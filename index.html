@@ -3524,6 +3524,19 @@ button.toggle-switch {
   border-radius: 3px;
   transition: height 0.3s;
 }
+.torre-preview.nft-schematic-host {
+  width: 100%;
+  max-width: 100%;
+  min-height: 168px;
+  align-items: stretch;
+  background: linear-gradient(155deg, #f0fdf4 0%, #e0f2fe 40%, #ecfdf5 100%);
+  border-radius: 14px;
+  border: 1.5px solid #86efac;
+  padding: 8px 6px 10px;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
+}
+.torre-preview.nft-schematic-host svg { max-width: 100%; height: auto; vertical-align: middle; }
 
 .torre-controls { flex: 1; }
 .torre-control-row {
@@ -3993,7 +4006,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div>
             <div id="dashTorreNombre"
               style="font-family:var(--font-display);font-size:14px;font-weight:900;color:#15803d">
-              Torre 1</div>
+              Instalación</div>
             <div id="dashTorreInfo"
               style="font-size:10px;color:#4b5563;margin-top:1px">—</div>
           </div>
@@ -4215,7 +4228,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
             <!-- Buscador de municipio -->
             <div style="margin-bottom:10px">
-              <input type="text" id="inputBuscarMunicipio" placeholder="Escribe tu municipio..."
+              <input type="text" id="inputBuscarMunicipio" placeholder="Municipio (castellano o valencià: Castellón, Castelló…)"
                 inputmode="search" autocomplete="address-level2"
                 aria-label="Buscar municipio para datos de calidad del agua"
                 style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:16px;padding:10px 12px;outline:none;box-sizing:border-box"
@@ -4271,11 +4284,11 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <div class="config-section" id="panelLocalidadMeteo">
           <div class="config-section-title" id="labelLocalidadMeteo">📍 Municipio de la torre (avisos oficiales)</div>
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px">
-            Escribe el <strong>municipio o localidad exacta</strong> donde está la torre. Los avisos MeteoAlarm se filtran solo si el texto del aviso nombra ese municipio
+            Escribe el <strong>municipio o localidad</strong> donde está la instalación. Los avisos MeteoAlarm se filtran si el texto del aviso nombra ese municipio
             (no provincia ni comunidad). <strong>Independiente</strong> del municipio del grifo: si usas destilada u ósmosis puedes (y debes) indicar aquí tu pueblo igualmente.
-            Conviene el nombre completo (ej. <em>Castelló de la Plana</em>) para no confundir con avisos provinciales.
+            <strong>Bilingüismo:</strong> en avisos oficiales el mismo pueblo puede aparecer en <em>castellano</em> o <em>valenciano</em> (p. ej. Castellón / Castelló de la Plana, Alacant / Alicante). La app reconoce variantes habituales para no perderte avisos.
           </div>
-          <input type="text" id="inputLocalidadMeteo" placeholder="Ej: Castelló de la Plana, Almassora…"
+          <input type="text" id="inputLocalidadMeteo" placeholder="Ej: Castelló de la Plana, Castellón, Almassora…"
             aria-labelledby="labelLocalidadMeteo" autocomplete="address-level2"
             onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
             style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:15px;padding:10px 12px;outline:none;box-sizing:border-box;margin-bottom:8px">
@@ -4610,7 +4623,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                         letter-spacing:0.5px">Registrando en</div>
             <div id="medirTorreNombre"
               style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#111827">
-              Torre 1</div>
+              Instalación</div>
           </div>
         </div>
         <span style="font-size:11px;color:#6b7280;border:1px solid #e5e7eb;
@@ -4816,12 +4829,38 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
     <div class="tab-panel" id="tab-torre" role="tabpanel" aria-labelledby="btn-torre" aria-hidden="true">
 
       <div class="section-title torre-section-heading" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <span><span class="section-title-accent" aria-hidden="true"></span>Torre <span class="accent" id="torreTabTitle">—</span></span>
+        <span><span class="section-title-accent" aria-hidden="true"></span><span class="accent" id="torreTabTitle">—</span></span>
         <button type="button" onclick="abrirTutorialTorrePestanaSiPrimeraVez({ force: true })"
           style="padding:5px 10px;font-size:10px;font-weight:700;border-radius:8px;border:1.5px solid #e5e7eb;
           background:#fff;color:#15803d;cursor:pointer;font-family:var(--font-display)">
           Guía de pantalla
         </button>
+      </div>
+
+      <!-- Nombre personalizado (torre / futuro NFT) -->
+      <div id="torreNombreCard" style="background:#fff;border:1.5px solid rgba(15,23,42,0.08);border-radius:14px;
+        padding:12px 14px;margin-bottom:10px">
+        <label class="form-label" for="torreNombreInstalacionInput" style="font-size:10px;font-weight:800;
+          color:#64748b;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;display:block">
+          Nombre de esta instalación
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" id="torreNombreInstalacionInput" class="form-input" maxlength="40"
+            autocomplete="off" placeholder="Ej. Torre terraza, NFT balcón, Lechugas cocina…"
+            aria-label="Nombre de la instalación activa"
+            style="flex:1;min-width:160px;font-size:14px;font-weight:700;padding:10px 12px;border-radius:10px"
+            onchange="guardarNombreInstalacionDesdeTorre()"
+            onblur="guardarNombreInstalacionDesdeTorre()">
+          <button type="button" onclick="guardarNombreInstalacionDesdeTorre()"
+            style="padding:10px 14px;border-radius:10px;border:1.5px solid #15803d;background:#f0fdf4;
+            font-family:var(--font-display);font-size:12px;font-weight:800;color:#14532d;cursor:pointer;
+            -webkit-tap-highlight-color:transparent">
+            Guardar nombre
+          </button>
+        </div>
+        <div style="font-size:9px;color:#94a3b8;margin-top:6px;line-height:1.35">
+          Aparece en Inicio, Mediciones e historial. Puedes cambiarlo cuando quieras.
+        </div>
       </div>
 
       <!-- Stats rápidas -->
@@ -5614,29 +5653,66 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
   <div class="setup-content">
 
     <div class="setup-page active" id="spage0">
-      <div class="setup-title">Configura tu torre</div>
+      <div class="setup-title">Configura tu instalación</div>
       <div class="setup-subtitle">
-        Ajusta niveles, cestas, volumen del depósito, tubo central si aplica, nutriente y ubicación.
-        Cada montaje es distinto: no usamos plantillas de marca comercial.
+        Elige primero el tipo de sistema: torre vertical o NFT. Cada uno guarda su propia geometría, nutrientes y
+        <strong>checklist de recarga</strong> (el de NFT incluye pasos de canales, película de agua y retornos).
+        Puedes tener las dos conviviendo y cambiar entre ellas en Inicio.
       </div>
-      <div class="welcome-hero" aria-hidden="true">🌿</div>
+
+      <div id="setupTipoInstalacionPanel" style="margin:16px 0">
+        <div style="font-size:11px;font-weight:800;color:#6b7280;
+          text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Tipo de sistema</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupCardTipoTorre"
+            onclick="seleccionarTipoInstalacionSetup('torre')"
+            aria-pressed="false" aria-label="Torre vertical: niveles y cestas">
+            <div style="font-size:28px;margin-bottom:6px" aria-hidden="true">🌿</div>
+            <div style="font-size:14px;font-weight:900;color:#374151">Torre / vertical</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:4px;line-height:1.35">Niveles, cestas, tubo si aplica</div>
+          </button>
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupCardTipoNft"
+            onclick="seleccionarTipoInstalacionSetup('nft')"
+            aria-pressed="false" aria-label="NFT: película nutricional y canales">
+            <div style="font-size:28px;margin-bottom:6px" aria-hidden="true">🪴</div>
+            <div style="font-size:14px;font-weight:900;color:#374151">NFT</div>
+            <div style="font-size:10px;color:#6b7280;margin-top:4px;line-height:1.35">Canales, pendiente, depósito</div>
+          </button>
+        </div>
+      </div>
+
+      <div class="welcome-hero" aria-hidden="true">💧</div>
       <button type="button" class="welcome-start-btn" onclick="iniciarConfiguracionTorre()"
         aria-label="Empezar asistente de configuración paso a paso">
         Empezar asistente
       </button>
-      <p class="welcome-hint">Podrás cambiar estos datos después en la pestaña Torre o Medir → Configuración.</p>
+      <p class="welcome-hint">Podrás revisar tipo y datos después en la pestaña Torre o Medir → Configuración.</p>
     </div>
 
     <div class="setup-page" id="spage1">
-      <div class="setup-title">🌿 Tu torre</div>
-      <div class="setup-subtitle">Configura las dimensiones de tu sistema hidropónico</div>
+      <div class="setup-title" id="spage1Title">🌿 Tu torre</div>
+      <div class="setup-subtitle" id="spage1Subtitle">Configura las dimensiones de tu sistema hidropónico</div>
 
+      <div id="setupNombreInstalacionWrap" style="display:none;margin-bottom:14px">
+        <label class="form-label" for="setupNombreInstalacionInput" style="font-size:11px;font-weight:800;
+          color:#374151;margin-bottom:6px;display:block">Nombre de esta instalación</label>
+        <input type="text" id="setupNombreInstalacionInput" class="form-input" maxlength="40"
+          autocomplete="off" placeholder="Ej. Torre terraza, NFT sur, Cultivo invierno…"
+          aria-label="Nombre para la nueva instalación"
+          style="width:100%;font-size:15px;font-weight:700;padding:12px 14px;border-radius:12px;box-sizing:border-box"
+          oninput="setupNombreNuevaTorre=(this.value||'').trim().slice(0,40)">
+        <p style="font-size:10px;color:#6b7280;margin:8px 0 0;line-height:1.45">
+          Así verás tu sistema en Inicio y al cambiar de instalación (no hace falta «Torre 1» o «NFT 1»).
+        </p>
+      </div>
+
+      <div id="setupTorreBuilderWrap">
       <div class="torre-builder">
         <!-- Preview visual -->
         <div>
           <div class="torre-preview" id="torrePreview"></div>
         </div>
-        <!-- Controles -->
+        <!-- Controles torre -->
         <div class="torre-controls">
           <div class="torre-control-row">
             <div class="torre-control-label">
@@ -5654,14 +5730,56 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <input type="range" class="torre-slider" id="sliderCestas"
               min="1" max="8" value="5" oninput="updateTorreBuilder()">
           </div>
-          <div class="torre-control-row">
-            <div class="torre-control-label">
-              Volumen depósito
-              <span class="torre-control-val" id="valVol">20<span style="font-size:12px;font-weight:600">L</span></span>
-            </div>
-            <input type="range" class="torre-slider" id="sliderVol"
-              min="5" max="100" value="20" step="5" oninput="updateTorreBuilder();if(setupPagina>=4)renderDosisSetup()">
+        </div>
+      </div>
+      </div>
+
+      <div id="setupNftBuilderWrap" style="display:none">
+        <div class="torre-builder">
+          <div>
+            <div class="torre-preview nft-schematic-host" id="nftPreview" aria-hidden="true"></div>
           </div>
+          <div class="torre-controls">
+            <div class="torre-control-row">
+              <div class="torre-control-label">
+                Canales paralelos
+                <span class="torre-control-val" id="valNftCanales">4</span>
+              </div>
+              <input type="range" class="torre-slider" id="sliderNftCanales"
+                min="1" max="12" value="4" oninput="updateNftSetupPreview()">
+            </div>
+            <div class="torre-control-row">
+              <div class="torre-control-label">
+                Huecos / plantas por canal
+                <span class="torre-control-val" id="valNftHuecos">8</span>
+              </div>
+              <input type="range" class="torre-slider" id="sliderNftHuecos"
+                min="2" max="30" value="8" oninput="updateNftSetupPreview()">
+            </div>
+            <div class="torre-control-row">
+              <div class="torre-control-label">
+                Pendiente aprox.
+                <span class="torre-control-val" id="valNftPendiente">2<span style="font-size:12px;font-weight:600">%</span></span>
+              </div>
+              <input type="range" class="torre-slider" id="sliderNftPendiente"
+                min="1" max="4" value="2" step="1" oninput="updateNftSetupPreview()">
+            </div>
+          </div>
+        </div>
+        <p style="font-size:10px;color:#6b7280;margin:10px 0 0;line-height:1.45">
+          En la <strong>pestaña Torre</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
+          El checklist NFT recuerda película de agua, retornos y limpieza de canales.
+        </p>
+      </div>
+
+      <div class="torre-controls" id="setupVolDepositoWrap" style="margin-top:4px">
+        <div class="torre-control-row">
+          <div class="torre-control-label">
+            Volumen depósito
+            <span class="torre-control-val" id="valVol">20<span style="font-size:12px;font-weight:600">L</span></span>
+          </div>
+          <input type="range" class="torre-slider" id="sliderVol"
+            min="5" max="100" value="20" step="5" oninput="onSetupVolSliderInput()">
         </div>
       </div>
 
@@ -6084,7 +6202,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <div id="seccionCiudadUbicacion" style="margin-top:12px">
         <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
           color:#374151;margin-bottom:8px">📍 Ciudad (para meteorología)</div>
-        <input type="text" id="setupCiudad2" placeholder="Busca tu ciudad..."
+        <input type="text" id="setupCiudad2" placeholder="Ciudad para meteo (nombre en castellano o valencià)"
           aria-label="Ciudad para datos meteorológicos"
           style="width:100%;background:#fff;border:2px solid #e5e7eb;border-radius:12px;
                  color:#111827;font-size:15px;padding:12px 14px;outline:none;
@@ -9072,18 +9190,29 @@ function updateTorreStats() {
   // Actualizar depósito y nutriente dinámicamente
   const cfg = state.configTorre || {};
   const nut = getNutrienteTorre();
-  const torreNombre = state.torres?.[state.torreActiva||0]?.nombre || 'Torre';
+  const rawNombre = (state.torres?.[state.torreActiva || 0]?.nombre || '').trim();
+  const torreNombre = rawNombre || 'Instalación';
   const vol  = cfg.volDeposito || 20;
-  const tipo = torreNombre;
+  const esNftCfg = cfg.tipoInstalacion === 'nft';
 
   // Título torre
   renderTablaVariedades();
   const ttEl = document.getElementById('torreTabTitle');
-  if (ttEl) ttEl.textContent = torreNombre;
+  if (ttEl) ttEl.textContent = torreNombre + (esNftCfg ? ' · NFT' : '');
+
+  const nomInpTorre = document.getElementById('torreNombreInstalacionInput');
+  if (nomInpTorre && document.activeElement !== nomInpTorre) {
+    nomInpTorre.value = rawNombre;
+  }
 
   // Info depósito
   const depEl = document.getElementById('depositoTitulo');
-  if (depEl) depEl.textContent = tipo + ' — ' + vol + 'L';
+  if (depEl) {
+    const geom = esNftCfg
+      ? ((cfg.nftNumCanales || cfg.numNiveles || '—') + ' canales × ' + (cfg.nftHuecosPorCanal || cfg.numCestas || '—') + ' huecos')
+      : ((cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C');
+    depEl.textContent = torreNombre + ' — ' + geom + ' — ' + vol + 'L';
+  }
 
   const volDepIn = document.getElementById('torreVolDepositoL');
   if (volDepIn && document.activeElement !== volDepIn) {
@@ -9763,6 +9892,8 @@ const NUTRIENTES_DB = [
 
 let setupPagina = 0;
 let setupTipoTorre = 'custom';
+/** 'torre' | 'nft' | '' (nueva instalación: hay que elegir en paso 0) */
+let setupTipoInstalacion = 'torre';
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 let setupUbicacion = 'exterior';
 let setupNutriente = 'canna_aqua';
@@ -9778,6 +9909,14 @@ function abrirSetup() {
     ph: !!sh.ph,
     humedad: !!sh.humedad,
   };
+  const c = state.configTorre || {};
+  setupTipoInstalacion = c.tipoInstalacion === 'nft' ? 'nft' : 'torre';
+  const snc = document.getElementById('sliderNftCanales');
+  const snh = document.getElementById('sliderNftHuecos');
+  const snp = document.getElementById('sliderNftPendiente');
+  if (snc) snc.value = String(Math.max(1, Math.min(12, c.nftNumCanales || c.numNiveles || 4)));
+  if (snh) snh.value = String(Math.max(2, Math.min(30, c.nftHuecosPorCanal || c.numCestas || 8)));
+  if (snp) snp.value = String(Math.max(1, Math.min(4, c.nftPendientePct != null ? Math.round(c.nftPendientePct) : 2)));
   const o = document.getElementById('setupOverlay');
   o.classList.add('open');
   renderNutrientesGrid();
@@ -9793,9 +9932,147 @@ function cerrarSetup() {
 }
 
 function iniciarConfiguracionTorre() {
+  if (setupEsNuevaTorre && setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft') {
+    showToast('Elige Torre / vertical o NFT antes de continuar', true);
+    return;
+  }
   setupTipoTorre = 'custom';
   setupPagina = 1;
   renderSetupPage();
+}
+
+function seleccionarTipoInstalacionSetup(tipo) {
+  setupTipoInstalacion = tipo === 'nft' ? 'nft' : 'torre';
+  refrescarSetupTipoInstalacionUI();
+  if (setupPagina === 1) {
+    if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+    else updateTorreBuilder();
+  }
+}
+
+function refrescarSetupTipoInstalacionUI() {
+  const torreCard = document.getElementById('setupCardTipoTorre');
+  const nftCard = document.getElementById('setupCardTipoNft');
+  [torreCard, nftCard].forEach(card => {
+    if (!card) return;
+    card.classList.remove('selected');
+    card.setAttribute('aria-pressed', 'false');
+  });
+  if (setupTipoInstalacion === 'torre' && torreCard) {
+    torreCard.classList.add('selected');
+    torreCard.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'nft' && nftCard) {
+    nftCard.classList.add('selected');
+    nftCard.setAttribute('aria-pressed', 'true');
+  }
+  if (setupPagina !== 1) return;
+  const isNft = setupTipoInstalacion === 'nft';
+  const tw = document.getElementById('setupTorreBuilderWrap');
+  const nw = document.getElementById('setupNftBuilderWrap');
+  if (tw) tw.style.display = isNft ? 'none' : 'block';
+  if (nw) nw.style.display = isNft ? 'block' : 'none';
+  const t1 = document.getElementById('spage1Title');
+  const st = document.getElementById('spage1Subtitle');
+  if (t1) t1.textContent = isNft ? '🪴 Tu sistema NFT' : '🌿 Tu torre';
+  if (st) {
+    st.textContent = isNft
+      ? 'Canales en paralelo, huecos por canal y pendiente. La rejilla usa un nivel por canal.'
+      : 'Configura las dimensiones de tu sistema hidropónico vertical';
+  }
+}
+
+function onSetupVolSliderInput() {
+  if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+  else updateTorreBuilder();
+  if (typeof setupPagina !== 'undefined' && setupPagina >= 4) renderDosisSetup();
+}
+
+/** Esquema SVG del NFT: depósito, subida, distribución, canales con pendiente y retorno (lectura rápida). */
+function buildNftSchematicSvg(canales, huecos, pendPct, volL) {
+  const W = 320;
+  const H = 168;
+  const nCh = Math.min(Math.max(parseInt(String(canales), 10) || 1, 1), 10);
+  const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
+  const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
+  const vol = Math.min(100, Math.max(5, parseInt(String(volL), 10) || 20));
+
+  const x0 = 34;
+  const x1 = W - 34;
+  const span = (x1 - x0) / nCh;
+  const yMan = 46;
+  const yTop = 54;
+  const yBot = 94;
+  const sk = 1.4 + pend * 0.45;
+
+  const chParts = [];
+  for (let i = 0; i < nCh; i++) {
+    const xa = x0 + i * span + 1.5;
+    const w = Math.max(span - 3, 13);
+    chParts.push(
+      '<path fill="url(#nftFilmG)" stroke="#0f766e" stroke-width="0.7" opacity="0.96" ' +
+        `d="M${xa} ${yTop} L${xa + w} ${yTop + sk} L${xa + w + 5} ${yBot} L${xa + 5} ${yBot - sk * 0.55}Z"/>`
+    );
+    const nd = Math.min(huecosN, 7);
+    const den = Math.max(nd - 1, 1);
+    for (let d = 0; d < nd; d++) {
+      const px = xa + 3.5 + (d / den) * (w - 3);
+      chParts.push(
+        `<circle cx="${px.toFixed(1)}" cy="${yTop + 8}" r="2.2" fill="#fef08a" stroke="#a16207" stroke-width="0.35"/>`
+      );
+    }
+  }
+
+  const tw = Math.min(128, 88 + Math.round(vol * 0.35));
+  const tx = (W - tw) / 2;
+
+  return (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="168" ' +
+      'preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="nftSvgTitle">' +
+      '<title id="nftSvgTitle">NFT: depósito, bomba, canales en pendiente y retorno al depósito</title>' +
+      '<defs>' +
+      '<linearGradient id="nftFilmG" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient>' +
+      '<linearGradient id="nftTankG" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+      '</defs>' +
+      '<text x="' + (W / 2) + '" y="20" text-anchor="middle" fill="#14532d" font-size="11" font-weight="800" ' +
+      'font-family="system-ui,Segoe UI,sans-serif">Bomba ↑ manifold → canales (agua en fina película)</text>' +
+      '<line x1="' + x0 + '" y1="' + yMan + '" x2="' + x1 + '" y2="' + (yMan + 1) + '" stroke="#065f46" stroke-width="4" stroke-linecap="round"/>' +
+      chParts.join('') +
+      '<line x1="' + (W / 2) + '" y1="' + (yMan + 1) + '" x2="' + (W / 2) + '" y2="' + (yTop - 2) + '" stroke="#047857" stroke-width="3.2" stroke-linecap="round"/>' +
+      '<rect x="' + tx + '" y="100" width="' + tw + '" height="36" rx="8" fill="url(#nftTankG)" stroke="#14532d" stroke-width="1.1"/>' +
+      '<text x="' + (W / 2) + '" y="122" text-anchor="middle" fill="#fff" font-size="11" font-weight="800" ' +
+      'font-family="system-ui,sans-serif">' + vol + ' L</text>' +
+      '<circle cx="' + (W / 2) + '" cy="96" r="9" fill="#1e293b" stroke="#475569" stroke-width="0.9"/>' +
+      '<text x="' + (W / 2) + '" y="99.5" text-anchor="middle" fill="#f8fafc" font-size="9" font-weight="800">B</text>' +
+      '<path d="M ' + (x1 + 4) + ' ' + (yBot - 4) + ' Q ' + (W - 4) + ' 112 ' + (tx + tw - 8) + ' 118" fill="none" stroke="#64748b" stroke-width="1.6" stroke-dasharray="5 4"/>' +
+      '<text x="' + (W - 10) + '" y="' + (yBot - 10) + '" text-anchor="end" fill="#475569" font-size="9" font-weight="700">Retorno</text>' +
+      '<text x="' + (W / 2) + '" y="162" text-anchor="middle" fill="#475569" font-size="9" font-weight="700" ' +
+      'font-family="system-ui,sans-serif">' + nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente</text>' +
+      '</svg>'
+  );
+}
+
+function updateNftSetupPreview() {
+  const canales = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+  const huecos  = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+  const pend    = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
+  const vol     = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+  const elC = document.getElementById('valNftCanales');
+  const elH = document.getElementById('valNftHuecos');
+  const elP = document.getElementById('valNftPendiente');
+  const elV = document.getElementById('valVol');
+  if (elC) elC.textContent = String(canales);
+  if (elH) elH.textContent = String(huecos);
+  if (elP) elP.innerHTML = pend + '<span style="font-size:12px;font-weight:600">%</span>';
+  if (elV) elV.innerHTML = vol + '<span style="font-size:12px;font-weight:600">L</span>';
+
+  const preview = document.getElementById('nftPreview');
+  if (!preview) return;
+  preview.innerHTML =
+    buildNftSchematicSvg(canales, huecos, pend, vol) +
+    '<div style="font-size:10px;font-weight:700;color:#15803d;text-align:center;margin-top:6px;line-height:1.4">' +
+    'Toca los deslizadores: el dibujo muestra más canales y el depósito ensancha un poco con el volumen.</div>';
 }
 
 function renderSetupPage() {
@@ -9813,8 +10090,22 @@ function renderSetupPage() {
   const curr = document.getElementById('spage' + setupPagina);
   if (curr) curr.classList.add('active');
 
+  const nomWrap = document.getElementById('setupNombreInstalacionWrap');
+  const nomInp = document.getElementById('setupNombreInstalacionInput');
+  if (nomWrap && nomInp) {
+    const showNom = setupEsNuevaTorre && setupPagina === 1;
+    nomWrap.style.display = showNom ? 'block' : 'none';
+    if (showNom && document.activeElement !== nomInp) {
+      nomInp.value = setupNombreNuevaTorre || '';
+    }
+  }
+
   // Acciones específicas por página
-  if (setupPagina === 1) updateTorreBuilder();
+  if (setupPagina === 0 || setupPagina === 1) refrescarSetupTipoInstalacionUI();
+  if (setupPagina === 1) {
+    if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+    else updateTorreBuilder();
+  }
   if (setupPagina === 2) cargarSetupSensoresHwUI();
   if (setupPagina === 3) setTimeout(() => seleccionarSustrato(setupData.sustrato), 0);
   if (setupPagina === 4) { renderNutrientesGrid(); setTimeout(renderDosisSetup, 100); }
@@ -9845,9 +10136,10 @@ function renderSetupPage() {
   const labelEl = document.getElementById('setupStepLabel');
   if (labelEl) {
     if (setupEsNuevaTorre) {
+      const nomLbl = (setupNombreNuevaTorre || '').trim() || 'Nueva instalación';
       labelEl.textContent = setupPagina === 0
-        ? '🌿 ' + setupNombreNuevaTorre + ' — nueva torre'
-        : setupNombreNuevaTorre + ' · Paso ' + setupPagina + ' de ' + (SETUP_TOTAL_PAGES-2) + ' — ' + (labels[setupPagina] || '');
+        ? '🌿 ' + nomLbl + ' — configuración'
+        : nomLbl + ' · Paso ' + setupPagina + ' de ' + (SETUP_TOTAL_PAGES-2) + ' — ' + (labels[setupPagina] || '');
     } else {
       labelEl.textContent = setupPagina === 0
         ? 'Bienvenido'
@@ -9865,6 +10157,15 @@ function renderSetupPage() {
 
 function setupNext() {
   if (setupPagina === 0) return; // página 0: botón «Empezar asistente»
+  if (setupEsNuevaTorre && setupPagina === 1) {
+    const inpNom = document.getElementById('setupNombreInstalacionInput');
+    if (inpNom) setupNombreNuevaTorre = (inpNom.value || '').trim().slice(0, 40);
+    if (!setupNombreNuevaTorre) {
+      showToast('Escribe un nombre para esta instalación', true);
+      inpNom?.focus();
+      return;
+    }
+  }
   const ultimoPaso = setupEsNuevaTorre ? SETUP_TOTAL_PAGES - 2 : SETUP_TOTAL_PAGES - 1;
   if (setupPagina < ultimoPaso) {
     setupPagina++;
@@ -9885,6 +10186,10 @@ function setupBack() {
 }
 
 function updateTorreBuilder() {
+  if (setupTipoInstalacion === 'nft') {
+    updateNftSetupPreview();
+    return;
+  }
   const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);
   const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
   const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20);
@@ -10291,9 +10596,33 @@ async function detectarCiudadSetup() {
 }
 
 function guardarSetupYContinuar() {
-  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);
-  const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
-  const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20);
+  if (setupEsNuevaTorre) {
+    const inpNom = document.getElementById('setupNombreInstalacionInput');
+    if (inpNom) setupNombreNuevaTorre = (inpNom.value || '').trim().slice(0, 40);
+    if (!setupNombreNuevaTorre) {
+      showToast('Escribe un nombre para esta instalación (paso de dimensiones)', true);
+      setupPagina = 1;
+      renderSetupPage();
+      document.getElementById('setupNombreInstalacionInput')?.focus();
+      return;
+    }
+    if (setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft') {
+      showToast('Elige Torre / vertical o NFT en el primer paso del asistente', true);
+      setupPagina = 0;
+      renderSetupPage();
+      return;
+    }
+  }
+
+  const isNft = setupTipoInstalacion === 'nft';
+  let niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
+  let cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5, 10);
+  if (isNft) {
+    niveles = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+    cestas  = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+  }
+  const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20, 10);
+  const nftPend = isNft ? parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10) : null;
 
   const sensHwGuardar = {
     ec: !!(setupData.sensoresHardware && setupData.sensoresHardware.ec),
@@ -10311,6 +10640,7 @@ function guardarSetupYContinuar() {
   setupData.horasLuz = horasLuzGuardar;
 
   state.configTorre = {
+    tipoInstalacion: isNft ? 'nft' : 'torre',
     tipoTorre:    'custom',
     numNiveles:   niveles,
     numCestas:    cestas,
@@ -10332,6 +10662,15 @@ function guardarSetupYContinuar() {
     localidadMeteo: setupEsNuevaTorre ? (locWizard || '') : (locWizard || prevLocMet || ''),
     sensoresHardware: sensHwGuardar,
   };
+  if (isNft) {
+    state.configTorre.nftNumCanales = niveles;
+    state.configTorre.nftHuecosPorCanal = cestas;
+    state.configTorre.nftPendientePct = Math.max(1, Math.min(4, nftPend != null ? nftPend : 2));
+  } else {
+    delete state.configTorre.nftNumCanales;
+    delete state.configTorre.nftHuecosPorCanal;
+    delete state.configTorre.nftPendientePct;
+  }
   invalidateMeteoNomiCache();
   const su = normalizaSustratoKey(setupData.sustrato);
   state.configTorre.sustrato = su;
@@ -10361,8 +10700,8 @@ function guardarSetupYContinuar() {
     const nTorres = (state.torres || []).length;
     const nuevaTorre = {
       id: Date.now(),
-      nombre: setupNombreNuevaTorre || ('Torre ' + (nTorres + 1)),
-      emoji: EMOJIS[nTorres % EMOJIS.length],
+      nombre: setupNombreNuevaTorre,
+      emoji: isNft ? '🪴' : EMOJIS[nTorres % EMOJIS.length],
       config: { ...state.configTorre },
       torre: JSON.parse(JSON.stringify(state.torre)),
       modoActual: 'lechugas',
@@ -10405,7 +10744,7 @@ function preguntarIniciarChecklist() {
   const nut        = getNutrienteTorre();
   const cfg        = state.configTorre || {};
   const torre      = state.torres?.[state.torreActiva || 0];
-  const nombreTorre = torre?.nombre || 'Torre 1';
+  const nombreTorre = (torre?.nombre || '').trim() || 'Instalación';
   const vol        = cfg.volDeposito || 18;
   const ecObj      = getECOptimaTorre();
 
@@ -10446,7 +10785,7 @@ function preguntarIniciarChecklist() {
   overlay.id = 'checklistPreguntaOverlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', 'Iniciar checklist de torre');
+  overlay.setAttribute('aria-label', cfg.tipoInstalacion === 'nft' ? 'Iniciar checklist NFT' : 'Iniciar checklist de torre');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;' +
     'display:flex;align-items:flex-end;justify-content:center;' +
     'padding-bottom:env(safe-area-inset-bottom,0px)';
@@ -10602,6 +10941,7 @@ function aplicarConfigTorre() {
   // Si no hay config, usar defaults para que la torre funcione
   if (!state.configTorre) {
     state.configTorre = {
+      tipoInstalacion: 'torre',
       numNiveles: NUM_NIVELES,
       numCestas:  NUM_CESTAS,
       volDeposito: 18,
@@ -10611,6 +10951,7 @@ function aplicarConfigTorre() {
       ciudad: 'Castelló de la Plana',
     };
   }
+  if (!state.configTorre.tipoInstalacion) state.configTorre.tipoInstalacion = 'torre';
   const cfg = state.configTorre;
 
   // Sincronizar nutriente global con la torre activa (cada torre puede tener el mar suyo)
@@ -11648,7 +11989,7 @@ function addRegistro(tipo, datos) {
   const tActiva = getTorreActiva();
   state.registro.unshift({
     tipo, fecha, hora,
-    torreNombre: tActiva.nombre || 'Torre 1',
+    torreNombre: (tActiva.nombre || '').trim() || 'Instalación',
     torreEmoji:  tActiva.emoji  || '🌿',
     ...datos
   });
@@ -11806,16 +12147,68 @@ const AGUA_MUNICIPIOS = {
   "Santander":             { ec: 145, dureza: "Muy blanda",  nota: "Embalse del Ebro" },
 };
 
+/** Normaliza texto para comparar municipios (minúsculas, sin tildes). */
+function normalizaMunicipioStr(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+/**
+ * Sinónimos toponímicos (valenciano/castellano u otras grafías) → clave canónica en AGUA_MUNICIPIOS.
+ * Así "Castellón", "Castelló" o "Castellón de la Plana" encuentran el mismo registro que Castelló de la Plana.
+ */
+const MUNICIPIO_ALIAS_A_CANON = (() => {
+  const m = Object.create(null);
+  const reg = (aliasList, canon) => {
+    aliasList.forEach(a => {
+      const k = normalizaMunicipioStr(a);
+      if (k) m[k] = canon;
+    });
+  };
+  reg(['Castellón de la Plana', 'Castellón', 'Castello de la Plana', 'Castello', 'Castelló', 'Castelló de la Plana'], 'Castelló de la Plana');
+  reg(['València', 'Valencia ciutat'], 'Valencia');
+  reg(['Alacant'], 'Alicante');
+  reg(["L'Hospitalet de Llobregat", 'Hospitalet de Llobregat', 'Hospitalet'], "L'Hospitalet");
+  reg(['Donostia', 'San Sebastián'], 'San Sebastián');
+  reg(['Vitoria', 'Gasteiz'], 'Vitoria-Gasteiz');
+  reg(['A Coruña', 'La Coruña'], 'A Coruña');
+  reg(['Palma', 'Palma de Mallorca', 'Ciutat de Mallorca'], 'Palma de Mallorca');
+  reg(['Las Palmas', 'Las Palmas de Gran Canaria'], 'Las Palmas de GC');
+  return m;
+})();
+
 // Función para buscar municipio
 function buscarMunicipio(query) {
   if (!query || query.length < 2) return [];
-  const q = query.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-  return Object.entries(AGUA_MUNICIPIOS)
-    .filter(([nombre]) => {
-      const n = nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-      return n.includes(q);
-    })
-    .slice(0, 6);
+  const q = normalizaMunicipioStr(query);
+  const seen = new Set();
+  const out = [];
+
+  function pushCanon(canonName) {
+    const data = AGUA_MUNICIPIOS[canonName];
+    if (!data || seen.has(canonName)) return;
+    seen.add(canonName);
+    out.push([canonName, data]);
+  }
+
+  const directCanon = MUNICIPIO_ALIAS_A_CANON[q];
+  if (directCanon) pushCanon(directCanon);
+
+  for (const aliasNorm of Object.keys(MUNICIPIO_ALIAS_A_CANON)) {
+    if (aliasNorm.includes(q) || q.includes(aliasNorm)) {
+      pushCanon(MUNICIPIO_ALIAS_A_CANON[aliasNorm]);
+    }
+  }
+
+  Object.entries(AGUA_MUNICIPIOS).forEach(([nombre, data]) => {
+    const n = normalizaMunicipioStr(nombre);
+    if (n.includes(q) || q.includes(n)) pushCanon(nombre);
+  });
+
+  return out.slice(0, 8);
 }
 
 // Constantes por tipo de agua
@@ -13456,12 +13849,15 @@ function construirTextoChecklistPreliminar() {
       p1Partes.push(Math.max(0.5, Math.round((ref.mlPorLitro[i] || 0) * 5 * 10) / 10) + sufP + ' ' + (orden[i] || ('Parte ' + (i + 1))));
     }
   }
+  const esNft = cfg.tipoInstalacion === 'nft';
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
-    p1Partes.join(' + ') + '. Remover bien.';
+    p1Partes.join(' + ') + '. Remover bien.' +
+    (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '');
   const stockExtra = orden.slice(0, partes).join(', ');
-  const p2 = 'Verificar stock: agua destilada u ósmosis' +
+  let p2 = 'Verificar stock: agua destilada u ósmosis' +
     (usarCalMagEnRecarga() ? ', CalMag' : '') +
     ', ' + stockExtra + ', pH+, agua oxigenada 3%, esponja';
+  if (esNft) p2 += ', cepillo suave o tubo flexible para canales, comprobación de pendiente';
   const ecO = getECOptimaTorre();
   const provMs = Math.min(1.2, Math.max(0.35, ((ecO.min + ecO.max) / 2000) * 0.06));
   return { descP1: desc, descP2: p2, placeholderProv: provMs.toFixed(2) };
@@ -13480,6 +13876,9 @@ function getCLPasos() {
   const ecRecTarget = getRecargaEcMetaMicroS();
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
+  const esNft = cfg.tipoInstalacion === 'nft';
+  const nftCh = esNft ? (cfg.nftNumCanales || cfg.numNiveles || 4) : 0;
+  const nftHx = esNft ? (cfg.nftHuecosPorCanal || cfg.numCestas || 8) : 0;
   const shCl = ensureSensoresHardware();
   const hwLista = [shCl.ec && 'EC', shCl.ph && 'pH', shCl.humedad && 'humedad'].filter(Boolean);
   const paso6SeccionTitulo = hwLista.length ? null : '📊 Paso 6 — Medir y ajustar';
@@ -13500,38 +13899,60 @@ function getCLPasos() {
     id:'6.0hw',
     seccion:'📊 Paso 6 — Medir y ajustar',
     paso:'6.0',
-    desc:'Sensores o medidores: constan en la torre ' + hwLista.join(', ') + '. Comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).',
+    desc: esNft
+      ? ('Sensores o medidores en tu NFT (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea tras el retorno; si el circuito es largo, espera unos minutos a que se estabilice.')
+      : ('Sensores o medidores: constan en la torre ' + hwLista.join(', ') + '. Comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. Los valores de los pasos siguientes deben coincidir con lo que anotarás después en Mediciones → dashboard.',
   }] : [];
+
+  const pasosNftExtra = esNft ? [
+    { id:'N1', seccion:null, paso:'N1',
+      desc:'Inspeccionar los ' + nftCh + ' canales: sin barro orgánico, raíces compactando el fondo ni tapones en codos',
+      nota:'NFT: la película de agua debe poder recorrer todo el canal; ~' + nftHx + ' huecos/canal en tu configuración' },
+    { id:'N2', seccion:null, paso:'N2',
+      desc:'Revisar retornos y bajantes al depósito: flujo continuo, sin burbujas atrapadas en subidas largas',
+      nota:'Aire en el circuito suele dejar los primeros huecos sin película' },
+  ] : [];
 
   return [
   { id:'P1', seccion:'🌙 Preparación', paso:'P1',
     desc: pre.descP1,
-    nota:'Para mantener raíces húmedas durante los 45 min sin bomba · Dosis escaladas desde tu depósito de ' + vol + 'L y ' + nut.nombre,
+    nota:'Para mantener raíces húmedas durante los 45 min sin bomba · Dosis escaladas desde tu depósito de ' + vol + 'L y ' + nut.nombre +
+      (esNft ? ' · NFT: prioriza humedad en raíces expuestas y entradas de canal.' : ''),
     campos:[{ id:'clEcProvisional', label:'EC provisional:', unit:'mS/cm', type:'number', step:'0.01', placeholder: pre.placeholderProv }] },
   { id:'P2', seccion:null, paso:'P2',
     desc: pre.descP2,
     nota:'Comprar lo faltante antes de empezar' },
   { id:'P3', seccion:null, paso:'P3',
     desc:'Poner toldo si hay sol directo o temperatura > 20°C',
-    nota:'Reduce transpiración durante los 45 min sin bomba' },
+    nota: esNft ? 'En NFT el sol directo seca rápido la película y las plántulas al inicio del canal' : 'Reduce transpiración durante los 45 min sin bomba' },
 
   { id:'1.1', seccion:'⏹️ Paso 1 — Apagar y riego provisional', paso:'1.1',
     desc:'Apagar la bomba de riego',
     campos:[{ id:'clHoraApagado', label:'Hora apagado:', type:'time', clase:'wide' }] },
   { id:'1.2', seccion:null, paso:'1.2',
-    desc:'Regar manualmente cada cesta con solución provisional: 50-100 ml por cesta',
-    nota:'Mantener esponjas húmedas' },
+    desc: esNft
+      ? ('Riego provisional por canal: humedecer copas, cubetas o el inicio de cada línea con solución (≈50–150 ml según longitud). Ningún tramo debe quedar seco.')
+      : 'Regar manualmente cada cesta con solución provisional: 50-100 ml por cesta',
+    nota: esNft ? ('Reparte en los ' + nftCh + ' canales si comparten bomba — prioridad al arranque de cada uno.') : 'Mantener esponjas húmedas' },
   { id:'1.3', seccion:null, paso:'1.3', alert:true,
     desc:'⚠️ Máximo 45 minutos sin bomba — anotar hora límite',
     nota:'Estrés hídrico irreversible si se supera' },
 
   { id:'1.4', seccion:null, paso:'1.4', alert:true,
-    desc:'✂️ COSECHAR PRIMERO todas las plantas maduras antes de limpiar',
-    nota:'⚠️ CRÍTICO: Las raíces maduras miden 30-40cm y al sacar las cestas se rompen inevitablemente. Los fragmentos de raíz en el depósito fermentan, generan espuma y suben el pH. Orden correcto: 1º Cosechar → 2º Limpiar → 3º Trasplantar' },
+    desc: esNft
+      ? '✂️ COSECHAR o retirar plantas maduras antes de vaciar — en NFT la materia orgánica y raíces en canales estrechos generan biofilm y cortan la película'
+      : '✂️ COSECHAR PRIMERO todas las plantas maduras antes de limpiar',
+    nota: esNft
+      ? 'Orden: 1º Vaciar carga madura del canal · 2º Limpiar canales/retornos · 3º Nueva solución'
+      : '⚠️ CRÍTICO: Las raíces maduras miden 30-40cm y al sacar las cestas se rompen inevitablemente. Los fragmentos de raíz en el depósito fermentan, generan espuma y suben el pH. Orden correcto: 1º Cosechar → 2º Limpiar → 3º Trasplantar' },
   { id:'1.5', seccion:null, paso:'1.5',
-    desc:'Si hay plantas en crecimiento que NO se cosechan: dejarlas en su sitio durante toda la limpieza',
-    nota:'Prepara un cubo con solución del depósito actual por si necesitas mover alguna planta de forma imprescindible — mantén las raíces sumergidas en todo momento' },
+    desc: esNft
+      ? 'Plantas jóvenes que siguen: no sacar raíces al aire; si mueves una copa, mantén sumersión en solución del depósito actual'
+      : 'Si hay plantas en crecimiento que NO se cosechan: dejarlas en su sitio durante toda la limpieza',
+    nota: esNft
+      ? 'En NFT las raíces suelen colgar en el canal — evita que queden al descubierto más de unos segundos'
+      : 'Prepara un cubo con solución del depósito actual por si necesitas mover alguna planta de forma imprescindible — mantén las raíces sumergidas en todo momento' },
 
   { id:'2.1', seccion:'🧹 Paso 2 — Vaciar y limpiar', paso:'2.1',
     desc:'Vaciar completamente el depósito y anotar color del agua',
@@ -13549,7 +13970,11 @@ function getCLPasos() {
     desc:'Aclarar con agua limpia — mínimo 2 veces',
     nota:'Eliminar todo residuo de agua oxigenada' },
   { id:'2.5', seccion:null, paso:'2.5',
-    desc:'Limpiar tubos, bomba exterior y conexiones' },
+    desc: esNft
+      ? 'Limpiar canales NFT, espigas, retornos al depósito y bomba; retirar restos de raíz en codos y bajantes'
+      : 'Limpiar tubos, bomba exterior y conexiones' },
+
+  ...pasosNftExtra,
 
   { id:'3.1', seccion:'🖤 Paso 3 — Cubrir depósito', paso:'3.1',
     desc:'Envolver exterior con bolsa negra opaca o film negro completamente',
@@ -13562,12 +13987,14 @@ function getCLPasos() {
     campos: paso40campos },
 
   { id:'4.1', seccion:null, paso:'4.1',
-    desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu torre',
+    desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' + (esNft ? 'depósito NFT' : 'torre'),
     campos:[{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
   ...generarPasosNutriente(),
 
   { id:'5.1', seccion:'🔌 Paso 5 — Verificar sistema', paso:'5.1',
-    desc:'Confirmar que la bomba lleva funcionando correctamente durante la espera',
+    desc: esNft
+      ? 'Con la bomba en marcha: caudal estable en los ' + nftCh + ' canales; sin tramos secos al inicio ni charcos al final (pendiente ~1–2 % típico)'
+      : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
       { id:'clMinSinBomba', label:'Min sin bomba:', type:'number', placeholder:'40' }
@@ -13602,15 +14029,21 @@ function getCLPasos() {
     ] },
 
   { id:'7.1', seccion:'✅ Paso 7 — Verificación final', paso:'7.1',
-    desc:'Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre' },
+    desc: esNft
+      ? ('Película de agua visible en todos los canales; retorno limpio al depósito; sin ruidos de cavitación en la bomba')
+      : ('Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre') },
   { id:'7.2', seccion:null, paso:'7.2',
-    desc:'Observar las plantas 30 minutos después — sin signos de estrés',
+    desc: esNft
+      ? 'Tras 30 min: plantas turgentes y entradas de canal sin marchitez; sin “chorros” que dañen plántulas'
+      : 'Observar las plantas 30 minutos después — sin signos de estrés',
     campos:[{
       id:'clEstadoPlantas', label:'Estado:', type:'select',
       opciones:['Turgentes — correcto','Ligeramente lacias','Muy lacias — revisar bomba']
     }] },
   { id:'7.3', seccion:null, paso:'7.3',
-    desc:'Ejecutar cálculo de riego en la app — verificar que los valores son correctos' },
+    desc: esNft
+      ? 'Anotar en Historial / Mediciones; los próximos días ajusta caudal o pendiente si algún canal se queda corto de película'
+      : 'Ejecutar cálculo de riego en la app — verificar que los valores son correctos' },
 ]; }
 
 function getCLTotal() { return getCLPasos().length; }
@@ -13619,6 +14052,13 @@ function abrirChecklist(esPrimeraVez = false) {
   clEsPrimeraVez = esPrimeraVez;
   clChecked.clear();
   aplicarConfigTorre();
+
+  const clTit = document.getElementById('checklistTitle');
+  if (clTit) {
+    clTit.textContent = (state.configTorre && state.configTorre.tipoInstalacion === 'nft')
+      ? '🪴 Recarga NFT — checklist'
+      : '🌿 HidroCultivo — Recarga';
+  }
 
   // Ocultar botón cerrar si es primera vez (obligatorio completarlo)
   document.getElementById('checklistCloseBtn').style.display = esPrimeraVez ? 'none' : 'flex';
@@ -14147,7 +14587,7 @@ function importarMedicionesAlRegistro() {
 
   const tActiva = getTorreActiva();
   const base = {
-    torreNombre: tActiva.nombre || 'Torre 1',
+    torreNombre: (tActiva.nombre || '').trim() || 'Instalación',
     torreEmoji: tActiva.emoji || '🌿',
   };
 
@@ -14495,6 +14935,9 @@ const CONSEJOS_DATA = {
       { icono:'🔃', titulo:'Rotación escalonada',
         texto:'Con 3 niveles activos, rota cada 12-15 días: cosecha nivel 5 → todo sube un nivel → nuevas plántulas en nivel 1. Así tienes producción continua y el depósito siempre tiene plantas en todas las etapas.',
         alerta:{ tipo:'info', txt:'ℹ️ Al rotar, ajusta la EC del depósito al estado del cultivo predominante.' } },
+      { icono:'⏱️', titulo:'NFT vs torre: ¿mismos días de cultivo?',
+        texto:'En estudios y guías técnicas (p. ej. comparativas NFT / DWC / torre con lechuga) lo que más se documenta son <strong>rendimiento, biomasa y uso de agua</strong>, no un calendario fijo distinto “por sistema”. Los <strong>días hasta cosecha</strong> los marcan sobre todo la <strong>variedad</strong>, la <strong>luz</strong>, <strong>temperatura</strong>, <strong>EC/pH</strong> y la calidad de la plántula. Un NFT con película inestable o una torre con sombra desigual puede alargar el ciclo; no es que NFT o torre tengan por sí solos otro “cronómetro” en webs serias.',
+        alerta:{ tipo:'info', txt:'ℹ️ Usa las fechas en la app y la ficha de la variedad; el tipo de montaje cambia la ingeniería del agua, no el genotipo.' } },
       { icono:'📅', titulo:'Fecha de trasplante en la ficha',
         texto:'Cada cesta debe llevar <strong>variedad + fecha</strong> desde que plantas o trasplantas. Sin fecha, el riego automático, las medias de edad y el calendario no reflejan lo que hay en la torre: puedes regar como si fueran plántulas cuando ya van por la mitad del ciclo (o al revés).',
         alerta:{ tipo:'ok', txt:'✅ Un momento al trasplantar: abre la ficha, elige cultivo y fecha. Así fotos, registro y cálculo de riego quedan alineados con tus plantas reales.' } },
@@ -17153,6 +17596,42 @@ function meteoNormTxt(s) {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+/**
+ * Variantes normalizadas del nombre de municipio para MeteoAlarm (avisos en castellano/valenciano/inglés).
+ * Ej.: Castelló de la Plana ↔ Castellón de la Plana; Alacant ↔ Alicante.
+ */
+function meteoMunicipioVariantesNormalizadas(mFullNorm) {
+  const m = String(mFullNorm || '').replace(/\s+/g, ' ').trim();
+  const set = new Set([m]);
+  const add = (s) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); if (t) set.add(t); };
+
+  if (/^castellon?\s+de\s+la\s+plana$/.test(m)) {
+    add('castello de la plana');
+    add('castellon de la plana');
+    add('castello');
+    add('castellon');
+  } else if (m === 'castello' || m === 'castellon') {
+    add('castello de la plana');
+    add('castellon de la plana');
+    add('castello');
+    add('castellon');
+  }
+
+  if (m === 'alicante' || m === 'alacant') {
+    add('alicante');
+    add('alacant');
+  }
+  if (m === 'valencia') {
+    add('valencia');
+  }
+  if (m === 'vitoria-gasteiz' || m === 'vitoria' || m === 'gasteiz') {
+    add('vitoria-gasteiz');
+    add('vitoria');
+    add('gasteiz');
+  }
+  return [...set];
+}
+
 /** Coincidencia estricta con municipio/localidad (no provincia ni CCAA solas). */
 function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
   const raw = String(municipio || '').split(',')[0].trim();
@@ -17160,6 +17639,15 @@ function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
   const mFull = meteoNormTxt(raw).replace(/\s+/g, ' ').trim();
   const blob = (meteoNormTxt(areaDesc) + ' ' + meteoNormTxt(title)).replace(/\s+/g, ' ').trim();
   if (!blob) return false;
+
+  const variantes = meteoMunicipioVariantesNormalizadas(mFull);
+  for (let vi = 0; vi < variantes.length; vi++) {
+    const vf = variantes[vi];
+    if (vf.length >= 12 && blob.includes(vf)) return true;
+  }
+
+  if ((mFull === 'alicante' || mFull === 'alacant') &&
+      (blob.includes('alicante') || blob.includes('alacant'))) return true;
 
   if (mFull.length >= 6 && blob.includes(mFull)) return true;
 
@@ -17734,8 +18222,14 @@ function seleccionarNumTorres(tipo) {
 function actualizarResumenSetup() {
   const el = document.getElementById('setupResumenContent');
   if (!el) return;
-  const niveles = document.getElementById('sliderNiveles')?.value || 5;
-  const cestas  = document.getElementById('sliderCestas')?.value  || 5;
+  const isNft = setupTipoInstalacion === 'nft';
+  const niveles = isNft
+    ? (document.getElementById('sliderNftCanales')?.value || 4)
+    : (document.getElementById('sliderNiveles')?.value || 5);
+  const cestas  = isNft
+    ? (document.getElementById('sliderNftHuecos')?.value || 8)
+    : (document.getElementById('sliderCestas')?.value  || 5);
+  const pendTxt = isNft ? (document.getElementById('sliderNftPendiente')?.value || 2) + '% pendiente · ' : '';
   const vol     = document.getElementById('sliderVol')?.value     || 20;
   const nut     = NUTRIENTES_DB.find(n => n.id === (window.setupNutriente || 'canna_aqua'));
   const ubic    = setupData.ubicacion || window.setupUbicacion || 'exterior';
@@ -17776,7 +18270,9 @@ function actualizarResumenSetup() {
     : '📟 Sensores / medidores: <strong>sin marcar</strong> (configúralo en paso Equipamiento o en Mediciones)<br>';
 
   el.innerHTML =
-    '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>' +
+    (isNft
+      ? '🪴 NFT: <strong>' + niveles + ' canales × ' + cestas + ' huecos/canal · ' + pendTxt + vol + 'L</strong><br>'
+      : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d;font-size:10px">(según cultivos)</span>' : '') + '<br>' +
@@ -18121,10 +18617,10 @@ const MAX_TORRES = 10;
 // Inicializar sistema de torres si no existe
 function initTorres() {
   if (!state.torres) {
-    // Migrar configuración actual como Torre 1
+    // Migrar configuración actual como primera instalación
     state.torres = [{
       id: 1,
-      nombre: 'Torre 1',
+      nombre: 'Mi instalación',
       emoji: '🌿',
       config: state.configTorre || null,
       torre: state.torre || [],
@@ -18163,7 +18659,7 @@ function actualizarTorreActual() {
   if (document.getElementById('tab-calendario')?.classList.contains('active')) {
     renderCalendario();
   }
-  showToast('🔄 Torre actualizada · ' + (getTorreActiva()?.nombre || 'Torre'));
+  showToast('🔄 Instalación actualizada · ' + ((getTorreActiva()?.nombre || '').trim() || 'Instalación'));
 }
 
 function cambiarTorreActiva(idx) {
@@ -18201,8 +18697,8 @@ function cambiarTorreActiva(idx) {
 
   // Toast con nombre de la torre
   const t = state.torres[idx];
-  const nombre = t ? t.nombre : 'Torre ' + (idx+1);
-  showToast('🌿 Ahora en: ' + nombre);
+  const nombre = (t && t.nombre) ? String(t.nombre).trim() : '';
+  showToast('🌿 Ahora en: ' + (nombre || 'Instalación'));
   // Marcar datos como obsoletos — se recargarán al abrir cada pestaña
   window._meteoObsoleto = true;
   window._riegoObsoleto  = true;
@@ -18292,7 +18788,7 @@ function cargarEstadoTorre(idx) {
 function actualizarHeaderTorre() {
   const t = getTorreActiva();
   const btn = document.getElementById('torreActivaNombre');
-  if (btn) btn.textContent = (t.emoji || '🌿') + ' ' + (t.nombre || 'Torre 1');
+  if (btn) btn.textContent = (t.emoji || '🌿') + ' ' + ((t.nombre || '').trim() || 'Instalación');
   // Mostrar/ocultar botón añadir según límite
   const btnCrear = document.getElementById('btnCrearTorre');
   if (btnCrear) btnCrear.style.display = (state.torres.length >= MAX_TORRES) ? 'none' : 'block';
@@ -18323,6 +18819,10 @@ function renderListaTorres() {
     const isActiva = i === activa;
     const plantasCount = (t.torre || []).reduce((sum, nivel) =>
       sum + (nivel || []).filter(c => c && c.variedad).length, 0);
+    const cfgT = t.config || {};
+    const geomTxt = cfgT.tipoInstalacion === 'nft'
+      ? ((cfgT.nftNumCanales || cfgT.numNiveles || 4) + ' canales × ' + (cfgT.nftHuecosPorCanal || cfgT.numCestas || 8) + ' huecos')
+      : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
 
     return `<div style="display:flex;align-items:center;gap:10px;padding:12px;
       border-radius:14px;border:2px solid ${isActiva ? '#16a34a' : '#e5e7eb'};
@@ -18332,13 +18832,13 @@ function renderListaTorres() {
         appearance:none;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;min-width:0"
         onclick="cambiarTorreActiva(${i})"
         aria-pressed="${isActiva ? 'true' : 'false'}"
-        aria-label="Activar ${String(t.nombre || 'torre').replace(/"/g, '&quot;')}${isActiva ? ', torre actual' : ''}">
+        aria-label="Activar ${String((t.nombre || '').trim() || 'instalación').replace(/"/g, '&quot;')}${isActiva ? ', instalación actual' : ''}">
       <span style="font-size:28px" aria-hidden="true">${t.emoji || '🌿'}</span>
       <span style="flex:1;min-width:0">
         <span style="display:block;font-family:var(--font-display);font-size:14px;font-weight:800;
-          color:${isActiva ? '#15803d' : '#111827'}">${t.nombre}</span>
+          color:${isActiva ? '#15803d' : '#111827'}">${(t.nombre || '').trim() || 'Instalación'}</span>
         <span style="display:block;font-size:11px;color:#6b7280;margin-top:2px">
-          ${plantasCount} plantas · ${t.config ? (t.config.numNiveles||5)+'N × '+(t.config.numCestas||5)+'C' : '5N × 5C'}
+          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
           ${isActiva ? ' · <strong style="color:#15803d">Activa</strong>' : ''}
         </span>
       </span>
@@ -18346,7 +18846,7 @@ function renderListaTorres() {
       <div style="display:flex;gap:6px;flex-shrink:0">
         <button type="button" onclick="editarNombreTorre(${i})"
           style="background:none;border:1.5px solid #e5e7eb;border-radius:8px;
-                 padding:6px 8px;font-size:12px;cursor:pointer;color:#374151" aria-label="Editar nombre de torre">✏️</button>
+                 padding:6px 8px;font-size:12px;cursor:pointer;color:#374151" aria-label="Editar nombre de la instalación">✏️</button>
         ${state.torres.length > 1 && !isActiva ? `
         <button type="button" onclick="borrarTorre(${i})"
           style="background:none;border:1.5px solid #fca5a5;border-radius:8px;
@@ -18361,11 +18861,11 @@ function renderListaTorres() {
 function abrirSetupNuevaTorre() {
   // Marcar que es una torre nueva (no reconfiguración)
   setupEsNuevaTorre = true;
-  const n = (state.torres || []).length + 1;
-  setupNombreNuevaTorre = 'Torre ' + n;
+  setupNombreNuevaTorre = '';
 
   // Preconfigurar sliders con valores razonables para torre nueva
   setupPagina = 0;
+  setupTipoInstalacion = '';
   setupTipoTorre = 'custom';
   setupEquipamiento = new Set(['difusor','calentador','bomba','timer','medidorEC']);
   setupNutriente = 'canna_aqua';
@@ -18376,6 +18876,9 @@ function abrirSetupNuevaTorre() {
 
   const so = document.getElementById('setupOverlay');
   so.classList.add('open');
+  document.getElementById('sliderNftCanales') && (document.getElementById('sliderNftCanales').value = '4');
+  document.getElementById('sliderNftHuecos') && (document.getElementById('sliderNftHuecos').value = '8');
+  document.getElementById('sliderNftPendiente') && (document.getElementById('sliderNftPendiente').value = '2');
   renderNutrientesGrid();
   updateTorreBuilder();
   renderSetupPage();
@@ -18384,53 +18887,50 @@ function abrirSetupNuevaTorre() {
   // Actualizar el título para indicar que es una torre nueva
   setTimeout(() => {
     const titulo = document.querySelector('.setup-header-title');
-    if (titulo) titulo.textContent = '🌿 Nueva torre — ' + setupNombreNuevaTorre;
+    if (titulo) titulo.textContent = '🌿 Nueva instalación';
   }, 50);
 }
 
 
 function crearNuevaTorre() {
   if (state.torres.length >= MAX_TORRES) {
-    showToast('Máximo ' + MAX_TORRES + ' torres', true); return;
+    showToast('Máximo ' + MAX_TORRES + ' instalaciones', true); return;
   }
-  const n = state.torres.length + 1;
-  const EMOJIS = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
-  const nuevaTorre = {
-    id: Date.now(),
-    nombre: 'Torre ' + n,
-    emoji: EMOJIS[(n-1) % EMOJIS.length],
-    config: null,
-    torre: [],
-    modoActual: 'lechugas',
-    mediciones: [],
-    registro: [],
-  };
-  // Inicializar estructura vacía
-  for (let nv = 0; nv < NUM_NIVELES; nv++) {
-    nuevaTorre.torre.push([]);
-    for (let c = 0; c < NUM_CESTAS; c++) {
-      nuevaTorre.torre[nv].push({ variedad:'', fecha:'', notas:'' });
-    }
-  }
-  guardarEstadoTorreActual();
-  state.torres.push(nuevaTorre);
-  const newIdx = state.torres.length - 1;
-  saveState();
-  // Cambiar a la nueva torre y abrir setup
-  cambiarTorreActiva(newIdx);
   cerrarModalTorres();
-  setTimeout(() => abrirSetup(), 300);
+  abrirSetupNuevaTorre();
 }
 
 function editarNombreTorre(idx) {
   const t = state.torres[idx];
-  const nuevoNombre = prompt('Nombre de la torre:', t.nombre);
+  const nuevoNombre = prompt('Nombre de la instalación:', t.nombre || '');
   if (nuevoNombre && nuevoNombre.trim()) {
-    state.torres[idx].nombre = nuevoNombre.trim().slice(0, 20);
+    state.torres[idx].nombre = nuevoNombre.trim().slice(0, 40);
     saveState();
     renderListaTorres();
     actualizarHeaderTorre();
+    updateTorreStats();
+    updateDashboard();
   }
+}
+
+function guardarNombreInstalacionDesdeTorre() {
+  initTorres();
+  const inp = document.getElementById('torreNombreInstalacionInput');
+  if (!inp) return;
+  const idx = state.torreActiva || 0;
+  const raw = (inp.value || '').trim().slice(0, 40);
+  if (!raw) {
+    showToast('Escribe un nombre o deja el que había', true);
+    inp.value = state.torres[idx]?.nombre || '';
+    return;
+  }
+  if (!state.torres[idx]) return;
+  state.torres[idx].nombre = raw;
+  saveState();
+  updateTorreStats();
+  updateDashboard();
+  actualizarHeaderTorre();
+  showToast('✅ Nombre guardado: ' + raw);
 }
 
 function borrarTorre(idx) {
@@ -18491,7 +18991,7 @@ function actualizarBadgesNutriente() {
   const dashTorreInfo   = document.getElementById('dashTorreInfo');
   const torre = getTorreActiva();
   if (dashTorreEmoji)  dashTorreEmoji.textContent  = torre.emoji || '🌿';
-  if (dashTorreNombre) dashTorreNombre.textContent  = torre.nombre || 'Torre 1';
+  if (dashTorreNombre) dashTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
   if (dashTorreInfo) {
     const niv = cfg.numNiveles || 5;
     const ces = cfg.numCestas  || 5;
@@ -18503,7 +19003,7 @@ function actualizarBadgesNutriente() {
   const medirTorreEmoji  = document.getElementById('medirTorreEmoji');
   const medirTorreNombre = document.getElementById('medirTorreNombre');
   if (medirTorreEmoji)  medirTorreEmoji.textContent  = torre.emoji || '🌿';
-  if (medirTorreNombre) medirTorreNombre.textContent  = torre.nombre || 'Torre 1';
+  if (medirTorreNombre) medirTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
 
   // Pestaña Torre — strip superior + tarjeta nutriente
   const torreBandera = document.getElementById('torreBadgeBandera');
