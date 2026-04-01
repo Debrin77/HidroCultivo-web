@@ -2537,7 +2537,7 @@ button.dia-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .hist-toolbar .hist-tabs {
   width: 100%;
@@ -2546,6 +2546,7 @@ button.dia-card {
 }
 .hist-checklist-btn {
   align-self: flex-end;
+  margin-top: 2px;
   padding: 8px 12px;
   border-radius: 10px;
   border: 1.5px solid var(--green);
@@ -2650,7 +2651,7 @@ button.dia-card {
 }
 .hist-tabla-header {
   display: grid;
-  grid-template-columns: 64px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 40px;
+  grid-template-columns: 78px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 40px;
   gap: 4px 6px;
   align-items: center;
   background: var(--bg3);
@@ -2662,7 +2663,7 @@ button.dia-card {
 }
 .hist-row {
   display: grid;
-  grid-template-columns: 64px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 40px;
+  grid-template-columns: 78px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 40px;
   gap: 4px 6px;
   padding: 10px 10px;
   border-top: 1px solid var(--border);
@@ -2673,13 +2674,20 @@ button.dia-card {
 .hist-row:first-child { border-top: none; }
 .hist-row > span {
   min-width: 0;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+}
+.hist-row .hist-val {
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 .hist-fecha {
   color: var(--muted);
   font-size: 11px;
   line-height: 1.25;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.hist-fecha-dia {
+  white-space: nowrap;
 }
 .hist-val { font-family: var(--font-display); font-weight: 700; }
 .hist-ultima-medicion {
@@ -2698,42 +2706,47 @@ button.dia-card {
   letter-spacing: 0.8px;
   margin-bottom: 10px;
 }
+/* Dos filas: 3 + 2 tarjetas — celdas más anchas; valores numéricos sin partir (p. ej. 1200) */
 .hist-ultima-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
 }
-@media (max-width: 380px) {
-  .hist-ultima-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .hist-ultima-grid .hist-ultima-cell:nth-child(5) {
-    grid-column: 1 / -1;
-  }
+.hist-ultima-cell:nth-child(1),
+.hist-ultima-cell:nth-child(2),
+.hist-ultima-cell:nth-child(3) {
+  grid-column: span 2;
+}
+.hist-ultima-cell:nth-child(4),
+.hist-ultima-cell:nth-child(5) {
+  grid-column: span 3;
 }
 .hist-ultima-cell {
   background: var(--bg3);
   border-radius: 12px;
-  padding: 8px 6px;
+  padding: 10px 8px;
   text-align: center;
   min-width: 0;
 }
 .hist-ultima-cell .hist-um-lab {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--muted);
   font-weight: 700;
   line-height: 1.2;
 }
 .hist-ultima-cell .hist-um-val {
   font-family: var(--font-display);
-  font-size: clamp(13px, 3.4vw, 17px);
+  font-size: clamp(16px, 4.5vw, 19px);
   font-weight: 900;
-  line-height: 1.15;
-  margin: 4px 0 2px;
-  overflow-wrap: anywhere;
+  line-height: 1.2;
+  margin: 6px 0 3px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hist-ultima-cell .hist-um-unit {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--muted);
   font-weight: 700;
 }
@@ -4889,6 +4902,16 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               onclick="limpiarSeleccionCestas()">Limpiar selección</button>
           </div>
           <div id="torreAssignAyuda" style="font-size:10px;color:#6b7280;line-height:1.45"></div>
+          <button type="button" id="torreBtnFinalizarAsignacion" onclick="finalizarAsignacionCultivos()"
+            style="width:100%;margin-top:10px;padding:11px 14px;border-radius:12px;border:2px solid #15803d;
+            background:linear-gradient(180deg,#f0fdf4,#ecfdf5);font-family:var(--font-display);font-size:13px;
+            font-weight:800;color:#14532d;cursor:pointer;-webkit-tap-highlight-color:transparent;
+            box-shadow:0 1px 3px rgba(21,128,61,0.12)">
+            ✓ Finalizar asignación
+          </button>
+          <div style="font-size:9px;color:#9ca3af;line-height:1.35;margin-top:6px;text-align:center">
+            Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (igual que «Actualizar torre»).
+          </div>
           <button type="button" onclick="abrirTutorialAsignarCultivo({ force: true })"
             style="margin-top:8px;width:100%;padding:8px 10px;border-radius:10px;border:1.5px dashed #86efac;
             background:#fff;font-family:var(--font-display);font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
@@ -8001,9 +8024,9 @@ function actualizarTorreAssignAyuda() {
     return;
   }
   if (torreAsignarInstantaneo) {
-    el.innerHTML = 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera.';
+    el.innerHTML = 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera. Al terminar, pulsa <strong>Finalizar asignación</strong>.';
   } else {
-    el.innerHTML = 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla.';
+    el.innerHTML = 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Cuando hayas acabado, pulsa <strong>Finalizar asignación</strong>.';
   }
 }
 
@@ -8420,6 +8443,29 @@ function limpiarSeleccionCestas() {
   torreCestasMultiSel.clear();
   actualizarBarraMultiSel();
   renderTorre();
+}
+
+/** Tras asignar cultivos: salir de modo asignar, volver a editar ficha y sincronizar (equivalente a Editar + Actualizar torre). */
+function finalizarAsignacionCultivos() {
+  if (torreInteraccionModo !== 'asignar') return;
+  torreCestasMultiSel.clear();
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  setTorreInteraccionModo('editar');
+  updateTorreStats();
+  updateDashboard();
+  actualizarBadgesNutriente();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) {
+    calcularRiego();
+  }
+  if (document.getElementById('tab-meteo')?.classList.contains('active')) {
+    cargarMeteo();
+  }
+  if (document.getElementById('tab-calendario')?.classList.contains('active')) {
+    renderCalendario();
+  }
+  showToast('✅ Asignación finalizada · Modo edición de cestas');
 }
 
 function renderTorre() {
@@ -14319,8 +14365,8 @@ function renderHistMediciones() {
   const tabla = document.getElementById('histTabla');
   tabla.innerHTML = mediciones.map((m, i) => `
     <div class="hist-row" style="${i===0 ? 'background:rgba(52,211,153,0.05)' : ''}">
-      <span class="hist-fecha">${m.fecha}<br>
-        <span style="font-size:10px;color:var(--muted)">${m.hora}</span>
+      <span class="hist-fecha"><span class="hist-fecha-dia">${m.fecha}</span><br>
+        <span class="hist-fecha-hora" style="font-size:10px;color:var(--muted)">${m.hora}</span>
         ${m.torreNombre && state.torres && state.torres.length > 1 ? `<span style="display:inline-block;margin-top:2px;font-size:9px;
           font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;
           border-radius:6px;padding:1px 5px">${m.torreEmoji||'🌿'} ${m.torreNombre}</span>` : ''}
