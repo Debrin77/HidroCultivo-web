@@ -8650,7 +8650,11 @@ function renderTorre() {
     const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
     const pend = cfg.nftPendientePct ?? 2;
     const vol = cfg.volDeposito || VOL_OBJETIVO;
-    wrap.innerHTML = buildNftSchematicSvg(ch, hx, pend, vol, 'Main');
+    const eqArr = cfg.equipamiento;
+    wrap.innerHTML = buildNftSchematicSvg(ch, hx, pend, vol, 'Main', {
+      calentador: eqArr?.includes('calentador') ?? true,
+      difusor: eqArr?.includes('difusor') ?? true,
+    });
     wrap.setAttribute('aria-label',
       'Esquema NFT con depósito, bomba y canales en pendiente. Usa la vista Lista para editar cada hueco.');
   } else {
@@ -10053,74 +10057,154 @@ function onSetupVolSliderInput() {
   if (typeof setupPagina !== 'undefined' && setupPagina >= 4) renderDosisSetup();
 }
 
-/** Esquema SVG del NFT: depósito, subida, distribución, canales con pendiente y retorno (lectura rápida). */
-function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix) {
+/** Esquema NFT: tubos con todos los huecos, recorrido de agua (subida → manifold → canales → retorno) y CAL/AIR en depósito si aplica. */
+function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
+  const EO = equipOpts || {};
+  const showCalentador = EO.calentador === true;
+  const showDifusor = EO.difusor === true;
+
   const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
     ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
     : '';
   const gidFilm = 'nftFilmG' + suf;
   const gidTank = 'nftTankG' + suf;
+  const gidAqua = 'nftAquaG' + suf;
   const tid = 'nftSvgTitle' + suf;
-  const W = 320;
-  const H = 168;
+  const W = 400;
+  const H = 268;
   const nCh = Math.min(Math.max(parseInt(String(canales), 10) || 1, 1), 10);
   const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(100, Math.max(5, parseInt(String(volL), 10) || 20));
 
+  const cx = W / 2;
   const x0 = 34;
   const x1 = W - 34;
   const span = (x1 - x0) / nCh;
-  const yMan = 46;
-  const yTop = 54;
-  const yBot = 94;
-  const sk = 1.4 + pend * 0.45;
+  const yMan = 40;
+  const yTop = 52;
+  const yBot = 106;
+  const sk = 1.75 + pend * 0.55;
+
+  const tankTop = 172;
+  const tankH = 52;
+  const tankW = Math.min(172, Math.round(92 + vol * 0.42));
+  const tx = (W - tankW) / 2;
+  const tankMid = tankTop + tankH / 2;
+  const waterFill = 0.82;
+  const waterTop = tankTop + 6 + (1 - waterFill) * (tankH - 14);
+  const retEndX = tx + tankW - 10;
+  const retEndY = waterTop + 8;
+
+  const flowDash = 'stroke-dasharray="5 4" stroke-linecap="round"';
+  const flowSt = 'stroke="#0ea5e9" fill="none" ' + flowDash;
+  const pipeGrey = 'stroke="#64748b" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+
+  let back = '';
+  const retPath =
+    'M ' + (x1 - 2) + ' ' + (yBot - 6) +
+    ' C ' + (W - 8) + ' ' + (yBot + 28) + ', ' + (W - 12) + ' ' + (tankTop - 18) + ', ' + retEndX + ' ' + retEndY;
+  back += '<path d="' + retPath + '" ' + pipeGrey + ' opacity="0.55"/>';
+  back += '<path d="' + retPath + '" ' + flowSt + ' stroke-width="1.85" opacity="0.92"/>';
+  back += '<text x="' + (W - 8) + '" y="' + (yBot + 14) + '" text-anchor="end" fill="#0369a1" font-size="8" font-weight="800">Agua retorno</text>';
+
+  let tankLayer = '';
+  tankLayer += '<rect x="' + tx + '" y="' + tankTop + '" width="' + tankW + '" height="' + tankH + '" rx="10" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.2"/>';
+  tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + (tankTop + tankH - 8 - waterTop) + '" rx="6" fill="url(#' + gidAqua + ')" opacity="0.88"/>';
+  tankLayer += '<text x="' + cx + '" y="' + (tankMid + 5) + '" text-anchor="middle" fill="#fff" font-size="12" font-weight="900" font-family="system-ui,sans-serif">' + vol + ' L</text>';
+  tankLayer += '<text x="' + cx + '" y="' + (tankTop + tankH + 14) + '" text-anchor="middle" fill="#14532d" font-size="9" font-weight="800">Depósito · recirculación</text>';
+
+  if (showCalentador) {
+    const hx = tx + 16;
+    tankLayer += '<rect x="' + (hx - 5) + '" y="' + (tankTop + tankH - 34) + '" width="10" height="28" rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.2"/>';
+    tankLayer += '<circle cx="' + hx + '" cy="' + (tankTop + tankH - 40) + '" r="3.5" fill="#fbbf24"/>';
+    tankLayer += '<text x="' + hx + '" y="' + (tankTop + tankH + 2) + '" text-anchor="middle" font-size="7" font-weight="800" fill="#c2410c">CAL</text>';
+  }
+  if (showDifusor) {
+    const ax = tx + tankW - 20;
+    const ay = tankTop + tankH - 14;
+    tankLayer += '<line x1="' + ax + '" y1="' + (tankTop - 4) + '" x2="' + ax + '" y2="' + (ay - 10) + '" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="3 2"/>';
+    tankLayer += '<ellipse cx="' + ax + '" cy="' + ay + '" rx="12" ry="6" fill="#9ca3af" stroke="#6b7280" stroke-width="1.2"/>';
+    for (let bi = 0; bi < 5; bi++) {
+      const bx = ax + (bi % 3 - 1) * 4;
+      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 6 - bi * 3) + '" r="1.6" fill="#93c5fd" opacity="0.85"/>';
+    }
+    tankLayer += '<text x="' + ax + '" y="' + (tankTop + tankH + 2) + '" text-anchor="middle" font-size="7" font-weight="800" fill="#475569">AIR</text>';
+  }
+
+  let plumbing = '';
+  plumbing += '<circle cx="' + cx + '" cy="' + (tankTop - 10) + '" r="11" fill="#1e293b" stroke="#475569" stroke-width="1"/>';
+  plumbing += '<text x="' + cx + '" y="' + (tankTop - 7) + '" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="900">B</text>';
+
+  const riserY1 = tankTop;
+  const riserY2 = yMan + 3;
+  plumbing += '<line x1="' + cx + '" y1="' + riserY1 + '" x2="' + cx + '" y2="' + riserY2 + '" ' + pipeGrey + ' opacity="0.65"/>';
+  plumbing += '<line x1="' + cx + '" y1="' + riserY1 + '" x2="' + cx + '" y2="' + riserY2 + '" ' + flowSt + ' stroke-width="2" opacity="0.92"/>';
+
+  plumbing += '<line x1="' + x0 + '" y1="' + yMan + '" x2="' + x1 + '" y2="' + yMan + '" stroke="#064e3b" stroke-width="5.5" stroke-linecap="round"/>';
+  plumbing += '<line x1="' + x0 + '" y1="' + yMan + '" x2="' + x1 + '" y2="' + yMan + '" ' + flowSt + ' stroke-width="1.55" opacity="0.78"/>';
+  plumbing += '<text x="' + cx + '" y="' + (yMan - 8) + '" text-anchor="middle" fill="#0f766e" font-size="8" font-weight="800">Manifold · distribución</text>';
 
   const chParts = [];
   for (let i = 0; i < nCh; i++) {
     const xa = x0 + i * span + 1.5;
-    const w = Math.max(span - 3, 13);
+    const w = Math.max(span - 3, 12);
+    const xtl = xa;
+    const ytl = yTop;
+    const xtr = xa + w;
+    const ytr = yTop + sk;
+    const xbr = xa + w + 5;
+    const ybr = yBot;
+    const xbl = xa + 5;
+    const ybl = yBot - sk * 0.55;
+    const dCh = 'M' + xtl + ' ' + ytl + ' L' + xtr + ' ' + ytr + ' L' + xbr + ' ' + ybr + ' L' + xbl + ' ' + ybl + 'Z';
+
+    const ix = xtl + Math.min(w * 0.2, 12);
+    chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" stroke="#475569" stroke-width="1.8" stroke-linecap="round"/>');
+    chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" ' + flowSt + ' stroke-width="1.15" opacity="0.9"/>');
+
+    chParts.push('<path fill="url(#' + gidFilm + ')" stroke="#064e3b" stroke-width="1.15" opacity="0.97" d="' + dCh + '"/>');
+
     chParts.push(
-      '<path fill="url(#' + gidFilm + ')" stroke="#0f766e" stroke-width="0.7" opacity="0.96" ' +
-        `d="M${xa} ${yTop} L${xa + w} ${yTop + sk} L${xa + w + 5} ${yBot} L${xa + 5} ${yBot - sk * 0.55}Z"/>`
+      '<path d="M' + (xbl + 3) + ' ' + (ybl + 2) + ' L' + (xbr - 4) + ' ' + (ybr - 4) + '" fill="none" ' + flowSt + ' stroke-width="1.35" opacity="0.88"/>'
     );
-    const nd = Math.min(huecosN, 7);
-    const den = Math.max(nd - 1, 1);
-    for (let d = 0; d < nd; d++) {
-      const px = xa + 3.5 + (d / den) * (w - 3);
+
+    const innerTopLen = Math.max(xtr - xtl - 5, 2);
+    const hr = Math.max(1.05, Math.min(3.5, (innerTopLen / Math.max(huecosN, 2)) * 0.44));
+    for (let j = 0; j < huecosN; j++) {
+      const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
+      const px = xtl + 2.5 + t * (xtr - xtl - 5);
+      const py = ytl + 4 + t * (ytr - ytl - 3);
       chParts.push(
-        `<circle cx="${px.toFixed(1)}" cy="${yTop + 8}" r="2.2" fill="#fef08a" stroke="#a16207" stroke-width="0.35"/>`
+        '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + hr.toFixed(2) + '" fill="#fef9c3" stroke="#854d0e" stroke-width="0.5"/>' +
+        '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + Math.max(0.55, hr * 0.42).toFixed(2) + '" fill="#fffbeb" opacity="0.55"/>'
       );
     }
+    chParts.push(
+      '<text x="' + (xtl - 1) + '" y="' + (ytl + 12) + '" text-anchor="end" font-size="7" font-weight="900" fill="#14532d">' + (i + 1) + '</text>'
+    );
   }
 
-  const tw = Math.min(128, 88 + Math.round(vol * 0.35));
-  const tx = (W - tw) / 2;
-
   return (
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="168" ' +
-      'preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' + tid + '">' +
-      '<title id="' + tid + '">NFT: depósito, bomba, canales en pendiente y retorno al depósito</title>' +
+    '<svg class="torre-svg-diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" ' +
+      'style="max-height:280px;height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' + tid + '">' +
+      '<title id="' + tid + '">NFT: circuito de agua desde el depósito a los canales y retorno; tubos con huecos de plantación</title>' +
       '<defs>' +
       '<linearGradient id="' + gidFilm + '" x1="0" y1="0" x2="1" y2="1">' +
       '<stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient>' +
       '<linearGradient id="' + gidTank + '" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+      '<linearGradient id="' + gidAqua + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.75"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.9"/></linearGradient>' +
       '</defs>' +
-      '<text x="' + (W / 2) + '" y="20" text-anchor="middle" fill="#14532d" font-size="11" font-weight="800" ' +
-      'font-family="system-ui,Segoe UI,sans-serif">Bomba ↑ manifold → canales (agua en fina película)</text>' +
-      '<line x1="' + x0 + '" y1="' + yMan + '" x2="' + x1 + '" y2="' + (yMan + 1) + '" stroke="#065f46" stroke-width="4" stroke-linecap="round"/>' +
+      '<text x="' + cx + '" y="22" text-anchor="middle" fill="#14532d" font-size="10.5" font-weight="800" font-family="system-ui,Segoe UI,sans-serif">' +
+      'Bomba · subida → manifold → canales (pendiente) → retorno al depósito</text>' +
+      back +
+      tankLayer +
       chParts.join('') +
-      '<line x1="' + (W / 2) + '" y1="' + (yMan + 1) + '" x2="' + (W / 2) + '" y2="' + (yTop - 2) + '" stroke="#047857" stroke-width="3.2" stroke-linecap="round"/>' +
-      '<rect x="' + tx + '" y="100" width="' + tw + '" height="36" rx="8" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.1"/>' +
-      '<text x="' + (W / 2) + '" y="122" text-anchor="middle" fill="#fff" font-size="11" font-weight="800" ' +
-      'font-family="system-ui,sans-serif">' + vol + ' L</text>' +
-      '<circle cx="' + (W / 2) + '" cy="96" r="9" fill="#1e293b" stroke="#475569" stroke-width="0.9"/>' +
-      '<text x="' + (W / 2) + '" y="99.5" text-anchor="middle" fill="#f8fafc" font-size="9" font-weight="800">B</text>' +
-      '<path d="M ' + (x1 + 4) + ' ' + (yBot - 4) + ' Q ' + (W - 4) + ' 112 ' + (tx + tw - 8) + ' 118" fill="none" stroke="#64748b" stroke-width="1.6" stroke-dasharray="5 4"/>' +
-      '<text x="' + (W - 10) + '" y="' + (yBot - 10) + '" text-anchor="end" fill="#475569" font-size="9" font-weight="700">Retorno</text>' +
-      '<text x="' + (W / 2) + '" y="162" text-anchor="middle" fill="#475569" font-size="9" font-weight="700" ' +
-      'font-family="system-ui,sans-serif">' + nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente</text>' +
+      plumbing +
+      '<text x="' + cx + '" y="' + (H - 6) + '" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' +
+      nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente</text>' +
       '</svg>'
   );
 }
@@ -10142,9 +10226,12 @@ function updateNftSetupPreview() {
   const preview = document.getElementById('nftPreview');
   if (!preview) return;
   preview.innerHTML =
-    buildNftSchematicSvg(canales, huecos, pend, vol) +
+    buildNftSchematicSvg(canales, huecos, pend, vol, '', {
+      calentador: setupEquipamiento.has('calentador'),
+      difusor: setupEquipamiento.has('difusor'),
+    }) +
     '<div style="font-size:10px;font-weight:700;color:#15803d;text-align:center;margin-top:6px;line-height:1.4">' +
-    'Toca los deslizadores: el dibujo muestra más canales y el depósito ensancha un poco con el volumen.</div>';
+    'Toca los deslizadores: tubos, huecos, circuito de agua y equipamiento del depósito se actualizan con la configuración.</div>';
 }
 
 function renderSetupPage() {
