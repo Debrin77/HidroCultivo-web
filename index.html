@@ -612,6 +612,13 @@ body::before { display: none; }
 #torreSVGWrap svg g.hc-cesta.hc-cesta-tapflash {
   filter: brightness(0.92);
 }
+#torreSVGWrap svg g.hc-nft-hueco:focus {
+  outline: none;
+}
+#torreSVGWrap svg g.hc-nft-hueco:focus-visible > circle:first-of-type {
+  stroke: #2563eb;
+  stroke-width: 1.6px;
+}
 
 /* Panel torre — diagrama / maqueta */
 .torre-nutriente-strip {
@@ -4901,7 +4908,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <!-- Modo interacción cestas: editar ficha vs asignar cultivo en bloque -->
       <div id="torreInteraccionBar" style="background:#f8fafc;border:1px solid rgba(15,23,42,0.08);border-radius:14px;
         padding:12px 14px;margin-top:10px">
-        <div style="font-size:10px;font-weight:800;color:#64748b;margin-bottom:8px;letter-spacing:0.12em;text-transform:uppercase">
+        <div id="torreInteraccionTitulo" style="font-size:10px;font-weight:800;color:#64748b;margin-bottom:8px;letter-spacing:0.12em;text-transform:uppercase">
           Cestas en la torre
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -4930,7 +4937,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             </div>
             <label style="display:flex;align-items:center;gap:10px;font-size:12px;cursor:pointer;color:#374151">
               <input type="checkbox" id="torreAssignInstant" onchange="onTorreInstantToggle(this)">
-              Modo rápido: un toque = asignar esa cesta al instante
+              <span id="torreAssignModoRapidoTxt">Modo rápido: un toque = asignar esa cesta al instante</span>
             </label>
           </div>
           <div id="torreAssignMultiBar" style="display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
@@ -4948,7 +4955,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             box-shadow:0 1px 3px rgba(21,128,61,0.12)">
             ✓ Finalizar asignación
           </button>
-          <div style="font-size:9px;color:#9ca3af;line-height:1.35;margin-top:6px;text-align:center">
+          <div id="torreAssignFinalizarHint" style="font-size:9px;color:#9ca3af;line-height:1.35;margin-top:6px;text-align:center">
             Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (igual que «Actualizar torre»).
           </div>
           <button type="button" onclick="abrirTutorialAsignarCultivo({ force: true })"
@@ -5693,6 +5700,20 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <div class="setup-title" id="spage1Title">🌿 Tu torre</div>
       <div class="setup-subtitle" id="spage1Subtitle">Configura las dimensiones de tu sistema hidropónico</div>
 
+      <div id="setupTipoInstalacionInline" style="margin:14px 0 10px" role="group" aria-label="Tipo de sistema">
+        <div style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
+          Tipo de sistema
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupInlineTipoTorre"
+            onclick="seleccionarTipoInstalacionSetup('torre')"
+            aria-pressed="false" aria-label="Torre vertical">🌿 Torre / vertical</button>
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupInlineTipoNft"
+            onclick="seleccionarTipoInstalacionSetup('nft')"
+            aria-pressed="false" aria-label="NFT">🪴 NFT</button>
+        </div>
+      </div>
+
       <div id="setupNombreInstalacionWrap" style="display:none;margin-bottom:14px">
         <label class="form-label" for="setupNombreInstalacionInput" style="font-size:11px;font-weight:800;
           color:#374151;margin-bottom:6px;display:block">Nombre de esta instalación</label>
@@ -5764,11 +5785,43 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <input type="range" class="torre-slider" id="sliderNftPendiente"
                 min="1" max="4" value="2" step="1" oninput="updateNftSetupPreview()">
             </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #e5e7eb">
+              <div style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
+                Diámetro interior tubería principal (subida / manifold)
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+                <button type="button" class="equip-card" id="nftTubo16" onclick="seleccionarTuboNft(16)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">16</button>
+                <button type="button" class="equip-card" id="nftTubo20" onclick="seleccionarTuboNft(20)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">20</button>
+                <button type="button" class="equip-card" id="nftTubo25" onclick="seleccionarTuboNft(25)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">25</button>
+                <button type="button" class="equip-card" id="nftTubo32" onclick="seleccionarTuboNft(32)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">32</button>
+                <button type="button" class="equip-card" id="nftTubo40" onclick="seleccionarTuboNft(40)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">40</button>
+              </div>
+              <div style="font-size:9px;color:#64748b;margin-top:6px;line-height:1.4">mm · Influye en pérdidas de carga, caudal mínimo estable y volumen de agua en circuito (película continua 24 h).</div>
+            </div>
+            <div id="nftBombaUsuarioWrap" style="margin-top:10px;padding:10px;background:#fffbeb;border-radius:10px;border:1.5px solid #fde68a">
+              <div style="font-size:10px;font-weight:800;color:#92400e;margin-bottom:6px">¿Ya tienes bomba? Comprueba si es válida para esta NFT</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end">
+                <div>
+                  <label for="nftBombaUsuarioLh" style="display:block;font-size:9px;color:#78350f;font-weight:700">Caudal nominal (L/h)</label>
+                  <input type="number" id="nftBombaUsuarioLh" min="0" step="10" placeholder="ej. 600"
+                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #fcd34d;font-size:14px"
+                    inputmode="decimal" oninput="onNftBombaUsuarioSetupInput()" onblur="onNftBombaUsuarioSetupBlur()">
+                </div>
+                <div>
+                  <label for="nftBombaUsuarioW" style="display:block;font-size:9px;color:#78350f;font-weight:700">Potencia (W, opcional)</label>
+                  <input type="number" id="nftBombaUsuarioW" min="0" step="1" placeholder="ej. 15"
+                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #fcd34d;font-size:14px"
+                    inputmode="decimal" oninput="onNftBombaUsuarioSetupInput()" onblur="onNftBombaUsuarioSetupBlur()">
+                </div>
+              </div>
+              <div id="nftBombaUsuarioValidacion" style="margin-top:8px;font-size:10px;line-height:1.45;font-weight:600" role="status"></div>
+            </div>
+            <div id="resultadoBombaNft" style="margin-top:10px;display:none"></div>
           </div>
         </div>
         <p style="font-size:10px;color:#6b7280;margin:10px 0 0;line-height:1.45">
           En la <strong>pestaña Sistema</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
-          El checklist NFT recuerda película de agua, retornos y limpieza de canales.
+          El checklist NFT incluye bomba, tubería y película de agua (24 h).
         </p>
       </div>
 
@@ -7585,7 +7638,11 @@ function torreOnCestaActivada(n, c) {
       setTimeout(renderCompatGrid, 50);
       const cult = getCultivoDB(v);
       mostrarBarraSeleccionCesta(n, c);
-      showToast('Asignado: ' + cultivoNombreLista(getCultivoDB(v), v) + ' · N' + (n + 1) + ' C' + (c + 1));
+      const esNft = state.configTorre?.tipoInstalacion === 'nft';
+      showToast(
+        'Asignado: ' + cultivoNombreLista(getCultivoDB(v), v) +
+        (esNft ? ' · canal ' + (n + 1) + ' · hueco ' + (c + 1) : ' · N' + (n + 1) + ' C' + (c + 1))
+      );
     } else {
       const k = n + ',' + c;
       if (torreCestasMultiSel.has(k)) torreCestasMultiSel.delete(k);
@@ -8122,10 +8179,13 @@ function actualizarBarraMultiSel() {
   const n = torreCestasMultiSel.size;
   const multiMode = torreInteraccionModo === 'asignar' && !torreAsignarInstantaneo;
   bar.style.display = multiMode ? 'flex' : 'none';
+  const esNft = state.configTorre?.tipoInstalacion === 'nft';
   cnt.textContent =
-    n === 0 ? 'Toca cestas en la torre para marcarlas (anillo ámbar)' :
-    n === 1 ? '1 cesta seleccionada' :
-    n + ' cestas seleccionadas';
+    n === 0
+      ? (esNft ? 'Toca huecos en el esquema NFT o en Lista (anillo ámbar)' : 'Toca cestas en la torre para marcarlas (anillo ámbar)')
+      : n === 1
+        ? (esNft ? '1 hueco seleccionado' : '1 cesta seleccionada')
+        : (esNft ? n + ' huecos seleccionados' : n + ' cestas seleccionadas');
   if (btnAplicar) {
     btnAplicar.disabled = n === 0;
     btnAplicar.style.opacity = n === 0 ? '0.55' : '1';
@@ -8137,6 +8197,24 @@ function actualizarBarraMultiSel() {
   }
 }
 
+function sincronizarTextosPanelInteraccionSistema() {
+  const esNft = state.configTorre?.tipoInstalacion === 'nft';
+  const tit = document.getElementById('torreInteraccionTitulo');
+  const modRap = document.getElementById('torreAssignModoRapidoTxt');
+  const finHint = document.getElementById('torreAssignFinalizarHint');
+  if (tit) tit.textContent = esNft ? 'Huecos en el sistema NFT' : 'Cestas en la torre';
+  if (modRap) {
+    modRap.textContent = esNft
+      ? 'Modo rápido: un toque = asignar ese hueco al instante'
+      : 'Modo rápido: un toque = asignar esa cesta al instante';
+  }
+  if (finHint) {
+    finHint.innerHTML = esNft
+      ? 'Cuando termines, pulsa aquí para volver a <strong>Editar ficha</strong> y guardar el sistema (igual que «Actualizar torre»).'
+      : 'Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (igual que «Actualizar torre»).';
+  }
+}
+
 function actualizarTorreAssignAyuda() {
   const el = document.getElementById('torreAssignAyuda');
   if (!el) return;
@@ -8144,10 +8222,15 @@ function actualizarTorreAssignAyuda() {
     el.textContent = '';
     return;
   }
+  const esNft = state.configTorre?.tipoInstalacion === 'nft';
   if (torreAsignarInstantaneo) {
-    el.innerHTML = 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera. Al terminar, pulsa <strong>Finalizar asignación</strong>.';
+    el.innerHTML = esNft
+      ? 'Elige cultivo y fecha; luego <strong>cada toque en un hueco del esquema</strong> (o en Lista) lo rellena al momento. Al terminar, pulsa <strong>Finalizar asignación</strong>.'
+      : 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera. Al terminar, pulsa <strong>Finalizar asignación</strong>.';
   } else {
-    el.innerHTML = 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Cuando hayas acabado, pulsa <strong>Finalizar asignación</strong>.';
+    el.innerHTML = esNft
+      ? 'Elige cultivo y fecha; <strong>toca varios huecos</strong> en el esquema o en Lista (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo uno marcado para quitarlo. Luego <strong>Finalizar asignación</strong>.'
+      : 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Cuando hayas acabado, pulsa <strong>Finalizar asignación</strong>.';
   }
 }
 
@@ -8196,35 +8279,50 @@ function abrirTutorialAsignarCultivo(opts) {
     'box-sizing:border-box', '-webkit-tap-highlight-color:transparent'
   ].join(';');
 
+  const esNftTut = state.configTorre?.tipoInstalacion === 'nft';
+  const titTut = esNftTut ? '🪴 Asignar cultivo en NFT' : '🌱 Asignar cultivo en la torre';
+  const subTut = esNftTut
+    ? 'Rellena muchos huecos (canales) sin abrir la ficha uno a uno.'
+    : 'En unos segundos llenas muchas cestas sin abrir la ficha una por una.';
+  const paso1Tut = esNftTut
+    ? '<strong style="color:#15803d">Elige cultivo y fecha</strong> en los campos de arriba. Sin cultivo, la app te avisará si tocas un hueco.'
+    : '<strong style="color:#15803d">Elige cultivo y fecha</strong> en los campos de arriba. Sin cultivo elegido, la app te avisará si tocas la torre.';
+  const paso2Tut = esNftTut
+    ? '<strong style="color:#1d4ed8">Todos los huecos del esquema son visibles</strong> (cada canal en su tubo). También puedes usar <strong>Lista</strong>. No hace falta girar la maqueta.'
+    : '<strong style="color:#1d4ed8">Solo cuentan las cestas de cara</strong> (las que ves al frente). <strong>Gira</strong> con el dedo o el botón ⟲ para llegar a las de atrás. Así evitas equivocarte de hueco.';
+  const paso3Tut = esNftTut
+    ? '<strong style="color:#b45309">Por defecto:</strong> toca varios <strong>huecos</strong> en el dibujo (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Modo rápido:</strong> cada toque asigna un hueco al instante.'
+    : '<strong style="color:#b45309">Por defecto:</strong> toca varias cestas (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Marca «Modo rápido»</strong> si prefieres que <strong>cada toque</strong> asigne de inmediato una sola cesta.';
+  const paso4Tut = esNftTut
+    ? 'Para <strong>fotos, notas o vaciar</strong> un hueco, vuelve a <strong>Editar ficha</strong> y tócalo en el esquema o en Lista.'
+    : 'Para <strong>fotos, notas o vaciar</strong> una cesta, vuelve a <strong>Editar ficha</strong> y tócala.';
+
   overlay.innerHTML =
     '<div style="width:100%;max-width:400px;background:#fff;border-radius:20px 20px 16px 16px;' +
       'box-shadow:0 -8px 40px rgba(0,0,0,0.35);overflow:hidden;max-height:88vh;overflow-y:auto">' +
       '<div style="width:36px;height:4px;background:#e5e7eb;border-radius:2px;margin:10px auto 0"></div>' +
       '<div style="padding:16px 18px 14px">' +
         '<div id="tutorialAsignarTitulo" style="font-family:var(--font-display);font-size:17px;font-weight:900;' +
-          'color:#111827;margin-bottom:4px">🌱 Asignar cultivo en la torre</div>' +
-        '<div style="font-size:12px;color:#6b7280;line-height:1.4">En unos segundos llenas muchas cestas sin abrir la ficha una por una.</div>' +
+          'color:#111827;margin-bottom:4px">' + titTut + '</div>' +
+        '<div style="font-size:12px;color:#6b7280;line-height:1.4">' + subTut + '</div>' +
       '</div>' +
       '<div style="padding:0 18px 14px;display:flex;flex-direction:column;gap:10px">' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#f0fdf4;' +
           'border-radius:12px;border:1px solid #bbf7d0">' +
           '<span style="font-size:20px;flex-shrink:0">1</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45"><strong style="color:#15803d">Elige cultivo y fecha</strong> ' +
-          'en los campos de arriba. Sin cultivo elegido, la app te avisará si tocas la torre.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45">' + paso1Tut + '</div></div>' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#eff6ff;' +
           'border-radius:12px;border:1px solid #bfdbfe">' +
           '<span style="font-size:20px;flex-shrink:0">2</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45"><strong style="color:#1d4ed8">Solo cuentan las cestas de cara</strong> ' +
-          '(las que ves al frente). <strong>Gira</strong> con el dedo o el botón ⟲ para llegar a las de atrás. Así evitas equivocarte de hueco.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45">' + paso2Tut + '</div></div>' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#fffbeb;' +
           'border-radius:12px;border:1px solid #fde68a">' +
           '<span style="font-size:20px;flex-shrink:0">3</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45"><strong style="color:#b45309">Por defecto:</strong> toca varias cestas (anillo ámbar) y pulsa <em>Aplicar a selección</em>. ' +
-          '<strong>Marca «Modo rápido»</strong> si prefieres que <strong>cada toque</strong> asigne de inmediato una sola cesta.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45">' + paso3Tut + '</div></div>' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#f9fafb;' +
           'border-radius:12px;border:1px solid #e5e7eb">' +
           '<span style="font-size:20px;flex-shrink:0">4</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45">Para <strong>fotos, notas o vaciar</strong> una cesta, vuelve a <strong>Editar ficha</strong> y tócala.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45">' + paso4Tut + '</div></div>' +
       '</div>' +
       '<div style="padding:10px 18px 16px;border-top:1px solid #f3f4f6">' +
         '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:#4b5563;margin-bottom:12px">' +
@@ -8247,7 +8345,11 @@ function abrirTutorialAsignarCultivo(opts) {
     e.stopPropagation();
     const chk = overlay.querySelector('#tutorialAsignarNoMas');
     cerrarTutorialAsignarCultivo(chk && chk.checked);
-    showToast('💡 Elige cultivo arriba, marca cestas y pulsa Aplicar a selección');
+    showToast(
+      esNftTut
+        ? '💡 Elige cultivo arriba, marca huecos en el esquema o Lista y pulsa Aplicar a selección'
+        : '💡 Elige cultivo arriba, marca cestas y pulsa Aplicar a selección'
+    );
   });
   overlay.querySelector('#tutorialAsignarBtnSoloCerrar').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -8273,7 +8375,7 @@ function actualizarTorreEditarAyuda() {
   }
   if (state.configTorre?.tipoInstalacion === 'nft') {
     el.innerHTML =
-      'En <strong>NFT</strong> el esquema es ilustrativo. Usa <strong>Lista</strong> para abrir la ficha de cada hueco (variedad, fecha, fotos y notas).';
+      'Con <strong>Editar ficha</strong>, toca un <strong>hueco</strong> en el esquema NFT o en <strong>Lista</strong> para abrir la ficha (variedad, fecha, fotos y notas).';
     return;
   }
   el.innerHTML = 'Toca una cesta en el <strong>esquema</strong> (de cara) o usa <strong>Lista</strong> abajo: ficha con variedad, fecha, fotos y notas. En el dibujo, desliza para ver el reverso.';
@@ -8427,21 +8529,32 @@ function abrirTutorialEditarCultivo(opts) {
     'box-sizing:border-box', '-webkit-tap-highlight-color:transparent'
   ].join(';');
 
+  const esNftEd = state.configTorre?.tipoInstalacion === 'nft';
+  const titEd = esNftEd ? '✏️ Editar ficha de un hueco NFT' : '✏️ Editar ficha de una cesta';
+  const paso1Ed = esNftEd
+    ? 'Activa <strong style="color:#1d4ed8">Editar ficha</strong> (arriba). Toca un <strong>hueco</strong> en el esquema o en Lista para abrir el panel completo.'
+    : 'Activa <strong style="color:#1d4ed8">Editar ficha</strong> (arriba). Así cada toque abre el panel con todos los datos de esa cesta.';
+  const paso3Ed = esNftEd
+    ? '<strong style="color:#b45309">Fotos y notas</strong> quedan guardadas con el hueco. Mantén pulsado un hueco en el esquema para un resumen rápido.'
+    : '<strong style="color:#b45309">Fotos y notas</strong> quedan guardadas con la planta. Mantén pulsado una cesta en la torre para ver un resumen rápido.';
+  const paso4Ed = esNftEd
+    ? 'En NFT <strong>todos los huecos</strong> del dibujo responden al toque; no hace falta girar la maqueta.'
+    : 'Solo responden las cestas de <strong>cara</strong>. <strong>Gira</strong> el dibujo para llegar al reverso. El deslizamiento no pisa el toque en una cesta.';
+
   overlay.innerHTML =
     '<div style="width:100%;max-width:400px;background:#fff;border-radius:20px 20px 16px 16px;' +
       'box-shadow:0 -8px 40px rgba(0,0,0,0.35);overflow:hidden;max-height:88vh;overflow-y:auto">' +
       '<div style="width:36px;height:4px;background:#e5e7eb;border-radius:2px;margin:10px auto 0"></div>' +
       '<div style="padding:16px 18px 14px">' +
         '<div id="tutorialEditarTitulo" style="font-family:var(--font-display);font-size:17px;font-weight:900;' +
-          'color:#111827;margin-bottom:4px">✏️ Editar ficha de una cesta</div>' +
+          'color:#111827;margin-bottom:4px">' + titEd + '</div>' +
         '<div style="font-size:12px;color:#6b7280;line-height:1.4">Ideal para afinar una planta o añadir fotos y notas.</div>' +
       '</div>' +
       '<div style="padding:0 18px 14px;display:flex;flex-direction:column;gap:10px">' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#eff6ff;' +
           'border-radius:12px;border:1px solid #bfdbfe">' +
           '<span style="font-size:20px;flex-shrink:0">1</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45">Activa <strong style="color:#1d4ed8">Editar ficha</strong> ' +
-          '(arriba). Así cada toque abre el panel con todos los datos de esa cesta.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45">' + paso1Ed + '</div></div>' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#f0fdf4;' +
           'border-radius:12px;border:1px solid #bbf7d0">' +
           '<span style="font-size:20px;flex-shrink:0">2</span>' +
@@ -8450,13 +8563,11 @@ function abrirTutorialEditarCultivo(opts) {
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#fffbeb;' +
           'border-radius:12px;border:1px solid #fde68a">' +
           '<span style="font-size:20px;flex-shrink:0">3</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45"><strong style="color:#b45309">Fotos y notas</strong> ' +
-          'quedan guardadas con la planta. Mantén pulsado una cesta en la torre para ver un resumen rápido.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45">' + paso3Ed + '</div></div>' +
         '<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:#f9fafb;' +
           'border-radius:12px;border:1px solid #e5e7eb">' +
           '<span style="font-size:20px;flex-shrink:0">4</span>' +
-          '<div style="font-size:12px;color:#374151;line-height:1.45">Solo responden las cestas de <strong>cara</strong>. ' +
-          '<strong>Gira</strong> el dibujo para llegar al reverso. El deslizamiento no pisa el toque en una cesta.</div></div>' +
+          '<div style="font-size:12px;color:#374151;line-height:1.45">' + paso4Ed + '</div></div>' +
       '</div>' +
       '<div style="padding:10px 18px 16px;border-top:1px solid #f3f4f6">' +
         '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:12px;color:#4b5563;margin-bottom:12px">' +
@@ -8478,7 +8589,7 @@ function abrirTutorialEditarCultivo(opts) {
     e.stopPropagation();
     const chk = overlay.querySelector('#tutorialEditarNoMas');
     cerrarTutorialEditarCultivo(chk && chk.checked);
-    showToast('💡 Toca una cesta para abrir su ficha');
+    showToast(esNftEd ? '💡 Toca un hueco en el esquema o Lista para abrir su ficha' : '💡 Toca una cesta para abrir su ficha');
   });
   overlay.querySelector('#tutorialEditarBtnCerrar').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -8547,7 +8658,8 @@ function aplicarCultivoSeleccionMultiple() {
     return;
   }
   if (torreCestasMultiSel.size === 0) {
-    showToast('Toca cestas en la torre para seleccionarlas (modo varias)', true);
+    const esNft = state.configTorre?.tipoInstalacion === 'nft';
+    showToast(esNft ? 'Toca huecos en el esquema NFT o en Lista para seleccionarlos (modo varias)' : 'Toca cestas en la torre para seleccionarlas (modo varias)', true);
     return;
   }
   const nAplicar = torreCestasMultiSel.size;
@@ -8562,7 +8674,10 @@ function aplicarCultivoSeleccionMultiple() {
   calcularRotacion();
   setTimeout(renderCompatGrid, 50);
   actualizarBarraMultiSel();
-  showToast('🌱 ' + cultivoNombreLista(getCultivoDB(v), v) + ' aplicado a ' + nAplicar + ' cesta' + (nAplicar === 1 ? '' : 's'));
+  const esNftT = state.configTorre?.tipoInstalacion === 'nft';
+  const uHueco = esNftT ? ' hueco' : ' cesta';
+  const uHuecos = esNftT ? ' huecos' : ' cestas';
+  showToast('🌱 ' + cultivoNombreLista(getCultivoDB(v), v) + ' aplicado a ' + nAplicar + (nAplicar === 1 ? uHueco : uHuecos));
 }
 
 function limpiarSeleccionCestas() {
@@ -8602,8 +8717,8 @@ function actualizarChromePanelEsquemaPorTipo() {
   if (intro) {
     if (esNft) {
       intro.innerHTML =
-        '<strong>Esquema NFT</strong> según tu configuración (canales, pendiente, volumen del depósito). ' +
-        'Para cultivos y fechas usa <strong>Lista</strong>: cada fila es un canal y cada botón un hueco.';
+        '<strong>Esquema NFT</strong> según tu configuración (canales, pendiente, depósito). ' +
+        'Toca cada <strong>hueco</strong> en el dibujo para ficha o asignación; también puedes usar <strong>Lista</strong> (cada fila = canal).';
     } else {
       intro.innerHTML =
         '<strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real). ' +
@@ -8651,12 +8766,16 @@ function renderTorre() {
     const pend = cfg.nftPendientePct ?? 2;
     const vol = cfg.volDeposito || VOL_OBJETIVO;
     const eqArr = cfg.equipamiento;
+    const bombMain = getNftBombaDesdeConfig(cfg);
     wrap.innerHTML = buildNftSchematicSvg(ch, hx, pend, vol, 'Main', {
       calentador: eqArr?.includes('calentador') ?? true,
       difusor: eqArr?.includes('difusor') ?? true,
+      interactive: true,
+      bombaInfo: bombMain,
     });
     wrap.setAttribute('aria-label',
-      'Esquema NFT con depósito, bomba y canales en pendiente. Usa la vista Lista para editar cada hueco.');
+      'Esquema NFT: toca cada hueco para ficha o asignar cultivo; también puedes usar Lista.');
+    try { bindTorreCestas(wrap); } catch (e) {}
   } else {
     wrap.innerHTML = generarSVGTorre();
     wrap.setAttribute('aria-label',
@@ -8666,6 +8785,7 @@ function renderTorre() {
   }
 
   actualizarChromePanelEsquemaPorTipo();
+  sincronizarTextosPanelInteraccionSistema();
 
   updateTorreStats();
   calcularRotacion();
@@ -8849,7 +8969,8 @@ function bindTorreCestas(wrap, opts = {}) {
       startX = ev.clientX; startY = ev.clientY;
       t = setTimeout(() => {
         const dat = (state.torre?.[n]?.[c]) || {};
-        const variedad = dat.variedad || 'Cesta vacía';
+        const vacioLbl = state.configTorre?.tipoInstalacion === 'nft' ? 'Hueco vacío' : 'Cesta vacía';
+        const variedad = dat.variedad || vacioLbl;
         const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
         const fotos = (dat.fotos || []).length;
         const notas = (dat.notas || '').trim();
@@ -9281,7 +9402,13 @@ function updateTorreStats() {
     const geom = esNftCfg
       ? ((cfg.nftNumCanales || cfg.numNiveles || '—') + ' canales × ' + (cfg.nftHuecosPorCanal || cfg.numCestas || '—') + ' huecos')
       : ((cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C');
-    depEl.textContent = torreNombre + ' — ' + geom + ' — ' + vol + 'L';
+    const nftTubo = esNftCfg ? (cfg.nftTuboInteriorMm || 25) : null;
+    const nftB = esNftCfg ? getNftBombaDesdeConfig(cfg) : null;
+    depEl.textContent =
+      torreNombre + ' — ' + geom + ' — ' + vol + 'L' +
+      (nftTubo != null && nftB
+        ? ' · Ø' + nftTubo + 'mm · ~' + nftB.caudalRecLH + 'L/h · ~' + nftB.potenciaRecW + 'W'
+        : '');
   }
 
   const volDepIn = document.getElementById('torreVolDepositoL');
@@ -9965,6 +10092,8 @@ let setupTipoTorre = 'custom';
 /** 'torre' | 'nft' | '' (nueva instalación: hay que elegir en paso 0) */
 let setupTipoInstalacion = 'torre';
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
+/** Diámetro interior tubería principal NFT (subida/manifold), mm — 16–40 */
+let setupNftTuboMm = 25;
 let setupUbicacion = 'exterior';
 let setupNutriente = 'canna_aqua';
 let setupCoordenadas = { lat: 39.9864, lon: -0.0495, ciudad: 'Castelló de la Plana' };
@@ -9987,11 +10116,31 @@ function abrirSetup() {
   if (snc) snc.value = String(Math.max(1, Math.min(12, c.nftNumCanales || c.numNiveles || 4)));
   if (snh) snh.value = String(Math.max(2, Math.min(30, c.nftHuecosPorCanal || c.numCestas || 8)));
   if (snp) snp.value = String(Math.max(1, Math.min(4, c.nftPendientePct != null ? Math.round(c.nftPendientePct) : 2)));
+  setupNftTuboMm = Math.max(16, Math.min(40, parseInt(String(c.nftTuboInteriorMm), 10) || 25));
+  seleccionarTuboNft(setupNftTuboMm);
   const o = document.getElementById('setupOverlay');
   o.classList.add('open');
   renderNutrientesGrid();
-  updateTorreBuilder();
+  if (setupTipoInstalacion === 'torre') updateTorreBuilder();
+  else updateNftSetupPreview();
   renderSetupPage();
+  setTimeout(function () {
+    const lhIn = document.getElementById('nftBombaUsuarioLh');
+    const wIn = document.getElementById('nftBombaUsuarioW');
+    if (lhIn) {
+      lhIn.value =
+        c.nftBombaUsuarioCaudalLh != null && c.nftBombaUsuarioCaudalLh !== ''
+          ? String(c.nftBombaUsuarioCaudalLh)
+          : '';
+    }
+    if (wIn) {
+      wIn.value =
+        c.nftBombaUsuarioPotenciaW != null && c.nftBombaUsuarioPotenciaW !== ''
+          ? String(c.nftBombaUsuarioPotenciaW)
+          : '';
+    }
+    if (setupTipoInstalacion === 'nft') refrescarUIMensajeBombaUsuarioNft('setup');
+  }, 0);
   a11yDialogOpened(o);
 }
 
@@ -10014,10 +10163,6 @@ function iniciarConfiguracionTorre() {
 function seleccionarTipoInstalacionSetup(tipo) {
   setupTipoInstalacion = tipo === 'nft' ? 'nft' : 'torre';
   refrescarSetupTipoInstalacionUI();
-  if (setupPagina === 1) {
-    if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
-    else updateTorreBuilder();
-  }
 }
 
 function refrescarSetupTipoInstalacionUI() {
@@ -10035,6 +10180,20 @@ function refrescarSetupTipoInstalacionUI() {
     nftCard.classList.add('selected');
     nftCard.setAttribute('aria-pressed', 'true');
   }
+  const inlTorre = document.getElementById('setupInlineTipoTorre');
+  const inlNft = document.getElementById('setupInlineTipoNft');
+  [inlTorre, inlNft].forEach(btn => {
+    if (!btn) return;
+    btn.classList.remove('selected');
+    btn.setAttribute('aria-pressed', 'false');
+  });
+  if (setupTipoInstalacion === 'torre' && inlTorre) {
+    inlTorre.classList.add('selected');
+    inlTorre.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'nft' && inlNft) {
+    inlNft.classList.add('selected');
+    inlNft.setAttribute('aria-pressed', 'true');
+  }
   if (setupPagina !== 1) return;
   const isNft = setupTipoInstalacion === 'nft';
   const tw = document.getElementById('setupTorreBuilderWrap');
@@ -10049,6 +10208,14 @@ function refrescarSetupTipoInstalacionUI() {
       ? 'Canales en paralelo, huecos por canal y pendiente. La rejilla usa un nivel por canal.'
       : 'Configura las dimensiones de tu sistema hidropónico vertical';
   }
+  syncSetupPreviewDiagramPorTipoInstalacion();
+}
+
+/** Actualiza el gráfico del paso 1 según Torre vs NFT (asistente). */
+function syncSetupPreviewDiagramPorTipoInstalacion() {
+  if (typeof setupPagina === 'undefined' || setupPagina !== 1) return;
+  if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+  else updateTorreBuilder();
 }
 
 function onSetupVolSliderInput() {
@@ -10057,11 +10224,270 @@ function onSetupVolSliderInput() {
   if (typeof setupPagina !== 'undefined' && setupPagina >= 4) renderDosisSetup();
 }
 
+/**
+ * Caudal y potencia orientativos NFT (24 h): película por canal + tubería Ø + pendiente.
+ * Modelo empírico — contrastar con catálogo de bomba y perfil real de canal.
+ */
+function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboMm) {
+  const nCh = Math.min(Math.max(parseInt(String(nCanales), 10) || 1, 1), 10);
+  const nHx = Math.min(Math.max(parseInt(String(huecosPorCanal), 10) || 2, 2), 30);
+  const pend = Math.min(Math.max(parseInt(String(pendientePct), 10) || 2, 1), 4);
+  let dMm = parseInt(String(diamTuboMm), 10) || 25;
+  dMm = Math.max(16, Math.min(40, dMm));
+
+  const longCanalM = Math.min(10, Math.max(0.75, 0.5 + nHx * 0.11));
+  const qFilmLhPorM = 2.35 * (1 + (pend - 2) * 0.14) * (dMm <= 20 ? 1.06 : 1);
+  const qCanalLh = longCanalM * qFilmLhPorM * 1.18;
+  const qTotalLh = Math.round(nCh * qCanalLh);
+  const caudalMinLH = Math.max(120, Math.round(qTotalLh * 0.88));
+  const caudalRecLH = Math.max(caudalMinLH + 40, Math.round(qTotalLh * 1.15));
+
+  const headBase = 0.42 + 0.055 * Math.min(nCh, 10);
+  const friccTubo = dMm <= 16 ? 0.22 : dMm <= 20 ? 0.14 : dMm <= 25 ? 0.09 : 0.06;
+  const headMetros = Math.round((headBase + friccTubo) * 10) / 10;
+
+  const Qm3h = caudalRecLH / 1000;
+  const potEstW = Math.ceil((Qm3h * headMetros) / (0.367 * 0.32));
+  const potenciaRecW = Math.max(5, Math.ceil(potEstW * 1.85));
+
+  const lenTuberiaM = 1.4 + nCh * 0.38;
+  const rM = dMm / 2000;
+  const volTuberiaL = Math.PI * rM * rM * lenTuberiaM * 1000;
+  const volPeliculaL = nCh * longCanalM * 0.14;
+  const volCircuitoL = Math.round((volTuberiaL + volPeliculaL) * 10) / 10;
+  const volMinDepositoSugeridoL = Math.max(8, Math.ceil(volCircuitoL + 5));
+
+  let modeloRec = '';
+  if (caudalRecLH <= 400 && headMetros <= 1.2) {
+    modeloRec = 'Bomba sumergible ~5–10 W, ' + caudalMinLH + '–' + (caudalRecLH + 80) + ' L/h, altura ≥ ' + headMetros + ' m (24 h continuo).';
+  } else if (caudalRecLH <= 900 && headMetros <= 1.8) {
+    modeloRec = 'Bomba ~10–20 W, ' + caudalMinLH + '–' + (caudalRecLH + 120) + ' L/h, altura ≥ ' + headMetros + ' m.';
+  } else {
+    modeloRec = 'Bomba ≥ ' + potenciaRecW + ' W nominal, ' + caudalRecLH + '+ L/h @ ' + headMetros + ' m — revisar curva del fabricante (uso continuo).';
+  }
+
+  return {
+    dMm,
+    nCh,
+    nHx,
+    pend,
+    longitudCanalM: Math.round(longCanalM * 100) / 100,
+    caudalMinLH,
+    caudalRecLH,
+    headMetros,
+    potenciaEstW: potEstW,
+    potenciaRecW,
+    modeloRec,
+    volCircuitoL,
+    volMinDepositoSugeridoL,
+  };
+}
+
+function getNftBombaDesdeConfig(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'nft') return null;
+  const nCh = cfg.nftNumCanales || cfg.numNiveles || 4;
+  const hx = cfg.nftHuecosPorCanal || cfg.numCestas || 8;
+  const pend = cfg.nftPendientePct || 2;
+  const dMm = cfg.nftTuboInteriorMm || 25;
+  return calcularBombaNftParam(nCh, hx, pend, dMm);
+}
+
+/**
+ * Compara caudal/potencia declarados por el usuario con el cálculo orientativo NFT.
+ * @returns {{ tipo: 'omitido'|'ok'|'marginal'|'error'|'potencia_baja', html: string, toast?: string }}
+ */
+function validarBombaUsuarioNftVsCalculo(b, caudalRaw, potenciaRaw) {
+  if (!b) {
+    return { tipo: 'omitido', html: '', toast: null };
+  }
+  const caudal = parseFloat(String(caudalRaw != null ? caudalRaw : '').replace(',', '.'));
+  const potW = parseFloat(String(potenciaRaw != null ? potenciaRaw : '').replace(',', '.'));
+  const hint =
+    '<span style="color:#64748b;font-weight:500">Introduce el caudal nominal de la placa (L/h) para comprobar si cubre el mínimo y el recomendado de <strong>tu</strong> configuración.</span>';
+  if (!Number.isFinite(caudal) || caudal <= 0) {
+    return { tipo: 'omitido', html: hint, toast: null };
+  }
+  const q = Math.round(caudal);
+  if (q < b.caudalMinLH) {
+    return {
+      tipo: 'error',
+      html:
+        '<span style="color:#b91c1c;font-weight:800">No válida para esta NFT:</span> ' +
+        q +
+        ' L/h está por debajo del mínimo orientativo (' +
+        b.caudalMinLH +
+        ' L/h). Riesgo alto de película discontinua o canales secos. Sustituye la bomba o reduce canales/huecos.',
+      toast: 'Bomba NFT: caudal insuficiente para esta configuración (comprueba L/h en la placa).',
+    };
+  }
+  let html = '';
+  let tipo = 'ok';
+  if (q < b.caudalRecLH) {
+    tipo = 'marginal';
+    html =
+      '<span style="color:#c2410c;font-weight:800">Válida al límite:</span> ' +
+      q +
+      ' L/h supera el mínimo (' +
+      b.caudalMinLH +
+      ' L/h) pero está por debajo del recomendado (' +
+      b.caudalRecLH +
+      ' L/h). Vigila el inicio de cada canal y la pendiente; si ves tramos secos, sube caudal o cambia bomba.';
+  } else {
+    html =
+      '<span style="color:#15803d;font-weight:800">Válida:</span> ' +
+      q +
+      ' L/h ≥ caudal recomendado (' +
+      b.caudalRecLH +
+      ' L/h) para película estable en continuo (24 h).';
+  }
+  if (Number.isFinite(potW) && potW > 0 && potW < Math.max(4, Math.round(b.potenciaRecW * 0.52))) {
+    tipo = tipo === 'ok' ? 'potencia_baja' : tipo;
+    html +=
+      '<br><span style="color:#b45309;font-weight:700">Aviso potencia:</span> ' +
+      Math.round(potW) +
+      ' W es bajo frente a ~' +
+      b.potenciaRecW +
+      ' W estimados; confirma en el manual que a <strong>' +
+      b.headMetros +
+      ' m</strong> de altura manométrica la bomba entrega al menos ' +
+      b.caudalMinLH +
+      '–' +
+      b.caudalRecLH +
+      ' L/h (curva Q–H).';
+  }
+  return { tipo, html, toast: null };
+}
+
+function refrescarUIMensajeBombaUsuarioNft(mode) {
+  const msgId = mode === 'checklist' ? 'clNftBombaUsuarioMsg' : 'nftBombaUsuarioValidacion';
+  const el = document.getElementById(msgId);
+  if (!el) return;
+  let b;
+  let lhRaw = '';
+  let wRaw = '';
+  if (mode === 'setup') {
+    const canales = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+    const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+    const pend = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
+    b = calcularBombaNftParam(canales, huecos, pend, setupNftTuboMm);
+    lhRaw = document.getElementById('nftBombaUsuarioLh')?.value ?? '';
+    wRaw = document.getElementById('nftBombaUsuarioW')?.value ?? '';
+  } else {
+    b = getNftBombaDesdeConfig(state.configTorre);
+    lhRaw = document.getElementById('clNftBombaUsuarioLh')?.value ?? '';
+    wRaw = document.getElementById('clNftBombaUsuarioW')?.value ?? '';
+  }
+  const v = validarBombaUsuarioNftVsCalculo(b, lhRaw, wRaw);
+  el.innerHTML = v.html || '';
+}
+
+function onNftBombaUsuarioSetupInput() {
+  refrescarUIMensajeBombaUsuarioNft('setup');
+}
+
+let _nftBombaBlurToastKey = '';
+function onNftBombaUsuarioSetupBlur() {
+  refrescarUIMensajeBombaUsuarioNft('setup');
+  const canales = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+  const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+  const pend = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
+  const b = calcularBombaNftParam(canales, huecos, pend, setupNftTuboMm);
+  const lhRaw = document.getElementById('nftBombaUsuarioLh')?.value ?? '';
+  const wRaw = document.getElementById('nftBombaUsuarioW')?.value ?? '';
+  const v = validarBombaUsuarioNftVsCalculo(b, lhRaw, wRaw);
+  const key = v.tipo + '|' + lhRaw + '|' + wRaw;
+  if (v.tipo === 'error' && v.toast && key !== _nftBombaBlurToastKey) {
+    _nftBombaBlurToastKey = key;
+    showToast(v.toast, true);
+  }
+}
+
+let _debouncePersistNftBombaCl = 0;
+function onNftBombaUsuarioChecklistInput() {
+  refrescarUIMensajeBombaUsuarioNft('checklist');
+  clearTimeout(_debouncePersistNftBombaCl);
+  _debouncePersistNftBombaCl = setTimeout(persistNftBombaUsuarioDesdeChecklist, 450);
+}
+
+function persistNftBombaUsuarioDesdeChecklist() {
+  const cfg = state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'nft') return;
+  const lhEl = document.getElementById('clNftBombaUsuarioLh');
+  const wEl = document.getElementById('clNftBombaUsuarioW');
+  if (!lhEl || !wEl) return;
+  const vLh = parseFloat(String(lhEl.value).replace(',', '.'));
+  const vW = parseFloat(String(wEl.value).replace(',', '.'));
+  if (Number.isFinite(vLh) && vLh > 0) cfg.nftBombaUsuarioCaudalLh = Math.round(vLh);
+  else delete cfg.nftBombaUsuarioCaudalLh;
+  if (Number.isFinite(vW) && vW > 0) cfg.nftBombaUsuarioPotenciaW = Math.round(vW);
+  else delete cfg.nftBombaUsuarioPotenciaW;
+  guardarEstadoTorreActual();
+  saveState();
+}
+
+let _nftBombaClBlurKey = '';
+function onNftBombaUsuarioChecklistBlur() {
+  refrescarUIMensajeBombaUsuarioNft('checklist');
+  persistNftBombaUsuarioDesdeChecklist();
+  const b = getNftBombaDesdeConfig(state.configTorre);
+  const lhRaw = document.getElementById('clNftBombaUsuarioLh')?.value ?? '';
+  const wRaw = document.getElementById('clNftBombaUsuarioW')?.value ?? '';
+  const v = validarBombaUsuarioNftVsCalculo(b, lhRaw, wRaw);
+  const key = v.tipo + '|' + lhRaw + '|' + wRaw;
+  if (v.tipo === 'error' && v.toast && key !== _nftBombaClBlurKey) {
+    _nftBombaClBlurKey = key;
+    showToast(v.toast, true);
+  }
+}
+
+function seleccionarTuboNft(mm) {
+  setupNftTuboMm = Math.max(16, Math.min(40, parseInt(String(mm), 10) || 25));
+  [16, 20, 25, 32, 40].forEach(d => {
+    const el = document.getElementById('nftTubo' + d);
+    if (el) el.classList.remove('selected');
+  });
+  const cur = document.getElementById('nftTubo' + setupNftTuboMm);
+  if (cur) cur.classList.add('selected');
+  if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+}
+
+function pintarResultadoBombaNftUI(b) {
+  const el = document.getElementById('resultadoBombaNft');
+  if (!el) return;
+  if (!b) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+    return;
+  }
+  el.style.display = 'block';
+  el.innerHTML =
+    '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#0f766e;margin-bottom:6px">⚡ Bomba NFT (circulación 24 h)</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">' +
+    '<div style="background:#ecfdf5;border-radius:8px;padding:6px;text-align:center;border:1px solid #a7f3d0">' +
+    '<div style="font-size:9px;color:#047857;font-weight:700">Caudal mín.</div>' +
+    '<div style="font-size:15px;font-weight:900;color:#065f46">' + b.caudalMinLH + ' L/h</div></div>' +
+    '<div style="background:#ecfdf5;border-radius:8px;padding:6px;text-align:center;border:1px solid #a7f3d0">' +
+    '<div style="font-size:9px;color:#047857;font-weight:700">Recomendado</div>' +
+    '<div style="font-size:15px;font-weight:900;color:#065f46">' + b.caudalRecLH + ' L/h</div></div>' +
+    '<div style="background:#fff;border-radius:8px;padding:6px;text-align:center;border:1px solid #e5e7eb">' +
+    '<div style="font-size:9px;color:#64748b;font-weight:700">Head ≈</div>' +
+    '<div style="font-size:14px;font-weight:900;color:#0f172a">' + b.headMetros + ' m</div></div>' +
+    '<div style="background:#fff;border-radius:8px;padding:6px;text-align:center;border:1px solid #e5e7eb">' +
+    '<div style="font-size:9px;color:#64748b;font-weight:700">Potencia ≈</div>' +
+    '<div style="font-size:14px;font-weight:900;color:#b45309">' + b.potenciaRecW + ' W</div></div></div>' +
+    '<div style="font-size:10px;color:#374151;line-height:1.45;background:#f8fafc;border-radius:8px;padding:8px">' +
+    '<strong>Volumen en circuito</strong> ~' + b.volCircuitoL + ' L (tubo Ø' + b.dMm + ' mm + película). ' +
+    '<strong>Depósito útil mínimo sugerido</strong> ≥ ' + b.volMinDepositoSugeridoL + ' L (bomba sumergida + margen).</div>' +
+    '<div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.4">💡 ' + escHtmlUi(b.modeloRec) + '</div>';
+}
+
 /** Esquema NFT: tubos con todos los huecos, recorrido de agua (subida → manifold → canales → retorno) y CAL/AIR en depósito si aplica. */
 function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
   const EO = equipOpts || {};
   const showCalentador = EO.calentador === true;
   const showDifusor = EO.difusor === true;
+  const interactive = EO.interactive === true;
+  const bomb = EO.bombaInfo || null;
 
   const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
     ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
@@ -10135,6 +10561,15 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   let plumbing = '';
   plumbing += '<circle cx="' + cx + '" cy="' + (tankTop - 10) + '" r="11" fill="#1e293b" stroke="#475569" stroke-width="1"/>';
   plumbing += '<text x="' + cx + '" y="' + (tankTop - 7) + '" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="900">B</text>';
+  if (bomb) {
+    const txB = cx + 15;
+    const y1 = tankTop - 18;
+    const y2 = tankTop - 9;
+    plumbing +=
+      '<text x="' + txB + '" y="' + y1 + '" text-anchor="start" fill="#1e40af" font-size="7" font-weight="800" font-family="system-ui,sans-serif">' +
+      bomb.caudalRecLH + ' L/h · ~' + bomb.potenciaRecW + ' W</text>' +
+      '<text x="' + txB + '" y="' + y2 + '" text-anchor="start" fill="#475569" font-size="6.5" font-weight="700" font-family="system-ui,sans-serif">24 h · Ø ' + bomb.dMm + ' mm</text>';
+  }
 
   const riserY1 = tankTop;
   const riserY2 = yMan + 3;
@@ -10160,13 +10595,14 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     const dCh = 'M' + xtl + ' ' + ytl + ' L' + xtr + ' ' + ytr + ' L' + xbr + ' ' + ybr + ' L' + xbl + ' ' + ybl + 'Z';
 
     const ix = xtl + Math.min(w * 0.2, 12);
-    chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" stroke="#475569" stroke-width="1.8" stroke-linecap="round"/>');
-    chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" ' + flowSt + ' stroke-width="1.15" opacity="0.9"/>');
+    const peNone = interactive ? ' pointer-events="none"' : '';
+    chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" stroke="#475569" stroke-width="1.8" stroke-linecap="round"' + peNone + '/>');
+    chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" ' + flowSt + ' stroke-width="1.15" opacity="0.9"' + peNone + '/>');
 
-    chParts.push('<path fill="url(#' + gidFilm + ')" stroke="#064e3b" stroke-width="1.15" opacity="0.97" d="' + dCh + '"/>');
+    chParts.push('<path fill="url(#' + gidFilm + ')" stroke="#064e3b" stroke-width="1.15" opacity="0.97" d="' + dCh + '"' + peNone + '/>');
 
     chParts.push(
-      '<path d="M' + (xbl + 3) + ' ' + (ybl + 2) + ' L' + (xbr - 4) + ' ' + (ybr - 4) + '" fill="none" ' + flowSt + ' stroke-width="1.35" opacity="0.88"/>'
+      '<path d="M' + (xbl + 3) + ' ' + (ybl + 2) + ' L' + (xbr - 4) + ' ' + (ybr - 4) + '" fill="none" ' + flowSt + ' stroke-width="1.35" opacity="0.88"' + peNone + '/>'
     );
 
     const innerTopLen = Math.max(xtr - xtl - 5, 2);
@@ -10175,14 +10611,65 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
       const px = xtl + 2.5 + t * (xtr - xtl - 5);
       const py = ytl + 4 + t * (ytr - ytl - 3);
-      chParts.push(
-        '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + hr.toFixed(2) + '" fill="#fef9c3" stroke="#854d0e" stroke-width="0.5"/>' +
-        '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + Math.max(0.55, hr * 0.42).toFixed(2) + '" fill="#fffbeb" opacity="0.55"/>'
-      );
+      if (interactive) {
+        const dat = (state.torre[i] && state.torre[i][j]) ? state.torre[i][j] : { variedad: '', fecha: '' };
+        const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
+        const nomLista = dat.variedad ? cultivoNombreLista(cult, dat.variedad) : 'vacío';
+        const col = torreListaColorCesta(i, j);
+        const multiKey = i + ',' + j;
+        const isMulti = torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
+        const isEd = !!(typeof editingCesta !== 'undefined' && editingCesta && editingCesta.nivel === i && editingCesta.cesta === j);
+        const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+        let ariaTxt = 'Canal ' + (i + 1) + ', hueco ' + (j + 1) + ', ' + nomLista;
+        if (dias !== null) ariaTxt += ', día ' + dias;
+        ariaTxt += '. Pulsa para abrir ficha o asignar cultivo.';
+        const hitR = Math.max(hr * 2.5, 10);
+        chParts.push(
+          '<g class="hc-cesta hc-nft-hueco" data-n="' + i + '" data-c="' + j + '" role="button" tabindex="0" aria-label="' + escAriaAttr(ariaTxt) + '" style="cursor:pointer">'
+        );
+        chParts.push(
+          '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="0.85"/>'
+        );
+        if (isMulti) {
+          chParts.push(
+            '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + (hr + 4).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.25" stroke-dasharray="3 2"/>'
+          );
+        }
+        if (isEd) {
+          chParts.push(
+            '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.35"/>'
+          );
+        }
+        chParts.push(
+          '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + hitR.toFixed(2) + '" fill="rgba(0,0,0,0.001)" pointer-events="all"/>'
+        );
+        chParts.push('</g>');
+      } else {
+        chParts.push(
+          '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + hr.toFixed(2) + '" fill="#fef9c3" stroke="#854d0e" stroke-width="0.5"/>' +
+          '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + Math.max(0.55, hr * 0.42).toFixed(2) + '" fill="#fffbeb" opacity="0.55"/>'
+        );
+      }
     }
     chParts.push(
-      '<text x="' + (xtl - 1) + '" y="' + (ytl + 12) + '" text-anchor="end" font-size="7" font-weight="900" fill="#14532d">' + (i + 1) + '</text>'
+      '<text x="' + (xtl - 1) + '" y="' + (ytl + 12) + '" text-anchor="end" font-size="7" font-weight="900" fill="#14532d"' + peNone + '>' + (i + 1) + '</text>'
     );
+  }
+
+  if (interactive) {
+    back = '<g pointer-events="none">' + back + '</g>';
+    tankLayer = '<g pointer-events="none">' + tankLayer + '</g>';
+    plumbing = '<g pointer-events="none">' + plumbing + '</g>';
+  }
+
+  let footSub = nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente';
+  if (bomb) {
+    footSub +=
+      ' · bomba ~' + bomb.caudalRecLH + ' L/h · ~' + bomb.potenciaRecW + ' W';
+    if (vol < bomb.volMinDepositoSugeridoL) {
+      footSub +=
+        ' · ⚠ depósito &lt; ' + bomb.volMinDepositoSugeridoL + ' L sugeridos';
+    }
   }
 
   return (
@@ -10204,7 +10691,7 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       chParts.join('') +
       plumbing +
       '<text x="' + cx + '" y="' + (H - 6) + '" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' +
-      nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente</text>' +
+      footSub + '</text>' +
       '</svg>'
   );
 }
@@ -10225,10 +10712,14 @@ function updateNftSetupPreview() {
 
   const preview = document.getElementById('nftPreview');
   if (!preview) return;
+  const bNft = calcularBombaNftParam(canales, huecos, pend, setupNftTuboMm);
+  pintarResultadoBombaNftUI(bNft);
+  refrescarUIMensajeBombaUsuarioNft('setup');
   preview.innerHTML =
     buildNftSchematicSvg(canales, huecos, pend, vol, '', {
       calentador: setupEquipamiento.has('calentador'),
       difusor: setupEquipamiento.has('difusor'),
+      bombaInfo: bNft,
     }) +
     '<div style="font-size:10px;font-weight:700;color:#15803d;text-align:center;margin-top:6px;line-height:1.4">' +
     'Toca los deslizadores: tubos, huecos, circuito de agua y equipamiento del depósito se actualizan con la configuración.</div>';
@@ -10259,12 +10750,8 @@ function renderSetupPage() {
     }
   }
 
-  // Acciones específicas por página
+  // Acciones específicas por página (refrescar en p.1 incluye sync del gráfico Torre/NFT)
   if (setupPagina === 0 || setupPagina === 1) refrescarSetupTipoInstalacionUI();
-  if (setupPagina === 1) {
-    if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
-    else updateTorreBuilder();
-  }
   if (setupPagina === 2) cargarSetupSensoresHwUI();
   if (setupPagina === 3) setTimeout(() => seleccionarSustrato(setupData.sustrato), 0);
   if (setupPagina === 4) { renderNutrientesGrid(); setTimeout(renderDosisSetup, 100); }
@@ -10825,10 +11312,32 @@ function guardarSetupYContinuar() {
     state.configTorre.nftNumCanales = niveles;
     state.configTorre.nftHuecosPorCanal = cestas;
     state.configTorre.nftPendientePct = Math.max(1, Math.min(4, nftPend != null ? nftPend : 2));
+    state.configTorre.nftTuboInteriorMm = setupNftTuboMm;
+    state.configTorre.nftBombaEstimada = calcularBombaNftParam(
+      niveles, cestas, state.configTorre.nftPendientePct, setupNftTuboMm
+    );
+    const lhInp = document.getElementById('nftBombaUsuarioLh');
+    const wInp = document.getElementById('nftBombaUsuarioW');
+    const uLh = lhInp ? parseFloat(String(lhInp.value).replace(',', '.')) : NaN;
+    const uW = wInp ? parseFloat(String(wInp.value).replace(',', '.')) : NaN;
+    if (Number.isFinite(uLh) && uLh > 0) state.configTorre.nftBombaUsuarioCaudalLh = Math.round(uLh);
+    else delete state.configTorre.nftBombaUsuarioCaudalLh;
+    if (Number.isFinite(uW) && uW > 0) state.configTorre.nftBombaUsuarioPotenciaW = Math.round(uW);
+    else delete state.configTorre.nftBombaUsuarioPotenciaW;
+    const vPump = validarBombaUsuarioNftVsCalculo(
+      state.configTorre.nftBombaEstimada,
+      lhInp ? lhInp.value : '',
+      wInp ? wInp.value : ''
+    );
+    if (vPump.tipo === 'error' && vPump.toast) showToast(vPump.toast, true);
   } else {
     delete state.configTorre.nftNumCanales;
     delete state.configTorre.nftHuecosPorCanal;
     delete state.configTorre.nftPendientePct;
+    delete state.configTorre.nftTuboInteriorMm;
+    delete state.configTorre.nftBombaEstimada;
+    delete state.configTorre.nftBombaUsuarioCaudalLh;
+    delete state.configTorre.nftBombaUsuarioPotenciaW;
   }
   invalidateMeteoNomiCache();
   const su = normalizaSustratoKey(setupData.sustrato);
@@ -11132,6 +11641,7 @@ function aplicarConfigTorre() {
     window.EC_POR_ML_AB_ACTIVO = ecSubePorMlCorreccion(nut, vAct);
   }
   actualizarVisibilidadPanelInteriorGrow();
+  try { sincronizarTextosPanelInteraccionSistema(); } catch (_) {}
 }
 
 // ── Detectar si hay plántulas nuevas (< 5 días) en la torre ─────────────────
@@ -14191,7 +14701,20 @@ function getCLPasos() {
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. Los valores de los pasos siguientes deben coincidir con lo que anotarás después en Mediciones → dashboard.',
   }] : [];
 
-  const pasosNftExtra = esNft ? [
+  const nftBomb = esNft ? getNftBombaDesdeConfig(cfg) : null;
+  const pasosNftExtra = esNft && nftBomb ? [
+    { id:'N0', seccion:null, paso:'N0',
+      desc:'Bomba de circulación <strong>24 h</strong>: caudal mínimo orientativo <strong>' + nftBomb.caudalMinLH + ' L/h</strong>, recomendado <strong>' + nftBomb.caudalRecLH + ' L/h</strong> · altura manométrica ≈ <strong>' + nftBomb.headMetros + ' m</strong> · potencia eléctrica aprox. <strong>' + nftBomb.potenciaRecW + ' W</strong> (tubo Ø interior <strong>' + nftBomb.dMm + ' mm</strong>). Opcional: anota los datos de <em>tu</em> bomba debajo; verás si son adecuados para esta instalación.',
+      nota: nftBomb.modeloRec + ' Volumen ~' + nftBomb.volCircuitoL + ' L en tubería + película; depósito útil mínimo sugerido ≥ ' + nftBomb.volMinDepositoSugeridoL + ' L. Si la película se corta, sube caudal o revisa pendiente/tapones.',
+      campos: [
+        { id:'clNftBombaUsuarioLh', label:'Tu bomba — caudal nominal (L/h)', type:'number', step:'10', placeholder:'ej. 600',
+          value: cfg.nftBombaUsuarioCaudalLh != null ? String(cfg.nftBombaUsuarioCaudalLh) : '',
+          _clOninput:'onNftBombaUsuarioChecklistInput()', _clOnblur:'onNftBombaUsuarioChecklistBlur()' },
+        { id:'clNftBombaUsuarioW', label:'Tu bomba — potencia (W, opcional)', type:'number', step:'1', placeholder:'ej. 15',
+          value: cfg.nftBombaUsuarioPotenciaW != null ? String(cfg.nftBombaUsuarioPotenciaW) : '',
+          _clOninput:'onNftBombaUsuarioChecklistInput()', _clOnblur:'onNftBombaUsuarioChecklistBlur()' },
+      ],
+      postCamposHtml: '<div id="clNftBombaUsuarioMsg" style="margin-top:10px;font-size:11px;line-height:1.45;font-weight:600" role="status"></div>' },
     { id:'N1', seccion:null, paso:'N1',
       desc:'Inspeccionar los ' + nftCh + ' canales: sin barro orgánico, raíces compactando el fondo ni tapones en codos',
       nota:'NFT: la película de agua debe poder recorrer todo el canal; ~' + nftHx + ' huecos/canal en tu configuración' },
@@ -14279,7 +14802,7 @@ function getCLPasos() {
 
   { id:'5.1', seccion:'🔌 Paso 5 — Verificar sistema', paso:'5.1',
     desc: esNft
-      ? 'Con la bomba en marcha: caudal estable en los ' + nftCh + ' canales; sin tramos secos al inicio ni charcos al final (pendiente ~1–2 % típico)'
+      ? ('Con la bomba en marcha (24 h): caudal estable en los ' + nftCh + ' canales — objetivo ≥ ' + (nftBomb ? nftBomb.caudalMinLH + ' L/h' : 'caudal según tu bomba') + '; sin tramos secos al inicio ni charcos al final (pendiente ~1–2 % típico). Potencia nominal ~' + (nftBomb ? nftBomb.potenciaRecW + ' W' : 'la de tu equipo') + '.')
       : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
@@ -14429,6 +14952,7 @@ function renderChecklist() {
         ? ' value="' + String(c.value).replace(/"/g, '&quot;') + '"'
         : '';
       const inpExtra = c._clOninput ? ' oninput="' + c._clOninput + '"' : '';
+      const blurExtra = c._clOnblur ? ' onblur="' + c._clOnblur + '"' : '';
       return `<div class="cl-field">
         <label>${c.label}</label>
         <input type="${c.type}" id="${c.id}" step="${c.step||'1'}"
@@ -14436,6 +14960,7 @@ function renderChecklist() {
           class="${c.clase||''}"
           ${valAttr}
           ${inpExtra}
+          ${blurExtra}
           ${c.type === 'number' ? 'inputmode="decimal"' : ''}>
         ${c.unit ? `<span class="unit">${c.unit}</span>` : ''}
       </div>`;
@@ -14456,6 +14981,7 @@ function renderChecklist() {
           ${p.nota ? `<div class="cl-note">${p.nota}</div>` : ''}
           ${p.extraHtml || ''}
           ${campos}
+          ${p.postCamposHtml || ''}
         </div>
       </div>`;
   });
@@ -14473,6 +14999,9 @@ function renderChecklist() {
     }
   });
   updateClProgress();
+  if ((state.configTorre || {}).tipoInstalacion === 'nft') {
+    try { refrescarUIMensajeBombaUsuarioNft('checklist'); } catch (e) {}
+  }
 }
 
 function clToggle(id) {
@@ -18533,6 +19062,8 @@ function actualizarResumenSetup() {
 
   const ecObj  = getSetupECObjetivo();
   const volNum = parseInt(vol);
+  const pendNft = isNft ? parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10) : 2;
+  const bResumenNft = isNft ? calcularBombaNftParam(niveles, cestas, pendNft, setupNftTuboMm) : null;
   const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volNum, ecObj);
   const ordenR = (d.nut.orden && d.nut.orden.length >= d.nut.partes) ? d.nut.orden : ['Parte A','Parte B','Parte C'];
 
@@ -18557,7 +19088,10 @@ function actualizarResumenSetup() {
 
   el.innerHTML =
     (isNft
-      ? '🪴 NFT: <strong>' + niveles + ' canales × ' + cestas + ' huecos/canal · ' + pendTxt + vol + 'L</strong><br>'
+      ? '🪴 NFT: <strong>' + niveles + ' canales × ' + cestas + ' huecos/canal · ' + pendTxt + vol + 'L</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong><br>' +
+        (bResumenNft
+          ? '⚡ Bomba circulación <strong>24 h</strong> (orientativo): <strong>' + bResumenNft.caudalMinLH + '–' + bResumenNft.caudalRecLH + ' L/h · ~' + bResumenNft.potenciaRecW + ' W</strong> · depósito útil mín. sugerido <strong>≥ ' + bResumenNft.volMinDepositoSugeridoL + ' L</strong><br>'
+          : '')
       : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
