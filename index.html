@@ -467,7 +467,7 @@ body::before { display: none; }
 /* Colores únicos por pestaña — inactivo suave, activo vivo */
 .tab-btn#btn-inicio      { --tab-color: #16a34a; }
 .tab-btn#btn-mediciones  { --tab-color: #2563eb; }
-.tab-btn#btn-torre       { --tab-color: #15803d; }
+.tab-btn#btn-sistema     { --tab-color: #15803d; }
 .tab-btn#btn-calendario  { --tab-color: #7c3aed; }
 .tab-btn#btn-riego       { --tab-color: #0891b2; }
 .tab-btn#btn-meteo       { --tab-color: #ea580c; }
@@ -4092,8 +4092,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       </div>
 
       <!-- Resumen torre -->
-      <button type="button" class="torre-summary" onclick="goTab('torre')" aria-label="Ir a la vista Torre hidropónica">
-        <div class="card-title">🌿 Torre hidropónica</div>
+      <button type="button" class="torre-summary" onclick="goTab('sistema')" aria-label="Ir a la vista Sistema de cultivo">
+        <div class="card-title">🌿 Sistema de cultivo</div>
         <div class="torre-summary-row">
           <div class="torre-mini-stat">
             <div class="torre-mini-val" id="dashPlantas" style="color:var(--green)">0</div>
@@ -4826,7 +4826,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
     <!-- FIN TAB MEDICIONES -->
 
     <!-- TAB 3: TORRE ══════════════════════════════════ -->
-    <div class="tab-panel" id="tab-torre" role="tabpanel" aria-labelledby="btn-torre" aria-hidden="true">
+    <div class="tab-panel" id="tab-sistema" role="tabpanel" aria-labelledby="btn-sistema" aria-hidden="true">
 
       <div class="section-title torre-section-heading" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
         <span><span class="section-title-accent" aria-hidden="true"></span><span class="accent" id="torreTabTitle">—</span></span>
@@ -4979,7 +4979,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             </div>
           </div>
           <div class="torre-strip-actions">
-            <button type="button" class="torre-icon-btn" onclick="rotarTorrePaso(1)"
+            <button type="button" id="btnTorreGirarEsquema" class="torre-icon-btn" onclick="rotarTorrePaso(1)"
               aria-label="Girar torre (una posición)"
               style="min-width:40px;padding:6px 10px;font-size:15px;line-height:1">
               ⟲
@@ -4996,7 +4996,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           En el dibujo, desliza para girar y ver todas las cestas.
         </div>
         <div id="torreDiagramToolbar" class="torre-diagram-toolbar">
-          <div class="torre-diagram-legend" aria-hidden="true">
+          <div id="torreDiagramLegend" class="torre-diagram-legend" aria-hidden="true">
             <span class="k-dep">Depósito</span>
             <span style="color:#cbd5e1;font-weight:400">·</span>
             <span class="k-niv">Niveles</span>
@@ -5011,7 +5011,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <button type="button" id="btnTorreVistaLista" class="torre-vista-btn"
               onclick="setTorreVistaModo('lista')" aria-pressed="false"
               aria-label="Ver lista de cestas">Lista</button>
-            <label class="torre-anim-label" title="Gotas, agua y burbujas en el esquema. Si el sistema tiene «reducir movimiento», se apagan aunque esté marcado.">
+            <label id="torreAnimSuavesLabel" class="torre-anim-label" title="Gotas, agua y burbujas en el esquema. Si el sistema tiene «reducir movimiento», se apagan aunque esté marcado.">
               <input type="checkbox" id="torreChkAnimSuaves" checked onchange="setTorreAnimSuaves(this.checked)"
                 aria-label="Animaciones suaves en el esquema del depósito y el riego">
               <span>Animaciones</span>
@@ -5221,7 +5221,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             inputmode="numeric" min="1" max="120" oninput="calcularRiego()"
             aria-describedby="riegoTorreHint">
           <input type="hidden" id="riegoEdad" value="4" autocomplete="off">
-          <p id="riegoTorreHint" class="riego-torre-hint">Indica cultivos y fechas en la pestaña Torre; el número de plantas se actualiza solo cuando hay cestas con fecha.</p>
+          <p id="riegoTorreHint" class="riego-torre-hint">Indica cultivos y fechas en la pestaña Sistema; el número de plantas se actualiza solo cuando hay huecos con fecha.</p>
         </div>
       </div>
 
@@ -5582,11 +5582,11 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       </svg>
       <span class="tab-label">Medir</span>
     </button>
-    <button class="tab-btn" type="button" role="tab" id="btn-torre" onclick="goTab('torre')" aria-label="Ir a Torre" aria-selected="false" aria-controls="tab-torre">
+    <button class="tab-btn" type="button" role="tab" id="btn-sistema" onclick="goTab('sistema')" aria-label="Ir a Sistema" aria-selected="false" aria-controls="tab-sistema">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="6" x2="12" y2="6.01"/><line x1="12" y1="10" x2="12" y2="10.01"/><line x1="12" y1="14" x2="12" y2="14.01"/>
       </svg>
-      <span class="tab-label">Torre</span>
+      <span class="tab-label">Sistema</span>
     </button>
     <button class="tab-btn" type="button" role="tab" id="btn-calendario" onclick="goTab('calendario')" aria-label="Ir a Calendario" aria-selected="false" aria-controls="tab-calendario">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -5686,7 +5686,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         aria-label="Empezar asistente de configuración paso a paso">
         Empezar asistente
       </button>
-      <p class="welcome-hint">Podrás revisar tipo y datos después en la pestaña Torre o Medir → Configuración.</p>
+      <p class="welcome-hint">Podrás revisar tipo y datos después en la pestaña Sistema o Medir → Configuración.</p>
     </div>
 
     <div class="setup-page" id="spage1">
@@ -5767,7 +5767,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </div>
         </div>
         <p style="font-size:10px;color:#6b7280;margin:10px 0 0;line-height:1.45">
-          En la <strong>pestaña Torre</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
+          En la <strong>pestaña Sistema</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
           El checklist NFT recuerda película de agua, retornos y limpieza de canales.
         </p>
       </div>
@@ -6257,7 +6257,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
       <div id="infoVarTorres" style="display:none;background:#fffbeb;border:1.5px solid #fcd34d;
         border-radius:12px;padding:12px 14px;font-size:12px;color:#92400e;line-height:1.7">
-        💡 Podrás añadir y configurar cada torre adicional desde la pestaña <strong>Torre</strong>
+        💡 Podrás añadir y configurar cada torre adicional desde la pestaña <strong>Sistema</strong>
         usando el botón <strong>➕ Añadir nueva torre</strong>. Cada torre tendrá su propio
         nutriente, historial de mediciones y plantas.
       </div>
@@ -7330,7 +7330,7 @@ function goTab(tab) {
   const activeBtn = document.getElementById('btn-' + tab);
   if (activeBtn) activeBtn.classList.add('active');
   scrollTabBarToActive(activeBtn);
-  ['inicio','mediciones','torre','calendario','riego','meteo','historial','consejos'].forEach(t => {
+  ['inicio','mediciones','sistema','calendario','riego','meteo','historial','consejos'].forEach(t => {
     const b = document.getElementById('btn-' + t);
     if (b) b.setAttribute('aria-selected', t === tab ? 'true' : 'false');
   });
@@ -7339,7 +7339,7 @@ function goTab(tab) {
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') { cargarMeteo(); window._meteoObsoleto = false; }
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
-  if (tab === 'torre') {
+  if (tab === 'sistema') {
     renderTorre();
     renderCompatGrid();
     calcularRotacion();
@@ -7439,6 +7439,7 @@ function setTorreAnimSuaves(on) {
 
 function aplicarVistaTorreUI() {
   const lista = state.configTorre?.torreVistaModo === 'lista';
+  const esNftSwipe = state.configTorre?.tipoInstalacion === 'nft';
   const w = document.getElementById('torreSVGWrap');
   const lv = document.getElementById('torreListaVista');
   const bE = document.getElementById('btnTorreVistaEsquema');
@@ -7451,7 +7452,7 @@ function aplicarVistaTorreUI() {
   if (w) w.style.display = lista ? 'none' : '';
   if (lv) lv.style.display = lista ? 'block' : 'none';
   if (swipe) {
-    if (lista) swipe.style.display = 'none';
+    if (lista || esNftSwipe) swipe.style.display = 'none';
     else if (swipeHidden) swipe.style.display = 'none';
     else swipe.style.display = '';
   }
@@ -7488,12 +7489,14 @@ function renderTorreLista() {
   const el = document.getElementById('torreListaVista');
   if (!el) return;
   const cfg = state.configTorre || {};
+  const esNft = cfg.tipoInstalacion === 'nft';
   const N = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
   const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS;
   let h = '<div class="torre-lista-block">';
   for (let n = 0; n < N; n++) {
-    h += '<div class="torre-lista-nivel-title">Nivel ' + (n + 1) + '</div>';
-    h += '<div class="torre-lista-grid" role="group" aria-label="Cestas del nivel ' + (n + 1) + '">';
+    h += '<div class="torre-lista-nivel-title">' + (esNft ? 'Canal ' : 'Nivel ') + (n + 1) + '</div>';
+    h += '<div class="torre-lista-grid" role="group" aria-label="' +
+      (esNft ? 'Huecos del canal ' : 'Cestas del nivel ') + (n + 1) + '">';
     for (let c = 0; c < C; c++) {
       const dat = state.torre?.[n]?.[c] || {};
       const col = torreListaColorCesta(n, c);
@@ -7513,7 +7516,7 @@ function renderTorreLista() {
       const fkAttr = ultFotoKey
         ? ' data-foto-key="' + String(ultFotoKey).replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'
         : '';
-      let ariaLabel = 'Cesta ' + (c + 1) + ', ' + (dat.variedad ? titLista : tit) + ', ' + sub;
+      let ariaLabel = (esNft ? 'Hueco ' : 'Cesta ') + (c + 1) + ', ' + (dat.variedad ? titLista : tit) + ', ' + sub;
       if (faseTit) ariaLabel += ', fase: ' + faseTit;
       ariaLabel = ariaLabel.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       h += '<button type="button" class="torre-lista-cesta-btn" data-n="' + n + '" data-c="' + c + '" ' +
@@ -7957,9 +7960,9 @@ function generarSVGTorre() {
       font-size="8" fill="#6b7280" text-anchor="middle" font-weight="600">AIR</text>`;
   }
 
-  // ── ETIQUETA DEPÓSITO ─────────────────────────────────────────────────────
+  // ── ETIQUETA DEPÓSITO (volumen nominal de la config activa, no la constante global) ──
   s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+4}" font-family="Syne,sans-serif"
-    font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle" letter-spacing="0.12em">DEPÓSITO · ${VOL_OBJETIVO}L</text>`;
+    font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle" letter-spacing="0.12em">DEPÓSITO · ${volConfig}L</text>`;
   s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+17}" font-family="Inconsolata,monospace"
     font-size="8.5" fill="#64748b" text-anchor="middle" font-weight="600">Bomba continua · recirculación</text>`;
 
@@ -8268,6 +8271,11 @@ function actualizarTorreEditarAyuda() {
     el.textContent = '';
     return;
   }
+  if (state.configTorre?.tipoInstalacion === 'nft') {
+    el.innerHTML =
+      'En <strong>NFT</strong> el esquema es ilustrativo. Usa <strong>Lista</strong> para abrir la ficha de cada hueco (variedad, fecha, fotos y notas).';
+    return;
+  }
   el.innerHTML = 'Toca una cesta en el <strong>esquema</strong> (de cara) o usa <strong>Lista</strong> abajo: ficha con variedad, fecha, fotos y notas. En el dibujo, desliza para ver el reverso.';
 }
 
@@ -8337,7 +8345,7 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
       '<div style="width:36px;height:4px;background:#e5e7eb;border-radius:2px;margin:10px auto 0"></div>' +
       '<div style="padding:16px 18px 12px">' +
         '<div id="tutorialTorreTabTitulo" style="font-family:var(--font-display);font-size:18px;font-weight:900;' +
-          'color:#111827">🌿 Tu torre en HidroCultivo</div>' +
+          'color:#111827">🌿 Tu sistema en HidroCultivo</div>' +
         '<div style="font-size:12px;color:#6b7280;line-height:1.45;margin-top:4px">Guía rápida de esta pantalla.</div>' +
       '</div>' +
       '<div style="padding:0 18px 14px;display:flex;flex-direction:column;gap:10px">' +
@@ -8346,9 +8354,9 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
         '<div style="padding:10px 12px;background:#eff6ff;border-radius:12px;border:1px solid #bfdbfe;font-size:12px;color:#374151;line-height:1.45">' +
           '<strong style="color:#1d4ed8">Modo de cultivo</strong> (Lechugas, Mixto…) adapta consejos generales; puedes cambiarlo cuando quieras.</div>' +
         '<div style="padding:10px 12px;background:#fffbeb;border-radius:12px;border:1px solid #fde68a;font-size:12px;color:#374151;line-height:1.45">' +
-          '<strong style="color:#b45309">Cestas en la torre</strong> · <em>Editar ficha</em> = detalle de cada hueco. <em>Asignar cultivo</em> = rellenar muchos a la vez (tiene su propio tutorial).</div>' +
+          '<strong style="color:#b45309">Huecos del sistema</strong> · <em>Editar ficha</em> = detalle de cada planta. <em>Asignar cultivo</em> = rellenar muchos a la vez (tiene su propio tutorial).</div>' +
         '<div style="padding:10px 12px;background:#fafafa;border-radius:12px;border:1px solid #e5e7eb;font-size:12px;color:#374151;line-height:1.45">' +
-          '<strong>Esquema</strong> · Vista tipo <em>maqueta</em> (simplificada, no escala real). <em>Desliza</em> para girar. Toca cestas de <strong>cara</strong> o prueba <strong>Lista</strong>. Puedes apagar animaciones suaves en la barra inferior del dibujo.</div>' +
+          '<strong>Esquema</strong> · En <strong>torre vertical</strong>: maqueta con giro al deslizar y cestas tocables de cara. En <strong>NFT</strong>: dibujo de canales; usa <strong>Lista</strong> para editar huecos. Animaciones (solo torre) en la barra inferior.</div>' +
       '</div>' +
       '<div style="padding:10px 18px 16px;border-top:1px solid #f3f4f6">' +
         '<button type="button" id="tutorialTorreTabOk" class="btn btn-primary" style="width:100%;padding:12px;border-radius:14px;' +
@@ -8586,23 +8594,77 @@ function finalizarAsignacionCultivos() {
   showToast('✅ Asignación finalizada · Modo edición de cestas');
 }
 
+/** Leyendas y botones del bloque esquema: torre vertical ≠ NFT (sin mezclar). */
+function actualizarChromePanelEsquemaPorTipo() {
+  const cfg = state.configTorre || {};
+  const esNft = cfg.tipoInstalacion === 'nft';
+  const intro = document.getElementById('torreEsquemaSub');
+  if (intro) {
+    if (esNft) {
+      intro.innerHTML =
+        '<strong>Esquema NFT</strong> según tu configuración (canales, pendiente, volumen del depósito). ' +
+        'Para cultivos y fechas usa <strong>Lista</strong>: cada fila es un canal y cada botón un hueco.';
+    } else {
+      intro.innerHTML =
+        '<strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real). ' +
+        'En el dibujo, desliza para girar y ver todas las cestas.';
+    }
+  }
+  const leg = document.getElementById('torreDiagramLegend');
+  if (leg) {
+    if (esNft) {
+      leg.innerHTML =
+        '<span class="k-dep">Depósito</span>' +
+        '<span style="color:#cbd5e1;font-weight:400">·</span>' +
+        '<span class="k-niv">Canales</span>' +
+        '<span style="color:#cbd5e1;font-weight:400">·</span>' +
+        '<span class="k-ces">Huecos</span>';
+    } else {
+      leg.innerHTML =
+        '<span class="k-dep">Depósito</span>' +
+        '<span style="color:#cbd5e1;font-weight:400">·</span>' +
+        '<span class="k-niv">Niveles</span>' +
+        '<span style="color:#cbd5e1;font-weight:400">·</span>' +
+        '<span class="k-ces">Cestas</span>' +
+        '<span class="k-hint"> · tocar</span>';
+    }
+  }
+  const btnGirar = document.getElementById('btnTorreGirarEsquema');
+  if (btnGirar) btnGirar.style.display = esNft ? 'none' : '';
+  const animLbl = document.getElementById('torreAnimSuavesLabel');
+  if (animLbl) animLbl.style.display = esNft ? 'none' : '';
+}
+
 function renderTorre() {
+  const cfg = state.configTorre || {};
+  const esNft = cfg.tipoInstalacion === 'nft';
+
   const chk = document.getElementById('torreChkAnimSuaves');
   if (chk) chk.checked = state.configTorre?.torreAnimSvg !== false;
 
   const wrap = document.getElementById('torreSVGWrap');
   if (!wrap) return;
-  wrap.innerHTML = generarSVGTorre();
 
-  // Swipe para girar torre (móvil): snap según numCestas
-  try { initTorreGestos(wrap); } catch(e) {}
+  if (esNft) {
+    const ch = cfg.nftNumCanales ?? cfg.numNiveles ?? 4;
+    const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
+    const pend = cfg.nftPendientePct ?? 2;
+    const vol = cfg.volDeposito || VOL_OBJETIVO;
+    wrap.innerHTML = buildNftSchematicSvg(ch, hx, pend, vol, 'Main');
+    wrap.setAttribute('aria-label',
+      'Esquema NFT con depósito, bomba y canales en pendiente. Usa la vista Lista para editar cada hueco.');
+  } else {
+    wrap.innerHTML = generarSVGTorre();
+    wrap.setAttribute('aria-label',
+      'Esquema de torre hidropónica. Desliza para girar la maqueta. Las cestas visibles de frente responden al toque.');
+    try { initTorreGestos(wrap); } catch (e) {}
+    bindTorreCestas(wrap);
+  }
 
-  bindTorreCestas(wrap);
+  actualizarChromePanelEsquemaPorTipo();
 
-  // Actualizar stats y rotación
   updateTorreStats();
   calcularRotacion();
-  // Actualizar compatibilidad
   setTimeout(renderCompatGrid, 100);
   actualizarTorreEditarAyuda();
 
@@ -8644,6 +8706,7 @@ function initTorreGestos(wrap) {
   };
 
   const pintarSoloCestas = () => {
+    if (state.configTorre?.tipoInstalacion === 'nft') return;
     const cfg = state.configTorre || {};
     const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
     const rot = cfg._torreRotRad || 0;
@@ -8658,6 +8721,7 @@ function initTorreGestos(wrap) {
     raf = requestAnimationFrame(() => {
       raf = 0;
       if (!wrap.isConnected) return;
+      if (state.configTorre?.tipoInstalacion === 'nft') return;
       if (dragRotating && wrap.querySelector('#hc-baskets-n-0')) {
         pintarSoloCestas();
       } else {
@@ -8670,6 +8734,7 @@ function initTorreGestos(wrap) {
   };
 
   const onDown = (clientX) => {
+    if (state.configTorre?.tipoInstalacion === 'nft') return;
     try {
       if (localStorage.getItem(TORRE_SWIPE_HINT_LS) !== '1') {
         localStorage.setItem(TORRE_SWIPE_HINT_LS, '1');
@@ -8826,6 +8891,7 @@ function bindTorreCestas(wrap, opts = {}) {
 }
 
 function rotarTorrePaso(dir = 1) {
+  if (state.configTorre?.tipoInstalacion === 'nft') return;
   const cfg = state.configTorre || {};
   const numCestas = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS || 5;
   const step = (2 * Math.PI) / Math.max(3, numCestas);
@@ -9132,7 +9198,7 @@ function actualizarAvisoCestasSinFecha() {
     inicio.style.display = 'block';
     inicio.innerHTML =
       '⚠️ Hay ' + nStr + ' ' + pl + ' con cultivo pero <strong>sin fecha</strong>. No se usan en el riego ni en la media de días (solo cuentan cestas con fecha válida). ' +
-      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'torre\')">Ir a Torre</button>';
+      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'sistema\')">Ir a Sistema</button>';
   }
   if (torre) {
     torre.style.display = 'block';
@@ -9145,7 +9211,7 @@ function actualizarAvisoCestasSinFecha() {
     riego.style.display = 'block';
     riego.innerHTML =
       '⚠️ Con ' + nStr + ' ' + pl + ' sin fecha, <strong>no entran</strong> en plantas/Kc del riego ni en la media de días del inicio (solo las fechas válidas). ' +
-      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'torre\')">Completar en Torre</button>';
+      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'sistema\')">Completar en Sistema</button>';
   }
 }
 
@@ -9988,7 +10054,13 @@ function onSetupVolSliderInput() {
 }
 
 /** Esquema SVG del NFT: depósito, subida, distribución, canales con pendiente y retorno (lectura rápida). */
-function buildNftSchematicSvg(canales, huecos, pendPct, volL) {
+function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix) {
+  const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
+    ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
+    : '';
+  const gidFilm = 'nftFilmG' + suf;
+  const gidTank = 'nftTankG' + suf;
+  const tid = 'nftSvgTitle' + suf;
   const W = 320;
   const H = 168;
   const nCh = Math.min(Math.max(parseInt(String(canales), 10) || 1, 1), 10);
@@ -10009,7 +10081,7 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL) {
     const xa = x0 + i * span + 1.5;
     const w = Math.max(span - 3, 13);
     chParts.push(
-      '<path fill="url(#nftFilmG)" stroke="#0f766e" stroke-width="0.7" opacity="0.96" ' +
+      '<path fill="url(#' + gidFilm + ')" stroke="#0f766e" stroke-width="0.7" opacity="0.96" ' +
         `d="M${xa} ${yTop} L${xa + w} ${yTop + sk} L${xa + w + 5} ${yBot} L${xa + 5} ${yBot - sk * 0.55}Z"/>`
     );
     const nd = Math.min(huecosN, 7);
@@ -10027,12 +10099,12 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL) {
 
   return (
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="168" ' +
-      'preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="nftSvgTitle">' +
-      '<title id="nftSvgTitle">NFT: depósito, bomba, canales en pendiente y retorno al depósito</title>' +
+      'preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' + tid + '">' +
+      '<title id="' + tid + '">NFT: depósito, bomba, canales en pendiente y retorno al depósito</title>' +
       '<defs>' +
-      '<linearGradient id="nftFilmG" x1="0" y1="0" x2="1" y2="1">' +
+      '<linearGradient id="' + gidFilm + '" x1="0" y1="0" x2="1" y2="1">' +
       '<stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient>' +
-      '<linearGradient id="nftTankG" x1="0" y1="0" x2="0" y2="1">' +
+      '<linearGradient id="' + gidTank + '" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
       '</defs>' +
       '<text x="' + (W / 2) + '" y="20" text-anchor="middle" fill="#14532d" font-size="11" font-weight="800" ' +
@@ -10040,7 +10112,7 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL) {
       '<line x1="' + x0 + '" y1="' + yMan + '" x2="' + x1 + '" y2="' + (yMan + 1) + '" stroke="#065f46" stroke-width="4" stroke-linecap="round"/>' +
       chParts.join('') +
       '<line x1="' + (W / 2) + '" y1="' + (yMan + 1) + '" x2="' + (W / 2) + '" y2="' + (yTop - 2) + '" stroke="#047857" stroke-width="3.2" stroke-linecap="round"/>' +
-      '<rect x="' + tx + '" y="100" width="' + tw + '" height="36" rx="8" fill="url(#nftTankG)" stroke="#14532d" stroke-width="1.1"/>' +
+      '<rect x="' + tx + '" y="100" width="' + tw + '" height="36" rx="8" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.1"/>' +
       '<text x="' + (W / 2) + '" y="122" text-anchor="middle" fill="#fff" font-size="11" font-weight="800" ' +
       'font-family="system-ui,sans-serif">' + vol + ' L</text>' +
       '<circle cx="' + (W / 2) + '" cy="96" r="9" fill="#1e293b" stroke="#475569" stroke-width="0.9"/>' +
@@ -15625,7 +15697,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
       <div class="consejo-titulo" style="margin-bottom:8px">Mezcla dinámica · <strong>${meteoEscHtml(nutActivo.nombre)}</strong> · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span style="font-size:11px;font-weight:600;opacity:.88">(${ecOrigen})</span></div>
       <div class="consejo-ecph-note" style="margin-bottom:10px">
-        Solo el <strong>nutriente activo</strong> de la torre (cámbialo en la pestaña Torre o en la configuración). Misma regla que el checklist: volumen del depósito, EC objetivo y <code>ecPorMl</code>. ${leyendaBlanda}
+        Solo el <strong>nutriente activo</strong> de la instalación (cámbialo en la pestaña Sistema o en la configuración). Misma regla que el checklist: volumen del depósito, EC objetivo y <code>ecPorMl</code>. ${leyendaBlanda}
         Columna <strong>grifo</strong>: pendiente hacia la misma EC restando la <strong>EC base</strong> del agua (Mediciones). La ficha bajo el nombre resume la orientación del fabricante.
         <strong>A+B simétricos</strong> y <strong>1 parte</strong>: cálculo EC. <strong>3 botellas</strong> y <strong>A+B distintas</strong>: tabla × volumen. Comprueba con el <strong>medidor</strong>.
       </div>
@@ -18410,7 +18482,7 @@ function actualizarResumenSetup() {
       : '') + '<br>' +
     hwResumen +
     '🌱 Cultivos: <strong>' + plantasSel + '</strong><br>' +
-    '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Torre)' : 'Una torre') + '</strong>';
+    '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Sistema)' : 'Una torre') + '</strong>';
 }
 
 // Tamaño de cestas
