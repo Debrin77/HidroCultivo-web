@@ -2533,6 +2533,31 @@ button.dia-card {
 .evento-tipo-clima    { border-color: rgba(167,243,208,0.2); }
 
 /* ══ HISTORIAL ══ */
+.hist-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.hist-toolbar .hist-tabs {
+  width: 100%;
+  margin-bottom: 0;
+  min-width: 0;
+}
+.hist-checklist-btn {
+  align-self: flex-end;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--green);
+  background: #f0fdf4;
+  color: #15803d;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
 .hist-tabs {
   display: flex;
   gap: 6px;
@@ -2540,6 +2565,7 @@ button.dia-card {
 }
 .hist-tab {
   flex: 1;
+  min-width: 0;
   padding: 8px;
   border-radius: 10px;
   border: 1px solid var(--border);
@@ -5307,19 +5333,16 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
       <div class="section-title">📈 <span class="accent">Historial</span></div>
 
-      <!-- Sub-tabs -->
-      <div style="display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap">
-        <div class="hist-tabs" role="tablist" aria-label="Apartados del historial" style="flex:1;margin-bottom:0;min-width:200px">
+      <!-- Sub-tabs + checklist (dos filas: evita solapamiento en móvil) -->
+      <div class="hist-toolbar">
+        <div class="hist-tabs" role="tablist" aria-label="Apartados del historial">
           <button type="button" class="hist-tab active" role="tab" id="htab-mediciones" aria-selected="true" onclick="histTab('mediciones')">📊 Mediciones</button>
           <button type="button" class="hist-tab" role="tab" id="htab-recargas" aria-selected="false" onclick="histTab('recargas')">🔄 Recargas</button>
           <button type="button" class="hist-tab" role="tab" id="htab-registro" aria-selected="false" onclick="histTab('registro')">📋 Registro</button>
           <button type="button" class="hist-tab" role="tab" id="htab-diario" aria-selected="false" onclick="histTab('diario')">📸 Diario</button>
         </div>
-        <button type="button" onclick="abrirChecklist(false)"
-          style="padding:8px 12px;border-radius:10px;border:1.5px solid var(--green);
-                 background:#f0fdf4;color:#15803d;font-family:var(--font-display);
-                 font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;
-                 -webkit-tap-highlight-color:transparent">
+        <button type="button" class="hist-checklist-btn" onclick="abrirChecklist(false)"
+          aria-label="Abrir checklist de recarga">
           📋 Checklist
         </button>
       </div>
