@@ -12088,6 +12088,51 @@ const AGUA_MUNICIPIOS = {
   "Sagunto":               { ec: 710, dureza: "Dura",       nota: "Canal del Camp de Morvedre" },
   "Torrent":               { ec: 600, dureza: "Dura",       nota: "EMIVASA Valencia" },
   "Vila-real":             { ec: 830, dureza: "Muy dura",   nota: "Mismo sistema que Castelló" },
+  // CV — Plana / Maestrat / interior Castelló (aguas duras, referencia Mijares–red provincial)
+  "Almassora":             { ec: 840, dureza: "Muy dura",   nota: "Plana — red próxima a Castelló" },
+  "Burriana":              { ec: 820, dureza: "Muy dura",   nota: "Litoral norte Castelló" },
+  "Benicarló":             { ec: 800, dureza: "Dura",       nota: "Baix Maestrat — agua dura típica" },
+  "Vinaròs":               { ec: 790, dureza: "Dura",       nota: "Litoral nord — similar Benicarló" },
+  "Onda":                  { ec: 860, dureza: "Muy dura",   nota: "Interior Plana Alta" },
+  "Nules":                 { ec: 850, dureza: "Muy dura",   nota: "Plana Baixa — similar Vila-real" },
+  "Peníscola":             { ec: 795, dureza: "Dura",       nota: "Litoral norte — acuífero y red local" },
+  "Morella":               { ec: 720, dureza: "Dura",       nota: "Els Ports — manantiales y mezcla red" },
+  "Segorbe":               { ec: 740, dureza: "Dura",       nota: "Alto Palancia — interior Castelló" },
+  "Vilafranca del Cid":    { ec: 715, dureza: "Dura",       nota: "Alt Maestrat — manantiales y red" },
+  "Monòver":               { ec: 728, dureza: "Dura",       nota: "Vinalopó Medio — similar Elda" },
+  // CV — Horta / Safor / Ribera / interior València
+  "Alzira":                { ec: 640, dureza: "Dura",       nota: "Ribera Alta — Júcar / red valenciana" },
+  "Sueca":                 { ec: 610, dureza: "Dura",       nota: "Litoral sud — acuíferos costeros" },
+  "Cullera":               { ec: 600, dureza: "Dura",       nota: "Túria / red metropolitana sur" },
+  "Xàtiva":                { ec: 680, dureza: "Dura",       nota: "Costera — acuíferos y red interior" },
+  "Ontinyent":             { ec: 700, dureza: "Dura",       nota: "Vall d'Albaida — dura" },
+  "Manises":               { ec: 610, dureza: "Dura",       nota: "Àrea metropolitana — mixta EMIVASA" },
+  "Burjassot":             { ec: 615, dureza: "Dura",       nota: "Metropolitana Valencia" },
+  "Paterna":               { ec: 605, dureza: "Dura",       nota: "Metropolitana — similar Torrent" },
+  "Mislata":               { ec: 615, dureza: "Dura",       nota: "Metropolitana Valencia" },
+  "Xirivella":             { ec: 618, dureza: "Dura",       nota: "Metropolitana Valencia" },
+  "Oliva":                 { ec: 580, dureza: "Dura",       nota: "Safor — similar Gandia" },
+  "Carcaixent":            { ec: 650, dureza: "Dura",       nota: "Ribera Alta — Júcar" },
+  // CV — Marina / Alacantí / Vinalopó / Vega Baja
+  "Dénia":                 { ec: 650, dureza: "Dura",       nota: "Marina Alta — acuíferos y red" },
+  "Calp":                  { ec: 670, dureza: "Dura",       nota: "Marina Alta — similar Benidorm" },
+  "Altea":                 { ec: 660, dureza: "Dura",       nota: "Marina Baixa" },
+  "Xàbia":                 { ec: 640, dureza: "Dura",       nota: "Marina Alta" },
+  "Orihuela":              { ec: 760, dureza: "Dura",       nota: "Vega Baja — trasvase y acuíferos" },
+  "Elda":                  { ec: 720, dureza: "Dura",       nota: "Vinalopó Medio — muy mineralizada" },
+  "Alcoi":                 { ec: 690, dureza: "Dura",       nota: "Hoya de Alcoy — manantiales y red" },
+  "Villena":               { ec: 710, dureza: "Dura",       nota: "Alto Vinalopó" },
+  "Novelda":               { ec: 750, dureza: "Muy dura",   nota: "Medio Vinalopó — muy dura" },
+  "Crevillent":            { ec: 770, dureza: "Muy dura",   nota: "Bajo Vinalopó — similar Elche" },
+  "Santa Pola":            { ec: 700, dureza: "Dura",       nota: "Litoral — acuífero y salinas" },
+  "Guardamar del Segura":  { ec: 720, dureza: "Dura",       nota: "Litoral sur — trasvase" },
+  "La Vila Joiosa":        { ec: 675, dureza: "Dura",       nota: "Marina Baixa — similar Benidorm" },
+  "Finestrat":             { ec: 670, dureza: "Dura",       nota: "Marina Baixa" },
+  "Callosa d'en Sarrià":   { ec: 655, dureza: "Dura",       nota: "Marina Baixa interior" },
+  "Ibi":                   { ec: 695, dureza: "Dura",       nota: "Alcoià — similar Alcoi" },
+  "Mutxamel":              { ec: 735, dureza: "Dura",       nota: "Camp d'Alacant — similar Alicante" },
+  "San Vicente del Raspeig": { ec: 745, dureza: "Dura",     nota: "Camp d'Alacant — campus y red urbana" },
+  "El Campello":           { ec: 710, dureza: "Dura",       nota: "Litoral — mezcla acuífero" },
   // Cataluña
   "Barcelona":             { ec: 180, dureza: "Blanda",     nota: "Río Ter — blanda en España" },
   "L'Hospitalet":          { ec: 190, dureza: "Blanda",     nota: "Red metropolitana Barcelona" },
@@ -12168,9 +12213,91 @@ const MUNICIPIO_ALIAS_A_CANON = (() => {
       if (k) m[k] = canon;
     });
   };
-  reg(['Castellón de la Plana', 'Castellón', 'Castello de la Plana', 'Castello', 'Castelló', 'Castelló de la Plana'], 'Castelló de la Plana');
-  reg(['València', 'Valencia ciutat'], 'Valencia');
-  reg(['Alacant'], 'Alicante');
+  // ── Comunitat Valenciana: bilingüe (valencià / castellà) y grafías habituales ──
+  reg(['Castellón de la Plana', 'Castellón', 'Castello de la Plana', 'Castello', 'Castelló', 'Castelló de la Plana', 'La Plana'], 'Castelló de la Plana');
+  reg(['València', 'Valencia ciutat', 'Valéncia', 'Ciutat de Valencia', 'Ciudad de Valencia'], 'Valencia');
+  reg(['Alacant', 'Alicante ciudad', 'Alacant ciutat'], 'Alicante');
+  reg(['Elx', 'Elche ciudad'], 'Elche');
+  reg(['Gandía', 'Gandia ciudad', 'La Safor'], 'Gandia');
+  reg(['Sagunt', 'Murviedro', 'Sagunto ciudad'], 'Sagunto');
+  reg(['Villarreal', 'Vila Real', 'Vila-real', 'Vila Real de'], 'Vila-real');
+  reg(['Almazora', 'Almassora', 'Almazara'], 'Almassora');
+  reg(['Borriana', 'Borrianes'], 'Burriana');
+  reg(['Benicarlo'], 'Benicarló');
+  reg(['Vinaroz', 'Vinaros', 'Vinaròs'], 'Vinaròs');
+  reg(['Peniscola', 'Peníscola', 'Peñíscola'], 'Peníscola');
+  reg(['Moixent', 'Mogente'], 'Xàtiva');
+  reg(['Montesa'], 'Ontinyent');
+  reg(['Alcira', 'Algezira', 'Alzira ciutat'], 'Alzira');
+  reg(['Játiva', 'Xativa'], 'Xàtiva');
+  reg(['Onteniente'], 'Ontinyent');
+  reg(['Denia', 'Diana'], 'Dénia');
+  reg(['Calpe'], 'Calp');
+  reg(['Jávea', 'Javea', 'Xabia'], 'Xàbia');
+  reg(['Oriola', 'Orihuela ciudad'], 'Orihuela');
+  reg(['Petrer', 'Petrer de los Valles', 'Petrer dels Alagons'], 'Elda');
+  reg(['Alcoy', 'Alcoy de', 'Alcoi ciutat'], 'Alcoi');
+  reg(['Crevillente'], 'Crevillent');
+  reg(['Villajoyosa', 'La Vila Joiosa', 'Vila Joiosa', 'Vila-Joiosa', 'La Vila'], 'La Vila Joiosa');
+  reg(['Callosa', "Callosa d'En Sarrià", 'Callosa den Sarria'], "Callosa d'en Sarrià");
+  reg(['San Vicente del Raspeig', 'Sant Vicent del Raspeig', 'San Vicente', 'Sant Vicent'], 'San Vicente del Raspeig');
+  reg(['Muchamiel', 'Mutxamel'], 'Mutxamel');
+  reg(['El Campello', "L'Altet", "l'Altet"], 'El Campello');
+  reg(['Guardamar'], 'Guardamar del Segura');
+  reg(['Monover', 'Monòver'], 'Monòver');
+  reg(['Elda ciudad'], 'Elda');
+  reg(['Novelda ciudad'], 'Novelda');
+  reg(['Villena ciudad'], 'Villena');
+  reg(['Ibi ciudad'], 'Ibi');
+  reg(['Finestrat ciudad'], 'Finestrat');
+  reg(['Santa Pola ciudad'], 'Santa Pola');
+  reg(['Torrevieja ciudad', 'Torrevella', 'Torrevella de la Mata'], 'Torrevieja');
+  reg(['Benidorm ciudad'], 'Benidorm');
+  reg(['Torrent ciudad', 'Torrent de'], 'Torrent');
+  reg(['Manises ciudad'], 'Manises');
+  reg(['Burjassot ciudad'], 'Burjassot');
+  reg(['Paterna ciudad'], 'Paterna');
+  reg(['Mislata ciudad'], 'Mislata');
+  reg(['Xirivella ciudad', 'Chirivella'], 'Xirivella');
+  reg(['Carcaixent ciudad', 'Carcagente'], 'Carcaixent');
+  reg(['Cullera ciudad'], 'Cullera');
+  reg(['Sueca ciudad'], 'Sueca');
+  reg(['Oliva ciudad', "l'Oliva"], 'Oliva');
+  reg(['Morella ciudad'], 'Morella');
+  reg(['Onda ciudad'], 'Onda');
+  reg(['Nules ciudad'], 'Nules');
+  reg(['Benicarló ciudad', 'Benicarlo ciudad'], 'Benicarló');
+  reg(['Burriana ciudad', 'Borriana ciudad'], 'Burriana');
+  reg(['Almassora ciudad', 'Almazora ciudad'], 'Almassora');
+  // CV — pueblos frecuentes → municipio de referencia (misma comarca / red)
+  reg(['Almenara', 'Tales', 'La Llosa', 'Moncofa', 'Chilches', 'Xilxes', 'La Vilavella', 'Les Alqueries', 'Alqueries'], 'Nules');
+  reg(['Vall d Uixó', 'Vall d Uxo', 'La Vall d Uixó', 'Vall duixo'], 'Nules');
+  reg(['Betxí', 'Betxi', 'Betchi'], 'Vila-real');
+  reg(['Alqueries', 'Alquerias del Niño Perdido', 'Alqueríes del Niño Perdido', 'Alquerias'], 'Almassora');
+  reg(['Cabanes', 'Cabanes de Mar', 'Orpesa', 'Oropesa del Mar', 'Orpesa del Mar'], 'Benicarló');
+  reg(['Benicasim', 'Benicàssim', 'Benicasim playa'], 'Castelló de la Plana');
+  reg(['Alcalà de Xivert', 'Alcala de Chivert', 'Torreblanca', 'Torreblanca playa'], 'Benicarló');
+  reg(['Alcora', "l'Alcora", 'Alcora ciudad'], 'Onda');
+  reg(['Lucena del Cid', 'Lucena Cid', 'Useras', 'Les Useres'], 'Onda');
+  reg(['Segorbe', 'Segorb', 'Altura', 'Soneja', 'Soneixa'], 'Segorbe');
+  reg(['Vilafranca', 'Vilafranca del Cid', 'Villafranca del Cid', 'Villafranca'], 'Vilafranca del Cid');
+  reg(['Silla', 'Silla Valencia', 'Albalat de la Ribera', 'Albalat Ribera', 'Guadassuar', 'L Alcudia', "L'Alcúdia", 'Alcudia Valencia', 'Carlet', 'Alginet', 'Benimodo', 'Catadau', 'Llombai', 'Llocnou'], 'Carcaixent');
+  reg(['Tavernes de la Valldigna', 'Tavernes Valldigna', 'Xeraco', 'Jaraco', 'Xeresa', 'Platja Xeraco'], 'Cullera');
+  reg(['Cullera playa', 'Favara', 'Favara Ribera', 'Antella', 'Alberic', 'Benimuslem'], 'Alzira');
+  reg(['L Eliana', "L'Eliana", 'La Eliana', 'La Pobla de Vallbona', 'Pobla Vallbona', 'Ribarroja', 'Riba-roja de Túria', 'Ribarroja del Turia', 'Benaguasil', 'Benisanó', 'Llíria', 'Liria', 'Marines', 'Gátova', 'Gatova', 'Olocau', 'Pedralba', 'Vilamarxant', 'Villamarchante'], 'Paterna');
+  reg(['Quart de Poblet', 'Quart Poblet', 'Quart de les Valls', 'Aldaia', 'Adaya', 'Alaquàs', 'Alaquas', 'Albal', 'Albal Valencia', 'Alcàsser', 'Alcasser', 'Alfafar', 'Alfafar Valencia', 'Albalat dels Sorells', 'Albalat Sorells', 'Albalat dels Tarongers', 'Alboraya', 'Alboraia', 'Almàssera', 'Almàssera Valencia', 'Almassera', 'Benetússer', 'Benetusser', 'Beniparell', 'Benisano', 'Bétera', 'Betera', 'Bonrepòs i Mirambell', 'Bonrepos Mirambell', 'Burjassot playa', 'Catarroja', 'Chiva', 'Xiva', 'Xirivella playa', 'Foios', 'Godella', 'Massanassa', 'Meliana', 'Moncada', 'Museros', 'Paiporta', 'Picanya', 'Picassent', 'Puzol', 'Puçol', 'Quartell', 'Rafelbunyol', 'Rafelbuñol', 'Rocafort', 'Sedaví', 'Silla horta', 'Tavernes Blanques', 'Tavernes Blanques Valencia', 'Vinalesa', 'Vinalesa Valencia'], 'Burjassot');
+  reg(['Albalat de la Ribera', 'Corbera', 'Fortaleny', 'Polinyà de Xúquer', 'Polinya Xuquer', 'Riola', 'Llanera de Ranes', 'Manuel', 'Real de Gandia', 'Real Gandia', 'Rafelcofer', 'Beniflá', 'Benifaio', 'Benifayo', 'Alfarp', 'Alfarb', 'Catadau horta', 'Montserrat Valencia', 'Montserrat Ribera', 'Montroy', 'Montroi', 'Llocnou de Sant Jeroni', 'Llocnou Sant Jeroni'], 'Carcaixent');
+  reg(['Ador', 'Alfauir', 'Almoines', 'Barx', 'Barxeta', 'Beniarjó', 'Benirredrà', 'Castellonet', 'Castellonet de la Conquesta', 'Llocnou de Sant Jeroni', 'Palma de Gandia', 'Palma Gandia', 'Potries', 'Rafelcofer', 'Real de Gandia', 'Villalonga'], 'Gandia');
+  reg(['Daimús', 'Daimus', 'Grau de Gandia', 'Platja Gandia', 'Miramar Valencia', 'Platja Miramar', 'Bellreguard', 'Bellreguart', 'Piles', 'Piles Valencia', 'Piles de la Baronia'], 'Gandia');
+  reg(['Beniarbeig', 'Benidoleig', 'Benimeli', 'El Verger', 'Els Poblets', 'Poblets', 'Ondara', 'Pedreguer', 'Ràfol d Almúnia', 'Rafol Almunia', 'Sanet y Negrals', 'Sanet Negrals', 'Benissa', 'Benisa', 'Calp playa', 'Calpe playa', 'Teulada', 'Moraira', 'Benitachell', 'Poble Nou Benitatxell'], 'Dénia');
+  reg(['Alfas del Pi', "l'Alfàs del Pi", 'Alfas Pi', 'Finestrat playa', 'Polop', 'Polop de la Marina', 'Relleu', 'Sella', 'Tàrbena', 'Tarbenya', 'Confrides', 'Benasau', 'Beniardá', 'Benimantell', 'Famorca', 'Facheca', 'Quatretondeta', 'Tollos'], 'Altea');
+  reg(['Agres', 'Alcoleja', 'Alcolecha', 'Alfafara', 'Alfafara Alicante', 'Alfàs del Pi interior', "Alqueria d'Asnar", 'Beniarrés', 'Benilloba', 'Benillup', 'Benimarfull', 'Benimassot', 'Benimeli', 'Castalla', 'Cocentaina', 'Facheca', 'Gaianes', 'Gorga', 'Millena', 'Muro de Alcoy', 'Planes', 'Quatretondeta', 'Tibi'], 'Alcoi');
+  reg(['Aspe', 'Hondon de las Nieves', 'Fondó', 'Fondo Nieves', 'Hondon Frailes', 'Monforte del Cid', 'Monforte Cid', 'Montealegre del Castillo', 'Pinoso', 'El Pinós', 'La Romana', 'La Romana Alicante', 'Algueña', 'Algueña Alicante', 'Herrada', 'Rafal', 'Redován', 'Redovan', 'San Isidro Alicante', 'Sant Isidre', 'Torrellano', 'Urbanización Torrellano'], 'Elda');
+  reg(['Ulea', 'Blanca', 'Abarán', 'Abaran', 'Ceutí', 'Ceuti', 'Fortuna', 'Lorquí', 'Lorqui'], 'Orihuela');
+  reg(['Algorfa', 'Almoradí', 'Almoradi', 'Benejúzar', 'Benejuzar', 'Benferri', 'Bigastro', 'Catral', 'Cox', 'Daya Nueva', 'Day Vieja', 'Dolores Alicante', 'Formentera del Segura', 'Granja Rocamora', 'Jacarilla', 'Los Montesinos', 'Montesinos', 'Pilar de la Horadada', 'Pilar Horadada', 'Rafal Torrevieja', 'San Fulgencio', 'San Miguel de Salinas', 'San Miguel Salinas', 'Torre de la Horadada', 'Torrevieja campo'], 'Orihuela');
+  reg(['Agost campo', 'Busot', 'Campello playa', 'Campello Altet', 'Jijona', 'Xixona', 'Mutxamel playa', 'San Juan Alicante', 'Sant Joan Alacant', 'San Juan playa', 'Muchavista', 'El Rebolledo'], 'Mutxamel');
+  reg(['Aigües', 'Aigues', 'Relleu', 'Tibi Alicante', 'Torremanzanas', 'Torremanzana', 'Villajoyosa playa'], 'La Vila Joiosa');
+  // Resto España (alias ya existentes)
   reg(["L'Hospitalet de Llobregat", 'Hospitalet de Llobregat', 'Hospitalet'], "L'Hospitalet");
   reg(['Donostia', 'San Sebastián'], 'San Sebastián');
   reg(['Vitoria', 'Gasteiz'], 'Vitoria-Gasteiz');
