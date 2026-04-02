@@ -5313,6 +5313,12 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <!-- Resultado programa general -->
       <div class="riego-resultado" id="riegoResultado" style="display:none">
 
+        <div id="riegoNftContinuoWrap" style="display:none;margin-bottom:14px;padding:12px 14px;border-radius:12px;background:#ecfdf5;border:1.5px solid #6ee7b7;font-size:12px;line-height:1.55;color:#065f46">
+          <strong>🪴 Instalación NFT</strong> — La bomba del circuito (película en el canal) suele ir <strong>encendida 24 h al día</strong> de forma continua. Los <strong>ciclos min ON / OFF</strong> de abajo están pensados para <strong>torre vertical con programador</strong>, no para NFT clásico.
+          <p style="margin:8px 0 0;font-size:11px;opacity:0.95">En NFT el riego “real” es el <strong>flujo continuo</strong> por el tubo; las guías técnicas lo describen así (p. ej. flujo laminar constante en canales NFT). El sustrato en copa (lana de roca, coco, esponja) sirve de arranque y apoyo, pero <strong>no sustituye</strong> la película: no convierte el sistema en riego por temporizador como en maceta. Algunos montajes usan temporizador de forma excepcional, pero no es lo habitual y cortar el flujo puede dejar tramos del canal sin película.</p>
+        </div>
+
+        <div id="riegoCiclosTorreWrap">
         <div class="card-title">📋 Programa general — 07:00 a 21:00h</div>
 
         <div class="riego-programa">
@@ -5373,6 +5379,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <div class="riego-stat-label">% ON / ciclo</div>
           </div>
         </div>
+        </div><!-- /riegoCiclosTorreWrap -->
 
         <!-- Datos clima usados -->
         <div class="card-title" style="margin-top:10px">🌤️ Datos climáticos usados</div>
@@ -8021,7 +8028,7 @@ function generarSVGTorre() {
   s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+4}" font-family="Syne,sans-serif"
     font-size="10" font-weight="900" fill="#0f172a" text-anchor="middle" letter-spacing="0.12em">DEPÓSITO · ${volConfig}L</text>`;
   s += `<text x="${CX}" y="${DEP_Y+DEP_H/2+17}" font-family="Inconsolata,monospace"
-    font-size="8.5" fill="#64748b" text-anchor="middle" font-weight="600">Bomba continua · recirculación</text>`;
+    font-size="8.5" fill="#64748b" text-anchor="middle" font-weight="600">Riego por ciclos · programador</text>`;
 
   // Conexión depósito → eje (tubito de subida)
   s += `<line x1="${CX}" y1="${DEP_Y}" x2="${CX}" y2="${ejeBot}"
@@ -10492,8 +10499,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const EO = equipOpts || {};
   const interactive = EO.interactive === true;
   const bomb = EO.bombaInfo || null;
-  const showCalentador = EO.calentador === true;
-  const showDifusor = EO.difusor === true;
   const userQ = EO.userCaudalLh != null && EO.userCaudalLh > 0 ? Math.round(EO.userCaudalLh) : null;
   const userW = EO.userPotenciaW != null && EO.userPotenciaW > 0 ? Math.round(EO.userPotenciaW) : null;
 
@@ -10533,11 +10538,13 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
   const flowSt = 'stroke="#2563eb" fill="none" ' + flowDash;
 
-  let flowD = '';
-  const xPump = cx;
+  /** Subida lateral (como esquema clásico NFT): no por el centro; entra al T1 por el extremo izquierdo del tubo. */
+  const xRiser = Math.max(26, Math.min(tx + 28, xL - 10));
   const yPump = waterTop + Math.min(18, waterH * 0.45);
-  flowD += 'M ' + xPump + ' ' + yPump;
-  flowD += ' L ' + xPump + ' ' + (yRow(0) - 6);
+
+  let flowD = '';
+  flowD += 'M ' + xRiser + ' ' + yPump;
+  flowD += ' L ' + xRiser + ' ' + yRow(0);
   flowD += ' L ' + (xL + padFlow) + ' ' + yRow(0);
   for (let i = 0; i < nCh; i++) {
     const y = yRow(i);
@@ -10557,8 +10564,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     flowD +=
       ' Q ' + (xL - 8) + ' ' + (yLast + 28) + ', ' + (tx + 18) + ' ' + (tankY + 6);
   }
-  flowD += ' L ' + (tx + tankW * 0.55) + ' ' + (tankY + 10);
-  flowD += ' L ' + xPump + ' ' + yPump;
+  flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
+  flowD += ' L ' + xRiser + ' ' + (tankY + 14);
+  flowD += ' L ' + xRiser + ' ' + yPump;
 
   let back = '';
   back += '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -10573,9 +10581,14 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '<text x="' + (xL - 4) + '" y="' + (yRow(i) + 4) + '" text-anchor="end" font-size="11" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (i + 1) + '</text>';
   }
 
-  let flowLayer = '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"/>';
+  const nftFlowAnim = torreSvgAnimacionesActivas();
+  let flowLayer =
+    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
+    (nftFlowAnim
+      ? '><animate attributeName="stroke-dashoffset" from="0" to="-13" dur="2.2s" repeatCount="indefinite" calcMode="linear"/></path>'
+      : '/>');
   flowLayer +=
-    '<text x="' + (xL + 2) + '" y="' + (yRow(0) - 14) + '" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const hr = Math.max(3.8, Math.min(8.5, ((xR - xL - 24) / Math.max(huecosN, 2)) * 0.38));
   let plants = '';
@@ -10680,17 +10693,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '<text x="' + cx + '" y="' + (tankY + 58) + '" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="800">' + escSvgText(uLine) + '</text>';
   }
 
-  let icons = '';
-  const ix0 = tx + tankW - 36;
-  icons += '<text x="' + ix0 + '" y="' + (tankY + 20) + '" font-size="14" aria-hidden="true">⚡</text>';
-  if (showDifusor) icons += '<text x="' + (ix0 - 22) + '" y="' + (tankY + 20) + '" font-size="12" aria-hidden="true">💨</text>';
-  if (showCalentador) icons += '<text x="' + (ix0 - 44) + '" y="' + (tankY + 20) + '" font-size="12" aria-hidden="true">🌡️</text>';
-
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
     channels = '<g pointer-events="none">' + channels + '</g>';
     flowLayer = '<g pointer-events="none">' + flowLayer + '</g>';
-    tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + icons + '</g>';
+    tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
   let foot =
@@ -10741,7 +10748,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     flowLayer +
     plants +
     tankLayer +
-    (!interactive ? pumpLines + icons : '') +
+    (!interactive ? pumpLines : '') +
     '<text x="' +
     cx +
     '" y="' +
@@ -18096,6 +18103,54 @@ async function calcularRiego() {
     if (sensRiego.mult !== 1) {
       demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * sensRiego.mult));
     }
+
+    const esNftRiego = state.configTorre?.tipoInstalacion === 'nft';
+    if (esNftRiego) {
+      document.getElementById('riegoClimaUsado').style.fontSize = '13px';
+      const etiquetaDiaN = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
+      const precipMmN = Math.round((Number(data.daily.precipitation_sum[idx]) || 0) * 10) / 10;
+      const uvDailyRawN = dataUV.daily?.uv_index_max?.[idx];
+      const uvClimaStrN = esInterior
+        ? '—'
+        : (!Number.isFinite(Number(uvDailyRawN)) ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
+      const lineaClimaN =
+        '🌡️ Temperatura: ' + Math.round(tempMin) + '–' + Math.round(tempMax) + ' °C' +
+        ' · 💧 Humedad media: ' + humMedia + '%' +
+        ' · ☀️ Índice UV: ' + uvClimaStrN +
+        ' · 🌧️ Prob. lluvia: ' + probLluvia + '% · ' + precipMmN + ' mm';
+      document.getElementById('riegoClimaUsado').innerHTML =
+        '<strong style="color:var(--white)">' + etiquetaDiaN + '</strong><br>' + lineaClimaN +
+        (esInterior
+          ? '<br><span style="opacity:0.92">🏠 Interior — referencia meteorológica de la ubicación guardada.</span>'
+          : '') +
+        '<br><span style="opacity:0.88;font-size:11px">Referencia ambiental: en NFT el riego del canal es <strong>continuo 24 h</strong>; no aplican ciclos ON/OFF de torre.</span>';
+
+      const cwrapN = document.getElementById('riegoCiclosTorreWrap');
+      if (cwrapN) cwrapN.style.display = 'none';
+      const nfwN = document.getElementById('riegoNftContinuoWrap');
+      if (nfwN) nfwN.style.display = 'block';
+      ['resMinON', 'resMinOFF', 'resCiclos', 'resTotalON', 'resEspaciado', 'resDutyCiclo', 'resMedioON', 'resMedioOFF', 'resMedioCiclos', 'resMedioTotal', 'resMedioDutyCiclo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '—';
+      });
+
+      state.ultimoRiego = {
+        nftContinuo24h: true,
+        fecha: new Date().toLocaleDateString('es-ES'),
+        vpd,
+        vpdMediodia: Math.round(vpdMediodia * 100) / 100,
+        sustratoPerfilNombre: sustrato.nombre,
+      };
+      saveState();
+      document.getElementById('riegoLoader').style.display = 'none';
+      document.getElementById('riegoResultado').style.display = 'block';
+      return;
+    }
+
+    const cwrapTorre = document.getElementById('riegoCiclosTorreWrap');
+    if (cwrapTorre) cwrapTorre.style.display = '';
+    const nfwTorre = document.getElementById('riegoNftContinuoWrap');
+    if (nfwTorre) nfwTorre.style.display = 'none';
 
     const ciclo = riegoMinutosDesdeDemanda(
       demandaDia, nPlantas, kcMedio, sustrato, esInterior
