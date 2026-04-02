@@ -10930,11 +10930,11 @@ function pintarResultadoBombaNftUI(b) {
 function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
   const EO = equipOpts || {};
   const interactive = EO.interactive === true;
+  const showCalentador = EO.calentador === true;
+  const showDifusor = EO.difusor === true;
   const bomb = EO.bombaInfo || null;
   const userQ = EO.userCaudalLh != null && EO.userCaudalLh > 0 ? Math.round(EO.userCaudalLh) : null;
   const userW = EO.userPotenciaW != null && EO.userPotenciaW > 0 ? Math.round(EO.userPotenciaW) : null;
-  const tInst = typeof getTorreActiva === 'function' ? getTorreActiva() : null;
-  const nombreInstSvg = escSvgText(((tInst?.nombre || '').trim() || 'Instalación'));
 
   const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
     ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
@@ -10952,7 +10952,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const W = 400;
   const rowStep = Math.max(40, Math.min(52, Math.floor(480 / Math.max(nCh, 1))));
   const topPad = 38;
-  const botTank = 100;
+  const botTank = 130;
   const H = topPad + nCh * rowStep + botTank;
   const cx = W / 2;
   const marginX = 52;
@@ -11099,40 +11099,36 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   let tankLayer = '';
   tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
   tankLayer += '<rect x="' + (tx + 5) + '" y="' + waterTop + '" width="' + (tankW - 10) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
-  let tyLbl = tankY + 19;
+  /* Depósito: solo volumen + CAL/AIR si el usuario los tiene en equipamiento (el resto de la config va al pie). */
+  const volTextY = tankY + Math.floor(tankH / 2) + 5;
   tankLayer +=
-    '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="900" font-family="system-ui,sans-serif">' +
-    nombreInstSvg +
-    ' · ' +
+    '<text x="' + cx + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="system-ui,sans-serif">' +
     vol +
     ' L</text>';
-  tyLbl += 14;
-  tankLayer +=
-    '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#e0f2fe" font-size="9.5" font-weight="700">' +
-    nCh +
-    ' tubos · ' +
-    huecosN +
-    ' huecos/tubo · pend. ' +
-    pend +
-    '%</text>';
-  if (bomb && bomb.canalFormaLabel) {
-    tyLbl += 13;
+  if (showCalentador) {
+    const hx = tx + 18;
     tankLayer +=
-      '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#fef9c3" font-size="9" font-weight="800">' +
-      escSvgText(bomb.canalFormaLabel) +
-      ' · lámina ' +
-      bomb.laminaMm +
-      ' mm · ~' +
-      bomb.caudalMinLH +
-      '–' +
-      bomb.caudalRecLH +
-      ' L/h</text>';
+      '<rect x="' + (hx - 5) + '" y="' + (tankY + tankH - 36) + '" width="10" height="30" rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.2"/>';
+    tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="#fbbf24"/>';
+    tankLayer +=
+      '<text x="' + hx + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff7ed">CAL</text>';
   }
-  tyLbl += 12;
-  tankLayer +=
-    '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#bbf7d0" font-size="8.5" font-weight="700">Bomba continua 24 h</text>';
+  if (showDifusor) {
+    const ax = tx + tankW - 18;
+    const ay = tankY + tankH - 16;
+    tankLayer +=
+      '<line x1="' + ax + '" y1="' + (tankY - 2) + '" x2="' + ax + '" y2="' + (ay - 12) + '" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
+    tankLayer +=
+      '<ellipse cx="' + ax + '" cy="' + ay + '" rx="13" ry="7" fill="#94a3b8" stroke="#64748b" stroke-width="1.2"/>';
+    for (let bi = 0; bi < 5; bi++) {
+      const bx = ax + (bi % 3 - 1) * 4;
+      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="#bfdbfe" opacity="0.9"/>';
+    }
+    tankLayer +=
+      '<text x="' + ax + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#f0f9ff">AIR</text>';
+  }
 
-  let pumpYNext = tyLbl + 11;
+  let pumpYNext = tankY + tankH + 10;
   let pumpLines = '';
   if (bomb) {
     pumpLines +=
