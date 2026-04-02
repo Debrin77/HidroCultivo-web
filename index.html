@@ -4843,7 +4843,14 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
     <div class="tab-panel" id="tab-sistema" role="tabpanel" aria-labelledby="btn-sistema" aria-hidden="true">
 
       <div class="section-title torre-section-heading" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
-        <span><span class="section-title-accent" aria-hidden="true"></span><span class="accent" id="torreTabTitle">—</span></span>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;flex:1">
+          <span><span class="section-title-accent" aria-hidden="true"></span><span class="accent" id="torreTabTitle">—</span></span>
+          <label for="sistemaInstalacionSelect" class="visually-hidden">Instalación a editar en esta pestaña</label>
+          <select id="sistemaInstalacionSelect" class="form-input"
+            style="max-width:260px;font-size:13px;font-weight:700;padding:8px 10px;border-radius:10px;flex-shrink:0"
+            aria-label="Elegir instalación"
+            onchange="onSistemaInstalacionSelectChange(this)"></select>
+        </div>
         <button type="button" onclick="abrirTutorialTorrePestanaSiPrimeraVez({ force: true })"
           style="padding:5px 10px;font-size:10px;font-weight:700;border-radius:8px;border:1.5px solid #e5e7eb;
           background:#fff;color:#15803d;cursor:pointer;font-family:var(--font-display)">
@@ -4993,16 +5000,6 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             </div>
           </div>
           <div class="torre-strip-actions">
-            <button type="button" id="btnTorreGirarEsquemaCCW" class="torre-icon-btn" onclick="rotarTorrePaso(-1)"
-              aria-label="Girar maqueta, vista anterior"
-              style="min-width:40px;padding:6px 10px;font-size:16px;line-height:1;font-weight:800">
-              ◀
-            </button>
-            <button type="button" id="btnTorreGirarEsquema" class="torre-icon-btn" onclick="rotarTorrePaso(1)"
-              aria-label="Girar maqueta, vista siguiente"
-              style="min-width:40px;padding:6px 10px;font-size:16px;line-height:1;font-weight:800">
-              ▶
-            </button>
             <button type="button" class="torre-icon-btn" onclick="cambiarNutriente()"
               aria-label="Cambiar nutriente de esta torre">
               Cambiar
@@ -5012,7 +5009,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
         <div id="torreEsquemaSub" class="torre-esquema-intro">
           <strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real).
-          Usa las <strong>flechas junto al depósito</strong> (o ◀ ▶ arriba) para girar; también puedes deslizar sobre el dibujo.
+          Usa las <strong>flechas junto al depósito</strong> en el esquema para girar; también puedes deslizar sobre el dibujo.
         </div>
         <div id="torreDiagramToolbar" class="torre-diagram-toolbar">
           <div id="torreDiagramLegend" class="torre-diagram-legend" aria-hidden="true">
@@ -8046,7 +8043,7 @@ function generarSVGTorre() {
 
   // Texto volumen
   s += `<text x="${CX}" y="${aguaY - 8}" font-family="Syne,sans-serif"
-    font-size="10.5" font-weight="800" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volActual}L</text>`;
+    font-size="15" font-weight="800" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volActual}L</text>`;
 
   // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {
@@ -8105,18 +8102,18 @@ function generarSVGTorre() {
   s += `<text x="${CX}" y="${DEP_Y+DEP_H-14}" font-family="Inconsolata,monospace"
     font-size="8.5" fill="#64748b" text-anchor="middle" font-weight="600">Riego por ciclos · programador</text>`;
 
-  // Flechas girar maqueta (misma acción que ◀ ▶ en la barra superior)
+  // Flechas girar maqueta (solo aquí, a lados del depósito)
   const btnR = 17;
   const yBtn = DEP_Y + DEP_H / 2;
   const xL = DEP_X - 6 - btnR;
   const xR = DEP_X + DEP_W + 6 + btnR;
   const triL = `M ${xL + 5} ${yBtn} L ${xL - 7} ${yBtn - 8} L ${xL - 7} ${yBtn + 8} Z`;
   const triR = `M ${xR - 5} ${yBtn} L ${xR + 7} ${yBtn - 8} L ${xR + 7} ${yBtn + 8} Z`;
-  s += `<g class="hc-torre-rot-flecha" data-rot-dir="-1" role="button" tabindex="0" aria-label="Girar maqueta a la izquierda" focusable="true">
+  s += `<g class="hc-torre-rot-flecha" data-rot-dir="1" role="button" tabindex="0" aria-label="Girar maqueta a la izquierda" focusable="true">
     <circle cx="${xL}" cy="${yBtn}" r="${btnR}" fill="rgba(248,250,252,0.97)" stroke="#64748b" stroke-width="1.3"/>
     <path d="${triL}" fill="#1e293b" pointer-events="none"/>
   </g>`;
-  s += `<g class="hc-torre-rot-flecha" data-rot-dir="1" role="button" tabindex="0" aria-label="Girar maqueta a la derecha" focusable="true">
+  s += `<g class="hc-torre-rot-flecha" data-rot-dir="-1" role="button" tabindex="0" aria-label="Girar maqueta a la derecha" focusable="true">
     <circle cx="${xR}" cy="${yBtn}" r="${btnR}" fill="rgba(248,250,252,0.97)" stroke="#64748b" stroke-width="1.3"/>
     <path d="${triR}" fill="#1e293b" pointer-events="none"/>
   </g>`;
@@ -8831,10 +8828,6 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<span class="k-hint"> · tocar</span>';
     }
   }
-  const btnGirar = document.getElementById('btnTorreGirarEsquema');
-  const btnGirarCCW = document.getElementById('btnTorreGirarEsquemaCCW');
-  if (btnGirar) btnGirar.style.display = esNft ? 'none' : '';
-  if (btnGirarCCW) btnGirarCCW.style.display = esNft ? 'none' : '';
   const animLbl = document.getElementById('torreAnimSuavesLabel');
   if (animLbl) animLbl.style.display = esNft ? 'none' : '';
 }
@@ -8892,6 +8885,31 @@ function renderTorre() {
   }
 }
 
+function torreGetNumCestasParaRot() {
+  const cfg = state.configTorre || {};
+  return cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS || 5;
+}
+function torreSnapRotRad(r) {
+  const k = (2 * Math.PI) / Math.max(3, torreGetNumCestasParaRot());
+  return Math.round(r / k) * k;
+}
+function torreNormRotRad(r) {
+  const t = 2 * Math.PI;
+  let x = r % t;
+  if (x < 0) x += t;
+  return x;
+}
+function torrePintarCestasSolo(wrap) {
+  if (!wrap || state.configTorre?.tipoInstalacion === 'nft') return;
+  const cfg = state.configTorre || {};
+  const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
+  const rot = cfg._torreRotRad || 0;
+  for (let ni = 0; ni < numNiveles; ni++) {
+    const g = wrap.querySelector('#hc-baskets-n-' + ni);
+    if (g) g.innerHTML = generarSVGTorreCestasNivelHTML(ni, rot);
+  }
+}
+
 // ── Gestos torre: swipe para rotar con snap ──────────────────────────────────
 let _torreGestosInit = false;
 function initTorreGestos(wrap) {
@@ -8925,16 +8943,7 @@ function initTorreGestos(wrap) {
     return x;
   };
 
-  const pintarSoloCestas = () => {
-    if (state.configTorre?.tipoInstalacion === 'nft') return;
-    const cfg = state.configTorre || {};
-    const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
-    const rot = cfg._torreRotRad || 0;
-    for (let ni = 0; ni < numNiveles; ni++) {
-      const g = wrap.querySelector('#hc-baskets-n-' + ni);
-      if (g) g.innerHTML = generarSVGTorreCestasNivelHTML(ni, rot);
-    }
-  };
+  const pintarSoloCestas = () => torrePintarCestasSolo(wrap);
 
   const schedule = () => {
     if (raf) return;
@@ -8988,7 +8997,7 @@ function initTorreGestos(wrap) {
     const wasLayerDrag = dragRotating;
     dragRotating = false;
     if (didDrag) {
-      setRot(normRot(snapRot(getRot())));
+      setRot(torreNormRotRad(torreSnapRotRad(getRot())));
       saveState();
     }
     if (wasLayerDrag && wrap.querySelector('#hc-baskets-n-0')) {
@@ -9113,17 +9122,14 @@ function bindTorreCestas(wrap, opts = {}) {
   });
 }
 
-/** Controles ◀ ▶ en el SVG (flanquean el depósito): mismo giro que la barra superior. */
+/** Flechas de giro solo en el SVG, a lados del depósito (torre vertical). Mantener pulsado = giro continuo. */
 function bindTorreRotFlechas(wrap) {
   if (!wrap || state.configTorre?.tipoInstalacion === 'nft') return;
   wrap.querySelectorAll('.hc-torre-rot-flecha').forEach(g => {
     const dirRaw = parseInt(g.getAttribute('data-rot-dir'), 10);
     const dir = dirRaw === -1 ? -1 : 1;
-    const go = (ev) => {
-      if (ev) {
-        ev.preventDefault();
-        ev.stopPropagation();
-      }
+    let holdIv = 0;
+    const dismissHint = () => {
       try {
         if (localStorage.getItem(TORRE_SWIPE_HINT_LS) !== '1') {
           localStorage.setItem(TORRE_SWIPE_HINT_LS, '1');
@@ -9131,25 +9137,55 @@ function bindTorreRotFlechas(wrap) {
           if (h) h.style.display = 'none';
         }
       } catch (_) {}
-      rotarTorrePaso(dir);
     };
-    g.addEventListener('pointerdown', (ev) => { ev.stopPropagation(); }, { passive: true });
-    g.addEventListener('click', go);
+    const spinOnce = () => {
+      if (!state.configTorre) state.configTorre = {};
+      const delta = 0.042 * dir;
+      state.configTorre._torreRotRad = (state.configTorre._torreRotRad || 0) + delta;
+      torrePintarCestasSolo(wrap);
+    };
+    const endHold = (ev) => {
+      if (holdIv) {
+        clearInterval(holdIv);
+        holdIv = 0;
+      }
+      if (ev && ev.currentTarget && typeof ev.pointerId === 'number') {
+        try { ev.currentTarget.releasePointerCapture(ev.pointerId); } catch (_) {}
+      }
+      if (!state.configTorre) return;
+      state.configTorre._torreRotRad = torreNormRotRad(torreSnapRotRad(state.configTorre._torreRotRad || 0));
+      saveState();
+      torrePintarCestasSolo(wrap);
+      bindTorreCestas(wrap, { suppressTapIfMoved: () => false });
+    };
+    const startHold = (ev) => {
+      if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      try { g.setPointerCapture(ev.pointerId); } catch (_) {}
+      dismissHint();
+      if (holdIv) return;
+      spinOnce();
+      holdIv = setInterval(spinOnce, 45);
+    };
+    g.addEventListener('pointerdown', startHold);
+    g.addEventListener('pointerup', endHold);
+    g.addEventListener('pointercancel', endHold);
+    g.addEventListener('lostpointercapture', endHold);
     g.addEventListener('keydown', (ev) => {
       if (ev.key !== 'Enter' && ev.key !== ' ') return;
-      go(ev);
+      ev.preventDefault();
+      rotarTorrePaso(dir);
     });
   });
 }
 
 function rotarTorrePaso(dir = 1) {
   if (state.configTorre?.tipoInstalacion === 'nft') return;
-  const cfg = state.configTorre || {};
-  const numCestas = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS || 5;
-  const step = (2 * Math.PI) / Math.max(3, numCestas);
+  const step = (2 * Math.PI) / Math.max(3, torreGetNumCestasParaRot());
   if (!state.configTorre) state.configTorre = {};
   const cur = state.configTorre._torreRotRad || 0;
-  state.configTorre._torreRotRad = cur + step * (dir >= 0 ? 1 : -1);
+  state.configTorre._torreRotRad = torreNormRotRad(torreSnapRotRad(cur + step * (dir >= 0 ? 1 : -1)));
   saveState();
   renderTorre();
 }
@@ -9526,16 +9562,13 @@ function updateTorreStats() {
   // Info depósito
   const depEl = document.getElementById('depositoTitulo');
   if (depEl) {
-    const geom = esNftCfg
-      ? ((cfg.nftNumCanales || cfg.numNiveles || '—') + ' canales × ' + (cfg.nftHuecosPorCanal || cfg.numCestas || '—') + ' huecos')
-      : ((cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C');
-    const nftTubo = esNftCfg ? (cfg.nftTuboInteriorMm || 25) : null;
-    const nftB = esNftCfg ? getNftBombaDesdeConfig(cfg) : null;
-    depEl.textContent =
-      torreNombre + ' — ' + geom + ' — ' + vol + 'L' +
-      (nftTubo != null && nftB
-        ? ' · Ø' + nftTubo + 'mm · ~' + nftB.caudalRecLH + 'L/h · ~' + nftB.potenciaRecW + 'W'
-        : '');
+    if (esNftCfg) {
+      depEl.textContent = nftTextoResumenInstalacion(cfg);
+    } else {
+      const geom =
+        (cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C';
+      depEl.textContent = torreNombre + ' — ' + geom + ' — ' + vol + 'L';
+    }
   }
 
   const volDepIn = document.getElementById('torreVolDepositoL');
@@ -9556,6 +9589,7 @@ function updateTorreStats() {
   if (nomCard)  nomCard.textContent = nb;
 
   actualizarAvisoCestasSinFecha();
+  renderSistemaInstalacionSelect();
 }
 
 /** Editar volumen nominal del depósito desde la pestaña Torre (mismaclave que el asistente). */
@@ -10626,6 +10660,27 @@ function getNftBombaDesdeConfig(cfg) {
   return calcularBombaNftParam(nCh, hx, pend, dMm, nftCanalGeomDesdeConfig(cfg));
 }
 
+/** Una sola línea de resumen NFT para #depositoTitulo, diagrama y Consejos (config activa). */
+function nftTextoResumenInstalacion(cfg) {
+  cfg = cfg || state.configTorre || {};
+  if (cfg.tipoInstalacion !== 'nft') return '';
+  const t = getTorreActiva();
+  const nombre = ((t?.nombre || '').trim() || 'Instalación');
+  const ch = cfg.nftNumCanales ?? cfg.numNiveles ?? 4;
+  const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
+  const vol = cfg.volDeposito > 0 ? cfg.volDeposito : VOL_OBJETIVO;
+  const pend = cfg.nftPendientePct ?? 2;
+  const tubo = cfg.nftTuboInteriorMm || 25;
+  const b = getNftBombaDesdeConfig(cfg);
+  let s = nombre + ' — ' + ch + ' canales × ' + hx + ' huecos — ' + vol + ' L · pend. ~' + pend + '%';
+  if (b) {
+    s +=
+      ' · Ø' + tubo + ' mm · ~' + b.caudalRecLH + ' L/h · ~' + b.potenciaRecW + ' W · ' +
+      b.canalFormaLabel + ', lámina ' + b.laminaMm + ' mm';
+  }
+  return s;
+}
+
 /**
  * Compara caudal/potencia declarados por el usuario con el cálculo orientativo NFT.
  * @returns {{ tipo: 'omitido'|'ok'|'marginal'|'error'|'potencia_baja', html: string, toast?: string }}
@@ -10877,6 +10932,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const bomb = EO.bombaInfo || null;
   const userQ = EO.userCaudalLh != null && EO.userCaudalLh > 0 ? Math.round(EO.userCaudalLh) : null;
   const userW = EO.userPotenciaW != null && EO.userPotenciaW > 0 ? Math.round(EO.userPotenciaW) : null;
+  const tInst = typeof getTorreActiva === 'function' ? getTorreActiva() : null;
+  const nombreInstSvg = escSvgText(((tInst?.nombre || '').trim() || 'Instalación'));
 
   const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
     ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
@@ -10894,7 +10951,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const W = 400;
   const rowStep = Math.max(40, Math.min(52, Math.floor(480 / Math.max(nCh, 1))));
   const topPad = 38;
-  const botTank = 88;
+  const botTank = 100;
   const H = topPad + nCh * rowStep + botTank;
   const cx = W / 2;
   const marginX = 52;
@@ -10903,7 +10960,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const tubeH = 24;
   const padFlow = 12;
   const tankY = H - botTank + 4;
-  const tankH = 68;
+  const tankH = 82;
   const tankW = Math.min(320, Math.round(140 + vol * 0.65));
   const tx = (W - tankW) / 2;
   const waterTop = tankY + 8;
@@ -11041,15 +11098,44 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   let tankLayer = '';
   tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
   tankLayer += '<rect x="' + (tx + 5) + '" y="' + waterTop + '" width="' + (tankW - 10) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  let tyLbl = tankY + 19;
   tankLayer +=
-    '<text x="' + cx + '" y="' + (tankY + 22) + '" text-anchor="middle" fill="#fff" font-size="13" font-weight="900" font-family="system-ui,sans-serif">DEPÓSITO ' + vol + ' L</text>';
+    '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#fff" font-size="12.5" font-weight="900" font-family="system-ui,sans-serif">' +
+    nombreInstSvg +
+    ' · ' +
+    vol +
+    ' L</text>';
+  tyLbl += 14;
   tankLayer +=
-    '<text x="' + cx + '" y="' + (tankY + 36) + '" text-anchor="middle" fill="#e0f2fe" font-size="8" font-weight="700">Bomba continua 24 h</text>';
+    '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#e0f2fe" font-size="9.5" font-weight="700">' +
+    nCh +
+    ' tubos · ' +
+    huecosN +
+    ' huecos/tubo · pend. ' +
+    pend +
+    '%</text>';
+  if (bomb && bomb.canalFormaLabel) {
+    tyLbl += 13;
+    tankLayer +=
+      '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#fef9c3" font-size="9" font-weight="800">' +
+      escSvgText(bomb.canalFormaLabel) +
+      ' · lámina ' +
+      bomb.laminaMm +
+      ' mm · ~' +
+      bomb.caudalMinLH +
+      '–' +
+      bomb.caudalRecLH +
+      ' L/h</text>';
+  }
+  tyLbl += 12;
+  tankLayer +=
+    '<text x="' + cx + '" y="' + tyLbl + '" text-anchor="middle" fill="#bbf7d0" font-size="8.5" font-weight="700">Bomba continua 24 h</text>';
 
+  let pumpYNext = tyLbl + 11;
   let pumpLines = '';
   if (bomb) {
     pumpLines +=
-      '<text x="' + cx + '" y="' + (tankY + 48) + '" text-anchor="middle" fill="#fef9c3" font-size="7.5" font-weight="700">Mín. calc.: ~' +
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Mín. calc.: ~' +
       bomb.potenciaRecW +
       ' W · ' +
       bomb.caudalMinLH +
@@ -11058,6 +11144,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       ' L/h · Ø ' +
       bomb.dMm +
       ' mm</text>';
+    pumpYNext += 12;
   }
   if (userQ != null || userW != null) {
     const uLine =
@@ -11066,7 +11153,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       (userQ != null && userW != null ? ' · ' : '') +
       (userQ != null ? userQ + ' L/h' : '');
     pumpLines +=
-      '<text x="' + cx + '" y="' + (tankY + 58) + '" text-anchor="middle" fill="#fff" font-size="7.5" font-weight="800">' + escSvgText(uLine) + '</text>';
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">' + escSvgText(uLine) + '</text>';
   }
 
   if (interactive) {
@@ -11086,6 +11173,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '% pendiente';
   if (bomb && vol < bomb.volMinDepositoSugeridoL) {
     foot += ' · ⚠ depósito &lt; ' + bomb.volMinDepositoSugeridoL + ' L sugeridos';
+  }
+  if (bomb && bomb.canalFormaLabel) {
+    foot += ' · Canal: ' + escSvgText(bomb.canalFormaLabel) + ', lámina ' + bomb.laminaMm + ' mm';
   }
 
   return (
@@ -17384,6 +17474,7 @@ function buildConsejosAguaNutrienteDinamico() {
 function buildConsejosNftHidraulica() {
   const cat = CONSEJOS_DATA.nft;
   const cfg = state.configTorre || {};
+  const resumenTxt = cfg.tipoInstalacion === 'nft' ? nftTextoResumenInstalacion(cfg) : '';
   const b = cfg.tipoInstalacion === 'nft' ? getNftBombaDesdeConfig(cfg) : null;
   let dyn;
   if (b) {
@@ -17391,7 +17482,10 @@ function buildConsejosNftHidraulica() {
       icono: '⚡',
       titulo: 'Tu instalación NFT — caudal y volumen (orientativo)',
       html:
-        '<p style="margin:0 0 8px;line-height:1.6;color:var(--muted)">Según tu torre: <strong>' + escHtmlUi(b.canalFormaLabel) + '</strong>, lámina <strong>' + b.laminaMm + ' mm</strong>, sección de flujo ~<strong>' + b.AflowMm2 + ' mm²</strong>, longitud canal <strong>' + b.longitudCanalM + ' m</strong>.</p>' +
+        (resumenTxt
+          ? '<p style="margin:0 0 10px;line-height:1.45;font-weight:800;color:var(--text)">' + escHtmlUi(resumenTxt) + '</p>'
+          : '') +
+        '<p style="margin:0 0 8px;line-height:1.6;color:var(--muted)">Detalle geométrico: <strong>' + escHtmlUi(b.canalFormaLabel) + '</strong>, lámina <strong>' + b.laminaMm + ' mm</strong>, sección de flujo ~<strong>' + b.AflowMm2 + ' mm²</strong>, longitud canal <strong>' + b.longitudCanalM + ' m</strong>.</p>' +
         '<p style="margin:0;line-height:1.6;color:var(--muted)">Volumen en película ~<strong>' + b.volPeliculaL + ' L</strong>; circuito (tubería + película) ~<strong>' + b.volCircuitoL + ' L</strong>. Caudal por geometría ~<strong>' + b.qTotalGeomRecLh + '</strong> L/h (recom.) / ~' + b.qTotalGeomMinLh + ' L/h (mín.); modelo empírico ~<strong>' + b.qTotalEmpiricoRecLh + '</strong> L/h. La app propone bomba mín. <strong>' + b.caudalMinLH + '</strong> / recom. <strong>' + b.caudalRecLH + ' L/h</strong> (24 h). <strong>Contrasta siempre</strong> con la curva Q–H del fabricante.</p>',
     });
   } else {
@@ -18126,10 +18220,13 @@ function actualizarVistaRiegoPorTipoInstalacion() {
   const btnCalc = document.getElementById('btnCalcRiego');
   const titleEl = document.getElementById('riegoSectionTitle');
   const diaGrp = document.getElementById('riegoDiaSelectorGroup');
+  const diaInfo = document.getElementById('riegoDiaInfo');
   const btnHoy = document.getElementById('btnRiegoHoy');
   const btnManana = document.getElementById('btnRiegoManana');
 
   if (torreControls) torreControls.style.display = esNft ? 'none' : '';
+  if (diaGrp) diaGrp.style.display = esNft ? 'none' : 'flex';
+  if (diaInfo) diaInfo.style.display = esNft ? 'none' : '';
   if (btnCalc) {
     btnCalc.style.display = esNft ? 'none' : '';
     btnCalc.hidden = esNft;
@@ -18546,7 +18643,7 @@ async function calcularRiego() {
 
   try {
     // ── Obtener datos Open-Meteo ──────────────────────────────────────────
-    const idx = diaRiego === 'manana' ? 1 : 0;
+    const idx = state.configTorre?.tipoInstalacion === 'nft' ? 0 : (diaRiego === 'manana' ? 1 : 0);
     const offsetHoras = idx * 24;
 
     /* ≥3 días: cubre mañana completa a cualquier hora; evita que "hoy"/"mañana" compartan el mismo trozo horario cuando la serie no empieza a medianoche. */
@@ -18707,7 +18804,6 @@ async function calcularRiego() {
       if (panelNft) panelNft.style.display = 'block';
       if (blockTorre) blockTorre.style.display = 'none';
 
-      const etiquetaDiaN = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
       const precipMmN = Math.round((Number(data.daily.precipitation_sum[idx]) || 0) * 10) / 10;
       const uvDailyRawN = dataUV.daily?.uv_index_max?.[idx];
       const uvClimaStrN = esInterior
@@ -18718,13 +18814,17 @@ async function calcularRiego() {
         ' · 💧 Humedad media: ' + humMedia + '%' +
         ' · ☀️ Índice UV: ' + uvClimaStrN +
         ' · 🌧️ Prob. lluvia: ' + probLluvia + '% · ' + precipMmN + ' mm';
+      const uvTipNft =
+        !esInterior && Number.isFinite(Number(uvEfectivo)) && Number(uvEfectivo) >= 7
+          ? '<br><br><span style="opacity:0.95;font-size:13px;line-height:1.5;display:block">💡 <strong>UV elevado:</strong> conviene <strong>toldo</strong>, <strong>malla sombra</strong> (p. ej. 30–50 %) o sombra parcial para moderar estrés y calor en el follaje.</span>'
+          : '';
       if (climaNft) {
         climaNft.innerHTML =
-          '<strong style="color:var(--white);font-size:15px;display:block;margin-bottom:10px">' + etiquetaDiaN + '</strong>' +
-          '<span style="font-size:14px;line-height:1.7">' + lineaClimaN + '</span>' +
+          '<span style="font-size:14px;line-height:1.7;display:block">' + lineaClimaN + '</span>' +
           (esInterior
             ? '<br><br><span style="opacity:0.92;font-size:13px;line-height:1.5">🏠 Interior — datos de la ubicación guardada (referencia).</span>'
-            : '');
+            : '') +
+          uvTipNft;
       }
 
       ['resMinON', 'resMinOFF', 'resCiclos', 'resTotalON', 'resEspaciado', 'resDutyCiclo', 'resMedioON', 'resMedioOFF', 'resMedioCiclos', 'resMedioTotal', 'resMedioDutyCiclo'].forEach(id => {
@@ -20552,6 +20652,32 @@ function actualizarHeaderTorre() {
   // Mostrar/ocultar botón añadir según límite
   const btnCrear = document.getElementById('btnCrearTorre');
   if (btnCrear) btnCrear.style.display = (state.torres.length >= MAX_TORRES) ? 'none' : 'block';
+}
+
+function renderSistemaInstalacionSelect() {
+  const sel = document.getElementById('sistemaInstalacionSelect');
+  if (!sel) return;
+  const torres = state.torres || [];
+  const n = torres.length;
+  const activa = n ? Math.min(Math.max(0, state.torreActiva || 0), n - 1) : 0;
+  sel.innerHTML = '';
+  torres.forEach((t, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    const nom = ((t?.nombre || '').trim() || 'Instalación ' + (i + 1));
+    const emoji = t?.emoji || '🌿';
+    const tipo = (t?.config?.tipoInstalacion === 'nft') ? 'NFT' : 'Torre vertical';
+    opt.textContent = emoji + ' ' + nom + ' · ' + tipo;
+    sel.appendChild(opt);
+  });
+  if (n) sel.value = String(activa);
+}
+
+function onSistemaInstalacionSelectChange(el) {
+  const idx = parseInt(el.value, 10);
+  if (!Number.isFinite(idx) || idx < 0 || idx >= (state.torres || []).length) return;
+  if (idx === (state.torreActiva || 0)) return;
+  cambiarTorreActiva(idx);
 }
 
 function abrirSelectorTorres() {
