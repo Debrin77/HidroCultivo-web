@@ -8107,8 +8107,9 @@ function generarSVGTorre() {
   const yBtn = DEP_Y + DEP_H / 2;
   const xL = DEP_X - 6 - btnR;
   const xR = DEP_X + DEP_W + 6 + btnR;
-  const triL = `M ${xL + 5} ${yBtn} L ${xL - 7} ${yBtn - 8} L ${xL - 7} ${yBtn + 8} Z`;
-  const triR = `M ${xR - 5} ${yBtn} L ${xR + 7} ${yBtn - 8} L ${xR + 7} ${yBtn + 8} Z`;
+  /* Punta hacia el exterior (alejada del depósito); la base mira al centro. */
+  const triL = `M ${xL - 7} ${yBtn} L ${xL + 5} ${yBtn - 8} L ${xL + 5} ${yBtn + 8} Z`;
+  const triR = `M ${xR + 7} ${yBtn} L ${xR - 5} ${yBtn - 8} L ${xR - 5} ${yBtn + 8} Z`;
   s += `<g class="hc-torre-rot-flecha" data-rot-dir="1" role="button" tabindex="0" aria-label="Girar maqueta a la izquierda" focusable="true">
     <circle cx="${xL}" cy="${yBtn}" r="${btnR}" fill="rgba(248,250,252,0.97)" stroke="#64748b" stroke-width="1.3"/>
     <path d="${triL}" fill="#1e293b" pointer-events="none"/>
@@ -18591,6 +18592,28 @@ function riegoHourlyIndicesPorFecha(timesIso, ymd) {
   return out.length ? out : null;
 }
 
+/**
+ * UV máx. diario alineado al día civil del ECMWF (IFS), no por índice de array.
+ * El modelo por defecto de Open-Meteo para `uv_index_max` puede tener `daily.time`
+ * desfasado respecto a `daily.time` de ECMWF IFS → `uv_index_max[idx]` no era el mismo día.
+ */
+function riegoUvMaxAlineado(dataUV, ymd, idxFallback) {
+  const daily = dataUV && !dataUV.error && dataUV.daily;
+  if (!daily || !Array.isArray(daily.time) || !Array.isArray(daily.uv_index_max)) return null;
+  const parseV = (v) => {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (v != null && v !== '' && Number.isFinite(Number(v))) return Number(v);
+    return null;
+  };
+  if (ymd) {
+    for (let j = 0; j < daily.time.length; j++) {
+      if (String(daily.time[j]).slice(0, 10) === ymd) return parseV(daily.uv_index_max[j]);
+    }
+  }
+  const vf = daily.uv_index_max[idxFallback];
+  return parseV(vf);
+}
+
 function riegoMediaDeIndices(arr, indices) {
   if (!Array.isArray(arr) || !indices || indices.length === 0) return NaN;
   let s = 0;
@@ -18625,6 +18648,8 @@ function riegoIndicesMediodiaPorIso(dayIndices, timesIso) {
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
  * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
+ * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
+ * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 13–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
 async function calcularRiego() {
   const riegoNPl = document.getElementById('riegoNPlantas');
@@ -18655,11 +18680,12 @@ async function calcularRiego() {
       '&hourly=relative_humidity_2m,temperature_2m' +
       `&forecast_days=${diasForecast}&timezone=auto&models=ecmwf_ifs`;
 
-    // Modelo default para UV (ECMWF no soporta uv_index_max)
+    // Modelo default para UV (ECMWF IFS no expone uv_index_max en daily). Mismos días que en Meteo (7)
+    // para poder cruzar por fecha con el `daily.time` de ECMWF sin depender del índice posicional.
     const urlUV = 'https://api.open-meteo.com/v1/forecast?' +
       'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=uv_index_max' +
-      `&forecast_days=${diasForecast}&timezone=auto`;
+      '&forecast_days=7&timezone=auto';
 
     const urlET0 = 'https://api.open-meteo.com/v1/forecast?' +
       'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
@@ -18673,13 +18699,15 @@ async function calcularRiego() {
     const tempMax  = data.daily.temperature_2m_max[idx];
     const tempMin  = data.daily.temperature_2m_min[idx];
     const tempMedia = (tempMax + tempMin) / 2;
-    const uvMax    = dataUV.daily?.uv_index_max?.[idx] ?? 0;
     const viento   = data.daily.windspeed_10m_max[idx];
     const probLluvia = data.daily.precipitation_probability_max[idx];
 
     const dailyDateStr = (data.daily?.time && data.daily.time[idx] != null)
       ? String(data.daily.time[idx]).slice(0, 10)
       : null;
+
+    const uvAlineado = riegoUvMaxAlineado(dataUV, dailyDateStr, idx);
+    const uvMax = uvAlineado != null ? uvAlineado : 0;
 
     const times = data.hourly?.time;
     const rhArr = data.hourly?.relative_humidity_2m;
@@ -18805,10 +18833,9 @@ async function calcularRiego() {
       if (blockTorre) blockTorre.style.display = 'none';
 
       const precipMmN = Math.round((Number(data.daily.precipitation_sum[idx]) || 0) * 10) / 10;
-      const uvDailyRawN = dataUV.daily?.uv_index_max?.[idx];
       const uvClimaStrN = esInterior
         ? '—'
-        : (!Number.isFinite(Number(uvDailyRawN)) ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
+        : (uvAlineado == null ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
       const lineaClimaN =
         '🌡️ Temperatura: ' + Math.round(tempMin) + '–' + Math.round(tempMax) + ' °C' +
         ' · 💧 Humedad media: ' + humMedia + '%' +
@@ -18914,17 +18941,34 @@ async function calcularRiego() {
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
     const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
     const precipMm = Math.round((Number(data.daily.precipitation_sum[idx]) || 0) * 10) / 10;
-    const uvDailyRaw = dataUV.daily?.uv_index_max?.[idx];
-    const uvClimaStr = esInterior ? '—' : (!Number.isFinite(Number(uvDailyRaw)) ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
+    const uvClimaStr = esInterior ? '—' : (uvAlineado == null ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
     const lineaClima =
       '🌡️ Temperatura: ' + Math.round(tempMin) + '–' + Math.round(tempMax) + ' °C' +
       ' · 💧 Humedad media: ' + humMedia + '%' +
       ' · ☀️ Índice UV: ' + uvClimaStr +
       ' · 🌧️ Prob. lluvia: ' + probLluvia + '% · ' + precipMm + ' mm';
+    const lineaTramo1315 = !esInterior
+      ? '<br>🕐 Mediodía modelo (13–15 h): ' + temp1315 + ' °C · ' + hum1315 + '% HR'
+      : '';
+    const vpdDiaTxt = Math.round(vpd * 1000) / 1000;
+    const vpdMedTxt = Math.round(vpdMediodia * 1000) / 1000;
+    const demDiaTxt = Math.round(demandaDia * 100) / 100;
+    const demMedTxt = Math.round(demandaMed * 100) / 100;
+    const fechaModTxt = escHtmlUi(dailyDateStr || '—');
+    let notaRedondeo = '';
+    if (!esInterior && (demDiaTxt !== demMedTxt || vpdDiaTxt !== vpdMedTxt) && minON === minONMedio && minOFF === minOFFMedio) {
+      notaRedondeo =
+        '<br><span style="opacity:0.78;font-size:10px;line-height:1.45">ℹ️ La demanda o el VPD cambian entre «día» y «mediodía», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
+    }
     document.getElementById('riegoClimaUsado').innerHTML =
-      '<strong style="color:var(--white)">' + etiquetaDia + '</strong><br>' + lineaClima +
+      '<strong style="color:var(--white)">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
+      '<br><span style="opacity:0.88;font-size:11px;line-height:1.5">📆 Día en el modelo: <strong>' + fechaModTxt +
+      '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs 13–15 h + pico radiación) · Demanda rel. ' +
+      demDiaTxt + ' / ' + demMedTxt + ' (general / mediodía).</span>' +
+      '<br><span style="opacity:0.78;font-size:10px;line-height:1.45">Si <strong>hoy</strong> y <strong>mañana</strong> dan el mismo programa, suele ser previsión muy parecida en la API + mismos redondeos; comprueba que cambian temperatura/UV arriba y la fecha del modelo.</span>' +
+      notaRedondeo +
       (esInterior
-        ? '<br><span style="opacity:0.92">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala.</span>'
+        ? '<br><span style="opacity:0.92">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala (programa mediodía = mismo índice que el día).</span>'
         : '');
 
     // Guardar en state para uso en otros módulos
