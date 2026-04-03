@@ -10546,6 +10546,15 @@ function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboM
   const volPeliculaL = nCh * longCanalM * A_m2 * 1000;
   const volCircuitoL = Math.round((volTuberiaL + volPeliculaL) * 10) / 10;
   const volMinDepositoSugeridoL = Math.max(8, Math.ceil(volCircuitoL + 5));
+  /* Margen de seguridad: evaporación/muestreos, oleaje y ~40–60 s de caudal nominal en el depósito. */
+  const margenSeguridadL = Math.max(
+    5,
+    Math.round(volCircuitoL * 0.2),
+    Math.round(caudalRecLH / 90)
+  );
+  let volDepositoRecomendadoL = Math.ceil(volMinDepositoSugeridoL + margenSeguridadL);
+  volDepositoRecomendadoL = Math.min(100, Math.max(10, volDepositoRecomendadoL));
+  if (volDepositoRecomendadoL < volMinDepositoSugeridoL) volDepositoRecomendadoL = volMinDepositoSugeridoL;
 
   let modeloRec = '';
   if (caudalRecLH <= 400 && headMetros <= 1.2) {
@@ -10584,6 +10593,8 @@ function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboM
     volPeliculaL: Math.round(volPeliculaL * 10) / 10,
     volTuberiaL: Math.round(volTuberiaL * 10) / 10,
     volMinDepositoSugeridoL,
+    margenSeguridadL,
+    volDepositoRecomendadoL,
   };
 }
 
@@ -10769,6 +10780,58 @@ function refrescarUIMensajeBombaUsuarioNft(mode) {
   }
   const v = validarBombaUsuarioNftVsCalculo(b, lhRaw, wRaw);
   el.innerHTML = v.html || '';
+  if (mode === 'checklist') {
+    try { refrescarNftDepositoRecomendadoChecklistUI(); } catch (e) {}
+  }
+}
+
+/** Bloque checklist / recarga NFT: volumen depósito mínimo vs recomendado (margen seguridad). */
+function refrescarNftDepositoRecomendadoChecklistUI() {
+  const wrap = document.getElementById('clNftDepositoRecomendadoWrap');
+  if (!wrap) return;
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+  const b = getNftBombaDesdeConfig(state.configTorre);
+  if (!b) {
+    wrap.innerHTML = '';
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+  const minL = b.volMinDepositoSugeridoL;
+  const recL = b.volDepositoRecomendadoL != null ? b.volDepositoRecomendadoL : minL;
+  const mar = b.margenSeguridadL != null ? b.margenSeguridadL : '—';
+  const vCfg = parseFloat(String(state.configTorre.volDeposito ?? '').replace(',', '.'));
+  const vAct = Number.isFinite(vCfg) && vCfg > 0 ? Math.round(vCfg) : null;
+  let badge = '';
+  if (vAct != null) {
+    if (vAct < minL) {
+      badge =
+        '<div style="margin-top:8px;font-size:10px;font-weight:800;color:#b91c1c;line-height:1.45">Tu depósito guardado (' + vAct +
+        ' L) está por debajo del <strong>mínimo útil</strong> (≥ ' + minL + ' L).</div>';
+    } else if (vAct < recL) {
+      badge =
+        '<div style="margin-top:8px;font-size:10px;font-weight:800;color:#c2410c;line-height:1.45">Tu depósito (' + vAct +
+        ' L) llena el circuito pero queda bajo el <strong>recomendado con margen</strong> (~' + recL + ' L).</div>';
+    } else {
+      badge =
+        '<div style="margin-top:8px;font-size:10px;font-weight:800;color:#15803d;line-height:1.45">Capacidad guardada (' + vAct + ' L) encaja con el margen sugerido.</div>';
+    }
+  } else {
+    badge =
+      '<div style="margin-top:8px;font-size:10px;color:#64748b;line-height:1.45">Indica el volumen del depósito en <strong>Sistema</strong> para cotejar con estos valores.</div>';
+  }
+  wrap.innerHTML =
+    '<div style="font-size:11px;font-weight:800;color:#1e40af;margin-bottom:6px">💧 Depósito — orientación (tú eliges la capacidad real)</div>' +
+    '<div style="font-size:10px;line-height:1.55;color:#334155">' +
+    '<strong>Mínimo útil</strong> (circuito + holgura): <strong>≥ ' + minL + ' L</strong><br>' +
+    '<strong>Recomendado</strong> (margen seguridad +' + mar + ' L): <strong>~' + recL + ' L</strong> · coherente con lámina y bomba · tope orientativo app 100 L<br>' +
+    'Ajusta el volumen en <strong>Sistema</strong> o en el asistente si reconfiguras.' +
+    '</div>' +
+    badge;
 }
 
 function onNftBombaUsuarioSetupInput() {
@@ -10830,6 +10893,7 @@ function actualizarMensajeNftCanalChecklist() {
     n0h.innerHTML =
       '📊 Con el canal actual: V circuito ~' + b.volCircuitoL + ' L · película ~' + b.volPeliculaL + ' L · caudal geom. ~' + b.qTotalGeomRecLh + ' L/h — comprueba tu bomba abajo.';
   }
+  try { refrescarNftDepositoRecomendadoChecklistUI(); } catch (e) {}
 }
 
 let _debounceNftCanalCl = 0;
@@ -10915,7 +10979,20 @@ function pintarResultadoBombaNftUI(b) {
     ' · long. <strong>' + (b.longitudCanalM != null ? b.longitudCanalM : '—') + ' m</strong>' +
     '<br><strong>Volumen película</strong> ~' + (b.volPeliculaL != null ? b.volPeliculaL : '—') + ' L · <strong>tubería alim.</strong> ~' +
     (b.volTuberiaL != null ? b.volTuberiaL : '—') + ' L (Ø' + b.dMm + ' mm)' +
-    '<br><strong>Volumen circuito</strong> ~' + b.volCircuitoL + ' L · <strong>Depósito útil mín.</strong> ≥ ' + b.volMinDepositoSugeridoL + ' L</div>' +
+    '<br><strong>Volumen circuito</strong> ~' + b.volCircuitoL + ' L · <strong>Depósito útil mín.</strong> ≥ ' + b.volMinDepositoSugeridoL + ' L' +
+    (b.volDepositoRecomendadoL != null
+      ? ' · <strong>Recomendado (margen seguridad)</strong> ~<strong>' + b.volDepositoRecomendadoL + ' L</strong> (+' +
+        (b.margenSeguridadL != null ? b.margenSeguridadL : '—') +
+        ' L margen)'
+      : '') +
+    '</div>' +
+    '<div style="margin-top:8px;padding:9px;border-radius:10px;background:#eff6ff;border:1px solid #93c5fd;font-size:10px;line-height:1.5;color:#1e3a5f">' +
+    '<strong>💧 Capacidad del depósito</strong> · Ajusta el <strong>volumen</strong> en este asistente (deslizador) o después en <strong>Sistema</strong>. ' +
+    'Usa al menos el <strong>mínimo útil</strong> para llenar tubería + película; el valor <strong>recomendado</strong> añade margen para uso real (muestreos, pérdidas, estabilidad). ' +
+    (b.volDepositoRecomendadoL != null
+      ? 'Orientativo: <strong>' + b.volDepositoRecomendadoL + ' L</strong> si tu recipiente lo permite (tope app 100 L).'
+      : '') +
+    '</div>' +
     '<div style="font-size:9px;color:#475569;margin-top:6px;line-height:1.4">Caudal: orientativo por geometría ~' +
     (b.qTotalGeomRecLh != null ? b.qTotalGeomRecLh : '—') + ' L/h (recom.) / ~' +
     (b.qTotalGeomMinLh != null ? b.qTotalGeomMinLh : '—') + ' L/h (mín.)' +
@@ -11168,8 +11245,14 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     ' huecos/tubo · ' +
     pend +
     '% pendiente';
-  if (bomb && vol < bomb.volMinDepositoSugeridoL) {
-    foot += ' · ⚠ depósito &lt; ' + bomb.volMinDepositoSugeridoL + ' L sugeridos';
+  if (bomb) {
+    const minV = bomb.volMinDepositoSugeridoL;
+    const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
+    if (vol < minV) {
+      foot += ' · ⚠ depósito &lt; mín. útil ' + minV + ' L';
+    } else if (vol < recV) {
+      foot += ' · ⚠ bajo ~' + recV + ' L recomendados (margen seguridad)';
+    }
   }
   if (bomb && bomb.canalFormaLabel) {
     foot += ' · Canal: ' + escSvgText(bomb.canalFormaLabel) + ', lámina ' + bomb.laminaMm + ' mm';
@@ -11415,9 +11498,12 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   if (bomb) {
     footSub +=
       ' · bomba ~' + bomb.caudalRecLH + ' L/h · ~' + bomb.potenciaRecW + ' W';
-    if (vol < bomb.volMinDepositoSugeridoL) {
-      footSub +=
-        ' · ⚠ depósito &lt; ' + bomb.volMinDepositoSugeridoL + ' L sugeridos';
+    const minV = bomb.volMinDepositoSugeridoL;
+    const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
+    if (vol < minV) {
+      footSub += ' · ⚠ depósito &lt; mín. útil ' + minV + ' L';
+    } else if (vol < recV) {
+      footSub += ' · ⚠ bajo ~' + recV + ' L recomendados';
     }
   }
 
@@ -15531,7 +15617,15 @@ function getCLPasos() {
   const pasosNftExtra = esNft && nftBomb ? [
     { id:'N0', seccion:null, paso:'N0',
       desc:'Bomba de circulación <strong>24 h</strong>: caudal mínimo orientativo <strong>' + nftBomb.caudalMinLH + ' L/h</strong>, recomendado <strong>' + nftBomb.caudalRecLH + ' L/h</strong> · altura manométrica ≈ <strong>' + nftBomb.headMetros + ' m</strong> · potencia eléctrica aprox. <strong>' + nftBomb.potenciaRecW + ' W</strong> (Ø <strong>alimentación</strong> usado en la app: <strong>' + nftBomb.dMm + ' mm</strong>; el canal de cultivo suele ser mucho mayor). Opcional: anota los datos de <em>tu</em> bomba debajo; verás si son adecuados para esta instalación.',
-      nota: nftBomb.modeloRec + ' Volumen ~' + nftBomb.volCircuitoL + ' L en tubería + película; depósito útil mínimo sugerido ≥ ' + nftBomb.volMinDepositoSugeridoL + ' L. Si la película se corta, sube caudal o revisa pendiente/tapones.',
+      nota:
+        nftBomb.modeloRec +
+        ' Volumen ~' +
+        nftBomb.volCircuitoL +
+        ' L en tubería + película · depósito <strong>mínimo útil</strong> ≥ ' +
+        nftBomb.volMinDepositoSugeridoL +
+        ' L · <strong>recomendado con margen seguridad</strong> ~' +
+        (nftBomb.volDepositoRecomendadoL != null ? nftBomb.volDepositoRecomendadoL : nftBomb.volMinDepositoSugeridoL) +
+        ' L (ajusta manualmente la capacidad en Sistema). Si la película se corta, sube caudal o revisa pendiente/tapones.',
       campos: [
         { id:'clNftBombaUsuarioLh', label:'Tu bomba — caudal nominal (L/h)', type:'number', step:'10', placeholder:'ej. 600',
           value: cfg.nftBombaUsuarioCaudalLh != null ? String(cfg.nftBombaUsuarioCaudalLh) : '',
@@ -15542,6 +15636,7 @@ function getCLPasos() {
       ],
       postCamposHtml:
         '<div id="clNftN0GeomHint" style="margin-bottom:8px;font-size:10px;line-height:1.45;color:#0f766e;font-weight:600" role="status"></div>' +
+        '<div id="clNftDepositoRecomendadoWrap" style="display:none;margin-top:10px;padding:12px;border-radius:12px;background:#eff6ff;border:1.5px solid #93c5fd" role="region" aria-label="Volumen de depósito recomendado NFT"></div>' +
         '<div id="clNftBombaUsuarioMsg" style="margin-top:10px;font-size:11px;line-height:1.45;font-weight:600" role="status"></div>' },
     { id:'N1', seccion:null, paso:'N1',
       desc:'Inspeccionar los ' + nftCh + ' canales: sin barro orgánico, raíces compactando el fondo ni tapones en codos',
@@ -17483,7 +17578,7 @@ function buildConsejosNftHidraulica() {
           ? '<p style="margin:0 0 10px;line-height:1.45;font-weight:800;color:var(--text)">' + escHtmlUi(resumenTxt) + '</p>'
           : '') +
         '<p style="margin:0 0 8px;line-height:1.6;color:var(--muted)">Detalle geométrico: <strong>' + escHtmlUi(b.canalFormaLabel) + '</strong>, lámina <strong>' + b.laminaMm + ' mm</strong>, sección de flujo ~<strong>' + b.AflowMm2 + ' mm²</strong>, longitud canal <strong>' + b.longitudCanalM + ' m</strong>.</p>' +
-        '<p style="margin:0;line-height:1.6;color:var(--muted)">Volumen en película ~<strong>' + b.volPeliculaL + ' L</strong>; circuito (tubería + película) ~<strong>' + b.volCircuitoL + ' L</strong>. Caudal por geometría ~<strong>' + b.qTotalGeomRecLh + '</strong> L/h (recom.) / ~' + b.qTotalGeomMinLh + ' L/h (mín.); modelo empírico ~<strong>' + b.qTotalEmpiricoRecLh + '</strong> L/h. La app propone bomba mín. <strong>' + b.caudalMinLH + '</strong> / recom. <strong>' + b.caudalRecLH + ' L/h</strong> (24 h). <strong>Contrasta siempre</strong> con la curva Q–H del fabricante.</p>',
+        '<p style="margin:0;line-height:1.6;color:var(--muted)">Volumen en película ~<strong>' + b.volPeliculaL + ' L</strong>; circuito (tubería + película) ~<strong>' + b.volCircuitoL + ' L</strong>. <strong>Depósito:</strong> mínimo útil ≥ <strong>' + b.volMinDepositoSugeridoL + ' L</strong>; recomendado con margen seguridad ~<strong>' + (b.volDepositoRecomendadoL != null ? b.volDepositoRecomendadoL : b.volMinDepositoSugeridoL) + ' L</strong> (tú eliges la capacidad en Sistema). Caudal por geometría ~<strong>' + b.qTotalGeomRecLh + '</strong> L/h (recom.) / ~' + b.qTotalGeomMinLh + ' L/h (mín.); modelo empírico ~<strong>' + b.qTotalEmpiricoRecLh + '</strong> L/h. La app propone bomba mín. <strong>' + b.caudalMinLH + '</strong> / recom. <strong>' + b.caudalRecLH + ' L/h</strong> (24 h). <strong>Contrasta siempre</strong> con la curva Q–H del fabricante.</p>',
     });
   } else {
     dyn = htmlInnerConsejoCard(cat, {
@@ -20166,7 +20261,7 @@ function actualizarResumenSetup() {
     (isNft
       ? '🪴 NFT: <strong>' + niveles + ' canales × ' + cestas + ' huecos/canal · ' + pendTxt + vol + 'L</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong><br>' +
         (bResumenNft
-          ? '⚡ Bomba circulación <strong>24 h</strong> (orientativo): <strong>' + bResumenNft.caudalMinLH + '–' + bResumenNft.caudalRecLH + ' L/h · ~' + bResumenNft.potenciaRecW + ' W</strong> · depósito útil mín. sugerido <strong>≥ ' + bResumenNft.volMinDepositoSugeridoL + ' L</strong><br>'
+          ? '⚡ Bomba circulación <strong>24 h</strong> (orientativo): <strong>' + bResumenNft.caudalMinLH + '–' + bResumenNft.caudalRecLH + ' L/h · ~' + bResumenNft.potenciaRecW + ' W</strong> · depósito mín. útil <strong>≥ ' + bResumenNft.volMinDepositoSugeridoL + ' L</strong> · recomendado con margen ~<strong>' + (bResumenNft.volDepositoRecomendadoL != null ? bResumenNft.volDepositoRecomendadoL : bResumenNft.volMinDepositoSugeridoL) + ' L</strong> (ajusta manual el volumen)<br>'
           : '')
       : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
