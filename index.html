@@ -4983,89 +4983,8 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </button>
       </div>
 
-      <!-- Stats rápidas -->
-      <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-value" id="statPlantas">0</div>
-          <div class="stat-label">Plantas</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="statDiasMedia" style="color:var(--gold)">—</div>
-          <div class="stat-label">Días media</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value" id="statCosechas" style="color:var(--red)">0</div>
-          <div class="stat-label">Cosechar</div>
-        </div>
-      </div>
-
-      <div id="avisoCestasSinFechaTorre" class="aviso-cestas-sin-fecha" style="display:none" role="status"></div>
-
-      <!-- Card rotación escalonada -->
-      <div id="rotacionCard" style="display:none"></div>
-
-      <!-- Selector modo cultivo -->
-      <div class="modo-selector" id="modoSelector">
-        <button type="button" class="modo-btn active" onclick="setModo('lechuga')" id="modo-lechuga" aria-pressed="true">Lechugas</button>
-        <button type="button" class="modo-btn" onclick="setModo('mixto')" id="modo-mixto" aria-pressed="false">Mixto</button>
-        <button type="button" class="modo-btn" onclick="setModo('intensivo')" id="modo-intensivo" aria-pressed="false">Intensivo</button>
-        <button type="button" class="modo-btn" onclick="setModo('mini')" id="modo-mini" aria-pressed="false">Compacto</button>
-      </div>
-
-      <!-- Info modo actual -->
-      <div class="info-banner" id="modoInfo">
-        <span class="torre-info-banner-icon" aria-hidden="true"></span>
-        <span id="modoInfoText">Niveles 1, 3 y 5 activos. Óptimo para EC 1300-1400 µS/cm</span>
-      </div>
-
-      <!-- Alerta compatibilidad -->
-      <div id="compatAlert" style="display:none" class="info-banner" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3)">
-        <span class="compat-alert-mark" aria-hidden="true">!</span>
-        <span id="compatAlertText"></span>
-      </div>
-
-      <!-- Torre visual SVG -->
+      <!-- Esquema / lista y gráfico del sistema (NFT o torre): sin cortar con resumen ni nutriente -->
       <div class="torre-container">
-        <!-- Badge nutriente activo junto al SVG -->
-        <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip">
-          <div style="display:flex;align-items:center;gap:10px;min-width:0">
-            <span class="torre-strip-flag" id="torreBadgeBandera" aria-hidden="true">🧪</span>
-            <div class="torre-strip-meta">
-              <div id="torreBadgeStripNombre"
-                style="font-family:var(--font-display);font-size:12px;font-weight:900;color:#0f172a;letter-spacing:-0.01em">—</div>
-              <div id="torreBadgeEC"
-                style="font-size:10px;color:#64748b;font-weight:600;margin-top:3px;font-family:var(--font-mono)">EC · pH —</div>
-            </div>
-          </div>
-          <div class="torre-strip-actions">
-            <button type="button" class="torre-icon-btn" onclick="cambiarNutriente()"
-              aria-label="Cambiar nutriente de esta torre">
-              Cambiar
-            </button>
-          </div>
-        </div>
-
-        <!-- Nutriente activo (tarjeta) — junto al strip, arriba del esquema -->
-        <button type="button" id="torreBadgeNutriente"
-          style="display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fff,#f8fafc);
-            border:1px solid rgba(15,23,42,0.1);border-radius:12px;padding:11px 14px;margin-bottom:4px;
-            cursor:pointer;width:100%;font:inherit;text-align:left;color:inherit;
-            appearance:none;-webkit-appearance:none;box-sizing:border-box;
-            box-shadow:0 1px 3px rgba(15,23,42,0.05)"
-          onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
-          <span class="torre-strip-flag" id="torreBadgeFlag" aria-hidden="true">🧪</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:800;color:#64748b;
-              text-transform:uppercase;letter-spacing:0.12em">Nutriente activo</div>
-            <div id="torreBadgeNombre"
-              style="font-family:var(--font-display);font-size:13px;font-weight:900;
-                color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px">
-              —</div>
-          </div>
-          <span style="font-size:11px;color:#15803d;font-weight:800;
-            white-space:nowrap">Cambiar ›</span>
-        </button>
-
         <div id="torreEsquemaSub" class="torre-esquema-intro">
           <strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real).
           Usa las <strong>flechas junto al depósito</strong> en el esquema para girar; también puedes deslizar sobre el dibujo.
@@ -5171,7 +5090,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           NFT: desplaza el diagrama si no cabe en pantalla · Toca un hueco para su ficha o usa <strong style="font-weight:800">Lista</strong>
         </div>
 
-        <!-- Depósito + Nutriente -->
+        <!-- Depósito y volumen (mezclas / checklist) -->
         <div class="torre-deposito" style="flex-direction:column;gap:6px">
           <div style="display:flex;align-items:center;gap:10px;width:100%">
             <div class="deposito-icon" aria-hidden="true"></div>
@@ -5207,6 +5126,81 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div class="leyenda-item"><div class="leyenda-dot" style="background:var(--red)"></div>Cosechar</div>
         </div>
       </div>
+
+      <!-- Stats y cultivo / nutriente: debajo del gráfico para no interrumpir la configuración visual NFT -->
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-value" id="statPlantas">0</div>
+          <div class="stat-label">Plantas</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statDiasMedia" style="color:var(--gold)">—</div>
+          <div class="stat-label">Días media</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="statCosechas" style="color:var(--red)">0</div>
+          <div class="stat-label">Cosechar</div>
+        </div>
+      </div>
+
+      <div id="avisoCestasSinFechaTorre" class="aviso-cestas-sin-fecha" style="display:none" role="status"></div>
+
+      <div id="rotacionCard" style="display:none"></div>
+
+      <div class="modo-selector" id="modoSelector">
+        <button type="button" class="modo-btn active" onclick="setModo('lechuga')" id="modo-lechuga" aria-pressed="true">Lechugas</button>
+        <button type="button" class="modo-btn" onclick="setModo('mixto')" id="modo-mixto" aria-pressed="false">Mixto</button>
+        <button type="button" class="modo-btn" onclick="setModo('intensivo')" id="modo-intensivo" aria-pressed="false">Intensivo</button>
+        <button type="button" class="modo-btn" onclick="setModo('mini')" id="modo-mini" aria-pressed="false">Compacto</button>
+      </div>
+
+      <div class="info-banner" id="modoInfo">
+        <span class="torre-info-banner-icon" aria-hidden="true"></span>
+        <span id="modoInfoText">Niveles 1, 3 y 5 activos. Óptimo para EC 1300-1400 µS/cm</span>
+      </div>
+
+      <div id="compatAlert" style="display:none" class="info-banner" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3)">
+        <span class="compat-alert-mark" aria-hidden="true">!</span>
+        <span id="compatAlertText"></span>
+      </div>
+
+      <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <span class="torre-strip-flag" id="torreBadgeBandera" aria-hidden="true">🧪</span>
+          <div class="torre-strip-meta">
+            <div id="torreBadgeStripNombre"
+              style="font-family:var(--font-display);font-size:12px;font-weight:900;color:#0f172a;letter-spacing:-0.01em">—</div>
+            <div id="torreBadgeEC"
+              style="font-size:10px;color:#64748b;font-weight:600;margin-top:3px;font-family:var(--font-mono)">EC · pH —</div>
+          </div>
+        </div>
+        <div class="torre-strip-actions">
+          <button type="button" class="torre-icon-btn" onclick="cambiarNutriente()"
+            aria-label="Cambiar nutriente de esta torre">
+            Cambiar
+          </button>
+        </div>
+      </div>
+
+      <button type="button" id="torreBadgeNutriente"
+        style="display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fff,#f8fafc);
+          border:1px solid rgba(15,23,42,0.1);border-radius:12px;padding:11px 14px;margin-bottom:10px;
+          cursor:pointer;width:100%;font:inherit;text-align:left;color:inherit;
+          appearance:none;-webkit-appearance:none;box-sizing:border-box;
+          box-shadow:0 1px 3px rgba(15,23,42,0.05)"
+        onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
+        <span class="torre-strip-flag" id="torreBadgeFlag" aria-hidden="true">🧪</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;font-weight:800;color:#64748b;
+            text-transform:uppercase;letter-spacing:0.12em">Nutriente activo</div>
+          <div id="torreBadgeNombre"
+            style="font-family:var(--font-display);font-size:13px;font-weight:900;
+              color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px">
+            —</div>
+        </div>
+        <span style="font-size:11px;color:#15803d;font-weight:800;
+          white-space:nowrap">Cambiar ›</span>
+      </button>
 
       <!-- Tabla resumen de variedades -->
       <div id="tablaVariedades" style="margin-top:4px;margin-bottom:8px"></div>
@@ -11702,9 +11696,9 @@ var NFT_SVG_FOOT_ORIENT_HINT = ' · Orientativo · ver panel / checklist';
 function nftHuecoPointerRadius(hrVisual, interactive, centerSpacing) {
   const baseNoTouch = Math.max(hrVisual * 2.5, 12);
   if (!interactive) return baseNoTouch;
-  const target = Math.max(hrVisual * 3.75, 20);
+  const target = Math.max(hrVisual * 4.1, 22);
   if (!Number.isFinite(centerSpacing) || centerSpacing <= 0) return target;
-  const cap = Math.max(13, centerSpacing * 0.44);
+  const cap = Math.max(14, centerSpacing * 0.5);
   return Math.min(target, cap);
 }
 
@@ -11747,6 +11741,48 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0) {
   return { html, canvasW };
 }
 
+/** Ancho lógico del canvas NFT (tubos más largos → huecos más separados y legibles). */
+function nftDiagramCanvasW0() {
+  return 520;
+}
+
+/**
+ * Proyección isométrica suave (cisalla + escala Y): maqueta visual, no escala de obra.
+ * El depósito va en el mismo grupo para que el trazado de agua cierre bien.
+ */
+function nftWrapIsoProjection(inner, pivotX, pivotY) {
+  const k = 0.46;
+  const sy = 0.9;
+  const padX = Math.round(26 + k * Math.min(pivotY, 420) * 0.22);
+  const padY = 6;
+  return (
+    '<g class="nft-iso-cluster" transform="translate(' +
+    padX +
+    ',' +
+    padY +
+    ') translate(' +
+    pivotX +
+    ' ' +
+    pivotY +
+    ') matrix(1 0 ' +
+    (-k) +
+    ' ' +
+    sy +
+    ' 0 0) translate(' +
+    (-pivotX) +
+    ' ' +
+    (-pivotY) +
+    ')">' +
+    inner +
+    '</g>'
+  );
+}
+
+/** viewBox horizontal extra para la cisalla isométrica (evita recortes). */
+function nftIsoViewBoxPadX() {
+  return { left: 58, right: 72 };
+}
+
 /**
  * NFT mesa multinivel: franjas con distinto número de tubos; flujo en serpentín entre franjas.
  */
@@ -11773,17 +11809,17 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
-  const W0 = 400;
+  const W0 = nftDiagramCanvasW0();
   const topPad = 42;
   const botTank = 130;
   const nTiers = tiers.length;
-  const tierRowH = Math.max(56, Math.min(76, Math.floor(560 / Math.max(nTiers, 1))));
+  const tierRowH = Math.max(58, Math.min(78, Math.floor(620 / Math.max(nTiers, 1))));
   const H = topPad + nTiers * tierRowH + botTank;
   const cx = W0 / 2;
-  const xL = 52;
-  const xR = W0 - 52;
-  const tubeH = 26;
-  const padFlow = 11;
+  const xL = 44;
+  const xR = W0 - 44;
+  const tubeH = 28;
+  const padFlow = 13;
   const tankY = H - botTank + 4;
   const tankH = 82;
   const tankW = Math.min(320, Math.round(140 + vol * 0.65));
@@ -11815,6 +11851,12 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         l2r: t % 2 === 0,
       });
     }
+  }
+
+  let minHoleSpanMM = rowInner;
+  for (let gi = 0; gi < geoms.length; gi++) {
+    const sp = geoms[gi].xR - geoms[gi].xL - 2 * padFlow;
+    if (sp > 0) minHoleSpanMM = Math.min(minHoleSpanMM, sp);
   }
 
   const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
@@ -11889,7 +11931,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   flowLayer +=
     '<text x="' + (xRiser - 3) + '" y="' + (yTopRung - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
-  const hr = Math.max(4, Math.min(9, ((xR - xL - 24) / Math.max(huecosN, 2)) * 0.36));
+  const hr = Math.max(5.2, Math.min(12.5, (minHoleSpanMM / Math.max(huecosN - 1, 1)) * 0.48));
   let plants = '';
   for (let gi = 0; gi < geoms.length; gi++) {
     const G = geoms[gi];
@@ -12016,17 +12058,24 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
+  const vbMM = nftIsoViewBoxPadX();
+  const cyIsoMM = topPad + (tankY - topPad) * 0.42;
+  const bodyMM = nftWrapIsoProjection(back + channels + flowLayer + plants + tankLayer, cxTitle, cyIsoMM);
+  const vbWMM = Wsvg + vbMM.left + vbMM.right;
+
   const nTot = geoms.length;
   let foot =
-    'NFT mesa multinivel · ' + tiers.join('+') + ' tubos · ' + nTot + ' total · ' + huecosN + ' huecos/tubo · ' + pend + '% pend.' +
+    'NFT mesa multinivel · ' + tiers.join('+') + ' tubos · ' + nTot + ' total · ' + huecosN + ' huecos/tubo · ' + pend + '% pend. · vista isométrica (maqueta)' +
     NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
-    Wsvg +
+    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
+    vbMM.left +
+    ' 0 ' +
+    vbWMM +
     ' ' +
     H +
-    '" width="100%" style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -12052,11 +12101,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '<text x="' +
     cxTitle +
     '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">NFT · mesa multinivel (franjas 1+2+4…)</text>' +
-    back +
-    channels +
-    flowLayer +
-    plants +
-    tankLayer +
+    bodyMM +
     (!interactive ? pumpLines : '') +
     '<text x="' +
     cxTitle +
@@ -12097,7 +12142,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
-  const W0 = 400;
+  const W0 = nftDiagramCanvasW0();
   const topPad = 38;
   const botTank = 130;
   const cx = W0 / 2;
@@ -12107,9 +12152,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const ladderTop = yApex + 22;
   const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
   const H = ladderBot + 56 + botTank;
-  const baseHalf = 90;
-  const rungOut = 56;
-  const rungIn = 16;
+  const baseHalf = 112;
+  const rungOut = 66;
+  const rungIn = 18;
   const tankY = H - botTank + 4;
   const tankH = 82;
   const tankW = Math.min(320, Math.round(140 + vol * 0.65));
@@ -12238,7 +12283,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const rungSpan = rungOut + rungIn;
-  const hr = Math.max(4.2, Math.min(10, (rungSpan / Math.max(huecosN, 2)) * 0.41));
+  const hr = Math.max(5.2, Math.min(12.5, (rungSpan / Math.max(huecosN - 1, 1)) * 0.48));
   let plants = '';
   for (let ri = 0; ri < runs.length; ri++) {
     const R = runs[ri];
@@ -12365,6 +12410,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
+  const vbEsc = nftIsoViewBoxPadX();
+  const cyIsoEsc = ladderTop + (tankY - ladderTop) * 0.38;
+  const bodyEsc = nftWrapIsoProjection(frame + back + channels + flowLayer + plants + tankLayer, cxTitle, cyIsoEsc);
+  const vbWEsc = Wsvg + vbEsc.left + vbEsc.right;
+
   const nTot = runs.length;
   let foot =
     'NFT escalera' +
@@ -12379,15 +12429,17 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     huecosN +
     ' huecos · ' +
     pend +
-    '% pend.' +
+    '% pend. · vista isométrica (maqueta)' +
     NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
-    Wsvg +
+    '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
+    vbEsc.left +
+    ' 0 ' +
+    vbWEsc +
     ' ' +
     H +
-    '" width="100%" style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -12417,12 +12469,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     ' · ' +
     car +
     ' cara(s)</text>' +
-    frame +
-    back +
-    channels +
-    flowLayer +
-    plants +
-    tankLayer +
+    bodyEsc +
     (!interactive ? pumpLines : '') +
     '<text x="' +
     cxTitle +
@@ -12486,18 +12533,18 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
-  const W0 = 400;
-  const rowStep = Math.max(50, Math.min(68, Math.floor(720 / Math.max(nCh, 1))));
+  const W0 = nftDiagramCanvasW0();
+  const rowStep = Math.max(54, Math.min(74, Math.floor(820 / Math.max(nCh, 1))));
   const topPad = 38;
   const botTank = 130;
   const stairExtra = dispLayout === 'escalera' ? Math.max(0, nCh - 1) * 28 : 0;
   const H = topPad + nCh * rowStep + botTank + stairExtra;
   const cx = W0 / 2;
-  const marginX = 52;
+  const marginX = 44;
   const xL = marginX;
   const xR = W0 - marginX;
-  const tubeH = 26;
-  const padFlow = 12;
+  const tubeH = 28;
+  const padFlow = 14;
   const tankY = H - botTank + 4;
   const tankH = 82;
   const tankW = Math.min(320, Math.round(140 + vol * 0.65));
@@ -12579,7 +12626,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   flowLayer +=
     '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
-  const hr = Math.max(4, Math.min(9, ((xR - xL - 24) / Math.max(huecosN, 2)) * 0.38));
+  const spanTube = xR - xL - 2 * padFlow;
+  const hr = Math.max(
+    5.5,
+    Math.min(12.5, (spanTube / Math.max(huecosN - 1, 1)) * 0.48)
+  );
   let plants = '';
   for (let i = 0; i < nCh; i++) {
     const y = yRow(i);
@@ -12593,7 +12644,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       }
     }
     const showDias = maxDias !== null;
-    const spanH = xR - xL - 2 * padFlow;
+    const spanH = spanTube;
     const slotAlongRow = huecosN <= 1 ? spanH : spanH / Math.max(1, huecosN - 1);
 
     for (let j = 0; j < huecosN; j++) {
@@ -12708,6 +12759,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
+  const vbSerp = nftIsoViewBoxPadX();
+  const cyIsoSerp = topPad + (tankY - topPad) * 0.42;
+  const bodySerp = nftWrapIsoProjection(back + channels + flowLayer + plants + tankLayer, cxTitle, cyIsoSerp);
+  const vbWSerp = Wsvg + vbSerp.left + vbSerp.right;
+
   const layoutFoot =
     dispLayout === 'escalera' ? 'Escalera' : dispLayout === 'pared' ? 'Pared (zigzag)' : 'Mesa';
   let foot =
@@ -12719,7 +12775,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     huecosN +
     ' huecos/tubo · ' +
     pend +
-    '% pendiente';
+    '% pendiente · vista isométrica (maqueta)';
   if (bomb) {
     const minV = bomb.volMinDepositoSugeridoL;
     const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
@@ -12732,11 +12788,13 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   foot += NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
-    Wsvg +
+    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
+    vbSerp.left +
+    ' 0 ' +
+    vbWSerp +
     ' ' +
     H +
-    '" width="100%" style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -12768,11 +12826,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
         ? 'NFT · pared (tubos horizontales en zigzag)'
         : 'NFT · mesa (paralelos, pendiente por tubo)') +
     '</text>' +
-    back +
-    channels +
-    flowLayer +
-    plants +
-    tankLayer +
+    bodySerp +
     (!interactive ? pumpLines : '') +
     '<text x="' +
     cxTitle +
@@ -12807,8 +12861,8 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   const gidTank = 'nftTankG' + suf;
   const gidAqua = 'nftAquaG' + suf;
   const tid = 'nftSvgTitle' + suf;
-  const W0 = 400;
-  const H = 268;
+  const W0 = 500;
+  const H = 278;
   const nCh = Math.min(Math.max(parseInt(String(canales), 10) || 1, 1), 10);
   const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
@@ -12817,8 +12871,8 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0 ? Math.round(Number(EO.nftAlturaBombeoCm)) : null;
 
   const cx = W0 / 2;
-  const x0 = 34;
-  const x1 = W0 - 34;
+  const x0 = 32;
+  const x1 = W0 - 32;
   const span = (x1 - x0) / nCh;
   const yMan = 40;
   const yTop = 52;
@@ -12922,7 +12976,7 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     );
 
     const innerTopLen = Math.max(xtr - xtl - 5, 2);
-    const hr = Math.max(1.05, Math.min(3.5, (innerTopLen / Math.max(huecosN, 2)) * 0.44));
+    const hr = Math.max(1.85, Math.min(5.6, (innerTopLen / Math.max(huecosN - 1, 1)) * 0.52));
     const alongDx = (xtr - xtl - 5) / Math.max(1, huecosN - 1);
     const alongDy = (ytr - ytl - 3) / Math.max(1, huecosN - 1);
     const slotAlong = huecosN <= 1 ? Infinity : Math.hypot(alongDx, alongDy);
@@ -12981,7 +13035,12 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     plumbing = '<g pointer-events="none">' + plumbing + '</g>';
   }
 
-  let footSub = nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente';
+  const vbSch = nftIsoViewBoxPadX();
+  const cyIsoSch = yTop + (tankTop - yTop) * 0.45;
+  const bodySch = nftWrapIsoProjection(back + tankLayer + chParts.join('') + plumbing, cxTitle, cyIsoSch);
+  const vbWSch = Wsvg + vbSch.left + vbSch.right;
+
+  let footSub = nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente · isométrico (maqueta)';
   if (bomb) {
     footSub += ' · circulación 24 h · ver asistente / checklist';
     const minV = bomb.volMinDepositoSugeridoL;
@@ -12994,8 +13053,16 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   }
 
   return (
-    '<svg class="torre-svg-diagram nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + Wsvg + ' ' + H + '" width="100%" ' +
-      'style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' + tid + '">' +
+    '<svg class="torre-svg-diagram nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
+      vbSch.left +
+      ' 0 ' +
+      vbWSch +
+      ' ' +
+      H +
+      '" width="100%" ' +
+      'style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+      tid +
+      '">' +
       '<title id="' + tid + '">NFT: circuito de agua desde el depósito a los canales y retorno; tubos con huecos de plantación</title>' +
       '<defs>' +
       '<linearGradient id="' + gidFilm + '" x1="0" y1="0" x2="1" y2="1">' +
@@ -13007,10 +13074,7 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       '</defs>' +
       '<text x="' + cxTitle + '" y="22" text-anchor="middle" fill="#14532d" font-size="10.5" font-weight="800" font-family="system-ui,Segoe UI,sans-serif">' +
       'Bomba · subida → manifold → canales (pendiente) → retorno al depósito</text>' +
-      back +
-      tankLayer +
-      chParts.join('') +
-      plumbing +
+      bodySch +
       '<text x="' + cxTitle + '" y="' + (H - 6) + '" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' +
       footSub + '</text>' +
       '</svg>'
