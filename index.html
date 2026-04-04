@@ -12139,12 +12139,12 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const tiersNums = tiers.map(t => Math.max(0, parseInt(String(t), 10) || 0));
   const nTubosMesa = tiersNums.reduce((a, b) => a + b, 0);
   const maxTubosPorNivelMesa = tiersNums.length ? Math.max.apply(null, tiersNums) : 0;
+  const nTiers = tiers.length;
 
   /** Ancho extra = tubos horizontales largos (tipo estantería / mesa comercial). */
   const W0 = Math.max(nftDiagramCanvasW0(), Math.min(980, 698 + maxTubosPorNivelMesa * 36 + nTiers * 14));
   const topPad = 52;
   const botTank = 130;
-  const nTiers = tiers.length;
   let tierRowH = Math.max(72, Math.min(102, Math.floor(560 / Math.max(nTiers, 1))));
   if (maxTubosPorNivelMesa <= 2) tierRowH = Math.max(tierRowH, 88);
   else if (maxTubosPorNivelMesa <= 3) tierRowH = Math.max(tierRowH, 80);
