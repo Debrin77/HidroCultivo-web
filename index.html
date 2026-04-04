@@ -4900,8 +4900,13 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 8px">
           Disposición, multinivel, escalera/A y pendiente. Los datos coinciden con el <strong>asistente de configuración</strong>; aquí puedes retocarlos y pulsar <strong>Aplicar</strong>.
         </p>
+        <ol style="font-size:9px;color:#475569;line-height:1.45;margin:0 0 10px;padding-left:16px;font-weight:600">
+          <li style="margin-bottom:4px">Elige <strong>mesa, escalera o pared</strong> y, si aplica, multinivel o caras del A.</li>
+          <li style="margin-bottom:4px">Ajusta <strong>tubos, huecos y pendiente</strong> (los huecos son el mismo número en cada tubo del dibujo).</li>
+          <li>Pulsa <strong>Aplicar montaje NFT</strong>. Canal, lámina, Ø de alimentación y bomba siguen en el asistente.</li>
+        </ol>
         <p style="font-size:9px;color:#94a3b8;line-height:1.4;margin:0 0 10px">
-          Canal de cultivo, lámina, tubo de alimentación (Ø) y bomba están solo en el asistente. Si cambiaste el montaje arriba, pulsa <strong>Aplicar</strong> antes de abrirlo para que cargue lo último.
+          Si cambiaste el montaje aquí, pulsa <strong>Aplicar</strong> antes de abrir el asistente para que cargue lo último.
         </p>
         <button type="button" onclick="abrirAsistenteNftCanalYTuboDesdeSistema()"
           style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px dashed #3b82f6;background:#eff6ff;
@@ -5162,6 +5167,9 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           border-radius:12px;padding:10px 12px;max-width:260px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
           font-size:12px;line-height:1.35"></div>
         <div id="torreSwipeHint" class="torre-swipe-hint">Flechas al lado del depósito o deslizar para girar</div>
+        <div id="torreNftDiagramHint" style="display:none;text-align:center;margin:8px 12px 2px;font-size:10px;font-weight:700;color:#64748b;line-height:1.45;letter-spacing:0.02em">
+          NFT: desplaza el diagrama si no cabe en pantalla · Toca un hueco para su ficha o usa <strong style="font-weight:800">Lista</strong>
+        </div>
 
         <!-- Depósito + Nutriente -->
         <div class="torre-deposito" style="flex-direction:column;gap:6px">
@@ -5886,31 +5894,15 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <div class="torre-preview nft-schematic-host" id="nftPreview" aria-hidden="true"></div>
           </div>
           <div class="torre-controls">
-            <div class="torre-control-row">
-              <div class="torre-control-label">
-                <span id="nftCanalesLabelMain">Tubos en serpentín</span>
-                <span class="torre-control-val" id="valNftCanales">4</span>
-              </div>
-              <input type="range" class="torre-slider" id="sliderNftCanales"
-                min="1" max="24" value="4" oninput="updateNftSetupPreview()">
+            <div style="background:linear-gradient(180deg,#f0fdf4,#ecfdf5);border:1.5px solid #bbf7d0;border-radius:12px;padding:10px 12px;margin-bottom:12px">
+              <div style="font-size:10px;font-weight:900;color:#14532d;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Cómo configurarlo</div>
+              <ol style="margin:0;padding-left:18px;font-size:10px;color:#365314;line-height:1.55;font-weight:600">
+                <li style="margin-bottom:4px"><strong>Primero</strong> la disposición (mesa, escalera o pared) y la <strong>altura de bombeo</strong> si el agua sube al primer tubo.</li>
+                <li style="margin-bottom:4px"><strong>Después</strong> tubos / peldaños y huecos: en el dibujo todos los tubos comparten el mismo perfil y el mismo número de huecos.</li>
+                <li>Abajo afinas <strong>canal, lámina y bomba</strong>. En la pestaña <strong>Sistema</strong> puedes retocar montaje y <strong>Aplicar</strong> sin repetir todo.</li>
+              </ol>
             </div>
-            <div class="torre-control-row">
-              <div class="torre-control-label">
-                Huecos / plantas por canal
-                <span class="torre-control-val" id="valNftHuecos">8</span>
-              </div>
-              <input type="range" class="torre-slider" id="sliderNftHuecos"
-                min="2" max="30" value="8" oninput="updateNftSetupPreview()">
-            </div>
-            <div class="torre-control-row">
-              <div class="torre-control-label">
-                Pendiente aprox.
-                <span class="torre-control-val" id="valNftPendiente">2<span style="font-size:12px;font-weight:600">%</span></span>
-              </div>
-              <input type="range" class="torre-slider" id="sliderNftPendiente"
-                min="1" max="4" value="2" step="1" oninput="updateNftSetupPreview()">
-            </div>
-            <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #e5e7eb">
+            <div style="margin-top:0;padding-top:0;border-top:none">
               <div style="font-size:10px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
                 Disposición física
               </div>
@@ -5964,8 +5956,36 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                   <button type="button" class="equip-card nft-disp-btn" id="nftEscCara2" onclick="seleccionarNftEscaleraCaras(2)"
                     aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Dos caras (A)</button>
                 </div>
-                <p style="font-size:9px;color:#64748b;margin:8px 0 0;line-height:1.4">El deslizador de arriba = <strong>peldaños por cara</strong>; el total de tubos = peldaños × caras.</p>
+                <p style="font-size:9px;color:#64748b;margin:8px 0 0;line-height:1.4">El deslizador de <strong>tubos / peldaños</strong> (sección siguiente) = <strong>peldaños por cara</strong>; el total de tubos = peldaños × caras.</p>
               </div>
+            </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1.5px solid #e5e7eb">
+              <div style="font-size:10px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Cantidades en el diagrama</div>
+              <p style="font-size:9px;color:#64748b;margin:0 0 10px;line-height:1.45">Misma sección de tubo y huecos alineados en todo el esquema. La <strong>línea azul</strong> es el agua (subida → recorrido por tubos → retorno por el borde al depósito).</p>
+            </div>
+            <div class="torre-control-row">
+              <div class="torre-control-label">
+                <span id="nftCanalesLabelMain">Tubos en serpentín</span>
+                <span class="torre-control-val" id="valNftCanales">4</span>
+              </div>
+              <input type="range" class="torre-slider" id="sliderNftCanales"
+                min="1" max="24" value="4" oninput="updateNftSetupPreview()">
+            </div>
+            <div class="torre-control-row">
+              <div class="torre-control-label">
+                Huecos por tubo <span style="font-size:9px;font-weight:600;color:#94a3b8">(igual en todos)</span>
+                <span class="torre-control-val" id="valNftHuecos">8</span>
+              </div>
+              <input type="range" class="torre-slider" id="sliderNftHuecos"
+                min="2" max="30" value="8" oninput="updateNftSetupPreview()">
+            </div>
+            <div class="torre-control-row">
+              <div class="torre-control-label">
+                Pendiente aprox.
+                <span class="torre-control-val" id="valNftPendiente">2<span style="font-size:12px;font-weight:600">%</span></span>
+              </div>
+              <input type="range" class="torre-slider" id="sliderNftPendiente"
+                min="1" max="4" value="2" step="1" oninput="updateNftSetupPreview()">
             </div>
             <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #e5e7eb">
               <div style="font-size:10px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
@@ -7734,6 +7754,7 @@ function aplicarVistaTorreUI() {
   const bE = document.getElementById('btnTorreVistaEsquema');
   const bL = document.getElementById('btnTorreVistaLista');
   const swipe = document.getElementById('torreSwipeHint');
+  const nftHint = document.getElementById('torreNftDiagramHint');
   let swipeHidden = false;
   try {
     swipeHidden = localStorage.getItem(TORRE_SWIPE_HINT_LS) === '1';
@@ -7744,6 +7765,9 @@ function aplicarVistaTorreUI() {
     if (lista || esNftSwipe) swipe.style.display = 'none';
     else if (swipeHidden) swipe.style.display = 'none';
     else swipe.style.display = '';
+  }
+  if (nftHint) {
+    nftHint.style.display = lista || !esNftSwipe ? 'none' : '';
   }
   if (bE) {
     bE.classList.toggle('active', !lista);
@@ -8969,9 +8993,10 @@ function actualizarChromePanelEsquemaPorTipo() {
       intro.innerHTML =
         '<strong>NFT</strong> · disposición ' +
         dTxt +
-        'La <strong>línea azul discontinua</strong> indica el flujo. ' +
-        'Configura <strong>altura de bombeo al 1.º canal</strong> en el asistente para afinar la bomba. ' +
-        'Toca cada <strong>hueco</strong> o usa <strong>Lista</strong> (cada fila = tubo).';
+        'En el dibujo los tubos tienen la <strong>misma sección</strong> y los huecos van <strong>alineados</strong>. ' +
+        'La <strong>línea azul</strong> es el agua; el <strong>retorno</strong> va por el borde del esquema para no cruzar los tubos. ' +
+        'Indica <strong>altura al 1.º canal</strong> en asistente o Sistema para la bomba. ' +
+        '<strong>Toca un hueco</strong> o <strong>Lista</strong> (cada fila = un tubo).';
     } else {
       intro.innerHTML =
         '<strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real). ' +
@@ -9037,7 +9062,7 @@ function renderTorre() {
       escaleraCaras: hyd.escaleraCaras,
     });
     wrap.setAttribute('aria-label',
-      'Diagrama NFT en serpentín: línea azul discontinua indica el sentido del agua. Toca cada hueco para ficha o Lista.');
+      'Diagrama NFT: línea azul = agua (subida, tubos T1 T2 y retorno por el borde). Desplaza con el dedo si hace falta. Toca cada hueco para ficha o usa Lista.');
     try { bindTorreCestas(wrap); } catch (e) {}
   } else {
     wrap.innerHTML = generarSVGTorre();
@@ -13046,7 +13071,7 @@ function refrescarNftCanalesSliderEtiqueta() {
     el.textContent = 'Tubos (si multinivel válido, el total lo fija la lista)';
     return;
   }
-  el.textContent = 'Tubos en serpentín';
+  el.textContent = 'Tubos en el circuito (mesa)';
 }
 
 function updateNftSetupPreview() {
@@ -13090,8 +13115,9 @@ function updateNftSetupPreview() {
       escaleraNiveles: hyd.escaleraNiveles,
       escaleraCaras: hyd.escaleraCaras,
     }) +
-    '<div style="font-size:10px;font-weight:700;color:#15803d;text-align:center;margin-top:6px;line-height:1.4">' +
-    'Toca los deslizadores: tubos, huecos, circuito de agua y equipamiento del depósito se actualizan con la configuración.</div>';
+    '<div style="font-size:10px;font-weight:700;color:#15803d;text-align:center;margin-top:8px;line-height:1.45;max-width:360px;margin-left:auto;margin-right:auto">' +
+    '<strong>Vista previa</strong>: arriba defines disposición y altura; aquí tubos, huecos (el mismo número en cada tubo) y pendiente. ' +
+    'La línea azul = agua. En móvil, desplaza el dibujo si no cabe.</div>';
   refrescarDocTuberiaNftSetup();
 }
 
