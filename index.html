@@ -12383,9 +12383,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         yMax = tmp;
       }
     }
-    const padBar = 2.5;
-    const yTop = yMin - hr - padBar;
-    const yBot = yMax + hr + padBar;
+    const tubeExt = Math.max(hr * 0.7, compactMesa ? 12 : 17);
+    const yTop = yMin - hr - tubeExt;
+    const yBot = yMax + hr + tubeExt;
     const barW = Math.max(14, Math.min(28, colW * 0.52));
     return { xC, colW, hr, gapV, gyForJ, yTop, yBot, barW, slotAlongG: gapV };
   }
@@ -12423,36 +12423,137 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
   const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
-  let flowD = 'M ' + xRiser + ' ' + yPump;
-  for (let i = 0; i < hydSeq.length; i++) {
-    const Gcur = geomByG[hydSeq[i]];
-    const H = mmShelf(Gcur);
-    const l2r = i % 2 === 0;
-    const xIn = l2r ? H.x0 : H.x1;
-    const xOut = l2r ? H.x1 : H.x0;
-    if (i === 0) {
-      flowD += ' L ' + xRiser + ' ' + H.yC;
-      flowD += ' L ' + xIn + ' ' + H.yC;
-      flowD += ' L ' + xOut + ' ' + H.yC;
-    } else {
-      const Gprev = geomByG[hydSeq[i - 1]];
-      const P = mmShelf(Gprev);
-      const prevOut = (i - 1) % 2 === 0 ? P.x1 : P.x0;
-      if (Math.abs(H.yC - P.yC) > 0.5) {
-        flowD += ' L ' + prevOut + ' ' + H.yC;
+  const fqPath = function (v) {
+    const n = Math.round(Number(v) * 100) / 100;
+    return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
+  };
+  let flowD = 'M ' + fqPath(xRiser) + ' ' + fqPath(yPump);
+  let flowLastX = xRiser;
+  let flowLastY = yPump;
+  if (nTiers > 1 && hydSeq.length) {
+    const er = compactMesa ? 12 : 16;
+    let lx = xRiser;
+    let ly = yPump;
+    const Lto = function (x, y) {
+      flowD += ' L ' + fqPath(x) + ' ' + fqPath(y);
+      lx = x;
+      ly = y;
+    };
+    const Arc = function (ex, ey, sw) {
+      flowD += ' A ' + fqPath(er) + ' ' + fqPath(er) + ' 0 0 ' + sw + ' ' + fqPath(ex) + ' ' + fqPath(ey);
+      lx = ex;
+      ly = ey;
+    };
+    const orthoKnee = function (tx, ty) {
+      if (Math.abs(lx - tx) < 0.8 && Math.abs(ly - ty) < 0.8) return;
+      if (Math.abs(lx - tx) < 0.8) {
+        Lto(tx, ty);
+        return;
       }
-      if (Math.abs(prevOut - xIn) > 0.5) {
+      if (Math.abs(ly - ty) < 0.8) {
+        Lto(tx, ty);
+        return;
+      }
+      const sx = tx > lx ? 1 : -1;
+      const sy = ty > ly ? 1 : -1;
+      if (Math.abs(ty - ly) > er && Math.abs(tx - lx) > er) {
+        Lto(lx, ty - sy * er);
+        const swK = sx > 0 ? (sy > 0 ? 1 : 0) : sy > 0 ? 0 : 1;
+        Arc(lx + sx * er, ty, swK);
+        Lto(tx, ty);
+      } else {
+        Lto(lx, ty);
+        Lto(tx, ty);
+      }
+    };
+    for (let i = 0; i < hydSeq.length; i++) {
+      const Gc = geomByG[hydSeq[i]];
+      const Lc = mesaMultinivelHoleLayout(Gc);
+      const xC = Lc.xC;
+      const yT = Lc.yTop;
+      const yB = Lc.yBot;
+      const Gn = i + 1 < hydSeq.length ? geomByG[hydSeq[i + 1]] : null;
+      const xNext = Gn ? mesaMultinivelHoleLayout(Gn).xC : null;
+      let dir;
+      if (Gn) {
+        dir = xNext >= xC - 0.5 ? 1 : -1;
+      } else if (i > 0) {
+        const xPrev = mesaMultinivelHoleLayout(geomByG[hydSeq[i - 1]]).xC;
+        dir = xC >= xPrev - 0.5 ? 1 : -1;
+      } else {
+        dir = 1;
+      }
+      const up = i % 2 === 0;
+      const xIn = xC - dir * er;
+      const xOut = xC + dir * er;
+      const yIn = up ? yB : yT;
+      if (i === 0) {
+        Lto(xRiser, yB);
+        Lto(xIn, yB);
+      } else {
+        orthoKnee(xIn, yIn);
+      }
+      if (up) {
+        if (dir > 0) {
+          Arc(xC, yB - er, 0);
+          Lto(xC, yT + er);
+          Arc(xOut, yT, 1);
+        } else {
+          Arc(xC, yB - er, 1);
+          Lto(xC, yT + er);
+          Arc(xOut, yT, 0);
+        }
+      } else {
+        if (dir > 0) {
+          Arc(xC, yT + er, 1);
+          Lto(xC, yB - er);
+          Arc(xOut, yB, 0);
+        } else {
+          Arc(xC, yT + er, 0);
+          Lto(xC, yB - er);
+          Arc(xOut, yB, 1);
+        }
+      }
+    }
+    flowLastX = lx;
+    flowLastY = ly;
+  } else {
+    for (let i = 0; i < hydSeq.length; i++) {
+      const Gcur = geomByG[hydSeq[i]];
+      const H = mmShelf(Gcur);
+      const l2r = i % 2 === 0;
+      const xIn = l2r ? H.x0 : H.x1;
+      const xOut = l2r ? H.x1 : H.x0;
+      if (i === 0) {
+        flowD += ' L ' + xRiser + ' ' + H.yC;
         flowD += ' L ' + xIn + ' ' + H.yC;
+        flowD += ' L ' + xOut + ' ' + H.yC;
+      } else {
+        const Gprev = geomByG[hydSeq[i - 1]];
+        const P = mmShelf(Gprev);
+        const prevOut = (i - 1) % 2 === 0 ? P.x1 : P.x0;
+        if (Math.abs(H.yC - P.yC) > 0.5) {
+          flowD += ' L ' + prevOut + ' ' + H.yC;
+        }
+        if (Math.abs(prevOut - xIn) > 0.5) {
+          flowD += ' L ' + xIn + ' ' + H.yC;
+        }
+        flowD += ' L ' + xOut + ' ' + H.yC;
       }
-      flowD += ' L ' + xOut + ' ' + H.yC;
+    }
+    if (hydSeq.length) {
+      const Gl = geomByG[hydSeq[hydSeq.length - 1]];
+      const Hl = mmShelf(Gl);
+      const ll2r = (hydSeq.length - 1) % 2 === 0;
+      flowLastX = ll2r ? Hl.x1 : Hl.x0;
+      flowLastY = Hl.yC;
     }
   }
   const Glast = hydSeq.length ? geomByG[hydSeq[hydSeq.length - 1]] : null;
   const lm = Glast ? mmShelf(Glast) : { yC: topPad + tierRowH / 2, x0: xL, x1: xR };
-  const lastL2r = hydSeq.length ? (hydSeq.length - 1) % 2 === 0 : true;
-  const lastExitX = lastL2r ? lm.x1 : lm.x0;
-  const retMargMM = lastExitX >= W0 / 2 ? xR + 14 : xL - 14;
-  flowD += ' L ' + retMargMM + ' ' + lm.yC;
+  const retMargMM = flowLastX >= W0 / 2 ? xR + 14 : xL - 14;
+  const retYJoin = nTiers > 1 && hydSeq.length ? flowLastY : lm.yC;
+  flowD += ' L ' + fqPath(retMargMM) + ' ' + fqPath(retYJoin);
   flowD += ' L ' + retMargMM + ' ' + (tankY + 24);
   flowD += ' L ' + (tx + tankW - 6) + ' ' + (tankY + 24);
   flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
