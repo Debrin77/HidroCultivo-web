@@ -757,6 +757,51 @@ body::before { display: none; }
   filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.06));
 }
 /* NFT: el diagrama puede crecer en altura; el scroll es en el contenedor */
+.torre-sistema-resumen-wrap {
+  margin: 12px 10px 6px;
+  padding: 12px 12px 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+.torre-sistema-resumen-wrap[hidden] {
+  display: none !important;
+}
+.torre-sistema-resumen-wrap .torre-sistema-resumen-title {
+  font-size: 10px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 10px;
+  text-align: center;
+}
+.torre-sistema-resumen-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.45;
+}
+.torre-sistema-resumen-table tbody tr {
+  border-top: 1px solid #e2e8f0;
+}
+.torre-sistema-resumen-table tbody tr:first-child {
+  border-top: none;
+}
+.torre-sistema-resumen-table th {
+  text-align: left;
+  font-weight: 700;
+  color: #64748b;
+  padding: 8px 10px 8px 0;
+  width: 44%;
+  vertical-align: top;
+}
+.torre-sistema-resumen-table td {
+  padding: 8px 0;
+  vertical-align: top;
+}
+
 #torreSVGWrap.torre-svg-canvas svg.nft-diagram--scroll {
   max-height: none;
   min-height: 200px;
@@ -4903,7 +4948,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <ol style="font-size:9px;color:#475569;line-height:1.45;margin:0 0 10px;padding-left:16px;font-weight:600">
           <li style="margin-bottom:4px">Elige <strong>mesa, escalera o pared</strong> y, si aplica, multinivel o caras del A.</li>
           <li style="margin-bottom:4px">Ajusta <strong>tubos, huecos y pendiente</strong> (los huecos son el mismo número en cada tubo del dibujo).</li>
-          <li>Pulsa <strong>Aplicar montaje NFT</strong>. Canal, lámina, Ø de alimentación y bomba siguen en el asistente.</li>
+          <li>Pulsa <strong>Aplicar montaje NFT</strong>. Canal, lámina, Ø de tubería de riego (alimentación) y bomba siguen en el asistente.</li>
         </ol>
         <p style="font-size:9px;color:#94a3b8;line-height:1.4;margin:0 0 10px">
           Si cambiaste el montaje aquí, pulsa <strong>Aplicar</strong> antes de abrir el asistente para que cargue lo último.
@@ -5081,6 +5126,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div style="text-align:center;padding:28px 16px;color:#94a3b8;font-size:12px;font-weight:600;letter-spacing:0.04em">Cargando esquema…</div>
         </div>
         <div id="torreListaVista" class="torre-lista-wrap" style="display:none" aria-label="Lista de cestas por nivel"></div>
+        <div id="torreSistemaResumenWrap" class="torre-sistema-resumen-wrap" role="region" aria-label="Resumen de la configuración del sistema" hidden></div>
         <div id="torreQuickTip" style="position:fixed;z-index:9999;display:none;pointer-events:none;
           background:rgba(17,24,39,0.95);color:#fff;border:1px solid rgba(255,255,255,0.12);
           border-radius:12px;padding:10px 12px;max-width:260px;box-shadow:0 10px 30px rgba(0,0,0,0.25);
@@ -5986,7 +6032,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 Canal de cultivo (cestas / raíces)
               </div>
               <p style="font-size:9px;color:#475569;line-height:1.45;margin:0 0 8px">
-                Con el <strong>diámetro o el ancho del fondo</strong>, la <strong>lámina ~3 mm</strong> y la <strong>longitud</strong> del canal, la app estima volumen de película y caudal orientativo (junto al modelo empírico). Distinto del tubo de alimentación (abajo).
+                Con el <strong>diámetro o el ancho del fondo</strong>, la <strong>lámina ~3 mm</strong> y la <strong>longitud</strong> del canal, la app estima volumen de película y caudal orientativo (junto al modelo empírico). En tubo redondo suele usarse PVC; lo habitual en bricolaje es <strong>PVC de saneamiento/evacuación</strong>, pero es <strong>preferible PVC alimentario</strong>. Distinto del tubo de alimentación al canal (abajo).
               </p>
               <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
                 <button type="button" class="equip-card" id="nftCanalFormaRedondo" onclick="seleccionarNftCanalForma('redondo')"
@@ -6024,10 +6070,10 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             </div>
             <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #e5e7eb">
               <div style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">
-                Ø interior — alimentación / distribución (desde bomba)
+                Ø tubería de riego — tramo que limita (derivación o rama desde bomba)
               </div>
               <p style="font-size:9px;color:#475569;line-height:1.45;margin:0 0 8px">
-                Tubería que lleva el nutriente desde la <strong>bomba</strong> (típico <strong>16–25 mm</strong>). No sustituye el Ø ancho del canal de cultivo. Más detalle en la guía plegable.
+                Tubería de <strong>riego estándar</strong> (p. ej. polietileno): <strong>Ø16 mm</strong> (muy común en derivaciones a cada canal), <strong>Ø20 mm</strong> si quieres más holgura; <strong>Ø25 mm</strong> muy habitual desde la bomba, <strong>Ø32 mm</strong> en tramos largos o medianos. El <strong>retorno</strong> al depósito suele ir en <strong>Ø40–50 mm</strong> (no es lo mismo que el canal de cultivo). Más detalle en la guía plegable.
               </p>
               <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
                 <button type="button" class="equip-card" id="nftTubo16" onclick="seleccionarTuboNft(16)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">16</button>
@@ -6037,7 +6083,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                 <button type="button" class="equip-card" id="nftTubo40" onclick="seleccionarTuboNft(40)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">40</button>
               </div>
               <div style="font-size:9px;color:#64748b;margin-top:6px;line-height:1.4">
-                mm · Este valor alimenta el cálculo de bomba (pérdidas, caudal mínimo, película continua 24 h). Si tu manifold es más ancho, elige el tramo que limita el caudal.
+                mm · Elige el <strong>Ø del tramo más estrecho</strong> que dimensiona la bomba (suele ser la rama <strong>25–32 mm</strong> desde bomba, o <strong>16–20 mm</strong> si el cuello de botella son las derivaciones). El <strong>retorno Ø40–50 mm</strong> no sustituye al canal ancho; sirve para el desagüe por gravedad.
               </div>
               <details id="nftTuberiaDocDetails" style="margin-top:10px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;overflow:hidden">
                 <summary style="cursor:pointer;padding:10px 12px;font-size:11px;font-weight:800;color:#1e40af;list-style-position:outside">
@@ -6069,7 +6115,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </div>
         <p style="font-size:10px;color:#6b7280;margin:10px 0 0;line-height:1.45">
           En la <strong>pestaña Sistema</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
-          El bloque <strong>Canal de cultivo</strong> alimenta el cálculo de caudal/volumen de película; el Ø de <strong>alimentación</strong> sigue siendo el de la bomba hasta el manifold.
+          El bloque <strong>Canal de cultivo</strong> alimenta el cálculo de caudal/volumen de película; el Ø de <strong>alimentación</strong> aquí es el de la línea de riego (bomba / derivaciones), no el del retorno ni el ancho del perfil de cultivo.
         </p>
       </div>
 
@@ -9094,6 +9140,7 @@ function renderTorre() {
 
   if (state.configTorre?.torreVistaModo === 'lista') renderTorreLista();
   aplicarVistaTorreUI();
+  renderTorreSistemaResumenTabla(cfg);
 
   if (document.getElementById('tab-riego')?.classList.contains('active')) {
     actualizarVistaRiegoPorTipoInstalacion();
@@ -11252,46 +11299,34 @@ function nftTuberiaReferenciaDocHtml(opts) {
   const h3first = 'margin:0 0 6px;font-size:' + (cl ? '12px' : '11px') + ';font-weight:800;color:#0f172a';
   const ul = 'margin:0 0 8px;padding-left:1.15em';
   const li = 'margin:3px 0';
-  const tbl =
-    'width:100%;border-collapse:collapse;font-size:' + (cl ? '10px' : '9px') +
-    ';margin:10px 0 4px;border:1px solid #e2e8f0';
-  const th = 'text-align:left;padding:6px 5px;background:#e2e8f0;font-weight:800;border:1px solid #cbd5e1';
-  const td = 'padding:6px 5px;border:1px solid #e2e8f0;vertical-align:top';
   return (
     '<div class="nft-tuberia-ref-doc" style="' + box + '">' +
     '<p style="' + h3first + '">1. Canal de cultivo (NFT)</p>' +
-    '<p style="margin:0 0 6px">Tubería o perfil donde crecen las plantas. Se recomienda PVC <strong>de grado alimenticio</strong> ' +
-    '(a menudo <strong>blanco</strong> para limitar el calentamiento del agua).</p>' +
+    '<p style="margin:0 0 6px">Tubería o perfil donde van las cestas y las raíces. Si no usas <strong>canaleta rectangular</strong>, lo habitual es <strong>tubo redondo en PVC</strong>: en muchos montajes caseros se emplea <strong>PVC de saneamiento o evacuación</strong> por precio y disponibilidad; es <strong>preferible PVC de uso alimentario</strong> (menor riesgo de lixiviación). El tubo <strong>blanco</strong> limita algo el calentamiento solar del agua.</p>' +
     '<ul style="' + ul + '">' +
-    '<li style="' + li + '"><strong>75–90 mm</strong> (≈ 3"–3½"): estándar ideal para hoja (lechuga, espinaca, rúcula). ' +
-    'La raíz se extiende sin tapar el flujo.</li>' +
-    '<li style="' + li + '"><strong>110 mm</strong> (≈ 4"): plantas de mayor porte o sistema radicular muy denso (albahaca madura, acelgas).</li>' +
-    '<li style="' + li + '"><strong>Perfil rectangular / plano</strong>: aunque lo habitual sea redondo, los canales planos suelen dar ' +
-    'una <strong>película</strong> de agua más uniforme bajo las raíces.</li>' +
+    '<li style="' + li + '"><strong>Ø75 mm</strong>: cultivos pequeños o sistemas compactos.</li>' +
+    '<li style="' + li + '"><strong>Ø90 mm</strong>: el más usado para lechuga y hojas.</li>' +
+    '<li style="' + li + '"><strong>Ø110 mm</strong>: plantas más grandes o cuando interesa más caudal por canal.</li>' +
+    '<li style="' + li + '"><strong>Perfil rectangular / canaleta</strong>: suele dar una <strong>película</strong> de agua muy uniforme bajo las raíces; equivale a elegir ancho útil del fondo en la app.</li>' +
     '</ul>' +
-    '<p style="' + h3 + '">2. Tubería de alimentación (entrada)</p>' +
-    '<p style="margin:0 0 6px">Lleva la solución desde la <strong>bomba</strong> hacia la parte alta de los canales.</p>' +
+    '<p style="' + h3 + '">2. Tubería de riego — alimentar cada canal</p>' +
+    '<p style="margin:0 0 6px">Es la tubería de <strong>riego presión habitual</strong> (p. ej. <strong>polietileno</strong>), distinta del tubo ancho de cultivo.</p>' +
     '<ul style="' + ul + '">' +
-    '<li style="' + li + '"><strong>16–20 mm</strong> (½"–¾"): lo más habitual en la línea principal de distribución.</li>' +
-    '<li style="' + li + '"><strong>Microtubo 4–6 mm</strong>: derivaciones a cada canal.</li>' +
+    '<li style="' + li + '"><strong>Derivación a cada canal</strong>: <strong>Ø16 mm</strong> (PE) es la medida más común para entradas individuales; <strong>Ø20 mm</strong> aporta más holgura y reduce el riesgo de estrechamientos.</li>' +
+    '<li style="' + li + '"><strong>Alimentación desde la bomba</strong> (rama principal hasta reparto o parte alta): <strong>Ø25 mm</strong> muy común; <strong>Ø32 mm</strong> recomendable en instalaciones medianas o con tramos largos.</li>' +
     '</ul>' +
-    '<p style="' + h3 + '">3. Tubería de retorno (drenaje)</p>' +
-    '<p style="margin:0 0 6px">El drenaje conviene que sea <strong>mayor que la entrada</strong> para evitar embudos por gravedad.</p>' +
+    '<p style="' + h3 + '">3. Retorno / desagüe al depósito</p>' +
+    '<p style="margin:0 0 6px">Por gravedad conviene un tramo <strong>más ancho</strong> que la línea de alimentación para no crear cuellos de botella.</p>' +
     '<ul style="' + ul + '">' +
-    '<li style="' + li + '"><strong>40–50 mm</strong> (1½"–2"): recoge el agua de los canales al depósito.</li>' +
-    '<li style="' + li + '"><strong>Pendiente ~2–4 %</strong> en el retorno para que drene bien.</li>' +
+    '<li style="' + li + '"><strong>Ø40 mm</strong>: suele bastar para varios canales.</li>' +
+    '<li style="' + li + '"><strong>Ø50 mm</strong>: recomendable con muchos canales o caudal alto.</li>' +
+    '<li style="' + li + '"><strong>Pendiente ~2–4 %</strong> en el retorno para un buen drenaje.</li>' +
     '</ul>' +
-    '<table style="' + tbl + '">' +
-    '<thead><tr><th style="' + th + '">Componente</th><th style="' + th + '">Ø / medida</th><th style="' + th + '">Función</th></tr></thead>' +
-    '<tbody>' +
-    '<tr><td style="' + td + '">Canal NFT</td><td style="' + td + '">75–100 mm <span style="opacity:.85">(o perfil rectangular equivalente)</span></td><td style="' + td + '">Crecimiento y raíces</td></tr>' +
-    '<tr><td style="' + td + '">Línea de distribución</td><td style="' + td + '">16–25 mm</td><td style="' + td + '">Desde bomba al manifold / canales</td></tr>' +
-    '<tr><td style="' + td + '">Colector de retorno</td><td style="' + td + '">40–50 mm</td><td style="' + td + '">Vuelta al tanque</td></tr>' +
-    '</tbody></table>' +
     '<p style="margin:8px 0 0;font-size:' + (cl ? '10px' : '9px') + ';color:#475569;line-height:1.5">' +
     '<strong>Nota técnica:</strong> en NFT la lámina de agua no debe ser muy profunda (orientativo <strong>3–5 mm</strong> de altura). ' +
-    'Un difusor de aire en el depósito ayuda al oxígeno disuelto, pero la clave sigue siendo que la parte superior de las raíces ' +
-    'mantenga contacto con el <strong>aire</strong> dentro del canal.</p>' +
+    'Un difusor de aire en el depósito ayuda al oxígeno disuelto; la parte superior de las raíces debe seguir en contacto con el <strong>aire</strong> dentro del canal. ' +
+    'Indica en el <strong>asistente</strong> las medidas <strong>reales de tu montaje</strong>: los botones recogen los Ø de canal y de tubería de riego más usados; elige los que correspondan a lo que tienes. ' +
+    'El Ø que eliges para la bomba debe ser el del <strong>tramo más restrictivo</strong> de la línea de alimentación (no el del retorno ni el del tubo de cultivo).</p>' +
     '</div>'
   );
 }
@@ -11413,6 +11448,118 @@ function nftTextoResumenInstalacion(cfg) {
     s += ' · alim. Ø' + tubo + ' mm · bomba/depósito: ver checklist o asistente';
   }
   return s;
+}
+
+/**
+ * Tabla resumen bajo el gráfico (NFT o torre): datos de la instalación activa según config.
+ */
+function renderTorreSistemaResumenTabla(cfg) {
+  const mount = document.getElementById('torreSistemaResumenWrap');
+  if (!mount) return;
+  cfg = cfg || state.configTorre || {};
+  const rows = [];
+  let t = null;
+  try {
+    t = typeof getTorreActiva === 'function' ? getTorreActiva() : null;
+  } catch (e) {
+    t = null;
+  }
+  const nombre = (t && t.nombre ? String(t.nombre).trim() : '') || '';
+
+  if (cfg.tipoInstalacion === 'nft') {
+    const hyd = getNftHidraulicaDesdeConfig(cfg);
+    const geom = nftCanalGeomDesdeConfig(cfg);
+    const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+    let montajeDet =
+      disp === 'escalera' ? 'Escalera / A-frame' : disp === 'pared' ? 'Pared (zigzag)' : 'Mesa';
+    if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
+      montajeDet =
+        'Mesa multinivel · ' +
+        hyd.mesaTiers.length +
+        ' niveles · tubos por nivel ' +
+        hyd.mesaTiers.join(' · ');
+    } else if (disp === 'escalera' && hyd.escaleraNiveles != null) {
+      montajeDet +=
+        ' · ' +
+        hyd.escaleraNiveles +
+        ' peldaños/cara · ' +
+        (hyd.escaleraCaras || 1) +
+        ' cara(s)';
+    }
+    const canalTxt =
+      geom.forma === 'rectangular'
+        ? 'Rectangular · fondo ' + geom.anchoMm + ' mm · lámina ~' + geom.laminaMm + ' mm'
+        : 'Redondo · Ø' + geom.diamMm + ' mm · lámina ~' + geom.laminaMm + ' mm';
+    const longM = geom.longCanalM != null ? String(geom.longCanalM) + ' m/canal' : 'Auto (por huecos)';
+    const altCm =
+      cfg.nftAlturaBombeoCm != null && Number(cfg.nftAlturaBombeoCm) > 0
+        ? Math.round(Number(cfg.nftAlturaBombeoCm))
+        : getNftAlturaBombeoEfectivaCm(cfg);
+    const tuboRi = cfg.nftTuboInteriorMm || 25;
+    const vol = cfg.volDeposito > 0 ? cfg.volDeposito : typeof VOL_OBJETIVO !== 'undefined' ? VOL_OBJETIVO : 20;
+    const pend = cfg.nftPendientePct ?? 2;
+
+    if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
+    rows.push(['Sistema', 'NFT']);
+    rows.push(['Montaje', escHtmlUi(montajeDet)]);
+    rows.push(['Canales (tubos)', String(hyd.nCh)]);
+    rows.push(['Huecos por canal', String(hyd.nHx)]);
+    rows.push(['Huecos totales', String(hyd.nCh * hyd.nHx)]);
+    rows.push(['Pendiente', '~' + pend + ' %']);
+    rows.push(['Depósito (mezclas)', String(vol) + ' L']);
+    rows.push(['Canal de cultivo', escHtmlUi(canalTxt + ' · long. ' + longM)]);
+    rows.push(['Tubería riego (Ø)', 'Ø' + tuboRi + ' mm <span style="color:#64748b;font-size:11px">(tramo que limita)</span>']);
+    if (altCm > 0) rows.push(['Altura bombeo', String(altCm) + ' cm']);
+    const qU = cfg.nftBombaUsuarioCaudalLh;
+    const wU = cfg.nftBombaUsuarioPotenciaW;
+    if ((qU != null && Number(qU) > 0) || (wU != null && Number(wU) > 0)) {
+      let btxt = '';
+      if (qU != null && Number(qU) > 0) btxt += Math.round(Number(qU)) + ' L/h';
+      if (wU != null && Number(wU) > 0) btxt += (btxt ? ' · ' : '') + Math.round(Number(wU)) + ' W';
+      rows.push(['Bomba (placa)', escHtmlUi(btxt)]);
+    }
+    const eqArr = cfg.equipamiento;
+    if (Array.isArray(eqArr) && eqArr.length) {
+      const bits = [];
+      if (eqArr.includes('calentador')) bits.push('Calentador');
+      if (eqArr.includes('difusor')) bits.push('Difusor');
+      if (bits.length) rows.push(['En el esquema', bits.join(' · ')]);
+    }
+  } else {
+    const N = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || (typeof NUM_NIVELES !== 'undefined' ? NUM_NIVELES : 4);
+    const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || (typeof NUM_CESTAS !== 'undefined' ? NUM_CESTAS : 5);
+    const vol = cfg.volDeposito > 0 ? cfg.volDeposito : typeof VOL_OBJETIVO !== 'undefined' ? VOL_OBJETIVO : 20;
+    if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
+    rows.push(['Sistema', 'Torre vertical']);
+    rows.push(['Niveles', String(N)]);
+    rows.push(['Cestas por nivel', String(C)]);
+    rows.push(['Cestas totales', String(N * C)]);
+    rows.push(['Depósito (mezclas)', String(vol) + ' L']);
+  }
+
+  let body = '';
+  for (let i = 0; i < rows.length; i++) {
+    const k = rows[i][0];
+    const v = rows[i][1];
+    body +=
+      '<tr><th scope="row">' +
+      escHtmlUi(k) +
+      '</th><td>' +
+      v +
+      '</td></tr>';
+  }
+  mount.innerHTML =
+    '<div class="torre-sistema-resumen-title">' +
+    escHtmlUi('Resumen del sistema configurado') +
+    '</div>' +
+    '<table class="torre-sistema-resumen-table">' +
+    '<caption class="visually-hidden">' +
+    escHtmlUi('Valores principales de la instalación según la configuración guardada') +
+    '</caption>' +
+    '<tbody>' +
+    body +
+    '</tbody></table>';
+  mount.removeAttribute('hidden');
 }
 
 /**
@@ -11719,17 +11866,44 @@ function nftHuecoPointerRadius(hrVisual, interactive, centerSpacing) {
   return Math.min(target, cap);
 }
 
-/** Insignia de altura junto al borde derecho del depósito (no tapa tubos); ensancha el viewBox si hace falta. */
-function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0) {
+/** Nivel de legibilidad (0–2) para insignia de altura y volumen del depósito en diagramas NFT. */
+function nftDiagramLegibilityHint(h) {
+  if (!h || typeof h !== 'object') return 0;
+  const nc = Number(h.nCanales) || 0;
+  const nt = Number(h.nTubosTotal) || 0;
+  const v = Number(h.volL) || 0;
+  if (nc >= 12 || nt >= 15 || v >= 100) return 2;
+  if (nc >= 7 || nt >= 9 || v >= 55) return 1;
+  return 0;
+}
+
+/** Tamaño de fuente del volumen (L) en el depósito según volumen y nivel de legibilidad. */
+function nftTankVolumeFontSize(volL, legTier) {
+  const v = Number(volL);
+  const vv = Number.isFinite(v) ? v : 20;
+  let fs = 15;
+  if (legTier >= 2) fs = 20;
+  else if (legTier >= 1) fs = 18;
+  if (vv >= 120) fs = Math.max(fs, 21);
+  return Math.min(24, fs);
+}
+
+/** Insignia de altura junto al borde derecho del depósito (no tapa tubos); ensancha el viewBox si hace falta. hint opcional: { nCanales, nTubosTotal, volL }. */
+function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0, hint) {
   const cm = altCm != null ? Math.round(Number(altCm)) : NaN;
   if (!Number.isFinite(cm) || cm <= 0) {
     return { html: '', canvasW: canvasW0 };
   }
-  const bw = 158;
-  const bh = 46;
+  const legTier = nftDiagramLegibilityHint(hint);
+  const bw = legTier >= 2 ? 198 : legTier >= 1 ? 176 : 158;
+  const bh = legTier >= 2 ? 56 : legTier >= 1 ? 50 : 46;
+  const fsMain = legTier >= 2 ? 17 : legTier >= 1 ? 15.5 : 14;
+  const fsSub = legTier >= 2 ? 12.5 : legTier >= 1 ? 11.5 : 10.5;
   const gap = 7;
   const bx = tx + tankW + gap;
   const by = tankY + Math.max(3, (tankH - bh) / 2);
+  const yMainLine = by + (legTier >= 2 ? 22 : legTier >= 1 ? 20 : 19);
+  const ySubLine = by + (legTier >= 2 ? 44 : legTier >= 1 ? 40 : 37);
   const canvasW = Math.max(canvasW0, bx + bw + 10);
   const html =
     '<g class="nft-altura-badge">' +
@@ -11745,15 +11919,15 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0) {
     '<text x="' +
     (bx + bw / 2) +
     '" y="' +
-    (by + 19) +
-    '" text-anchor="middle" font-size="14" font-weight="900" fill="#7c2d12" font-family="system-ui,Segoe UI,sans-serif">↑ Altura ' +
+    yMainLine +
+    '" text-anchor="middle" font-size="' + fsMain + '" font-weight="900" fill="#7c2d12" font-family="system-ui,Segoe UI,sans-serif">↑ Altura ' +
     cm +
     ' cm</text>' +
     '<text x="' +
     (bx + bw / 2) +
     '" y="' +
-    (by + 37) +
-    '" text-anchor="middle" font-size="10.5" font-weight="800" fill="#9a3412" font-family="system-ui,Segoe UI,sans-serif">al 1.º tubo · bombeo</text>' +
+    ySubLine +
+    '" text-anchor="middle" font-size="' + fsSub + '" font-weight="800" fill="#9a3412" font-family="system-ui,Segoe UI,sans-serif">al 1.º tubo · bombeo</text>' +
     '</g>';
   return { html, canvasW };
 }
@@ -11789,8 +11963,12 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
+  const tiersNums = tiers.map(t => Math.max(0, parseInt(String(t), 10) || 0));
+  const nTubosMesa = tiersNums.reduce((a, b) => a + b, 0);
+  const maxTubosPorNivelMesa = tiersNums.length ? Math.max.apply(null, tiersNums) : 0;
+
   const W0 = nftDiagramCanvasW0();
-  const topPad = 42;
+  const topPad = 48;
   const botTank = 130;
   const nTiers = tiers.length;
   const tierRowH = Math.max(58, Math.min(78, Math.floor(620 / Math.max(nTiers, 1))));
@@ -11806,11 +11984,14 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const waterTop = tankY + 8;
   const waterH = tankH - 20;
   const xRiser = Math.max(26, Math.min(tx + 28, xL - 10));
-  const altBadgeMM = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0);
+  const legHintMM = { volL: vol, nCanales: maxTubosPorNivelMesa, nTubosTotal: nTubosMesa };
+  const legTierMM = nftDiagramLegibilityHint(legHintMM);
+  const volFsMM = nftTankVolumeFontSize(vol, legTierMM);
+  const altBadgeMM = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0, legHintMM);
   const Wsvg = altBadgeMM.canvasW;
   const cxTitle = Wsvg / 2;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
-  const gapT = 7;
+  const gapT = 3;
   const rowInner = xR - xL - 2 * padFlow;
   const geoms = [];
   let gIdx = 0;
@@ -11911,10 +12092,10 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       '/>';
     channels +=
       '<text x="' +
-      (m.cx - m.barW / 2 - 5) +
+      m.cx +
       '" y="' +
-      (G.rowY + 4) +
-      '" text-anchor="end" font-size="' +
+      (m.yT - 14) +
+      '" text-anchor="middle" font-size="' +
       tLabelFsMM +
       '" font-weight="900" fill="#0c4a6e"' +
       peNoneCh +
@@ -11997,7 +12178,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
   const volCx = tx + tankW / 2;
   tankLayer +=
-    '<text x="' + volCx + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="system-ui,sans-serif">' +
+    '<text x="' + volCx + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="' + volFsMM + '" font-weight="900" font-family="system-ui,sans-serif">' +
     vol +
     ' L</text>';
   if (showCalentador) {
@@ -12043,9 +12224,28 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   }
 
   const nTot = geoms.length;
+  const tiersFmt = tiersNums.join(' · ');
+  const mesaNivelesTxt =
+    nTiers > 1
+      ? nTiers + ' niveles · tubos por nivel ' + tiersFmt + ' · ' + nTot + ' tubos en total'
+      : '1 nivel · ' + (tiersNums[0] != null ? tiersNums[0] : 0) + ' tubos';
   let foot =
-    'NFT mesa multinivel · ' + tiers.join('+') + ' tubos · ' + nTot + ' total · ' + huecosN + ' huecos/tubo · ' + pend + '% pend.' +
+    'NFT mesa multinivel · ' +
+    mesaNivelesTxt +
+    ' · ' +
+    huecosN +
+    ' huecos/tubo · ' +
+    pend +
+    '% pend.' +
     NFT_SVG_FOOT_ORIENT_HINT;
+  const mesaSubtit =
+    nTiers > 1
+      ? 'NFT · mesa multinivel · ' + nTiers + ' niveles · tubos por nivel ' + tiersFmt
+      : 'NFT · mesa multinivel · 1 nivel · ' + (tiersNums[0] != null ? tiersNums[0] : 0) + ' tubos';
+  const mesaTitleLong =
+    nTiers > 1
+      ? 'NFT mesa multinivel: ' + nTiers + ' niveles; en cada nivel ' + tiersFmt + ' tubos (' + nTot + ' en total). Recorrido del agua en serpentín.'
+      : 'NFT mesa multinivel: un nivel con ' + (tiersNums[0] != null ? tiersNums[0] : 0) + ' tubos y recorrido del agua.';
 
   return (
     '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
@@ -12057,7 +12257,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '">' +
     '<title id="' +
     tid +
-    '">NFT mesa multinivel: varios niveles con distinto número de tubos y recorrido del agua</title>' +
+    '">' +
+    mesaTitleLong.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+    '</title>' +
     '<defs>' +
     '<linearGradient id="' +
     gidCh +
@@ -12077,7 +12279,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '" y="20" text-anchor="middle" fill="#0f172a" font-size="11.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
-    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">NFT · mesa multinivel (franjas 1+2+4…)</text>' +
+    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">' +
+    mesaSubtit.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+    '</text>' +
     back +
     channels +
     flowLayer +
@@ -12123,19 +12327,22 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
-  const W0 = nftDiagramCanvasW0();
+  const W0base = nftDiagramCanvasW0();
+  const rungOut = Math.min(220, 102 + Math.max(0, huecosN - 5) * 21);
+  const rungIn = 20;
+  const baseHalf = 138;
+  const minCxEsc = 32 + 14 + baseHalf + rungOut;
+  const cxMid = W0base / 2;
+  const cx = Math.max(cxMid, minCxEsc);
+  const W0 = W0base + Math.max(0, cx - cxMid);
   const topPad = 38;
   const botTank = 130;
-  const cx = W0 / 2;
   const yApex = topPad + 4;
   const dy = Math.min(58, Math.max(38, Math.floor(440 / Math.max(nv, 1))));
   const yStagger2 = car === 2 ? dy * 0.45 : 0;
   const ladderTop = yApex + 22;
   const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
   const H = ladderBot + 56 + botTank;
-  const baseHalf = 138;
-  const rungOut = 102;
-  const rungIn = 20;
   const tankY = H - botTank + 4;
   const tankH = 82;
   const tankW = Math.min(360, Math.round(140 + vol * 0.65));
@@ -12146,7 +12353,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const tubeH = 28;
   const padFlow = 8;
-  const altBadgeEsc = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0);
+  const nRunsHint = car === 2 ? nv * 2 : nv;
+  const legHintEsc = { volL: vol, nCanales: nRunsHint, nTubosTotal: nRunsHint };
+  const legTierEsc = nftDiagramLegibilityHint(legHintEsc);
+  const volFsEsc = nftTankVolumeFontSize(vol, legTierEsc);
+  const altBadgeEsc = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0, legHintEsc);
   const Wsvg = altBadgeEsc.canvasW;
   const cxTitle = Wsvg / 2;
 
@@ -12252,8 +12463,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       ')" stroke="#0369a1" stroke-width="1.3"' +
       peNone +
       '/>';
+    const yTubeTop = R.y - tubeH / 2;
     channels +=
-      '<text x="' + (R.xL - 4) + '" y="' + (R.y + 4) + '" text-anchor="end" font-size="' + tLabelFsEsc + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (R.g + 1) + '</text>';
+      '<text x="' + (R.xL - 6) + '" y="' + (yTubeTop - 8) + '" text-anchor="end" font-size="' + tLabelFsEsc + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (R.g + 1) + '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -12264,7 +12476,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       : '/>');
   const bombaFsEsc = nRunsEsc >= 14 ? 9 : 10;
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 6) + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 8) + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const rungSpan = rungOut + rungIn;
   const hr = Math.max(5.2, Math.min(12.5, (rungSpan / Math.max(huecosN - 1, 1)) * 0.48));
@@ -12329,7 +12541,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
   const volCxEsc = tx + tankW / 2;
   tankLayer +=
-    '<text x="' + volCxEsc + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="system-ui,sans-serif">' +
+    '<text x="' + volCxEsc + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="' + volFsEsc + '" font-weight="900" font-family="system-ui,sans-serif">' +
     vol +
     ' L</text>';
   if (showCalentador) {
@@ -12516,7 +12728,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const waterH = tankH - 20;
   const altCmSerp =
     EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0 ? Math.round(Number(EO.nftAlturaBombeoCm)) : null;
-  const altBadgeSerp = nftAlturaBadgeBesideTank(altCmSerp, tx, tankY, tankW, tankH, W0);
+  const legHintSerp = { volL: vol, nCanales: nCh, nTubosTotal: nCh };
+  const legTierSerp = nftDiagramLegibilityHint(legHintSerp);
+  const volFsSerp = nftTankVolumeFontSize(vol, legTierSerp);
+  const altBadgeSerp = nftAlturaBadgeBesideTank(altCmSerp, tx, tankY, tankW, tankH, W0, legHintSerp);
   const Wsvg = altBadgeSerp.canvasW;
   const cxTitle = Wsvg / 2;
 
@@ -12577,8 +12792,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       ')" stroke="#0369a1" stroke-width="1.4"' +
       peNone +
       '/>';
+    const yTubeTopSerp = yRi - tubeH / 2;
     channels +=
-      '<text x="' + (xL - 4) + '" y="' + (yRi + 4) + '" text-anchor="end" font-size="' + tLabelFsSerp + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (i + 1) + '</text>';
+      '<text x="' + (xL - 6) + '" y="' + (yTubeTopSerp - 8) + '" text-anchor="end" font-size="' + tLabelFsSerp + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (i + 1) + '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -12589,7 +12805,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       : '/>');
   const bombaFsSerp = nCh >= 10 ? 9 : 10;
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 6) + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 8) + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
@@ -12660,7 +12876,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
   const volCxSerp = tx + tankW / 2;
   tankLayer +=
-    '<text x="' + volCxSerp + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="system-ui,sans-serif">' +
+    '<text x="' + volCxSerp + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="' + volFsSerp + '" font-weight="900" font-family="system-ui,sans-serif">' +
     vol +
     ' L</text>';
   if (showCalentador) {
@@ -17165,7 +17381,7 @@ function getCLPasos() {
       desc:
         'Configura el <strong>canal donde van las cestas</strong> (tubo redondo o ancho útil de perfil rectangular), la <strong>lámina de agua</strong> (~3 mm habitual) y opcionalmente la <strong>longitud</strong> de cada canal. ' +
         'Con eso la app estima volumen de película y caudal orientativo, y contrasta con tu bomba en el paso N0.',
-      nota: 'El Ø de <strong>alimentación</strong> (16–25 mm) se configuró en Sistema; aquí solo el canal ancho/decorre de cultivo.',
+      nota: 'El Ø de <strong>línea de riego</strong> (16–32 mm según tramo; retorno 40–50 mm aparte) se configuró en Sistema; aquí solo el canal de cultivo (redondo o rectangular), lámina y longitud.',
       extraHtml: nftTuberiaReferenciaDocHtml({ forChecklist: true }),
       campos: [
         {
