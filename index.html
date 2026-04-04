@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 
+<!-- Three.js ES modules: OrbitControls importa el bare specifier "three"; sin esto el navegador no resuelve y la vista NFT 3D cae al SVG 2D. -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#15803d">
@@ -9063,10 +9073,22 @@ function actualizarChromePanelEsquemaPorTipo() {
 let _nftThreeModulesPromise = null;
 function loadNftThreeModules() {
   if (_nftThreeModulesPromise) return _nftThreeModulesPromise;
-  _nftThreeModulesPromise = Promise.all([
-    import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'),
-    import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js'),
-  ]).then(([T, o]) => ({ THREE: T, OrbitControls: o.OrbitControls }));
+  const fromImportMap = () =>
+    Promise.all([import('three'), import('three/addons/controls/OrbitControls.js')]).then(([T, o]) => ({
+      THREE: T,
+      OrbitControls: o.OrbitControls,
+    }));
+  const fromEsmSh = () =>
+    Promise.all([
+      import('https://esm.sh/three@0.160.0'),
+      import('https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js'),
+    ]).then(([T, o]) => ({ THREE: T, OrbitControls: o.OrbitControls }));
+  _nftThreeModulesPromise = fromImportMap()
+    .catch(() => fromEsmSh())
+    .catch(err => {
+      _nftThreeModulesPromise = null;
+      throw err;
+    });
   return _nftThreeModulesPromise;
 }
 
