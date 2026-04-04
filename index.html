@@ -13180,6 +13180,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const Wsvg = altBadgeEsc.canvasW;
   const cxTitle = Wsvg / 2;
 
+  /** Dos caras, primer peldaño: ancho libre bajo la T (suministro entre canales). */
+  const topCenterGap2 = car === 2 ? (compactEsc ? 24 : 34) : 0;
+
   const runs = [];
   let g = 0;
   if (car === 1) {
@@ -13191,17 +13194,29 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
     }
   } else {
+    const xInL0 = cx - topCenterGap2 / 2;
+    const xInR0 = cx + topCenterGap2 / 2;
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
       const xLeftFoot = cx - baseHalf * p;
-      runs.push({ g: g++, y, xL: xLeftFoot - rungOut, xR: xLeftFoot + rungIn, rtl: i % 2 === 1 });
+      let xL = xLeftFoot - rungOut;
+      let xR = xLeftFoot + rungIn;
+      if (i === 0) {
+        xR = Math.min(xR, xInL0);
+      }
+      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 1 });
     }
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
       const xRightFoot = cx + baseHalf * p;
-      runs.push({ g: g++, y, xL: xRightFoot - rungIn, xR: xRightFoot + rungOut, rtl: i % 2 === 0 });
+      let xL = xRightFoot - rungIn;
+      let xR = xRightFoot + rungOut;
+      if (i === 0) {
+        xL = Math.max(xL, xInR0);
+      }
+      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
     }
   }
 
@@ -13323,6 +13338,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
         '<line x1="' + (cx - baseHalf * 0.48) + '" y1="' + yBrace + '" x2="' + (cx + baseHalf * 0.48) + '" y2="' + yBrace + '" stroke="#94a3b8" stroke-width="1.35" stroke-linecap="round" opacity="0.8"/>';
     }
     const ym = yEscManifold2;
+    const teeBarHalf = Math.max(22, topCenterGap2 / 2 + 16);
     frame +=
       '<g class="nft-esc-tee-mark" pointer-events="none" aria-hidden="true">' +
       '<line x1="' +
@@ -13335,11 +13351,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       (ym + 6) +
       '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.95"/>' +
       '<line x1="' +
-      (cx - 20) +
+      (cx - teeBarHalf) +
       '" y1="' +
       ym +
       '" x2="' +
-      (cx + 20) +
+      (cx + teeBarHalf) +
       '" y2="' +
       ym +
       '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.95"/>' +
