@@ -13128,6 +13128,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const yStagger2 = car === 2 ? dy * 0.45 : 0;
   const ladderTop = yApex + 22;
   const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
+  /** Vértice / reparto en T (solo 2 caras): entre ápice y primer peldaño. */
+  const yEscManifold2 = car === 2 ? ladderTop - 9 : 0;
   const H = ladderBot + 56 + botTank;
   const tankY = H - botTank + 4;
   const tankH = 82;
@@ -13226,23 +13228,64 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   };
   if (runs.length) {
-    orthoKneeEsc(xRiser, runs[0].y);
-    for (let i = 0; i < runs.length; i++) {
-      const R = runs[i];
-      const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
-      const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
-      orthoKneeEsc(xS, R.y);
-      orthoKneeEsc(xE, R.y);
+    if (car === 2) {
+      const yManifold = yEscManifold2;
+      const xTee = cx;
+      orthoKneeEsc(xRiser, yManifold);
+      orthoKneeEsc(xTee, yManifold);
+      for (let i = 0; i < nv; i++) {
+        const R = runs[i];
+        const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+        const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+        orthoKneeEsc(xS, R.y);
+        orthoKneeEsc(xE, R.y);
+      }
+      const RlastL = runs[nv - 1];
+      const xMargL = 14;
+      orthoKneeEsc(xMargL, RlastL.y);
+      orthoKneeEsc(xMargL, tankY + 26);
+      orthoKneeEsc(tx + 16, tankY + 26);
+      orthoKneeEsc(tx + 16, tankY + 14);
+      flowD += ' M ' + fqPathEsc(xTee) + ' ' + fqPathEsc(yManifold);
+      lx = xTee;
+      ly = yManifold;
+      for (let i = nv; i < runs.length; i++) {
+        const R = runs[i];
+        const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+        const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+        orthoKneeEsc(xS, R.y);
+        orthoKneeEsc(xE, R.y);
+      }
+      const RlastR = runs[runs.length - 1];
+      const xMargR = Wsvg - 14;
+      orthoKneeEsc(xMargR, RlastR.y);
+      orthoKneeEsc(xMargR, tankY + 26);
+      orthoKneeEsc(tx + tankW - 16, tankY + 26);
+      orthoKneeEsc(tx + tankW - 16, tankY + 14);
+      flowD += ' M ' + fqPathEsc(tx + tankW * 0.45) + ' ' + fqPathEsc(tankY + 12);
+      lx = tx + tankW * 0.45;
+      ly = tankY + 12;
+      orthoKneeEsc(xRiser, tankY + 14);
+      orthoKneeEsc(xRiser, yPump);
+    } else {
+      orthoKneeEsc(xRiser, runs[0].y);
+      for (let i = 0; i < runs.length; i++) {
+        const R = runs[i];
+        const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+        const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+        orthoKneeEsc(xS, R.y);
+        orthoKneeEsc(xE, R.y);
+      }
+      const Rlast = runs[runs.length - 1];
+      const xLastE = Rlast.rtl ? Rlast.xL + padFlow : Rlast.xR - padFlow;
+      const xMargEsc = xLastE >= cx ? Wsvg - 16 : 16;
+      orthoKneeEsc(xMargEsc, Rlast.y);
+      orthoKneeEsc(xMargEsc, tankY + 26);
+      orthoKneeEsc(tx + tankW - 6, tankY + 26);
+      orthoKneeEsc(tx + tankW * 0.45, tankY + 12);
+      orthoKneeEsc(xRiser, tankY + 14);
+      orthoKneeEsc(xRiser, yPump);
     }
-    const Rlast = runs[runs.length - 1];
-    const xLastE = Rlast.rtl ? Rlast.xL + padFlow : Rlast.xR - padFlow;
-    const xMargEsc = xLastE >= cx ? Wsvg - 16 : 16;
-    orthoKneeEsc(xMargEsc, Rlast.y);
-    orthoKneeEsc(xMargEsc, tankY + 26);
-    orthoKneeEsc(tx + tankW - 6, tankY + 26);
-    orthoKneeEsc(tx + tankW * 0.45, tankY + 12);
-    orthoKneeEsc(xRiser, tankY + 14);
-    orthoKneeEsc(xRiser, yPump);
   }
 
   let frame = '';
@@ -13258,6 +13301,28 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       frame +=
         '<line x1="' + (cx - baseHalf * 0.48) + '" y1="' + yBrace + '" x2="' + (cx + baseHalf * 0.48) + '" y2="' + yBrace + '" stroke="#94a3b8" stroke-width="1.35" stroke-linecap="round" opacity="0.8"/>';
     }
+    const ym = yEscManifold2;
+    frame +=
+      '<g class="nft-esc-tee-mark" pointer-events="none" aria-hidden="true">' +
+      '<line x1="' +
+      cx +
+      '" y1="' +
+      (ym - 6) +
+      '" x2="' +
+      cx +
+      '" y2="' +
+      (ym + 6) +
+      '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.95"/>' +
+      '<line x1="' +
+      (cx - 20) +
+      '" y1="' +
+      ym +
+      '" x2="' +
+      (cx + 20) +
+      '" y2="' +
+      ym +
+      '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.95"/>' +
+      '</g>';
   } else {
     const backX = cx + 44;
     frame +=
@@ -13435,7 +13500,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const nTot = runs.length;
   let foot =
     'NFT escalera' +
-    (car === 2 ? ' (A · 2 caras)' : '') +
+    (car === 2 ? ' (A · 2 caras · subida al vértice, T y drenaje por cara)' : '') +
     ' · ' +
     nv +
     ' peldaños/cara · ' +
@@ -13463,7 +13528,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '">' +
     '<title id="' +
     tid +
-    '">NFT escalera o A-frame: peldaños y recorrido del agua. Leyenda: canal, cesta, flujo (línea azul discontinua).</title>' +
+    '">' +
+    (car === 2
+      ? 'NFT escalera o estructura A (dos caras): bomba sube al vértice; reparto en T a cada cara; agua recorre los peldaños y vuelve al depósito desde el último tubo de cada lado. '
+      : 'NFT escalera o inclinado: peldaños y recorrido del agua. ') +
+    'Leyenda: canal, cesta, flujo (línea azul discontinua).</title>' +
     '<defs>' +
     '<linearGradient id="' +
     gidCh +
