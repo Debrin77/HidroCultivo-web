@@ -808,13 +808,13 @@ body::before { display: none; }
 }
 /* Escalera una cara: aprovecha mejor el lienzo (cestas más fáciles de pulsar). */
 #torreSVGWrap.torre-svg-canvas svg.nft-escalera--una-cara {
-  min-height: min(58vh, 600px);
+  min-height: min(60vh, 640px);
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-mesa-mm-svg {
   min-height: min(62vh, 720px);
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-escalera-svg {
-  min-height: min(54vh, 560px);
+  min-height: min(56vh, 600px);
 }
 #torreSVGWrap.torre-svg-canvas .nft-schema-legend text {
   letter-spacing: 0.03em;
@@ -13124,7 +13124,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const cxMid = W0base / 2;
   const cx = Math.max(cxMid, minCxEsc);
   const W0 = Math.max(W0base + Math.max(0, cx - cxMid), minRungSpanUnits + baseHalf + 200);
-  const topPad = 70 + (compactEsc ? 8 : 0);
+  const topPad = 92 + (compactEsc ? 10 : 0);
   const botTank = 130;
   const yApex = topPad + 4;
   let dy =
@@ -13146,11 +13146,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   if (compactEsc) {
     dy = Math.max(car === 1 ? 50 : 42, Math.round(dy * 0.9));
   }
-  const ladderTop = yApex + 22;
+  const ladderTop = yApex + 34;
   /** Dos caras: mismo y por peldaño (izq./dcha.) para alinear tubos superiores y suministro en T central. */
   const ladderBot = ladderTop + (nv - 1) * dy + 10;
   /** Vértice / reparto en T (solo 2 caras): entre ápice y primer peldaño. */
-  const yEscManifold2 = car === 2 ? ladderTop - 9 : 0;
+  const yEscManifold2 = car === 2 ? ladderTop - 10 : 0;
   const H = ladderBot + 56 + botTank;
   const tankY = H - botTank + 4;
   const tankH = 82;
@@ -13373,15 +13373,24 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   let back =
     '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
 
+  const nRunsEsc = runs.length;
+  const tLabelFsEsc = compactEsc ? 14.25 : 16.5;
+  const rungSpan = rungOut + rungIn;
+  const slotDEsc = Math.max(1, huecosN - 1);
+  const hrRawEsc = (rungSpan / slotDEsc) * (compactEsc ? 0.54 : 0.58);
+  const hr =
+    car === 1
+      ? Math.max(compactEsc ? 10 : 11, Math.min(compactEsc ? 17 : 19, hrRawEsc, tubeH * (compactEsc ? 0.58 : 0.62)))
+      : Math.max(compactEsc ? 8.5 : 9.5, Math.min(compactEsc ? 15 : 17, hrRawEsc, tubeH * (compactEsc ? 0.54 : 0.58)));
+  const holeNumFsEsc = nRunsEsc >= 14 ? 8.5 : nRunsEsc >= 8 ? 9.25 : 10;
+  const plantLiftEsc = Math.min(tubeH * (compactEsc ? 0.36 : 0.4), compactEsc ? 10 : 12);
+
   let channels = '';
   const peNone = interactive ? ' pointer-events="none"' : '';
-  const nRunsEsc = runs.length;
-  const tLabelFsEsc = compactEsc ? 12 : 13.5;
   const chStrokeEsc = car === 2 ? 1.05 : 1.25;
   for (let i = 0; i < runs.length; i++) {
     const R = runs[i];
     const yc = R.y - tubeH / 2;
-    const cxRun = (R.xL + R.xR) / 2;
     channels +=
       '<rect x="' +
       R.xL +
@@ -13398,18 +13407,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '"' +
       peNone +
       '/>';
-    channels +=
-      '<text x="' +
-      cxRun +
-      '" y="' +
-      (yc - 6) +
-      '" text-anchor="middle" font-size="' +
-      tLabelFsEsc +
-      '" font-weight="900" fill="#0c4a6e"' +
-      peNone +
-      '>T' +
-      (R.g + 1) +
-      '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -13419,16 +13416,30 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
 
-  const rungSpan = rungOut + rungIn;
-  const slotDEsc = Math.max(1, huecosN - 1);
-  const hrRawEsc = (rungSpan / slotDEsc) * (compactEsc ? 0.54 : 0.58);
-  const hr =
-    car === 1
-      ? Math.max(compactEsc ? 10 : 11, Math.min(compactEsc ? 17 : 19, hrRawEsc, tubeH * (compactEsc ? 0.58 : 0.62)))
-      : Math.max(compactEsc ? 8.5 : 9.5, Math.min(compactEsc ? 15 : 17, hrRawEsc, tubeH * (compactEsc ? 0.54 : 0.58)));
-  const holeNumFsEsc = nRunsEsc >= 14 ? 8.5 : nRunsEsc >= 8 ? 9.25 : 10;
+  let channelLabels = '';
+  const plantTopPadEsc = compactEsc ? 10 : 13;
+  for (let i = 0; i < runs.length; i++) {
+    const R = runs[i];
+    const yc = R.y - tubeH / 2;
+    const cxRun = (R.xL + R.xR) / 2;
+    const plantTopY = R.y - plantLiftEsc - hr - plantTopPadEsc;
+    let tLabY = plantTopY - 5;
+    tLabY = Math.min(tLabY, yc - 5);
+    channelLabels +=
+      '<text x="' +
+      cxRun +
+      '" y="' +
+      tLabY.toFixed(2) +
+      '" text-anchor="middle" font-size="' +
+      tLabelFsEsc +
+      '" font-weight="900" fill="#0c4a6e" style="paint-order: stroke fill" stroke="#f8fafc" stroke-width="0.55" stroke-opacity="0.92"' +
+      peNone +
+      '>T' +
+      (R.g + 1) +
+      '</text>';
+  }
+
   let plants = '';
-  const plantLiftEsc = Math.min(tubeH * (compactEsc ? 0.36 : 0.4), compactEsc ? 10 : 12);
   for (let ri = 0; ri < runs.length; ri++) {
     const R = runs[ri];
     const y = R.y;
@@ -13531,6 +13542,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     frame = '<g pointer-events="none">' + frame + '</g>';
     channels = '<g pointer-events="none">' + channels + '</g>';
     flowLayer = '<g pointer-events="none">' + flowLayer + '</g>';
+    channelLabels = '<g pointer-events="none">' + channelLabels + '</g>';
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
@@ -13586,20 +13598,21 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '</defs>' +
     '<text x="' +
     cxTitle +
-    '" y="22" text-anchor="middle" fill="#0f172a" font-size="15.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '" y="26" text-anchor="middle" fill="#0f172a" font-size="17.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
-    '" y="40" text-anchor="middle" fill="#64748b" font-size="10.25" font-weight="600">NFT · escalera' +
+    '" y="48" text-anchor="middle" fill="#64748b" font-size="11.75" font-weight="600">NFT · escalera' +
     (car === 2 ? ' (estructura A)' : ' / inclinado') +
     ' · ' +
     car +
     ' cara(s)</text>' +
-    nftMesaEscaleraLegendSvg(cxTitle, 54, gidCh, compactEsc, true) +
+    nftMesaEscaleraLegendSvg(cxTitle, 62, gidCh, compactEsc, true) +
     frame +
     back +
     channels +
     flowLayer +
     plants +
+    channelLabels +
     tankLayer +
     (!interactive ? pumpLines : '') +
     '<text x="' +
