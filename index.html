@@ -816,6 +816,36 @@ body::before { display: none; }
 #torreSVGWrap.torre-svg-canvas svg.nft-escalera-svg {
   min-height: min(56vh, 600px);
 }
+#torreSVGWrap.torre-svg-canvas svg.nft-serpentine-svg {
+  min-height: min(56vh, 600px);
+}
+#torreSVGWrap.torre-svg-canvas svg.nft-serpentine--pared {
+  min-height: min(64vh, 740px);
+}
+/* Móvil: el diagrama NFT usa casi todo el alto útil (dvh evita barra del navegador). */
+@media (max-width: 640px) {
+  #torreSVGWrap.torre-svg-canvas {
+    padding: 8px 4px;
+    max-height: min(100dvh, 1600px);
+  }
+  #torreSVGWrap.torre-svg-canvas svg.nft-diagram--scroll {
+    min-height: min(74vh, 860px);
+    width: 100%;
+  }
+  #torreSVGWrap.torre-svg-canvas svg.nft-escalera-svg,
+  #torreSVGWrap.torre-svg-canvas svg.nft-escalera--una-cara {
+    min-height: min(84vh, 920px);
+  }
+  #torreSVGWrap.torre-svg-canvas svg.nft-mesa-mm-svg {
+    min-height: min(86vh, 960px);
+  }
+  #torreSVGWrap.torre-svg-canvas svg.nft-serpentine-svg {
+    min-height: min(78vh, 900px);
+  }
+  #torreSVGWrap.torre-svg-canvas svg.nft-serpentine--pared {
+    min-height: min(88vh, 1000px);
+  }
+}
 #torreSVGWrap.torre-svg-canvas .nft-schema-legend text {
   letter-spacing: 0.03em;
 }
@@ -3616,6 +3646,16 @@ button.toggle-switch {
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
 }
 .torre-preview.nft-schematic-host svg { max-width: 100%; height: auto; vertical-align: middle; }
+@media (max-width: 640px) {
+  .torre-preview.nft-schematic-host {
+    min-height: min(50vh, 560px);
+    padding: 6px 4px 8px;
+  }
+  .torre-preview.nft-schematic-host svg {
+    min-height: min(46vh, 520px);
+    width: 100%;
+  }
+}
 
 .torre-controls { flex: 1; }
 .torre-control-row {
@@ -13677,9 +13717,14 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
+  const isParedSerp = dispLayout === 'pared';
   const W0 = nftDiagramCanvasW0();
-  const rowStep = Math.max(54, Math.min(74, Math.floor(820 / Math.max(nCh, 1))));
-  const topPad = 38;
+  const rowStep = Math.max(
+    isParedSerp ? 58 : 54,
+    Math.min(74, Math.floor((isParedSerp ? 840 : 820) / Math.max(nCh, 1)))
+  );
+  /** Pared: cabecera alineada con escalera/mesa (título grande); mesa/escalera serpentín más compacto. */
+  const topPad = isParedSerp ? 80 : 38;
   const botTank = 130;
   const stairExtra = dispLayout === 'escalera' ? Math.max(0, nCh - 1) * 28 : 0;
   const H = topPad + nCh * rowStep + botTank + stairExtra;
@@ -13743,8 +13788,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   back += '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
-  const tLabelFsSerp = nCh >= 10 ? 12 : nCh >= 6 ? 13 : 14;
+  const tLabelFsSerpBase = nCh >= 10 ? 12 : nCh >= 6 ? 13 : 14;
+  const tLabelFsSerp = isParedSerp ? tLabelFsSerpBase + 2.25 : tLabelFsSerpBase;
   const cxTubeSerp = (xL + xR) / 2;
+  const tLabelDyBelowTube = isParedSerp ? 15 : 13;
   for (let i = 0; i < nCh; i++) {
     const yRi = yRow(i);
     const yc = yRi - tubeH / 2;
@@ -13769,10 +13816,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '<text x="' +
       cxTubeSerp +
       '" y="' +
-      (yc + tubeH + (dispLayout === 'pared' ? 12 : 13)) +
+      (yc + tubeH + tLabelDyBelowTube) +
       '" text-anchor="middle" font-size="' +
       tLabelFsSerp +
-      '" font-weight="900" fill="#0c4a6e"' +
+      '" font-weight="900" fill="#0c4a6e" style="paint-order: stroke fill" stroke="#f8fafc" stroke-width="0.45" stroke-opacity="0.9"' +
       peNone +
       '>T' +
       (i + 1) +
@@ -13795,7 +13842,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     dispLayout === 'pared' ? 6.2 : 5.6,
     Math.min(dispLayout === 'pared' ? 13.2 : 12.5, (spanTube / Math.max(huecosN - 1, 1)) * (dispLayout === 'pared' ? 0.51 : 0.48))
   );
-  const holeNumFsSerp = nCh >= 10 ? 8.5 : nCh >= 6 ? 9.25 : 10;
+  const holeNumFsSerp = (nCh >= 10 ? 8.5 : nCh >= 6 ? 9.25 : 10) + (isParedSerp ? 0.85 : 0);
   const compactSerp = nCh * huecosN > 20;
   let plants = '';
   for (let i = 0; i < nCh; i++) {
@@ -13928,8 +13975,16 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   }
   foot += NFT_SVG_FOOT_ORIENT_HINT;
 
+  const serpTitleFs = isParedSerp ? 18.5 : 11.5;
+  const serpSubFs = isParedSerp ? 12.25 : 8;
+  const serpTitleY = isParedSerp ? 28 : 20;
+  const serpSubY = isParedSerp ? 50 : 32;
+  const serpFootFs = isParedSerp ? 9 : 7.5;
+
   return (
-    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll' +
+    (isParedSerp ? ' nft-serpentine--pared' : '') +
+    '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
     H +
@@ -13955,10 +14010,18 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '</defs>' +
     '<text x="' +
     cxTitle +
-    '" y="20" text-anchor="middle" fill="#0f172a" font-size="11.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '" y="' +
+    serpTitleY +
+    '" text-anchor="middle" fill="#0f172a" font-size="' +
+    serpTitleFs +
+    '" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
-    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">' +
+    '" y="' +
+    serpSubY +
+    '" text-anchor="middle" fill="#64748b" font-size="' +
+    serpSubFs +
+    '" font-weight="600">' +
     (dispLayout === 'escalera'
       ? 'NFT · escalera (canales escalonados)'
       : dispLayout === 'pared'
@@ -13975,7 +14038,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     cxTitle +
     '" y="' +
     (H - 4) +
-    '" text-anchor="middle" fill="#475569" font-size="7.5" font-weight="600">' +
+    '" text-anchor="middle" fill="#475569" font-size="' +
+    serpFootFs +
+    '" font-weight="600">' +
     foot +
     '</text>' +
     '</svg>'
