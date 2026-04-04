@@ -12432,6 +12432,10 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   let flowLastY = yPump;
   if (nTiers > 1 && hydSeq.length) {
     const er = compactMesa ? 12 : 16;
+    const flowRunoff = compactMesa ? 16 : 22;
+    const xRunoffMm = function (exitX) {
+      return exitX < cxTitle ? xL + 4 + flowRunoff : Wsvg - (xL + 4 + flowRunoff);
+    };
     let lx = xRiser;
     let ly = yPump;
     const Lto = function (x, y) {
@@ -12491,7 +12495,22 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         Lto(xRiser, yB);
         Lto(xIn, yB);
       } else {
-        orthoKnee(xIn, yIn);
+        const Gp = geomByG[hydSeq[i - 1]];
+        const tierJump = Gp.t !== Gc.t;
+        if (tierJump) {
+          const xr = xRunoffMm(lx);
+          if (Math.abs(lx - xr) > 0.8) {
+            Lto(xr, ly);
+          }
+          if (Math.abs(ly - yIn) > 0.8) {
+            Lto(xr, yIn);
+          }
+          if (Math.abs(lx - xIn) > 0.8) {
+            Lto(xIn, yIn);
+          }
+        } else {
+          orthoKnee(xIn, yIn);
+        }
       }
       if (up) {
         if (dir > 0) {
@@ -12808,6 +12827,43 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       '<text x="' + cxTitle + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">Placa anotada · ver veredicto en checklist</text>';
   }
 
+  let tierBandsMm = '';
+  if (nTiers > 1) {
+    const bandRx = 8;
+    const bandX = 5;
+    const bandW = Wsvg - 2 * bandX;
+    const labFs = compactMesa ? 8.5 : 9.5;
+    for (let tb = 0; tb < nTiers; tb++) {
+      const y0b = topPad + tb * tierPitch;
+      const fillB = tb % 2 === 0 ? '#e2edf7' : '#eef2f8';
+      tierBandsMm +=
+        '<rect x="' +
+        bandX +
+        '" y="' +
+        y0b +
+        '" width="' +
+        bandW +
+        '" height="' +
+        tierRowH +
+        '" rx="' +
+        bandRx +
+        '" fill="' +
+        fillB +
+        '" opacity="0.9" stroke="#94a3b8" stroke-width="0.9"/>';
+      tierBandsMm +=
+        '<text x="' +
+        (bandX + 8) +
+        '" y="' +
+        (y0b + 17) +
+        '" fill="#334155" font-size="' +
+        labFs +
+        '" font-weight="800" font-family="system-ui,sans-serif">Nivel ' +
+        (tb + 1) +
+        '</text>';
+    }
+    tierBandsMm = '<g class="nft-mesa-tier-bands" pointer-events="none">' + tierBandsMm + '</g>';
+  }
+
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
     channels = '<g pointer-events="none">' + channels + '</g>';
@@ -12863,6 +12919,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '">' +
     mesaTitleLong.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     ' · Leyenda: canal (perfil), cesta (planta), flujo (línea azul discontinua).' +
+    (nTiers > 1 ? ' Franjas sombreadas por nivel.' : '') +
     '</title>' +
     '<defs>' +
     '<linearGradient id="' +
@@ -12887,6 +12944,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     mesaSubtit.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     '</text>' +
     nftMesaEscaleraLegendSvg(cxTitle, 41, gidCh, compactMesa) +
+    tierBandsMm +
     back +
     channels +
     flowLayer +
