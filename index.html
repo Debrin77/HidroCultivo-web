@@ -808,13 +808,13 @@ body::before { display: none; }
 }
 /* Escalera una cara: aprovecha mejor el lienzo (cestas más fáciles de pulsar). */
 #torreSVGWrap.torre-svg-canvas svg.nft-escalera--una-cara {
-  min-height: min(52vh, 540px);
+  min-height: min(58vh, 600px);
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-mesa-mm-svg {
   min-height: min(62vh, 720px);
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-escalera-svg {
-  min-height: min(50vh, 520px);
+  min-height: min(54vh, 560px);
 }
 #torreSVGWrap.torre-svg-canvas .nft-schema-legend text {
   letter-spacing: 0.03em;
@@ -13081,15 +13081,20 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
   const nTubosEscTotal = car === 2 ? nv * 2 : nv;
   const compactEsc = nTubosEscTotal > 20;
+  const escFew = nv <= 5 && !compactEsc;
 
   const W0base = nftDiagramCanvasW0();
   const minRungSpanUnits = 40 + huecosN * 18;
   let rungOut = Math.min(240, 108 + Math.max(0, huecosN - 5) * 22);
   rungOut = Math.max(rungOut, minRungSpanUnits - 20);
   if (car === 1) {
-    rungOut = Math.min(compactEsc ? 320 : 380, Math.round(rungOut * 1.62));
+    const mult1 = escFew ? 1.78 : 1.62;
+    const cap1 = compactEsc ? 340 : escFew ? 430 : 400;
+    rungOut = Math.min(cap1, Math.round(rungOut * mult1));
   } else {
-    rungOut = Math.min(compactEsc ? 275 : 320, Math.round(rungOut * 1.28));
+    const mult2 = escFew ? 1.38 : 1.28;
+    const cap2 = compactEsc ? 295 : escFew ? 350 : 330;
+    rungOut = Math.min(cap2, Math.round(rungOut * mult2));
   }
   rungOut = Math.max(rungOut, minRungSpanUnits - (car === 2 ? 22 : 18));
   const rungIn = car === 2 ? 18 : 22;
@@ -13098,13 +13103,25 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const cxMid = W0base / 2;
   const cx = Math.max(cxMid, minCxEsc);
   const W0 = Math.max(W0base + Math.max(0, cx - cxMid), minRungSpanUnits + baseHalf + 200);
-  const topPad = 40 + (compactEsc ? 8 : 0);
+  const topPad = 70 + (compactEsc ? 8 : 0);
   const botTank = 130;
   const yApex = topPad + 4;
   let dy =
     car === 1
-      ? Math.min(76, Math.max(52, Math.floor(620 / Math.max(nv, 1)) + Math.min(14, huecosN * 2)))
-      : Math.min(66, Math.max(44, Math.floor(500 / Math.max(nv, 1)) + Math.min(12, huecosN * 2)));
+      ? Math.min(
+          escFew ? 84 : 76,
+          Math.max(
+            escFew ? 60 : 52,
+            Math.floor((escFew ? 700 : 620) / Math.max(nv, 1)) + Math.min(14, huecosN * 2)
+          )
+        )
+      : Math.min(
+          escFew ? 74 : 66,
+          Math.max(
+            escFew ? 48 : 44,
+            Math.floor((escFew ? 580 : 500) / Math.max(nv, 1)) + Math.min(12, huecosN * 2)
+          )
+        );
   if (compactEsc) {
     dy = Math.max(car === 1 ? 50 : 42, Math.round(dy * 0.9));
   }
@@ -13121,6 +13138,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const xRiser = Math.max(26, Math.min(tx + 28, 40));
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   let tubeH = car === 2 ? Math.min(22, 17 + Math.min(6, huecosN * 0.45)) : Math.min(32, 24 + Math.min(8, huecosN * 0.55));
+  if (escFew) {
+    tubeH = Math.round(tubeH * (car === 2 ? 1.06 : 1.08));
+    tubeH = Math.min(car === 2 ? 24 : 34, tubeH);
+  }
   if (compactEsc) {
     tubeH = Math.max(car === 2 ? 15 : 20, Math.round(tubeH * 0.92));
   }
@@ -13163,33 +13184,66 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
   const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
-  let flowD = 'M ' + xRiser + ' ' + yPump;
-  for (let i = 0; i < runs.length; i++) {
-    const R = runs[i];
-    const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
-    const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
-    if (i === 0) {
-      flowD += ' L ' + xRiser + ' ' + R.y;
-      flowD += ' L ' + xS + ' ' + R.y;
-    } else {
-      const P = runs[i - 1];
-      const xEP = P.rtl ? P.xL + padFlow : P.xR - padFlow;
-      flowD += ' L ' + xEP + ' ' + P.y;
-      if (Math.abs(R.y - P.y) > 0.5) flowD += ' L ' + xEP + ' ' + R.y;
-      flowD += ' L ' + xS + ' ' + R.y;
+  const fqPathEsc = function (v) {
+    const n = Math.round(Number(v) * 100) / 100;
+    return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
+  };
+  const erEsc = compactEsc ? 10 : 14;
+  let flowD = 'M ' + fqPathEsc(xRiser) + ' ' + fqPathEsc(yPump);
+  let lx = xRiser;
+  let ly = yPump;
+  const LtoEsc = function (x, y) {
+    flowD += ' L ' + fqPathEsc(x) + ' ' + fqPathEsc(y);
+    lx = x;
+    ly = y;
+  };
+  const ArcEsc = function (ex, ey, sw) {
+    flowD +=
+      ' A ' + fqPathEsc(erEsc) + ' ' + fqPathEsc(erEsc) + ' 0 0 ' + sw + ' ' + fqPathEsc(ex) + ' ' + fqPathEsc(ey);
+    lx = ex;
+    ly = ey;
+  };
+  const orthoKneeEsc = function (tx, ty) {
+    if (Math.abs(lx - tx) < 0.8 && Math.abs(ly - ty) < 0.8) return;
+    if (Math.abs(lx - tx) < 0.8) {
+      LtoEsc(tx, ty);
+      return;
     }
-    flowD += ' L ' + xE + ' ' + R.y;
+    if (Math.abs(ly - ty) < 0.8) {
+      LtoEsc(tx, ty);
+      return;
+    }
+    const sx = tx > lx ? 1 : -1;
+    const sy = ty > ly ? 1 : -1;
+    if (Math.abs(ty - ly) > erEsc && Math.abs(tx - lx) > erEsc) {
+      LtoEsc(lx, ty - sy * erEsc);
+      const swK = sx > 0 ? (sy > 0 ? 1 : 0) : sy > 0 ? 0 : 1;
+      ArcEsc(lx + sx * erEsc, ty, swK);
+      LtoEsc(tx, ty);
+    } else {
+      LtoEsc(lx, ty);
+      LtoEsc(tx, ty);
+    }
+  };
+  if (runs.length) {
+    orthoKneeEsc(xRiser, runs[0].y);
+    for (let i = 0; i < runs.length; i++) {
+      const R = runs[i];
+      const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+      const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+      orthoKneeEsc(xS, R.y);
+      orthoKneeEsc(xE, R.y);
+    }
+    const Rlast = runs[runs.length - 1];
+    const xLastE = Rlast.rtl ? Rlast.xL + padFlow : Rlast.xR - padFlow;
+    const xMargEsc = xLastE >= cx ? Wsvg - 16 : 16;
+    orthoKneeEsc(xMargEsc, Rlast.y);
+    orthoKneeEsc(xMargEsc, tankY + 26);
+    orthoKneeEsc(tx + tankW - 6, tankY + 26);
+    orthoKneeEsc(tx + tankW * 0.45, tankY + 12);
+    orthoKneeEsc(xRiser, tankY + 14);
+    orthoKneeEsc(xRiser, yPump);
   }
-  const Rlast = runs[runs.length - 1];
-  const xLastE = Rlast.rtl ? Rlast.xL + padFlow : Rlast.xR - padFlow;
-  flowD += ' L ' + xLastE + ' ' + Rlast.y;
-  const xMargEsc = xLastE >= cx ? W0 - 16 : 16;
-  flowD += ' L ' + xMargEsc + ' ' + Rlast.y;
-  flowD += ' L ' + xMargEsc + ' ' + (tankY + 26);
-  flowD += ' L ' + (tx + tankW - 6) + ' ' + (tankY + 26);
-  flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
-  flowD += ' L ' + xRiser + ' ' + (tankY + 14);
-  flowD += ' L ' + xRiser + ' ' + yPump;
 
   let frame = '';
   if (car === 2) {
@@ -13262,10 +13316,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
-  const bombaFsEsc = nRunsEsc >= 14 ? 9 : 10;
-  const bombaYEsc = runs.length ? Math.min(runs[0].y - tubeH - 16, yPump - 22) : yPump - 22;
-  flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + bombaYEsc + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const rungSpan = rungOut + rungIn;
   const slotDEsc = Math.max(1, huecosN - 1);
@@ -13430,15 +13480,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '</defs>' +
     '<text x="' +
     cxTitle +
-    '" y="20" text-anchor="middle" fill="#0f172a" font-size="11.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '" y="22" text-anchor="middle" fill="#0f172a" font-size="15.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
-    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">NFT · escalera' +
+    '" y="40" text-anchor="middle" fill="#64748b" font-size="10.25" font-weight="600">NFT · escalera' +
     (car === 2 ? ' (estructura A)' : ' / inclinado') +
     ' · ' +
     car +
     ' cara(s)</text>' +
-    nftMesaEscaleraLegendSvg(cxTitle, 41, gidCh, compactEsc) +
+    nftMesaEscaleraLegendSvg(cxTitle, 54, gidCh, compactEsc, true) +
     frame +
     back +
     channels +
