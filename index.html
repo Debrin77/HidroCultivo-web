@@ -13146,9 +13146,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   if (compactEsc) {
     dy = Math.max(car === 1 ? 50 : 42, Math.round(dy * 0.9));
   }
-  const yStagger2 = car === 2 ? dy * 0.45 : 0;
   const ladderTop = yApex + 22;
-  const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
+  /** Dos caras: mismo y por peldaño (izq./dcha.) para alinear tubos superiores y suministro en T central. */
+  const ladderBot = ladderTop + (nv - 1) * dy + 10;
   /** Vértice / reparto en T (solo 2 caras): entre ápice y primer peldaño. */
   const yEscManifold2 = car === 2 ? ladderTop - 9 : 0;
   const H = ladderBot + 56 + botTank;
@@ -13199,7 +13199,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
-      const y = ladderTop + i * dy + yStagger2;
+      const y = ladderTop + i * dy;
       const xRightFoot = cx + baseHalf * p;
       runs.push({ g: g++, y, xL: xRightFoot - rungIn, xR: xRightFoot + rungOut, rtl: i % 2 === 0 });
     }
