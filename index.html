@@ -811,7 +811,13 @@ body::before { display: none; }
   min-height: min(52vh, 540px);
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-mesa-mm-svg {
-  min-height: min(48vh, 500px);
+  min-height: min(54vh, 580px);
+}
+#torreSVGWrap.torre-svg-canvas svg.nft-escalera-svg {
+  min-height: min(50vh, 520px);
+}
+#torreSVGWrap.torre-svg-canvas .nft-schema-legend text {
+  letter-spacing: 0.03em;
 }
 .torre-swipe-hint {
   text-align: center;
@@ -12111,6 +12117,81 @@ function nftDiagramCanvasW0() {
 }
 
 /**
+ * Leyenda fija solo en NFT mesa multinivel y escalera (esquema tipo manual).
+ * @param {number} cx centro horizontal del título (viewBox)
+ * @param {number} yLine línea base visual (centro de iconos)
+ * @param {string} gidCh id del gradiente del canal (mismo que los rect de tubo)
+ * @param {boolean} compact modo >20 tubos
+ */
+function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact) {
+  const fs = compact ? 7 : 8;
+  const hCanal = compact ? 7 : 8;
+  const wCanal = compact ? 20 : 24;
+  const rCesta = compact ? 4 : 5.5;
+  const spanFromCenter = compact ? 124 : 140;
+  const x0 = cx - spanFromCenter;
+  let s = '<g class="nft-schema-legend" pointer-events="none" aria-hidden="true">';
+  s +=
+    '<rect x="' +
+    x0 +
+    '" y="' +
+    (yLine - hCanal / 2) +
+    '" width="' +
+    wCanal +
+    '" height="' +
+    hCanal +
+    '" rx="2.5" fill="url(#' +
+    gidCh +
+    ')" stroke="#0369a1" stroke-width="0.8"/>';
+  s +=
+    '<text x="' +
+    (x0 + wCanal + 5) +
+    '" y="' +
+    (yLine + 3) +
+    '" text-anchor="start" font-size="' +
+    fs +
+    '" font-weight="700" fill="#475569" font-family="system-ui,sans-serif">Canal</text>';
+  const xCesta = x0 + wCanal + 5 + 34 + rCesta;
+  s +=
+    '<circle cx="' +
+    xCesta +
+    '" cy="' +
+    yLine +
+    '" r="' +
+    rCesta +
+    '" fill="#f8fafc" stroke="#64748b" stroke-width="1"/>';
+  s +=
+    '<text x="' +
+    (xCesta + rCesta + 5) +
+    '" y="' +
+    (yLine + 3) +
+    '" text-anchor="start" font-size="' +
+    fs +
+    '" font-weight="700" fill="#475569" font-family="system-ui,sans-serif">Cesta</text>';
+  const xFl = xCesta + rCesta + 5 + 38;
+  s +=
+    '<path d="M ' +
+    xFl +
+    ' ' +
+    yLine +
+    ' L ' +
+    (xFl + 20) +
+    ' ' +
+    yLine +
+    '" stroke="#1d4ed8" fill="none" stroke-width="1.15" stroke-dasharray="4 3" stroke-linecap="round"/>';
+  s +=
+    '<text x="' +
+    (xFl + 26) +
+    '" y="' +
+    (yLine + 3) +
+    '" text-anchor="start" font-size="' +
+    fs +
+    '" font-weight="700" fill="#475569" font-family="system-ui,sans-serif">Flujo</text>';
+  s += '</g>';
+  return s;
+}
+
+/**
  * NFT mesa multinivel: franjas con distinto número de tubos; flujo en serpentín entre franjas.
  */
 function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
@@ -12140,14 +12221,34 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const nTubosMesa = tiersNums.reduce((a, b) => a + b, 0);
   const maxTubosPorNivelMesa = tiersNums.length ? Math.max.apply(null, tiersNums) : 0;
   const nTiers = tiers.length;
+  const compactMesa = nTubosMesa > 20;
 
-  /** Ancho extra = tubos horizontales largos (tipo estantería / mesa comercial). */
-  const W0 = Math.max(nftDiagramCanvasW0(), Math.min(980, 698 + maxTubosPorNivelMesa * 36 + nTiers * 14));
-  const topPad = 52;
+  /**
+   * Ancho mínimo por canal (esquema tipo manual técnico): cada hueco necesita ~14–18 u
+   * en el viewBox para que las cestas no queden como puntos al escalar el SVG.
+   */
+  const gapT = compactMesa ? 5 : 6;
+  const minUnitsPerTube = (compactMesa ? 44 : 52) + huecosN * (compactMesa ? 14 : 17);
+  const minRowForHuecos =
+    maxTubosPorNivelMesa <= 0
+      ? 420
+      : maxTubosPorNivelMesa * minUnitsPerTube + Math.max(0, maxTubosPorNivelMesa - 1) * gapT;
+  const W0 = Math.max(
+    nftDiagramCanvasW0(),
+    Math.min(compactMesa ? 1100 : 1240, minRowForHuecos + 96 + 2 * 12 + Math.max(0, nTiers - 2) * 8)
+  );
+  const topPad = 52 + (compactMesa ? 8 : 0);
   const botTank = 130;
-  let tierRowH = Math.max(72, Math.min(102, Math.floor(560 / Math.max(nTiers, 1))));
-  if (maxTubosPorNivelMesa <= 2) tierRowH = Math.max(tierRowH, 88);
-  else if (maxTubosPorNivelMesa <= 3) tierRowH = Math.max(tierRowH, 80);
+  let tierRowH = Math.max(
+    88,
+    Math.min(138, Math.floor(520 / Math.max(nTiers, 1)) + huecosN * 5 + (maxTubosPorNivelMesa <= 2 ? 18 : 0))
+  );
+  if (nTiers >= 3) tierRowH = Math.max(tierRowH, 92);
+  if (maxTubosPorNivelMesa <= 2) tierRowH = Math.max(tierRowH, 96);
+  else if (maxTubosPorNivelMesa <= 3) tierRowH = Math.max(tierRowH, 90);
+  if (compactMesa) {
+    tierRowH = Math.max(74, Math.round(tierRowH * 0.9));
+  }
   const H = topPad + nTiers * tierRowH + botTank;
   const cx = W0 / 2;
   const xL = 40;
@@ -12167,7 +12268,6 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const Wsvg = altBadgeMM.canvasW;
   const cxTitle = Wsvg / 2;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
-  const gapT = 3;
   const rowInner = xR - xL - 2 * padFlow;
   const geoms = [];
   let gIdx = 0;
@@ -12193,12 +12293,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
    * Tubos horizontales por estante (como mesa/estantería NFT real): canal largo y bajo,
    * cestas a lo largo del eje X; serpentín entre tubos del recorrido global.
    */
-  const padAlongX = 8;
+  const padAlongX = 10;
   function mmShelf(G) {
     const x0 = G.xL + padFlow + padAlongX;
     const x1 = G.xR - padFlow - padAlongX;
     const yC = G.rowY;
-    const thick = Math.min(16, Math.max(10, tierRowH * 0.17));
+    let thick = Math.min(22, Math.max(11, 10.5 + huecosN * 0.75 + tierRowH * 0.065));
+    if (compactMesa) thick = Math.max(10, Math.round(thick * 0.9));
     return {
       x0,
       x1,
@@ -12210,13 +12311,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     };
   }
 
-  const padHuecoAlong = 7;
-  let minHoleSpanMM = rowInner;
-  for (let gi = 0; gi < geoms.length; gi++) {
-    const S = mmShelf(geoms[gi]);
-    const sp = S.wid - 2 * padHuecoAlong;
-    if (sp > 0) minHoleSpanMM = Math.min(minHoleSpanMM, sp);
-  }
+  const padHuecoAlong = 8;
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
   const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
@@ -12260,7 +12355,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   let channels = '';
   const peNoneCh = interactive ? ' pointer-events="none"' : '';
   const nGeomMM = geoms.length;
-  const tLabelFsMM = nGeomMM >= 14 ? 10.5 : nGeomMM >= 8 ? 11.5 : 12.5;
+  let tLabelFsMM = nGeomMM >= 14 ? 10.5 : nGeomMM >= 8 ? 11.5 : 12.5;
+  if (compactMesa) tLabelFsMM = Math.max(9, tLabelFsMM - 1.2);
   for (let gi = 0; gi < geoms.length; gi++) {
     const G = geoms[gi];
     const S = mmShelf(G);
@@ -12308,12 +12404,6 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '<text x="' + (xRiser - 3) + '" y="' + bombaYMM + '" text-anchor="end" font-size="' + bombaFsMM + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const slotDenom = Math.max(1, huecosN - 1);
-  const hrFromSpan = (minHoleSpanMM / slotDenom) * 0.62;
-  const hrCap = Math.min(26, Math.max(12, tierRowH * 0.34));
-  const hrThickRef = geoms.length ? mmShelf(geoms[0]).thick : 14;
-  const hr = interactive
-    ? Math.max(13.5, Math.min(hrCap, hrFromSpan, hrThickRef * 2.1))
-    : Math.max(11, Math.min(22, hrFromSpan, hrThickRef * 1.9));
   const holeNumFsMM = nGeomMM >= 14 ? 9.5 : nGeomMM >= 8 ? 10 : 10.75;
   let plants = '';
   for (let gi = 0; gi < geoms.length; gi++) {
@@ -12322,10 +12412,19 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     const down = gi % 2 === 0;
     const spanX = S.wid - 2 * padHuecoAlong;
     const slotAlongG = huecosN <= 1 ? spanX : spanX / Math.max(1, huecosN - 1);
+    const hrFromSpanGi = (spanX / slotDenom) * (compactMesa ? 0.62 : 0.68);
+    const hrCapGi = Math.min(compactMesa ? 26 : 30, Math.max(compactMesa ? 12 : 14, tierRowH * (compactMesa ? 0.34 : 0.38)));
+    const hrGi = interactive
+      ? Math.max(
+          compactMesa ? 12.5 : 14.5,
+          Math.min(hrCapGi, hrFromSpanGi, S.thick * (compactMesa ? 2.15 : 2.45))
+        )
+      : Math.max(compactMesa ? 10.5 : 12, Math.min(compactMesa ? 20 : 24, hrFromSpanGi, S.thick * (compactMesa ? 1.85 : 2.05)));
+    const plantLift = Math.min(S.thick * (compactMesa ? 0.48 : 0.55), compactMesa ? 12 : 14);
     for (let j = 0; j < huecosN; j++) {
       const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
       const gx = down ? S.x0 + padHuecoAlong + t * spanX : S.x1 - padHuecoAlong - t * spanX;
-      const gy = S.yC;
+      const gy = S.yC - plantLift;
       const numShow = j + 1;
       let dat = { variedad: '', fecha: '' };
       if (interactive && state.torre[G.g] && state.torre[G.g][j]) dat = state.torre[G.g][j];
@@ -12349,19 +12448,19 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
           escAriaAttr(ariaTxt) +
           '">';
       }
-      plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="' + (interactive ? '1.35' : '1.1') + '"/>';
+      plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + hrGi.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="' + (interactive ? '1.35' : '1.1') + '"/>';
       if (isMulti) {
         plants +=
-          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2"/>';
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hrGi + 3.5).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2"/>';
       }
       if (isEd) {
         plants +=
-          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hrGi + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
       plants +=
-        '<text x="' + gx.toFixed(2) + '" y="' + (gy + 3.5) + '" text-anchor="middle" font-size="' + holeNumFsMM + '" font-weight="800" fill="#1e293b">' + numShow + '</text>';
+        '<text x="' + gx.toFixed(2) + '" y="' + (gy + 4) + '" text-anchor="middle" font-size="' + holeNumFsMM + '" font-weight="800" fill="#1e293b">' + numShow + '</text>';
       if (interactive) {
-        const ptrR = nftHuecoPointerRadius(hr, true, slotAlongG);
+        const ptrR = nftHuecoPointerRadius(hrGi, true, slotAlongG);
         plants +=
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + ptrR.toFixed(2) + '" fill="rgba(0,0,0,0.001)" pointer-events="all"/>';
         plants += '</g>';
@@ -12435,6 +12534,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     ' huecos/tubo · ' +
     pend +
     '% pend.' +
+    (compactMesa ? ' · modo compacto (>20 tubos)' : '') +
     NFT_SVG_FOOT_ORIENT_HINT;
   const mesaSubtit =
     nTiers > 1
@@ -12454,7 +12554,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         ' canales horizontales y recorrido del agua.';
 
   return (
-    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll' +
+    (compactMesa ? ' nft-diagram--compact' : '') +
+    '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
     H +
@@ -12465,6 +12567,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     tid +
     '">' +
     mesaTitleLong.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+    ' · Leyenda: canal (perfil), cesta (planta), flujo (línea azul discontinua).' +
     '</title>' +
     '<defs>' +
     '<linearGradient id="' +
@@ -12488,6 +12591,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">' +
     mesaSubtit.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     '</text>' +
+    nftMesaEscaleraLegendSvg(cxTitle, 41, gidCh, compactMesa) +
     back +
     channels +
     flowLayer +
@@ -12532,27 +12636,35 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
+  const nTubosEscTotal = car === 2 ? nv * 2 : nv;
+  const compactEsc = nTubosEscTotal > 20;
 
   const W0base = nftDiagramCanvasW0();
-  let rungOut = Math.min(220, 102 + Math.max(0, huecosN - 5) * 21);
+  const minRungSpanUnits = 40 + huecosN * 18;
+  let rungOut = Math.min(240, 108 + Math.max(0, huecosN - 5) * 22);
+  rungOut = Math.max(rungOut, minRungSpanUnits - 20);
   if (car === 1) {
-    rungOut = Math.min(340, Math.round(rungOut * 1.58));
+    rungOut = Math.min(compactEsc ? 320 : 380, Math.round(rungOut * 1.62));
   } else {
-    rungOut = Math.min(292, Math.round(rungOut * 1.22));
+    rungOut = Math.min(compactEsc ? 275 : 320, Math.round(rungOut * 1.28));
   }
-  const rungIn = car === 2 ? 18 : 20;
+  rungOut = Math.max(rungOut, minRungSpanUnits - (car === 2 ? 22 : 18));
+  const rungIn = car === 2 ? 18 : 22;
   const baseHalf = car === 1 ? 128 : 138;
   const minCxEsc = 32 + 14 + baseHalf + rungOut;
   const cxMid = W0base / 2;
   const cx = Math.max(cxMid, minCxEsc);
-  const W0 = W0base + Math.max(0, cx - cxMid);
-  const topPad = 38;
+  const W0 = Math.max(W0base + Math.max(0, cx - cxMid), minRungSpanUnits + baseHalf + 200);
+  const topPad = 40 + (compactEsc ? 8 : 0);
   const botTank = 130;
   const yApex = topPad + 4;
-  const dy =
+  let dy =
     car === 1
-      ? Math.min(66, Math.max(44, Math.floor(540 / Math.max(nv, 1))))
-      : Math.min(58, Math.max(36, Math.floor(430 / Math.max(nv, 1))));
+      ? Math.min(76, Math.max(52, Math.floor(620 / Math.max(nv, 1)) + Math.min(14, huecosN * 2)))
+      : Math.min(66, Math.max(44, Math.floor(500 / Math.max(nv, 1)) + Math.min(12, huecosN * 2)));
+  if (compactEsc) {
+    dy = Math.max(car === 1 ? 50 : 42, Math.round(dy * 0.9));
+  }
   const yStagger2 = car === 2 ? dy * 0.45 : 0;
   const ladderTop = yApex + 22;
   const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
@@ -12565,8 +12677,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const waterH = tankH - 20;
   const xRiser = Math.max(26, Math.min(tx + 28, 40));
   const yPump = waterTop + Math.min(18, waterH * 0.45);
-  const tubeH = car === 2 ? 19 : 27;
-  const padFlow = car === 2 ? 7 : 8;
+  let tubeH = car === 2 ? Math.min(22, 17 + Math.min(6, huecosN * 0.45)) : Math.min(32, 24 + Math.min(8, huecosN * 0.55));
+  if (compactEsc) {
+    tubeH = Math.max(car === 2 ? 15 : 20, Math.round(tubeH * 0.92));
+  }
+  const padFlow = car === 2 ? 7 : 9;
   const nRunsHint = car === 2 ? nv * 2 : nv;
   const legHintEsc = { volL: vol, nCanales: nRunsHint, nTubosTotal: nRunsHint, alturaBadgeNTubos: nRunsHint };
   const legTierEsc = nftDiagramLegibilityHint(legHintEsc);
@@ -12662,7 +12777,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   let channels = '';
   const peNone = interactive ? ' pointer-events="none"' : '';
   const nRunsEsc = runs.length;
-  const tLabelFsEsc = 13.5;
+  const tLabelFsEsc = compactEsc ? 12 : 13.5;
   const chStrokeEsc = car === 2 ? 1.05 : 1.25;
   for (let i = 0; i < runs.length; i++) {
     const R = runs[i];
@@ -12710,12 +12825,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '<text x="' + (xRiser - 3) + '" y="' + bombaYEsc + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const rungSpan = rungOut + rungIn;
+  const slotDEsc = Math.max(1, huecosN - 1);
+  const hrRawEsc = (rungSpan / slotDEsc) * (compactEsc ? 0.54 : 0.58);
   const hr =
     car === 1
-      ? Math.max(6.9, Math.min(14, (rungSpan / Math.max(huecosN - 1, 1)) * 0.53))
-      : Math.max(5.4, Math.min(12.2, (rungSpan / Math.max(huecosN - 1, 1)) * 0.47));
+      ? Math.max(compactEsc ? 10 : 11, Math.min(compactEsc ? 17 : 19, hrRawEsc, tubeH * (compactEsc ? 0.58 : 0.62)))
+      : Math.max(compactEsc ? 8.5 : 9.5, Math.min(compactEsc ? 15 : 17, hrRawEsc, tubeH * (compactEsc ? 0.54 : 0.58)));
   const holeNumFsEsc = nRunsEsc >= 14 ? 8.5 : nRunsEsc >= 8 ? 9.25 : 10;
   let plants = '';
+  const plantLiftEsc = Math.min(tubeH * (compactEsc ? 0.36 : 0.4), compactEsc ? 10 : 12);
   for (let ri = 0; ri < runs.length; ri++) {
     const R = runs[ri];
     const y = R.y;
@@ -12725,7 +12843,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     for (let j = 0; j < huecosN; j++) {
       const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
       const gx = rtl ? R.xR - padFlow - t * spanR : R.xL + padFlow + t * spanR;
-      const gy = y;
+      const gy = y - plantLiftEsc;
       let dat = { variedad: '', fecha: '' };
       if (interactive && state.torre[R.g] && state.torre[R.g][j]) dat = state.torre[R.g][j];
       const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
@@ -12758,7 +12876,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
       plants +=
-        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="' + holeNumFsEsc + '" font-weight="800" fill="#1e293b">' + (j + 1) + '</text>';
+        '<text x="' +
+        gx.toFixed(2) +
+        '" y="' +
+        (gy + 4) +
+        '" text-anchor="middle" font-size="' +
+        holeNumFsEsc +
+        '" font-weight="800" fill="#1e293b">' +
+        (j + 1) +
+        '</text>';
       if (interactive) {
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongR);
         plants +=
@@ -12836,11 +12962,13 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     ' huecos · ' +
     pend +
     '% pend.' +
+    (compactEsc ? ' · modo compacto (>20 tubos)' : '') +
     NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
     '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll' +
     (car === 1 ? ' nft-escalera--una-cara' : '') +
+    (compactEsc ? ' nft-diagram--compact' : '') +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
@@ -12850,7 +12978,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '">' +
     '<title id="' +
     tid +
-    '">NFT escalera o A-frame: peldaños y recorrido del agua</title>' +
+    '">NFT escalera o A-frame: peldaños y recorrido del agua. Leyenda: canal, cesta, flujo (línea azul discontinua).</title>' +
     '<defs>' +
     '<linearGradient id="' +
     gidCh +
@@ -12875,6 +13003,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     ' · ' +
     car +
     ' cara(s)</text>' +
+    nftMesaEscaleraLegendSvg(cxTitle, 41, gidCh, compactEsc) +
     frame +
     back +
     channels +
@@ -21583,14 +21712,24 @@ async function ensureMeteoCoordsAuto() {
   if (_meteoGeoInFlight) return _meteoGeoInFlight;
 
   _meteoGeoInFlight = new Promise((resolve) => {
+    const done = () => {
+      try {
+        resolve();
+      } catch (_) {}
+    };
+    const hardMaxMs = 12000;
+    const tHard = setTimeout(done, hardMaxMs);
+    const clearHard = () => {
+      clearTimeout(tHard);
+    };
+
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+      pos => {
         try {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
           if (!state.configTorre) state.configTorre = {};
 
-          // Guardar solo si cambia de forma apreciable
           const prevLat = parseFloat(state.configTorre.lat);
           const prevLon = parseFloat(state.configTorre.lon);
           const changed = !isFinite(prevLat) || !isFinite(prevLon) ||
@@ -21599,30 +21738,39 @@ async function ensureMeteoCoordsAuto() {
           state.configTorre.lat = lat;
           state.configTorre.lon = lon;
 
-          // Intentar nombre (mejora UX), pero no bloqueante
           if (changed) {
-            try {
-              const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=es`;
-              const res = await fetch(url, { headers: { 'User-Agent': 'HidroCultivo/1.0' } });
-              const data = await res.json();
-              const ciudad = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || '';
-              const prov = data.address?.state || data.address?.region || '';
-              if (ciudad || prov) {
-                state.configTorre.ciudad = (ciudad ? ciudad : 'Ubicación actual') + (prov ? `, ${prov}` : '');
-                if (ciudad && !(state.configTorre.localidadMeteo && String(state.configTorre.localidadMeteo).trim())) {
-                  state.configTorre.localidadMeteo = String(ciudad).trim();
+            invalidateMeteoNomiCache();
+            const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=es`;
+            const nomOpts = { headers: { 'User-Agent': 'HidroCultivo/1.0' } };
+            if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+              nomOpts.signal = AbortSignal.timeout(6500);
+            }
+            fetch(url, nomOpts)
+              .then(r => r.json())
+              .then(data => {
+                const ciudad = data.address?.city || data.address?.town || data.address?.village || data.address?.municipality || '';
+                const prov = data.address?.state || data.address?.region || '';
+                if (ciudad || prov) {
+                  state.configTorre.ciudad = (ciudad ? ciudad : 'Ubicación actual') + (prov ? `, ${prov}` : '');
+                  if (ciudad && !(state.configTorre.localidadMeteo && String(state.configTorre.localidadMeteo).trim())) {
+                    state.configTorre.localidadMeteo = String(ciudad).trim();
+                  }
+                  saveState();
                 }
-              }
-            } catch (_) {}
+              })
+              .catch(() => {});
           }
 
-          if (changed) invalidateMeteoNomiCache();
           saveState();
         } finally {
-          resolve();
+          clearHard();
+          done();
         }
       },
-      () => resolve(),
+      () => {
+        clearHard();
+        done();
+      },
       { timeout: 8000, maximumAge: 10 * 60 * 1000, enableHighAccuracy: false }
     );
   }).finally(() => { _meteoGeoInFlight = null; });
