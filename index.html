@@ -8041,8 +8041,14 @@ function generarSVGTorre() {
     ${ta ? `<animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>` : ''}
   </ellipse>`;
 
-  // Texto volumen
-  s += `<text x="${CX}" y="${aguaY - 8}" font-family="Syne,sans-serif"
+  // Texto volumen: centrado en el agua visible (antes: aguaY-8 pegaba al techo si el depósito iba lleno)
+  const aguaBottom = aguaY + aguaH + 7;
+  const volTextIdeal = (aguaY + aguaBottom) / 2 + 5;
+  const volTextY = Math.max(
+    DEP_Y + 16,
+    Math.min(DEP_Y + DEP_H - 26, volTextIdeal)
+  );
+  s += `<text x="${CX}" y="${volTextY}" font-family="Syne,sans-serif"
     font-size="15" font-weight="800" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volActual}L</text>`;
 
   // ── CALENTADOR ────────────────────────────────────────────────────────────
