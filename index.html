@@ -5,16 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 
-<!-- Three.js ES modules: OrbitControls importa el bare specifier "three"; sin esto el navegador no resuelve y la vista NFT 3D cae al SVG 2D. -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#15803d">
@@ -770,47 +760,6 @@ body::before { display: none; }
 #torreSVGWrap.torre-svg-canvas svg.nft-diagram--scroll {
   max-height: none;
   min-height: 200px;
-}
-#torreSVGWrap.torre-nft-three-wrap {
-  overflow: hidden;
-  padding: 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
-}
-.nft-three-root {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-.nft-three-meta {
-  font-size: 11px;
-  font-weight: 800;
-  color: #14532d;
-  text-align: center;
-  padding: 10px 12px 4px;
-  line-height: 1.4;
-  font-family: var(--font-display);
-}
-.nft-three-canvas-wrap {
-  position: relative;
-  width: 100%;
-  height: min(52vh, 440px);
-  min-height: 260px;
-  touch-action: none;
-}
-.nft-three-canvas-wrap canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  outline: none;
-}
-.nft-three-hint {
-  font-size: 10px;
-  font-weight: 700;
-  color: #64748b;
-  text-align: center;
-  padding: 6px 12px 12px;
-  line-height: 1.45;
 }
 .torre-swipe-hint {
   text-align: center;
@@ -5056,9 +5005,9 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <button type="button" id="btnTorreVistaLista" class="torre-vista-btn"
               onclick="setTorreVistaModo('lista')" aria-pressed="false"
               aria-label="Ver lista de cestas">Lista</button>
-            <label id="torreAnimSuavesLabel" class="torre-anim-label" title="Gotas, agua y burbujas en el esquema. Si el sistema tiene «reducir movimiento», se apagan aunque esté marcado.">
+            <label id="torreAnimSuavesLabel" class="torre-anim-label" title="NFT: flecha azul discontinua del agua en movimiento. Torre: gotas y burbujas. Respeta «reducir movimiento» del sistema.">
               <input type="checkbox" id="torreChkAnimSuaves" checked onchange="setTorreAnimSuaves(this.checked)"
-                aria-label="Animaciones suaves en el esquema del depósito y el riego">
+                aria-label="Animaciones suaves en el esquema (flujo NFT, depósito, riego)">
               <span>Animaciones</span>
             </label>
           </div>
@@ -5138,11 +5087,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           font-size:12px;line-height:1.35"></div>
         <div id="torreSwipeHint" class="torre-swipe-hint">Flechas al lado del depósito o deslizar para girar</div>
         <div id="torreNftDiagramHint" style="display:none;text-align:center;margin:8px 12px 2px;font-size:10px;font-weight:700;color:#64748b;line-height:1.45;letter-spacing:0.02em">
-          <span>NFT: arrastra en vacío para girar · toca el <strong style="font-weight:800">número del hueco</strong> o usa <strong style="font-weight:800">Lista</strong></span>
-          <label style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;font-size:10px;font-weight:700;color:#475569;cursor:pointer;text-align:left;max-width:320px;margin-left:auto;margin-right:auto">
-            <input type="checkbox" id="torreNftPrefer2d" onchange="onTorreNftPrefer2dChange(this)" style="width:16px;height:16px;flex-shrink:0">
-            <span>Usar <strong style="font-weight:800">esquema 2D</strong> (SVG detallado) en lugar de 3D</span>
-          </label>
+          NFT: línea <strong style="font-weight:800">azul discontinua</strong> = sentido del agua (con animación suave activada) · toca un <strong style="font-weight:800">hueco</strong> o usa <strong style="font-weight:800">Lista</strong>
         </div>
 
         <!-- Depósito y volumen (mezclas / checklist) -->
@@ -7835,13 +7780,6 @@ function setTorreVistaModo(modo) {
   renderTorre();
 }
 
-function onTorreNftPrefer2dChange(el) {
-  if (!state.configTorre) state.configTorre = {};
-  state.configTorre.nftPreferSvgEsquema = !!(el && el.checked);
-  saveState();
-  renderTorre();
-}
-
 function torreListaColorCesta(n, c) {
   const dat = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad: '', fecha: '' };
   const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
@@ -9049,7 +8987,7 @@ function actualizarChromePanelEsquemaPorTipo() {
       intro.innerHTML =
         '<strong>NFT</strong> · disposición ' +
         dTxt +
-        'Vista <strong>3D</strong> (WebGL): arrastra en vacío para orbitar; <strong>toca el número del hueco</strong> para la ficha. Puedes usar el <strong>esquema 2D</strong> (casilla bajo el diagrama) si prefieres el SVG. ' +
+        'Esquema <strong>2D</strong>: recorrido del agua en <strong>azul discontinuo</strong> (animado si «Animaciones suaves» está activo). <strong>Toca un hueco</strong> para la ficha. ' +
         'Indica <strong>altura al 1.º canal</strong> en asistente o Sistema para la bomba. ' +
         '<strong>Lista</strong> = acceso lineal (cada fila = un tubo).';
     } else {
@@ -9078,29 +9016,7 @@ function actualizarChromePanelEsquemaPorTipo() {
     }
   }
   const animLbl = document.getElementById('torreAnimSuavesLabel');
-  if (animLbl) animLbl.style.display = esNft ? 'none' : '';
-}
-
-let _nftThreeModulesPromise = null;
-function loadNftThreeModules() {
-  if (_nftThreeModulesPromise) return _nftThreeModulesPromise;
-  const fromImportMap = () =>
-    Promise.all([import('three'), import('three/addons/controls/OrbitControls.js')]).then(([T, o]) => ({
-      THREE: T,
-      OrbitControls: o.OrbitControls,
-    }));
-  const fromEsmSh = () =>
-    Promise.all([
-      import('https://esm.sh/three@0.160.0'),
-      import('https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js'),
-    ]).then(([T, o]) => ({ THREE: T, OrbitControls: o.OrbitControls }));
-  _nftThreeModulesPromise = fromImportMap()
-    .catch(() => fromEsmSh())
-    .catch(err => {
-      _nftThreeModulesPromise = null;
-      throw err;
-    });
-  return _nftThreeModulesPromise;
+  if (animLbl) animLbl.style.display = '';
 }
 
 function disposeNftThreeIfAny(wrap) {
@@ -9109,620 +9025,6 @@ function disposeNftThreeIfAny(wrap) {
     wrap._nftThreeDispose();
   } catch (e) {}
   wrap._nftThreeDispose = null;
-}
-
-function nftThreeMatColor(THREE, css, fallbackHex) {
-  const s = String(css || '').trim();
-  const m = s.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
-  if (m) return new THREE.Color(+m[1] / 255, +m[2] / 255, +m[3] / 255);
-  try {
-    return new THREE.Color(s);
-  } catch (_) {}
-  return new THREE.Color(fallbackHex != null ? fallbackHex : 0xf8fafc);
-}
-
-/** CanvasTexture para sprites de número de hueco o etiqueta Tn (siempre cara a cámara). */
-function nftThreeMakeLabelTexture(THREE, text) {
-  const cvs = document.createElement('canvas');
-  cvs.width = 128;
-  cvs.height = 128;
-  const ctx = cvs.getContext('2d');
-  ctx.fillStyle = 'rgba(15,23,42,0.88)';
-  ctx.beginPath();
-  ctx.arc(64, 64, 58, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(255,255,255,0.42)';
-  ctx.lineWidth = 4;
-  ctx.stroke();
-  ctx.fillStyle = '#f8fafc';
-  const t = String(text);
-  const fs = t.length > 3 ? 34 : 52;
-  ctx.font = '800 ' + fs + 'px system-ui,Segoe UI,sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(t, 64, 66);
-  const tex = new THREE.CanvasTexture(cvs);
-  if (THREE.SRGBColorSpace != null) tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-/**
- * Misma secuencia de tubos que buildNftEscaleraDiagramSvg (g = índice en state.torre).
- * @returns {{ runs: Array<{g:number,y:number,xL:number,xR:number,rtl:boolean}>, W0: number, ladderTop: number, ladderBot: number, nv: number, car: number }}
- */
-function nftEscaleraRunsGeometry(nvRaw, carRaw) {
-  const W0 = nftDiagramCanvasW0();
-  const topPad = 38;
-  const yApex = topPad + 4;
-  const nv = Math.min(12, Math.max(1, parseInt(String(nvRaw), 10) || 1));
-  const car = carRaw === 2 ? 2 : 1;
-  const dy = Math.min(58, Math.max(38, Math.floor(440 / Math.max(nv, 1))));
-  const yStagger2 = car === 2 ? dy * 0.45 : 0;
-  const ladderTop = yApex + 22;
-  const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
-  const cx = W0 / 2;
-  const baseHalf = 112;
-  const rungOut = 66;
-  const rungIn = 18;
-  const runs = [];
-  let g = 0;
-  if (car === 1) {
-    for (let i = 0; i < nv; i++) {
-      const p = nv <= 1 ? 0 : i / (nv - 1);
-      const y = ladderTop + i * dy;
-      const xFoot = cx - 14 - baseHalf * p;
-      runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
-    }
-  } else {
-    for (let i = 0; i < nv; i++) {
-      const p = nv <= 1 ? 0 : i / (nv - 1);
-      const y = ladderTop + i * dy;
-      const xLeftFoot = cx - baseHalf * p;
-      runs.push({ g: g++, y, xL: xLeftFoot - rungOut, xR: xLeftFoot + rungIn, rtl: i % 2 === 1 });
-    }
-    for (let i = 0; i < nv; i++) {
-      const p = nv <= 1 ? 0 : i / (nv - 1);
-      const y = ladderTop + i * dy + yStagger2;
-      const xRightFoot = cx + baseHalf * p;
-      runs.push({ g: g++, y, xL: xRightFoot - rungIn, xR: xRightFoot + rungOut, rtl: i % 2 === 0 });
-    }
-  }
-  return { runs, W0, ladderTop, ladderBot, dy, nv, car };
-}
-
-function nftThreeLayoutsEscalera(cfg, hyd) {
-  const nv = hyd.escaleraNiveles != null ? hyd.escaleraNiveles : 1;
-  const car = hyd.escaleraCaras === 2 ? 2 : 1;
-  const nh = hyd.nHx;
-  const { runs, W0, ladderTop, ladderBot } = nftEscaleraRunsGeometry(nv, car);
-  const vertSpan = Math.max(1, ladderBot - ladderTop);
-  const xPosScale = 0.0215;
-  const lenScale = 0.064;
-  const layouts = [];
-  for (const R of runs) {
-    const lenSvg = R.xR - R.xL;
-    const cxSvg = (R.xL + R.xR) / 2;
-    const len = Math.max(1.85, Math.min(6.4, lenSvg * lenScale));
-    let worldZ = 0;
-    if (car === 2) {
-      worldZ = R.g < nv ? -0.62 : 0.62;
-    }
-    const worldX = (cxSvg - W0 / 2) * xPosScale;
-    const worldY = -((R.y - ladderTop) / vertSpan) * 5.6;
-    layouts.push({
-      n: R.g,
-      cx: worldX,
-      cy: worldY,
-      cz: worldZ,
-      len,
-      rotY: R.rtl ? Math.PI : 0,
-      tw: 0.68,
-      th: 0.35,
-      nh,
-    });
-  }
-  return layouts;
-}
-
-/** Posiciones 3D de tubos; índice n alineado con state.torre[n] (mismo orden que el SVG multinivel / serpentín / escalera). */
-function nftThreeLayoutsForConfig(cfg, hyd) {
-  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
-  const nh = hyd.nHx;
-  if (disp === 'escalera') {
-    return nftThreeLayoutsEscalera(cfg, hyd);
-  }
-  if (disp === 'mesa' && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
-    const tiers = hyd.mesaTiers;
-    const rowInner = 9;
-    const gapT = 0.38;
-    const rowDz = 2.05;
-    const out = [];
-    let g = 0;
-    for (let t = 0; t < tiers.length; t++) {
-      const nt = tiers[t];
-      const tubeW = (rowInner - (nt - 1) * gapT) / nt;
-      const order = t % 2 === 0 ? [...Array(nt).keys()] : [...Array(nt).keys()].reverse();
-      for (const k of order) {
-        const xL = -rowInner / 2 + k * (tubeW + gapT);
-        const cx = xL + tubeW / 2;
-        out.push({
-          n: g++,
-          cx,
-          cy: 0,
-          cz: -t * rowDz,
-          len: Math.max(1.85, tubeW * 0.92),
-          rotY: 0,
-          tw: 0.72,
-          th: 0.36,
-          nh,
-        });
-      }
-    }
-    return out;
-  }
-  const nCh = hyd.nCh;
-  const dz = 1.48;
-  const out = [];
-  for (let i = 0; i < nCh; i++) {
-    out.push({
-      n: i,
-      cx: 0,
-      cy: 0,
-      cz: -i * dz,
-      len: 11,
-      rotY: i % 2 ? Math.PI : 0,
-      tw: 0.76,
-      th: 0.38,
-      nh,
-    });
-  }
-  return out;
-}
-
-function nftMountThreeNftDiagram(wrap, cfg, hyd, hx, pend, vol, altShow, bombMain, THREE, OrbitControls) {
-  disposeNftThreeIfAny(wrap);
-  const layouts = nftThreeLayoutsForConfig(cfg, hyd);
-  const root = document.createElement('div');
-  root.className = 'nft-three-root';
-  const cap = document.createElement('div');
-  cap.className = 'nft-three-meta';
-  let capHtml =
-    '<span>Vista 3D</span> · ' + hyd.nCh + ' tubos · ' + hx + ' huecos/tubo · ' + vol + ' L';
-  if (altShow > 0) capHtml += ' · ↑ ' + altShow + ' cm al 1.º tubo';
-  cap.innerHTML = capHtml;
-  const cvWrap = document.createElement('div');
-  cvWrap.className = 'nft-three-canvas-wrap';
-  const canvas = document.createElement('canvas');
-  cvWrap.appendChild(canvas);
-  const hint = document.createElement('div');
-  hint.className = 'nft-three-hint';
-  hint.textContent =
-    'Arrastra en vacío para girar la escena · toca un hueco numerado para abrir la ficha (mantén pulsado: resumen)';
-  root.appendChild(cap);
-  root.appendChild(cvWrap);
-  root.appendChild(hint);
-  wrap.innerHTML = '';
-  wrap.appendChild(root);
-
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xe8edf3);
-  let aimX = 0;
-  let aimY = 0.3;
-  let aimZ = -Math.max(1, hyd.nCh) * 0.72;
-  if (layouts.length) {
-    let sx = 0;
-    let sy = 0;
-    let sz = 0;
-    for (const L of layouts) {
-      sx += L.cx;
-      sy += L.cy;
-      sz += L.cz;
-    }
-    const nl = layouts.length;
-    aimX = sx / nl;
-    aimY = sy / nl + 0.28;
-    aimZ = sz / nl;
-  }
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
-  camera.position.set(aimX + 0.35, aimY + 8.4, aimZ + 17.2);
-  camera.lookAt(aimX, aimY, aimZ);
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-
-  const controls = new OrbitControls(camera, canvas);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.07;
-  controls.target.set(aimX, aimY, aimZ);
-  controls.maxPolarAngle = Math.PI * 0.52;
-  controls.minDistance = 6;
-  controls.maxDistance = 48;
-  controls.update();
-
-  scene.add(new THREE.AmbientLight(0xffffff, 0.58));
-  const dl = new THREE.DirectionalLight(0xffffff, 0.9);
-  dl.position.set(6, 16, 10);
-  scene.add(dl);
-  const fill = new THREE.DirectionalLight(0xc7d2fe, 0.32);
-  fill.position.set(-10, 8, -6);
-  scene.add(fill);
-
-  const tankZ = aimZ + 4.1;
-  const tank = new THREE.Mesh(
-    new THREE.BoxGeometry(5.4, 1.4, 3.5),
-    new THREE.MeshStandardMaterial({ color: 0x166534, metalness: 0.04, roughness: 0.52 })
-  );
-  tank.position.set(aimX * 0.25, aimY - 2.35, tankZ);
-  scene.add(tank);
-  const water = new THREE.Mesh(
-    new THREE.BoxGeometry(4.75, 0.5, 2.95),
-    new THREE.MeshStandardMaterial({
-      color: 0x0284c7,
-      metalness: 0.02,
-      roughness: 0.28,
-      transparent: true,
-      opacity: 0.8,
-    })
-  );
-  water.position.set(aimX * 0.25, aimY - 1.95, tankZ);
-  scene.add(water);
-
-  const pickMeshes = [];
-
-  function refreshHoleMaterials() {
-    for (const m of pickMeshes) {
-      const vis = m.userData.visualMesh;
-      const rim = m.userData.rimMesh;
-      if (!m.userData || m.userData.n == null) continue;
-      const n = m.userData.n;
-      const c = m.userData.c;
-      const col = torreListaColorCesta(n, c);
-      if (vis && vis.material) {
-        vis.material.color.copy(nftThreeMatColor(THREE, col.bg, 0xf8fafc));
-        vis.material.emissive.copy(nftThreeMatColor(THREE, col.border, 0x475569));
-        vis.material.emissiveIntensity = 0.14;
-      }
-      if (rim && rim.material) {
-        rim.material.color.copy(nftThreeMatColor(THREE, col.border, 0x0e7490));
-      }
-      const multiKey = n + ',' + c;
-      const isMulti =
-        typeof torreInteraccionModo !== 'undefined' &&
-        torreInteraccionModo === 'asignar' &&
-        torreCestasMultiSel &&
-        torreCestasMultiSel.has(multiKey);
-      const isEd =
-        typeof editingCesta !== 'undefined' &&
-        editingCesta &&
-        editingCesta.nivel === n &&
-        editingCesta.cesta === c;
-      if (m.userData.ring) m.userData.ring.visible = !!isMulti;
-      if (m.userData.edRing) m.userData.edRing.visible = !!isEd;
-    }
-  }
-
-  for (const L of layouts) {
-    const grp = new THREE.Group();
-    grp.position.set(L.cx, L.cy, L.cz);
-    grp.rotation.y = L.rotY;
-    const chGeo = new THREE.BoxGeometry(L.len, L.th, L.tw);
-    const chMat = new THREE.MeshStandardMaterial({
-      color: 0x7dd3fc,
-      transparent: true,
-      opacity: 0.36,
-      metalness: 0.06,
-      roughness: 0.28,
-      side: THREE.DoubleSide,
-    });
-    const box = new THREE.Mesh(chGeo, chMat);
-    grp.add(box);
-    const edgeGeo = new THREE.EdgesGeometry(chGeo);
-    const edgeMat = new THREE.LineBasicMaterial({ color: 0x0c4a6e, transparent: true, opacity: 0.9 });
-    grp.add(new THREE.LineSegments(edgeGeo, edgeMat));
-
-    const tubeLabelTex = nftThreeMakeLabelTexture(THREE, 'T' + (L.n + 1));
-    const tubeSprMat = new THREE.SpriteMaterial({
-      map: tubeLabelTex,
-      transparent: true,
-      depthTest: true,
-      depthWrite: false,
-    });
-    const tubeSpr = new THREE.Sprite(tubeSprMat);
-    tubeSpr.scale.set(0.52, 0.52, 1);
-    tubeSpr.position.set(-L.len / 2 + 0.48, L.th * 0.26, 0);
-    grp.add(tubeSpr);
-
-    const padX = 0.52;
-    const span = Math.max(0.5, L.len - 2 * padX);
-    for (let j = 0; j < L.nh; j++) {
-      const t = L.nh <= 1 ? 0 : j / (L.nh - 1);
-      const lx = (t - 0.5) * span;
-      const col = torreListaColorCesta(L.n, j);
-      const rHole = Math.max(0.3, Math.min(0.56, (span / Math.max(L.nh - 1, 1)) * 0.21));
-      const yHole = L.th * 0.62;
-
-      const cupMat = new THREE.MeshStandardMaterial({
-        color: 0x0f172a,
-        metalness: 0,
-        roughness: 0.92,
-      });
-      const cup = new THREE.Mesh(new THREE.SphereGeometry(rHole * 0.4, 14, 12), cupMat);
-      cup.position.set(lx, yHole - rHole * 0.36, 0);
-      grp.add(cup);
-
-      const visMat = new THREE.MeshStandardMaterial({
-        color: nftThreeMatColor(THREE, col.bg, 0xf8fafc),
-        metalness: 0.08,
-        roughness: 0.36,
-        emissive: nftThreeMatColor(THREE, col.border, 0x64748b),
-        emissiveIntensity: 0.12,
-      });
-      const vis = new THREE.Mesh(new THREE.SphereGeometry(rHole * 0.9, 28, 22), visMat);
-      vis.position.set(lx, yHole, 0);
-      grp.add(vis);
-
-      const torR = rHole * 1.08;
-      const torTube = Math.max(0.035, rHole * 0.1);
-      const rimMat = new THREE.MeshStandardMaterial({
-        color: nftThreeMatColor(THREE, col.border, 0x0e7490),
-        metalness: 0.2,
-        roughness: 0.42,
-      });
-      const rim = new THREE.Mesh(new THREE.TorusGeometry(torR, torTube, 14, 40), rimMat);
-      rim.position.set(lx, yHole + rHole * 0.22, 0);
-      rim.rotation.x = Math.PI / 2;
-      grp.add(rim);
-
-      const numTex = nftThreeMakeLabelTexture(THREE, String(j + 1));
-      const numSprMat = new THREE.SpriteMaterial({
-        map: numTex,
-        transparent: true,
-        depthTest: true,
-        depthWrite: false,
-      });
-      const numSpr = new THREE.Sprite(numSprMat);
-      numSpr.scale.set(0.4, 0.4, 1);
-      numSpr.position.set(lx, yHole + rHole * 1.05, 0);
-      grp.add(numSpr);
-
-      const hitR = Math.max(rHole * 4.2, 1.25);
-      const hitMat = new THREE.MeshBasicMaterial({
-        transparent: true,
-        opacity: 0,
-        depthWrite: false,
-        depthTest: true,
-      });
-      if ('colorWrite' in hitMat) hitMat.colorWrite = false;
-      const hit = new THREE.Mesh(new THREE.SphereGeometry(hitR, 12, 10), hitMat);
-      hit.position.set(lx, yHole, 0);
-      hit.userData.nftHueco = true;
-      hit.userData.n = L.n;
-      hit.userData.c = j;
-      hit.userData.visualMesh = vis;
-      hit.userData.rimMesh = rim;
-      const ring = new THREE.Mesh(
-        new THREE.RingGeometry(rHole * 1.12, rHole * 1.55, 32),
-        new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.95, side: THREE.DoubleSide })
-      );
-      ring.position.set(lx, yHole + 0.03, 0);
-      ring.rotation.x = -Math.PI / 2;
-      ring.visible = false;
-      grp.add(ring);
-      hit.userData.ring = ring;
-      const edRing = new THREE.Mesh(
-        new THREE.RingGeometry(rHole * 1.05, rHole * 1.42, 32),
-        new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.92, side: THREE.DoubleSide })
-      );
-      edRing.position.set(lx, yHole - 0.03, 0);
-      edRing.rotation.x = -Math.PI / 2;
-      edRing.visible = false;
-      grp.add(edRing);
-      hit.userData.edRing = edRing;
-      pickMeshes.push(hit);
-    }
-    scene.add(grp);
-  }
-
-  refreshHoleMaterials();
-
-  const raycaster = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
-  const resize = () => {
-    const w = cvWrap.clientWidth;
-    const h = cvWrap.clientHeight;
-    if (w < 2 || h < 2) return;
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  };
-  const ro = new ResizeObserver(resize);
-  ro.observe(cvWrap);
-  setTimeout(resize, 0);
-
-  let rafId = 0;
-  const tick = () => {
-    rafId = requestAnimationFrame(tick);
-    controls.update();
-    renderer.render(scene, camera);
-  };
-  tick();
-
-  const tipEl = document.getElementById('torreQuickTip');
-  const hideTip = () => {
-    if (tipEl) tipEl.style.display = 'none';
-  };
-  const showTip = (html, x, y) => {
-    if (!tipEl) return;
-    tipEl.innerHTML = html;
-    tipEl.style.display = 'block';
-    const pad = 10;
-    const ww = window.innerWidth || 390;
-    const wh = window.innerHeight || 800;
-    const tw = 270;
-    let left = x + 12;
-    let top = y + 14;
-    if (left + tw + pad > ww) left = Math.max(pad, x - tw - 12);
-    if (top + 120 + pad > wh) top = Math.max(pad, y - 120);
-    tipEl.style.left = left + 'px';
-    tipEl.style.top = top + 'px';
-  };
-
-  let downX = 0;
-  let downY = 0;
-  let downT = 0;
-  let lpTimer = 0;
-  let lpDidFire = false;
-  let downOnHueco = false;
-  const ndcDown = new THREE.Vector2();
-
-  const getNdc = (e, target) => {
-    const r = target.getBoundingClientRect();
-    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-  };
-
-  const pickFromClient = (clientX, clientY) => {
-    getNdc({ clientX, clientY }, canvas);
-    raycaster.setFromCamera(ndc, camera);
-    const hits = raycaster.intersectObjects(pickMeshes, false);
-    if (!hits.length) return null;
-    const o = hits[0].object;
-    if (!o.userData || o.userData.nftHueco == null) return null;
-    return { n: o.userData.n, c: o.userData.c };
-  };
-
-  const clearLp = () => {
-    if (lpTimer) {
-      clearTimeout(lpTimer);
-      lpTimer = 0;
-    }
-  };
-
-  const onDown = e => {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    downX = e.clientX;
-    downY = e.clientY;
-    downT = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    lpDidFire = false;
-    clearLp();
-    hideTip();
-    getNdc(e, canvas);
-    ndcDown.copy(ndc);
-    raycaster.setFromCamera(ndcDown, camera);
-    const firstHit = raycaster.intersectObjects(pickMeshes, false)[0];
-    downOnHueco = !!(firstHit && firstHit.object.userData && firstHit.object.userData.nftHueco);
-    if (downOnHueco) controls.enabled = false;
-    lpTimer = setTimeout(() => {
-      lpDidFire = true;
-      raycaster.setFromCamera(ndcDown, camera);
-      const hits = raycaster.intersectObjects(pickMeshes, false);
-      if (!hits.length) return;
-      const o = hits[0].object;
-      if (!o.userData || o.userData.nftHueco == null) return;
-      const n = o.userData.n;
-      const c = o.userData.c;
-      const dat = (state.torre && state.torre[n] && state.torre[n][c]) || {};
-      const vacioLbl = 'Hueco vacío';
-      const variedad = dat.variedad || vacioLbl;
-      const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
-      const fotos = (dat.fotos || []).length;
-      const notas = (dat.notas || '').trim();
-      const meta = [
-        dias !== null ? dias + ' d' : '',
-        fotos ? fotos + ' foto' + (fotos === 1 ? '' : 's') : '',
-        notas ? 'Notas' : '',
-      ]
-        .filter(Boolean)
-        .join(' · ');
-      const cultTip = dat.variedad ? getCultivoDB(dat.variedad) : null;
-      const iconTip = dat.variedad
-        ? '<span style="flex-shrink:0;line-height:0;margin-right:8px" aria-hidden="true">' + cultivoEmojiHtml(cultTip, 1.5) + '</span>'
-        : '';
-      const nomTip = cultivoNombreLista(cultTip, dat.variedad);
-      showTip(
-        '<div style="display:flex;align-items:center;margin-bottom:4px">' +
-          iconTip +
-          '<div style="font-weight:900;font-family:var(--font-display);font-size:13px;min-width:0">' +
-          escHtmlUi(nomTip) +
-          '</div></div>' +
-          (meta ? '<div style="opacity:0.9">' + escHtmlUi(meta) + '</div>' : '<div style="opacity:0.9">Toca para editar</div>'),
-        downX,
-        downY
-      );
-    }, 430);
-  };
-
-  const onMove = e => {
-    if (Math.hypot(e.clientX - downX, e.clientY - downY) > 12) clearLp();
-    if (e.buttons === 0) {
-      const h = pickFromClient(e.clientX, e.clientY);
-      canvas.style.cursor = h ? 'pointer' : 'grab';
-    }
-  };
-
-  const onUp = e => {
-    clearLp();
-    controls.enabled = true;
-    setTimeout(hideTip, 50);
-    const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
-    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
-    const dur = now - downT;
-    if (lpDidFire) return;
-    if (dist > 38) return;
-    if (dur > 700) return;
-    const hit = pickFromClient(downX, downY);
-    if (hit == null) return;
-    torreOnCestaActivada(hit.n, hit.c);
-  };
-
-  const onPointerLeave = () => {
-    canvas.style.cursor = 'grab';
-  };
-
-  const onGlobalPointerEnd = () => {
-    controls.enabled = true;
-    canvas.style.cursor = 'grab';
-  };
-
-  canvas.addEventListener('pointerdown', onDown);
-  canvas.addEventListener('pointermove', onMove);
-  canvas.addEventListener('pointerup', onUp);
-  canvas.addEventListener('pointercancel', onPointerLeave);
-  canvas.addEventListener('pointerleave', onPointerLeave);
-  window.addEventListener('pointerup', onGlobalPointerEnd);
-  window.addEventListener('pointercancel', onGlobalPointerEnd);
-  canvas.style.cursor = 'grab';
-  canvas.setAttribute('tabindex', '0');
-  canvas.setAttribute('role', 'application');
-  canvas.setAttribute(
-    'aria-label',
-    'Vista 3D del NFT: arrastra para girar, toca un hueco para abrir su ficha. Usa Lista para acceso lineal.'
-  );
-
-  wrap._nftThreeDispose = () => {
-    cancelAnimationFrame(rafId);
-    ro.disconnect();
-    canvas.removeEventListener('pointerdown', onDown);
-    canvas.removeEventListener('pointermove', onMove);
-    canvas.removeEventListener('pointerup', onUp);
-    canvas.removeEventListener('pointercancel', onPointerLeave);
-    canvas.removeEventListener('pointerleave', onPointerLeave);
-    window.removeEventListener('pointerup', onGlobalPointerEnd);
-    window.removeEventListener('pointercancel', onGlobalPointerEnd);
-    controls.dispose();
-    renderer.dispose();
-    scene.traverse(obj => {
-      if (obj.geometry) obj.geometry.dispose();
-      if (obj.material) {
-        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-        mats.forEach(mm => {
-          if (mm && mm.map) mm.map.dispose();
-          if (mm && mm.dispose) mm.dispose();
-        });
-      }
-    });
-  };
-  wrap._nftThreeRefreshHuecos = refreshHoleMaterials;
 }
 
 function renderTorre() {
@@ -9737,7 +9039,6 @@ function renderTorre() {
 
   if (!esNft) {
     disposeNftThreeIfAny(wrap);
-    wrap.classList.remove('torre-nft-three-wrap');
   }
 
   if (esNft) {
@@ -9751,7 +9052,7 @@ function renderTorre() {
       cfg.nftAlturaBombeoCm != null && Number(cfg.nftAlturaBombeoCm) > 0
         ? Math.round(Number(cfg.nftAlturaBombeoCm))
         : getNftAlturaBombeoEfectivaCm(cfg);
-    const preferSvg = cfg.nftPreferSvgEsquema === true;
+    disposeNftThreeIfAny(wrap);
     const svgOpts = {
       calentador: eqArr?.includes('calentador') ?? true,
       difusor: eqArr?.includes('difusor') ?? true,
@@ -9766,79 +9067,14 @@ function renderTorre() {
       escaleraNiveles: hyd.escaleraNiveles,
       escaleraCaras: hyd.escaleraCaras,
     };
-    const cb2d = document.getElementById('torreNftPrefer2d');
-    if (cb2d) cb2d.checked = preferSvg;
-
-    if (preferSvg) {
-      wrap.classList.remove('torre-nft-three-wrap');
-      disposeNftThreeIfAny(wrap);
-      wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
-      wrap.setAttribute(
-        'aria-label',
-        'NFT: esquema 2D. Toca un hueco para la ficha o usa Lista.'
-      );
-      try {
-        bindTorreCestas(wrap);
-      } catch (e2) {}
-    } else {
-      wrap.classList.add('torre-nft-three-wrap');
-      disposeNftThreeIfAny(wrap);
-      wrap.innerHTML =
-        '<div style="text-align:center;padding:36px 16px;color:#64748b;font-size:13px;font-weight:700">Cargando vista 3D…</div>';
-      loadNftThreeModules()
-        .then(({ THREE, OrbitControls }) => {
-          if (!wrap.isConnected) return;
-          const cfg2 = state.configTorre;
-          if (cfg2?.tipoInstalacion !== 'nft' || cfg2.nftPreferSvgEsquema === true) return;
-          const hyd2 = getNftHidraulicaDesdeConfig(cfg2);
-          const hx2 = cfg2.nftHuecosPorCanal ?? cfg2.numCestas ?? 8;
-          const pend2 = cfg2.nftPendientePct ?? 2;
-          const vol2 = cfg2.volDeposito || VOL_OBJETIVO;
-          const eq2 = cfg2.equipamiento;
-          const bomb2 = getNftBombaDesdeConfig(cfg2);
-          const alt2 =
-            cfg2.nftAlturaBombeoCm != null && Number(cfg2.nftAlturaBombeoCm) > 0
-              ? Math.round(Number(cfg2.nftAlturaBombeoCm))
-              : getNftAlturaBombeoEfectivaCm(cfg2);
-          const svgOpts2 = {
-            calentador: eq2?.includes('calentador') ?? true,
-            difusor: eq2?.includes('difusor') ?? true,
-            interactive: true,
-            bombaInfo: bomb2,
-            userCaudalLh: cfg2.nftBombaUsuarioCaudalLh || null,
-            userPotenciaW: cfg2.nftBombaUsuarioPotenciaW || null,
-            nftDisposicion: cfg2.nftDisposicion,
-            nftAlturaBombeoCm: alt2 > 0 ? alt2 : null,
-            cfgSnapshot: cfg2,
-            mesaTiers: hyd2.mesaTiers,
-            escaleraNiveles: hyd2.escaleraNiveles,
-            escaleraCaras: hyd2.escaleraCaras,
-          };
-          try {
-            nftMountThreeNftDiagram(wrap, cfg2, hyd2, hx2, pend2, vol2, alt2, bomb2, THREE, OrbitControls);
-          } catch (err) {
-            console.warn('NFT 3D:', err);
-            wrap.classList.remove('torre-nft-three-wrap');
-            wrap.innerHTML = buildNftActiveDiagramSvg(hyd2.nCh, hx2, pend2, vol2, 'Main', svgOpts2);
-            try {
-              bindTorreCestas(wrap);
-            } catch (e2) {}
-          }
-        })
-        .catch(err => {
-          console.warn('Three.js NFT', err);
-          if (!wrap.isConnected) return;
-          wrap.classList.remove('torre-nft-three-wrap');
-          wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
-          try {
-            bindTorreCestas(wrap);
-          } catch (e2) {}
-        });
-      wrap.setAttribute(
-        'aria-label',
-        'NFT en 3D: arrastra en vacío para girar; toca un hueco numerado para la ficha, o usa Lista.'
-      );
-    }
+    wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
+    wrap.setAttribute(
+      'aria-label',
+      'NFT: esquema 2D con flujo de agua en azul. Toca un hueco para la ficha o usa Lista.'
+    );
+    try {
+      bindTorreCestas(wrap);
+    } catch (e2) {}
   } else {
     wrap.innerHTML = generarSVGTorre();
     wrap.setAttribute('aria-label',
@@ -12524,7 +11760,7 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0) {
 
 /** Ancho lógico del canvas NFT (tubos más largos → huecos más separados y legibles). */
 function nftDiagramCanvasW0() {
-  return 520;
+  return 660;
 }
 
 /**
@@ -12560,13 +11796,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const tierRowH = Math.max(58, Math.min(78, Math.floor(620 / Math.max(nTiers, 1))));
   const H = topPad + nTiers * tierRowH + botTank;
   const cx = W0 / 2;
-  const xL = 44;
-  const xR = W0 - 44;
+  const xL = 34;
+  const xR = W0 - 34;
   const tubeH = 28;
   const padFlow = 13;
   const tankY = H - botTank + 4;
   const tankH = 82;
-  const tankW = Math.min(320, Math.round(140 + vol * 0.65));
+  const tankW = Math.min(360, Math.round(140 + vol * 0.65));
   const tx = (W0 - tankW) / 2;
   const waterTop = tankY + 8;
   const waterH = tankH - 20;
@@ -12603,8 +11839,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     if (sp > 0) minHoleSpanMM = Math.min(minHoleSpanMM, sp);
   }
 
-  const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="#2563eb" fill="none" ' + flowDash;
+  const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
   let flowD = 'M ' + xRiser + ' ' + yPump;
   for (let i = 0; i < geoms.length; i++) {
     const G = geoms[i];
@@ -12669,7 +11905,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   let flowLayer =
     '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
     (nftFlowAnim
-      ? '><animate attributeName="stroke-dashoffset" from="0" to="-13" dur="2.2s" repeatCount="indefinite" calcMode="linear"/></path>'
+      ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
   const yTopRung = geoms.length ? geoms[0].rowY : topPad;
   flowLayer +=
@@ -12873,12 +12109,12 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const ladderTop = yApex + 22;
   const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
   const H = ladderBot + 56 + botTank;
-  const baseHalf = 112;
-  const rungOut = 66;
-  const rungIn = 18;
+  const baseHalf = 138;
+  const rungOut = 78;
+  const rungIn = 20;
   const tankY = H - botTank + 4;
   const tankH = 82;
-  const tankW = Math.min(320, Math.round(140 + vol * 0.65));
+  const tankW = Math.min(360, Math.round(140 + vol * 0.65));
   const tx = (W0 - tankW) / 2;
   const waterTop = tankY + 8;
   const waterH = tankH - 20;
@@ -12915,8 +12151,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   }
 
-  const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="#2563eb" fill="none" ' + flowDash;
+  const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
   let flowD = 'M ' + xRiser + ' ' + yPump;
   for (let i = 0; i < runs.length; i++) {
     const R = runs[i];
@@ -12998,7 +12234,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   let flowLayer =
     '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
     (nftFlowAnim
-      ? '><animate attributeName="stroke-dashoffset" from="0" to="-13" dur="2.2s" repeatCount="indefinite" calcMode="linear"/></path>'
+      ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
   flowLayer +=
     '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
@@ -13239,14 +12475,14 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const stairExtra = dispLayout === 'escalera' ? Math.max(0, nCh - 1) * 28 : 0;
   const H = topPad + nCh * rowStep + botTank + stairExtra;
   const cx = W0 / 2;
-  const marginX = 44;
+  const marginX = 34;
   const xL = marginX;
   const xR = W0 - marginX;
   const tubeH = 28;
   const padFlow = 14;
   const tankY = H - botTank + 4;
   const tankH = 82;
-  const tankW = Math.min(320, Math.round(140 + vol * 0.65));
+  const tankW = Math.min(360, Math.round(140 + vol * 0.65));
   const tx = (W0 - tankW) / 2;
   const waterTop = tankY + 8;
   const waterH = tankH - 20;
@@ -13259,8 +12495,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const yRow = i =>
     topPad + i * rowStep + Math.floor(rowStep / 2) + (dispLayout === 'escalera' ? i * 14 : 0);
 
-  const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="#2563eb" fill="none" ' + flowDash;
+  const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
 
   /** Subida lateral (como esquema clásico NFT): no por el centro; entra al T1 por el extremo izquierdo del tubo. */
   const xRiser = Math.max(26, Math.min(tx + 28, xL - 10));
@@ -13320,7 +12556,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   let flowLayer =
     '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
     (nftFlowAnim
-      ? '><animate attributeName="stroke-dashoffset" from="0" to="-13" dur="2.2s" repeatCount="indefinite" calcMode="linear"/></path>'
+      ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
   flowLayer +=
     '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
@@ -13569,8 +12805,9 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   const retEndX = tx + tankW - 10;
   const retEndY = waterTop + 8;
 
-  const flowDash = 'stroke-dasharray="5 4" stroke-linecap="round"';
-  const flowSt = 'stroke="#0ea5e9" fill="none" ' + flowDash;
+  const schFlowAnim = torreSvgAnimacionesActivas();
+  const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
   const pipeGrey = 'stroke="#64748b" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"';
 
   let back = '';
@@ -13578,7 +12815,11 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     'M ' + (x1 - 2) + ' ' + (yBot - 6) +
     ' C ' + (W0 - 8) + ' ' + (yBot + 28) + ', ' + (W0 - 12) + ' ' + (tankTop - 18) + ', ' + retEndX + ' ' + retEndY;
   back += '<path d="' + retPath + '" ' + pipeGrey + ' opacity="0.55"/>';
-  back += '<path d="' + retPath + '" ' + flowSt + ' stroke-width="1.85" opacity="0.92"/>';
+  back +=
+    '<path d="' + retPath + '" ' + flowSt + ' stroke-width="1.85" opacity="0.92"' +
+    (schFlowAnim
+      ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
+      : '/>');
   back += '<text x="' + (W0 - 8) + '" y="' + (yBot + 14) + '" text-anchor="end" fill="#0369a1" font-size="8" font-weight="800">Agua retorno</text>';
 
   let tankLayer = '';
