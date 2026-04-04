@@ -5001,9 +5001,12 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             <span>Mesa <strong>multinivel</strong> (tubos por franja, ej. 1+2+4)</span>
           </label>
           <div id="sysNftMesaMultinivelFields" style="display:none;margin-top:10px">
-            <label class="form-label" for="sysNftMesaTubosStr" style="font-size:9px;font-weight:700;color:#64748b">Tubos por nivel (coma)</label>
-            <input type="text" id="sysNftMesaTubosStr" placeholder="ej. 1, 2, 4" autocomplete="off"
-              style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:600">
+            <label class="form-label" for="sysNftMesaNumNiveles" style="font-size:9px;font-weight:700;color:#64748b">Niveles (superpuestos)</label>
+            <input type="number" id="sysNftMesaNumNiveles" min="2" max="8" step="1" value="2" inputmode="numeric" autocomplete="off"
+              style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700"
+              onchange="onSistemaNftMesaNumNivelesChange()">
+            <div id="sysNftMesaTubosPorNivelGrid" style="margin-top:4px"></div>
+            <p style="font-size:9px;color:#64748b;margin-top:8px;line-height:1.45"><strong>Cestas/tubo:</strong> campo <strong>Huecos / canal</strong> arriba (mismo valor en todos).</p>
             <label class="form-label" for="sysNftMesaSepCm" style="font-size:9px;font-weight:700;color:#64748b;margin-top:8px;display:block">Separación niveles (cm)</label>
             <input type="number" id="sysNftMesaSepCm" min="0" max="150" step="1" placeholder="ej. 28"
               style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px">
@@ -5020,6 +5023,21 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <label class="form-label" for="sysNftPeldaños" style="font-size:9px;font-weight:700;color:#64748b">Peldaños por cara</label>
           <input type="number" id="sysNftPeldaños" min="1" max="12" step="1"
             style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+        </div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px dashed #cbd5e1">
+          <div style="font-size:9px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">Bomba — datos de placa (opcional)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label class="form-label" for="sysNftBombaLh" style="font-size:9px;font-weight:700;color:#64748b">Caudal (L/h)</label>
+              <input type="number" id="sysNftBombaLh" min="0" step="10" placeholder="ej. 600" inputmode="numeric" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+            </div>
+            <div>
+              <label class="form-label" for="sysNftBombaW" style="font-size:9px;font-weight:700;color:#64748b">Potencia (W)</label>
+              <input type="number" id="sysNftBombaW" min="0" step="1" placeholder="ej. 15" inputmode="numeric" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+            </div>
+          </div>
         </div>
         <button type="button" onclick="aplicarSistemaNftMontajeDesdeFormulario()"
           style="width:100%;padding:11px 14px;border-radius:12px;border:2px solid #15803d;background:linear-gradient(180deg,#f0fdf4,#ecfdf5);
@@ -5977,10 +5995,14 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                   <span>Mesa con <strong>varios niveles</strong> (distintos tubos por franja, ej. 1+2+4)</span>
                 </label>
                 <div id="nftMesaMultinivelFields" style="display:none;margin-top:10px">
-                  <label class="form-label" for="nftMesaTubosPorNivelStr" style="font-size:9px;font-weight:700;color:#64748b">Tubos por nivel, de arriba abajo (separar con comas)</label>
-                  <input type="text" id="nftMesaTubosPorNivelStr" placeholder="ej. 1, 2, 4" autocomplete="off"
-                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:600"
-                    oninput="updateNftSetupPreview()" onblur="updateNftSetupPreview()">
+                  <label class="form-label" for="nftMesaNumNiveles" style="font-size:9px;font-weight:700;color:#64748b">Número de niveles (mesas superpuestas)</label>
+                  <input type="number" id="nftMesaNumNiveles" min="2" max="8" step="1" value="2" inputmode="numeric" autocomplete="off"
+                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700"
+                    onchange="onNftWizardMesaNumNivelesChange()">
+                  <div id="nftMesaTubosPorNivelGrid" style="margin-top:4px"></div>
+                  <p id="nftMesaCestasHint" style="font-size:9px;color:#64748b;margin-top:10px;line-height:1.45">
+                    <strong>Cestas por tubo</strong> (igual en todos los canales): usa el deslizador <strong>Huecos por tubo</strong> en «Cantidades en el diagrama». Valor actual: <strong id="nftMesaHuecosMirror">—</strong>.
+                  </p>
                   <label class="form-label" for="nftMesaSepNivelesCm" style="font-size:9px;font-weight:700;color:#64748b;margin-top:8px;display:block">Separación entre niveles (cm) — solo si no indicas altura total arriba</label>
                   <input type="number" id="nftMesaSepNivelesCm" min="0" max="150" step="1" placeholder="ej. 28"
                     inputmode="numeric" autocomplete="off"
@@ -9828,7 +9850,7 @@ function updateTorreStats() {
   const depEl = document.getElementById('depositoTitulo');
   if (depEl) {
     if (esNftCfg) {
-      depEl.textContent = nftTextoResumenInstalacion(cfg);
+      depEl.textContent = 'Depósito para mezclas · ' + vol + ' L';
     } else {
       const geom =
         (cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C';
@@ -10606,8 +10628,13 @@ function abrirSetup() {
   seleccionarNftDisposicion(c.nftDisposicion || 'mesa');
   const mmChk = document.getElementById('nftMesaMultinivelChk');
   if (mmChk) mmChk.checked = c.nftMesaMultinivel === true;
-  const mmStr = document.getElementById('nftMesaTubosPorNivelStr');
-  if (mmStr) mmStr.value = c.nftMesaTubosPorNivelStr != null ? String(c.nftMesaTubosPorNivelStr) : '';
+  const mmGridW = document.getElementById('nftMesaTubosPorNivelGrid');
+  if (mmChk && mmChk.checked) {
+    const tiersW = parseNftMesaTubosPorNivelStr(c.nftMesaTubosPorNivelStr || '');
+    rebuildNftMesaMultinivelGrid('nft', tiersW.length >= 2 ? tiersW : [1, 2]);
+  } else if (mmGridW) {
+    mmGridW.innerHTML = '';
+  }
   const mmSep = document.getElementById('nftMesaSepNivelesCm');
   if (mmSep) {
     mmSep.value =
@@ -10804,6 +10831,93 @@ function parseNftMesaTubosPorNivelStr(str) {
   return out.slice(0, 8);
 }
 
+/** Serializa tubos por nivel desde la cuadrícula del asistente (nft) o Sistema (sys). */
+function getNftMesaTubosPorNivelStrFromGrid(prefix) {
+  const isSys = prefix === 'sys';
+  const nEl = document.getElementById(isSys ? 'sysNftMesaNumNiveles' : 'nftMesaNumNiveles');
+  let n = parseInt(String(nEl && nEl.value != null ? nEl.value : ''), 10);
+  if (!Number.isFinite(n) || n < 2) n = 2;
+  n = Math.min(8, n);
+  const parts = [];
+  for (let i = 0; i < n; i++) {
+    const id = (isSys ? 'sysNftMesaTubosNivel_' : 'nftMesaTubosNivel_') + i;
+    const v = parseInt(String(document.getElementById(id)?.value || ''), 10);
+    parts.push(Math.min(12, Math.max(1, Number.isFinite(v) ? v : 1)));
+  }
+  return parts.join(',');
+}
+
+function rebuildNftMesaMultinivelGrid(prefix, tiersInit) {
+  const isSys = prefix === 'sys';
+  const gridId = isSys ? 'sysNftMesaTubosPorNivelGrid' : 'nftMesaTubosPorNivelGrid';
+  const numId = isSys ? 'sysNftMesaNumNiveles' : 'nftMesaNumNiveles';
+  const grid = document.getElementById(gridId);
+  const numInp = document.getElementById(numId);
+  if (!grid || !numInp) return;
+  let tiers = [];
+  if (Array.isArray(tiersInit)) {
+    tiers = tiersInit.map(t => Math.min(12, Math.max(1, parseInt(String(t), 10) || 1)));
+  } else {
+    tiers = parseNftMesaTubosPorNivelStr(String(tiersInit || ''));
+  }
+  if (tiers.length < 2) tiers = [1, 2];
+  tiers = tiers.slice(0, 8);
+  numInp.value = String(Math.min(8, Math.max(2, tiers.length)));
+  const n = parseInt(String(numInp.value), 10) || 2;
+  while (tiers.length < n) tiers.push(1);
+  tiers = tiers.slice(0, n);
+  let html = '';
+  for (let i = 0; i < n; i++) {
+    const id = (isSys ? 'sysNftMesaTubosNivel_' : 'nftMesaTubosNivel_') + i;
+    const val = tiers[i] != null ? tiers[i] : 1;
+    let lab = 'Nivel ' + (i + 1) + ' (de arriba a abajo)';
+    if (i === 0) lab = 'Nivel superior — tubos';
+    if (i === n - 1 && n > 1) lab = 'Nivel inferior — tubos';
+    const ev = isSys ? '' : ' oninput="updateNftSetupPreview()"';
+    html +=
+      '<div style="margin-top:8px">' +
+      '<label class="form-label" for="' +
+      id +
+      '" style="font-size:9px;font-weight:700;color:#64748b">' +
+      escHtmlUi(lab) +
+      '</label>' +
+      '<input type="number" id="' +
+      id +
+      '" min="1" max="12" step="1" value="' +
+      val +
+      '" inputmode="numeric" autocomplete="off"' +
+      ev +
+      ' style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700"/>' +
+      '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function onNftWizardMesaNumNivelesChange() {
+  const want = Math.min(8, Math.max(2, parseInt(String(document.getElementById('nftMesaNumNiveles')?.value || ''), 10) || 2));
+  const prev = [];
+  for (let i = 0; i < 8; i++) {
+    const el = document.getElementById('nftMesaTubosNivel_' + i);
+    if (el) prev.push(Math.min(12, Math.max(1, parseInt(String(el.value), 10) || 1)));
+  }
+  while (prev.length < want) prev.push(1);
+  rebuildNftMesaMultinivelGrid('nft', prev.slice(0, want));
+  document.getElementById('nftMesaNumNiveles').value = String(want);
+  if (typeof updateNftSetupPreview === 'function') updateNftSetupPreview();
+}
+
+function onSistemaNftMesaNumNivelesChange() {
+  const want = Math.min(8, Math.max(2, parseInt(String(document.getElementById('sysNftMesaNumNiveles')?.value || ''), 10) || 2));
+  const prev = [];
+  for (let i = 0; i < 8; i++) {
+    const el = document.getElementById('sysNftMesaTubosNivel_' + i);
+    if (el) prev.push(Math.min(12, Math.max(1, parseInt(String(el.value), 10) || 1)));
+  }
+  while (prev.length < want) prev.push(1);
+  rebuildNftMesaMultinivelGrid('sys', prev.slice(0, want));
+  document.getElementById('sysNftMesaNumNiveles').value = String(want);
+}
+
 function nftEscaleraCarasNormalizada(v) {
   const n = parseInt(String(v), 10);
   return n === 2 ? 2 : 1;
@@ -10867,7 +10981,7 @@ function readNftMontajeFromSetupUi() {
   const altCm =
     Number.isFinite(raw) && raw > 0 ? Math.min(500, Math.round(raw)) : 0;
   const mesaMultinivel = document.getElementById('nftMesaMultinivelChk')?.checked === true;
-  const mesaTubosStr = document.getElementById('nftMesaTubosPorNivelStr')?.value || '';
+  const mesaTubosStr = mesaMultinivel ? getNftMesaTubosPorNivelStrFromGrid('nft') : '';
   const sepRaw = parseFloat(String(document.getElementById('nftMesaSepNivelesCm')?.value || '').replace(',', '.'));
   const mesaSepCm =
     Number.isFinite(sepRaw) && sepRaw > 0 ? Math.min(150, Math.round(sepRaw)) : 0;
@@ -10907,6 +11021,9 @@ function onNftMesaMultinivelToggle() {
   const mf = document.getElementById('nftMesaMultinivelFields');
   const chk = document.getElementById('nftMesaMultinivelChk');
   if (mf && chk) mf.style.display = chk.checked ? 'block' : 'none';
+  if (chk && chk.checked && !document.getElementById('nftMesaTubosPorNivelGrid')?.innerHTML) {
+    rebuildNftMesaMultinivelGrid('nft', [1, 2]);
+  }
   updateNftSetupPreview();
 }
 
@@ -10943,6 +11060,9 @@ function onSistemaNftMesaMultinivelToggle() {
   const mf = document.getElementById('sysNftMesaMultinivelFields');
   const chk = document.getElementById('sysNftMesaMultinivelChk');
   if (mf && chk) mf.style.display = chk.checked ? 'block' : 'none';
+  if (chk && chk.checked && !document.getElementById('sysNftMesaTubosPorNivelGrid')?.innerHTML) {
+    rebuildNftMesaMultinivelGrid('sys', [1, 2]);
+  }
   refrescarSistemaNftMontajeSubpanels();
 }
 
@@ -11046,8 +11166,27 @@ function sincronizarSistemaNftMontajeUI() {
   if (pendEl) pendEl.value = String(Math.max(1, Math.min(4, Math.round(Number(cfg.nftPendientePct)) || 2)));
   const mmChk = document.getElementById('sysNftMesaMultinivelChk');
   if (mmChk) mmChk.checked = cfg.nftMesaMultinivel === true;
-  const mmStr = document.getElementById('sysNftMesaTubosStr');
-  if (mmStr) mmStr.value = cfg.nftMesaTubosPorNivelStr != null ? String(cfg.nftMesaTubosPorNivelStr) : '';
+  const mmGridS = document.getElementById('sysNftMesaTubosPorNivelGrid');
+  if (mmChk && mmChk.checked) {
+    const tiersS = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr || '');
+    rebuildNftMesaMultinivelGrid('sys', tiersS.length >= 2 ? tiersS : [1, 2]);
+  } else if (mmGridS) {
+    mmGridS.innerHTML = '';
+  }
+  const bhSys = document.getElementById('sysNftBombaLh');
+  const bwSys = document.getElementById('sysNftBombaW');
+  if (bhSys) {
+    bhSys.value =
+      cfg.nftBombaUsuarioCaudalLh != null && cfg.nftBombaUsuarioCaudalLh !== ''
+        ? String(cfg.nftBombaUsuarioCaudalLh)
+        : '';
+  }
+  if (bwSys) {
+    bwSys.value =
+      cfg.nftBombaUsuarioPotenciaW != null && cfg.nftBombaUsuarioPotenciaW !== ''
+        ? String(cfg.nftBombaUsuarioPotenciaW)
+        : '';
+  }
   const mmSep = document.getElementById('sysNftMesaSepCm');
   if (mmSep) {
     mmSep.value =
@@ -11100,6 +11239,12 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   cfg.nftPendientePct = Math.max(1, Math.min(4, Number.isFinite(pendSel) ? pendSel : 2));
   const hxInp = parseInt(String(document.getElementById('sysNftHuecos')?.value || ''), 10);
   cfg.nftHuecosPorCanal = Math.max(2, Math.min(30, Number.isFinite(hxInp) ? hxInp : cfg.nftHuecosPorCanal || 8));
+  const lhSys = parseFloat(String(document.getElementById('sysNftBombaLh')?.value || '').replace(',', '.'));
+  const wSys = parseFloat(String(document.getElementById('sysNftBombaW')?.value || '').replace(',', '.'));
+  if (Number.isFinite(lhSys) && lhSys > 0) cfg.nftBombaUsuarioCaudalLh = Math.round(lhSys);
+  else delete cfg.nftBombaUsuarioCaudalLh;
+  if (Number.isFinite(wSys) && wSys > 0) cfg.nftBombaUsuarioPotenciaW = Math.round(wSys);
+  else delete cfg.nftBombaUsuarioPotenciaW;
   delete cfg.nftMesaMultinivel;
   delete cfg.nftMesaTubosPorNivelStr;
   delete cfg.nftMesaSeparacionNivelesCm;
@@ -11107,12 +11252,12 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   delete cfg.nftEscaleraNivelesCara;
   if (dispo === 'mesa') {
     const mm = document.getElementById('sysNftMesaMultinivelChk')?.checked === true;
-    const tiersStr = document.getElementById('sysNftMesaTubosStr')?.value || '';
+    const tiersStr = getNftMesaTubosPorNivelStrFromGrid('sys');
     const sepRaw = parseFloat(String(document.getElementById('sysNftMesaSepCm')?.value || '').replace(',', '.'));
     if (mm) {
       const tiers = parseNftMesaTubosPorNivelStr(tiersStr);
       if (tiers.length < 2) {
-        showToast('Multinivel: indica al menos dos niveles separados por comas (ej. 1, 2, 4).', true);
+        showToast('Multinivel: elige al menos dos niveles y un tubo por nivel en la cuadrícula.', true);
         return;
       }
       cfg.nftMesaMultinivel = true;
@@ -11894,7 +12039,11 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0, hint
   if (!Number.isFinite(cm) || cm <= 0) {
     return { html: '', canvasW: canvasW0 };
   }
-  const legTier = nftDiagramLegibilityHint(hint);
+  let legTier = nftDiagramLegibilityHint(hint);
+  if (hint && hint.alturaBadgeMinTier != null) {
+    const mn = Math.round(Number(hint.alturaBadgeMinTier));
+    if (Number.isFinite(mn) && mn >= 1) legTier = Math.max(legTier, Math.min(2, mn));
+  }
   const bw = legTier >= 2 ? 198 : legTier >= 1 ? 176 : 158;
   const bh = legTier >= 2 ? 56 : legTier >= 1 ? 50 : 46;
   const fsMain = legTier >= 2 ? 17 : legTier >= 1 ? 15.5 : 14;
@@ -11971,7 +12120,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const topPad = 48;
   const botTank = 130;
   const nTiers = tiers.length;
-  const tierRowH = Math.max(58, Math.min(78, Math.floor(620 / Math.max(nTiers, 1))));
+  let tierRowH = Math.max(58, Math.min(78, Math.floor(620 / Math.max(nTiers, 1))));
+  if (maxTubosPorNivelMesa <= 2) tierRowH = Math.max(tierRowH, 92);
+  else if (maxTubosPorNivelMesa <= 3) tierRowH = Math.max(tierRowH, 84);
   const H = topPad + nTiers * tierRowH + botTank;
   const cx = W0 / 2;
   const xL = 34;
@@ -12019,7 +12170,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     const cx = (G.xL + G.xR) / 2;
     const yT = G.rowY - tierRowH / 2 + vPadMM;
     const yB = G.rowY + tierRowH / 2 - vPadMM;
-    const barW = Math.min(34, Math.max(18, (G.xR - G.xL) * 0.44));
+    const barW = Math.min(52, Math.max(26, (G.xR - G.xL) * 0.58));
     return { cx, yT, yB, barW };
   }
 
@@ -12092,10 +12243,10 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       '/>';
     channels +=
       '<text x="' +
-      m.cx +
+      (m.cx - m.barW / 2 - 8) +
       '" y="' +
-      (m.yT - 14) +
-      '" text-anchor="middle" font-size="' +
+      (G.rowY + 5) +
+      '" text-anchor="end" font-size="' +
       tLabelFsMM +
       '" font-weight="900" fill="#0c4a6e"' +
       peNoneCh +
@@ -12112,10 +12263,11 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       : '/>');
   const m0 = geoms.length ? mmTube(geoms[0]) : { yT: topPad };
   const bombaFsMM = nGeomMM >= 14 ? 9 : 10;
+  const bombaYMM = geoms.length ? Math.min(m0.yT - 22, yPump - 24) : topPad + 8;
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (m0.yT - 6) + '" text-anchor="end" font-size="' + bombaFsMM + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + bombaYMM + '" text-anchor="end" font-size="' + bombaFsMM + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
-  const hr = Math.max(5.2, Math.min(12.5, (minHoleSpanMM / Math.max(huecosN - 1, 1)) * 0.48));
+  const hr = Math.max(7, Math.min(14.5, (minHoleSpanMM / Math.max(huecosN - 1, 1)) * 0.52));
   const holeNumFsMM = nGeomMM >= 14 ? 8.5 : nGeomMM >= 8 ? 9 : 9.75;
   let plants = '';
   for (let gi = 0; gi < geoms.length; gi++) {
@@ -12357,7 +12509,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const legHintEsc = { volL: vol, nCanales: nRunsHint, nTubosTotal: nRunsHint };
   const legTierEsc = nftDiagramLegibilityHint(legHintEsc);
   const volFsEsc = nftTankVolumeFontSize(vol, legTierEsc);
-  const altBadgeEsc = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0, legHintEsc);
+  const altBadgeEsc = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0, {
+    ...legHintEsc,
+    alturaBadgeMinTier: 2,
+  });
   const Wsvg = altBadgeEsc.canvasW;
   const cxTitle = Wsvg / 2;
 
@@ -12445,10 +12600,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   let channels = '';
   const peNone = interactive ? ' pointer-events="none"' : '';
   const nRunsEsc = runs.length;
-  const tLabelFsEsc = nRunsEsc >= 14 ? 11.5 : nRunsEsc >= 8 ? 12.5 : 13.5;
+  const tLabelFsEsc = 13.5;
   for (let i = 0; i < runs.length; i++) {
     const R = runs[i];
     const yc = R.y - tubeH / 2;
+    const cxRun = (R.xL + R.xR) / 2;
     channels +=
       '<rect x="' +
       R.xL +
@@ -12463,9 +12619,18 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       ')" stroke="#0369a1" stroke-width="1.3"' +
       peNone +
       '/>';
-    const yTubeTop = R.y - tubeH / 2;
     channels +=
-      '<text x="' + (R.xL - 6) + '" y="' + (yTubeTop - 8) + '" text-anchor="end" font-size="' + tLabelFsEsc + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (R.g + 1) + '</text>';
+      '<text x="' +
+      cxRun +
+      '" y="' +
+      (R.y + tubeH / 2 + 14) +
+      '" text-anchor="middle" font-size="' +
+      tLabelFsEsc +
+      '" font-weight="900" fill="#0c4a6e"' +
+      peNone +
+      '>T' +
+      (R.g + 1) +
+      '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -12475,8 +12640,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
   const bombaFsEsc = nRunsEsc >= 14 ? 9 : 10;
+  const bombaYEsc = runs.length ? Math.min(runs[0].y - tubeH - 16, yPump - 22) : yPump - 22;
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 8) + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + bombaYEsc + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const rungSpan = rungOut + rungIn;
   const hr = Math.max(5.2, Math.min(12.5, (rungSpan / Math.max(huecosN - 1, 1)) * 0.48));
@@ -12774,6 +12940,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
 
   let channels = '';
   const tLabelFsSerp = nCh >= 10 ? 12 : nCh >= 6 ? 13 : 14;
+  const cxTubeSerp = (xL + xR) / 2;
   for (let i = 0; i < nCh; i++) {
     const yRi = yRow(i);
     const yc = yRi - tubeH / 2;
@@ -12792,9 +12959,18 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       ')" stroke="#0369a1" stroke-width="1.4"' +
       peNone +
       '/>';
-    const yTubeTopSerp = yRi - tubeH / 2;
     channels +=
-      '<text x="' + (xL - 6) + '" y="' + (yTubeTopSerp - 8) + '" text-anchor="end" font-size="' + tLabelFsSerp + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (i + 1) + '</text>';
+      '<text x="' +
+      cxTubeSerp +
+      '" y="' +
+      (yc + tubeH + 14) +
+      '" text-anchor="middle" font-size="' +
+      tLabelFsSerp +
+      '" font-weight="900" fill="#0c4a6e"' +
+      peNone +
+      '>T' +
+      (i + 1) +
+      '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -12804,8 +12980,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
   const bombaFsSerp = nCh >= 10 ? 9 : 10;
+  const bombaYSerp = Math.min(yRow(0) - tubeH - 16, yPump - 22);
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 8) + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + bombaYSerp + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
@@ -13310,6 +13487,8 @@ function updateNftSetupPreview() {
   if (elH) elH.textContent = String(huecos);
   if (elP) elP.innerHTML = pend + '<span style="font-size:12px;font-weight:600">%</span>';
   if (elV) elV.innerHTML = vol + '<span style="font-size:12px;font-weight:600">L</span>';
+  const mmHueMirror = document.getElementById('nftMesaHuecosMirror');
+  if (mmHueMirror) mmHueMirror.textContent = String(huecos);
 
   const preview = document.getElementById('nftPreview');
   if (!preview) return;
@@ -13334,10 +13513,7 @@ function updateNftSetupPreview() {
       mesaTiers: hyd.mesaTiers,
       escaleraNiveles: hyd.escaleraNiveles,
       escaleraCaras: hyd.escaleraCaras,
-    }) +
-    '<div style="font-size:10px;font-weight:700;color:#15803d;text-align:center;margin-top:8px;line-height:1.45;max-width:360px;margin-left:auto;margin-right:auto">' +
-    '<strong>Vista previa</strong>: arriba defines disposición y altura; aquí tubos, huecos (el mismo número en cada tubo) y pendiente. ' +
-    'La línea azul = agua. En móvil, desplaza el dibujo si no cabe.</div>';
+    });
   refrescarDocTuberiaNftSetup();
 }
 
