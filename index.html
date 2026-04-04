@@ -4963,6 +4963,9 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <li style="margin-bottom:4px">Ajusta <strong>tubos, huecos y pendiente</strong> (los huecos son el mismo número en cada tubo del dibujo).</li>
           <li>Pulsa <strong>Aplicar montaje NFT</strong>. Canal, lámina, Ø de tubería de riego (alimentación) y bomba siguen en el asistente.</li>
         </ol>
+        <p style="font-size:9px;color:#64748b;line-height:1.45;margin:0 0 8px">
+          En <strong>escalera / A</strong>, el esquema NFT asume alimentación al <strong>primer tubo</strong> por cara (T en el vértice si hay dos caras), cascada en <strong>zigzag</strong> entre extremos de cada peldaño y <strong>retorno al depósito</strong> desde el último peldaño, en línea con montajes NFT en pendiente habituales.
+        </p>
         <p style="font-size:9px;color:#94a3b8;line-height:1.4;margin:0 0 10px">
           Si cambiaste el montaje aquí, pulsa <strong>Aplicar</strong> antes de abrir el asistente para que cargue lo último.
         </p>
@@ -5979,7 +5982,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               </div>
               <p style="font-size:9px;color:#475569;line-height:1.45;margin:0 0 8px">
                 <strong>Mesa</strong>: tubos horizontales en paralelo o en varios niveles (más cosecha por m²).
-                <strong>Escalera</strong> / inclinado: peldaños; indica si llevas tubos en una cara o en dos (tipo A).
+                <strong>Escalera</strong> / inclinado: peldaños; una o dos caras (tipo A). El diagrama sigue el NFT escalonado usual: alimentación al primer peldaño, enlace entre niveles en el extremo opuesto del canal (como manguitos/codos) y caída del último peldaño al depósito.
                 <strong>Pared</strong>: tubos horizontales apilados en zigzag en el muro.
                 La <strong>altura de bombeo</strong> hasta el 1.º tubo suma carga a la bomba; en <strong>pared y escalera</strong> conviene indicarla siempre.
               </p>
@@ -6032,11 +6035,17 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                     aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Dos caras (A)</button>
                 </div>
                 <p style="font-size:9px;color:#64748b;margin:8px 0 0;line-height:1.4">El deslizador de <strong>tubos / peldaños</strong> (sección siguiente) = <strong>peldaños por cara</strong>; el total de tubos = peldaños × caras.</p>
+                <p style="font-size:9px;color:#0c4a6e;margin:10px 0 0;line-height:1.5;font-weight:600;border-left:3px solid #38bdf8;padding-left:8px">
+                  <strong>Circuito de agua en el diagrama</strong> (criterio NFT en escalera / pirámide, como en montajes de canal en pendiente y guías técnicas:
+                  <a href="https://atlas-scientific.com/blog/nft-system-hydroponics/" target="_blank" rel="noopener noreferrer" style="color:#0369a1;font-weight:800">NFT — flujo y retorno</a>):
+                  desde el depósito la bomba sube a la <strong>entrada del primer tubo</strong> de cada cara; en <strong>dos caras (A)</strong> el esquema usa un <strong>reparto en T</strong> en el vértice.
+                  El agua recorre cada canal y en el <strong>extremo opuesto</strong> enlaza con el peldaño inferior (en obra: manguitos o codos), en <strong>zigzag</strong> hasta el último tubo; desde ahí <strong>vuelve al depósito</strong> y el dibujo cierra la recirculación.
+                </p>
               </div>
             </div>
             <div style="margin-top:12px;padding-top:12px;border-top:1.5px solid #e5e7eb">
               <div style="font-size:10px;font-weight:900;color:#475569;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">Cantidades en el diagrama</div>
-              <p style="font-size:9px;color:#64748b;margin:0 0 10px;line-height:1.45">Misma sección de tubo y huecos alineados en todo el esquema. La <strong>línea azul</strong> es el agua (subida → recorrido por tubos → retorno por el borde al depósito).</p>
+              <p style="font-size:9px;color:#64748b;margin:0 0 10px;line-height:1.45">Misma sección de tubo y huecos alineados en todo el esquema. La <strong>línea azul</strong> es el agua: subida desde la bomba al <strong>primer tubo</strong> (en A, reparto en T en el vértice), recorrido en <strong>zigzag</strong> entre extremos de cada peldaño y <strong>retorno al depósito</strong> desde el último tubo de cada cara.</p>
             </div>
             <div class="torre-control-row">
               <div class="torre-control-label">
@@ -13054,6 +13063,18 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
 
 /**
  * NFT escalera / A-frame esquemático: peldaños por cara (1 o 2 caras).
+ *
+ * Modelo hidráulico del trazado (línea azul), alineado con NFT en canal pendiente
+ * habitual: bomba → alimentación al extremo de entrada del primer tubo (peldaño
+ * superior); el agua cruza el canal en lámina y en el extremo opuesto enlaza al
+ * peldaño inferior mediante tramo vertical (manguito/codo en la realidad); así
+ * en zigzag hasta el último tubo; desde ahí retorno por gravedad al depósito.
+ * Dos caras (A): subida al vértice, reparto en T al primer tubo de cada cara,
+ * dos retornos (último tubo por lado) y cierre visual hacia la bomba.
+ *
+ * Referencias generales NFT (pendiente, recirculación, retorno al depósito):
+ * p. ej. Atlas Scientific — How to Build a Nutrient Film Technique (NFT) System;
+ * literatura de extensión y catálogos de sistemas A-frame/NFT en invernadero.
  */
 function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
   const EO = equipOpts || {};
@@ -13530,8 +13551,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     tid +
     '">' +
     (car === 2
-      ? 'NFT escalera o estructura A (dos caras): bomba sube al vértice; reparto en T a cada cara; agua recorre los peldaños y vuelve al depósito desde el último tubo de cada lado. '
-      : 'NFT escalera o inclinado: peldaños y recorrido del agua. ') +
+      ? 'NFT escalera o estructura A (dos caras): bomba sube al vértice; reparto en T al primer tubo de cada cara; en cada lado el agua cruza cada canal y en el extremo opuesto pasa al peldaño inferior (zigzag) hasta el último tubo; retorno al depósito desde cada cara. '
+      : 'NFT escalera o inclinado: bomba al primer peldaño; zigzag entre extremos hasta el último tubo; retorno al depósito. ') +
     'Leyenda: canal, cesta, flujo (línea azul discontinua).</title>' +
     '<defs>' +
     '<linearGradient id="' +
