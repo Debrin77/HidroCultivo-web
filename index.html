@@ -12249,6 +12249,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   if (compactMesa) {
     tierRowH = Math.max(74, Math.round(tierRowH * 0.9));
   }
+  if (nTiers > 1) {
+    tierRowH = Math.max(tierRowH, compactMesa ? 88 : 96);
+  }
   const H = topPad + nTiers * tierRowH + botTank;
   const cx = W0 / 2;
   const xL = 40;
@@ -12271,27 +12274,65 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const rowInner = xR - xL - 2 * padFlow;
   const geoms = [];
   let gIdx = 0;
-  for (let t = 0; t < nTiers; t++) {
-    const nt = tiers[t];
-    const rowY = topPad + t * tierRowH + tierRowH / 2;
-    const tubeW = nt <= 0 ? rowInner : (rowInner - (nt - 1) * gapT) / nt;
-    const order = t % 2 === 0 ? [...Array(nt).keys()] : [...Array(nt).keys()].reverse();
-    for (const layoutK of order) {
-      const xTubeL = xL + padFlow + layoutK * (tubeW + gapT);
-      geoms.push({
-        g: gIdx++,
-        t,
-        rowY,
-        xL: xTubeL,
-        xR: xTubeL + tubeW,
-        l2r: t % 2 === 0,
-      });
+  if (nTiers <= 1) {
+    for (let t = 0; t < nTiers; t++) {
+      const nt = tiersNums[t];
+      const rowY = topPad + t * tierRowH + tierRowH / 2;
+      const tubeW = nt <= 0 ? rowInner : (rowInner - (nt - 1) * gapT) / nt;
+      const order = t % 2 === 0 ? [...Array(nt).keys()] : [...Array(nt).keys()].reverse();
+      for (const layoutK of order) {
+        const xTubeL = xL + padFlow + layoutK * (tubeW + gapT);
+        geoms.push({
+          g: gIdx++,
+          t,
+          rowY,
+          xL: xTubeL,
+          xR: xTubeL + tubeW,
+          l2r: t % 2 === 0,
+        });
+      }
+    }
+  } else {
+    const maxNt = Math.max(1, maxTubosPorNivelMesa);
+    const tubeW = (rowInner - (maxNt - 1) * gapT) / maxNt;
+    for (let t = 0; t < nTiers; t++) {
+      const nt = tiersNums[t];
+      const rowY = topPad + t * tierRowH + tierRowH / 2;
+      for (let k = 0; k < nt; k++) {
+        const xTubeL = xL + padFlow + k * (tubeW + gapT);
+        geoms.push({
+          g: gIdx++,
+          t,
+          rowY,
+          xL: xTubeL,
+          xR: xTubeL + tubeW,
+          l2r: t % 2 === 0,
+        });
+      }
     }
   }
 
+  const geomByG = {};
+  for (let gi = 0; gi < geoms.length; gi++) geomByG[geoms[gi].g] = geoms[gi];
+  const hydSeq = (function () {
+    if (geoms.length === 0) return [];
+    if (nTiers <= 1) return geoms.map(G => G.g);
+    const seq = [];
+    let base = 0;
+    for (let t = 0; t < nTiers; t++) {
+      const nt = tiersNums[t];
+      const seg = [];
+      for (let k = 0; k < nt; k++) seg.push(base + k);
+      if (t % 2 === 1) seg.reverse();
+      for (let hi = 0; hi < seg.length; hi++) seq.push(seg[hi]);
+      base += nt;
+    }
+    return seq;
+  })();
+
   /**
-   * Tubos horizontales por estante (como mesa/estantería NFT real): canal largo y bajo,
-   * cestas a lo largo del eje X; serpentín entre tubos del recorrido global.
+   * Tubos horizontales por estante: 1 nivel = reparto clásico; varios niveles = rejilla
+   * (ancho de canal uniforme por columna). El trazo de flujo sigue el orden hidráulico serpentín.
    */
   const padAlongX = 10;
   function mmShelf(G) {
@@ -12316,8 +12357,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
   const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
   let flowD = 'M ' + xRiser + ' ' + yPump;
-  for (let i = 0; i < geoms.length; i++) {
-    const H = mmShelf(geoms[i]);
+  for (let i = 0; i < hydSeq.length; i++) {
+    const Gcur = geomByG[hydSeq[i]];
+    const H = mmShelf(Gcur);
     const l2r = i % 2 === 0;
     const xIn = l2r ? H.x0 : H.x1;
     const xOut = l2r ? H.x1 : H.x0;
@@ -12326,7 +12368,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       flowD += ' L ' + xIn + ' ' + H.yC;
       flowD += ' L ' + xOut + ' ' + H.yC;
     } else {
-      const P = mmShelf(geoms[i - 1]);
+      const Gprev = geomByG[hydSeq[i - 1]];
+      const P = mmShelf(Gprev);
       const prevOut = (i - 1) % 2 === 0 ? P.x1 : P.x0;
       if (Math.abs(H.yC - P.yC) > 0.5) {
         flowD += ' L ' + prevOut + ' ' + H.yC;
@@ -12337,9 +12380,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       flowD += ' L ' + xOut + ' ' + H.yC;
     }
   }
-  const Glast = geoms[geoms.length - 1];
-  const lm = mmShelf(Glast);
-  const lastL2r = (geoms.length - 1) % 2 === 0;
+  const Glast = hydSeq.length ? geomByG[hydSeq[hydSeq.length - 1]] : null;
+  const lm = Glast ? mmShelf(Glast) : { yC: topPad + tierRowH / 2, x0: xL, x1: xR };
+  const lastL2r = hydSeq.length ? (hydSeq.length - 1) % 2 === 0 : true;
   const lastExitX = lastL2r ? lm.x1 : lm.x0;
   const retMargMM = lastExitX >= W0 / 2 ? xR + 14 : xL - 14;
   flowD += ' L ' + retMargMM + ' ' + lm.yC;
@@ -12409,7 +12452,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   for (let gi = 0; gi < geoms.length; gi++) {
     const G = geoms[gi];
     const S = mmShelf(G);
-    const down = gi % 2 === 0;
+    const down = G.t % 2 === 0;
     const spanX = S.wid - 2 * padHuecoAlong;
     const slotAlongG = huecosN <= 1 ? spanX : spanX / Math.max(1, huecosN - 1);
     const hrFromSpanGi = (spanX / slotDenom) * (compactMesa ? 0.62 : 0.68);
@@ -12538,17 +12581,17 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     NFT_SVG_FOOT_ORIENT_HINT;
   const mesaSubtit =
     nTiers > 1
-      ? 'NFT · mesa estantería · ' + nTiers + ' niveles · canales/tablero ' + tiersFmt
+      ? 'NFT · mesa estantería · ' + nTiers + ' niveles · rejilla ' + tiersFmt + ' (columnas alineadas)'
       : 'NFT · mesa estantería · 1 nivel · ' + (tiersNums[0] != null ? tiersNums[0] : 0) + ' canales';
   const mesaTitleLong =
     nTiers > 1
       ? 'NFT mesa multinivel: ' +
         nTiers +
-        ' estantes; en cada uno ' +
+        ' estantes en rejilla (misma columna = mismo índice de canal); ' +
         tiersFmt +
-        ' canales horizontales (' +
+        ' canales por fila (' +
         nTot +
-        ' en total). Agua en serpentín entre canales.'
+        ' en total). Recorrido del agua en serpentín.'
       : 'NFT mesa multinivel: un estante con ' +
         (tiersNums[0] != null ? tiersNums[0] : 0) +
         ' canales horizontales y recorrido del agua.';
