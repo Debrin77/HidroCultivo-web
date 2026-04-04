@@ -4884,6 +4884,93 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         </div>
       </div>
 
+      <!-- Montaje NFT (Sistema): mismo criterio que el asistente, sin abrir el wizard -->
+      <div id="sistemaNftMontajeCard" style="display:none;background:#fff;border:1.5px solid rgba(15,23,42,0.08);border-radius:14px;
+        padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
+          Montaje NFT
+        </div>
+        <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 8px">
+          Disposición, multinivel, escalera/A y pendiente. Los datos coinciden con el <strong>asistente de configuración</strong>; aquí puedes retocarlos y pulsar <strong>Aplicar</strong>.
+        </p>
+        <p style="font-size:9px;color:#94a3b8;line-height:1.4;margin:0 0 10px">
+          Canal de cultivo, lámina, tubo de alimentación (Ø) y bomba están solo en el asistente. Si cambiaste el montaje arriba, pulsa <strong>Aplicar</strong> antes de abrirlo para que cargue lo último.
+        </p>
+        <button type="button" onclick="abrirAsistenteNftCanalYTuboDesdeSistema()"
+          style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px dashed #3b82f6;background:#eff6ff;
+          font-family:var(--font-display);font-size:12px;font-weight:800;color:#1d4ed8;cursor:pointer;margin-bottom:10px;
+          -webkit-tap-highlight-color:transparent">
+          Abrir asistente — canal / tubo / bomba
+        </button>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+          <button type="button" class="equip-card nft-disp-btn" id="sysNftDispMesa" onclick="seleccionarSistemaNftDisposicion('mesa')"
+            aria-pressed="true" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Mesa</button>
+          <button type="button" class="equip-card nft-disp-btn" id="sysNftDispEscalera" onclick="seleccionarSistemaNftDisposicion('escalera')"
+            aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Escalera</button>
+          <button type="button" class="equip-card nft-disp-btn" id="sysNftDispPared" onclick="seleccionarSistemaNftDisposicion('pared')"
+            aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Pared</button>
+        </div>
+        <label class="form-label" for="sysNftAlturaBombeoCm" style="font-size:9px;font-weight:700;color:#64748b;display:block;margin-bottom:4px">
+          Altura bombeo al 1.º tubo (cm) — importante en pared y escalera
+        </label>
+        <input type="number" id="sysNftAlturaBombeoCm" min="0" max="500" step="1" placeholder="ej. 40"
+          inputmode="numeric" autocomplete="off"
+          style="width:100%;margin-bottom:10px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label class="form-label" for="sysNftHuecos" style="font-size:9px;font-weight:700;color:#64748b">Huecos / canal</label>
+            <input type="number" id="sysNftHuecos" min="2" max="30" step="1"
+              style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="sysNftPendiente" style="font-size:9px;font-weight:700;color:#64748b">Pendiente (%)</label>
+            <select id="sysNftPendiente" style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+        </div>
+        <div id="sysNftRowNumCanales" style="margin-bottom:10px">
+          <label class="form-label" for="sysNftNumCanales" style="font-size:9px;font-weight:700;color:#64748b">Tubos / canales (mesa o pared)</label>
+          <input type="number" id="sysNftNumCanales" min="1" max="24" step="1"
+            style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+        </div>
+        <div id="sysNftMesaExtraWrap" style="display:none;margin-bottom:10px;padding-top:10px;border-top:1px dashed #cbd5e1">
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:700;color:#0f766e;cursor:pointer;margin:0">
+            <input type="checkbox" id="sysNftMesaMultinivelChk" style="margin-top:3px;width:16px;height:16px;accent-color:#15803d"
+              onchange="onSistemaNftMesaMultinivelToggle()">
+            <span>Mesa <strong>multinivel</strong> (tubos por franja, ej. 1+2+4)</span>
+          </label>
+          <div id="sysNftMesaMultinivelFields" style="display:none;margin-top:10px">
+            <label class="form-label" for="sysNftMesaTubosStr" style="font-size:9px;font-weight:700;color:#64748b">Tubos por nivel (coma)</label>
+            <input type="text" id="sysNftMesaTubosStr" placeholder="ej. 1, 2, 4" autocomplete="off"
+              style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:600">
+            <label class="form-label" for="sysNftMesaSepCm" style="font-size:9px;font-weight:700;color:#64748b;margin-top:8px;display:block">Separación niveles (cm)</label>
+            <input type="number" id="sysNftMesaSepCm" min="0" max="150" step="1" placeholder="ej. 28"
+              style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px">
+          </div>
+        </div>
+        <div id="sysNftEscaleraExtraWrap" style="display:none;margin-bottom:10px;padding-top:10px;border-top:1px dashed #cbd5e1">
+          <div style="font-size:9px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Cara(s)</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+            <button type="button" class="equip-card nft-disp-btn" id="sysNftEscCara1" onclick="seleccionarSistemaNftEscaleraCaras(1)"
+              aria-pressed="true" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Una cara</button>
+            <button type="button" class="equip-card nft-disp-btn" id="sysNftEscCara2" onclick="seleccionarSistemaNftEscaleraCaras(2)"
+              aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Dos (A)</button>
+          </div>
+          <label class="form-label" for="sysNftPeldaños" style="font-size:9px;font-weight:700;color:#64748b">Peldaños por cara</label>
+          <input type="number" id="sysNftPeldaños" min="1" max="12" step="1"
+            style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700">
+        </div>
+        <button type="button" onclick="aplicarSistemaNftMontajeDesdeFormulario()"
+          style="width:100%;padding:11px 14px;border-radius:12px;border:2px solid #15803d;background:linear-gradient(180deg,#f0fdf4,#ecfdf5);
+          font-family:var(--font-display);font-size:13px;font-weight:800;color:#14532d;cursor:pointer;margin-top:4px">
+          Aplicar montaje NFT
+        </button>
+      </div>
+
       <!-- Stats rápidas -->
       <div class="stats-row">
         <div class="stat-box">
@@ -5794,11 +5881,11 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           <div class="torre-controls">
             <div class="torre-control-row">
               <div class="torre-control-label">
-                Canales paralelos
+                <span id="nftCanalesLabelMain">Tubos en serpentín</span>
                 <span class="torre-control-val" id="valNftCanales">4</span>
               </div>
               <input type="range" class="torre-slider" id="sliderNftCanales"
-                min="1" max="12" value="4" oninput="updateNftSetupPreview()">
+                min="1" max="24" value="4" oninput="updateNftSetupPreview()">
             </div>
             <div class="torre-control-row">
               <div class="torre-control-label">
@@ -5815,6 +5902,63 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               </div>
               <input type="range" class="torre-slider" id="sliderNftPendiente"
                 min="1" max="4" value="2" step="1" oninput="updateNftSetupPreview()">
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #e5e7eb">
+              <div style="font-size:10px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
+                Disposición física
+              </div>
+              <p style="font-size:9px;color:#475569;line-height:1.45;margin:0 0 8px">
+                <strong>Mesa</strong>: tubos horizontales en paralelo o en varios niveles (más cosecha por m²).
+                <strong>Escalera</strong> / inclinado: peldaños; indica si llevas tubos en una cara o en dos (tipo A).
+                <strong>Pared</strong>: tubos horizontales apilados en zigzag en el muro.
+                La <strong>altura de bombeo</strong> hasta el 1.º tubo suma carga a la bomba; en <strong>pared y escalera</strong> conviene indicarla siempre.
+              </p>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">
+                <button type="button" class="equip-card nft-disp-btn selected" id="nftDispMesa" onclick="seleccionarNftDisposicion('mesa')"
+                  aria-pressed="true" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Mesa</button>
+                <button type="button" class="equip-card nft-disp-btn" id="nftDispEscalera" onclick="seleccionarNftDisposicion('escalera')"
+                  aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Escalera</button>
+                <button type="button" class="equip-card nft-disp-btn" id="nftDispPared" onclick="seleccionarNftDisposicion('pared')"
+                  aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Pared</button>
+              </div>
+              <label class="form-label" for="nftAlturaBombeoCm" style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:4px;display:block">
+                Altura desde el agua del depósito (o bomba) hasta la entrada del 1.º tubo (cm)
+              </label>
+              <input type="number" id="nftAlturaBombeoCm" min="0" max="500" step="1" placeholder="ej. 40"
+                inputmode="numeric" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px;font-weight:700"
+                oninput="updateNftSetupPreview()" onblur="updateNftSetupPreview()">
+              <div id="nftAlturaBombeoHint" style="font-size:9px;color:#64748b;margin-top:6px;line-height:1.4">
+                Opcional en mesa plana; <strong>imprescindible</strong> en pared y escalera para afinar la bomba. En mesa multinivel, si no la pones, se puede estimar con la separación entre niveles (abajo).
+              </div>
+              <div id="nftMesaExtraWrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #cbd5e1">
+                <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:700;color:#0f766e;cursor:pointer;margin:0">
+                  <input type="checkbox" id="nftMesaMultinivelChk" style="margin-top:3px;width:16px;height:16px;accent-color:#15803d"
+                    onchange="onNftMesaMultinivelToggle()">
+                  <span>Mesa con <strong>varios niveles</strong> (distintos tubos por franja, ej. 1+2+4)</span>
+                </label>
+                <div id="nftMesaMultinivelFields" style="display:none;margin-top:10px">
+                  <label class="form-label" for="nftMesaTubosPorNivelStr" style="font-size:9px;font-weight:700;color:#64748b">Tubos por nivel, de arriba abajo (separar con comas)</label>
+                  <input type="text" id="nftMesaTubosPorNivelStr" placeholder="ej. 1, 2, 4" autocomplete="off"
+                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:600"
+                    oninput="updateNftSetupPreview()" onblur="updateNftSetupPreview()">
+                  <label class="form-label" for="nftMesaSepNivelesCm" style="font-size:9px;font-weight:700;color:#64748b;margin-top:8px;display:block">Separación entre niveles (cm) — solo si no indicas altura total arriba</label>
+                  <input type="number" id="nftMesaSepNivelesCm" min="0" max="150" step="1" placeholder="ej. 28"
+                    inputmode="numeric" autocomplete="off"
+                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px"
+                    oninput="updateNftSetupPreview()" onblur="updateNftSetupPreview()">
+                </div>
+              </div>
+              <div id="nftEscaleraExtraWrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px dashed #cbd5e1">
+                <div style="font-size:9px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Cara(s) con tubos</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                  <button type="button" class="equip-card nft-disp-btn selected" id="nftEscCara1" onclick="seleccionarNftEscaleraCaras(1)"
+                    aria-pressed="true" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Una cara</button>
+                  <button type="button" class="equip-card nft-disp-btn" id="nftEscCara2" onclick="seleccionarNftEscaleraCaras(2)"
+                    aria-pressed="false" style="padding:8px 4px;text-align:center;font-size:11px;font-weight:800">Dos caras (A)</button>
+                </div>
+                <p style="font-size:9px;color:#64748b;margin:8px 0 0;line-height:1.4">El deslizador de arriba = <strong>peldaños por cara</strong>; el total de tubos = peldaños × caras.</p>
+              </div>
             </div>
             <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #e5e7eb">
               <div style="font-size:10px;font-weight:800;color:#0f766e;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
@@ -8808,9 +8952,18 @@ function actualizarChromePanelEsquemaPorTipo() {
   const intro = document.getElementById('torreEsquemaSub');
   if (intro) {
     if (esNft) {
+      const dN = nftDisposicionNormalizada(cfg.nftDisposicion);
+      const dTxt =
+        dN === 'pared'
+          ? '<strong>pared</strong> (tubos horizontales en zigzag). '
+          : dN === 'escalera'
+            ? '<strong>escalera / inclinado</strong> (peldaños; una o dos caras). '
+            : '<strong>mesa</strong> (paralelos o multinivel). ';
       intro.innerHTML =
-        '<strong>Diagrama NFT en serpentín</strong> (tubos T1… configurables, agua en zigzag). ' +
-        'La <strong>línea azul discontinua</strong> marca el sentido del flujo. Depósito y bomba (mín. calculada y la tuya si la indicaste) se leen abajo. ' +
+        '<strong>NFT</strong> · disposición ' +
+        dTxt +
+        'La <strong>línea azul discontinua</strong> indica el flujo. ' +
+        'Configura <strong>altura de bombeo al 1.º canal</strong> en el asistente para afinar la bomba. ' +
         'Toca cada <strong>hueco</strong> o usa <strong>Lista</strong> (cada fila = tubo).';
     } else {
       intro.innerHTML =
@@ -8852,19 +9005,29 @@ function renderTorre() {
   if (!wrap) return;
 
   if (esNft) {
-    const ch = cfg.nftNumCanales ?? cfg.numNiveles ?? 4;
+    const hyd = getNftHidraulicaDesdeConfig(cfg);
     const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
     const pend = cfg.nftPendientePct ?? 2;
     const vol = cfg.volDeposito || VOL_OBJETIVO;
     const eqArr = cfg.equipamiento;
     const bombMain = getNftBombaDesdeConfig(cfg);
-    wrap.innerHTML = buildNftSerpentineDiagramSvg(ch, hx, pend, vol, 'Main', {
+    const altShow =
+      cfg.nftAlturaBombeoCm != null && Number(cfg.nftAlturaBombeoCm) > 0
+        ? Math.round(Number(cfg.nftAlturaBombeoCm))
+        : getNftAlturaBombeoEfectivaCm(cfg);
+    wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', {
       calentador: eqArr?.includes('calentador') ?? true,
       difusor: eqArr?.includes('difusor') ?? true,
       interactive: true,
       bombaInfo: bombMain,
       userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
       userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
+      nftDisposicion: cfg.nftDisposicion,
+      nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+      cfgSnapshot: cfg,
+      mesaTiers: hyd.mesaTiers,
+      escaleraNiveles: hyd.escaleraNiveles,
+      escaleraCaras: hyd.escaleraCaras,
     });
     wrap.setAttribute('aria-label',
       'Diagrama NFT en serpentín: línea azul discontinua indica el sentido del agua. Toca cada hueco para ficha o Lista.');
@@ -8892,6 +9055,9 @@ function renderTorre() {
   if (document.getElementById('tab-riego')?.classList.contains('active')) {
     actualizarVistaRiegoPorTipoInstalacion();
   }
+  try {
+    sincronizarSistemaNftMontajeUI();
+  } catch (e) {}
 }
 
 function torreGetNumCestasParaRot() {
@@ -10334,9 +10500,34 @@ function abrirSetup() {
   const snc = document.getElementById('sliderNftCanales');
   const snh = document.getElementById('sliderNftHuecos');
   const snp = document.getElementById('sliderNftPendiente');
-  if (snc) snc.value = String(Math.max(1, Math.min(12, c.nftNumCanales || c.numNiveles || 4)));
+  const dispN = nftDisposicionNormalizada(c.nftDisposicion);
+  let sliderCanales = Math.max(1, Math.min(24, c.nftNumCanales || c.numNiveles || 4));
+  if (dispN === 'escalera' && c.nftEscaleraNivelesCara != null && Number(c.nftEscaleraNivelesCara) > 0) {
+    sliderCanales = Math.max(1, Math.min(12, Math.round(Number(c.nftEscaleraNivelesCara))));
+  }
+  if (snc) snc.value = String(sliderCanales);
   if (snh) snh.value = String(Math.max(2, Math.min(30, c.nftHuecosPorCanal || c.numCestas || 8)));
   if (snp) snp.value = String(Math.max(1, Math.min(4, c.nftPendientePct != null ? Math.round(c.nftPendientePct) : 2)));
+  const altB = document.getElementById('nftAlturaBombeoCm');
+  if (altB) {
+    altB.value =
+      c.nftAlturaBombeoCm != null && Number(c.nftAlturaBombeoCm) > 0 ? String(Math.round(Number(c.nftAlturaBombeoCm))) : '';
+  }
+  seleccionarNftDisposicion(c.nftDisposicion || 'mesa');
+  const mmChk = document.getElementById('nftMesaMultinivelChk');
+  if (mmChk) mmChk.checked = c.nftMesaMultinivel === true;
+  const mmStr = document.getElementById('nftMesaTubosPorNivelStr');
+  if (mmStr) mmStr.value = c.nftMesaTubosPorNivelStr != null ? String(c.nftMesaTubosPorNivelStr) : '';
+  const mmSep = document.getElementById('nftMesaSepNivelesCm');
+  if (mmSep) {
+    mmSep.value =
+      c.nftMesaSeparacionNivelesCm != null && Number(c.nftMesaSeparacionNivelesCm) > 0
+        ? String(Math.round(Number(c.nftMesaSeparacionNivelesCm)))
+        : '';
+  }
+  seleccionarNftEscaleraCaras(c.nftEscaleraCaras === 2 ? 2 : 1);
+  onNftMesaMultinivelToggle();
+  refrescarNftMontajeSubpanels();
   setupNftTuboMm = Math.max(16, Math.min(40, parseInt(String(c.nftTuboInteriorMm), 10) || 25));
   seleccionarTuboNft(setupNftTuboMm);
   setupNftCanalDiamMm = Math.max(50, Math.min(160, parseInt(String(c.nftCanalDiamMm), 10) || 90));
@@ -10445,7 +10636,13 @@ function refrescarSetupTipoInstalacionUI() {
       : 'Configura las dimensiones de tu sistema hidropónico vertical';
   }
   syncSetupPreviewDiagramPorTipoInstalacion();
-  if (isNft) refrescarDocTuberiaNftSetup();
+  if (isNft) {
+    refrescarDocTuberiaNftSetup();
+    try {
+      refrescarNftMontajeSubpanels();
+      refrescarNftCanalesSliderEtiqueta();
+    } catch (e) {}
+  }
 }
 
 /** Actualiza el gráfico del paso 1 según Torre vs NFT (asistente). */
@@ -10496,12 +10693,388 @@ function nftAreaFlujoLaminaMm2(g) {
   return Math.max(1, wMm * lam);
 }
 
+/** NFT: mesa (horizontal), escalera/inclinado (peldaños), pared (tubos horizontales en zigzag en muro). */
+function nftDisposicionNormalizada(v) {
+  const s = String(v == null ? '' : v).toLowerCase();
+  if (s === 'escalera') return 'escalera';
+  if (s === 'pared' || s === 'mural' || s === 'vertical') return 'pared';
+  return 'mesa';
+}
+
+/** @returns {number[]} tubos por franja de arriba a abajo */
+function parseNftMesaTubosPorNivelStr(str) {
+  const s = String(str == null ? '' : str).trim();
+  if (!s) return [];
+  const parts = s.split(/[,;\s]+/).filter(Boolean);
+  const out = [];
+  for (const p of parts) {
+    const n = parseInt(p, 10);
+    if (Number.isFinite(n) && n >= 1 && n <= 12) out.push(n);
+  }
+  return out.slice(0, 8);
+}
+
+function nftEscaleraCarasNormalizada(v) {
+  const n = parseInt(String(v), 10);
+  return n === 2 ? 2 : 1;
+}
+
 /**
- * Caudal y potencia orientativos NFT (24 h): película según geometría del canal + modelo empírico + tubería de alimentación.
- * @param {object|null|undefined} canalGeom si null/undefined, usa valores por defecto (Ø90 redondo, 3 mm, longitud auto).
+ * Canales hidráulicos efectivos y metadatos de montaje para cálculo y SVG.
+ * @returns {{ nCh: number, nHx: number, mesaTiers?: number[], escaleraNiveles?: number, escaleraCaras?: number }}
  */
-function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboMm, canalGeom) {
-  const nCh = Math.min(Math.max(parseInt(String(nCanales), 10) || 1, 1), 10);
+function getNftHidraulicaDesdeConfig(cfg) {
+  cfg = cfg || {};
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  const hx = Math.min(30, Math.max(2, parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8), 10) || 8));
+  if (disp === 'mesa' && cfg.nftMesaMultinivel) {
+    const tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr);
+    if (tiers.length >= 2) {
+      const sumT = tiers.reduce((a, b) => a + b, 0);
+      return { nCh: Math.min(24, Math.max(1, sumT)), nHx: hx, mesaTiers: tiers };
+    }
+  }
+  if (disp === 'escalera') {
+    const caras = nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras);
+    let nv = parseInt(String(cfg.nftEscaleraNivelesCara ?? ''), 10);
+    if (!Number.isFinite(nv) || nv < 1) {
+      const total = parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? 4), 10) || 4;
+      nv = Math.max(1, Math.ceil(total / Math.max(1, caras)));
+    }
+    nv = Math.min(12, Math.max(1, nv));
+    const nCh = Math.min(24, Math.max(1, nv * caras));
+    return { nCh, nHx: hx, escaleraNiveles: nv, escaleraCaras: caras };
+  }
+  const nCh = Math.min(24, Math.max(1, parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? 4), 10) || 4));
+  return { nCh, nHx: hx };
+}
+
+/** Altura estática efectiva (cm) para el cálculo de bomba: manual o estimada en mesa multinivel. */
+function getNftAlturaBombeoEfectivaCm(cfg) {
+  cfg = cfg || {};
+  const raw = cfg.nftAlturaBombeoCm;
+  if (raw != null && Number.isFinite(Number(raw)) && Number(raw) > 0) {
+    return Math.min(500, Math.max(0, Math.round(Number(raw))));
+  }
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  if (disp === 'mesa' && cfg.nftMesaMultinivel) {
+    const tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr);
+    if (tiers.length >= 2) {
+      let sep = parseFloat(String(cfg.nftMesaSeparacionNivelesCm ?? '').replace(',', '.'));
+      if (!Number.isFinite(sep) || sep <= 0) sep = 28;
+      sep = Math.min(150, Math.max(10, sep));
+      return Math.round((tiers.length - 1) * sep);
+    }
+  }
+  return 0;
+}
+
+function readNftMontajeFromSetupUi() {
+  let dispo = 'mesa';
+  if (document.getElementById('nftDispEscalera')?.classList.contains('selected')) dispo = 'escalera';
+  else if (document.getElementById('nftDispPared')?.classList.contains('selected')) dispo = 'pared';
+  const raw = parseFloat(String(document.getElementById('nftAlturaBombeoCm')?.value || '').replace(',', '.'));
+  const altCm =
+    Number.isFinite(raw) && raw > 0 ? Math.min(500, Math.round(raw)) : 0;
+  const mesaMultinivel = document.getElementById('nftMesaMultinivelChk')?.checked === true;
+  const mesaTubosStr = document.getElementById('nftMesaTubosPorNivelStr')?.value || '';
+  const sepRaw = parseFloat(String(document.getElementById('nftMesaSepNivelesCm')?.value || '').replace(',', '.'));
+  const mesaSepCm =
+    Number.isFinite(sepRaw) && sepRaw > 0 ? Math.min(150, Math.round(sepRaw)) : 0;
+  let escaleraCaras = 1;
+  if (document.getElementById('nftEscCara2')?.classList.contains('selected')) escaleraCaras = 2;
+  return {
+    disposicion: dispo,
+    alturaBombeoCm: altCm,
+    mesaMultinivel,
+    mesaTubosStr,
+    mesaSepCm,
+    escaleraCaras,
+  };
+}
+
+function refrescarNftMontajeSubpanels() {
+  const d = readNftMontajeFromSetupUi().disposicion;
+  const mesaW = document.getElementById('nftMesaExtraWrap');
+  const escW = document.getElementById('nftEscaleraExtraWrap');
+  const hint = document.getElementById('nftAlturaBombeoHint');
+  if (mesaW) mesaW.style.display = d === 'mesa' ? 'block' : 'none';
+  if (escW) escW.style.display = d === 'escalera' ? 'block' : 'none';
+  if (hint) {
+    hint.innerHTML =
+      d === 'mesa'
+        ? 'Opcional en mesa plana; <strong>imprescindible</strong> en pared y escalera. En mesa multinivel puedes usar la separación entre niveles si no pones altura total.'
+        : d === 'pared' || d === 'escalera'
+          ? '<strong>Imprescindible</strong> en este montaje: sin altura (cm) el cálculo de bomba solo usa pérdidas orientativas.'
+          : '';
+  }
+  const mf = document.getElementById('nftMesaMultinivelFields');
+  const chk = document.getElementById('nftMesaMultinivelChk');
+  if (mf && chk) mf.style.display = d === 'mesa' && chk.checked ? 'block' : 'none';
+}
+
+function onNftMesaMultinivelToggle() {
+  const mf = document.getElementById('nftMesaMultinivelFields');
+  const chk = document.getElementById('nftMesaMultinivelChk');
+  if (mf && chk) mf.style.display = chk.checked ? 'block' : 'none';
+  updateNftSetupPreview();
+}
+
+function seleccionarNftEscaleraCaras(n) {
+  const caras = n === 2 ? 2 : 1;
+  const b1 = document.getElementById('nftEscCara1');
+  const b2 = document.getElementById('nftEscCara2');
+  if (b1) {
+    b1.classList.toggle('selected', caras === 1);
+    b1.setAttribute('aria-pressed', caras === 1 ? 'true' : 'false');
+  }
+  if (b2) {
+    b2.classList.toggle('selected', caras === 2);
+    b2.setAttribute('aria-pressed', caras === 2 ? 'true' : 'false');
+  }
+  if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+}
+
+function seleccionarNftDisposicion(which) {
+  const w = nftDisposicionNormalizada(which);
+  const ids = { mesa: 'nftDispMesa', escalera: 'nftDispEscalera', pared: 'nftDispPared' };
+  Object.keys(ids).forEach(k => {
+    const el = document.getElementById(ids[k]);
+    if (!el) return;
+    const on = k === w;
+    el.classList.toggle('selected', on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  refrescarNftMontajeSubpanels();
+  if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+}
+
+function onSistemaNftMesaMultinivelToggle() {
+  const mf = document.getElementById('sysNftMesaMultinivelFields');
+  const chk = document.getElementById('sysNftMesaMultinivelChk');
+  if (mf && chk) mf.style.display = chk.checked ? 'block' : 'none';
+  refrescarSistemaNftMontajeSubpanels();
+}
+
+function seleccionarSistemaNftEscaleraCaras(n) {
+  const caras = n === 2 ? 2 : 1;
+  const b1 = document.getElementById('sysNftEscCara1');
+  const b2 = document.getElementById('sysNftEscCara2');
+  if (b1) {
+    b1.classList.toggle('selected', caras === 1);
+    b1.setAttribute('aria-pressed', caras === 1 ? 'true' : 'false');
+  }
+  if (b2) {
+    b2.classList.toggle('selected', caras === 2);
+    b2.setAttribute('aria-pressed', caras === 2 ? 'true' : 'false');
+  }
+}
+
+function seleccionarSistemaNftDisposicion(which) {
+  const w = nftDisposicionNormalizada(which);
+  const ids = { mesa: 'sysNftDispMesa', escalera: 'sysNftDispEscalera', pared: 'sysNftDispPared' };
+  Object.keys(ids).forEach(k => {
+    const el = document.getElementById(ids[k]);
+    if (!el) return;
+    const on = k === w;
+    el.classList.toggle('selected', on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  refrescarSistemaNftMontajeSubpanels();
+}
+
+function refrescarSistemaNftMontajeSubpanels() {
+  const mesaW = document.getElementById('sysNftMesaExtraWrap');
+  const escW = document.getElementById('sysNftEscaleraExtraWrap');
+  const rowC = document.getElementById('sysNftRowNumCanales');
+  let d = 'mesa';
+  if (document.getElementById('sysNftDispEscalera')?.classList.contains('selected')) d = 'escalera';
+  else if (document.getElementById('sysNftDispPared')?.classList.contains('selected')) d = 'pared';
+  if (mesaW) mesaW.style.display = d === 'mesa' ? 'block' : 'none';
+  if (escW) escW.style.display = d === 'escalera' ? 'block' : 'none';
+  if (rowC) {
+    const mm = document.getElementById('sysNftMesaMultinivelChk')?.checked === true;
+    rowC.style.display = d === 'escalera' ? 'none' : 'block';
+    if (d === 'mesa' && mm) rowC.style.display = 'none';
+  }
+  const mf = document.getElementById('sysNftMesaMultinivelFields');
+  const chk = document.getElementById('sysNftMesaMultinivelChk');
+  if (mf && chk) mf.style.display = d === 'mesa' && chk.checked ? 'block' : 'none';
+}
+
+/** Redimensiona state.torre a la hidráulica NFT conservando huecos existentes cuando sea posible. */
+function redimensionarMatrizTorreNftPreservando(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'nft') return;
+  const hyd = getNftHidraulicaDesdeConfig(cfg);
+  const nCh = hyd.nCh;
+  const nHx = Math.min(30, Math.max(2, parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8), 10) || 8));
+  const empty = () => ({ variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] });
+  const copy = o => {
+    if (!o || typeof o !== 'object') return empty();
+    return {
+      variedad: o.variedad || '',
+      fecha: o.fecha || '',
+      notas: o.notas || '',
+      fotos: Array.isArray(o.fotos) ? o.fotos.slice() : [],
+      fotoKeys: Array.isArray(o.fotoKeys) ? o.fotoKeys.slice() : [],
+    };
+  };
+  const prev = state.torre || [];
+  const nue = [];
+  for (let i = 0; i < nCh; i++) {
+    const row = [];
+    const pi = prev[i];
+    for (let j = 0; j < nHx; j++) {
+      row.push(pi && pi[j] ? copy(pi[j]) : empty());
+    }
+    nue.push(row);
+  }
+  state.torre = nue;
+  cfg.numNiveles = nCh;
+  cfg.numCestas = nHx;
+}
+
+function sincronizarSistemaNftMontajeUI() {
+  const card = document.getElementById('sistemaNftMontajeCard');
+  const cfg = state.configTorre;
+  if (!card) return;
+  if (!cfg || cfg.tipoInstalacion !== 'nft') {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const dispN = nftDisposicionNormalizada(cfg.nftDisposicion);
+  seleccionarSistemaNftDisposicion(dispN);
+  const altInp = document.getElementById('sysNftAlturaBombeoCm');
+  if (altInp) {
+    altInp.value =
+      cfg.nftAlturaBombeoCm != null && Number(cfg.nftAlturaBombeoCm) > 0 ? String(Math.round(Number(cfg.nftAlturaBombeoCm))) : '';
+  }
+  const hxEl = document.getElementById('sysNftHuecos');
+  if (hxEl) hxEl.value = String(Math.max(2, Math.min(30, cfg.nftHuecosPorCanal || cfg.numCestas || 8)));
+  const pendEl = document.getElementById('sysNftPendiente');
+  if (pendEl) pendEl.value = String(Math.max(1, Math.min(4, Math.round(Number(cfg.nftPendientePct)) || 2)));
+  const mmChk = document.getElementById('sysNftMesaMultinivelChk');
+  if (mmChk) mmChk.checked = cfg.nftMesaMultinivel === true;
+  const mmStr = document.getElementById('sysNftMesaTubosStr');
+  if (mmStr) mmStr.value = cfg.nftMesaTubosPorNivelStr != null ? String(cfg.nftMesaTubosPorNivelStr) : '';
+  const mmSep = document.getElementById('sysNftMesaSepCm');
+  if (mmSep) {
+    mmSep.value =
+      cfg.nftMesaSeparacionNivelesCm != null && Number(cfg.nftMesaSeparacionNivelesCm) > 0
+        ? String(Math.round(Number(cfg.nftMesaSeparacionNivelesCm)))
+        : '';
+  }
+  seleccionarSistemaNftEscaleraCaras(cfg.nftEscaleraCaras === 2 ? 2 : 1);
+  let nvEsc = 4;
+  if (dispN === 'escalera' && cfg.nftEscaleraNivelesCara != null && Number(cfg.nftEscaleraNivelesCara) > 0) {
+    nvEsc = Math.max(1, Math.min(12, Math.round(Number(cfg.nftEscaleraNivelesCara))));
+  }
+  const peld = document.getElementById('sysNftPeldaños');
+  if (peld) peld.value = String(nvEsc);
+  const ncEl = document.getElementById('sysNftNumCanales');
+  if (ncEl) {
+    let nc = Math.max(1, Math.min(24, parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? 4), 10) || 4));
+    if (dispN === 'escalera') nc = Math.max(1, Math.min(24, nvEsc * (cfg.nftEscaleraCaras === 2 ? 2 : 1)));
+    ncEl.value = String(nc);
+  }
+  onSistemaNftMesaMultinivelToggle();
+  refrescarSistemaNftMontajeSubpanels();
+}
+
+/** Desde Sistema: mismo overlay que «configurar», saltando al paso 1 (NFT: canal, tubo Ø, lámina, bomba). */
+function abrirAsistenteNftCanalYTuboDesdeSistema() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') return;
+  guardarEstadoTorreActual();
+  saveState();
+  abrirSetup();
+  setupTipoInstalacion = 'nft';
+  setupPagina = 1;
+  renderSetupPage();
+  try {
+    updateNftSetupPreview();
+  } catch (e) {}
+}
+
+function aplicarSistemaNftMontajeDesdeFormulario() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') return;
+  const cfg = state.configTorre;
+  let dispo = 'mesa';
+  if (document.getElementById('sysNftDispEscalera')?.classList.contains('selected')) dispo = 'escalera';
+  else if (document.getElementById('sysNftDispPared')?.classList.contains('selected')) dispo = 'pared';
+  cfg.nftDisposicion = dispo;
+  const altRaw = parseFloat(String(document.getElementById('sysNftAlturaBombeoCm')?.value || '').replace(',', '.'));
+  if (Number.isFinite(altRaw) && altRaw > 0) cfg.nftAlturaBombeoCm = Math.min(500, Math.round(altRaw));
+  else delete cfg.nftAlturaBombeoCm;
+  const pendSel = parseInt(String(document.getElementById('sysNftPendiente')?.value || '2'), 10);
+  cfg.nftPendientePct = Math.max(1, Math.min(4, Number.isFinite(pendSel) ? pendSel : 2));
+  const hxInp = parseInt(String(document.getElementById('sysNftHuecos')?.value || ''), 10);
+  cfg.nftHuecosPorCanal = Math.max(2, Math.min(30, Number.isFinite(hxInp) ? hxInp : cfg.nftHuecosPorCanal || 8));
+  delete cfg.nftMesaMultinivel;
+  delete cfg.nftMesaTubosPorNivelStr;
+  delete cfg.nftMesaSeparacionNivelesCm;
+  delete cfg.nftEscaleraCaras;
+  delete cfg.nftEscaleraNivelesCara;
+  if (dispo === 'mesa') {
+    const mm = document.getElementById('sysNftMesaMultinivelChk')?.checked === true;
+    const tiersStr = document.getElementById('sysNftMesaTubosStr')?.value || '';
+    const sepRaw = parseFloat(String(document.getElementById('sysNftMesaSepCm')?.value || '').replace(',', '.'));
+    if (mm) {
+      const tiers = parseNftMesaTubosPorNivelStr(tiersStr);
+      if (tiers.length < 2) {
+        showToast('Multinivel: indica al menos dos niveles separados por comas (ej. 1, 2, 4).', true);
+        return;
+      }
+      cfg.nftMesaMultinivel = true;
+      cfg.nftMesaTubosPorNivelStr = tiers.join(',');
+      if (Number.isFinite(sepRaw) && sepRaw > 0) cfg.nftMesaSeparacionNivelesCm = Math.min(150, Math.round(sepRaw));
+      else delete cfg.nftMesaSeparacionNivelesCm;
+      cfg.nftNumCanales = getNftHidraulicaDesdeConfig(cfg).nCh;
+    } else {
+      const nc = parseInt(String(document.getElementById('sysNftNumCanales')?.value || ''), 10);
+      cfg.nftNumCanales = Math.max(1, Math.min(24, Number.isFinite(nc) ? nc : 4));
+    }
+  } else if (dispo === 'escalera') {
+    const caras = document.getElementById('sysNftEscCara2')?.classList.contains('selected') ? 2 : 1;
+    cfg.nftEscaleraCaras = caras;
+    const nv = parseInt(String(document.getElementById('sysNftPeldaños')?.value || ''), 10);
+    cfg.nftEscaleraNivelesCara = Math.max(1, Math.min(12, Number.isFinite(nv) ? nv : 4));
+    cfg.nftNumCanales = cfg.nftEscaleraNivelesCara * caras;
+  } else {
+    const nc = parseInt(String(document.getElementById('sysNftNumCanales')?.value || ''), 10);
+    cfg.nftNumCanales = Math.max(1, Math.min(24, Number.isFinite(nc) ? nc : 4));
+  }
+  cfg.nftBombaEstimada = getNftBombaDesdeConfig(cfg);
+  redimensionarMatrizTorreNftPreservando(cfg);
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  renderTorre();
+  updateTorreStats();
+  updateDashboard();
+  actualizarBadgesNutriente();
+  try {
+    refrescarUIMensajeBombaUsuarioNft('checklist');
+  } catch (e) {}
+  if (document.getElementById('tab-consejos')?.classList.contains('active')) {
+    try {
+      renderConsejos();
+    } catch (e2) {}
+  }
+  showToast('Montaje NFT aplicado');
+}
+
+/**
+ * Caudal y potencia orientativos NFT (24 h). Combina: (1) sección de lámina en el canal y velocidad típica de película
+ * en NFT doméstico (~0,08–0,15 m/s según pendiente y referencias de cultivo en película); (2) regla empírica por metro
+ * de canal alineada con tablas habituales de diseño; (3) pérdidas en tubería de alimentación + elevación indicada;
+ * (4) potencia vía potencia hidráulica aproximada y rendimiento conservador de mini-bombas. La decisión final debe
+ * basarse en la curva Q–H del fabricante (placa de la bomba).
+ * @param {object|null|undefined} canalGeom si null/undefined, usa valores por defecto (Ø90 redondo, 3 mm, longitud auto).
+ * @param {number} [alturaBombeoCm] altura vertical desde nivel de agua / bomba hasta entrada al primer canal (0 = omitir).
+ */
+function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboMm, canalGeom, alturaBombeoCm) {
+  const nCh = Math.min(Math.max(parseInt(String(nCanales), 10) || 1, 1), 24);
   const nHx = Math.min(Math.max(parseInt(String(huecosPorCanal), 10) || 2, 2), 30);
   const pend = Math.min(Math.max(parseInt(String(pendientePct), 10) || 2, 1), 4);
   let dMm = parseInt(String(diamTuboMm), 10) || 25;
@@ -10540,9 +11113,18 @@ function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboM
   const caudalMinLH = Math.max(120, Math.round(Math.max(qTotalGeomMin, qTotalEmpMin, qTotalParaRec * 0.88)));
   const caudalRecLH = Math.max(caudalMinLH + 40, Math.round(Math.max(qTotalParaRec * 1.12, qTotalGeomRec * 1.08)));
 
-  const headBase = 0.42 + 0.055 * Math.min(nCh, 10);
+  const headBase = 0.42 + 0.055 * Math.min(nCh, 15);
   const friccTubo = dMm <= 16 ? 0.22 : dMm <= 20 ? 0.14 : dMm <= 25 ? 0.09 : 0.06;
-  const headMetros = Math.round((headBase + friccTubo) * 10) / 10;
+  let altCmUsed = 0;
+  let altM = 0;
+  if (alturaBombeoCm != null && Number.isFinite(Number(alturaBombeoCm))) {
+    const cmm = Math.round(Number(alturaBombeoCm));
+    if (cmm > 0) {
+      altCmUsed = Math.min(500, Math.max(0, cmm));
+      altM = altCmUsed / 100;
+    }
+  }
+  const headMetros = Math.round((headBase + friccTubo + altM) * 10) / 10;
 
   const Qm3h = caudalRecLH / 1000;
   const potEstW = Math.ceil((Qm3h * headMetros) / (0.367 * 0.32));
@@ -10571,6 +11153,9 @@ function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboM
     modeloRec = 'Bomba ~10–20 W, ' + caudalMinLH + '–' + (caudalRecLH + 120) + ' L/h, altura ≥ ' + headMetros + ' m.';
   } else {
     modeloRec = 'Bomba ≥ ' + potenciaRecW + ' W nominal, ' + caudalRecLH + '+ L/h @ ' + headMetros + ' m — revisar curva del fabricante (uso continuo).';
+  }
+  if (altM > 0) {
+    modeloRec += ' El head orientativo incluye la elevación indicada al 1.º canal (~' + altCmUsed + ' cm).';
   }
 
   const canalFormaLabel =
@@ -10603,6 +11188,8 @@ function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboM
     volMinDepositoSugeridoL,
     margenSeguridadL,
     volDepositoRecomendadoL,
+    alturaBombeoCm: altCmUsed,
+    alturaBombeoM: altM,
   };
 }
 
@@ -10673,11 +11260,85 @@ function refrescarDocTuberiaNftSetup() {
 
 function getNftBombaDesdeConfig(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'nft') return null;
-  const nCh = cfg.nftNumCanales || cfg.numNiveles || 4;
-  const hx = cfg.nftHuecosPorCanal || cfg.numCestas || 8;
+  const hyd = getNftHidraulicaDesdeConfig(cfg);
   const pend = cfg.nftPendientePct || 2;
   const dMm = cfg.nftTuboInteriorMm || 25;
-  return calcularBombaNftParam(nCh, hx, pend, dMm, nftCanalGeomDesdeConfig(cfg));
+  const altCm = getNftAlturaBombeoEfectivaCm(cfg);
+  return calcularBombaNftParam(hyd.nCh, hyd.nHx, pend, dMm, nftCanalGeomDesdeConfig(cfg), altCm);
+}
+
+/** Bloque &lt;details&gt; reutilizable: cifras y fórmulas solo bajo demanda. */
+function nftWrapDetalleTecnicoSummary(innerHtml, summaryLabel) {
+  const lab =
+    summaryLabel != null && String(summaryLabel).trim() !== ''
+      ? String(summaryLabel).trim()
+      : 'Ver detalle técnico y cifras';
+  return (
+    '<details style="margin-top:10px;border-radius:10px;border:1px solid #e2e8f0;background:#fafafa;overflow:hidden">' +
+    '<summary style="cursor:pointer;padding:10px 12px;font-size:11px;font-weight:700;color:#475569">' +
+    escHtmlUi(lab) +
+    '</summary>' +
+    '<div style="padding:0 12px 12px;font-size:10px;line-height:1.55;color:#334155">' +
+    innerHtml +
+    '</div></details>'
+  );
+}
+
+/** Desglose numérico (solo para uso dentro de &lt;details&gt;). */
+function nftBombaDetalleTecnicoHtml(b) {
+  if (!b) return '';
+  return (
+    '<p style="margin:0 0 8px">Se cruza geometría del canal (lámina y longitud) con reglas habituales de NFT y pérdidas en la línea de alimentación. <strong>No sustituye</strong> la curva <em>caudal–altura (Q–H)</em> del fabricante ni el manual de la bomba.</p>' +
+    '<ul style="margin:0;padding-left:1.2em">' +
+    '<li>Caudal orientativo mín.: <strong>' + b.caudalMinLH + ' L/h</strong> · recomendado: <strong>' + b.caudalRecLH + ' L/h</strong> (24 h, conjunto de canales)</li>' +
+    '<li>Altura manométrica estimada: <strong>' + b.headMetros + ' m</strong></li>' +
+    '<li>Potencia eléctrica orientativa: <strong>~' + b.potenciaRecW + ' W</strong></li>' +
+    '<li>Canal: ' + escHtmlUi(b.canalFormaLabel) + ' · lámina <strong>' + b.laminaMm + ' mm</strong> · sección flujo ≈ <strong>' + b.AflowMm2 + ' mm²</strong> · longitud <strong>' + b.longitudCanalM + ' m</strong></li>' +
+    '<li>Vol. película ~<strong>' + b.volPeliculaL + ' L</strong> · tubería alim. Ø<strong>' + b.dMm + ' mm</strong> ~<strong>' + b.volTuberiaL + ' L</strong> · circuito ~<strong>' + b.volCircuitoL + ' L</strong></li>' +
+    '<li>Comparación interna (L/h): geometría mín./rec. ' + b.qTotalGeomMinLh + ' / ' + b.qTotalGeomRecLh + ' · regla empírica rec. ~' + b.qTotalEmpiricoRecLh + '</li>' +
+    '</ul>' +
+    '<p style="margin:8px 0 0;font-size:10px;color:#64748b">' + escHtmlUi(b.modeloRec) + '</p>'
+  );
+}
+
+/** Veredicto depósito vs volumen (cifras solo en detalle). */
+function nftDepositoVeredictoBloqueHtml(b, volUsuarioL) {
+  if (!b) return '';
+  const minL = b.volMinDepositoSugeridoL;
+  const recL = b.volDepositoRecomendadoL != null ? b.volDepositoRecomendadoL : minL;
+  const vAct =
+    volUsuarioL != null && Number.isFinite(Number(volUsuarioL)) && Number(volUsuarioL) > 0
+      ? Math.round(Number(volUsuarioL))
+      : null;
+  let main = '';
+  if (vAct == null) {
+    main =
+      '<strong>Depósito:</strong> indica el volumen en <strong>Sistema</strong> para comprobar si cumple el margen orientativo.';
+  } else if (vAct < minL) {
+    main =
+      '<strong>Depósito:</strong> <span style="color:#b91c1c;font-weight:800">No cumple</span> el volumen útil mínimo orientativo para este circuito.';
+  } else if (vAct < recL) {
+    main =
+      '<strong>Depósito:</strong> <span style="color:#ca8a04;font-weight:800">Cumple el mínimo</span> · conviene más margen para uso real.';
+  } else {
+    main =
+      '<strong>Depósito:</strong> <span style="color:#15803d;font-weight:800">Cumple</span> con margen orientativo.';
+  }
+  const detInner =
+    '<p style="margin:0 0 6px">Volumen indicado: <strong>' +
+    (vAct != null ? vAct + ' L' : '—') +
+    '</strong> · Mín. útil orientativo: <strong>' +
+    minL +
+    ' L</strong> · Recomendado con margen: <strong>~' +
+    recL +
+    ' L</strong>.</p>' +
+    '<p style="margin:0;color:#64748b">Criterio: agua en tuberías + película + holgura para muestreos y pérdidas, en línea con recomendaciones de depósito en sistemas de recirculación continua.</p>';
+  return (
+    '<div style="line-height:1.5">' +
+    main +
+    '</div>' +
+    nftWrapDetalleTecnicoSummary(detInner, 'Cifras de depósito (litros)')
+  );
 }
 
 /** Una sola línea de resumen NFT para #depositoTitulo, diagrama y Consejos (config activa). */
@@ -10686,23 +11347,34 @@ function nftTextoResumenInstalacion(cfg) {
   if (cfg.tipoInstalacion !== 'nft') return '';
   const t = getTorreActiva();
   const nombre = ((t?.nombre || '').trim() || 'Instalación');
-  const ch = cfg.nftNumCanales ?? cfg.numNiveles ?? 4;
-  const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
+  const hyd = getNftHidraulicaDesdeConfig(cfg);
+  const ch = hyd.nCh;
+  const hx = hyd.nHx;
   const vol = cfg.volDeposito > 0 ? cfg.volDeposito : VOL_OBJETIVO;
   const pend = cfg.nftPendientePct ?? 2;
   const tubo = cfg.nftTuboInteriorMm || 25;
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  const dispTxt = disp === 'escalera' ? 'escalera' : disp === 'pared' ? 'pared' : 'mesa';
+  const altEff = getNftAlturaBombeoEfectivaCm(cfg);
   const b = getNftBombaDesdeConfig(cfg);
-  let s = nombre + ' — ' + ch + ' canales × ' + hx + ' huecos — ' + vol + ' L · pend. ~' + pend + '%';
+  let extraDisp = '';
+  if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
+    extraDisp = ' multinivel ' + hyd.mesaTiers.join('+');
+  }
+  if (disp === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraCaras != null) {
+    extraDisp += ' · ' + hyd.escaleraNiveles + '×' + hyd.escaleraCaras + ' cara(s)';
+  }
+  let s = nombre + ' — ' + ch + ' tubos × ' + hx + ' huecos — ' + vol + ' L · ' + dispTxt + extraDisp + ' · pend. ~' + pend + '%';
+  if (altEff > 0) s += ' · ↑~' + altEff + ' cm';
   if (b) {
-    s +=
-      ' · Ø' + tubo + ' mm · ~' + b.caudalRecLH + ' L/h · ~' + b.potenciaRecW + ' W · ' +
-      b.canalFormaLabel + ', lámina ' + b.laminaMm + ' mm';
+    s += ' · alim. Ø' + tubo + ' mm · bomba/depósito: ver checklist o asistente';
   }
   return s;
 }
 
 /**
- * Compara caudal/potencia declarados por el usuario con el cálculo orientativo NFT.
+ * Compara caudal/potencia declarados por el usuario con el criterio orientativo NFT.
+ * La respuesta visible es un veredicto; las cifras van en &lt;details&gt;.
  * @returns {{ tipo: 'omitido'|'ok'|'marginal'|'error'|'potencia_baja', html: string, toast?: string }}
  */
 function validarBombaUsuarioNftVsCalculo(b, caudalRaw, potenciaRaw) {
@@ -10712,21 +11384,28 @@ function validarBombaUsuarioNftVsCalculo(b, caudalRaw, potenciaRaw) {
   const caudal = parseFloat(String(caudalRaw != null ? caudalRaw : '').replace(',', '.'));
   const potW = parseFloat(String(potenciaRaw != null ? potenciaRaw : '').replace(',', '.'));
   const hint =
-    '<span style="color:#64748b;font-weight:500">Introduce el caudal nominal de la placa (L/h) para comprobar si cubre el mínimo y el recomendado de <strong>tu</strong> configuración.</span>';
+    '<span style="color:#64748b;font-size:11px;line-height:1.45">Escribe el <strong>caudal nominal de la placa</strong> (L/h) para saber si <strong>cumple</strong> los parámetros orientativos de tu instalación.</span>';
   if (!Number.isFinite(caudal) || caudal <= 0) {
     return { tipo: 'omitido', html: hint, toast: null };
   }
   const q = Math.round(caudal);
+  const detalleCaudal =
+    '<p style="margin:0 0 6px">Caudal declarado: <strong>' +
+    q +
+    ' L/h</strong> · Mín. orientativo: <strong>' +
+    b.caudalMinLH +
+    ' L/h</strong> · Recomendado: <strong>' +
+    b.caudalRecLH +
+    ' L/h</strong>.</p>' +
+    '<p style="margin:0;color:#64748b">Si el caudal es bajo, suele notarse primero al <strong>inicio</strong> de los canales (película cortada). Confirma siempre con la curva Q–H del fabricante a la altura de tu montaje.</p>';
   if (q < b.caudalMinLH) {
     return {
       tipo: 'error',
       html:
-        '<span style="color:#b91c1c;font-weight:800">No válida para esta NFT:</span> ' +
-        q +
-        ' L/h está por debajo del mínimo orientativo (' +
-        b.caudalMinLH +
-        ' L/h). Riesgo alto de película discontinua o canales secos. Sustituye la bomba o reduce canales/huecos.',
-      toast: 'Bomba NFT: caudal insuficiente para esta configuración (comprueba L/h en la placa).',
+        '<div style="font-size:13px;font-weight:800;color:#b91c1c;margin-bottom:6px">Bomba: no cumple</div>' +
+        '<div style="font-size:11px;line-height:1.45;color:#334155;margin-bottom:4px">El caudal declarado es <strong>insuficiente</strong> para mantener la película en todos los canales con margen. Conviene otra bomba o menos líneas/huecos.</div>' +
+        nftWrapDetalleTecnicoSummary(detalleCaudal + nftBombaDetalleTecnicoHtml(b)),
+      toast: 'Bomba NFT: caudal insuficiente para esta configuración (revisa la placa y la curva Q–H).',
     };
   }
   let html = '';
@@ -10734,35 +11413,29 @@ function validarBombaUsuarioNftVsCalculo(b, caudalRaw, potenciaRaw) {
   if (q < b.caudalRecLH) {
     tipo = 'marginal';
     html =
-      '<span style="color:#c2410c;font-weight:800">Válida al límite:</span> ' +
-      q +
-      ' L/h supera el mínimo (' +
-      b.caudalMinLH +
-      ' L/h) pero está por debajo del recomendado (' +
-      b.caudalRecLH +
-      ' L/h). Vigila el inicio de cada canal y la pendiente; si ves tramos secos, sube caudal o cambia bomba.';
+      '<div style="font-size:13px;font-weight:800;color:#c2410c;margin-bottom:6px">Bomba: cumple al límite</div>' +
+      '<div style="font-size:11px;line-height:1.45;color:#334155;margin-bottom:4px">Supera el mínimo orientativo pero <strong>sin margen</strong>. Vigila inicios de canal y pendiente; si seca, sube caudal o cambia bomba.</div>' +
+      nftWrapDetalleTecnicoSummary(detalleCaudal + nftBombaDetalleTecnicoHtml(b));
   } else {
     html =
-      '<span style="color:#15803d;font-weight:800">Válida:</span> ' +
-      q +
-      ' L/h ≥ caudal recomendado (' +
-      b.caudalRecLH +
-      ' L/h) para película estable en continuo (24 h).';
+      '<div style="font-size:13px;font-weight:800;color:#15803d;margin-bottom:6px">Bomba: cumple</div>' +
+      '<div style="font-size:11px;line-height:1.45;color:#334155;margin-bottom:4px">El caudal declarado encaja con el <strong>margen orientativo</strong> para circulación continua (24 h), según los datos de tu sistema.</div>' +
+      nftWrapDetalleTecnicoSummary(detalleCaudal + nftBombaDetalleTecnicoHtml(b));
   }
   if (Number.isFinite(potW) && potW > 0 && potW < Math.max(4, Math.round(b.potenciaRecW * 0.52))) {
     tipo = tipo === 'ok' ? 'potencia_baja' : tipo;
     html +=
-      '<br><span style="color:#b45309;font-weight:700">Aviso potencia:</span> ' +
-      Math.round(potW) +
-      ' W es bajo frente a ~' +
-      b.potenciaRecW +
-      ' W estimados; confirma en el manual que a <strong>' +
-      b.headMetros +
-      ' m</strong> de altura manométrica la bomba entrega al menos ' +
-      b.caudalMinLH +
-      '–' +
-      b.caudalRecLH +
-      ' L/h (curva Q–H).';
+      '<div style="margin-top:10px;padding:10px;border-radius:8px;background:#fffbeb;border:1px solid #fcd34d;font-size:11px;line-height:1.45;color:#92400e">' +
+      '<strong>Potencia:</strong> el valor declarado es <strong>bajo</strong> frente al orden de magnitud orientativo. Revisa en la <strong>ficha del fabricante</strong> (curva Q–H) el caudal real a la altura de tu instalación.</div>' +
+      nftWrapDetalleTecnicoSummary(
+        '<p>Potencia declarada: <strong>' +
+          Math.round(potW) +
+          ' W</strong> · Orientativo ~<strong>' +
+          b.potenciaRecW +
+          ' W</strong> · Altura manométrica estimada <strong>' +
+          b.headMetros +
+          ' m</strong>.</p>'
+      ).replace('Ver detalle técnico y cifras', 'Ver cifras de potencia / altura');
   }
   return { tipo, html, toast: null };
 }
@@ -10775,10 +11448,7 @@ function refrescarUIMensajeBombaUsuarioNft(mode) {
   let lhRaw = '';
   let wRaw = '';
   if (mode === 'setup') {
-    const canales = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
-    const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
-    const pend = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
-    b = calcularBombaNftParam(canales, huecos, pend, setupNftTuboMm, readNftCanalGeomFromSetupUi());
+    b = getNftBombaDesdeConfig(buildNftDraftConfigFromSetupUi());
     lhRaw = document.getElementById('nftBombaUsuarioLh')?.value ?? '';
     wRaw = document.getElementById('nftBombaUsuarioW')?.value ?? '';
   } else {
@@ -10790,10 +11460,11 @@ function refrescarUIMensajeBombaUsuarioNft(mode) {
   el.innerHTML = v.html || '';
   if (mode === 'checklist') {
     try { refrescarNftDepositoRecomendadoChecklistUI(); } catch (e) {}
+    try { refrescarNftLayoutResumenChecklist(); } catch (e) {}
   }
 }
 
-/** Bloque checklist / recarga NFT: volumen depósito mínimo vs recomendado (margen seguridad). */
+/** Bloque checklist / recarga NFT: veredicto depósito (cifras en detalle). */
 function refrescarNftDepositoRecomendadoChecklistUI() {
   const wrap = document.getElementById('clNftDepositoRecomendadoWrap');
   if (!wrap) return;
@@ -10809,37 +11480,11 @@ function refrescarNftDepositoRecomendadoChecklistUI() {
     return;
   }
   wrap.style.display = 'block';
-  const minL = b.volMinDepositoSugeridoL;
-  const recL = b.volDepositoRecomendadoL != null ? b.volDepositoRecomendadoL : minL;
-  const mar = b.margenSeguridadL != null ? b.margenSeguridadL : '—';
   const vCfg = parseFloat(String(state.configTorre.volDeposito ?? '').replace(',', '.'));
   const vAct = Number.isFinite(vCfg) && vCfg > 0 ? Math.round(vCfg) : null;
-  let badge = '';
-  if (vAct != null) {
-    if (vAct < minL) {
-      badge =
-        '<div style="margin-top:8px;font-size:10px;font-weight:800;color:#b91c1c;line-height:1.45">Tu depósito guardado (' + vAct +
-        ' L) está por debajo del <strong>mínimo útil</strong> (≥ ' + minL + ' L).</div>';
-    } else if (vAct < recL) {
-      badge =
-        '<div style="margin-top:8px;font-size:10px;font-weight:800;color:#c2410c;line-height:1.45">Tu depósito (' + vAct +
-        ' L) llena el circuito pero queda bajo el <strong>recomendado con margen</strong> (~' + recL + ' L).</div>';
-    } else {
-      badge =
-        '<div style="margin-top:8px;font-size:10px;font-weight:800;color:#15803d;line-height:1.45">Capacidad guardada (' + vAct + ' L) encaja con el margen sugerido.</div>';
-    }
-  } else {
-    badge =
-      '<div style="margin-top:8px;font-size:10px;color:#64748b;line-height:1.45">Indica el volumen del depósito en <strong>Sistema</strong> para cotejar con estos valores.</div>';
-  }
   wrap.innerHTML =
-    '<div style="font-size:11px;font-weight:800;color:#1e40af;margin-bottom:6px">💧 Depósito — orientación (tú eliges la capacidad real)</div>' +
-    '<div style="font-size:10px;line-height:1.55;color:#334155">' +
-    '<strong>Mínimo útil</strong> (circuito + holgura): <strong>≥ ' + minL + ' L</strong><br>' +
-    '<strong>Recomendado</strong> (margen seguridad +' + mar + ' L): <strong>~' + recL + ' L</strong> · coherente con lámina y bomba · tope orientativo app 100 L<br>' +
-    'Ajusta el volumen en <strong>Sistema</strong> o en el asistente si reconfiguras.' +
-    '</div>' +
-    badge;
+    '<div style="font-size:11px;font-weight:800;color:#1e40af;margin-bottom:8px">💧 Depósito — ¿cumple el margen orientativo?</div>' +
+    nftDepositoVeredictoBloqueHtml(b, vAct);
 }
 
 function onNftBombaUsuarioSetupInput() {
@@ -10849,10 +11494,8 @@ function onNftBombaUsuarioSetupInput() {
 let _nftBombaBlurToastKey = '';
 function onNftBombaUsuarioSetupBlur() {
   refrescarUIMensajeBombaUsuarioNft('setup');
-  const canales = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
-  const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
-  const pend = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
-  const b = calcularBombaNftParam(canales, huecos, pend, setupNftTuboMm, readNftCanalGeomFromSetupUi());
+  const b = getNftBombaDesdeConfig(buildNftDraftConfigFromSetupUi());
+  if (!b) return;
   const lhRaw = document.getElementById('nftBombaUsuarioLh')?.value ?? '';
   const wRaw = document.getElementById('nftBombaUsuarioW')?.value ?? '';
   const v = validarBombaUsuarioNftVsCalculo(b, lhRaw, wRaw);
@@ -10886,22 +11529,50 @@ function persistNftBombaUsuarioDesdeChecklist() {
   saveState();
 }
 
+function refrescarNftLayoutResumenChecklist() {
+  const el = document.getElementById('clNftLayoutResumen');
+  if (!el || !state.configTorre || state.configTorre.tipoInstalacion !== 'nft') return;
+  const cfg = state.configTorre;
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  const hyd = getNftHidraulicaDesdeConfig(cfg);
+  const altEff = getNftAlturaBombeoEfectivaCm(cfg);
+  const lines = [];
+  let monte = 'Mesa';
+  if (disp === 'pared') monte = 'Pared (tubos horizontales en zigzag)';
+  else if (disp === 'escalera') monte = 'Escalera / inclinado';
+  lines.push('<strong>Montaje</strong>: ' + monte);
+  if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
+    lines.push('Multinivel: <strong>' + hyd.mesaTiers.join('+') + '</strong> tubos por franja · ' + hyd.mesaTiers.length + ' niveles');
+  }
+  if (disp === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraCaras != null) {
+    lines.push('Peldaños/cara: <strong>' + hyd.escaleraNiveles + '</strong> · Caras: <strong>' + hyd.escaleraCaras + '</strong>');
+  }
+  lines.push('Tubos de tu instalación: <strong>' + hyd.nCh + '</strong> × <strong>' + hyd.nHx + '</strong> huecos/tubo');
+  if (altEff > 0) lines.push('Altura de bombeo al 1.º tubo: <strong>~' + altEff + ' cm</strong> (entra en el criterio de carga de la bomba).');
+  else if (disp === 'pared' || disp === 'escalera') {
+    lines.push(
+      '<span style="color:#b91c1c;font-weight:800">Indica la altura de bombeo (cm) en Sistema o asistente para un criterio más fiable.</span>'
+    );
+  }
+  el.innerHTML = lines.join('<br>');
+}
+
 function actualizarMensajeNftCanalChecklist() {
   if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') return;
   const b = getNftBombaDesdeConfig(state.configTorre);
   const msg = document.getElementById('clNftGeomRecalcMsg');
   if (msg && b) {
     msg.innerHTML =
-      '<strong>Resumen hidráulico</strong> · ' + escHtmlUi(b.canalFormaLabel) + ' · lámina <strong>' + b.laminaMm + ' mm</strong> · sección ~<strong>' + b.AflowMm2 + ' mm²</strong> · long. <strong>' + b.longitudCanalM + ' m</strong><br>' +
-      '<strong>Volumen película</strong> ~' + b.volPeliculaL + ' L · caudal por geometría ~<strong>' + b.qTotalGeomRecLh + '</strong> L/h (recom.) / ~' + b.qTotalGeomMinLh + ' L/h (mín.) · empírico ~' + b.qTotalEmpiricoRecLh + ' L/h.<br>' +
-      'Rango bomba en esta app: mín. <strong>' + b.caudalMinLH + '</strong> · recom. <strong>' + b.caudalRecLH + ' L/h</strong> (24 h).';
+      '<span style="font-size:11px;line-height:1.5;color:#0f766e">Los datos del canal sirven para un <strong>criterio orientativo</strong> alineado con guías NFT habituales (película fina, 24 h). El resultado <strong>cumple / no cumple</strong> lo ves en depósito y bomba; aquí solo el desglose opcional.</span>' +
+      nftWrapDetalleTecnicoSummary(nftBombaDetalleTecnicoHtml(b));
   }
   const n0h = document.getElementById('clNftN0GeomHint');
   if (n0h && b) {
     n0h.innerHTML =
-      '📊 Con el canal actual: V circuito ~' + b.volCircuitoL + ' L · película ~' + b.volPeliculaL + ' L · caudal geom. ~' + b.qTotalGeomRecLh + ' L/h — comprueba tu bomba abajo.';
+      'Anota el caudal de la <strong>placa</strong> de tu bomba: verás si <strong>cumple</strong> el criterio orientativo. La decisión final es siempre la <strong>curva Q–H del fabricante</strong>.';
   }
   try { refrescarNftDepositoRecomendadoChecklistUI(); } catch (e) {}
+  try { refrescarNftLayoutResumenChecklist(); } catch (e) {}
 }
 
 let _debounceNftCanalCl = 0;
@@ -10956,7 +11627,7 @@ function seleccionarTuboNft(mm) {
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
 }
 
-function pintarResultadoBombaNftUI(b) {
+function pintarResultadoBombaNftUI(b, volUsuarioL) {
   const el = document.getElementById('resultadoBombaNft');
   if (!el) return;
   if (!b) {
@@ -10964,48 +11635,719 @@ function pintarResultadoBombaNftUI(b) {
     el.innerHTML = '';
     return;
   }
+  const vol =
+    volUsuarioL != null && Number.isFinite(Number(volUsuarioL))
+      ? Math.round(Number(volUsuarioL))
+      : parseInt(document.getElementById('sliderVol')?.value || 20, 10);
   el.style.display = 'block';
+  const altTxt =
+    b.alturaBombeoCm > 0
+      ? 'La altura indicada al 1.º canal entra en el criterio de carga de la bomba (junto a pérdidas típicas de la línea de alimentación).'
+      : 'Si el agua sube mucho hasta el primer canal, indica esa altura para afinar el criterio; si no, el fabricante sigue mandando con la curva Q–H.';
   el.innerHTML =
-    '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#0f766e;margin-bottom:6px">⚡ Bomba NFT (circulación 24 h)</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px">' +
-    '<div style="background:#ecfdf5;border-radius:8px;padding:6px;text-align:center;border:1px solid #a7f3d0">' +
-    '<div style="font-size:9px;color:#047857;font-weight:700">Caudal mín.</div>' +
-    '<div style="font-size:15px;font-weight:900;color:#065f46">' + b.caudalMinLH + ' L/h</div></div>' +
-    '<div style="background:#ecfdf5;border-radius:8px;padding:6px;text-align:center;border:1px solid #a7f3d0">' +
-    '<div style="font-size:9px;color:#047857;font-weight:700">Recomendado</div>' +
-    '<div style="font-size:15px;font-weight:900;color:#065f46">' + b.caudalRecLH + ' L/h</div></div>' +
-    '<div style="background:#fff;border-radius:8px;padding:6px;text-align:center;border:1px solid #e5e7eb">' +
-    '<div style="font-size:9px;color:#64748b;font-weight:700">Head ≈</div>' +
-    '<div style="font-size:14px;font-weight:900;color:#0f172a">' + b.headMetros + ' m</div></div>' +
-    '<div style="background:#fff;border-radius:8px;padding:6px;text-align:center;border:1px solid #e5e7eb">' +
-    '<div style="font-size:9px;color:#64748b;font-weight:700">Potencia ≈</div>' +
-    '<div style="font-size:14px;font-weight:900;color:#b45309">' + b.potenciaRecW + ' W</div></div></div>' +
-    '<div style="font-size:10px;color:#374151;line-height:1.45;background:#f8fafc;border-radius:8px;padding:8px">' +
-    '<strong>Canal</strong> ' + escHtmlUi(b.canalFormaLabel || '') +
-    ' · lámina <strong>' + (b.laminaMm != null ? b.laminaMm : '—') + ' mm</strong>' +
-    ' · sección flujo ≈ <strong>' + (b.AflowMm2 != null ? b.AflowMm2 : '—') + ' mm²</strong>' +
-    ' · long. <strong>' + (b.longitudCanalM != null ? b.longitudCanalM : '—') + ' m</strong>' +
-    '<br><strong>Volumen película</strong> ~' + (b.volPeliculaL != null ? b.volPeliculaL : '—') + ' L · <strong>tubería alim.</strong> ~' +
-    (b.volTuberiaL != null ? b.volTuberiaL : '—') + ' L (Ø' + b.dMm + ' mm)' +
-    '<br><strong>Volumen circuito</strong> ~' + b.volCircuitoL + ' L · <strong>Depósito útil mín.</strong> ≥ ' + b.volMinDepositoSugeridoL + ' L' +
-    (b.volDepositoRecomendadoL != null
-      ? ' · <strong>Recomendado (margen seguridad)</strong> ~<strong>' + b.volDepositoRecomendadoL + ' L</strong> (+' +
-        (b.margenSeguridadL != null ? b.margenSeguridadL : '—') +
-        ' L margen)'
-      : '') +
-    '</div>' +
-    '<div style="margin-top:8px;padding:9px;border-radius:10px;background:#eff6ff;border:1px solid #93c5fd;font-size:10px;line-height:1.5;color:#1e3a5f">' +
-    '<strong>💧 Capacidad del depósito</strong> · Ajusta el <strong>volumen</strong> en este asistente (deslizador) o después en <strong>Sistema</strong>. ' +
-    'Usa al menos el <strong>mínimo útil</strong> para llenar tubería + película; el valor <strong>recomendado</strong> añade margen para uso real (muestreos, pérdidas, estabilidad). ' +
-    (b.volDepositoRecomendadoL != null
-      ? 'Orientativo: <strong>' + b.volDepositoRecomendadoL + ' L</strong> si tu recipiente lo permite (tope app 100 L).'
-      : '') +
-    '</div>' +
-    '<div style="font-size:9px;color:#475569;margin-top:6px;line-height:1.4">Caudal: orientativo por geometría ~' +
-    (b.qTotalGeomRecLh != null ? b.qTotalGeomRecLh : '—') + ' L/h (recom.) / ~' +
-    (b.qTotalGeomMinLh != null ? b.qTotalGeomMinLh : '—') + ' L/h (mín.)' +
-    ' · empírico ~' + (b.qTotalEmpiricoRecLh != null ? b.qTotalEmpiricoRecLh : '—') + ' L/h. La app usa el <strong>mayor</strong> de ambos en el rango mostrado.</div>' +
-    '<div style="font-size:10px;color:#475569;margin-top:6px;line-height:1.4">💡 ' + escHtmlUi(b.modeloRec) + '</div>';
+    '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#0f766e;margin-bottom:8px">⚡ Bomba y depósito (NFT · 24 h)</div>' +
+    '<div style="padding:12px;border-radius:12px;background:#ecfdf5;border:1.5px solid #6ee7b7;margin-bottom:10px">' +
+    '<div style="font-size:12px;font-weight:800;color:#065f46;margin-bottom:6px">Configuración coherente</div>' +
+    '<div style="font-size:11px;line-height:1.5;color:#14532d">Con los datos del asistente, los requisitos encajan con <strong>instalaciones NFT domésticas habituales</strong> (película fina, recirculación continua). ' +
+    'Al elegir bomba, prioriza la <strong>curva Q–H del fabricante</strong> a la altura real de tu montaje.</div>' +
+    '<div style="font-size:10px;line-height:1.45;color:#166534;margin-top:8px">' +
+    altTxt +
+    '</div></div>' +
+    nftDepositoVeredictoBloqueHtml(b, vol) +
+    nftWrapDetalleTecnicoSummary(nftBombaDetalleTecnicoHtml(b)) +
+    '<p style="font-size:10px;color:#64748b;margin:10px 0 0;line-height:1.45">Abajo puedes anotar el caudal de la <strong>placa</strong> de tu bomba: la app te dirá si <strong>cumple</strong> o no ese criterio orientativo.</p>';
+}
+
+/** Texto unificado al pie de los SVG NFT (sin forma de canal ni lámina). */
+var NFT_SVG_FOOT_ORIENT_HINT = ' · Orientativo · ver panel / checklist';
+
+/**
+ * NFT mesa multinivel: franjas con distinto número de tubos; flujo en serpentín entre franjas.
+ */
+function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
+  const EO = equipOpts || {};
+  const interactive = EO.interactive === true;
+  const showCalentador = EO.calentador === true;
+  const showDifusor = EO.difusor === true;
+  const bomb = EO.bombaInfo || null;
+  const userQ = EO.userCaudalLh != null && EO.userCaudalLh > 0 ? Math.round(EO.userCaudalLh) : null;
+  const userW = EO.userPotenciaW != null && EO.userPotenciaW > 0 ? Math.round(EO.userPotenciaW) : null;
+  const altCmLbl =
+    EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0 ? Math.round(Number(EO.nftAlturaBombeoCm)) : null;
+
+  const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
+    ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
+    : '';
+  const gidCh = 'nftMMCh' + suf;
+  const gidTank = 'nftMMTk' + suf;
+  const gidAqua = 'nftMMAq' + suf;
+  const tid = 'nftMMTitle' + suf;
+
+  const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
+  const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
+  const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
+
+  const W = 400;
+  const topPad = 38;
+  const botTank = 130;
+  const tierRowH = 44;
+  const nTiers = tiers.length;
+  const H = topPad + nTiers * tierRowH + botTank;
+  const cx = W / 2;
+  const xL = 52;
+  const xR = W - 52;
+  const tubeH = 22;
+  const padFlow = 10;
+  const tankY = H - botTank + 4;
+  const tankH = 82;
+  const tankW = Math.min(320, Math.round(140 + vol * 0.65));
+  const tx = (W - tankW) / 2;
+  const waterTop = tankY + 8;
+  const waterH = tankH - 20;
+  const xRiser = Math.max(26, Math.min(tx + 28, xL - 10));
+  const yPump = waterTop + Math.min(18, waterH * 0.45);
+  const gapT = 7;
+  const rowInner = xR - xL - 2 * padFlow;
+  const geoms = [];
+  let gIdx = 0;
+  for (let t = 0; t < nTiers; t++) {
+    const nt = tiers[t];
+    const rowY = topPad + t * tierRowH + tierRowH / 2;
+    const tubeW = nt <= 0 ? rowInner : (rowInner - (nt - 1) * gapT) / nt;
+    const order = t % 2 === 0 ? [...Array(nt).keys()] : [...Array(nt).keys()].reverse();
+    for (const layoutK of order) {
+      const xTubeL = xL + padFlow + layoutK * (tubeW + gapT);
+      geoms.push({
+        g: gIdx++,
+        t,
+        rowY,
+        xL: xTubeL,
+        xR: xTubeL + tubeW,
+        l2r: t % 2 === 0,
+      });
+    }
+  }
+
+  const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
+  const flowSt = 'stroke="#2563eb" fill="none" ' + flowDash;
+  let flowD = 'M ' + xRiser + ' ' + yPump;
+  for (let i = 0; i < geoms.length; i++) {
+    const G = geoms[i];
+    const y = G.rowY;
+    const xS = G.l2r ? G.xL + padFlow : G.xR - padFlow;
+    const xE = G.l2r ? G.xR - padFlow : G.xL + padFlow;
+    if (i === 0) {
+      flowD += ' L ' + xRiser + ' ' + y;
+      flowD += ' L ' + xS + ' ' + y;
+    } else {
+      const P = geoms[i - 1];
+      const yP = P.rowY;
+      const xEP = P.l2r ? P.xR - padFlow : P.xL + padFlow;
+      flowD += ' L ' + xEP + ' ' + yP;
+      if (Math.abs(y - yP) > 0.5) flowD += ' L ' + xEP + ' ' + y;
+      flowD += ' L ' + xS + ' ' + y;
+    }
+    flowD += ' L ' + xE + ' ' + y;
+  }
+  const Glast = geoms[geoms.length - 1];
+  const yLast = Glast.rowY;
+  const xLastE = Glast.l2r ? Glast.xR - padFlow : Glast.xL + padFlow;
+  flowD += ' L ' + xLastE + ' ' + yLast;
+  if (Glast.l2r) {
+    flowD += ' Q ' + (xR + 8) + ' ' + (yLast + 28) + ', ' + (tx + tankW - 18) + ' ' + (tankY + 6);
+  } else {
+    flowD += ' Q ' + (xL - 8) + ' ' + (yLast + 28) + ', ' + (tx + 18) + ' ' + (tankY + 6);
+  }
+  flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
+  flowD += ' L ' + xRiser + ' ' + (tankY + 14);
+  flowD += ' L ' + xRiser + ' ' + yPump;
+
+  let back =
+    '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
+
+  let channels = '';
+  for (let t = 0; t < nTiers; t++) {
+    const nt = tiers[t];
+    const rowY = topPad + t * tierRowH + tierRowH / 2;
+    const tubeW = (rowInner - (nt - 1) * gapT) / nt;
+    const peNone = interactive ? ' pointer-events="none"' : '';
+    for (let layoutK = 0; layoutK < nt; layoutK++) {
+      const xTubeL = xL + padFlow + layoutK * (tubeW + gapT);
+      const yc = rowY - tubeH / 2;
+      channels +=
+        '<rect x="' +
+        xTubeL +
+        '" y="' +
+        yc +
+        '" width="' +
+        tubeW +
+        '" height="' +
+        tubeH +
+        '" rx="9" fill="url(#' +
+        gidCh +
+        ')" stroke="#0369a1" stroke-width="1.3"' +
+        peNone +
+        '/>';
+    }
+  }
+
+  const nftFlowAnim = torreSvgAnimacionesActivas();
+  let flowLayer =
+    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
+    (nftFlowAnim
+      ? '><animate attributeName="stroke-dashoffset" from="0" to="-13" dur="2.2s" repeatCount="indefinite" calcMode="linear"/></path>'
+      : '/>');
+  const yTopRung = geoms.length ? geoms[0].rowY : topPad;
+  flowLayer +=
+    '<text x="' + (xRiser - 3) + '" y="' + (yTopRung - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+  if (altCmLbl != null) {
+    flowLayer +=
+      '<text x="' + (W - 10) + '" y="' + (topPad + 6) + '" text-anchor="end" font-size="7.5" font-weight="700" fill="#64748b">↑ ~' + altCmLbl + ' cm</text>';
+  }
+
+  const hr = Math.max(3.5, Math.min(8, ((xR - xL - 24) / Math.max(huecosN, 2)) * 0.35));
+  let plants = '';
+  for (let gi = 0; gi < geoms.length; gi++) {
+    const G = geoms[gi];
+    const y = G.rowY;
+    const rtl = !G.l2r;
+    let maxDias = null;
+    for (let j = 0; j < huecosN; j++) {
+      const dat = interactive && state.torre[G.g] && state.torre[G.g][j] ? state.torre[G.g][j] : null;
+      if (dat && dat.fecha && cestaTieneFechaValida(dat.fecha)) {
+        const d = Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000));
+        maxDias = maxDias === null ? d : Math.max(maxDias, d);
+      }
+    }
+    const showDias = maxDias !== null;
+    for (let j = 0; j < huecosN; j++) {
+      const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
+      const span = G.xR - G.xL - 2 * padFlow;
+      const gx = rtl ? G.xR - padFlow - t * span : G.xL + padFlow + t * span;
+      const numShow = j + 1;
+      let dat = { variedad: '', fecha: '' };
+      if (interactive && state.torre[G.g] && state.torre[G.g][j]) dat = state.torre[G.g][j];
+      const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
+      const col = interactive ? torreListaColorCesta(G.g, j) : { bg: '#f8fafc', border: '#94a3b8' };
+      const multiKey = G.g + ',' + j;
+      const isMulti = interactive && torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
+      const isEd =
+        interactive &&
+        typeof editingCesta !== 'undefined' &&
+        editingCesta &&
+        editingCesta.nivel === G.g &&
+        editingCesta.cesta === j;
+      const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+      let ariaTxt = 'Canal T' + (G.g + 1) + ', hueco ' + (j + 1) + ', ' + (dat.variedad ? cultivoNombreLista(cult, dat.variedad) : 'vacío');
+      if (dias !== null) ariaTxt += ', día ' + dias;
+      ariaTxt += '. Pulsa para ficha o asignar cultivo.';
+      const em = cultivoEmoji(cult);
+      if (interactive) {
+        plants +=
+          '<g class="hc-cesta hc-nft-hueco" data-n="' + G.g + '" data-c="' + j + '" role="button" tabindex="0" aria-label="' +
+          escAriaAttr(ariaTxt) +
+          '">';
+      }
+      plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="1.1"/>';
+      if (isMulti) {
+        plants +=
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2"/>';
+      }
+      if (isEd) {
+        plants +=
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
+      }
+      if (dat.variedad) {
+        plants +=
+          '<text x="' + gx.toFixed(2) + '" y="' + (y - hr - 3) + '" text-anchor="middle" font-size="11" dominant-baseline="middle">' + em + '</text>';
+      }
+      plants +=
+        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="8" font-weight="800" fill="#1e293b">' + numShow + '</text>';
+      if (interactive) {
+        plants +=
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + Math.max(hr * 2.4, 11).toFixed(2) + '" fill="rgba(0,0,0,0.001)" pointer-events="all"/>';
+        plants += '</g>';
+      }
+    }
+    if (showDias) {
+      const lx = rtl ? G.xL + 4 : G.xR - 4;
+      const anc = rtl ? 'start' : 'end';
+      plants +=
+        '<text x="' + lx + '" y="' + (y + tubeH / 2 + 12) + '" text-anchor="' + anc + '" font-size="9" font-weight="800" fill="#b91c1c">✂ ' + maxDias + 'd</text>';
+    }
+  }
+
+  let tankLayer = '';
+  tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
+  tankLayer += '<rect x="' + (tx + 5) + '" y="' + waterTop + '" width="' + (tankW - 10) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  const volTextY = tankY + Math.floor(tankH / 2) + 5;
+  tankLayer +=
+    '<text x="' + cx + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="system-ui,sans-serif">' +
+    vol +
+    ' L</text>';
+  if (showCalentador) {
+    const hx = tx + 18;
+    tankLayer +=
+      '<rect x="' + (hx - 5) + '" y="' + (tankY + tankH - 36) + '" width="10" height="30" rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.2"/>';
+    tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="#fbbf24"/>';
+    tankLayer +=
+      '<text x="' + hx + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff7ed">CAL</text>';
+  }
+  if (showDifusor) {
+    const ax = tx + tankW - 18;
+    const ay = tankY + tankH - 16;
+    tankLayer +=
+      '<line x1="' + ax + '" y1="' + (tankY - 2) + '" x2="' + ax + '" y2="' + (ay - 12) + '" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
+    tankLayer +=
+      '<ellipse cx="' + ax + '" cy="' + ay + '" rx="13" ry="7" fill="#94a3b8" stroke="#64748b" stroke-width="1.2"/>';
+    for (let bi = 0; bi < 5; bi++) {
+      const bx = ax + (bi % 3 - 1) * 4;
+      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="#bfdbfe" opacity="0.9"/>';
+    }
+    tankLayer +=
+      '<text x="' + ax + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#f0f9ff">AIR</text>';
+  }
+
+  let pumpYNext = tankY + tankH + 10;
+  let pumpLines = '';
+  if (bomb) {
+    pumpLines +=
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Circulación 24 h · criterio en panel</text>';
+    pumpYNext += 12;
+  }
+  if (userQ != null || userW != null) {
+    pumpLines +=
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">Placa anotada · ver veredicto en checklist</text>';
+  }
+
+  if (interactive) {
+    back = '<g pointer-events="none">' + back + '</g>';
+    channels = '<g pointer-events="none">' + channels + '</g>';
+    flowLayer = '<g pointer-events="none">' + flowLayer + '</g>';
+    tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
+  }
+
+  const nTot = geoms.length;
+  let foot =
+    'NFT mesa multinivel · ' + tiers.join('+') + ' tubos · ' + nTot + ' total · ' + huecosN + ' huecos/tubo · ' + pend + '% pend.' +
+    NFT_SVG_FOOT_ORIENT_HINT;
+
+  return (
+    '<svg class="torre-svg-diagram nft-mesa-mm-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    W +
+    ' ' +
+    H +
+    '" width="100%" style="max-height:min(78vh,720px);height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    tid +
+    '">' +
+    '<title id="' +
+    tid +
+    '">NFT mesa multinivel: varios niveles con distinto número de tubos y recorrido del agua</title>' +
+    '<defs>' +
+    '<linearGradient id="' +
+    gidCh +
+    '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>' +
+    '<linearGradient id="' +
+    gidTank +
+    '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+    '<linearGradient id="' +
+    gidAqua +
+    '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
+    '</defs>' +
+    '<text x="' +
+    cx +
+    '" y="20" text-anchor="middle" fill="#0f172a" font-size="11.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '<text x="' +
+    cx +
+    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">NFT · mesa multinivel (franjas 1+2+4…)</text>' +
+    back +
+    channels +
+    flowLayer +
+    plants +
+    tankLayer +
+    (!interactive ? pumpLines : '') +
+    '<text x="' +
+    cx +
+    '" y="' +
+    (H - 4) +
+    '" text-anchor="middle" fill="#475569" font-size="7.5" font-weight="600">' +
+    foot +
+    '</text>' +
+    '</svg>'
+  );
+}
+
+/**
+ * NFT escalera / A-frame esquemático: peldaños por cara (1 o 2 caras).
+ */
+function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
+  const EO = equipOpts || {};
+  const interactive = EO.interactive === true;
+  const showCalentador = EO.calentador === true;
+  const showDifusor = EO.difusor === true;
+  const bomb = EO.bombaInfo || null;
+  const userQ = EO.userCaudalLh != null && EO.userCaudalLh > 0 ? Math.round(EO.userCaudalLh) : null;
+  const userW = EO.userPotenciaW != null && EO.userPotenciaW > 0 ? Math.round(EO.userPotenciaW) : null;
+  const altCmLbl =
+    EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0 ? Math.round(Number(EO.nftAlturaBombeoCm)) : null;
+
+  const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
+    ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
+    : '';
+  const gidCh = 'nftEscCh' + suf;
+  const gidTank = 'nftEscTk' + suf;
+  const gidAqua = 'nftEscAq' + suf;
+  const tid = 'nftEscTitle' + suf;
+
+  const nv = Math.min(12, Math.max(1, parseInt(String(nivelesCara), 10) || 1));
+  const car = caras === 2 ? 2 : 1;
+  const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
+  const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
+  const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
+
+  const W = 400;
+  const topPad = 38;
+  const botTank = 130;
+  const cx = W / 2;
+  const yApex = topPad + 4;
+  const dy = Math.min(34, Math.max(26, Math.floor(215 / Math.max(nv, 1))));
+  const ladderTop = yApex + 22;
+  const ladderBot = ladderTop + (nv - 1) * dy + 8;
+  const H = ladderBot + 56 + botTank;
+  const baseHalf = 90;
+  const rungOut = 52;
+  const rungIn = 14;
+  const tankY = H - botTank + 4;
+  const tankH = 82;
+  const tankW = Math.min(320, Math.round(140 + vol * 0.65));
+  const tx = (W - tankW) / 2;
+  const waterTop = tankY + 8;
+  const waterH = tankH - 20;
+  const xRiser = Math.max(26, Math.min(tx + 28, 40));
+  const yPump = waterTop + Math.min(18, waterH * 0.45);
+  const tubeH = 20;
+  const padFlow = 8;
+
+  const runs = [];
+  let g = 0;
+  if (car === 1) {
+    const backX = cx + 44;
+    for (let i = 0; i < nv; i++) {
+      const p = nv <= 1 ? 0 : i / (nv - 1);
+      const y = ladderTop + i * dy;
+      const xFoot = cx - 14 - baseHalf * p;
+      runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
+    }
+  } else {
+    for (let i = 0; i < nv; i++) {
+      const p = nv <= 1 ? 0 : i / (nv - 1);
+      const y = ladderTop + i * dy;
+      const xLeftFoot = cx - baseHalf * p;
+      runs.push({ g: g++, y, xL: xLeftFoot - rungOut, xR: xLeftFoot + rungIn, rtl: i % 2 === 1 });
+    }
+    for (let i = 0; i < nv; i++) {
+      const p = nv <= 1 ? 0 : i / (nv - 1);
+      const y = ladderTop + i * dy;
+      const xRightFoot = cx + baseHalf * p;
+      runs.push({ g: g++, y, xL: xRightFoot - rungIn, xR: xRightFoot + rungOut, rtl: i % 2 === 0 });
+    }
+  }
+
+  const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
+  const flowSt = 'stroke="#2563eb" fill="none" ' + flowDash;
+  let flowD = 'M ' + xRiser + ' ' + yPump;
+  for (let i = 0; i < runs.length; i++) {
+    const R = runs[i];
+    const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+    const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+    if (i === 0) {
+      flowD += ' L ' + xRiser + ' ' + R.y;
+      flowD += ' L ' + xS + ' ' + R.y;
+    } else {
+      const P = runs[i - 1];
+      const xEP = P.rtl ? P.xL + padFlow : P.xR - padFlow;
+      flowD += ' L ' + xEP + ' ' + P.y;
+      if (Math.abs(R.y - P.y) > 0.5) flowD += ' L ' + xEP + ' ' + R.y;
+      flowD += ' L ' + xS + ' ' + R.y;
+    }
+    flowD += ' L ' + xE + ' ' + R.y;
+  }
+  const Rlast = runs[runs.length - 1];
+  const xLastE = Rlast.rtl ? Rlast.xL + padFlow : Rlast.xR - padFlow;
+  flowD += ' L ' + xLastE + ' ' + Rlast.y;
+  flowD += ' Q ' + (cx + 60) + ' ' + (Rlast.y + 30) + ', ' + (tx + tankW - 18) + ' ' + (tankY + 6);
+  flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
+  flowD += ' L ' + xRiser + ' ' + (tankY + 14);
+  flowD += ' L ' + xRiser + ' ' + yPump;
+
+  let frame = '';
+  if (car === 2) {
+    frame +=
+      '<line x1="' + cx + '" y1="' + yApex + '" x2="' + (cx - baseHalf) + '" y2="' + ladderBot + '" stroke="#64748b" stroke-width="2.8" stroke-linecap="round"/>';
+    frame +=
+      '<line x1="' + cx + '" y1="' + yApex + '" x2="' + (cx + baseHalf) + '" y2="' + ladderBot + '" stroke="#64748b" stroke-width="2.8" stroke-linecap="round"/>';
+    frame +=
+      '<line x1="' + (cx - baseHalf) + '" y1="' + ladderBot + '" x2="' + (cx + baseHalf) + '" y2="' + ladderBot + '" stroke="#475569" stroke-width="2.2" stroke-linecap="round" opacity="0.88"/>';
+    if (nv >= 2) {
+      const yBrace = ladderTop + Math.min(nv - 1, 3) * dy * 0.42;
+      frame +=
+        '<line x1="' + (cx - baseHalf * 0.48) + '" y1="' + yBrace + '" x2="' + (cx + baseHalf * 0.48) + '" y2="' + yBrace + '" stroke="#94a3b8" stroke-width="1.35" stroke-linecap="round" opacity="0.8"/>';
+    }
+  } else {
+    const backX = cx + 44;
+    frame +=
+      '<line x1="' + (cx - 12) + '" y1="' + yApex + '" x2="' + (cx - baseHalf - 10) + '" y2="' + ladderBot + '" stroke="#64748b" stroke-width="2.6" stroke-linecap="round"/>';
+    frame +=
+      '<line x1="' + backX + '" y1="' + (yApex + 8) + '" x2="' + backX + '" y2="' + ladderBot + '" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"/>';
+    frame +=
+      '<line x1="' + (cx - baseHalf - 10) + '" y1="' + ladderBot + '" x2="' + backX + '" y2="' + ladderBot + '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.9"/>';
+  }
+
+  let back =
+    '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
+
+  let channels = '';
+  const peNone = interactive ? ' pointer-events="none"' : '';
+  for (let i = 0; i < runs.length; i++) {
+    const R = runs[i];
+    const yc = R.y - tubeH / 2;
+    channels +=
+      '<rect x="' + R.xL + '" y="' + yc + '" width="' + (R.xR - R.xL) + '" height="' + tubeH + '" rx="8" fill="url(#' + gidCh + ')" stroke="#0369a1" stroke-width="1.25"' + peNone + '/>';
+    channels +=
+      '<text x="' + (R.xL - 4) + '" y="' + (R.y + 4) + '" text-anchor="end" font-size="10" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (R.g + 1) + '</text>';
+  }
+
+  const nftFlowAnim = torreSvgAnimacionesActivas();
+  let flowLayer =
+    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
+    (nftFlowAnim
+      ? '><animate attributeName="stroke-dashoffset" from="0" to="-13" dur="2.2s" repeatCount="indefinite" calcMode="linear"/></path>'
+      : '/>');
+  flowLayer +=
+    '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+  if (altCmLbl != null) {
+    flowLayer +=
+      '<text x="' + (W - 10) + '" y="' + (topPad + 4) + '" text-anchor="end" font-size="7.5" font-weight="700" fill="#64748b">↑ ~' + altCmLbl + ' cm</text>';
+  }
+
+  const rungSpan = rungOut + rungIn;
+  const hr = Math.max(3.2, Math.min(7.5, (rungSpan / Math.max(huecosN, 2)) * 0.38));
+  let plants = '';
+  for (let ri = 0; ri < runs.length; ri++) {
+    const R = runs[ri];
+    const y = R.y;
+    const rtl = R.rtl;
+    let maxDias = null;
+    for (let j = 0; j < huecosN; j++) {
+      const dat = interactive && state.torre[R.g] && state.torre[R.g][j] ? state.torre[R.g][j] : null;
+      if (dat && dat.fecha && cestaTieneFechaValida(dat.fecha)) {
+        const d = Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000));
+        maxDias = maxDias === null ? d : Math.max(maxDias, d);
+      }
+    }
+    const showDias = maxDias !== null;
+    for (let j = 0; j < huecosN; j++) {
+      const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
+      const span = R.xR - R.xL - 2 * padFlow;
+      const gx = rtl ? R.xR - padFlow - t * span : R.xL + padFlow + t * span;
+      let dat = { variedad: '', fecha: '' };
+      if (interactive && state.torre[R.g] && state.torre[R.g][j]) dat = state.torre[R.g][j];
+      const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
+      const col = interactive ? torreListaColorCesta(R.g, j) : { bg: '#f8fafc', border: '#94a3b8' };
+      const multiKey = R.g + ',' + j;
+      const isMulti = interactive && torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
+      const isEd =
+        interactive &&
+        typeof editingCesta !== 'undefined' &&
+        editingCesta &&
+        editingCesta.nivel === R.g &&
+        editingCesta.cesta === j;
+      const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+      let ariaTxt = 'Canal T' + (R.g + 1) + ', hueco ' + (j + 1) + ', ' + (dat.variedad ? cultivoNombreLista(cult, dat.variedad) : 'vacío');
+      if (dias !== null) ariaTxt += ', día ' + dias;
+      ariaTxt += '. Pulsa para ficha o asignar cultivo.';
+      const em = cultivoEmoji(cult);
+      if (interactive) {
+        plants +=
+          '<g class="hc-cesta hc-nft-hueco" data-n="' + R.g + '" data-c="' + j + '" role="button" tabindex="0" aria-label="' +
+          escAriaAttr(ariaTxt) +
+          '">';
+      }
+      plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="1.1"/>';
+      if (isMulti) {
+        plants +=
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2"/>';
+      }
+      if (isEd) {
+        plants +=
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
+      }
+      if (dat.variedad) {
+        plants +=
+          '<text x="' + gx.toFixed(2) + '" y="' + (y - hr - 3) + '" text-anchor="middle" font-size="11" dominant-baseline="middle">' + em + '</text>';
+      }
+      plants +=
+        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="8" font-weight="800" fill="#1e293b">' + (j + 1) + '</text>';
+      if (interactive) {
+        plants +=
+          '<circle cx="' + gx.toFixed(2) + '" cy="' + y + '" r="' + Math.max(hr * 2.4, 11).toFixed(2) + '" fill="rgba(0,0,0,0.001)" pointer-events="all"/>';
+        plants += '</g>';
+      }
+    }
+    if (showDias) {
+      const lx = rtl ? R.xL + 4 : R.xR - 4;
+      const anc = rtl ? 'start' : 'end';
+      plants +=
+        '<text x="' + lx + '" y="' + (y + tubeH / 2 + 12) + '" text-anchor="' + anc + '" font-size="9" font-weight="800" fill="#b91c1c">✂ ' + maxDias + 'd</text>';
+    }
+  }
+
+  let tankLayer = '';
+  tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
+  tankLayer += '<rect x="' + (tx + 5) + '" y="' + waterTop + '" width="' + (tankW - 10) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  const volTextY = tankY + Math.floor(tankH / 2) + 5;
+  tankLayer +=
+    '<text x="' + cx + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="15" font-weight="900" font-family="system-ui,sans-serif">' +
+    vol +
+    ' L</text>';
+  if (showCalentador) {
+    const hx = tx + 18;
+    tankLayer +=
+      '<rect x="' + (hx - 5) + '" y="' + (tankY + tankH - 36) + '" width="10" height="30" rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.2"/>';
+    tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="#fbbf24"/>';
+    tankLayer +=
+      '<text x="' + hx + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff7ed">CAL</text>';
+  }
+  if (showDifusor) {
+    const ax = tx + tankW - 18;
+    const ay = tankY + tankH - 16;
+    tankLayer +=
+      '<line x1="' + ax + '" y1="' + (tankY - 2) + '" x2="' + ax + '" y2="' + (ay - 12) + '" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
+    tankLayer +=
+      '<ellipse cx="' + ax + '" cy="' + ay + '" rx="13" ry="7" fill="#94a3b8" stroke="#64748b" stroke-width="1.2"/>';
+    for (let bi = 0; bi < 5; bi++) {
+      const bx = ax + (bi % 3 - 1) * 4;
+      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="#bfdbfe" opacity="0.9"/>';
+    }
+    tankLayer +=
+      '<text x="' + ax + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#f0f9ff">AIR</text>';
+  }
+
+  let pumpYNext = tankY + tankH + 10;
+  let pumpLines = '';
+  if (bomb) {
+    pumpLines +=
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Circulación 24 h · criterio en panel</text>';
+    pumpYNext += 12;
+  }
+  if (userQ != null || userW != null) {
+    pumpLines +=
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">Placa anotada · ver veredicto en checklist</text>';
+  }
+
+  if (interactive) {
+    back = '<g pointer-events="none">' + back + '</g>';
+    frame = '<g pointer-events="none">' + frame + '</g>';
+    channels = '<g pointer-events="none">' + channels + '</g>';
+    flowLayer = '<g pointer-events="none">' + flowLayer + '</g>';
+    tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
+  }
+
+  const nTot = runs.length;
+  let foot =
+    'NFT escalera' +
+    (car === 2 ? ' (A · 2 caras)' : '') +
+    ' · ' +
+    nv +
+    ' peldaños/cara · ' +
+    car +
+    ' cara(s) · ' +
+    nTot +
+    ' tubos · ' +
+    huecosN +
+    ' huecos · ' +
+    pend +
+    '% pend.' +
+    NFT_SVG_FOOT_ORIENT_HINT;
+
+  return (
+    '<svg class="torre-svg-diagram nft-escalera-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    W +
+    ' ' +
+    H +
+    '" width="100%" style="max-height:min(78vh,720px);height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    tid +
+    '">' +
+    '<title id="' +
+    tid +
+    '">NFT escalera o A-frame: peldaños y recorrido del agua</title>' +
+    '<defs>' +
+    '<linearGradient id="' +
+    gidCh +
+    '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>' +
+    '<linearGradient id="' +
+    gidTank +
+    '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+    '<linearGradient id="' +
+    gidAqua +
+    '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
+    '</defs>' +
+    '<text x="' +
+    cx +
+    '" y="20" text-anchor="middle" fill="#0f172a" font-size="11.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '<text x="' +
+    cx +
+    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">NFT · escalera' +
+    (car === 2 ? ' (estructura A)' : ' / inclinado') +
+    ' · ' +
+    car +
+    ' cara(s)</text>' +
+    frame +
+    back +
+    channels +
+    flowLayer +
+    plants +
+    tankLayer +
+    (!interactive ? pumpLines : '') +
+    '<text x="' +
+    cx +
+    '" y="' +
+    (H - 4) +
+    '" text-anchor="middle" fill="#475569" font-size="7.5" font-weight="600">' +
+    foot +
+    '</text>' +
+    '</svg>'
+  );
+}
+
+/** Elige SVG NFT según config (mesa multinivel, escalera, serpentín mesa/pared). */
+function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
+  const EO = equipOpts || {};
+  const cfg = EO.cfgSnapshot || {};
+  const disp = nftDisposicionNormalizada(EO.nftDisposicion != null ? EO.nftDisposicion : cfg.nftDisposicion);
+  let tiers = EO.mesaTiers && EO.mesaTiers.length >= 2 ? EO.mesaTiers : null;
+  if (!tiers && disp === 'mesa' && cfg.nftMesaMultinivel) {
+    tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr);
+    if (tiers.length < 2) tiers = null;
+  }
+  if (disp === 'mesa' && tiers) {
+    return buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts);
+  }
+  if (disp === 'escalera') {
+    const caras = EO.escaleraCaras != null ? EO.escaleraCaras : nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras);
+    let nv = EO.escaleraNiveles;
+    if (nv == null || !Number.isFinite(nv)) nv = parseInt(String(cfg.nftEscaleraNivelesCara), 10);
+    if (!Number.isFinite(nv) || nv < 1) nv = Math.max(1, Math.ceil(canales / Math.max(1, caras)));
+    nv = Math.min(12, Math.max(1, nv));
+    return buildNftEscaleraDiagramSvg(nv, caras, huecos, pendPct, volL, svgIdSuffix, equipOpts);
+  }
+  return buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts);
 }
 
 /**
@@ -11020,6 +12362,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const bomb = EO.bombaInfo || null;
   const userQ = EO.userCaudalLh != null && EO.userCaudalLh > 0 ? Math.round(EO.userCaudalLh) : null;
   const userW = EO.userPotenciaW != null && EO.userPotenciaW > 0 ? Math.round(EO.userPotenciaW) : null;
+  const dispLayout = nftDisposicionNormalizada(EO.nftDisposicion);
 
   const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
     ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
@@ -11029,16 +12372,17 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const gidAqua = 'nftSerpAq' + suf;
   const tid = 'nftSerpTitle' + suf;
 
-  const nCh = Math.min(Math.max(parseInt(String(canales), 10) || 1, 1), 12);
+  const nCh = Math.min(Math.max(parseInt(String(canales), 10) || 1, 1), 24);
   const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
   const W = 400;
-  const rowStep = Math.max(40, Math.min(52, Math.floor(480 / Math.max(nCh, 1))));
+  const rowStep = Math.max(36, Math.min(52, Math.floor(520 / Math.max(nCh, 1))));
   const topPad = 38;
   const botTank = 130;
-  const H = topPad + nCh * rowStep + botTank;
+  const stairExtra = dispLayout === 'escalera' ? Math.max(0, nCh - 1) * 14 : 0;
+  const H = topPad + nCh * rowStep + botTank + stairExtra;
   const cx = W / 2;
   const marginX = 52;
   const xL = marginX;
@@ -11052,7 +12396,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const waterTop = tankY + 8;
   const waterH = tankH - 20;
 
-  const yRow = i => topPad + i * rowStep + Math.floor(rowStep / 2);
+  const yRow = i =>
+    topPad + i * rowStep + Math.floor(rowStep / 2) + (dispLayout === 'escalera' ? i * 14 : 0);
 
   const flowDash = 'stroke-dasharray="7 6" stroke-linecap="round" stroke-linejoin="round"';
   const flowSt = 'stroke="#2563eb" fill="none" ' + flowDash;
@@ -11108,6 +12453,18 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       : '/>');
   flowLayer +=
     '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+  const altCmSerp =
+    EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0 ? Math.round(Number(EO.nftAlturaBombeoCm)) : null;
+  if (altCmSerp != null) {
+    flowLayer +=
+      '<text x="' +
+      (W - 10) +
+      '" y="' +
+      (yRow(0) - tubeH / 2 - 16) +
+      '" text-anchor="end" font-size="7.5" font-weight="700" fill="#64748b">↑ ~' +
+      altCmSerp +
+      ' cm</text>';
+  }
 
   const hr = Math.max(3.8, Math.min(8.5, ((xR - xL - 24) / Math.max(huecosN, 2)) * 0.38));
   let plants = '';
@@ -11217,25 +12574,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   let pumpLines = '';
   if (bomb) {
     pumpLines +=
-      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Mín. calc.: ~' +
-      bomb.potenciaRecW +
-      ' W · ' +
-      bomb.caudalMinLH +
-      '–' +
-      bomb.caudalRecLH +
-      ' L/h · Ø ' +
-      bomb.dMm +
-      ' mm</text>';
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Circulación 24 h · criterio en panel</text>';
     pumpYNext += 12;
   }
   if (userQ != null || userW != null) {
-    const uLine =
-      'Tu bomba: ' +
-      (userW != null ? userW + ' W' : '') +
-      (userQ != null && userW != null ? ' · ' : '') +
-      (userQ != null ? userQ + ' L/h' : '');
     pumpLines +=
-      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">' + escSvgText(uLine) + '</text>';
+      '<text x="' + cx + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">Placa anotada · ver veredicto en checklist</text>';
   }
 
   if (interactive) {
@@ -11245,8 +12589,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
+  const layoutFoot =
+    dispLayout === 'escalera' ? 'Escalera' : dispLayout === 'pared' ? 'Pared (zigzag)' : 'Mesa';
   let foot =
-    'Línea azul discontinua = sentido del agua · ' +
+    'NFT ' +
+    layoutFoot +
+    ' · línea azul = agua · ' +
     nCh +
     ' tubos · ' +
     huecosN +
@@ -11257,14 +12605,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     const minV = bomb.volMinDepositoSugeridoL;
     const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
     if (vol < minV) {
-      foot += ' · ⚠ depósito &lt; mín. útil ' + minV + ' L';
+      foot += ' · ⚠ revisar depósito (orientativo: por debajo del mínimo útil)';
     } else if (vol < recV) {
-      foot += ' · ⚠ bajo ~' + recV + ' L recomendados (margen seguridad)';
+      foot += ' · ⚠ revisar margen de depósito en panel';
     }
   }
-  if (bomb && bomb.canalFormaLabel) {
-    foot += ' · Canal: ' + escSvgText(bomb.canalFormaLabel) + ', lámina ' + bomb.laminaMm + ' mm';
-  }
+  foot += NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
     '<svg class="torre-svg-diagram nft-serpentine-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
@@ -11296,7 +12642,13 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '" y="20" text-anchor="middle" fill="#0f172a" font-size="11.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cx +
-    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">NFT · recirculación en serpentín</text>' +
+    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">' +
+    (dispLayout === 'escalera'
+      ? 'NFT · escalera (canales escalonados)'
+      : dispLayout === 'pared'
+        ? 'NFT · pared (tubos horizontales en zigzag)'
+        : 'NFT · mesa (paralelos, pendiente por tubo)') +
+    '</text>' +
     back +
     channels +
     flowLayer +
@@ -11403,12 +12755,10 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   plumbing += '<text x="' + cx + '" y="' + (tankTop - 7) + '" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="900">B</text>';
   if (bomb) {
     const txB = cx + 15;
-    const y1 = tankTop - 18;
-    const y2 = tankTop - 9;
+    const y1 = tankTop - 14;
     plumbing +=
       '<text x="' + txB + '" y="' + y1 + '" text-anchor="start" fill="#1e40af" font-size="7" font-weight="800" font-family="system-ui,sans-serif">' +
-      bomb.caudalRecLH + ' L/h · ~' + bomb.potenciaRecW + ' W</text>' +
-      '<text x="' + txB + '" y="' + y2 + '" text-anchor="start" fill="#475569" font-size="6.5" font-weight="700" font-family="system-ui,sans-serif">24 h · Ø ' + bomb.dMm + ' mm</text>';
+      'Bomba 24 h · criterio en asistente</text>';
   }
 
   const riserY1 = tankTop;
@@ -11504,14 +12854,13 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
 
   let footSub = nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente';
   if (bomb) {
-    footSub +=
-      ' · bomba ~' + bomb.caudalRecLH + ' L/h · ~' + bomb.potenciaRecW + ' W';
+    footSub += ' · circulación 24 h · ver asistente / checklist';
     const minV = bomb.volMinDepositoSugeridoL;
     const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
     if (vol < minV) {
-      footSub += ' · ⚠ depósito &lt; mín. útil ' + minV + ' L';
+      footSub += ' · ⚠ revisar depósito (orientativo)';
     } else if (vol < recV) {
-      footSub += ' · ⚠ bajo ~' + recV + ' L recomendados';
+      footSub += ' · ⚠ margen depósito: ver panel';
     }
   }
 
@@ -11539,6 +12888,63 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   );
 }
 
+/** Borrador de config NFT desde el asistente (paso 1) para cálculo y SVG. */
+function buildNftDraftConfigFromSetupUi() {
+  const mont = readNftMontajeFromSetupUi();
+  const canalesSlider = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+  const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+  const pend = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
+  const geom = readNftCanalGeomFromSetupUi();
+  const draft = {
+    tipoInstalacion: 'nft',
+    nftNumCanales: Math.max(1, Math.min(24, canalesSlider)),
+    nftHuecosPorCanal: huecos,
+    nftPendientePct: pend,
+    nftTuboInteriorMm: setupNftTuboMm,
+    nftDisposicion: mont.disposicion,
+    nftCanalForma: geom.forma,
+    nftCanalDiamMm: geom.diamMm,
+    nftCanalAnchoMm: geom.anchoMm,
+    nftLaminaAguaMm: geom.laminaMm,
+  };
+  if (geom.longCanalM != null) draft.nftLongCanalM = geom.longCanalM;
+  if (mont.alturaBombeoCm > 0) draft.nftAlturaBombeoCm = mont.alturaBombeoCm;
+  if (mont.disposicion === 'mesa' && mont.mesaMultinivel) {
+    const tiers = parseNftMesaTubosPorNivelStr(mont.mesaTubosStr);
+    if (tiers.length >= 2) {
+      draft.nftMesaMultinivel = true;
+      draft.nftMesaTubosPorNivelStr = tiers.join(',');
+      draft.nftNumCanales = tiers.reduce((a, b) => a + b, 0);
+      if (mont.mesaSepCm > 0) draft.nftMesaSeparacionNivelesCm = mont.mesaSepCm;
+    }
+  }
+  if (mont.disposicion === 'escalera') {
+    draft.nftEscaleraCaras = mont.escaleraCaras;
+    draft.nftEscaleraNivelesCara = Math.max(1, Math.min(12, canalesSlider));
+    draft.nftNumCanales = draft.nftEscaleraNivelesCara * mont.escaleraCaras;
+  }
+  return draft;
+}
+
+function refrescarNftCanalesSliderEtiqueta() {
+  const el = document.getElementById('nftCanalesLabelMain');
+  if (!el) return;
+  const mont = readNftMontajeFromSetupUi();
+  if (mont.disposicion === 'escalera') {
+    el.textContent = 'Peldaños por cara';
+    return;
+  }
+  if (mont.disposicion === 'pared') {
+    el.textContent = 'Tubos apilados (pared)';
+    return;
+  }
+  if (mont.mesaMultinivel) {
+    el.textContent = 'Tubos (si multinivel válido, el total lo fija la lista)';
+    return;
+  }
+  el.textContent = 'Tubos en serpentín';
+}
+
 function updateNftSetupPreview() {
   const canales = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
   const huecos  = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
@@ -11548,25 +12954,37 @@ function updateNftSetupPreview() {
   const elH = document.getElementById('valNftHuecos');
   const elP = document.getElementById('valNftPendiente');
   const elV = document.getElementById('valVol');
-  if (elC) elC.textContent = String(canales);
+  refrescarNftCanalesSliderEtiqueta();
+  const draft = buildNftDraftConfigFromSetupUi();
+  const hyd = getNftHidraulicaDesdeConfig(draft);
+  if (elC) elC.textContent = String(hyd.nCh);
   if (elH) elH.textContent = String(huecos);
   if (elP) elP.innerHTML = pend + '<span style="font-size:12px;font-weight:600">%</span>';
   if (elV) elV.innerHTML = vol + '<span style="font-size:12px;font-weight:600">L</span>';
 
   const preview = document.getElementById('nftPreview');
   if (!preview) return;
-  const bNft = calcularBombaNftParam(canales, huecos, pend, setupNftTuboMm, readNftCanalGeomFromSetupUi());
-  pintarResultadoBombaNftUI(bNft);
+  const bNft = getNftBombaDesdeConfig(draft);
+  pintarResultadoBombaNftUI(bNft, vol);
   refrescarUIMensajeBombaUsuarioNft('setup');
   const uLh = parseFloat(String(document.getElementById('nftBombaUsuarioLh')?.value || '').replace(',', '.'));
   const uW = parseFloat(String(document.getElementById('nftBombaUsuarioW')?.value || '').replace(',', '.'));
+  const altShow = draft.nftAlturaBombeoCm != null && Number(draft.nftAlturaBombeoCm) > 0
+    ? Math.round(Number(draft.nftAlturaBombeoCm))
+    : getNftAlturaBombeoEfectivaCm(draft);
   preview.innerHTML =
-    buildNftSerpentineDiagramSvg(canales, huecos, pend, vol, '', {
+    buildNftActiveDiagramSvg(hyd.nCh, huecos, pend, vol, '', {
       calentador: setupEquipamiento.has('calentador'),
       difusor: setupEquipamiento.has('difusor'),
       bombaInfo: bNft,
       userCaudalLh: Number.isFinite(uLh) && uLh > 0 ? Math.round(uLh) : null,
       userPotenciaW: Number.isFinite(uW) && uW > 0 ? Math.round(uW) : null,
+      nftDisposicion: draft.nftDisposicion,
+      nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+      cfgSnapshot: draft,
+      mesaTiers: hyd.mesaTiers,
+      escaleraNiveles: hyd.escaleraNiveles,
+      escaleraCaras: hyd.escaleraCaras,
     }) +
     '<div style="font-size:10px;font-weight:700;color:#15803d;text-align:center;margin-top:6px;line-height:1.4">' +
     'Toca los deslizadores: tubos, huecos, circuito de agua y equipamiento del depósito se actualizan con la configuración.</div>';
@@ -12111,9 +13529,25 @@ function guardarSetupYContinuar() {
   const isNft = setupTipoInstalacion === 'nft';
   let niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
   let cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5, 10);
+  let nftNvSlider = 4;
   if (isNft) {
-    niveles = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
-    cestas  = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+    const nftMont = readNftMontajeFromSetupUi();
+    if ((nftMont.disposicion === 'pared' || nftMont.disposicion === 'escalera') && nftMont.alturaBombeoCm <= 0) {
+      showToast('Indica la altura de bombeo (cm) hasta el 1.º tubo: en pared y escalera es imprescindible para calcular la bomba.', true);
+      setupPagina = 1;
+      renderSetupPage();
+      document.getElementById('nftAlturaBombeoCm')?.focus();
+      return;
+    }
+    nftNvSlider = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+    cestas = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+    niveles = Math.max(1, Math.min(24, nftNvSlider));
+    if (nftMont.disposicion === 'mesa' && nftMont.mesaMultinivel) {
+      const tiers = parseNftMesaTubosPorNivelStr(nftMont.mesaTubosStr);
+      if (tiers.length >= 2) niveles = Math.min(24, tiers.reduce((a, b) => a + b, 0));
+    } else if (nftMont.disposicion === 'escalera') {
+      niveles = Math.min(24, Math.max(1, nftNvSlider * nftMont.escaleraCaras));
+    }
   }
   const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20, 10);
   const nftPend = isNft ? parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10) : null;
@@ -12168,9 +13602,28 @@ function guardarSetupYContinuar() {
     state.configTorre.nftLaminaAguaMm = geomSv.laminaMm;
     if (geomSv.longCanalM != null) state.configTorre.nftLongCanalM = geomSv.longCanalM;
     else delete state.configTorre.nftLongCanalM;
-    state.configTorre.nftBombaEstimada = calcularBombaNftParam(
-      niveles, cestas, state.configTorre.nftPendientePct, setupNftTuboMm, geomSv
-    );
+    delete state.configTorre.nftMesaMultinivel;
+    delete state.configTorre.nftMesaTubosPorNivelStr;
+    delete state.configTorre.nftMesaSeparacionNivelesCm;
+    delete state.configTorre.nftEscaleraCaras;
+    delete state.configTorre.nftEscaleraNivelesCara;
+    const montSv = readNftMontajeFromSetupUi();
+    state.configTorre.nftDisposicion = montSv.disposicion;
+    if (montSv.alturaBombeoCm > 0) state.configTorre.nftAlturaBombeoCm = montSv.alturaBombeoCm;
+    else delete state.configTorre.nftAlturaBombeoCm;
+    if (montSv.disposicion === 'mesa' && montSv.mesaMultinivel) {
+      const tiersSv = parseNftMesaTubosPorNivelStr(montSv.mesaTubosStr);
+      if (tiersSv.length >= 2) {
+        state.configTorre.nftMesaMultinivel = true;
+        state.configTorre.nftMesaTubosPorNivelStr = tiersSv.join(',');
+        if (montSv.mesaSepCm > 0) state.configTorre.nftMesaSeparacionNivelesCm = montSv.mesaSepCm;
+      }
+    }
+    if (montSv.disposicion === 'escalera') {
+      state.configTorre.nftEscaleraCaras = montSv.escaleraCaras;
+      state.configTorre.nftEscaleraNivelesCara = Math.max(1, Math.min(12, nftNvSlider));
+    }
+    state.configTorre.nftBombaEstimada = getNftBombaDesdeConfig(state.configTorre);
     const lhInp = document.getElementById('nftBombaUsuarioLh');
     const wInp = document.getElementById('nftBombaUsuarioW');
     const uLh = lhInp ? parseFloat(String(lhInp.value).replace(',', '.')) : NaN;
@@ -12198,6 +13651,13 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftCanalAnchoMm;
     delete state.configTorre.nftLaminaAguaMm;
     delete state.configTorre.nftLongCanalM;
+    delete state.configTorre.nftDisposicion;
+    delete state.configTorre.nftAlturaBombeoCm;
+    delete state.configTorre.nftMesaMultinivel;
+    delete state.configTorre.nftMesaTubosPorNivelStr;
+    delete state.configTorre.nftMesaSeparacionNivelesCm;
+    delete state.configTorre.nftEscaleraCaras;
+    delete state.configTorre.nftEscaleraNivelesCara;
   }
   invalidateMeteoNomiCache();
   const su = normalizaSustratoKey(setupData.sustrato);
@@ -15533,8 +16993,9 @@ function getCLPasos() {
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
   const esNft = cfg.tipoInstalacion === 'nft';
-  const nftCh = esNft ? (cfg.nftNumCanales || cfg.numNiveles || 4) : 0;
-  const nftHx = esNft ? (cfg.nftHuecosPorCanal || cfg.numCestas || 8) : 0;
+  const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
+  const nftCh = nftHyd ? nftHyd.nCh : 0;
+  const nftHx = nftHyd ? nftHyd.nHx : 0;
   const shCl = ensureSensoresHardware();
   const hwLista = [shCl.ec && 'EC', shCl.ph && 'pH', shCl.humedad && 'humedad'].filter(Boolean);
   const paso6SeccionTitulo = hwLista.length ? null : '📊 Paso 6 — Medir y ajustar';
@@ -15619,21 +17080,17 @@ function getCLPasos() {
         },
       ],
       postCamposHtml:
+        '<div id="clNftLayoutResumen" style="margin-bottom:10px;padding:10px;border-radius:10px;background:#f0fdf4;border:1.5px solid #86efac;font-size:11px;line-height:1.5;font-weight:600;color:#14532d" role="status"></div>' +
         '<div id="clNftGeomRecalcMsg" style="margin-top:10px;font-size:11px;line-height:1.45;font-weight:600;color:#0f766e" role="status"></div>',
     }]
     : [];
   const pasosNftExtra = esNft && nftBomb ? [
     { id:'N0', seccion:null, paso:'N0',
-      desc:'Bomba de circulación <strong>24 h</strong>: caudal mínimo orientativo <strong>' + nftBomb.caudalMinLH + ' L/h</strong>, recomendado <strong>' + nftBomb.caudalRecLH + ' L/h</strong> · altura manométrica ≈ <strong>' + nftBomb.headMetros + ' m</strong> · potencia eléctrica aprox. <strong>' + nftBomb.potenciaRecW + ' W</strong> (Ø <strong>alimentación</strong> usado en la app: <strong>' + nftBomb.dMm + ' mm</strong>; el canal de cultivo suele ser mucho mayor). Opcional: anota los datos de <em>tu</em> bomba debajo; verás si son adecuados para esta instalación.',
+      desc:'Bomba de circulación <strong>24 h</strong> continua. La app aplica criterios orientativos alineados con práctica NFT habitual (película fina, pérdidas típicas de línea y altura de bombeo si la indicaste). <strong>No</strong> sustituye la <strong>curva Q–H</strong> del fabricante. Anota el caudal (y opcionalmente la potencia) de la <strong>placa</strong> de tu bomba: verás si <strong>cumple</strong> o no el criterio orientativo.',
       nota:
+        'Orientación de equipo (no es veredicto): ' +
         nftBomb.modeloRec +
-        ' Volumen ~' +
-        nftBomb.volCircuitoL +
-        ' L en tubería + película · depósito <strong>mínimo útil</strong> ≥ ' +
-        nftBomb.volMinDepositoSugeridoL +
-        ' L · <strong>recomendado con margen seguridad</strong> ~' +
-        (nftBomb.volDepositoRecomendadoL != null ? nftBomb.volDepositoRecomendadoL : nftBomb.volMinDepositoSugeridoL) +
-        ' L (ajusta manualmente la capacidad en Sistema). Si la película se corta, sube caudal o revisa pendiente/tapones.',
+        ' Ajusta la capacidad del depósito en <strong>Sistema</strong>. Si la película se corta, sube caudal o revisa pendiente y tapones. Cifras y desglose: bloque «Depósito» y «Ver detalle técnico» debajo.',
       campos: [
         { id:'clNftBombaUsuarioLh', label:'Tu bomba — caudal nominal (L/h)', type:'number', step:'10', placeholder:'ej. 600',
           value: cfg.nftBombaUsuarioCaudalLh != null ? String(cfg.nftBombaUsuarioCaudalLh) : '',
@@ -15734,7 +17191,7 @@ function getCLPasos() {
 
   { id:'5.1', seccion:'🔌 Paso 5 — Verificar sistema', paso:'5.1',
     desc: esNft
-      ? ('Con la bomba en marcha (24 h): caudal estable en los ' + nftCh + ' canales — objetivo ≥ ' + (nftBomb ? nftBomb.caudalMinLH + ' L/h' : 'caudal según tu bomba') + '; sin tramos secos al inicio ni charcos al final (pendiente ~1–2 % típico). Potencia nominal ~' + (nftBomb ? nftBomb.potenciaRecW + ' W' : 'la de tu equipo') + '.')
+      ? ('Con la bomba en marcha (24 h): película continua en los ' + nftCh + ' canales; sin tramos secos al inicio ni charcos al final (pendiente ~1–2 % típico). Si anotaste la placa en el checklist, ya tienes el <strong>cumple / no cumple</strong> orientativo.')
       : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
@@ -15934,6 +17391,7 @@ function renderChecklist() {
   if ((state.configTorre || {}).tipoInstalacion === 'nft') {
     try { refrescarUIMensajeBombaUsuarioNft('checklist'); } catch (e) {}
     try { actualizarMensajeNftCanalChecklist(); } catch (e) {}
+    try { refrescarNftLayoutResumenChecklist(); } catch (e) {}
   }
 }
 
@@ -17578,22 +19036,25 @@ function buildConsejosNftHidraulica() {
   const b = cfg.tipoInstalacion === 'nft' ? getNftBombaDesdeConfig(cfg) : null;
   let dyn;
   if (b) {
+    const vDepCfg = parseFloat(String(cfg.volDeposito ?? '').replace(',', '.'));
+    const vDepAct = Number.isFinite(vDepCfg) && vDepCfg > 0 ? Math.round(vDepCfg) : null;
     dyn = htmlInnerConsejoCard(cat, {
       icono: '⚡',
-      titulo: 'Tu instalación NFT — caudal y volumen (orientativo)',
+      titulo: 'Tu instalación NFT — cumplimiento orientativo',
       html:
         (resumenTxt
           ? '<p style="margin:0 0 10px;line-height:1.45;font-weight:800;color:var(--text)">' + escHtmlUi(resumenTxt) + '</p>'
           : '') +
-        '<p style="margin:0 0 8px;line-height:1.6;color:var(--muted)">Detalle geométrico: <strong>' + escHtmlUi(b.canalFormaLabel) + '</strong>, lámina <strong>' + b.laminaMm + ' mm</strong>, sección de flujo ~<strong>' + b.AflowMm2 + ' mm²</strong>, longitud canal <strong>' + b.longitudCanalM + ' m</strong>.</p>' +
-        '<p style="margin:0;line-height:1.6;color:var(--muted)">Volumen en película ~<strong>' + b.volPeliculaL + ' L</strong>; circuito (tubería + película) ~<strong>' + b.volCircuitoL + ' L</strong>. <strong>Depósito:</strong> mínimo útil ≥ <strong>' + b.volMinDepositoSugeridoL + ' L</strong>; recomendado con margen seguridad ~<strong>' + (b.volDepositoRecomendadoL != null ? b.volDepositoRecomendadoL : b.volMinDepositoSugeridoL) + ' L</strong> (tú eliges la capacidad en Sistema). Caudal por geometría ~<strong>' + b.qTotalGeomRecLh + '</strong> L/h (recom.) / ~' + b.qTotalGeomMinLh + ' L/h (mín.); modelo empírico ~<strong>' + b.qTotalEmpiricoRecLh + '</strong> L/h. La app propone bomba mín. <strong>' + b.caudalMinLH + '</strong> / recom. <strong>' + b.caudalRecLH + ' L/h</strong> (24 h). <strong>Contrasta siempre</strong> con la curva Q–H del fabricante.</p>',
+        '<p style="margin:0 0 10px;line-height:1.55;color:var(--muted)">Lo importante aquí es si el <strong>depósito</strong> y la <strong>bomba</strong> encajan con un criterio práctico (24 h, película fina, pérdidas típicas). Los números detallados van en el desplegable. Contrasta siempre con la <strong>curva Q–H</strong> del fabricante.</p>' +
+        nftDepositoVeredictoBloqueHtml(b, vDepAct) +
+        nftWrapDetalleTecnicoSummary(nftBombaDetalleTecnicoHtml(b), 'Bomba, caudal y geometría (detalle)'),
     });
   } else {
     dyn = htmlInnerConsejoCard(cat, {
       icono: 'ℹ️',
       titulo: 'Configuración NFT',
       html:
-        '<p style="margin:0;line-height:1.6;color:var(--muted)">Elige en <strong>Sistema</strong> instalación <strong>NFT</strong> y completa canal, lámina y longitud en el checklist (N·ref) o en el asistente para ver aquí los cálculos de tu caso.</p>',
+        '<p style="margin:0;line-height:1.6;color:var(--muted)">Elige en <strong>Sistema</strong> instalación <strong>NFT</strong> y completa canal, lámina y longitud en el checklist (N·ref) o en el asistente para ver aquí el criterio orientativo de tu caso.</p>',
     });
   }
   const formula = htmlConsejoCard(cat, {
@@ -20241,8 +21702,11 @@ function actualizarResumenSetup() {
 
   const ecObj  = getSetupECObjetivo();
   const volNum = parseInt(vol);
-  const pendNft = isNft ? parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10) : 2;
-  const bResumenNft = isNft ? calcularBombaNftParam(niveles, cestas, pendNft, setupNftTuboMm, readNftCanalGeomFromSetupUi()) : null;
+  const montR = isNft ? readNftMontajeFromSetupUi() : { disposicion: 'mesa', alturaBombeoCm: 0 };
+  const draftNFT = isNft ? buildNftDraftConfigFromSetupUi() : null;
+  const hydNFT = isNft ? getNftHidraulicaDesdeConfig(draftNFT) : null;
+  const bResumenNft = isNft ? getNftBombaDesdeConfig(draftNFT) : null;
+  const altResNFT = isNft ? getNftAlturaBombeoEfectivaCm(draftNFT) : 0;
   const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volNum, ecObj);
   const ordenR = (d.nut.orden && d.nut.orden.length >= d.nut.partes) ? d.nut.orden : ['Parte A','Parte B','Parte C'];
 
@@ -20267,9 +21731,15 @@ function actualizarResumenSetup() {
 
   el.innerHTML =
     (isNft
-      ? '🪴 NFT: <strong>' + niveles + ' canales × ' + cestas + ' huecos/canal · ' + pendTxt + vol + 'L</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong><br>' +
+      ? '🪴 NFT: <strong>' + (hydNFT ? hydNFT.nCh : niveles) + ' tubos × ' + cestas + ' huecos/canal · ' + pendTxt + vol + 'L</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong> · disposición <strong>' +
+        (montR.disposicion === 'escalera' ? 'escalera' : montR.disposicion === 'pared' ? 'pared' : 'mesa') +
+        (montR.disposicion === 'mesa' && montR.mesaMultinivel ? ' · multinivel' : '') +
+        (montR.disposicion === 'escalera' && montR.escaleraCaras === 2 ? ' · A (2 caras)' : '') +
+        '</strong>' +
+        (altResNFT > 0 ? ' · bombeo (efectivo) al 1.º tubo <strong>' + altResNFT + ' cm</strong>' : '') +
+        '<br>' +
         (bResumenNft
-          ? '⚡ Bomba circulación <strong>24 h</strong> (orientativo): <strong>' + bResumenNft.caudalMinLH + '–' + bResumenNft.caudalRecLH + ' L/h · ~' + bResumenNft.potenciaRecW + ' W</strong> · depósito mín. útil <strong>≥ ' + bResumenNft.volMinDepositoSugeridoL + ' L</strong> · recomendado con margen ~<strong>' + (bResumenNft.volDepositoRecomendadoL != null ? bResumenNft.volDepositoRecomendadoL : bResumenNft.volMinDepositoSugeridoL) + ' L</strong> (ajusta manual el volumen)<br>'
+          ? '⚡ NFT: circulación <strong>24 h</strong> · criterio bomba/depósito en el paso de equipo y en checklist (veredicto visible; cifras en «detalle técnico»).<br>'
           : '')
       : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
