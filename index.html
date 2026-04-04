@@ -12122,13 +12122,16 @@ function nftDiagramCanvasW0() {
  * @param {number} yLine línea base visual (centro de iconos)
  * @param {string} gidCh id del gradiente del canal (mismo que los rect de tubo)
  * @param {boolean} compact modo >20 tubos
+ * @param {boolean} [largeLegend] leyenda más grande (NFT mesa)
  */
-function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact) {
-  const fs = compact ? 7 : 8;
-  const hCanal = compact ? 7 : 8;
-  const wCanal = compact ? 20 : 24;
-  const rCesta = compact ? 4 : 5.5;
-  const spanFromCenter = compact ? 124 : 140;
+function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact, largeLegend) {
+  const large = largeLegend === true;
+  const fs = large ? (compact ? 9 : 11) : compact ? 7 : 8;
+  const hCanal = large ? (compact ? 8.5 : 10) : compact ? 7 : 8;
+  const wCanal = large ? (compact ? 24 : 28) : compact ? 20 : 24;
+  const rCesta = large ? (compact ? 5 : 6.5) : compact ? 4 : 5.5;
+  const spanFromCenter = large ? (compact ? 142 : 162) : compact ? 124 : 140;
+  const flowStroke = large ? 1.35 : 1.15;
   const x0 = cx - spanFromCenter;
   let s = '<g class="nft-schema-legend" pointer-events="none" aria-hidden="true">';
   s +=
@@ -12147,11 +12150,11 @@ function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact) {
     '<text x="' +
     (x0 + wCanal + 5) +
     '" y="' +
-    (yLine + 3) +
+    (yLine + (large ? 4 : 3)) +
     '" text-anchor="start" font-size="' +
     fs +
     '" font-weight="700" fill="#475569" font-family="system-ui,sans-serif">Canal</text>';
-  const xCesta = x0 + wCanal + 5 + 34 + rCesta;
+  const xCesta = x0 + wCanal + 5 + (large ? 38 : 34) + rCesta;
   s +=
     '<circle cx="' +
     xCesta +
@@ -12164,11 +12167,11 @@ function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact) {
     '<text x="' +
     (xCesta + rCesta + 5) +
     '" y="' +
-    (yLine + 3) +
+    (yLine + (large ? 4 : 3)) +
     '" text-anchor="start" font-size="' +
     fs +
     '" font-weight="700" fill="#475569" font-family="system-ui,sans-serif">Cesta</text>';
-  const xFl = xCesta + rCesta + 5 + 38;
+  const xFl = xCesta + rCesta + 5 + (large ? 42 : 38);
   s +=
     '<path d="M ' +
     xFl +
@@ -12178,12 +12181,14 @@ function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact) {
     (xFl + 20) +
     ' ' +
     yLine +
-    '" stroke="#1d4ed8" fill="none" stroke-width="1.15" stroke-dasharray="4 3" stroke-linecap="round"/>';
+    '" stroke="#1d4ed8" fill="none" stroke-width="' +
+    flowStroke +
+    '" stroke-dasharray="4 3" stroke-linecap="round"/>';
   s +=
     '<text x="' +
     (xFl + 26) +
     '" y="' +
-    (yLine + 3) +
+    (yLine + (large ? 4 : 3)) +
     '" text-anchor="start" font-size="' +
     fs +
     '" font-weight="700" fill="#475569" font-family="system-ui,sans-serif">Flujo</text>';
@@ -12191,50 +12196,71 @@ function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact) {
   return s;
 }
 
+const NFT_SVG_PE_NONE = ' pointer-events="none"';
+
+/** Emoji centrado en la cesta (más grande al no compartir espacio con el número). */
+function nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hrGi, compact) {
+  const hasV = dat && String(dat.variedad || '').trim() !== '';
+  if (!hasV || hrGi < 4) return '';
+  const em = cultivoEmoji(cult);
+  const emFs = Math.max(13, Math.min(hrGi * 1.88, compact ? 26 : 32));
+  return (
+    '<text x="' +
+    gx.toFixed(2) +
+    '" y="' +
+    gy.toFixed(2) +
+    '" text-anchor="middle" dominant-baseline="central" font-size="' +
+    emFs.toFixed(1) +
+    '" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,system-ui,sans-serif"' +
+    NFT_SVG_PE_NONE +
+    '>' +
+    em +
+    '</text>'
+  );
+}
+
+/** Número de hueco a un lado del tubo vertical (anchor end = izquierda del tubo, start = derecha). */
+function nftSvgHuecoNumBesideVertBar(numX, gy, numShow, fs, anchor) {
+  const anc = anchor === 'start' ? 'start' : 'end';
+  return (
+    '<text x="' +
+    numX.toFixed(2) +
+    '" y="' +
+    gy.toFixed(2) +
+    '" text-anchor="' +
+    anc +
+    '" dominant-baseline="central" font-size="' +
+    fs +
+    '" font-weight="800" fill="#475569"' +
+    NFT_SVG_PE_NONE +
+    '>' +
+    numShow +
+    '</text>'
+  );
+}
+
+/** Número de hueco bajo el círculo (tubo horizontal: escalera, serpentín, mesa 1 nivel). */
+function nftSvgHuecoNumBelowHole(gx, gy, hrGi, numShow, fs, compact) {
+  const dy = Math.max(7, Math.min(15, hrGi * 0.42 + (compact ? 4 : 6)));
+  const ny = gy + hrGi + dy;
+  return (
+    '<text x="' +
+    gx.toFixed(2) +
+    '" y="' +
+    ny.toFixed(2) +
+    '" text-anchor="middle" font-size="' +
+    fs +
+    '" font-weight="800" fill="#475569"' +
+    NFT_SVG_PE_NONE +
+    '>' +
+    numShow +
+    '</text>'
+  );
+}
+
 /**
  * NFT mesa multinivel: franjas con distinto número de tubos; flujo en serpentín entre franjas.
  */
-/** Emoji del cultivo + número de hueco en SVG NFT; sin pointer-events para no bloquear el hit area. */
-function nftSvgHuecoEmojiYNum(dat, cult, gx, gy, hrGi, numShow, holeNumFsMM, compact, optNumDy) {
-  const hasV = dat && String(dat.variedad || '').trim() !== '';
-  const gxF = gx.toFixed(2);
-  const peNoneTxt = ' pointer-events="none"';
-  const dyNum = optNumDy != null ? optNumDy : 4;
-  let out = '';
-  if (hasV && hrGi >= 4) {
-    const em = cultivoEmoji(cult);
-    const emFs = Math.max(8, Math.min(hrGi * 1.38, compact ? 17 : 21));
-    const emY = gy - hrGi * 0.28;
-    out +=
-      '<text x="' +
-      gxF +
-      '" y="' +
-      emY.toFixed(2) +
-      '" text-anchor="middle" dominant-baseline="central" font-size="' +
-      emFs.toFixed(1) +
-      '" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,system-ui,sans-serif"' +
-      peNoneTxt +
-      '>' +
-      em +
-      '</text>';
-  }
-  const numY = hasV && hrGi >= 4 ? gy + Math.min(hrGi * 0.38, 10) : gy + dyNum;
-  const numFs = hasV && hrGi >= 4 ? Math.max(7, holeNumFsMM - 1.1) : holeNumFsMM;
-  out +=
-    '<text x="' +
-    gxF +
-    '" y="' +
-    numY.toFixed(2) +
-    '" text-anchor="middle" font-size="' +
-    numFs +
-    '" font-weight="800" fill="#1e293b"' +
-    peNoneTxt +
-    '>' +
-    numShow +
-    '</text>';
-  return out;
-}
-
 function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
   const EO = equipOpts || {};
   const interactive = EO.interactive === true;
@@ -12287,7 +12313,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const rowInnerPreMM = Math.max(160, xRmmPre - xLmmPre - 2 * padFlowMMPre);
   const maxNtPreMM = Math.max(1, maxTubosPorNivelMesa);
   const colWPreMM = (rowInnerPreMM - Math.max(0, maxNtPreMM - 1) * gapT) / maxNtPreMM;
-  const topPad = 52 + (compactMesa ? 8 : 0);
+  const topPad = 70 + (compactMesa ? 8 : 0);
   const botTank = 130;
   let tierRowH = Math.max(
     88,
@@ -12702,12 +12728,6 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
-  const m0 = geoms.length ? mmShelf(geoms[0]) : { yT: topPad, yC: topPad };
-  const bombaFsMM = nGeomMM >= 14 ? 9 : 10;
-  const bombaYMM = geoms.length ? Math.min(m0.yT - 20, yPump - 24) : topPad + 8;
-  flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + bombaYMM + '" text-anchor="end" font-size="' + bombaFsMM + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
-
   const slotDenom = Math.max(1, huecosN - 1);
   const holeNumFsMM = nGeomMM >= 14 ? 9.5 : nGeomMM >= 8 ? 10 : 10.75;
   let plants = '';
@@ -12752,7 +12772,16 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
           plants +=
             '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hrGi + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
         }
-        plants += nftSvgHuecoEmojiYNum(dat, cult, gx, gy, hrGi, numShow, holeNumFsMM, compactMesa, null);
+        plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hrGi, compactMesa);
+        const numLeftSide = G.t % 2 === 0;
+        const numXHole = numLeftSide ? L.xC - L.barW / 2 - 5 : L.xC + L.barW / 2 + 5;
+        plants += nftSvgHuecoNumBesideVertBar(
+          numXHole,
+          gy,
+          numShow,
+          Math.max(7.5, holeNumFsMM - 0.75),
+          numLeftSide ? 'end' : 'start'
+        );
         if (interactive) {
           const ptrR = nftHuecoPointerRadius(hrGi, true, slotAlongG);
           plants +=
@@ -12811,7 +12840,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         plants +=
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hrGi + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
-      plants += nftSvgHuecoEmojiYNum(dat, cult, gx, gy, hrGi, numShow, holeNumFsMM, compactMesa, null);
+      plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hrGi, compactMesa);
+      plants += nftSvgHuecoNumBelowHole(gx, gy, hrGi, numShow, Math.max(7.5, holeNumFsMM - 0.75), compactMesa);
       if (interactive) {
         const ptrR = nftHuecoPointerRadius(hrGi, true, slotAlongG);
         plants +=
@@ -12997,13 +13027,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '</defs>' +
     '<text x="' +
     cxTitle +
-    '" y="20" text-anchor="middle" fill="#0f172a" font-size="11.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '" y="22" text-anchor="middle" fill="#0f172a" font-size="15.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
-    '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">' +
+    '" y="40" text-anchor="middle" fill="#64748b" font-size="10.25" font-weight="600">' +
     mesaSubtit.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     '</text>' +
-    nftMesaEscaleraLegendSvg(cxTitle, 41, gidCh, compactMesa) +
+    nftMesaEscaleraLegendSvg(cxTitle, 54, gidCh, compactMesa, true) +
     tierBandsMm +
     back +
     channels +
@@ -13288,7 +13318,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
         plants +=
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
-      plants += nftSvgHuecoEmojiYNum(dat, cult, gx, gy, hr, j + 1, holeNumFsEsc, compactEsc, null);
+      plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactEsc);
+      plants += nftSvgHuecoNumBelowHole(gx, gy, hr, j + 1, Math.max(7, holeNumFsEsc - 0.75), compactEsc);
       if (interactive) {
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongR);
         plants +=
@@ -13641,7 +13672,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
         plants +=
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
-      plants += nftSvgHuecoEmojiYNum(dat, cult, gx, gy, hr, numShow, holeNumFsSerp, compactSerp, 3.5);
+      plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactSerp);
+      plants += nftSvgHuecoNumBelowHole(gx, gy, hr, numShow, Math.max(7, holeNumFsSerp - 0.75), compactSerp);
       if (interactive) {
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongRow);
         plants +=
