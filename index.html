@@ -4919,67 +4919,6 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <span id="modoInfoText">Niveles 1, 3 y 5 activos. Óptimo para EC 1300-1400 µS/cm</span>
       </div>
 
-      <!-- Modo interacción cestas: editar ficha vs asignar cultivo en bloque -->
-      <div id="torreInteraccionBar" style="background:#f8fafc;border:1px solid rgba(15,23,42,0.08);border-radius:14px;
-        padding:12px 14px;margin-top:10px">
-        <div id="torreInteraccionTitulo" style="font-size:10px;font-weight:800;color:#64748b;margin-bottom:8px;letter-spacing:0.12em;text-transform:uppercase">
-          Cestas en la torre
-        </div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
-          <button type="button" id="torreModoEditar" onclick="setTorreInteraccionModo('editar')"
-            class="modo-btn active" style="padding:8px 12px;font-size:12px;border-radius:10px"
-            aria-pressed="true">Editar ficha</button>
-          <button type="button" id="torreModoAsignar" onclick="setTorreInteraccionModo('asignar')"
-            class="modo-btn" style="padding:8px 12px;font-size:12px;border-radius:10px"
-            aria-pressed="false">Asignar cultivo</button>
-        </div>
-        <div id="torreEditarExtra" style="display:block;margin-bottom:10px">
-          <div id="torreEditarAyuda" style="font-size:10px;color:#6b7280;line-height:1.45"></div>
-          <button type="button" onclick="abrirTutorialEditarCultivo({ force: true })"
-            style="margin-top:8px;width:100%;padding:8px 10px;border-radius:10px;border:1.5px dashed #93c5fd;
-            background:#fff;font-family:var(--font-display);font-size:11px;font-weight:700;color:#1d4ed8;cursor:pointer">
-            Tutorial · edición de ficha
-          </button>
-        </div>
-        <div id="torreAssignPanel" style="display:none">
-          <label class="form-label" style="font-size:11px;margin-bottom:4px">1 · Cultivo a colocar</label>
-          <select id="torreAssignVariedad" class="form-select" style="margin-bottom:8px;font-size:13px" aria-label="Cultivo para asignar"></select>
-          <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:8px">
-            <div>
-              <label class="form-label" style="font-size:10px" for="torreAssignFecha">Fecha de trasplante (nuevas)</label>
-              <input type="date" id="torreAssignFecha" class="form-input" autocomplete="off">
-            </div>
-            <label style="display:flex;align-items:center;gap:10px;font-size:12px;cursor:pointer;color:#374151">
-              <input type="checkbox" id="torreAssignInstant" onchange="onTorreInstantToggle(this)">
-              <span id="torreAssignModoRapidoTxt">Modo rápido: un toque = asignar esa cesta al instante</span>
-            </label>
-          </div>
-          <div id="torreAssignMultiBar" style="display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
-            <span id="torreAssignCount" style="font-size:12px;font-weight:800;color:#b45309"></span>
-            <button type="button" id="torreBtnAplicarSeleccion" class="btn btn-primary" style="padding:6px 14px;font-size:12px;border-radius:10px"
-              onclick="aplicarCultivoSeleccionMultiple()">Aplicar a selección</button>
-            <button type="button" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;border-radius:10px"
-              onclick="limpiarSeleccionCestas()">Limpiar selección</button>
-          </div>
-          <div id="torreAssignAyuda" style="font-size:10px;color:#6b7280;line-height:1.45"></div>
-          <button type="button" id="torreBtnFinalizarAsignacion" onclick="finalizarAsignacionCultivos()"
-            style="width:100%;margin-top:10px;padding:11px 14px;border-radius:12px;border:2px solid #15803d;
-            background:linear-gradient(180deg,#f0fdf4,#ecfdf5);font-family:var(--font-display);font-size:13px;
-            font-weight:800;color:#14532d;cursor:pointer;-webkit-tap-highlight-color:transparent;
-            box-shadow:0 1px 3px rgba(21,128,61,0.12)">
-            ✓ Finalizar asignación
-          </button>
-          <div id="torreAssignFinalizarHint" style="font-size:9px;color:#9ca3af;line-height:1.35;margin-top:6px;text-align:center">
-            Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (igual que «Actualizar torre»).
-          </div>
-          <button type="button" onclick="abrirTutorialAsignarCultivo({ force: true })"
-            style="margin-top:8px;width:100%;padding:8px 10px;border-radius:10px;border:1.5px dashed #86efac;
-            background:#fff;font-family:var(--font-display);font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
-            Tutorial · asignación en bloque
-          </button>
-        </div>
-      </div>
-
       <!-- Alerta compatibilidad -->
       <div id="compatAlert" style="display:none" class="info-banner" style="background:rgba(251,191,36,0.08);border-color:rgba(251,191,36,0.3)">
         <span class="compat-alert-mark" aria-hidden="true">!</span>
@@ -5006,6 +4945,27 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
             </button>
           </div>
         </div>
+
+        <!-- Nutriente activo (tarjeta) — junto al strip, arriba del esquema -->
+        <button type="button" id="torreBadgeNutriente"
+          style="display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fff,#f8fafc);
+            border:1px solid rgba(15,23,42,0.1);border-radius:12px;padding:11px 14px;margin-bottom:4px;
+            cursor:pointer;width:100%;font:inherit;text-align:left;color:inherit;
+            appearance:none;-webkit-appearance:none;box-sizing:border-box;
+            box-shadow:0 1px 3px rgba(15,23,42,0.05)"
+          onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
+          <span class="torre-strip-flag" id="torreBadgeFlag" aria-hidden="true">🧪</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-weight:800;color:#64748b;
+              text-transform:uppercase;letter-spacing:0.12em">Nutriente activo</div>
+            <div id="torreBadgeNombre"
+              style="font-family:var(--font-display);font-size:13px;font-weight:900;
+                color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px">
+              —</div>
+          </div>
+          <span style="font-size:11px;color:#15803d;font-weight:800;
+            white-space:nowrap">Cambiar ›</span>
+        </button>
 
         <div id="torreEsquemaSub" class="torre-esquema-intro">
           <strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real).
@@ -5035,6 +4995,68 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           </div>
         </div>
         <div id="torreCestaFocusBar" role="status" aria-live="polite"></div>
+
+        <!-- Modo interacción cestas: justo encima del esquema / lista -->
+        <div id="torreInteraccionBar" style="background:#f8fafc;border:1px solid rgba(15,23,42,0.08);border-radius:14px;
+          padding:12px 14px;margin-top:8px;margin-bottom:8px">
+          <div id="torreInteraccionTitulo" style="font-size:10px;font-weight:800;color:#64748b;margin-bottom:8px;letter-spacing:0.12em;text-transform:uppercase">
+            Cestas en la torre
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+            <button type="button" id="torreModoEditar" onclick="setTorreInteraccionModo('editar')"
+              class="modo-btn active" style="padding:8px 12px;font-size:12px;border-radius:10px"
+              aria-pressed="true">Editar ficha</button>
+            <button type="button" id="torreModoAsignar" onclick="setTorreInteraccionModo('asignar')"
+              class="modo-btn" style="padding:8px 12px;font-size:12px;border-radius:10px"
+              aria-pressed="false">Asignar cultivo</button>
+          </div>
+          <div id="torreEditarExtra" style="display:block;margin-bottom:10px">
+            <div id="torreEditarAyuda" style="font-size:10px;color:#6b7280;line-height:1.45"></div>
+            <button type="button" onclick="abrirTutorialEditarCultivo({ force: true })"
+              style="margin-top:8px;width:100%;padding:8px 10px;border-radius:10px;border:1.5px dashed #93c5fd;
+              background:#fff;font-family:var(--font-display);font-size:11px;font-weight:700;color:#1d4ed8;cursor:pointer">
+              Tutorial · edición de ficha
+            </button>
+          </div>
+          <div id="torreAssignPanel" style="display:none">
+            <label class="form-label" style="font-size:11px;margin-bottom:4px">1 · Cultivo a colocar</label>
+            <select id="torreAssignVariedad" class="form-select" style="margin-bottom:8px;font-size:13px" aria-label="Cultivo para asignar"></select>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:8px">
+              <div>
+                <label class="form-label" style="font-size:10px" for="torreAssignFecha">Fecha de trasplante (nuevas)</label>
+                <input type="date" id="torreAssignFecha" class="form-input" autocomplete="off">
+              </div>
+              <label style="display:flex;align-items:center;gap:10px;font-size:12px;cursor:pointer;color:#374151">
+                <input type="checkbox" id="torreAssignInstant" onchange="onTorreInstantToggle(this)">
+                <span id="torreAssignModoRapidoTxt">Modo rápido: un toque = asignar esa cesta al instante</span>
+              </label>
+            </div>
+            <div id="torreAssignMultiBar" style="display:none;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px">
+              <span id="torreAssignCount" style="font-size:12px;font-weight:800;color:#b45309"></span>
+              <button type="button" id="torreBtnAplicarSeleccion" class="btn btn-primary" style="padding:6px 14px;font-size:12px;border-radius:10px"
+                onclick="aplicarCultivoSeleccionMultiple()">Aplicar a selección</button>
+              <button type="button" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;border-radius:10px"
+                onclick="limpiarSeleccionCestas()">Limpiar selección</button>
+            </div>
+            <div id="torreAssignAyuda" style="font-size:10px;color:#6b7280;line-height:1.45"></div>
+            <button type="button" id="torreBtnFinalizarAsignacion" onclick="finalizarAsignacionCultivos()"
+              style="width:100%;margin-top:10px;padding:11px 14px;border-radius:12px;border:2px solid #15803d;
+              background:linear-gradient(180deg,#f0fdf4,#ecfdf5);font-family:var(--font-display);font-size:13px;
+              font-weight:800;color:#14532d;cursor:pointer;-webkit-tap-highlight-color:transparent;
+              box-shadow:0 1px 3px rgba(21,128,61,0.12)">
+              ✓ Finalizar asignación
+            </button>
+            <div id="torreAssignFinalizarHint" style="font-size:9px;color:#9ca3af;line-height:1.35;margin-top:6px;text-align:center">
+              Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (igual que «Actualizar torre»).
+            </div>
+            <button type="button" onclick="abrirTutorialAsignarCultivo({ force: true })"
+              style="margin-top:8px;width:100%;padding:8px 10px;border-radius:10px;border:1.5px dashed #86efac;
+              background:#fff;font-family:var(--font-display);font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
+              Tutorial · asignación en bloque
+            </button>
+          </div>
+        </div>
+
         <!-- SVG o lista -->
         <div id="torreSVGWrap" class="torre-svg-canvas" role="img"
           aria-label="Esquema de torre hidropónica. Flechas junto al depósito o deslizar para girar. Las cestas de frente responden al toque.">
@@ -5073,26 +5095,6 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               </div>
             </div>
           </div>
-          <!-- Nutriente activo de esta torre -->
-          <button type="button" id="torreBadgeNutriente"
-            style="display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fff,#f8fafc);
-              border:1px solid rgba(15,23,42,0.1);border-radius:12px;padding:11px 14px;
-              cursor:pointer;width:100%;font:inherit;text-align:left;color:inherit;
-              appearance:none;-webkit-appearance:none;box-sizing:border-box;
-              box-shadow:0 1px 3px rgba(15,23,42,0.05)"
-            onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
-            <span class="torre-strip-flag" id="torreBadgeFlag" aria-hidden="true">🧪</span>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:10px;font-weight:800;color:#64748b;
-                text-transform:uppercase;letter-spacing:0.12em">Nutriente activo</div>
-              <div id="torreBadgeNombre"
-                style="font-family:var(--font-display);font-size:13px;font-weight:900;
-                  color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px">
-                —</div>
-            </div>
-            <span style="font-size:11px;color:#15803d;font-weight:800;
-              white-space:nowrap">Cambiar ›</span>
-          </button>
         </div>
 
         <!-- Leyenda -->
@@ -7253,7 +7255,7 @@ function initApp() {
   if (modoBtn) modoBtn.classList.add('active');
   const m = MODOS_CULTIVO[modoActual];
   if (m) document.getElementById('modoInfoText').textContent =
-    `${m.desc} — Editar ficha o asignar cultivo (barra bajo este texto)`;
+    `${m.desc} — Editar ficha o asignar cultivo (barra encima del esquema)`;
   renderTorre();
   updateTorreStats();
   updateDashboard();
@@ -7531,7 +7533,7 @@ function setModo(modo) {
   // Update info
   const m = MODOS_CULTIVO[modo];
   document.getElementById('modoInfoText').textContent =
-    `${m.desc} — Editar ficha o asignar cultivo (barra bajo este texto)`;
+    `${m.desc} — Editar ficha o asignar cultivo (barra encima del esquema)`;
   renderTorre();
 }
 
@@ -9584,7 +9586,7 @@ function updateTorreStats() {
     volDepIn.value = String(Math.max(5, Math.min(100, Math.round(vCfg))));
   }
 
-  // Badge nutriente (tarjeta inferior + bandera strip)
+  // Badge nutriente (strip + tarjeta arriba del esquema)
   const flagEl   = document.getElementById('torreBadgeFlag');
   const bandEl   = document.getElementById('torreBadgeBandera');
   const nomStrip = document.getElementById('torreBadgeStripNombre');
