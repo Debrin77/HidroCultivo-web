@@ -811,7 +811,7 @@ body::before { display: none; }
   min-height: min(52vh, 540px);
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-mesa-mm-svg {
-  min-height: min(54vh, 580px);
+  min-height: min(62vh, 720px);
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-escalera-svg {
   min-height: min(50vh, 520px);
@@ -12240,6 +12240,12 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     nftDiagramCanvasW0(),
     Math.min(compactMesa ? 1100 : 1240, minRowForHuecos + 96 + 2 * 12 + Math.max(0, nTiers - 2) * 8)
   );
+  const xLmmPre = 40;
+  const xRmmPre = W0 - 40;
+  const padFlowMMPre = 12;
+  const rowInnerPreMM = Math.max(160, xRmmPre - xLmmPre - 2 * padFlowMMPre);
+  const maxNtPreMM = Math.max(1, maxTubosPorNivelMesa);
+  const colWPreMM = (rowInnerPreMM - Math.max(0, maxNtPreMM - 1) * gapT) / maxNtPreMM;
   const topPad = 52 + (compactMesa ? 8 : 0);
   const botTank = 130;
   let tierRowH = Math.max(
@@ -12253,12 +12259,14 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     tierRowH = Math.max(74, Math.round(tierRowH * 0.9));
   }
   if (nTiers > 1) {
-    const gapVmin = compactMesa ? 12 : 14;
-    const rStackEst = compactMesa ? 14.5 : 16.5;
-    const stackNeed = (huecosN - 1) * gapVmin + 2 * rStackEst + (compactMesa ? 34 : 40);
-    tierRowH = Math.max(tierRowH, stackNeed, compactMesa ? 92 : 104);
+    const hrPreMM = Math.min(compactMesa ? 22 : 26, Math.max(compactMesa ? 12.5 : 14, colWPreMM * 0.44));
+    const slotPadMM = compactMesa ? 6 : 8;
+    const gapVNeedMM = 2 * hrPreMM + slotPadMM;
+    const bandPadMM = compactMesa ? 46 : 56;
+    const stackMinMM = (huecosN - 1) * gapVNeedMM + 2 * hrPreMM + bandPadMM;
+    tierRowH = Math.max(tierRowH, stackMinMM, compactMesa ? 118 : 136);
   }
-  const tierGapMM = nTiers > 1 ? (compactMesa ? 12 : 16) : 0;
+  const tierGapMM = nTiers > 1 ? (compactMesa ? 14 : 20) : 0;
   const tierPitch = tierRowH + tierGapMM;
   const H = topPad + nTiers * tierRowH + Math.max(0, nTiers - 1) * tierGapMM + botTank;
   const cx = W0 / 2;
@@ -12349,11 +12357,14 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     const hr = interactive
       ? Math.max(compactMesa ? 12.5 : 14, Math.min(compactMesa ? 22 : 26, colW * 0.44))
       : Math.max(compactMesa ? 11 : 12, Math.min(compactMesa ? 20 : 24, colW * 0.4));
-    let gapV = Math.max(hr * 1.12, compactMesa ? 10 : 12);
+    const gapVMin = 2 * hr + (compactMesa ? 5 : 7);
+    const vBand = compactMesa ? 22 : 28;
+    const maxHalf = Math.max(0, tierRowH / 2 - vBand);
+    let gapV = Math.max(gapVMin, hr * 1.12);
     let halfSpan = huecosN <= 1 ? 0 : ((huecosN - 1) * gapV) / 2;
-    const maxHalf = Math.max(0, tierRowH / 2 - (compactMesa ? 14 : 18));
     if (huecosN > 1 && halfSpan + hr > maxHalf) {
-      gapV = Math.max(hr * 1.02, (2 * Math.max(6, maxHalf - hr)) / (huecosN - 1));
+      const gapVF = (2 * (maxHalf - hr)) / (huecosN - 1);
+      gapV = gapVF < gapVMin ? gapVMin : gapVF;
       halfSpan = ((huecosN - 1) * gapV) / 2;
     }
     const down = G.t % 2 === 0;
