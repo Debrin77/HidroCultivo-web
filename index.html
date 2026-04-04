@@ -5128,7 +5128,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           font-size:12px;line-height:1.35"></div>
         <div id="torreSwipeHint" class="torre-swipe-hint">Flechas al lado del depósito o deslizar para girar</div>
         <div id="torreNftDiagramHint" style="display:none;text-align:center;margin:8px 12px 2px;font-size:10px;font-weight:700;color:#64748b;line-height:1.45;letter-spacing:0.02em">
-          NFT 3D: arrastra para girar el modelo · toca un hueco o usa <strong style="font-weight:800">Lista</strong> (escalera = esquema 2D)
+          NFT 3D: arrastra para girar el modelo · toca un hueco o usa <strong style="font-weight:800">Lista</strong>
         </div>
 
         <!-- Depósito y volumen (mezclas / checklist) -->
@@ -9028,9 +9028,7 @@ function actualizarChromePanelEsquemaPorTipo() {
       intro.innerHTML =
         '<strong>NFT</strong> · disposición ' +
         dTxt +
-        (dN === 'escalera'
-          ? 'Vista <strong>2D</strong> con recorrido del agua en azul. Los huecos comparten el mismo número por tubo. '
-          : 'Vista <strong>3D</strong> (WebGL): arrastra para orbitar, pellizco o rueda para zoom; <strong>toca un hueco</strong> para la ficha. ') +
+        'Vista <strong>3D</strong> (WebGL): arrastra para orbitar, pellizco o rueda para zoom; <strong>toca un hueco</strong> para la ficha. ' +
         'Indica <strong>altura al 1.º canal</strong> en asistente o Sistema para la bomba. ' +
         '<strong>Lista</strong> = acceso lineal (cada fila = un tubo).';
     } else {
@@ -9090,10 +9088,91 @@ function nftThreeMatColor(THREE, css, fallbackHex) {
   return new THREE.Color(fallbackHex != null ? fallbackHex : 0xf8fafc);
 }
 
-/** Posiciones 3D de tubos; índice n alineado con state.torre[n] (mismo orden que el SVG multinivel / serpentín). */
+/**
+ * Misma secuencia de tubos que buildNftEscaleraDiagramSvg (g = índice en state.torre).
+ * @returns {{ runs: Array<{g:number,y:number,xL:number,xR:number,rtl:boolean}>, W0: number, ladderTop: number, ladderBot: number, nv: number, car: number }}
+ */
+function nftEscaleraRunsGeometry(nvRaw, carRaw) {
+  const W0 = nftDiagramCanvasW0();
+  const topPad = 38;
+  const yApex = topPad + 4;
+  const nv = Math.min(12, Math.max(1, parseInt(String(nvRaw), 10) || 1));
+  const car = carRaw === 2 ? 2 : 1;
+  const dy = Math.min(58, Math.max(38, Math.floor(440 / Math.max(nv, 1))));
+  const yStagger2 = car === 2 ? dy * 0.45 : 0;
+  const ladderTop = yApex + 22;
+  const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
+  const cx = W0 / 2;
+  const baseHalf = 112;
+  const rungOut = 66;
+  const rungIn = 18;
+  const runs = [];
+  let g = 0;
+  if (car === 1) {
+    for (let i = 0; i < nv; i++) {
+      const p = nv <= 1 ? 0 : i / (nv - 1);
+      const y = ladderTop + i * dy;
+      const xFoot = cx - 14 - baseHalf * p;
+      runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
+    }
+  } else {
+    for (let i = 0; i < nv; i++) {
+      const p = nv <= 1 ? 0 : i / (nv - 1);
+      const y = ladderTop + i * dy;
+      const xLeftFoot = cx - baseHalf * p;
+      runs.push({ g: g++, y, xL: xLeftFoot - rungOut, xR: xLeftFoot + rungIn, rtl: i % 2 === 1 });
+    }
+    for (let i = 0; i < nv; i++) {
+      const p = nv <= 1 ? 0 : i / (nv - 1);
+      const y = ladderTop + i * dy + yStagger2;
+      const xRightFoot = cx + baseHalf * p;
+      runs.push({ g: g++, y, xL: xRightFoot - rungIn, xR: xRightFoot + rungOut, rtl: i % 2 === 0 });
+    }
+  }
+  return { runs, W0, ladderTop, ladderBot, dy, nv, car };
+}
+
+function nftThreeLayoutsEscalera(cfg, hyd) {
+  const nv = hyd.escaleraNiveles != null ? hyd.escaleraNiveles : 1;
+  const car = hyd.escaleraCaras === 2 ? 2 : 1;
+  const nh = hyd.nHx;
+  const { runs, W0, ladderTop, ladderBot } = nftEscaleraRunsGeometry(nv, car);
+  const vertSpan = Math.max(1, ladderBot - ladderTop);
+  const xPosScale = 0.0215;
+  const lenScale = 0.064;
+  const layouts = [];
+  for (const R of runs) {
+    const lenSvg = R.xR - R.xL;
+    const cxSvg = (R.xL + R.xR) / 2;
+    const len = Math.max(1.85, Math.min(6.4, lenSvg * lenScale));
+    let worldZ = 0;
+    if (car === 2) {
+      worldZ = R.g < nv ? -0.62 : 0.62;
+    }
+    const worldX = (cxSvg - W0 / 2) * xPosScale;
+    const worldY = -((R.y - ladderTop) / vertSpan) * 5.6;
+    layouts.push({
+      n: R.g,
+      cx: worldX,
+      cy: worldY,
+      cz: worldZ,
+      len,
+      rotY: R.rtl ? Math.PI : 0,
+      tw: 0.68,
+      th: 0.35,
+      nh,
+    });
+  }
+  return layouts;
+}
+
+/** Posiciones 3D de tubos; índice n alineado con state.torre[n] (mismo orden que el SVG multinivel / serpentín / escalera). */
 function nftThreeLayoutsForConfig(cfg, hyd) {
   const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
   const nh = hyd.nHx;
+  if (disp === 'escalera') {
+    return nftThreeLayoutsEscalera(cfg, hyd);
+  }
   if (disp === 'mesa' && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
     const tiers = hyd.mesaTiers;
     const rowInner = 9;
@@ -9169,10 +9248,26 @@ function nftMountThreeNftDiagram(wrap, cfg, hyd, hx, pend, vol, altShow, bombMai
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xe8edf3);
+  let aimX = 0;
+  let aimY = 0.3;
+  let aimZ = -Math.max(1, hyd.nCh) * 0.72;
+  if (layouts.length) {
+    let sx = 0;
+    let sy = 0;
+    let sz = 0;
+    for (const L of layouts) {
+      sx += L.cx;
+      sy += L.cy;
+      sz += L.cz;
+    }
+    const nl = layouts.length;
+    aimX = sx / nl;
+    aimY = sy / nl + 0.28;
+    aimZ = sz / nl;
+  }
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
-  camera.position.set(0.2, 8.2, 17.5);
-  const aimZ = -Math.max(1, hyd.nCh) * 0.72;
-  camera.lookAt(0, 0.35, aimZ);
+  camera.position.set(aimX + 0.35, aimY + 8.4, aimZ + 17.2);
+  camera.lookAt(aimX, aimY, aimZ);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -9180,7 +9275,7 @@ function nftMountThreeNftDiagram(wrap, cfg, hyd, hx, pend, vol, altShow, bombMai
   const controls = new OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.07;
-  controls.target.set(0, 0.25, aimZ);
+  controls.target.set(aimX, aimY, aimZ);
   controls.maxPolarAngle = Math.PI * 0.52;
   controls.minDistance = 6;
   controls.maxDistance = 48;
@@ -9195,11 +9290,12 @@ function nftMountThreeNftDiagram(wrap, cfg, hyd, hx, pend, vol, altShow, bombMai
   scene.add(fill);
 
   const chMatBase = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, metalness: 0.06, roughness: 0.42 });
+  const tankZ = aimZ + 4.1;
   const tank = new THREE.Mesh(
     new THREE.BoxGeometry(5.4, 1.4, 3.5),
     new THREE.MeshStandardMaterial({ color: 0x166534, metalness: 0.04, roughness: 0.52 })
   );
-  tank.position.set(0, -1.18, 2.75);
+  tank.position.set(aimX * 0.25, aimY - 2.35, tankZ);
   scene.add(tank);
   const water = new THREE.Mesh(
     new THREE.BoxGeometry(4.75, 0.5, 2.95),
@@ -9211,7 +9307,7 @@ function nftMountThreeNftDiagram(wrap, cfg, hyd, hx, pend, vol, altShow, bombMai
       opacity: 0.8,
     })
   );
-  water.position.set(0, -0.78, 2.75);
+  water.position.set(aimX * 0.25, aimY - 1.95, tankZ);
   scene.add(water);
 
   const pickMeshes = [];
@@ -9492,111 +9588,76 @@ function renderTorre() {
       cfg.nftAlturaBombeoCm != null && Number(cfg.nftAlturaBombeoCm) > 0
         ? Math.round(Number(cfg.nftAlturaBombeoCm))
         : getNftAlturaBombeoEfectivaCm(cfg);
-    const dispNft = nftDisposicionNormalizada(cfg.nftDisposicion);
-    const nftUseThree = dispNft !== 'escalera';
-
-    if (nftUseThree) {
-      wrap.classList.add('torre-nft-three-wrap');
-      disposeNftThreeIfAny(wrap);
-      wrap.innerHTML =
-        '<div style="text-align:center;padding:36px 16px;color:#64748b;font-size:13px;font-weight:700">Cargando vista 3D…</div>';
-      loadNftThreeModules()
-        .then(({ THREE, OrbitControls }) => {
-          if (!wrap.isConnected) return;
-          const cfg2 = state.configTorre;
-          if (cfg2?.tipoInstalacion !== 'nft') return;
-          const hyd2 = getNftHidraulicaDesdeConfig(cfg2);
-          const hx2 = cfg2.nftHuecosPorCanal ?? cfg2.numCestas ?? 8;
-          const pend2 = cfg2.nftPendientePct ?? 2;
-          const vol2 = cfg2.volDeposito || VOL_OBJETIVO;
-          const eq2 = cfg2.equipamiento;
-          const bomb2 = getNftBombaDesdeConfig(cfg2);
-          const alt2 =
-            cfg2.nftAlturaBombeoCm != null && Number(cfg2.nftAlturaBombeoCm) > 0
-              ? Math.round(Number(cfg2.nftAlturaBombeoCm))
-              : getNftAlturaBombeoEfectivaCm(cfg2);
-          const disp2 = nftDisposicionNormalizada(cfg2.nftDisposicion);
-          const svgOpts = {
-            calentador: eq2?.includes('calentador') ?? true,
-            difusor: eq2?.includes('difusor') ?? true,
-            interactive: true,
-            bombaInfo: bomb2,
-            userCaudalLh: cfg2.nftBombaUsuarioCaudalLh || null,
-            userPotenciaW: cfg2.nftBombaUsuarioPotenciaW || null,
-            nftDisposicion: cfg2.nftDisposicion,
-            nftAlturaBombeoCm: alt2 > 0 ? alt2 : null,
-            cfgSnapshot: cfg2,
-            mesaTiers: hyd2.mesaTiers,
-            escaleraNiveles: hyd2.escaleraNiveles,
-            escaleraCaras: hyd2.escaleraCaras,
-          };
-          if (disp2 === 'escalera') {
-            wrap.classList.remove('torre-nft-three-wrap');
-            disposeNftThreeIfAny(wrap);
-            wrap.innerHTML = buildNftActiveDiagramSvg(hyd2.nCh, hx2, pend2, vol2, 'Main', svgOpts);
-            try {
-              bindTorreCestas(wrap);
-            } catch (e2) {}
-            return;
-          }
-          try {
-            nftMountThreeNftDiagram(wrap, cfg2, hyd2, hx2, pend2, vol2, alt2, bomb2, THREE, OrbitControls);
-          } catch (err) {
-            console.warn('NFT 3D:', err);
-            wrap.classList.remove('torre-nft-three-wrap');
-            wrap.innerHTML = buildNftActiveDiagramSvg(hyd2.nCh, hx2, pend2, vol2, 'Main', svgOpts);
-            try {
-              bindTorreCestas(wrap);
-            } catch (e2) {}
-          }
-        })
-        .catch(err => {
-          console.warn('Three.js NFT', err);
-          if (!wrap.isConnected) return;
+    wrap.classList.add('torre-nft-three-wrap');
+    disposeNftThreeIfAny(wrap);
+    wrap.innerHTML =
+      '<div style="text-align:center;padding:36px 16px;color:#64748b;font-size:13px;font-weight:700">Cargando vista 3D…</div>';
+    loadNftThreeModules()
+      .then(({ THREE, OrbitControls }) => {
+        if (!wrap.isConnected) return;
+        const cfg2 = state.configTorre;
+        if (cfg2?.tipoInstalacion !== 'nft') return;
+        const hyd2 = getNftHidraulicaDesdeConfig(cfg2);
+        const hx2 = cfg2.nftHuecosPorCanal ?? cfg2.numCestas ?? 8;
+        const pend2 = cfg2.nftPendientePct ?? 2;
+        const vol2 = cfg2.volDeposito || VOL_OBJETIVO;
+        const eq2 = cfg2.equipamiento;
+        const bomb2 = getNftBombaDesdeConfig(cfg2);
+        const alt2 =
+          cfg2.nftAlturaBombeoCm != null && Number(cfg2.nftAlturaBombeoCm) > 0
+            ? Math.round(Number(cfg2.nftAlturaBombeoCm))
+            : getNftAlturaBombeoEfectivaCm(cfg2);
+        const svgOpts = {
+          calentador: eq2?.includes('calentador') ?? true,
+          difusor: eq2?.includes('difusor') ?? true,
+          interactive: true,
+          bombaInfo: bomb2,
+          userCaudalLh: cfg2.nftBombaUsuarioCaudalLh || null,
+          userPotenciaW: cfg2.nftBombaUsuarioPotenciaW || null,
+          nftDisposicion: cfg2.nftDisposicion,
+          nftAlturaBombeoCm: alt2 > 0 ? alt2 : null,
+          cfgSnapshot: cfg2,
+          mesaTiers: hyd2.mesaTiers,
+          escaleraNiveles: hyd2.escaleraNiveles,
+          escaleraCaras: hyd2.escaleraCaras,
+        };
+        try {
+          nftMountThreeNftDiagram(wrap, cfg2, hyd2, hx2, pend2, vol2, alt2, bomb2, THREE, OrbitControls);
+        } catch (err) {
+          console.warn('NFT 3D:', err);
           wrap.classList.remove('torre-nft-three-wrap');
-          wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', {
-            calentador: eqArr?.includes('calentador') ?? true,
-            difusor: eqArr?.includes('difusor') ?? true,
-            interactive: true,
-            bombaInfo: bombMain,
-            userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
-            userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
-            nftDisposicion: cfg.nftDisposicion,
-            nftAlturaBombeoCm: altShow > 0 ? altShow : null,
-            cfgSnapshot: cfg,
-            mesaTiers: hyd.mesaTiers,
-            escaleraNiveles: hyd.escaleraNiveles,
-            escaleraCaras: hyd.escaleraCaras,
-          });
+          wrap.innerHTML = buildNftActiveDiagramSvg(hyd2.nCh, hx2, pend2, vol2, 'Main', svgOpts);
           try {
             bindTorreCestas(wrap);
           } catch (e2) {}
+        }
+      })
+      .catch(err => {
+        console.warn('Three.js NFT', err);
+        if (!wrap.isConnected) return;
+        wrap.classList.remove('torre-nft-three-wrap');
+        wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', {
+          calentador: eqArr?.includes('calentador') ?? true,
+          difusor: eqArr?.includes('difusor') ?? true,
+          interactive: true,
+          bombaInfo: bombMain,
+          userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
+          userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
+          nftDisposicion: cfg.nftDisposicion,
+          nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+          cfgSnapshot: cfg,
+          mesaTiers: hyd.mesaTiers,
+          escaleraNiveles: hyd.escaleraNiveles,
+          escaleraCaras: hyd.escaleraCaras,
         });
-      wrap.setAttribute(
-        'aria-label',
-        'NFT en 3D: orbita el modelo y toca un hueco para la ficha, o usa Lista.'
-      );
-    } else {
-      wrap.classList.remove('torre-nft-three-wrap');
-      disposeNftThreeIfAny(wrap);
-      wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', {
-        calentador: eqArr?.includes('calentador') ?? true,
-        difusor: eqArr?.includes('difusor') ?? true,
-        interactive: true,
-        bombaInfo: bombMain,
-        userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
-        userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
-        nftDisposicion: cfg.nftDisposicion,
-        nftAlturaBombeoCm: altShow > 0 ? altShow : null,
-        cfgSnapshot: cfg,
-        mesaTiers: hyd.mesaTiers,
-        escaleraNiveles: hyd.escaleraNiveles,
-        escaleraCaras: hyd.escaleraCaras,
+        try {
+          bindTorreCestas(wrap);
+        } catch (e2) {}
       });
-      wrap.setAttribute('aria-label',
-        'Diagrama NFT: línea azul = agua (subida, tubos T1 T2 y retorno por el borde). Desplaza con el dedo si hace falta. Toca cada hueco para ficha o usa Lista.');
-      try { bindTorreCestas(wrap); } catch (e) {}
-    }
+    wrap.setAttribute(
+      'aria-label',
+      'NFT en 3D: orbita el modelo y toca un hueco para la ficha, o usa Lista.'
+    );
   } else {
     wrap.innerHTML = generarSVGTorre();
     wrap.setAttribute('aria-label',
