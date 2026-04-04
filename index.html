@@ -806,6 +806,10 @@ body::before { display: none; }
   max-height: none;
   min-height: 200px;
 }
+/* Escalera una cara: aprovecha mejor el lienzo (cestas más fáciles de pulsar). */
+#torreSVGWrap.torre-svg-canvas svg.nft-escalera--una-cara {
+  min-height: min(52vh, 540px);
+}
 .torre-swipe-hint {
   text-align: center;
   margin: 11px 0 2px;
@@ -12033,7 +12037,7 @@ function nftTankVolumeFontSize(volL, legTier) {
   return Math.min(24, fs);
 }
 
-/** Insignia de altura junto al borde derecho del depósito (no tapa tubos); ensancha el viewBox si hace falta. hint opcional: { nCanales, nTubosTotal, volL }. */
+/** Insignia de altura junto al borde derecho del depósito (no tapa tubos); ensancha el viewBox si hace falta. hint opcional: { nCanales, nTubosTotal, volL, alturaBadgeNTubos }. */
 function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0, hint) {
   const cm = altCm != null ? Math.round(Number(altCm)) : NaN;
   if (!Number.isFinite(cm) || cm <= 0) {
@@ -12044,15 +12048,32 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0, hint
     const mn = Math.round(Number(hint.alturaBadgeMinTier));
     if (Number.isFinite(mn) && mn >= 1) legTier = Math.max(legTier, Math.min(2, mn));
   }
-  const bw = legTier >= 2 ? 198 : legTier >= 1 ? 176 : 158;
-  const bh = legTier >= 2 ? 56 : legTier >= 1 ? 50 : 46;
-  const fsMain = legTier >= 2 ? 17 : legTier >= 1 ? 15.5 : 14;
-  const fsSub = legTier >= 2 ? 12.5 : legTier >= 1 ? 11.5 : 10.5;
+  const rawNt =
+    hint && (hint.alturaBadgeNTubos != null ? hint.alturaBadgeNTubos : hint.nCanales != null ? hint.nCanales : hint.nTubosTotal);
+  const nTubosBadge = Math.max(1, Math.min(48, Math.round(Number(rawNt)) || 1));
+
+  let bw = legTier >= 2 ? 198 : legTier >= 1 ? 176 : 158;
+  let bh = legTier >= 2 ? 56 : legTier >= 1 ? 50 : 46;
+  let fsMain = legTier >= 2 ? 17 : legTier >= 1 ? 15.5 : 14;
+  let fsSub = legTier >= 2 ? 12.5 : legTier >= 1 ? 11.5 : 10.5;
+
+  if (nTubosBadge <= 3) {
+    fsMain = Math.max(fsMain + 2, 18.25);
+    fsSub = Math.max(fsSub + 1.75, 13);
+    bw = Math.max(bw + 18, 212);
+    bh = Math.max(bh + 10, 60);
+  } else {
+    fsMain = Math.max(fsMain, 16);
+    fsSub = Math.max(fsSub, 12);
+    bw = Math.max(bw, 188);
+    bh = Math.max(bh, 52);
+  }
+
   const gap = 7;
   const bx = tx + tankW + gap;
   const by = tankY + Math.max(3, (tankH - bh) / 2);
-  const yMainLine = by + (legTier >= 2 ? 22 : legTier >= 1 ? 20 : 19);
-  const ySubLine = by + (legTier >= 2 ? 44 : legTier >= 1 ? 40 : 37);
+  const yMainLine = by + Math.round(bh * 0.36);
+  const ySubLine = by + Math.round(bh * 0.8);
   const canvasW = Math.max(canvasW0, bx + bw + 10);
   const html =
     '<g class="nft-altura-badge">' +
@@ -12135,7 +12156,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const waterTop = tankY + 8;
   const waterH = tankH - 20;
   const xRiser = Math.max(26, Math.min(tx + 28, xL - 10));
-  const legHintMM = { volL: vol, nCanales: maxTubosPorNivelMesa, nTubosTotal: nTubosMesa };
+  const legHintMM = { volL: vol, nCanales: maxTubosPorNivelMesa, nTubosTotal: nTubosMesa, alturaBadgeNTubos: nTubosMesa };
   const legTierMM = nftDiagramLegibilityHint(legHintMM);
   const volFsMM = nftTankVolumeFontSize(vol, legTierMM);
   const altBadgeMM = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0, legHintMM);
@@ -12165,16 +12186,16 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   }
 
   /** Tubos verticales por franja: agua en serpentín (T1 arriba→abajo, T2 abajo→arriba, …); retorno desde el fondo del último. */
-  const vPadMM = 11;
+  const vPadMM = 6;
   function mmTube(G) {
     const cx = (G.xL + G.xR) / 2;
     const yT = G.rowY - tierRowH / 2 + vPadMM;
     const yB = G.rowY + tierRowH / 2 - vPadMM;
-    const barW = Math.min(52, Math.max(26, (G.xR - G.xL) * 0.58));
+    const barW = Math.min(36, Math.max(15, (G.xR - G.xL) * 0.34));
     return { cx, yT, yB, barW };
   }
 
-  const padHuecoV = 7;
+  const padHuecoV = 5;
   let minHoleSpanMM = tierRowH - 2 * vPadMM - 2 * padHuecoV;
   for (let gi = 0; gi < geoms.length; gi++) {
     const m = mmTube(geoms[gi]);
@@ -12267,8 +12288,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   flowLayer +=
     '<text x="' + (xRiser - 3) + '" y="' + bombaYMM + '" text-anchor="end" font-size="' + bombaFsMM + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
-  const hr = Math.max(7, Math.min(14.5, (minHoleSpanMM / Math.max(huecosN - 1, 1)) * 0.52));
-  const holeNumFsMM = nGeomMM >= 14 ? 8.5 : nGeomMM >= 8 ? 9 : 9.75;
+  const hr = Math.max(8.75, Math.min(16, (minHoleSpanMM / Math.max(huecosN - 1, 1)) * 0.58));
+  const holeNumFsMM = nGeomMM >= 14 ? 9.25 : nGeomMM >= 8 ? 9.75 : 10.25;
   let plants = '';
   for (let gi = 0; gi < geoms.length; gi++) {
     const G = geoms[gi];
@@ -12480,9 +12501,14 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
   const W0base = nftDiagramCanvasW0();
-  const rungOut = Math.min(220, 102 + Math.max(0, huecosN - 5) * 21);
-  const rungIn = 20;
-  const baseHalf = 138;
+  let rungOut = Math.min(220, 102 + Math.max(0, huecosN - 5) * 21);
+  if (car === 1) {
+    rungOut = Math.min(340, Math.round(rungOut * 1.58));
+  } else {
+    rungOut = Math.min(292, Math.round(rungOut * 1.22));
+  }
+  const rungIn = car === 2 ? 18 : 20;
+  const baseHalf = car === 1 ? 128 : 138;
   const minCxEsc = 32 + 14 + baseHalf + rungOut;
   const cxMid = W0base / 2;
   const cx = Math.max(cxMid, minCxEsc);
@@ -12490,7 +12516,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const topPad = 38;
   const botTank = 130;
   const yApex = topPad + 4;
-  const dy = Math.min(58, Math.max(38, Math.floor(440 / Math.max(nv, 1))));
+  const dy =
+    car === 1
+      ? Math.min(66, Math.max(44, Math.floor(540 / Math.max(nv, 1))))
+      : Math.min(58, Math.max(36, Math.floor(430 / Math.max(nv, 1))));
   const yStagger2 = car === 2 ? dy * 0.45 : 0;
   const ladderTop = yApex + 22;
   const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
@@ -12503,10 +12532,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const waterH = tankH - 20;
   const xRiser = Math.max(26, Math.min(tx + 28, 40));
   const yPump = waterTop + Math.min(18, waterH * 0.45);
-  const tubeH = 28;
-  const padFlow = 8;
+  const tubeH = car === 2 ? 19 : 27;
+  const padFlow = car === 2 ? 7 : 8;
   const nRunsHint = car === 2 ? nv * 2 : nv;
-  const legHintEsc = { volL: vol, nCanales: nRunsHint, nTubosTotal: nRunsHint };
+  const legHintEsc = { volL: vol, nCanales: nRunsHint, nTubosTotal: nRunsHint, alturaBadgeNTubos: nRunsHint };
   const legTierEsc = nftDiagramLegibilityHint(legHintEsc);
   const volFsEsc = nftTankVolumeFontSize(vol, legTierEsc);
   const altBadgeEsc = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0, {
@@ -12601,6 +12630,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const peNone = interactive ? ' pointer-events="none"' : '';
   const nRunsEsc = runs.length;
   const tLabelFsEsc = 13.5;
+  const chStrokeEsc = car === 2 ? 1.05 : 1.25;
   for (let i = 0; i < runs.length; i++) {
     const R = runs[i];
     const yc = R.y - tubeH / 2;
@@ -12616,14 +12646,16 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       tubeH +
       '" rx="8" fill="url(#' +
       gidCh +
-      ')" stroke="#0369a1" stroke-width="1.3"' +
+      ')" stroke="#0369a1" stroke-width="' +
+      chStrokeEsc +
+      '"' +
       peNone +
       '/>';
     channels +=
       '<text x="' +
       cxRun +
       '" y="' +
-      (R.y + tubeH / 2 + 14) +
+      (yc - 6) +
       '" text-anchor="middle" font-size="' +
       tLabelFsEsc +
       '" font-weight="900" fill="#0c4a6e"' +
@@ -12645,7 +12677,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '<text x="' + (xRiser - 3) + '" y="' + bombaYEsc + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const rungSpan = rungOut + rungIn;
-  const hr = Math.max(5.2, Math.min(12.5, (rungSpan / Math.max(huecosN - 1, 1)) * 0.48));
+  const hr =
+    car === 1
+      ? Math.max(6.9, Math.min(14, (rungSpan / Math.max(huecosN - 1, 1)) * 0.53))
+      : Math.max(5.4, Math.min(12.2, (rungSpan / Math.max(huecosN - 1, 1)) * 0.47));
   const holeNumFsEsc = nRunsEsc >= 14 ? 8.5 : nRunsEsc >= 8 ? 9.25 : 10;
   let plants = '';
   for (let ri = 0; ri < runs.length; ri++) {
@@ -12771,7 +12806,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll' +
+    (car === 1 ? ' nft-escalera--una-cara' : '') +
+    '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
     H +
@@ -12884,8 +12921,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const marginX = 34;
   const xL = marginX;
   const xR = W0 - marginX;
-  const tubeH = 28;
+  const tubeH = dispLayout === 'pared' ? 17 : 25;
   const padFlow = 14;
+  const serpChStroke = dispLayout === 'pared' ? 1.05 : 1.3;
   const tankY = H - botTank + 4;
   const tankH = 82;
   const tankW = Math.min(360, Math.round(140 + vol * 0.65));
@@ -12894,7 +12932,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const waterH = tankH - 20;
   const altCmSerp =
     EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0 ? Math.round(Number(EO.nftAlturaBombeoCm)) : null;
-  const legHintSerp = { volL: vol, nCanales: nCh, nTubosTotal: nCh };
+  const legHintSerp = { volL: vol, nCanales: nCh, nTubosTotal: nCh, alturaBadgeNTubos: nCh };
   const legTierSerp = nftDiagramLegibilityHint(legHintSerp);
   const volFsSerp = nftTankVolumeFontSize(vol, legTierSerp);
   const altBadgeSerp = nftAlturaBadgeBesideTank(altCmSerp, tx, tankY, tankW, tankH, W0, legHintSerp);
@@ -12956,14 +12994,16 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       tubeH +
       '" rx="11" fill="url(#' +
       gidCh +
-      ')" stroke="#0369a1" stroke-width="1.4"' +
+      ')" stroke="#0369a1" stroke-width="' +
+      serpChStroke +
+      '"' +
       peNone +
       '/>';
     channels +=
       '<text x="' +
       cxTubeSerp +
       '" y="' +
-      (yc + tubeH + 14) +
+      (yc + tubeH + (dispLayout === 'pared' ? 12 : 13)) +
       '" text-anchor="middle" font-size="' +
       tLabelFsSerp +
       '" font-weight="900" fill="#0c4a6e"' +
@@ -12986,8 +13026,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
 
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
-    5.5,
-    Math.min(12.5, (spanTube / Math.max(huecosN - 1, 1)) * 0.48)
+    dispLayout === 'pared' ? 6.2 : 5.6,
+    Math.min(dispLayout === 'pared' ? 13.2 : 12.5, (spanTube / Math.max(huecosN - 1, 1)) * (dispLayout === 'pared' ? 0.51 : 0.48))
   );
   const holeNumFsSerp = nCh >= 10 ? 8.5 : nCh >= 6 ? 9.25 : 10;
   let plants = '';
