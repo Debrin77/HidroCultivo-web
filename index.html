@@ -11725,8 +11725,8 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0) {
   if (!Number.isFinite(cm) || cm <= 0) {
     return { html: '', canvasW: canvasW0 };
   }
-  const bw = 136;
-  const bh = 38;
+  const bw = 158;
+  const bh = 46;
   const gap = 7;
   const bx = tx + tankW + gap;
   const by = tankY + Math.max(3, (tankH - bh) / 2);
@@ -11745,15 +11745,15 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0) {
     '<text x="' +
     (bx + bw / 2) +
     '" y="' +
-    (by + 16) +
-    '" text-anchor="middle" font-size="11.5" font-weight="900" fill="#7c2d12" font-family="system-ui,Segoe UI,sans-serif">↑ Altura ' +
+    (by + 19) +
+    '" text-anchor="middle" font-size="14" font-weight="900" fill="#7c2d12" font-family="system-ui,Segoe UI,sans-serif">↑ Altura ' +
     cm +
     ' cm</text>' +
     '<text x="' +
     (bx + bw / 2) +
     '" y="' +
-    (by + 30) +
-    '" text-anchor="middle" font-size="8" font-weight="800" fill="#9a3412" font-family="system-ui,Segoe UI,sans-serif">al 1.º tubo · bombeo</text>' +
+    (by + 37) +
+    '" text-anchor="middle" font-size="10.5" font-weight="800" fill="#9a3412" font-family="system-ui,Segoe UI,sans-serif">al 1.º tubo · bombeo</text>' +
     '</g>';
   return { html, canvasW };
 }
@@ -11798,7 +11798,6 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const cx = W0 / 2;
   const xL = 34;
   const xR = W0 - 34;
-  const tubeH = 28;
   const padFlow = 13;
   const tankY = H - botTank + 4;
   const tankH = 82;
@@ -11833,9 +11832,21 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     }
   }
 
-  let minHoleSpanMM = rowInner;
+  /** Tubos verticales por franja: agua en serpentín (T1 arriba→abajo, T2 abajo→arriba, …); retorno desde el fondo del último. */
+  const vPadMM = 11;
+  function mmTube(G) {
+    const cx = (G.xL + G.xR) / 2;
+    const yT = G.rowY - tierRowH / 2 + vPadMM;
+    const yB = G.rowY + tierRowH / 2 - vPadMM;
+    const barW = Math.min(34, Math.max(18, (G.xR - G.xL) * 0.44));
+    return { cx, yT, yB, barW };
+  }
+
+  const padHuecoV = 7;
+  let minHoleSpanMM = tierRowH - 2 * vPadMM - 2 * padHuecoV;
   for (let gi = 0; gi < geoms.length; gi++) {
-    const sp = geoms[gi].xR - geoms[gi].xL - 2 * padFlow;
+    const m = mmTube(geoms[gi]);
+    const sp = m.yB - m.yT - 2 * padHuecoV;
     if (sp > 0) minHoleSpanMM = Math.min(minHoleSpanMM, sp);
   }
 
@@ -11844,28 +11855,29 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   let flowD = 'M ' + xRiser + ' ' + yPump;
   for (let i = 0; i < geoms.length; i++) {
     const G = geoms[i];
-    const y = G.rowY;
-    const xS = G.l2r ? G.xL + padFlow : G.xR - padFlow;
-    const xE = G.l2r ? G.xR - padFlow : G.xL + padFlow;
+    const m = mmTube(G);
+    const down = i % 2 === 0;
+    const entryY = down ? m.yT : m.yB;
+    const exitY = down ? m.yB : m.yT;
     if (i === 0) {
-      flowD += ' L ' + xRiser + ' ' + y;
-      flowD += ' L ' + xS + ' ' + y;
+      flowD += ' L ' + xRiser + ' ' + entryY;
+      flowD += ' L ' + m.cx + ' ' + entryY;
     } else {
-      const P = geoms[i - 1];
-      const yP = P.rowY;
-      const xEP = P.l2r ? P.xR - padFlow : P.xL + padFlow;
-      flowD += ' L ' + xEP + ' ' + yP;
-      if (Math.abs(y - yP) > 0.5) flowD += ' L ' + xEP + ' ' + y;
-      flowD += ' L ' + xS + ' ' + y;
+      const pm = mmTube(geoms[i - 1]);
+      const pExitY = (i - 1) % 2 === 0 ? pm.yB : pm.yT;
+      flowD += ' L ' + m.cx + ' ' + pExitY;
+      flowD += ' L ' + m.cx + ' ' + entryY;
     }
-    flowD += ' L ' + xE + ' ' + y;
+    flowD += ' L ' + m.cx + ' ' + exitY;
   }
   const Glast = geoms[geoms.length - 1];
-  const yLast = Glast.rowY;
-  const xLastE = Glast.l2r ? Glast.xR - padFlow : Glast.xL + padFlow;
-  flowD += ' L ' + xLastE + ' ' + yLast;
-  const retMargMM = Glast.l2r ? xR + 14 : xL - 14;
-  flowD += ' L ' + retMargMM + ' ' + yLast;
+  const lm = mmTube(Glast);
+  const lastDown = (geoms.length - 1) % 2 === 0;
+  if (!lastDown) {
+    flowD += ' L ' + lm.cx + ' ' + lm.yB;
+  }
+  const retMargMM = lm.cx >= W0 / 2 ? xR + 14 : xL - 14;
+  flowD += ' L ' + retMargMM + ' ' + lm.yB;
   flowD += ' L ' + retMargMM + ' ' + (tankY + 24);
   flowD += ' L ' + (tx + tankW - 6) + ' ' + (tankY + 24);
   flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
@@ -11876,29 +11888,39 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
-  for (let t = 0; t < nTiers; t++) {
-    const nt = tiers[t];
-    const rowY = topPad + t * tierRowH + tierRowH / 2;
-    const tubeW = (rowInner - (nt - 1) * gapT) / nt;
-    const peNone = interactive ? ' pointer-events="none"' : '';
-    for (let layoutK = 0; layoutK < nt; layoutK++) {
-      const xTubeL = xL + padFlow + layoutK * (tubeW + gapT);
-      const yc = rowY - tubeH / 2;
-      channels +=
-        '<rect x="' +
-        xTubeL +
-        '" y="' +
-        yc +
-        '" width="' +
-        tubeW +
-        '" height="' +
-        tubeH +
-        '" rx="9" fill="url(#' +
-        gidCh +
-        ')" stroke="#0369a1" stroke-width="1.35"' +
-        peNone +
-        '/>';
-    }
+  const peNoneCh = interactive ? ' pointer-events="none"' : '';
+  const nGeomMM = geoms.length;
+  const tLabelFsMM = nGeomMM >= 14 ? 10.5 : nGeomMM >= 8 ? 11.5 : 12.5;
+  for (let gi = 0; gi < geoms.length; gi++) {
+    const G = geoms[gi];
+    const m = mmTube(G);
+    const hBar = m.yB - m.yT;
+    channels +=
+      '<rect x="' +
+      (m.cx - m.barW / 2) +
+      '" y="' +
+      m.yT +
+      '" width="' +
+      m.barW +
+      '" height="' +
+      hBar +
+      '" rx="9" fill="url(#' +
+      gidCh +
+      ')" stroke="#0369a1" stroke-width="1.35"' +
+      peNoneCh +
+      '/>';
+    channels +=
+      '<text x="' +
+      (m.cx - m.barW / 2 - 5) +
+      '" y="' +
+      (G.rowY + 4) +
+      '" text-anchor="end" font-size="' +
+      tLabelFsMM +
+      '" font-weight="900" fill="#0c4a6e"' +
+      peNoneCh +
+      '>T' +
+      (G.g + 1) +
+      '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -11907,22 +11929,24 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
-  const yTopRung = geoms.length ? geoms[0].rowY : topPad;
+  const m0 = geoms.length ? mmTube(geoms[0]) : { yT: topPad };
+  const bombaFsMM = nGeomMM >= 14 ? 9 : 10;
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (yTopRung - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + (m0.yT - 6) + '" text-anchor="end" font-size="' + bombaFsMM + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const hr = Math.max(5.2, Math.min(12.5, (minHoleSpanMM / Math.max(huecosN - 1, 1)) * 0.48));
+  const holeNumFsMM = nGeomMM >= 14 ? 8.5 : nGeomMM >= 8 ? 9 : 9.75;
   let plants = '';
   for (let gi = 0; gi < geoms.length; gi++) {
     const G = geoms[gi];
-    const y = G.rowY;
-    const rtl = !G.l2r;
-    const spanG = G.xR - G.xL - 2 * padFlow;
-    const slotAlongG = huecosN <= 1 ? spanG : spanG / Math.max(1, huecosN - 1);
+    const m = mmTube(G);
+    const down = gi % 2 === 0;
+    const spanV = m.yB - m.yT - 2 * padHuecoV;
+    const slotAlongG = huecosN <= 1 ? spanV : spanV / Math.max(1, huecosN - 1);
     for (let j = 0; j < huecosN; j++) {
       const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
-      const gx = rtl ? G.xR - padFlow - t * spanG : G.xL + padFlow + t * spanG;
-      const gy = y;
+      const gy = down ? m.yT + padHuecoV + t * spanV : m.yB - padHuecoV - t * spanV;
+      const gx = m.cx;
       const numShow = j + 1;
       let dat = { variedad: '', fecha: '' };
       if (interactive && state.torre[G.g] && state.torre[G.g][j]) dat = state.torre[G.g][j];
@@ -11956,7 +11980,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
       plants +=
-        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="8" font-weight="800" fill="#1e293b">' + numShow + '</text>';
+        '<text x="' + gx.toFixed(2) + '" y="' + (gy + 3.5) + '" text-anchor="middle" font-size="' + holeNumFsMM + '" font-weight="800" fill="#1e293b">' + numShow + '</text>';
       if (interactive) {
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongG);
         plants +=
@@ -12110,7 +12134,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const ladderBot = ladderTop + (nv - 1) * dy + yStagger2 + 10;
   const H = ladderBot + 56 + botTank;
   const baseHalf = 138;
-  const rungOut = 78;
+  const rungOut = 102;
   const rungIn = 20;
   const tankY = H - botTank + 4;
   const tankH = 82;
@@ -12209,6 +12233,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   let channels = '';
   const peNone = interactive ? ' pointer-events="none"' : '';
+  const nRunsEsc = runs.length;
+  const tLabelFsEsc = nRunsEsc >= 14 ? 11.5 : nRunsEsc >= 8 ? 12.5 : 13.5;
   for (let i = 0; i < runs.length; i++) {
     const R = runs[i];
     const yc = R.y - tubeH / 2;
@@ -12227,7 +12253,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       peNone +
       '/>';
     channels +=
-      '<text x="' + (R.xL - 4) + '" y="' + (R.y + 4) + '" text-anchor="end" font-size="10" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (R.g + 1) + '</text>';
+      '<text x="' + (R.xL - 4) + '" y="' + (R.y + 4) + '" text-anchor="end" font-size="' + tLabelFsEsc + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (R.g + 1) + '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -12236,11 +12262,13 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
+  const bombaFsEsc = nRunsEsc >= 14 ? 9 : 10;
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + (runs[0].y - tubeH / 2 - 6) + '" text-anchor="end" font-size="' + bombaFsEsc + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const rungSpan = rungOut + rungIn;
   const hr = Math.max(5.2, Math.min(12.5, (rungSpan / Math.max(huecosN - 1, 1)) * 0.48));
+  const holeNumFsEsc = nRunsEsc >= 14 ? 8.5 : nRunsEsc >= 8 ? 9.25 : 10;
   let plants = '';
   for (let ri = 0; ri < runs.length; ri++) {
     const R = runs[ri];
@@ -12284,7 +12312,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
       plants +=
-        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="8" font-weight="800" fill="#1e293b">' + (j + 1) + '</text>';
+        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="' + holeNumFsEsc + '" font-weight="800" fill="#1e293b">' + (j + 1) + '</text>';
       if (interactive) {
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongR);
         plants +=
@@ -12530,6 +12558,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   back += '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
+  const tLabelFsSerp = nCh >= 10 ? 12 : nCh >= 6 ? 13 : 14;
   for (let i = 0; i < nCh; i++) {
     const yRi = yRow(i);
     const yc = yRi - tubeH / 2;
@@ -12549,7 +12578,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       peNone +
       '/>';
     channels +=
-      '<text x="' + (xL - 4) + '" y="' + (yRi + 4) + '" text-anchor="end" font-size="11" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (i + 1) + '</text>';
+      '<text x="' + (xL - 4) + '" y="' + (yRi + 4) + '" text-anchor="end" font-size="' + tLabelFsSerp + '" font-weight="900" fill="#0c4a6e"' + peNone + '>T' + (i + 1) + '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -12558,14 +12587,16 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
+  const bombaFsSerp = nCh >= 10 ? 9 : 10;
   flowLayer +=
-    '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 6) + '" text-anchor="end" font-size="8" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xRiser - 3) + '" y="' + (yRow(0) - tubeH / 2 - 6) + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
     5.5,
     Math.min(12.5, (spanTube / Math.max(huecosN - 1, 1)) * 0.48)
   );
+  const holeNumFsSerp = nCh >= 10 ? 8.5 : nCh >= 6 ? 9.25 : 10;
   let plants = '';
   for (let i = 0; i < nCh; i++) {
     const y = yRow(i);
@@ -12611,7 +12642,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
       }
       plants +=
-        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="8" font-weight="800" fill="#1e293b">' + numShow + '</text>';
+        '<text x="' + gx.toFixed(2) + '" y="' + (y + 3.5) + '" text-anchor="middle" font-size="' + holeNumFsSerp + '" font-weight="800" fill="#1e293b">' + numShow + '</text>';
       if (interactive) {
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongRow);
         plants +=
