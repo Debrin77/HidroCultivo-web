@@ -761,6 +761,47 @@ body::before { display: none; }
   max-height: none;
   min-height: 200px;
 }
+#torreSVGWrap.torre-nft-three-wrap {
+  overflow: hidden;
+  padding: 0;
+  background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+}
+.nft-three-root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.nft-three-meta {
+  font-size: 11px;
+  font-weight: 800;
+  color: #14532d;
+  text-align: center;
+  padding: 10px 12px 4px;
+  line-height: 1.4;
+  font-family: var(--font-display);
+}
+.nft-three-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: min(52vh, 440px);
+  min-height: 260px;
+  touch-action: none;
+}
+.nft-three-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+.nft-three-hint {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+  padding: 6px 12px 12px;
+  line-height: 1.45;
+}
 .torre-swipe-hint {
   text-align: center;
   margin: 11px 0 2px;
@@ -5087,7 +5128,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
           font-size:12px;line-height:1.35"></div>
         <div id="torreSwipeHint" class="torre-swipe-hint">Flechas al lado del depósito o deslizar para girar</div>
         <div id="torreNftDiagramHint" style="display:none;text-align:center;margin:8px 12px 2px;font-size:10px;font-weight:700;color:#64748b;line-height:1.45;letter-spacing:0.02em">
-          NFT: desplaza el diagrama si no cabe en pantalla · Toca un hueco para su ficha o usa <strong style="font-weight:800">Lista</strong>
+          NFT 3D: arrastra para girar el modelo · toca un hueco o usa <strong style="font-weight:800">Lista</strong> (escalera = esquema 2D)
         </div>
 
         <!-- Depósito y volumen (mezclas / checklist) -->
@@ -8987,10 +9028,11 @@ function actualizarChromePanelEsquemaPorTipo() {
       intro.innerHTML =
         '<strong>NFT</strong> · disposición ' +
         dTxt +
-        'En el dibujo los tubos tienen la <strong>misma sección</strong> y los huecos van <strong>alineados</strong>. ' +
-        'La <strong>línea azul</strong> es el agua; el <strong>retorno</strong> va por el borde del esquema para no cruzar los tubos. ' +
+        (dN === 'escalera'
+          ? 'Vista <strong>2D</strong> con recorrido del agua en azul. Los huecos comparten el mismo número por tubo. '
+          : 'Vista <strong>3D</strong> (WebGL): arrastra para orbitar, pellizco o rueda para zoom; <strong>toca un hueco</strong> para la ficha. ') +
         'Indica <strong>altura al 1.º canal</strong> en asistente o Sistema para la bomba. ' +
-        '<strong>Toca un hueco</strong> o <strong>Lista</strong> (cada fila = un tubo).';
+        '<strong>Lista</strong> = acceso lineal (cada fila = un tubo).';
     } else {
       intro.innerHTML =
         '<strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real). ' +
@@ -9020,6 +9062,410 @@ function actualizarChromePanelEsquemaPorTipo() {
   if (animLbl) animLbl.style.display = esNft ? 'none' : '';
 }
 
+let _nftThreeModulesPromise = null;
+function loadNftThreeModules() {
+  if (_nftThreeModulesPromise) return _nftThreeModulesPromise;
+  _nftThreeModulesPromise = Promise.all([
+    import('https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js'),
+    import('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js'),
+  ]).then(([T, o]) => ({ THREE: T, OrbitControls: o.OrbitControls }));
+  return _nftThreeModulesPromise;
+}
+
+function disposeNftThreeIfAny(wrap) {
+  if (!wrap || typeof wrap._nftThreeDispose !== 'function') return;
+  try {
+    wrap._nftThreeDispose();
+  } catch (e) {}
+  wrap._nftThreeDispose = null;
+}
+
+function nftThreeMatColor(THREE, css, fallbackHex) {
+  const s = String(css || '').trim();
+  const m = s.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)/i);
+  if (m) return new THREE.Color(+m[1] / 255, +m[2] / 255, +m[3] / 255);
+  try {
+    return new THREE.Color(s);
+  } catch (_) {}
+  return new THREE.Color(fallbackHex != null ? fallbackHex : 0xf8fafc);
+}
+
+/** Posiciones 3D de tubos; índice n alineado con state.torre[n] (mismo orden que el SVG multinivel / serpentín). */
+function nftThreeLayoutsForConfig(cfg, hyd) {
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  const nh = hyd.nHx;
+  if (disp === 'mesa' && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
+    const tiers = hyd.mesaTiers;
+    const rowInner = 9;
+    const gapT = 0.38;
+    const rowDz = 2.05;
+    const out = [];
+    let g = 0;
+    for (let t = 0; t < tiers.length; t++) {
+      const nt = tiers[t];
+      const tubeW = (rowInner - (nt - 1) * gapT) / nt;
+      const order = t % 2 === 0 ? [...Array(nt).keys()] : [...Array(nt).keys()].reverse();
+      for (const k of order) {
+        const xL = -rowInner / 2 + k * (tubeW + gapT);
+        const cx = xL + tubeW / 2;
+        out.push({
+          n: g++,
+          cx,
+          cy: 0,
+          cz: -t * rowDz,
+          len: Math.max(1.85, tubeW * 0.92),
+          rotY: 0,
+          tw: 0.72,
+          th: 0.36,
+          nh,
+        });
+      }
+    }
+    return out;
+  }
+  const nCh = hyd.nCh;
+  const dz = 1.48;
+  const out = [];
+  for (let i = 0; i < nCh; i++) {
+    out.push({
+      n: i,
+      cx: 0,
+      cy: 0,
+      cz: -i * dz,
+      len: 11,
+      rotY: i % 2 ? Math.PI : 0,
+      tw: 0.76,
+      th: 0.38,
+      nh,
+    });
+  }
+  return out;
+}
+
+function nftMountThreeNftDiagram(wrap, cfg, hyd, hx, pend, vol, altShow, bombMain, THREE, OrbitControls) {
+  disposeNftThreeIfAny(wrap);
+  const layouts = nftThreeLayoutsForConfig(cfg, hyd);
+  const root = document.createElement('div');
+  root.className = 'nft-three-root';
+  const cap = document.createElement('div');
+  cap.className = 'nft-three-meta';
+  let capHtml =
+    '<span>Vista 3D</span> · ' + hyd.nCh + ' tubos · ' + hx + ' huecos/tubo · ' + vol + ' L';
+  if (altShow > 0) capHtml += ' · ↑ ' + altShow + ' cm al 1.º tubo';
+  cap.innerHTML = capHtml;
+  const cvWrap = document.createElement('div');
+  cvWrap.className = 'nft-three-canvas-wrap';
+  const canvas = document.createElement('canvas');
+  cvWrap.appendChild(canvas);
+  const hint = document.createElement('div');
+  hint.className = 'nft-three-hint';
+  hint.textContent =
+    'Arrastra para orbitar · pellizco o rueda para zoom · toca un hueco (mantén pulsado para resumen rápido)';
+  root.appendChild(cap);
+  root.appendChild(cvWrap);
+  root.appendChild(hint);
+  wrap.innerHTML = '';
+  wrap.appendChild(root);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xe8edf3);
+  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 200);
+  camera.position.set(0.2, 8.2, 17.5);
+  const aimZ = -Math.max(1, hyd.nCh) * 0.72;
+  camera.lookAt(0, 0.35, aimZ);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+
+  const controls = new OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+  controls.target.set(0, 0.25, aimZ);
+  controls.maxPolarAngle = Math.PI * 0.52;
+  controls.minDistance = 6;
+  controls.maxDistance = 48;
+  controls.update();
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.58));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.9);
+  dl.position.set(6, 16, 10);
+  scene.add(dl);
+  const fill = new THREE.DirectionalLight(0xc7d2fe, 0.32);
+  fill.position.set(-10, 8, -6);
+  scene.add(fill);
+
+  const chMatBase = new THREE.MeshStandardMaterial({ color: 0x7dd3fc, metalness: 0.06, roughness: 0.42 });
+  const tank = new THREE.Mesh(
+    new THREE.BoxGeometry(5.4, 1.4, 3.5),
+    new THREE.MeshStandardMaterial({ color: 0x166534, metalness: 0.04, roughness: 0.52 })
+  );
+  tank.position.set(0, -1.18, 2.75);
+  scene.add(tank);
+  const water = new THREE.Mesh(
+    new THREE.BoxGeometry(4.75, 0.5, 2.95),
+    new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      metalness: 0.02,
+      roughness: 0.28,
+      transparent: true,
+      opacity: 0.8,
+    })
+  );
+  water.position.set(0, -0.78, 2.75);
+  scene.add(water);
+
+  const pickMeshes = [];
+
+  function refreshHoleMaterials() {
+    for (const m of pickMeshes) {
+      const vis = m.userData.visualMesh;
+      if (!vis || !vis.material) continue;
+      const n = m.userData.n;
+      const c = m.userData.c;
+      const col = torreListaColorCesta(n, c);
+      vis.material.color.copy(nftThreeMatColor(THREE, col.bg, 0xf8fafc));
+      vis.material.emissive.copy(nftThreeMatColor(THREE, col.border, 0x475569));
+      vis.material.emissiveIntensity = 0.11;
+      const multiKey = n + ',' + c;
+      const isMulti =
+        typeof torreInteraccionModo !== 'undefined' &&
+        torreInteraccionModo === 'asignar' &&
+        torreCestasMultiSel &&
+        torreCestasMultiSel.has(multiKey);
+      const isEd =
+        typeof editingCesta !== 'undefined' &&
+        editingCesta &&
+        editingCesta.nivel === n &&
+        editingCesta.cesta === c;
+      if (m.userData.ring) m.userData.ring.visible = !!isMulti;
+      if (m.userData.edRing) m.userData.edRing.visible = !!isEd;
+    }
+  }
+
+  for (const L of layouts) {
+    const grp = new THREE.Group();
+    grp.position.set(L.cx, L.cy, L.cz);
+    grp.rotation.y = L.rotY;
+    const box = new THREE.Mesh(new THREE.BoxGeometry(L.len, L.th, L.tw), chMatBase.clone());
+    grp.add(box);
+    const padX = 0.52;
+    const span = Math.max(0.5, L.len - 2 * padX);
+    for (let j = 0; j < L.nh; j++) {
+      const t = L.nh <= 1 ? 0 : j / (L.nh - 1);
+      const lx = (t - 0.5) * span;
+      const col = torreListaColorCesta(L.n, j);
+      const visMat = new THREE.MeshStandardMaterial({
+        color: nftThreeMatColor(THREE, col.bg, 0xf8fafc),
+        metalness: 0.05,
+        roughness: 0.4,
+        emissive: nftThreeMatColor(THREE, col.border, 0x64748b),
+        emissiveIntensity: 0.1,
+      });
+      const rHole = Math.max(0.3, Math.min(0.56, (span / Math.max(L.nh - 1, 1)) * 0.21));
+      const vis = new THREE.Mesh(new THREE.SphereGeometry(rHole, 26, 22), visMat);
+      vis.position.set(lx, L.th * 0.62, 0);
+      grp.add(vis);
+      const hitR = Math.max(rHole * 2.5, 0.78);
+      const hit = new THREE.Mesh(
+        new THREE.SphereGeometry(hitR, 14, 12),
+        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.04, depthWrite: false })
+      );
+      hit.position.copy(vis.position);
+      hit.userData.nftHueco = true;
+      hit.userData.n = L.n;
+      hit.userData.c = j;
+      hit.userData.visualMesh = vis;
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(rHole * 1.12, rHole * 1.55, 32),
+        new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.95, side: THREE.DoubleSide })
+      );
+      ring.position.set(lx, L.th * 0.62 + 0.02, 0);
+      ring.rotation.x = -Math.PI / 2;
+      ring.visible = false;
+      grp.add(ring);
+      hit.userData.ring = ring;
+      const edRing = new THREE.Mesh(
+        new THREE.RingGeometry(rHole * 1.05, rHole * 1.42, 32),
+        new THREE.MeshBasicMaterial({ color: 0x22c55e, transparent: true, opacity: 0.92, side: THREE.DoubleSide })
+      );
+      edRing.position.set(lx, L.th * 0.62 - 0.02, 0);
+      edRing.rotation.x = -Math.PI / 2;
+      edRing.visible = false;
+      grp.add(edRing);
+      hit.userData.edRing = edRing;
+      pickMeshes.push(hit);
+    }
+    scene.add(grp);
+  }
+
+  refreshHoleMaterials();
+
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const resize = () => {
+    const w = cvWrap.clientWidth;
+    const h = cvWrap.clientHeight;
+    if (w < 2 || h < 2) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  };
+  const ro = new ResizeObserver(resize);
+  ro.observe(cvWrap);
+  setTimeout(resize, 0);
+
+  let rafId = 0;
+  const tick = () => {
+    rafId = requestAnimationFrame(tick);
+    controls.update();
+    renderer.render(scene, camera);
+  };
+  tick();
+
+  const tipEl = document.getElementById('torreQuickTip');
+  const hideTip = () => {
+    if (tipEl) tipEl.style.display = 'none';
+  };
+  const showTip = (html, x, y) => {
+    if (!tipEl) return;
+    tipEl.innerHTML = html;
+    tipEl.style.display = 'block';
+    const pad = 10;
+    const ww = window.innerWidth || 390;
+    const wh = window.innerHeight || 800;
+    const tw = 270;
+    let left = x + 12;
+    let top = y + 14;
+    if (left + tw + pad > ww) left = Math.max(pad, x - tw - 12);
+    if (top + 120 + pad > wh) top = Math.max(pad, y - 120);
+    tipEl.style.left = left + 'px';
+    tipEl.style.top = top + 'px';
+  };
+
+  let downX = 0;
+  let downY = 0;
+  let lpTimer = 0;
+  let lastLpAt = 0;
+  const ndcDown = new THREE.Vector2();
+
+  const getNdc = (e, target) => {
+    const r = target.getBoundingClientRect();
+    ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+  };
+
+  const pickFromNdc = (vx, vy) => {
+    ndc.set(vx, vy);
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(pickMeshes, false);
+    if (!hits.length) return null;
+    const o = hits[0].object;
+    if (!o.userData || o.userData.nftHueco == null) return null;
+    return { n: o.userData.n, c: o.userData.c };
+  };
+
+  const clearLp = () => {
+    if (lpTimer) {
+      clearTimeout(lpTimer);
+      lpTimer = 0;
+    }
+  };
+
+  const onDown = e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    downX = e.clientX;
+    downY = e.clientY;
+    clearLp();
+    hideTip();
+    getNdc(e, canvas);
+    ndcDown.copy(ndc);
+    lpTimer = setTimeout(() => {
+      raycaster.setFromCamera(ndcDown, camera);
+      const hits = raycaster.intersectObjects(pickMeshes, false);
+      if (!hits.length) return;
+      const o = hits[0].object;
+      if (!o.userData || o.userData.nftHueco == null) return;
+      const n = o.userData.n;
+      const c = o.userData.c;
+      const dat = (state.torre && state.torre[n] && state.torre[n][c]) || {};
+      const vacioLbl = 'Hueco vacío';
+      const variedad = dat.variedad || vacioLbl;
+      const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+      const fotos = (dat.fotos || []).length;
+      const notas = (dat.notas || '').trim();
+      const meta = [
+        dias !== null ? dias + ' d' : '',
+        fotos ? fotos + ' foto' + (fotos === 1 ? '' : 's') : '',
+        notas ? 'Notas' : '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      const cultTip = dat.variedad ? getCultivoDB(dat.variedad) : null;
+      const iconTip = dat.variedad
+        ? '<span style="flex-shrink:0;line-height:0;margin-right:8px" aria-hidden="true">' + cultivoEmojiHtml(cultTip, 1.5) + '</span>'
+        : '';
+      const nomTip = cultivoNombreLista(cultTip, dat.variedad);
+      lastLpAt = Date.now();
+      showTip(
+        '<div style="display:flex;align-items:center;margin-bottom:4px">' +
+          iconTip +
+          '<div style="font-weight:900;font-family:var(--font-display);font-size:13px;min-width:0">' +
+          escHtmlUi(nomTip) +
+          '</div></div>' +
+          (meta ? '<div style="opacity:0.9">' + escHtmlUi(meta) + '</div>' : '<div style="opacity:0.9">Toca para editar</div>'),
+        downX,
+        downY
+      );
+    }, 430);
+  };
+
+  const onMove = e => {
+    if (Math.hypot(e.clientX - downX, e.clientY - downY) > 12) clearLp();
+  };
+
+  const onUp = e => {
+    clearLp();
+    setTimeout(hideTip, 50);
+    const dist = Math.hypot(e.clientX - downX, e.clientY - downY);
+    if (dist > 22) return;
+    if (Date.now() - lastLpAt < 380) return;
+    getNdc(e, canvas);
+    const hit = pickFromNdc(ndc.x, ndc.y);
+    if (hit == null) return;
+    torreOnCestaActivada(hit.n, hit.c);
+  };
+
+  canvas.addEventListener('pointerdown', onDown);
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointercancel', clearLp);
+  canvas.setAttribute('tabindex', '0');
+  canvas.setAttribute('role', 'application');
+  canvas.setAttribute(
+    'aria-label',
+    'Vista 3D del NFT: arrastra para girar, toca un hueco para abrir su ficha. Usa Lista para acceso lineal.'
+  );
+
+  wrap._nftThreeDispose = () => {
+    cancelAnimationFrame(rafId);
+    ro.disconnect();
+    canvas.removeEventListener('pointerdown', onDown);
+    canvas.removeEventListener('pointermove', onMove);
+    canvas.removeEventListener('pointerup', onUp);
+    canvas.removeEventListener('pointercancel', clearLp);
+    controls.dispose();
+    renderer.dispose();
+    scene.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) obj.material.forEach(mm => mm.dispose && mm.dispose());
+        else obj.material.dispose && obj.material.dispose();
+      }
+    });
+  };
+  wrap._nftThreeRefreshHuecos = refreshHoleMaterials;
+}
+
 function renderTorre() {
   const cfg = state.configTorre || {};
   const esNft = cfg.tipoInstalacion === 'nft';
@@ -9029,6 +9475,11 @@ function renderTorre() {
 
   const wrap = document.getElementById('torreSVGWrap');
   if (!wrap) return;
+
+  if (!esNft) {
+    disposeNftThreeIfAny(wrap);
+    wrap.classList.remove('torre-nft-three-wrap');
+  }
 
   if (esNft) {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
@@ -9041,23 +9492,111 @@ function renderTorre() {
       cfg.nftAlturaBombeoCm != null && Number(cfg.nftAlturaBombeoCm) > 0
         ? Math.round(Number(cfg.nftAlturaBombeoCm))
         : getNftAlturaBombeoEfectivaCm(cfg);
-    wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', {
-      calentador: eqArr?.includes('calentador') ?? true,
-      difusor: eqArr?.includes('difusor') ?? true,
-      interactive: true,
-      bombaInfo: bombMain,
-      userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
-      userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
-      nftDisposicion: cfg.nftDisposicion,
-      nftAlturaBombeoCm: altShow > 0 ? altShow : null,
-      cfgSnapshot: cfg,
-      mesaTiers: hyd.mesaTiers,
-      escaleraNiveles: hyd.escaleraNiveles,
-      escaleraCaras: hyd.escaleraCaras,
-    });
-    wrap.setAttribute('aria-label',
-      'Diagrama NFT: línea azul = agua (subida, tubos T1 T2 y retorno por el borde). Desplaza con el dedo si hace falta. Toca cada hueco para ficha o usa Lista.');
-    try { bindTorreCestas(wrap); } catch (e) {}
+    const dispNft = nftDisposicionNormalizada(cfg.nftDisposicion);
+    const nftUseThree = dispNft !== 'escalera';
+
+    if (nftUseThree) {
+      wrap.classList.add('torre-nft-three-wrap');
+      disposeNftThreeIfAny(wrap);
+      wrap.innerHTML =
+        '<div style="text-align:center;padding:36px 16px;color:#64748b;font-size:13px;font-weight:700">Cargando vista 3D…</div>';
+      loadNftThreeModules()
+        .then(({ THREE, OrbitControls }) => {
+          if (!wrap.isConnected) return;
+          const cfg2 = state.configTorre;
+          if (cfg2?.tipoInstalacion !== 'nft') return;
+          const hyd2 = getNftHidraulicaDesdeConfig(cfg2);
+          const hx2 = cfg2.nftHuecosPorCanal ?? cfg2.numCestas ?? 8;
+          const pend2 = cfg2.nftPendientePct ?? 2;
+          const vol2 = cfg2.volDeposito || VOL_OBJETIVO;
+          const eq2 = cfg2.equipamiento;
+          const bomb2 = getNftBombaDesdeConfig(cfg2);
+          const alt2 =
+            cfg2.nftAlturaBombeoCm != null && Number(cfg2.nftAlturaBombeoCm) > 0
+              ? Math.round(Number(cfg2.nftAlturaBombeoCm))
+              : getNftAlturaBombeoEfectivaCm(cfg2);
+          const disp2 = nftDisposicionNormalizada(cfg2.nftDisposicion);
+          const svgOpts = {
+            calentador: eq2?.includes('calentador') ?? true,
+            difusor: eq2?.includes('difusor') ?? true,
+            interactive: true,
+            bombaInfo: bomb2,
+            userCaudalLh: cfg2.nftBombaUsuarioCaudalLh || null,
+            userPotenciaW: cfg2.nftBombaUsuarioPotenciaW || null,
+            nftDisposicion: cfg2.nftDisposicion,
+            nftAlturaBombeoCm: alt2 > 0 ? alt2 : null,
+            cfgSnapshot: cfg2,
+            mesaTiers: hyd2.mesaTiers,
+            escaleraNiveles: hyd2.escaleraNiveles,
+            escaleraCaras: hyd2.escaleraCaras,
+          };
+          if (disp2 === 'escalera') {
+            wrap.classList.remove('torre-nft-three-wrap');
+            disposeNftThreeIfAny(wrap);
+            wrap.innerHTML = buildNftActiveDiagramSvg(hyd2.nCh, hx2, pend2, vol2, 'Main', svgOpts);
+            try {
+              bindTorreCestas(wrap);
+            } catch (e2) {}
+            return;
+          }
+          try {
+            nftMountThreeNftDiagram(wrap, cfg2, hyd2, hx2, pend2, vol2, alt2, bomb2, THREE, OrbitControls);
+          } catch (err) {
+            console.warn('NFT 3D:', err);
+            wrap.classList.remove('torre-nft-three-wrap');
+            wrap.innerHTML = buildNftActiveDiagramSvg(hyd2.nCh, hx2, pend2, vol2, 'Main', svgOpts);
+            try {
+              bindTorreCestas(wrap);
+            } catch (e2) {}
+          }
+        })
+        .catch(err => {
+          console.warn('Three.js NFT', err);
+          if (!wrap.isConnected) return;
+          wrap.classList.remove('torre-nft-three-wrap');
+          wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', {
+            calentador: eqArr?.includes('calentador') ?? true,
+            difusor: eqArr?.includes('difusor') ?? true,
+            interactive: true,
+            bombaInfo: bombMain,
+            userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
+            userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
+            nftDisposicion: cfg.nftDisposicion,
+            nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+            cfgSnapshot: cfg,
+            mesaTiers: hyd.mesaTiers,
+            escaleraNiveles: hyd.escaleraNiveles,
+            escaleraCaras: hyd.escaleraCaras,
+          });
+          try {
+            bindTorreCestas(wrap);
+          } catch (e2) {}
+        });
+      wrap.setAttribute(
+        'aria-label',
+        'NFT en 3D: orbita el modelo y toca un hueco para la ficha, o usa Lista.'
+      );
+    } else {
+      wrap.classList.remove('torre-nft-three-wrap');
+      disposeNftThreeIfAny(wrap);
+      wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', {
+        calentador: eqArr?.includes('calentador') ?? true,
+        difusor: eqArr?.includes('difusor') ?? true,
+        interactive: true,
+        bombaInfo: bombMain,
+        userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
+        userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
+        nftDisposicion: cfg.nftDisposicion,
+        nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+        cfgSnapshot: cfg,
+        mesaTiers: hyd.mesaTiers,
+        escaleraNiveles: hyd.escaleraNiveles,
+        escaleraCaras: hyd.escaleraCaras,
+      });
+      wrap.setAttribute('aria-label',
+        'Diagrama NFT: línea azul = agua (subida, tubos T1 T2 y retorno por el borde). Desplaza con el dedo si hace falta. Toca cada hueco para ficha o usa Lista.');
+      try { bindTorreCestas(wrap); } catch (e) {}
+    }
   } else {
     wrap.innerHTML = generarSVGTorre();
     wrap.setAttribute('aria-label',
@@ -11747,43 +12286,6 @@ function nftDiagramCanvasW0() {
 }
 
 /**
- * Proyección isométrica suave (cisalla + escala Y): maqueta visual, no escala de obra.
- * El depósito va en el mismo grupo para que el trazado de agua cierre bien.
- */
-function nftWrapIsoProjection(inner, pivotX, pivotY) {
-  const k = 0.46;
-  const sy = 0.9;
-  const padX = Math.round(26 + k * Math.min(pivotY, 420) * 0.22);
-  const padY = 6;
-  return (
-    '<g class="nft-iso-cluster" transform="translate(' +
-    padX +
-    ',' +
-    padY +
-    ') translate(' +
-    pivotX +
-    ' ' +
-    pivotY +
-    ') matrix(1 0 ' +
-    (-k) +
-    ' ' +
-    sy +
-    ' 0 0) translate(' +
-    (-pivotX) +
-    ' ' +
-    (-pivotY) +
-    ')">' +
-    inner +
-    '</g>'
-  );
-}
-
-/** viewBox horizontal extra para la cisalla isométrica (evita recortes). */
-function nftIsoViewBoxPadX() {
-  return { left: 58, right: 72 };
-}
-
-/**
  * NFT mesa multinivel: franjas con distinto número de tubos; flujo en serpentín entre franjas.
  */
 function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
@@ -12058,24 +12560,17 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
-  const vbMM = nftIsoViewBoxPadX();
-  const cyIsoMM = topPad + (tankY - topPad) * 0.42;
-  const bodyMM = nftWrapIsoProjection(back + channels + flowLayer + plants + tankLayer, cxTitle, cyIsoMM);
-  const vbWMM = Wsvg + vbMM.left + vbMM.right;
-
   const nTot = geoms.length;
   let foot =
-    'NFT mesa multinivel · ' + tiers.join('+') + ' tubos · ' + nTot + ' total · ' + huecosN + ' huecos/tubo · ' + pend + '% pend. · vista isométrica (maqueta)' +
+    'NFT mesa multinivel · ' + tiers.join('+') + ' tubos · ' + nTot + ' total · ' + huecosN + ' huecos/tubo · ' + pend + '% pend.' +
     NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
-    vbMM.left +
-    ' 0 ' +
-    vbWMM +
+    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    Wsvg +
     ' ' +
     H +
-    '" width="100%" style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -12101,7 +12596,11 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '<text x="' +
     cxTitle +
     '" y="32" text-anchor="middle" fill="#64748b" font-size="8" font-weight="600">NFT · mesa multinivel (franjas 1+2+4…)</text>' +
-    bodyMM +
+    back +
+    channels +
+    flowLayer +
+    plants +
+    tankLayer +
     (!interactive ? pumpLines : '') +
     '<text x="' +
     cxTitle +
@@ -12410,11 +12909,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
-  const vbEsc = nftIsoViewBoxPadX();
-  const cyIsoEsc = ladderTop + (tankY - ladderTop) * 0.38;
-  const bodyEsc = nftWrapIsoProjection(frame + back + channels + flowLayer + plants + tankLayer, cxTitle, cyIsoEsc);
-  const vbWEsc = Wsvg + vbEsc.left + vbEsc.right;
-
   const nTot = runs.length;
   let foot =
     'NFT escalera' +
@@ -12429,17 +12923,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     huecosN +
     ' huecos · ' +
     pend +
-    '% pend. · vista isométrica (maqueta)' +
+    '% pend.' +
     NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
-    vbEsc.left +
-    ' 0 ' +
-    vbWEsc +
+    '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    Wsvg +
     ' ' +
     H +
-    '" width="100%" style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -12469,7 +12961,12 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     ' · ' +
     car +
     ' cara(s)</text>' +
-    bodyEsc +
+    frame +
+    back +
+    channels +
+    flowLayer +
+    plants +
+    tankLayer +
     (!interactive ? pumpLines : '') +
     '<text x="' +
     cxTitle +
@@ -12759,11 +13256,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
   }
 
-  const vbSerp = nftIsoViewBoxPadX();
-  const cyIsoSerp = topPad + (tankY - topPad) * 0.42;
-  const bodySerp = nftWrapIsoProjection(back + channels + flowLayer + plants + tankLayer, cxTitle, cyIsoSerp);
-  const vbWSerp = Wsvg + vbSerp.left + vbSerp.right;
-
   const layoutFoot =
     dispLayout === 'escalera' ? 'Escalera' : dispLayout === 'pared' ? 'Pared (zigzag)' : 'Mesa';
   let foot =
@@ -12775,7 +13267,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     huecosN +
     ' huecos/tubo · ' +
     pend +
-    '% pendiente · vista isométrica (maqueta)';
+    '% pendiente';
   if (bomb) {
     const minV = bomb.volMinDepositoSugeridoL;
     const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
@@ -12788,13 +13280,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   foot += NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
-    vbSerp.left +
-    ' 0 ' +
-    vbWSerp +
+    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    Wsvg +
     ' ' +
     H +
-    '" width="100%" style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -12826,7 +13316,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
         ? 'NFT · pared (tubos horizontales en zigzag)'
         : 'NFT · mesa (paralelos, pendiente por tubo)') +
     '</text>' +
-    bodySerp +
+    back +
+    channels +
+    flowLayer +
+    plants +
+    tankLayer +
     (!interactive ? pumpLines : '') +
     '<text x="' +
     cxTitle +
@@ -13035,12 +13529,7 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     plumbing = '<g pointer-events="none">' + plumbing + '</g>';
   }
 
-  const vbSch = nftIsoViewBoxPadX();
-  const cyIsoSch = yTop + (tankTop - yTop) * 0.45;
-  const bodySch = nftWrapIsoProjection(back + tankLayer + chParts.join('') + plumbing, cxTitle, cyIsoSch);
-  const vbWSch = Wsvg + vbSch.left + vbSch.right;
-
-  let footSub = nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente · isométrico (maqueta)';
+  let footSub = nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente';
   if (bomb) {
     footSub += ' · circulación 24 h · ver asistente / checklist';
     const minV = bomb.volMinDepositoSugeridoL;
@@ -13053,14 +13542,8 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   }
 
   return (
-    '<svg class="torre-svg-diagram nft-diagram--scroll nft-diagram--iso" xmlns="http://www.w3.org/2000/svg" viewBox="-' +
-      vbSch.left +
-      ' 0 ' +
-      vbWSch +
-      ' ' +
-      H +
-      '" width="100%" ' +
-      'style="height:auto;display:block;overflow:visible" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '<svg class="torre-svg-diagram nft-diagram--scroll" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + Wsvg + ' ' + H + '" width="100%" ' +
+      'style="height:auto;display:block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
       tid +
       '">' +
       '<title id="' + tid + '">NFT: circuito de agua desde el depósito a los canales y retorno; tubos con huecos de plantación</title>' +
@@ -13074,7 +13557,10 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       '</defs>' +
       '<text x="' + cxTitle + '" y="22" text-anchor="middle" fill="#14532d" font-size="10.5" font-weight="800" font-family="system-ui,Segoe UI,sans-serif">' +
       'Bomba · subida → manifold → canales (pendiente) → retorno al depósito</text>' +
-      bodySch +
+      back +
+      tankLayer +
+      chParts.join('') +
+      plumbing +
       '<text x="' + cxTitle + '" y="' + (H - 6) + '" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' +
       footSub + '</text>' +
       '</svg>'
