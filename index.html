@@ -18501,7 +18501,8 @@ function generarPasosNutriente() {
     id:'4.5', seccion:null, paso:'4.5', alert:true,
     desc: 'Medir pH inmediatamente — estará en 3.5-4.5 con agua destilada',
     nota: tieneBuffer
-      ? '⚠️ pH muy ácido es normal. ' + nut.nombre + ' tiene buffers integrados que lo subirán solos. Añadir pH+ MÍNIMO solo hasta pH 5.0, no más.'
+      ? '⚠️ pH muy ácido es normal. ' + nut.nombre + ' tiene buffers integrados que lo subirán solos. Añadir pH+ MÍNIMO solo hasta pH 5.0, no más. ' +
+        'Esta lectura es solo el <strong>punto de partida</strong>: no tomes decisiones de corrección “definitivas” hasta las ventanas de tiempo del <strong>4.8</strong> y el <strong>paso 6</strong> (tras difusor + 2–3 h mínimo).'
       : '⚠️ pH muy ácido es normal con agua destilada + nutrientes. Ajustar a ' + pHRango[0] + '-' + ((pHRango[0]+pHRango[1])/2).toFixed(1),
     campos:[{ id:'clPhTrasMezcla', label:'pH recién mezclado:', type:'number', step:'0.1', placeholder:'3.5' }]
   });
@@ -18512,7 +18513,8 @@ function generarPasosNutriente() {
       ? 'Añadir pH+ MÍNIMO solo hasta pH 5.0 — los buffers harán el resto'
       : 'Añadir pH+ hasta pH ' + pHRango[0] + ' — ajuste completo necesario',
     nota: tieneBuffer
-      ? 'Solo subir hasta 5.0. Los buffers de ' + nut.nombre + ' subirán solos hasta ' + pHRango[0] + '-' + pHRango[1] + ' en 2-3 horas. Cada ml extra de pH+ debilita los buffers.'
+      ? 'Solo subir hasta 5.0. Los buffers de ' + nut.nombre + ' subirán solos hacia ' + pHRango[0] + '-' + pHRango[1] + ' en <strong>2–3 h</strong> (primera fase). ' +
+        'Cada ml extra de pH+ debilita el buffer. A partir de aquí: <strong>no añadas más pH+</strong> hasta una lectura de control (4.8 o paso 6) cumpliendo los tiempos que indica la nota del 4.8.'
       : nut.nombre + ' no tiene buffers — ajustar directamente al rango ' + pHRango[0] + '-' + pHRango[1] + '. Añadir pH+ de 2ml en 2ml.',
     campos:[{ id:'clPhMasPaso46', label:'ml pH+ añadidos:', type:'number', step:'0.5', placeholder: tieneBuffer ? '3' : '5' }]
   });
@@ -18521,19 +18523,25 @@ function generarPasosNutriente() {
     id:'4.7', seccion:null, paso:'4.7',
     desc: 'Encender bomba con pH ' + (tieneBuffer ? '5.0' : pHRango[0]) + ' — seguro para las raíces',
     nota: tieneBuffer
-      ? 'Las raíces toleran pH 5.0 perfectamente. NO tocar más el pH. Los buffers actuarán en 2-3h.'
+      ? 'Las raíces toleran pH 5.0 perfectamente. <strong>No toques más el pH</strong> hasta las lecturas programadas. ' +
+        'A partir de este paso cuenta el tiempo para el buffer: <strong>2–3 h</strong> = primera subida esperable; <strong>~24 h</strong> (o el día siguiente) = lectura de <strong>control</strong> en el 4.8. ' +
+        'El <strong>paso 6</strong> volverá a pedir pH <strong>después</strong> del 5.4 (20 min difusor) y con <strong>≥2–3 h</strong> desde este encendido y desde el último pH+ del 4.6.'
       : 'Sistema listo para operar. Medir EC y pH cada 24h.'
   });
 
   if (tieneBuffer) {
+    const phInt = nut.pHIntervenir ? nut.pHIntervenir[0] + '–' + nut.pHIntervenir[1] : pHRango[0] + '–' + pHRango[1];
     pasos.push({
       id:'4.8', seccion:null, paso:'4.8',
-      desc: 'Medir pH a las 24h — debería estar en ' + pHRango[0] + '-' + pHRango[1] + ' por los buffers',
-      nota: 'Rango de NO intervención ' + nut.nombre + ': ' + nut.pHIntervenir[0] + '-' + nut.pHIntervenir[1] +
-        '. Solo actuar fuera de ese rango. Con plántulas nuevas el pH puede subir — normal los primeros 5 días.',
+      desc: 'pH con buffer: lectura de control (crítica para no sobrecorregir)',
+      nota:
+        '<strong>1) Ventana 2–3 h</strong> (tras 4.7): puedes mirar el pH solo para ver <strong>tendencia</strong>. Si ya va claramente hacia ' + pHRango[0] + '–' + pHRango[1] + ', <strong>no añadas pH+</strong>.<br><br>' +
+        '<strong>2) Lectura de control</strong> (campos de abajo): ideal <strong>~24 h</strong> tras 4.7; si te encaja mejor, <strong>al día siguiente</strong> en condiciones parecidas. Mínimo práctico antes de corregir de nuevo: <strong>≥2–3 h</strong> desde 4.7 y desde el último pH+ del 4.6, con bomba/difusor como en uso real.<br><br>' +
+        '<strong>3) Paso 6</strong> repetirá pH: misma regla — <strong>5.4</strong> (20 min difusor) + esas mismas ventanas de tiempo — para que el buffer haya actuado y no estropees el equilibrio con pH+ de más.<br><br>' +
+        '<strong>Rango de NO intervención</strong> (' + nut.nombre + '): <strong>' + phInt + '</strong>. Solo actuar fuera de ese rango. Con plántulas nuevas el pH puede seguir moviéndose — normal los primeros días.',
       campos:[
-        { id:'clPh24h', label:'pH a las 24h:', type:'number', step:'0.1', placeholder:'6.0' },
-        { id:'clEc24h', label:'EC a las 24h:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }
+        { id:'clPh24h', label:'pH de control (~24 h tras 4.7, o al día siguiente):', type:'number', step:'0.1', placeholder:'6.0' },
+        { id:'clEc24h', label:'EC en esa misma lectura:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }
       ]
     });
   } else {
@@ -18827,6 +18835,7 @@ function getCLPasos() {
   const phObj = ((pHR[0] + pHR[1]) / 2).toFixed(1);
   const ecMed = Math.round((ecMin + ecMax) / 2);
   const ecRecTarget = getRecargaEcMetaMicroS();
+  const phIntRango = nut.pHIntervenir ? nut.pHIntervenir[0] + '–' + nut.pHIntervenir[1] : pHR[0] + '–' + pHR[1];
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
   const esNft = cfg.tipoInstalacion === 'nft';
@@ -19046,10 +19055,34 @@ function getCLPasos() {
     campos:[{ id:'clTempAguaInicial', label:'Temp inicial:', unit:'°C', type:'number', step:'0.1', placeholder:'17' }] },
   { id:'5.4', seccion:null, paso:'5.4',
     desc:'Esperar 20 minutos con difusor en marcha antes de medir',
-    nota:'Con difusor 20 min son suficientes' },
+    nota: nut.pHBuffer
+      ? 'Con difusor, 20 min <strong>homogeneizan</strong> la mezcla para muestrear con sentido. En nutrientes con <strong>buffer de pH</strong>, este tiempo <strong>no sustituye</strong> la espera de <strong>≥2–3 h</strong> desde el paso 4.7 y desde el último pH+ del 4.6: el paso 6 enlaza con el 4.8 para no corregir antes de tiempo.'
+      : 'Con difusor 20 min son suficientes' },
 
   ...pasosPrev6,
 
+  ...(nut.pHBuffer ? [
+  { id:'6.1', seccion: paso6SeccionTitulo, paso:'6.1',
+    desc:'Medir EC — rango cultivos ' + ecMin + '–' + ecMax + ' µS/cm · meta de esta recarga ~' + ecRecTarget + ' µS/cm (' + nut.nombre + ')',
+    campos:[{ id:'clEcMedida', label:'EC medida:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) }] },
+  { id:'6.2', seccion:null, paso:'6.2',
+    desc:'Medir pH — nutriente con <strong>buffer</strong>: antes cumple el <strong>5.4</strong> (20 min con difusor). Además deben haber pasado <strong>mínimo 2–3 h</strong> desde el <strong>4.7</strong> (bomba encendida) y <strong>mínimo 2–3 h</strong> desde el <strong>último pH+ del 4.6</strong> (si no añadiste más después, cuenta desde ahí). Objetivo de equilibrio ~' + phObj + ' (rango ' + pHR[0] + '–' + pHR[1] + ').',
+    nota:'Si en el <strong>4.8</strong> ya estabas en ' + pHR[0] + '–' + pHR[1] + ' o dentro del rango de no intervención <strong>' + phIntRango + '</strong>, aquí <strong>confirmas</strong> tras homogeneizar; no añadas pH+ por inquietud. Si completas el checklist <strong>otro día</strong>, mantén bomba/difusor como en uso real antes de medir.',
+    campos:[{ id:'clPhMedidoP6', label:'pH medido (tras 5.4 + ≥2–3 h desde 4.7 y desde último pH+ de 4.6):', type:'number', step:'0.1', placeholder: phObj }] },
+  { id:'6.3', seccion:null, paso:'6.3',
+    desc:'pH+ <strong>solo si hace falta</strong> — con buffer, lo habitual es <strong>0 ml</strong> si ya estás en ' + phIntRango,
+    nota:'Fuera de <strong>' + phIntRango + '</strong>: subir gota a gota y lo mínimo; cada corrección extra debilita el buffer. Si añades pH+, ideal repetir 5.4 + espera antes del 6.4.',
+    campos:[{ id:'clPhMasP6', label:'ml pH+ en este paso (0 si no procede):', type:'number', step:'0.1', placeholder:'0' }] },
+  { id:'6.4', seccion:null, paso:'6.4',
+    desc:'Medición final para registro (Mediciones / dashboard)',
+    nota:'Si en 6.3 fue <strong>0 ml</strong>, estos valores ya son representativos tras la espera anterior. Si añadiste pH+, espera de nuevo <strong>5.4 + tiempo</strong> antes de cerrar, o deja constancia de que el pH final es pre-estabilización.',
+    campos:[
+      { id:'clEcFinalReg', label:'EC final:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) },
+      { id:'clPhFinalReg', label:'pH final:', type:'number', step:'0.1', placeholder: phObj },
+      { id:'clTempAgua', label:'Temp agua:', unit:'°C', type:'number', step:'0.1', placeholder:'20' },
+      { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(vol) }
+    ] },
+  ] : [
   { id:'6.1', seccion: paso6SeccionTitulo, paso:'6.1',
     desc:'Medir EC — rango cultivos ' + ecMin + '–' + ecMax + ' µS/cm · meta de esta recarga ~' + ecRecTarget + ' µS/cm (' + nut.nombre + ')',
     campos:[{ id:'clEcMedida', label:'EC medida:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) }] },
@@ -19067,6 +19100,7 @@ function getCLPasos() {
       { id:'clTempAgua', label:'Temp agua:', unit:'°C', type:'number', step:'0.1', placeholder:'20' },
       { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(vol) }
     ] },
+  ]),
 
   { id:'7.1', seccion:'✅ Paso 7 — Verificación final', paso:'7.1',
     desc: esNft
