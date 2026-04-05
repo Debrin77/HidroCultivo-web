@@ -2637,6 +2637,7 @@ button.dia-card {
 .evento-tipo-cosecha  { border-color: rgba(248,113,113,0.3); background: rgba(248,113,113,0.04); }
 .evento-tipo-rotacion { border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.04); }
 .evento-tipo-clima    { border-color: rgba(167,243,208,0.2); }
+.evento-tipo-plantula-ph { border-color: rgba(167,139,250,0.45); background: rgba(124,58,237,0.07); }
 
 /* ══ HISTORIAL ══ */
 .hist-toolbar {
@@ -5402,11 +5403,13 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#16a34a"></div>Recarga</div>
         <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#d97706"></div>Limpieza</div>
         <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#dc2626"></div>Cosecha</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:#7c3aed"></div>pH plántula nueva (5 días)</div>
       </div>
 
-      <!-- Próximos eventos -->
-      <div class="card">
+      <!-- Próximos eventos / detalle día (clic en celda con puntos) -->
+      <div class="card" id="calEventosCard">
         <div class="card-title">📋 Próximos eventos</div>
+        <div id="calDiaLabel" style="font-size:12px;font-weight:700;color:#a855f7;min-height:0;margin:0 0 8px"></div>
         <div id="eventosDia" style="font-size:13px;color:var(--muted)">
           <div style="text-align:center;padding:8px">Cargando eventos...</div>
         </div>
@@ -5416,6 +5419,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
         <div class="card-title">🧪 Rutina diaria</div>
         <p style="font-size:13px;color:var(--muted);line-height:1.5;margin:0">
           <strong style="color:var(--white)">Sugerencia:</strong> una toma de muestra al día (pH, EC, temperatura del depósito) mantiene consejos y registros alineados con tu agua real.
+          Si registras una <strong style="color:var(--white)">fecha nueva</strong> en una cesta (trasplante), el calendario marca <strong style="color:#c4b5fd">5 días seguidos</strong> para reforzar el control diario del <strong style="color:var(--white)">pH</strong> por la variación típica en plántulas.
         </p>
       </div>
 
@@ -7769,7 +7773,7 @@ function goTab(tab) {
   if (tab === 'mediciones') { cargarUltimaMedicion(); initConfigUI(); }
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') { cargarMeteo(); window._meteoObsoleto = false; }
-  if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = new Date(); renderCalendario(); }
+  if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = null; renderCalendario(); }
   if (tab === 'sistema') {
     renderTorre();
     renderCompatGrid();
@@ -20537,11 +20541,14 @@ function renderConsejosLista() {
 // ══════════════════════════════════════════════════
 
 let calFecha = new Date();
-let calDiaSeleccionado = new Date();
+/** null = lista «próximos eventos»; Date = detalle de ese día en la tarjeta. */
+let calDiaSeleccionado = null;
 
 const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_CAL = ['L','M','X','J','V','S','D'];
+/** Días consecutivos desde la fecha en torre/NFT en que se sugiere medir pH a diario (plántulas nuevas). */
+const DIAS_MUESTRA_PH_TRASPLANTE = 5;
 
 // Eventos del calendario basados en estado real del sistema
 function generarEventos(fecha) {
@@ -20595,6 +20602,28 @@ function generarEventos(fecha) {
           icono: '✂️',
           titulo: diasParaCosecha === 0 ? `¡Cosechar ${c.variedad}!` : `Cosecha próxima — ${c.variedad}`,
           desc: `Nivel ${n+1}, cesta ${ci+1}. ${diasParaCosecha === 0 ? 'Lista para cosechar hoy.' : `En ${diasParaCosecha} días aproximadamente.`}`
+        });
+      }
+
+      if (diasTrasplante >= 0 && diasTrasplante < DIAS_MUESTRA_PH_TRASPLANTE) {
+        const nomC = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
+        eventos.push({
+          tipo: 'plantula-ph',
+          icono: '🧪',
+          titulo:
+            'Muestra diaria pH — plántula nueva (día ' +
+            (diasTrasplante + 1) +
+            '/' +
+            DIAS_MUESTRA_PH_TRASPLANTE +
+            ')',
+          desc:
+            'Nivel ' +
+            (n + 1) +
+            ', cesta ' +
+            (ci + 1) +
+            ' · ' +
+            nomC +
+            '. En los primeros días la raíz joven puede variar el pH de la solución: anota al menos una medición al día en Mediciones (pH y EC).'
         });
       }
 
@@ -20722,6 +20751,26 @@ function renderCalendario() {
       const cosecha   = new Date(siembra.getTime() + diasTotal * 86400000);
       if (cosecha.getMonth() === mes && cosecha.getFullYear() === año)
         addEvento(cosecha.getDate(), 'cosecha', '#dc2626', '✂️ Cosecha N' + (n+1) + ' C' + (c+1) + ' (' + cultivoNombreLista(getCultivoDB(cesta.variedad), cesta.variedad) + ')');
+      const siembraPh = new Date(cesta.fecha);
+      siembraPh.setHours(0, 0, 0, 0);
+      for (let k = 0; k < DIAS_MUESTRA_PH_TRASPLANTE; k++) {
+        const diaPh = new Date(siembraPh.getTime() + k * 86400000);
+        if (diaPh.getMonth() === mes && diaPh.getFullYear() === año) {
+          addEvento(
+            diaPh.getDate(),
+            'plantula-ph',
+            '#7c3aed',
+            '🧪 pH plántula N' +
+              (n + 1) +
+              ' C' +
+              (c + 1) +
+              ' · día ' +
+              (k + 1) +
+              '/' +
+              DIAS_MUESTRA_PH_TRASPLANTE
+          );
+        }
+      }
     });
   });
 
@@ -20737,6 +20786,11 @@ function renderCalendario() {
   for (let d = 1; d <= diasMes; d++) {
     const esHoy = (d === hoy.getDate() && mes === hoy.getMonth() && año === hoy.getFullYear());
     const evs   = eventos[d] || [];
+    const esSel =
+      calDiaSeleccionado != null &&
+      d === calDiaSeleccionado.getDate() &&
+      mes === calDiaSeleccionado.getMonth() &&
+      año === calDiaSeleccionado.getFullYear();
     const dots  = evs.slice(0,3).map(e =>
       '<div style="width:5px;height:5px;border-radius:50%;background:' + e.color + '"></div>'
     ).join('');
@@ -20745,6 +20799,7 @@ function renderCalendario() {
       'background:' + (esHoy ? '#16a34a' : evs.length > 0 ? 'var(--bg2)' : 'var(--bg3)') + ';' +
       'border:1.5px solid ' + (esHoy ? '#16a34a' : evs.length > 0 ? '#86efac' : 'var(--border)') + ';' +
       'border-radius:8px;padding:4px 2px;text-align:center;min-height:42px;' +
+      (esSel ? 'box-shadow:0 0 0 2px #a855f7;' : '') +
       (evs.length > 0 ? 'cursor:pointer;' : 'cursor:default;');
     const numInner =
       '<div style="font-family:var(--font-display);font-size:12px;font-weight:700;' +
@@ -20764,7 +20819,7 @@ function renderCalendario() {
     }
   }
 
-  // ── Próximos eventos ─────────────────────────────────────────────────────
+  // ── Tarjeta: detalle del día elegido o lista de próximos ─────────────────
   const diaHoy = (mes === hoy.getMonth() && año === hoy.getFullYear()) ? hoy.getDate() : 1;
   const proximos = [];
   Object.entries(eventos).forEach(([dia, evs]) => {
@@ -20776,31 +20831,47 @@ function renderCalendario() {
 
   const mesCorto = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][mes];
   const eventosDiaEl = document.getElementById('eventosDia');
+  const calDiaLabelEl = document.getElementById('calDiaLabel');
 
-  if (proximos.length === 0) {
-    eventosDiaEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:8px">No hay eventos próximos este mes</div>';
-    return;
+  const sel = calDiaSeleccionado;
+  const selEnMes =
+    sel != null &&
+    sel.getFullYear() === año &&
+    sel.getMonth() === mes;
+
+  if (selEnMes) {
+    mostrarEventosDia(sel);
+  } else {
+    if (calDiaLabelEl) calDiaLabelEl.textContent = '';
+    if (proximos.length === 0) {
+      eventosDiaEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:8px">No hay eventos próximos este mes</div>';
+    } else {
+      eventosDiaEl.innerHTML = proximos.slice(0, 8).map(e =>
+        '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+        '<div style="width:36px;height:36px;border-radius:10px;background:' + e.color + '18;' +
+        'border:1.5px solid ' + e.color + '44;display:flex;flex-direction:column;' +
+        'align-items:center;justify-content:center;flex-shrink:0">' +
+        '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + e.color + '">' + e.dia + '</div>' +
+        '<div style="font-size:8px;color:' + e.color + ';font-weight:600">' + mesCorto + '</div>' +
+        '</div>' +
+        '<div style="font-size:13px;color:var(--white);font-weight:600">' + e.label + '</div>' +
+        '</div>'
+      ).join('');
+    }
   }
-
-  eventosDiaEl.innerHTML = proximos.slice(0, 8).map(e =>
-    '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
-    '<div style="width:36px;height:36px;border-radius:10px;background:' + e.color + '18;' +
-    'border:1.5px solid ' + e.color + '44;display:flex;flex-direction:column;' +
-    'align-items:center;justify-content:center;flex-shrink:0">' +
-    '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + e.color + '">' + e.dia + '</div>' +
-    '<div style="font-size:8px;color:' + e.color + ';font-weight:600">' + mesCorto + '</div>' +
-    '</div>' +
-    '<div style="font-size:13px;color:var(--white);font-weight:600">' + e.label + '</div>' +
-    '</div>'
-  ).join('');
 
   } catch(e) { console.error("renderCalendario error:", e); }
 }
 
 function mostrarEventosDiaHC(d, mes, año) {
-  const meses = ['enero','febrero','marzo','abril','mayo','junio',
-                 'julio','agosto','septiembre','octubre','noviembre','diciembre'];
-  showToast('📅 ' + d + ' de ' + meses[mes] + ' ' + año);
+  calDiaSeleccionado = new Date(año, mes, d);
+  calDiaSeleccionado.setHours(0, 0, 0, 0);
+  renderCalendario();
+  const host = document.getElementById('eventosDia');
+  const card = host && host.closest('.card');
+  if (card) requestAnimationFrame(function () {
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
 }
 
 
@@ -20817,7 +20888,8 @@ function mostrarEventosDia(fecha) {
     diffDias === -1 ? 'Ayer' :
     `${fecha.getDate()} de ${MESES_LARGO[fecha.getMonth()]}`;
 
-  document.getElementById('calDiaLabel').textContent = labelDia;
+  const calLbl = document.getElementById('calDiaLabel');
+  if (calLbl) calLbl.textContent = labelDia;
 
   const eventos = generarEventos(fecha);
   const lista = document.getElementById('eventosDia');
