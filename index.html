@@ -7749,6 +7749,12 @@ function cerrarModalAgua(ev) {
 
 function a11yEscapeTopDialog(ev) {
   if (ev.key !== 'Escape' || ev.defaultPrevented) return;
+  const clr = document.getElementById('checklistRutaRecargaOverlay');
+  if (clr) {
+    ev.preventDefault();
+    cerrarOverlayRutaChecklistRecarga();
+    return;
+  }
   const cld = document.getElementById('checklistDatosInstalacionOverlay');
   if (cld) {
     ev.preventDefault();
@@ -18418,6 +18424,88 @@ function cargarUltimaMedicion() {
 
 let clChecked = new Set();
 let clEsPrimeraVez = false;
+/** 'recarga' = flujo completo (apagar, vaciar, cubrir…); 'primer_llenado' = depósito sin cultivo previo */
+let clRutaChecklist = 'recarga';
+
+function debePreguntarRutaChecklist(esPrimeraVezApp) {
+  return !!esPrimeraVezApp || !state.ultimaRecarga;
+}
+
+function cerrarOverlayRutaChecklistRecarga() {
+  const o = document.getElementById('checklistRutaRecargaOverlay');
+  if (o) {
+    try { a11yDialogClosed(o); } catch (e) {}
+    o.remove();
+  }
+}
+
+/**
+ * Primera vez en la app / reset / nunca finalizaste una recarga en el checklist: elige recorrido.
+ */
+function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
+  cerrarOverlayRutaChecklistRecarga();
+  const overlay = document.createElement('div');
+  overlay.id = 'checklistRutaRecargaOverlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'clRutaTitulo');
+  overlay.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10030;display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));';
+
+  overlay.innerHTML =
+    '<div style="background:var(--bg2,#1e293b);border:1.5px solid var(--border,#334155);border-radius:20px 20px 12px 12px;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:18px;color:var(--white,#f8fafc)">' +
+      '<div id="clRutaTitulo" style="font-family:var(--font-display);font-size:17px;font-weight:900;margin-bottom:8px">¿Qué tipo de checklist necesitas?</div>' +
+      '<p style="font-size:12px;color:var(--muted,#94a3b8);line-height:1.55;margin:0 0 16px">' +
+        '<strong>Primer llenado</strong>: depósito nuevo o sin haber cultivado aún — te saltamos apagar bomba, vaciado de solución usada y pasos de cosecha. ' +
+        'Sí te guiamos en <strong>limpiar el depósito</strong> antes de la primera mezcla.<br><br>' +
+        '<strong>Recarga completa</strong>: ya hubo cultivo y solución en el sistema; el recorrido habitual (parar bomba, vaciar, limpiar, cubrir depósito…).</p>' +
+      '<p style="font-size:10px;color:var(--muted,#94a3b8);line-height:1.45;margin:0 0 14px;opacity:.95">Tras <strong>finalizar</strong> una recarga en el checklist, la app ya no muestra esta pregunta y abrirá directamente la recarga completa.</p>' +
+      '<button type="button" id="clRutaPrimer" style="width:100%;padding:14px;background:#0d9488;color:#fff;border:none;border-radius:14px;font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">' +
+        '🌱 Primer llenado del depósito</button>' +
+      '<button type="button" id="clRutaCompleta" style="width:100%;padding:14px;background:var(--bg3);color:var(--white);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">' +
+        '🔄 Recarga completa (habitual)</button>' +
+      '<button type="button" id="clRutaCancelar" style="width:100%;padding:10px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer">' +
+        'Cancelar</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  try { a11yDialogOpened(overlay); } catch (e) {}
+
+  const continuar = (ruta) => {
+    cerrarOverlayRutaChecklistRecarga();
+    clRutaChecklist = ruta;
+    abrirChecklistDespuesDeElegirRuta(esPrimeraVez);
+  };
+
+  document.getElementById('clRutaPrimer').addEventListener('click', () => continuar('primer_llenado'));
+  document.getElementById('clRutaCompleta').addEventListener('click', () => continuar('recarga'));
+  document.getElementById('clRutaCancelar').addEventListener('click', () => {
+    cerrarOverlayRutaChecklistRecarga();
+    if (esPrimeraVez) try { goTab('inicio'); } catch (e2) {}
+  });
+}
+
+function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
+  aplicarConfigTorre();
+
+  const clTit = document.getElementById('checklistTitle');
+  if (clTit) {
+    const esNft = state.configTorre && state.configTorre.tipoInstalacion === 'nft';
+    if (clRutaChecklist === 'primer_llenado') {
+      clTit.textContent = esNft ? '🪴 Primer llenado NFT — checklist' : '🌿 Primer llenado — checklist';
+    } else {
+      clTit.textContent = esNft ? '🪴 Recarga NFT — checklist' : '🌿 HidroCultivo — Recarga';
+    }
+  }
+
+  document.getElementById('checklistCloseBtn').style.display = esPrimeraVez ? 'none' : 'flex';
+
+  renderChecklist();
+  const co = document.getElementById('checklistOverlay');
+  co.classList.add('open');
+  updateClProgress();
+  a11yDialogOpened(co);
+}
 
 // Definición de pasos del checklist
 function generarPasosNutriente() {
@@ -18962,7 +19050,9 @@ function getCLPasos() {
       nota:'Aire en el circuito suele dejar los primeros huecos sin película' },
   ] : [];
 
-  return [
+  const primerLlenado = clRutaChecklist === 'primer_llenado';
+
+  const pasosCabeceraRecargaCompleta = [
   { id:'P1', seccion:'🌙 Preparación', paso:'P1',
     desc: pre.descP1,
     nota:'Para mantener raíces húmedas durante los 45 min sin bomba · Dosis escaladas desde tu depósito de ' + vol + 'L y ' + nut.nombre +
@@ -19021,13 +19111,33 @@ function getCLPasos() {
     desc: esNft
       ? 'Limpiar canales NFT, espigas, retornos al depósito y bomba; retirar restos de raíz en codos y bajantes'
       : 'Limpiar tubos, bomba exterior y conexiones' },
+  ];
 
-  ...pasoNftTuberiaRef,
-  ...pasosNftExtra,
-
+  const pasosCubiertaDeposito = [
   { id:'3.1', seccion:'🖤 Paso 3 — Cubrir depósito', paso:'3.1',
     desc:'Envolver exterior con bolsa negra opaca o film negro completamente',
     nota:'Previene algas y oxidación del hierro' },
+  ];
+
+  const pasosCabeceraPrimerLlenado = [
+  { id:'PL0', seccion:'🚀 Primer llenado del depósito', paso:'PL·0',
+    desc:'Recorrido acortado: sin parada prolongada de bomba ni vaciado de solución usada (no aplica P1–P3 ni pasos 1.x).',
+    nota:'Si en realidad ya cultivabas y vas a recargar de verdad, cancela y abre de nuevo el checklist eligiendo <strong>Recarga completa</strong>.' },
+  { id:'PL1', seccion:'🧹 Depósito antes del primer uso', paso:'PL·1',
+    desc:'Limpiar el interior del depósito: agua oxigenada 3% — 15 ml en ~5 L de agua. Frotar paredes con esponja suave.',
+    nota: esNft
+      ? 'Quita polvo, restos de fabricación o films sueltos. Canales nuevos: enjuagar; una limpieza tipo «recarga» (biofilm, raíces) la harás cuando el sistema ya haya estado en uso.'
+      : 'Quita polvo, grasa o restos industriales. Con tubo/bomba nuevos, un enjuague previo evita residuos en la primera mezcla.' },
+  { id:'PL2', seccion:null, paso:'PL·2',
+    desc:'Aclarar con agua limpia — mínimo 2 veces',
+    nota:'Sin olor a oxigenada antes de llenar con agua para el paso 4 (mezcla nutritiva).' },
+  ];
+
+  return [
+    ...(primerLlenado ? pasosCabeceraPrimerLlenado : pasosCabeceraRecargaCompleta),
+    ...pasoNftTuberiaRef,
+    ...pasosNftExtra,
+    ...(primerLlenado ? [] : pasosCubiertaDeposito),
 
   { id:'4.0', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.0',
     desc:'Fija el EC objetivo (µS/cm) para calcular las mililitros de cada producto en el orden del fabricante. Por defecto usa el punto medio del rango óptimo de tus cultivos o del nutriente.',
@@ -19131,23 +19241,13 @@ function abrirChecklist(esPrimeraVez = false) {
     return;
   }
 
-  aplicarConfigTorre();
-
-  const clTit = document.getElementById('checklistTitle');
-  if (clTit) {
-    clTit.textContent = (state.configTorre && state.configTorre.tipoInstalacion === 'nft')
-      ? '🪴 Recarga NFT — checklist'
-      : '🌿 HidroCultivo — Recarga';
+  if (debePreguntarRutaChecklist(esPrimeraVez)) {
+    mostrarOverlayRutaChecklistRecarga(esPrimeraVez);
+    return;
   }
 
-  // Ocultar botón cerrar si es primera vez (obligatorio completarlo)
-  document.getElementById('checklistCloseBtn').style.display = esPrimeraVez ? 'none' : 'flex';
-
-  renderChecklist();
-  const co = document.getElementById('checklistOverlay');
-  co.classList.add('open');
-  updateClProgress();
-  a11yDialogOpened(co);
+  clRutaChecklist = 'recarga';
+  abrirChecklistDespuesDeElegirRuta(esPrimeraVez);
 }
 
 function cerrarChecklist() {
