@@ -3061,6 +3061,34 @@ button.checklist-close {
 .cl-field input.wide { width: 150px; }
 .cl-field .unit { font-size: 11px; color: var(--muted); }
 
+/* CalMag en paso 4 — activado muy visible (:has para estado checked) */
+label.cl-field.cl-calmag-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+label.cl-field.cl-calmag-option input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  accent-color: #16a34a;
+}
+label.cl-field.cl-calmag-option span { font-size: 12px; line-height: 1.5; color: var(--muted); font-weight: 500; }
+label.cl-field.cl-calmag-option:has(input:checked) {
+  border-color: #22c55e;
+  background: linear-gradient(145deg, rgba(22, 163, 74, 0.28), rgba(34, 197, 94, 0.14));
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-weight: 800; }
+
 /* Barra final checklist */
 .checklist-footer {
   position: fixed;
@@ -7693,6 +7721,12 @@ function cerrarModalAgua(ev) {
 
 function a11yEscapeTopDialog(ev) {
   if (ev.key !== 'Escape' || ev.defaultPrevented) return;
+  const cld = document.getElementById('checklistDatosInstalacionOverlay');
+  if (cld) {
+    ev.preventDefault();
+    cerrarOverlayChecklistDatosInstalacion();
+    return;
+  }
   const order = ['modalConsejosTablaPersonal', 'modalOverlay', 'checklistOverlay', 'setupOverlay', 'modalTorres', 'modalAgua'];
   for (const id of order) {
     const el = document.getElementById(id);
@@ -14993,6 +15027,8 @@ function guardarSetupYContinuar() {
     numNiveles:   niveles,
     numCestas:    cestas,
     volDeposito:  vol,
+    agua:         setupData.agua || 'destilada',
+    checklistInstalacionConfirmada: true,
     ubicacion:    setupData.ubicacion || setupUbicacion || 'exterior',
     luz:          setupData.luz || 'led',
     horasLuz:     horasLuzGuardar,
@@ -15354,6 +15390,8 @@ function aplicarConfigTorre() {
       numCestas:  NUM_CESTAS,
       volDeposito: 18,
       nutriente: 'canna_aqua',
+      agua: state.configAgua || 'destilada',
+      checklistInstalacionConfirmada: false,
       lat: 39.9864,
       lon: -0.0495,
       ciudad: 'Castelló de la Plana',
@@ -18399,6 +18437,201 @@ function construirTextoChecklistPreliminar() {
   return { descP1: desc, descP2: p2, placeholderProv: provMs.toFixed(2) };
 }
 
+/**
+ * ¿Podemos mostrar el checklist de recarga con cifras fiables (volumen, nutriente, tipo sistema, agua)?
+ * Si el usuario completó el asistente o ya usa la instalación, no molestamos. Tras reset o config genérica sin confirmar, pedimos datos antes.
+ */
+function checklistInstalacionCompletaParaRecarga() {
+  const cfg = state.configTorre;
+  if (!cfg || typeof cfg !== 'object') return false;
+  const vol = Number(cfg.volDeposito);
+  if (!Number.isFinite(vol) || vol < 1 || vol > 800) return false;
+  if (!cfg.nutriente || !NUTRIENTES_DB.some(n => n.id === cfg.nutriente)) return false;
+  const tipo = cfg.tipoInstalacion;
+  if (tipo !== 'torre' && tipo !== 'nft') return false;
+
+  if (cfg.checklistInstalacionConfirmada === true) return true;
+
+  const hayUso =
+    !!(state.ultimaRecarga || state.ultimaMedicion) ||
+    getNivelesActivos().some(n => (state.torre[n] || []).some(c => c && c.variedad));
+  return hayUso;
+}
+
+function cerrarOverlayChecklistDatosInstalacion() {
+  const o = document.getElementById('checklistDatosInstalacionOverlay');
+  if (o) {
+    try { a11yDialogClosed(o); } catch (e) {}
+    o.remove();
+  }
+}
+
+/**
+ * Aplica torre o NFT mínimos tras el cuestionario previo al checklist (reset / primera recarga sin asistente).
+ */
+function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId) {
+  initTorres();
+  const aguaOk = agua === 'osmosis' || agua === 'grifo' ? agua : 'destilada';
+  const aguaMap = { destilada: 'destilada', osmosis: 'osmosis', grifo: 'grifo' };
+  if (aguaMap[aguaOk]) setAgua(aguaMap[aguaOk]);
+
+  const baseComun = {
+    nutriente: nutId,
+    volDeposito: vol,
+    agua: aguaOk,
+    checklistInstalacionConfirmada: true,
+    tipoTorre: 'custom',
+    ubicacion: 'exterior',
+    luz: 'led',
+    horasLuz: 16,
+    equipamiento: ['difusor', 'calentador', 'bomba'],
+    lat: 39.9864,
+    lon: -0.0495,
+    ciudad: 'Castelló de la Plana',
+    sustrato: normalizaSustratoKey(state.configSustrato || 'esponja'),
+    tamanoCesta: 'standard',
+    diametroTubo: 50,
+    antiRaices: 'tubo_interior',
+    alturaTorre: 1.2,
+    sensoresHardware: { ec: false, ph: false, humedad: false },
+  };
+
+  if (tipo === 'nft') {
+    state.configTorre = Object.assign({}, baseComun, {
+      tipoInstalacion: 'nft',
+      numNiveles: 4,
+      numCestas: 8,
+      nftNumCanales: 4,
+      nftHuecosPorCanal: 8,
+      nftPendientePct: 2,
+      nftDisposicion: 'mesa',
+      nftTuboInteriorMm: 25,
+      nftCanalForma: 'redondo',
+      nftCanalDiamMm: 90,
+      nftLaminaAguaMm: 3,
+    });
+    redimensionarMatrizTorreNftPreservando(state.configTorre);
+  } else {
+    state.configTorre = Object.assign({}, baseComun, {
+      tipoInstalacion: 'torre',
+      numNiveles: NUM_NIVELES,
+      numCestas: NUM_CESTAS,
+    });
+    state.torre = [];
+    for (let n = 0; n < NUM_NIVELES; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < NUM_CESTAS; c++) {
+        state.torre[n].push({ variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] });
+      }
+    }
+  }
+
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try { actualizarHeaderTorre(); } catch (eH) {}
+  renderTorre();
+  updateTorreStats();
+  updateDashboard();
+  try { initConfigUI(); } catch (e) {}
+  try { actualizarBadgesNutriente(); } catch (e2) {}
+  try { actualizarVistaRiegoPorTipoInstalacion(); } catch (e3) {}
+}
+
+function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
+  cerrarOverlayChecklistDatosInstalacion();
+  const cfg = state.configTorre || {};
+  const volIni = Number.isFinite(Number(cfg.volDeposito)) && Number(cfg.volDeposito) > 0 ? Math.round(Number(cfg.volDeposito)) : 20;
+  const tipoIni = cfg.tipoInstalacion === 'nft' ? 'nft' : 'torre';
+  const aguaIni = cfg.agua || state.configAgua || 'destilada';
+  const nutIni = (cfg.nutriente && NUTRIENTES_DB.some(n => n.id === cfg.nutriente) ? cfg.nutriente : (getNutrienteTorre().id || 'canna_aqua'));
+  const optsNut = NUTRIENTES_DB.map(n =>
+    '<option value="' + String(n.id).replace(/"/g, '') + '"' + (n.id === nutIni ? ' selected' : '') + '>' +
+    escHtmlUi(n.nombre) + '</option>'
+  ).join('');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'checklistDatosInstalacionOverlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'cldTitulo');
+  overlay.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10020;display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));';
+
+  overlay.innerHTML =
+    '<div style="background:var(--bg2,#1e293b);border:1.5px solid var(--border,#334155);border-radius:20px 20px 12px 12px;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:18px;color:var(--white,#f8fafc)">' +
+      '<div id="cldTitulo" style="font-family:var(--font-display);font-size:17px;font-weight:900;margin-bottom:6px">Antes del checklist de recarga</div>' +
+      '<p style="font-size:12px;color:var(--muted,#94a3b8);line-height:1.5;margin:0 0 14px">' +
+        'Indica cómo es <strong>esta</strong> instalación para que volumen, agua, nutriente y pasos (torre o NFT) coincidan con tu montaje real. ' +
+        'Puedes afinar todo después en <strong>Sistema</strong> o con el asistente completo.</p>' +
+
+      '<div style="font-size:11px;font-weight:800;color:#86efac;margin-bottom:6px">Tipo de sistema</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
+          '<input type="radio" name="cldTipoInst" value="torre"' + (tipoIni === 'torre' ? ' checked' : '') + '>' +
+          '<span style="font-size:13px;font-weight:700">Torre vertical</span></label>' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
+          '<input type="radio" name="cldTipoInst" value="nft"' + (tipoIni === 'nft' ? ' checked' : '') + '>' +
+          '<span style="font-size:13px;font-weight:700">NFT</span></label>' +
+      '</div>' +
+
+      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Volumen del depósito (L)</label>' +
+      '<input id="cldVolDeposito" type="number" inputmode="numeric" min="1" max="600" step="1" value="' + volIni + '"' +
+        ' style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:16px;margin-bottom:12px">' +
+
+      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Agua para la mezcla</label>' +
+      '<select id="cldAgua" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:14px;margin-bottom:12px">' +
+        '<option value="destilada"' + (aguaIni === 'destilada' ? ' selected' : '') + '>Destilada</option>' +
+        '<option value="osmosis"' + (aguaIni === 'osmosis' ? ' selected' : '') + '>Ósmosis</option>' +
+        '<option value="grifo"' + (aguaIni === 'grifo' ? ' selected' : '') + '>Grifo</option>' +
+      '</select>' +
+
+      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Nutriente / marca</label>' +
+      '<select id="cldNutriente" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:14px;margin-bottom:16px">' +
+        optsNut +
+      '</select>' +
+
+      '<button type="button" id="cldBtnContinuar" style="width:100%;padding:14px;background:#16a34a;color:#fff;border:none;border-radius:14px;font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px">' +
+        'Continuar al checklist</button>' +
+      '<button type="button" id="cldBtnAsistente" style="width:100%;padding:12px;background:var(--bg3);color:var(--white);border:1.5px solid var(--border);border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">' +
+        'Asistente completo (recomendado)</button>' +
+      '<button type="button" id="cldBtnDespues" style="width:100%;padding:10px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer">' +
+        'Más tarde</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  try { a11yDialogOpened(overlay); } catch (e) {}
+
+  const continuar = () => {
+    const tipo = (overlay.querySelector('input[name="cldTipoInst"]:checked') || {}).value || 'torre';
+    const vol = parseInt(String(document.getElementById('cldVolDeposito').value || '0'), 10);
+    const agua = document.getElementById('cldAgua').value || 'destilada';
+    const nutId = document.getElementById('cldNutriente').value;
+    if (!Number.isFinite(vol) || vol < 1 || vol > 600) {
+      showToast('Indica un volumen de depósito entre 1 y 600 L', true);
+      return;
+    }
+    if (!nutId || !NUTRIENTES_DB.some(n => n.id === nutId)) {
+      showToast('Elige un nutriente de la lista', true);
+      return;
+    }
+    cerrarOverlayChecklistDatosInstalacion();
+    aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId);
+    abrirChecklist(esPrimeraVezChecklist);
+  };
+
+  document.getElementById('cldBtnContinuar').addEventListener('click', continuar);
+  document.getElementById('cldBtnAsistente').addEventListener('click', () => {
+    cerrarOverlayChecklistDatosInstalacion();
+    try { abrirSetup(); } catch (e) {}
+  });
+  document.getElementById('cldBtnDespues').addEventListener('click', () => {
+    cerrarOverlayChecklistDatosInstalacion();
+    showToast('Cuando quieras: Historial → checklist o Inicio → recarga');
+    if (esPrimeraVezChecklist) try { goTab('inicio'); } catch (e) {}
+  });
+}
+
 function getCLPasos() {
   const cfg = state.configTorre || {};
   const vol = cfg.volDeposito || VOL_OBJETIVO || 18;
@@ -18422,12 +18655,17 @@ function getCLPasos() {
   const paso40campos = [
     { id:'clEcObjetivoRecarga', label:'EC objetivo de esta recarga', type:'number', step:'10',
       unit:'µS/cm', placeholder:String(ecMed), value:getRecargaEcMetaMicroS(),
-      _clOninput:'onChecklistRecargaPrefsChanged()' },
+      clase:'wide',
+      _clOnblur:'onChecklistRecargaPrefsChanged()',
+      _clOnkeydown:'if(event.key===\'Enter\'){event.preventDefault();this.blur();}' },
   ];
   if (nut.calmagNecesario) {
     paso40campos.push({
       id:'clUsarCalMag', type:'checkbox', checked: usarCalMagEnRecarga(),
-      label:'Incluir CalMag antes del abono (recomendado con agua blanda; con grifo suele omitirse). Al marcar o desmarcar se actualizan CalMag y los ml de abono (A+B iguales / 1 parte) según EC objetivo y pendiente sobre CalMag estimado.',
+      labelClass: 'cl-calmag-option',
+      label:
+        '<strong style="color:var(--white);display:block;margin-bottom:4px">CalMag antes del abono</strong>' +
+        'Recomendado con agua blanda; con grifo suele omitirse. Al activarlo se recalculan CalMag y los ml de abono según el EC objetivo.',
       _clOnchange:'onChecklistRecargaPrefsChanged()',
     });
   }
@@ -18600,7 +18838,7 @@ function getCLPasos() {
 
   { id:'4.0', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.0',
     desc:'Fija el EC objetivo (µS/cm) para calcular las mililitros de cada producto en el orden del fabricante. Por defecto usa el punto medio del rango óptimo de tus cultivos o del nutriente.',
-    nota:'Si cambias el valor o CalMag, los pasos siguientes se actualizan al instante.',
+    nota:'Tras escribir el EC, <strong>sal del campo</strong> (toca fuera, Tab o Intro) para aplicarlo y recalcular los ml de los pasos siguientes. CalMag se actualiza al marcar o desmarcar.',
     extraHtml:'<button type="button" class="btn btn-ghost" style="margin-top:8px;padding:8px 12px;font-size:12px;font-weight:700;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;width:100%" onclick="irConsejosTablaResumenEc()">📊 Ver tabla resumen EC / pH en Consejos</button>',
     campos: paso40campos },
 
@@ -18669,6 +18907,12 @@ function getCLTotal() { return getCLPasos().length; }
 function abrirChecklist(esPrimeraVez = false) {
   clEsPrimeraVez = esPrimeraVez;
   clChecked.clear();
+
+  if (!checklistInstalacionCompletaParaRecarga()) {
+    mostrarOverlayChecklistDatosInstalacion(esPrimeraVez);
+    return;
+  }
+
   aplicarConfigTorre();
 
   const clTit = document.getElementById('checklistTitle');
@@ -18701,12 +18945,14 @@ function onChecklistRecargaPrefsChanged() {
   if (!state.configTorre) state.configTorre = {};
   const ecInp = document.getElementById('clEcObjetivoRecarga');
   if (ecInp) {
-    const raw = ecInp.value.trim();
+    const raw = String(ecInp.value || '').trim().replace(',', '.');
     const ec = parseFloat(raw);
     if (raw === '' || !Number.isFinite(ec)) {
       delete state.configTorre.checklistEcObjetivoUs;
     } else if (ec >= 200 && ec <= 6000) {
       state.configTorre.checklistEcObjetivoUs = Math.round(ec);
+    } else {
+      delete state.configTorre.checklistEcObjetivoUs;
     }
   }
   const cm = document.getElementById('clUsarCalMag');
@@ -18750,11 +18996,18 @@ function renderChecklist() {
         </div>`;
       }
       if (c.type === 'checkbox') {
-        return `<label class="cl-field" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px">
-          <input type="checkbox" id="${c.id}" style="margin-top:3px;flex-shrink:0;width:18px;height:18px;accent-color:#15803d"
+        const lblExtra = c.labelClass ? ' ' + c.labelClass : '';
+        const chkStyle = c.labelClass
+          ? ''
+          : 'margin-top:3px;flex-shrink:0;width:18px;height:18px;accent-color:#15803d';
+        const lblInline = c.labelClass
+          ? ''
+          : ' style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px"';
+        return `<label class="cl-field${lblExtra}"${lblInline}>
+          <input type="checkbox" id="${c.id}"${chkStyle ? ' style="' + chkStyle + '"' : ''}
             ${c.checked ? 'checked' : ''}
             ${c._clOnchange ? ' onchange="' + c._clOnchange + '"' : ''}>
-          <span style="font-size:12px;line-height:1.45;color:var(--muted)">${c.label || ''}</span>
+          <span${c.labelClass ? '' : ' style="font-size:12px;line-height:1.45;color:var(--muted)"'}>${c.label || ''}</span>
         </label>`;
       }
       const valAttr = (c.value != null && c.value !== '')
@@ -18762,6 +19015,7 @@ function renderChecklist() {
         : '';
       const inpExtra = c._clOninput ? ' oninput="' + c._clOninput + '"' : '';
       const blurExtra = c._clOnblur ? ' onblur="' + c._clOnblur + '"' : '';
+      const keyExtra = c._clOnkeydown ? ' onkeydown="' + c._clOnkeydown + '"' : '';
       return `<div class="cl-field">
         <label>${c.label}</label>
         <input type="${c.type}" id="${c.id}" step="${c.step||'1'}"
@@ -18770,6 +19024,7 @@ function renderChecklist() {
           ${valAttr}
           ${inpExtra}
           ${blurExtra}
+          ${keyExtra}
           ${c.type === 'number' ? 'inputmode="decimal"' : ''}>
         ${c.unit ? `<span class="unit">${c.unit}</span>` : ''}
       </div>`;
@@ -23618,6 +23873,7 @@ function getTorreActiva() {
 
 // Actualizar todos los datos de la torre activa
 function actualizarTorreActual() {
+  if (state.configTorre) state.configTorre.checklistInstalacionConfirmada = true;
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
