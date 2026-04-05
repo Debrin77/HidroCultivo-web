@@ -2,8 +2,15 @@
  * HidroCultivo — Service Worker mínimo (PWA + TWA Bubblewrap).
  * Precache: shell offline básico. APIs (Open-Meteo, etc.) siempre red.
  */
-const CACHE_NAME = 'hidrocultivo-shell-v1';
-const PRECACHE_URLS = ['./index.html', './manifest.json'];
+const CACHE_NAME = 'hidrocultivo-shell-v2';
+const PRECACHE_URLS = [
+  './index.html',
+  './manifest.json',
+  './css/main.css',
+  './js/cultivos-db.js',
+  './js/state-torre-logic.js',
+  './js/ui-tabs.js',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
