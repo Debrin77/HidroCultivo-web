@@ -7761,6 +7761,12 @@ function a11yEscapeTopDialog(ev) {
     cerrarOverlayChecklistDatosInstalacion();
     return;
   }
+  const clTab = document.getElementById('checklistTablaCultivosOverlay');
+  if (clTab) {
+    ev.preventDefault();
+    cerrarOverlayTablaCultivosChecklist();
+    return;
+  }
   const order = ['modalConsejosTablaPersonal', 'modalOverlay', 'checklistOverlay', 'setupOverlay', 'modalTorres', 'modalAgua'];
   for (const id of order) {
     const el = document.getElementById(id);
@@ -18427,6 +18433,64 @@ let clEsPrimeraVez = false;
 /** 'recarga' = flujo completo (apagar, vaciar, cubrir…); 'primer_llenado' = depósito sin cultivo previo */
 let clRutaChecklist = 'recarga';
 
+/** Si no se elige ruta en modal: reanudar la que tenga progreso guardado (por torre). */
+function elegirClRutaChecklistAlAbrir() {
+  const por = state.configTorre && state.configTorre.checklistAvancePorRuta;
+  if (!por) {
+    clRutaChecklist = 'recarga';
+    return;
+  }
+  const rec = por.recarga;
+  const prim = por.primer_llenado;
+  const nR = rec && Array.isArray(rec.checked) ? rec.checked.length : 0;
+  const nP = prim && Array.isArray(prim.checked) ? prim.checked.length : 0;
+  if (nP > 0 && nR === 0) {
+    clRutaChecklist = 'primer_llenado';
+    return;
+  }
+  if (nR > 0 && nP === 0) {
+    clRutaChecklist = 'recarga';
+    return;
+  }
+  if (nR > 0 && nP > 0) {
+    const tR = rec.ts || 0;
+    const tP = prim.ts || 0;
+    clRutaChecklist = tP >= tR ? 'primer_llenado' : 'recarga';
+    return;
+  }
+  clRutaChecklist = 'recarga';
+}
+
+function persistirClChecklistAvance() {
+  try {
+    initTorres();
+    if (!state.configTorre) state.configTorre = {};
+    if (!state.configTorre.checklistAvancePorRuta) state.configTorre.checklistAvancePorRuta = {};
+    state.configTorre.checklistAvancePorRuta[clRutaChecklist] = {
+      checked: [...clChecked],
+      ts: Date.now()
+    };
+    guardarEstadoTorreActual();
+    saveState();
+  } catch (e) {
+    console.error('persistirClChecklistAvance', e);
+  }
+}
+
+function restaurarClCheckedDesdeEstado() {
+  const por = state.configTorre && state.configTorre.checklistAvancePorRuta
+    && state.configTorre.checklistAvancePorRuta[clRutaChecklist];
+  const arr = por && Array.isArray(por.checked) ? por.checked : [];
+  clChecked = new Set(arr);
+}
+
+function limpiarClChecklistAvanceActual() {
+  if (!state.configTorre || !state.configTorre.checklistAvancePorRuta) return;
+  delete state.configTorre.checklistAvancePorRuta[clRutaChecklist];
+  const o = state.configTorre.checklistAvancePorRuta;
+  if (o && Object.keys(o).length === 0) delete state.configTorre.checklistAvancePorRuta;
+}
+
 function debePreguntarRutaChecklist(esPrimeraVezApp) {
   return !!esPrimeraVezApp || !state.ultimaRecarga;
 }
@@ -18500,6 +18564,7 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
 
   document.getElementById('checklistCloseBtn').style.display = esPrimeraVez ? 'none' : 'flex';
 
+  restaurarClCheckedDesdeEstado();
   renderChecklist();
   const co = document.getElementById('checklistOverlay');
   co.classList.add('open');
@@ -18546,103 +18611,75 @@ function generarPasosNutriente() {
       desc: 'Añadir ' + orden[0] + ': ' + mlP0 + suf + ' — remover 3 min',
       nota: 'Dosis recomendada: ' + nut.dosis.recomendado + ' ' + nut.dosis.unidad +
         '. EC objetivo: ' + ecFinal + ' µS/cm.',
-      campos:[{ id:'clEcAB', label:'EC tras mezcla:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }]
+      campos:[{ id:'clEcAB', label:'EC tras mezcla:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 2) {
     pasos.push({
       id:'4.3', seccion:null, paso:'4.3', alert:true,
       desc: 'Agitar ' + orden[0] + '. Añadir ' + mlP0 + suf + ' — remover 2 min',
-      nota: '⚠️ NUNCA mezclar ' + orden[0] + ' y ' + orden[1] + ' puros — añade A primero.' +
+      nota: '⚠️ NUNCA mezclar ' + orden[0] + ' y ' + orden[1] + ' puros — añade la primera parte, remueve, luego la segunda. La EC útil es tras las dos partes (paso 4.4).' +
         (refNut.mlPorLitro.length >= 2 && Math.abs(refNut.mlPorLitro[0] - refNut.mlPorLitro[1]) < 1e-6
-          ? ' Cantidades para EC ~' + ecFinal + ' µS/cm tras CalMag estimado (modelo lineal).'
+          ? ' Cantidades calculadas para ~' + ecFinal + ' µS/cm tras CalMag (modelo orientativo).'
           : ''),
-      campos:[{ id:'clEcA', label:'EC tras ' + orden[0] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:((ecFinal/2)/1000).toFixed(2) }]
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
       desc: 'Agitar ' + orden[1] + '. Añadir ' + mlP1 + suf + ' — remover 3 min',
-      nota: 'EC objetivo: ~' + (ecFinal/1000).toFixed(2) + ' mS/cm (' + ecFinal + ' µS/cm).',
-      campos:[{ id:'clEcAB', label:'EC tras A+B:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }]
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.',
+      campos:[{ id:'clEcAB', label:'EC tras mezcla completa (A+B):', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 3) {
     pasos.push({
       id:'4.3', seccion:null, paso:'4.3', alert:true,
       desc: 'Añadir ' + orden[0] + ' PRIMERO: ' + mlP0 + suf + ' — remover 2 min',
       nota: '⚠️ IMPORTANTE: ' + orden[0] + ' siempre primero. Nunca mezclar ' + orden[0] + ' con ' + (orden[2]||orden[1]) + ' directamente.',
-      campos:[{ id:'clEcA', label:'EC tras ' + orden[0] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.5' }]
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
       desc: 'Añadir ' + orden[1] + ': ' + mlP1 + suf + ' — remover 2 min',
-      campos:[{ id:'clEcB', label:'EC tras ' + orden[1] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:'0.9' }]
     });
     pasos.push({
       id:'4.4b', seccion:null, paso:'4.4b',
       desc: 'Añadir ' + orden[2] + ': ' + mlP2 + suf + ' — remover 3 min',
-      nota: 'EC objetivo: ~' + (ecFinal/1000).toFixed(2) + ' mS/cm.',
-      campos:[{ id:'clEcAB', label:'EC tras ' + orden[2] + ':', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }]
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.',
+      campos:[{ id:'clEcAB', label:'EC tras mezcla completa:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   }
 
-  // PASOS pH — adaptados si hay buffer o no
+  const aguaBlanda = cfg.agua === 'destilada' || cfg.agua === 'osmosis' || (!cfg.agua && (state.configAgua === 'destilada' || state.configAgua === 'osmosis'));
   pasos.push({
     id:'4.5', seccion:null, paso:'4.5', alert:true,
-    desc: 'Medir pH inmediatamente — estará en 3.5-4.5 con agua destilada',
-    nota: tieneBuffer
-      ? '⚠️ pH muy ácido es normal. ' + nut.nombre + ' tiene buffers integrados que lo subirán solos. Añadir pH+ MÍNIMO solo hasta pH 5.0, no más. ' +
-        'Esta lectura es solo el <strong>punto de partida</strong>: no tomes decisiones de corrección “definitivas” hasta las ventanas de tiempo del <strong>4.8</strong> y el <strong>paso 6</strong> (tras difusor + 2–3 h mínimo).'
-      : '⚠️ pH muy ácido es normal con agua destilada + nutrientes. Ajustar a ' + pHRango[0] + '-' + ((pHRango[0]+pHRango[1])/2).toFixed(1),
+    desc: 'Medir pH al instante',
+    nota: aguaBlanda
+      ? 'Con agua destilada u ósmosis el pH sale <strong>muy bajo</strong> al principio: es normal.'
+      : 'Tras nutrientes el pH puede quedar ácido; contrasta con el rango que buscas (~' + pHRango[0] + '–' + pHRango[1] + ').',
     campos:[{ id:'clPhTrasMezcla', label:'pH recién mezclado:', type:'number', step:'0.1', placeholder:'3.5' }]
   });
 
   pasos.push({
     id:'4.6', seccion:null, paso:'4.6', alert:true,
     desc: tieneBuffer
-      ? 'Añadir pH+ MÍNIMO solo hasta pH 5.0 — los buffers harán el resto'
+      ? 'Corregir pH+ solo hasta ~5,0'
       : 'Añadir pH+ hasta pH ' + pHRango[0] + ' — ajuste completo necesario',
     nota: tieneBuffer
-      ? 'Solo subir hasta 5.0. Los buffers de ' + nut.nombre + ' subirán solos hacia ' + pHRango[0] + '-' + pHRango[1] + ' en <strong>2–3 h</strong> (primera fase). ' +
-        'Cada ml extra de pH+ debilita el buffer. A partir de aquí: <strong>no añadas más pH+</strong> hasta una lectura de control (4.8 o paso 6) cumpliendo los tiempos que indica la nota del 4.8.'
-      : nut.nombre + ' no tiene buffers — ajustar directamente al rango ' + pHRango[0] + '-' + pHRango[1] + '. Añadir pH+ de 2ml en 2ml.',
+      ? nut.nombre + ' lleva <strong>buffer de pH</strong>: sube solo hasta <strong>pH 5</strong>; en las horas siguientes tenderá al rango normal. Anota los <strong>ml de pH+</strong> usados.'
+      : nut.nombre + ' sin buffer: ajusta al rango ' + pHRango[0] + '–' + pHRango[1] + ' con pH+ poco a poco. Anota los ml.',
     campos:[{ id:'clPhMasPaso46', label:'ml pH+ añadidos:', type:'number', step:'0.5', placeholder: tieneBuffer ? '3' : '5' }]
   });
 
   pasos.push({
     id:'4.7', seccion:null, paso:'4.7',
-    desc: 'Encender bomba con pH ' + (tieneBuffer ? '5.0' : pHRango[0]) + ' — seguro para las raíces',
+    desc: 'Encender bomba con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — seguro para las raíces',
     nota: tieneBuffer
-      ? 'Las raíces toleran pH 5.0 perfectamente. <strong>No toques más el pH</strong> hasta las lecturas programadas. ' +
-        'A partir de este paso cuenta el tiempo para el buffer: <strong>2–3 h</strong> = primera subida esperable; <strong>~24 h</strong> (o el día siguiente) = lectura de <strong>control</strong> en el 4.8. ' +
-        'El <strong>paso 6</strong> volverá a pedir pH <strong>después</strong> del 5.4 (20 min difusor) y con <strong>≥2–3 h</strong> desde este encendido y desde el último pH+ del 4.6.'
-      : 'Sistema listo para operar. Medir EC y pH cada 24h.'
+      ? 'No corrijas más el pH hasta medir con calma (recordatorio en 4.8 y registro en paso 6).'
+      : 'Sistema listo para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.'
   });
 
-  if (tieneBuffer) {
-    const phInt = nut.pHIntervenir ? nut.pHIntervenir[0] + '–' + nut.pHIntervenir[1] : pHRango[0] + '–' + pHRango[1];
-    pasos.push({
-      id:'4.8', seccion:null, paso:'4.8',
-      desc: 'pH con buffer: lectura de control (crítica para no sobrecorregir)',
-      nota:
-        '<strong>1) Ventana 2–3 h</strong> (tras 4.7): puedes mirar el pH solo para ver <strong>tendencia</strong>. Si ya va claramente hacia ' + pHRango[0] + '–' + pHRango[1] + ', <strong>no añadas pH+</strong>.<br><br>' +
-        '<strong>2) Lectura de control</strong> (campos de abajo): ideal <strong>~24 h</strong> tras 4.7; si te encaja mejor, <strong>al día siguiente</strong> en condiciones parecidas. Mínimo práctico antes de corregir de nuevo: <strong>≥2–3 h</strong> desde 4.7 y desde el último pH+ del 4.6, con bomba/difusor como en uso real.<br><br>' +
-        '<strong>3) Paso 6</strong> repetirá pH: misma regla — <strong>5.4</strong> (20 min difusor) + esas mismas ventanas de tiempo — para que el buffer haya actuado y no estropees el equilibrio con pH+ de más.<br><br>' +
-        '<strong>Rango de NO intervención</strong> (' + nut.nombre + '): <strong>' + phInt + '</strong>. Solo actuar fuera de ese rango. Con plántulas nuevas el pH puede seguir moviéndose — normal los primeros días.',
-      campos:[
-        { id:'clPh24h', label:'pH de control (~24 h tras 4.7, o al día siguiente):', type:'number', step:'0.1', placeholder:'6.0' },
-        { id:'clEc24h', label:'EC en esa misma lectura:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }
-      ]
-    });
-  } else {
-    pasos.push({
-      id:'4.8', seccion:null, paso:'4.8',
-      desc: 'Medir EC y pH finales — ajustar si es necesario',
-      nota: 'Rango pH óptimo para ' + nut.nombre + ': ' + pHRango[0] + '-' + pHRango[1] + '. EC objetivo: ' + ecFinal + ' µS/cm.',
-      campos:[
-        { id:'clPhPostNut', label:'pH tras mezcla + espera:', type:'number', step:'0.1', placeholder: String(pHRango[0]) },
-        { id:'clEcPostNut', label:'EC tras mezcla:', unit:'mS/cm', type:'number', step:'0.01', placeholder:(ecFinal/1000).toFixed(2) }
-      ]
-    });
-  }
+  pasos.push({
+    id:'4.8', seccion:null, paso:'4.8',
+    desc: 'Seguimiento EC y pH',
+    nota: 'En las <strong>próximas ~2 horas</strong> y <strong>mañana</strong> (o al día siguiente), mide EC y pH, <strong>regístralos en Mediciones</strong> y corrige si hace falta. El checklist sigue; no hace falta rellenar aquí esas lecturas.'
+  });
 
   return pasos;
 }
@@ -18923,7 +18960,6 @@ function getCLPasos() {
   const phObj = ((pHR[0] + pHR[1]) / 2).toFixed(1);
   const ecMed = Math.round((ecMin + ecMax) / 2);
   const ecRecTarget = getRecargaEcMetaMicroS();
-  const phIntRango = nut.pHIntervenir ? nut.pHIntervenir[0] + '–' + nut.pHIntervenir[1] : pHR[0] + '–' + pHR[1];
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
   const esNft = cfg.tipoInstalacion === 'nft';
@@ -18932,7 +18968,7 @@ function getCLPasos() {
   const nftHx = nftHyd ? nftHyd.nHx : 0;
   const shCl = ensureSensoresHardware();
   const hwLista = [shCl.ec && 'EC', shCl.ph && 'pH', shCl.humedad && 'humedad'].filter(Boolean);
-  const paso6SeccionTitulo = hwLista.length ? null : '📊 Paso 6 — Medir y ajustar';
+  const paso6SeccionTitulo = hwLista.length ? null : '📊 Paso 6 — Registro';
   const paso40campos = [
     { id:'clEcObjetivoRecarga', label:'EC objetivo de esta recarga', type:'number', step:'10',
       unit:'µS/cm', placeholder:String(ecMed), value:getRecargaEcMetaMicroS(),
@@ -18969,7 +19005,10 @@ function getCLPasos() {
   const pasosConfigPrimerLlenado = [
     { id: 'PC1', seccion: '⚙️ Depósito, agua y nutriente', paso: 'PC·1',
       desc: 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.',
-      nota: 'El <strong>rango de EC</strong> recomendado por <strong>cultivos</strong> lo acotas en la pestaña <strong>Sistema</strong> (grupos de planta); en el paso <strong>PC·2</strong> fijas el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.',
+      nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Sistema</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.',
+      extraHtml:
+        '<button type="button" class="btn btn-ghost" style="margin-top:8px;padding:8px 12px;font-size:12px;font-weight:700;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;width:100%" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
+        '<p style="margin:8px 0 0;font-size:11px;line-height:1.45;color:var(--muted)">Ventana de consulta: ciérrala y sigue con el checklist.</p>',
       campos: [
         { id: 'clPrimerVolMax', label: 'Capacidad máx. depósito (L)', type: 'number', step: '1', placeholder: '20',
           value: String(volMaxPrimerIni),
@@ -19184,19 +19223,15 @@ function getCLPasos() {
     ...pasosNftExtra,
     ...(primerLlenado ? [] : pasosCubiertaDeposito),
 
-  { id:'4.0', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.0',
-    desc: primerLlenado
-      ? 'Mezcla nutritiva: volumen, agua, nutriente y EC los fijaste en <strong>PC·1</strong> y <strong>PC·2</strong>. A partir de 4.1 sigue el orden del fabricante.'
-      : 'Fija el EC objetivo (µS/cm) para calcular las mililitros de cada producto en el orden del fabricante. Por defecto usa el punto medio del rango óptimo de tus cultivos o del nutriente.',
+  { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
+    desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' + (esNft ? 'depósito NFT' : 'torre') +
+      (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'),
     nota: primerLlenado
-      ? 'Para cambiar EC, CalMag o volumen vuelve a <strong>PC·1 / PC·2</strong> o ajústalo en <strong>Sistema</strong> al terminar.'
-      : 'Tras escribir el EC, <strong>sal del campo</strong> (toca fuera, Tab o Intro) para aplicarlo y recalcular los ml de los pasos siguientes. CalMag se actualiza al marcar o desmarcar.',
-    extraHtml:'<button type="button" class="btn btn-ghost" style="margin-top:8px;padding:8px 12px;font-size:12px;font-weight:700;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;width:100%" onclick="irConsejosTablaResumenEc()">📊 Ver tabla resumen EC / pH en Consejos</button>',
-    campos: primerLlenado ? [] : paso40campos },
-
-  { id:'4.1', seccion:null, paso:'4.1',
-    desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' + (esNft ? 'depósito NFT' : 'torre'),
-    campos:[{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
+      ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.'
+      : 'CalMag: marcar o desmarcar recalcula los pasos siguientes.',
+    campos: primerLlenado
+      ? [{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }]
+      : [...paso40campos, { id:'clEcInicial', label:'EC inicial del agua:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
   ...generarPasosNutriente(),
 
   { id:'5.1', seccion:'🔌 Paso 5 — Verificar sistema', paso:'5.1',
@@ -19215,51 +19250,22 @@ function getCLPasos() {
   { id:'5.4', seccion:null, paso:'5.4',
     desc:'Esperar 20 minutos con difusor en marcha antes de medir',
     nota: nut.pHBuffer
-      ? 'Con difusor, 20 min <strong>homogeneizan</strong> la mezcla para muestrear con sentido. En nutrientes con <strong>buffer de pH</strong>, este tiempo <strong>no sustituye</strong> la espera de <strong>≥2–3 h</strong> desde el paso 4.7 y desde el último pH+ del 4.6: el paso 6 enlaza con el 4.8 para no corregir antes de tiempo.'
-      : 'Con difusor 20 min son suficientes' },
+      ? '20 min homogeneizan la mezcla. Con buffer de pH, las correcciones finas mejor tras unas horas y en <strong>Mediciones</strong> (paso 6 y días siguientes).'
+      : 'Con difusor 20 min bastan para una lectura orientativa; afinar EC/pH después en Mediciones si hace falta.' },
 
   ...pasosPrev6,
 
-  ...(nut.pHBuffer ? [
-  { id:'6.1', seccion: paso6SeccionTitulo, paso:'6.1',
-    desc:'Medir EC — rango cultivos ' + ecMin + '–' + ecMax + ' µS/cm · meta de esta recarga ~' + ecRecTarget + ' µS/cm (' + nut.nombre + ')',
-    campos:[{ id:'clEcMedida', label:'EC medida:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) }] },
-  { id:'6.2', seccion:null, paso:'6.2',
-    desc:'Medir pH — nutriente con <strong>buffer</strong>: antes cumple el <strong>5.4</strong> (20 min con difusor). Además deben haber pasado <strong>mínimo 2–3 h</strong> desde el <strong>4.7</strong> (bomba encendida) y <strong>mínimo 2–3 h</strong> desde el <strong>último pH+ del 4.6</strong> (si no añadiste más después, cuenta desde ahí). Objetivo de equilibrio ~' + phObj + ' (rango ' + pHR[0] + '–' + pHR[1] + ').',
-    nota:'Si en el <strong>4.8</strong> ya estabas en ' + pHR[0] + '–' + pHR[1] + ' o dentro del rango de no intervención <strong>' + phIntRango + '</strong>, aquí <strong>confirmas</strong> tras homogeneizar; no añadas pH+ por inquietud. Si completas el checklist <strong>otro día</strong>, mantén bomba/difusor como en uso real antes de medir.',
-    campos:[{ id:'clPhMedidoP6', label:'pH medido (tras 5.4 + ≥2–3 h desde 4.7 y desde último pH+ de 4.6):', type:'number', step:'0.1', placeholder: phObj }] },
-  { id:'6.3', seccion:null, paso:'6.3',
-    desc:'pH+ <strong>solo si hace falta</strong> — con buffer, lo habitual es <strong>0 ml</strong> si ya estás en ' + phIntRango,
-    nota:'Fuera de <strong>' + phIntRango + '</strong>: subir gota a gota y lo mínimo; cada corrección extra debilita el buffer. Si añades pH+, ideal repetir 5.4 + espera antes del 6.4.',
-    campos:[{ id:'clPhMasP6', label:'ml pH+ en este paso (0 si no procede):', type:'number', step:'0.1', placeholder:'0' }] },
-  { id:'6.4', seccion:null, paso:'6.4',
-    desc:'Medición final para registro (Mediciones / dashboard)',
-    nota:'Si en 6.3 fue <strong>0 ml</strong>, estos valores ya son representativos tras la espera anterior. Si añadiste pH+, espera de nuevo <strong>5.4 + tiempo</strong> antes de cerrar, o deja constancia de que el pH final es pre-estabilización.',
+  { id:'6.4', seccion: paso6SeccionTitulo || '📊 Paso 6 — Registro', paso:'6.4',
+    desc:'Registro en la app — valores de esta recarga / mezcla',
+    nota:'Las lecturas intermedias las haces cuando te encaje; aquí cierras lo que quieres guardar ahora. Puedes seguir corrigiendo EC y pH desde <strong>Mediciones</strong>.',
     campos:[
       { id:'clEcFinalReg', label:'EC final:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) },
       { id:'clPhFinalReg', label:'pH final:', type:'number', step:'0.1', placeholder: phObj },
+      { id:'clPhPlusRegFinal', label:'ml pH+ añadidos en total (opcional):', type:'number', step:'0.1', placeholder:'0' },
+      { id:'clPhMinusRegFinal', label:'ml pH− añadidos en total (opcional):', type:'number', step:'0.1', placeholder:'0' },
       { id:'clTempAgua', label:'Temp agua:', unit:'°C', type:'number', step:'0.1', placeholder:'20' },
       { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(vol) }
     ] },
-  ] : [
-  { id:'6.1', seccion: paso6SeccionTitulo, paso:'6.1',
-    desc:'Medir EC — rango cultivos ' + ecMin + '–' + ecMax + ' µS/cm · meta de esta recarga ~' + ecRecTarget + ' µS/cm (' + nut.nombre + ')',
-    campos:[{ id:'clEcMedida', label:'EC medida:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) }] },
-  { id:'6.2', seccion:null, paso:'6.2',
-    desc:'Medir pH — objetivo ~' + phObj + ' (rango ' + pHR[0] + '–' + pHR[1] + ' con ' + nut.nombre + ')',
-    campos:[{ id:'clPhMedidoP6', label:'pH medido:', type:'number', step:'0.1', placeholder: phObj }] },
-  { id:'6.3', seccion:null, paso:'6.3',
-    desc:'Ajustar pH con pH+ si necesario — gota a gota',
-    campos:[{ id:'clPhMasP6', label:'ml pH+ añadidos (este paso):', type:'number', step:'0.1', placeholder:'0' }] },
-  { id:'6.4', seccion:null, paso:'6.4',
-    desc:'Medición final — valores definitivos para el registro',
-    campos:[
-      { id:'clEcFinalReg', label:'EC final:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) },
-      { id:'clPhFinalReg', label:'pH final:', type:'number', step:'0.1', placeholder: phObj },
-      { id:'clTempAgua', label:'Temp agua:', unit:'°C', type:'number', step:'0.1', placeholder:'20' },
-      { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(vol) }
-    ] },
-  ]),
 
   { id:'7.1', seccion:'✅ Paso 7 — Verificación final', paso:'7.1',
     desc: esNft
@@ -19283,7 +19289,6 @@ function getCLTotal() { return getCLPasos().length; }
 
 function abrirChecklist(esPrimeraVez = false) {
   clEsPrimeraVez = esPrimeraVez;
-  clChecked.clear();
 
   if (!checklistInstalacionCompletaParaRecarga()) {
     mostrarOverlayChecklistDatosInstalacion(esPrimeraVez);
@@ -19295,7 +19300,7 @@ function abrirChecklist(esPrimeraVez = false) {
     return;
   }
 
-  clRutaChecklist = 'recarga';
+  elegirClRutaChecklistAlAbrir();
   abrirChecklistDespuesDeElegirRuta(esPrimeraVez);
 }
 
@@ -19395,6 +19400,44 @@ function irConsejosTablaResumenEc() {
   }, 100);
 }
 
+function cerrarOverlayTablaCultivosChecklist() {
+  const o = document.getElementById('checklistTablaCultivosOverlay');
+  if (o) {
+    try { a11yDialogClosed(o); } catch (e) {}
+    o.remove();
+  }
+}
+
+/** Tabla EC/pH por cultivo — overlay para PC·1 sin salir del checklist. */
+function abrirOverlayTablaCultivosChecklist() {
+  cerrarOverlayTablaCultivosChecklist();
+  const overlay = document.createElement('div');
+  overlay.id = 'checklistTablaCultivosOverlay';
+  overlay.setAttribute('role', 'dialog');
+  overlay.setAttribute('aria-modal', 'true');
+  overlay.setAttribute('aria-labelledby', 'clTablaCultivosTit');
+  overlay.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10085;display:flex;align-items:center;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));';
+  overlay.innerHTML =
+    '<div style="background:var(--bg2,#1e293b);border:1.5px solid var(--border,#334155);border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;color:var(--white,#f8fafc)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border,#334155);flex-shrink:0">' +
+        '<div id="clTablaCultivosTit" style="font-family:var(--font-display);font-size:16px;font-weight:800">EC y pH por cultivo</div>' +
+        '<button type="button" id="clTablaCultivosCerrar" style="flex-shrink:0;width:40px;height:40px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:18px;font-weight:800;cursor:pointer" aria-label="Cerrar">✕</button>' +
+      '</div>' +
+      '<div id="clTablaCultivosBody" style="padding:14px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;font-size:12px;line-height:1.45"></div>' +
+      '<div style="padding:12px 16px calc(12px + env(safe-area-inset-bottom,0));border-top:1px solid var(--border,#334155);flex-shrink:0">' +
+        '<button type="button" id="clTablaCultivosVolver" style="width:100%;padding:12px;background:#0d9488;color:#fff;border:none;border-radius:12px;font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer">Volver al checklist</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  const body = document.getElementById('clTablaCultivosBody');
+  if (body) body.innerHTML = buildHtmlTablaEcPh({ omitAnchorId: true });
+  document.getElementById('clTablaCultivosCerrar')?.addEventListener('click', cerrarOverlayTablaCultivosChecklist);
+  document.getElementById('clTablaCultivosVolver')?.addEventListener('click', cerrarOverlayTablaCultivosChecklist);
+  overlay.addEventListener('click', (ev) => { if (ev.target === overlay) cerrarOverlayTablaCultivosChecklist(); });
+  try { a11yDialogOpened(overlay); } catch (e) {}
+}
+
 function renderChecklist() {
   const el = document.getElementById('checklistContent');
   let html = '';
@@ -19484,7 +19527,9 @@ function renderChecklist() {
 
   el.innerHTML = html;
   const validIds = new Set(getCLPasos().map(p => p.id));
+  const prevN = clChecked.size;
   clChecked = new Set([...clChecked].filter(id => validIds.has(id)));
+  if (prevN !== clChecked.size) persistirClChecklistAvance();
   clChecked.forEach(id => {
     const cb = document.getElementById('clCb-' + id);
     const item = document.getElementById('clItem-' + id);
@@ -19517,6 +19562,7 @@ function clToggle(id) {
     cb.setAttribute('aria-pressed', 'true');
   }
   updateClProgress();
+  persistirClChecklistAvance();
 }
 
 function updateClProgress() {
@@ -19569,8 +19615,10 @@ async function finalizarChecklist() {
   const nutR = getNutrienteTorre();
   const mlP0 = calcularMlParteNutriente(0);
   const pMas46 = parseFloat(gCL('clPhMasPaso46')) || 0;
-  const pMas6  = parseFloat(gCL('clPhMasP6')) || 0;
-  const phMasTot = pMas46 + pMas6;
+  const pPlusFin = parseFloat(gCL('clPhPlusRegFinal'));
+  const pMinusFin = parseFloat(gCL('clPhMinusRegFinal'));
+  const phPlusExtra = Number.isFinite(pPlusFin) ? pPlusFin : 0;
+  const phMasTot = pMas46 + phPlusExtra;
   const recargaData = {
     fecha, hora,
     nutrienteId: nutR.id,
@@ -19581,8 +19629,9 @@ async function finalizarChecklist() {
     calmagMl:     gCL('clCalmagMl')    || String(CALMAG_ML_OBJETIVO),
     ecTrasA:      gCL('clEcA')         || '',
     ecTrasAB:     gCL('clEcAB')        || '',
-    phMedido:     gCL('clPhTrasMezcla') || gCL('clPhMedidoP6') || '',
+    phMedido:     gCL('clPhTrasMezcla') || gCL('clPhFinalReg') || '',
     phMasMl:      phMasTot ? String(phMasTot) : '',
+    phMenosMl:    Number.isFinite(pMinusFin) && pMinusFin > 0 ? String(pMinusFin) : '',
     vegaAMl:      String(mlP0),
     vegaBMl:      nutR.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
     vegaCMl:      nutR.partes >= 3 ? String(calcularMlParteNutriente(2)) : '',
@@ -19619,6 +19668,10 @@ async function finalizarChecklist() {
     notas: 'Recarga completa'
   });
 
+  limpiarClChecklistAvanceActual();
+  clChecked.clear();
+  guardarEstadoTorreActual();
+
   saveState();
 
   // Guardar recarga en Google Sheets
@@ -19637,7 +19690,8 @@ async function finalizarChecklist() {
         vegaBMl: getNutrienteTorre().partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
         phMasMl: phMasTot ? String(phMasTot) : '',
         nutriente: nutR.nombre,
-        observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}`
+        observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}` +
+          (recargaData.phMenosMl ? ` · pH−: ${recargaData.phMenosMl} ml` : '')
       })
     });
 
@@ -20462,7 +20516,9 @@ const REF_CULTIVOS_EC_PH = [
   { cultivo: 'Flores de corte (p. ej. rosa)', ec: '1200–2200', ph: '5,5–6,2', nota: '' },
 ];
 
-function buildHtmlTablaEcPh() {
+function buildHtmlTablaEcPh(opts) {
+  const omitId = opts && opts.omitAnchorId;
+  const wrapAttr = omitId ? 'class="consejo-ecph-wrap"' : 'class="consejo-ecph-wrap" id="consejos-resumen-ec-ph"';
   const rows = REF_CULTIVOS_EC_PH.map(r => `
     <tr>
       <td class="consejo-ecph-icon-cell" aria-hidden="true">${refEcPhRowEmojiHtml(r)}</td>
@@ -20473,7 +20529,7 @@ function buildHtmlTablaEcPh() {
     </tr>
   `).join('');
   return `
-    <div class="consejo-ecph-wrap" id="consejos-resumen-ec-ph">
+    <div ${wrapAttr}>
       <div class="consejo-titulo" style="margin-bottom:8px">Referencia rápida hidroponía</div>
       <div class="consejo-ecph-note">
         Valores medios habituales en bibliografía y tablas de cultivos (EC en <strong>µS/cm</strong> como en esta app; pH de la solución).
