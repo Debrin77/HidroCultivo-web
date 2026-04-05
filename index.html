@@ -5408,7 +5408,33 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
 
       </div>
 
-      
+      <input type="file" id="inputImportEstado" accept="application/json,.json" style="display:none"
+        aria-hidden="true" onchange="onImportEstadoFileSelected(event)">
+
+      <div style="background:linear-gradient(180deg,#f8fafc,#f1f5f9);border:1.5px solid #cbd5e1;border-radius:14px;
+        padding:14px;margin-top:14px">
+        <div style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
+          Copia de seguridad local
+        </div>
+        <p style="font-size:11px;color:#64748b;line-height:1.5;margin:0 0 12px">
+          Todo sigue guardándose en <strong>este navegador</strong> (<code style="font-size:10px">localStorage</code>). La exportación descarga un archivo JSON a tu móvil u ordenador: no sube nada a internet.
+          Tras importar se recarga la página. Las fotos del diario están en almacenamiento aparte del navegador: en <strong>otro dispositivo</strong> puede que haya que volver a subirlas; en el mismo suelen conservarse si no borraste datos del sitio.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button type="button" onclick="exportarEstadoHidroCultivo()"
+            style="padding:12px;border-radius:12px;border:1.5px solid #3b82f6;background:#eff6ff;
+              font-family:var(--font-display);font-size:12px;font-weight:800;color:#1d4ed8;cursor:pointer;
+              -webkit-tap-highlight-color:transparent">
+            ⬇️ Exportar estado
+          </button>
+          <button type="button" onclick="importarEstadoHidroCultivoClick()"
+            style="padding:12px;border-radius:12px;border:1.5px solid #0d9488;background:#f0fdfa;
+              font-family:var(--font-display);font-size:12px;font-weight:800;color:#0f766e;cursor:pointer;
+              -webkit-tap-highlight-color:transparent">
+            ⬆️ Importar estado
+          </button>
+        </div>
+      </div>
 
     </div>
     <!-- FIN TAB TORRE -->
@@ -7476,6 +7502,12 @@ function initState() {
 
 function saveState() {
   try {
+    // Multi-torre: la copia en state.torres[idx] es la que se rehidrata al abrir la app.
+    // Sin esto, guardar solo state.torre (p. ej. tras editar una cesta) deja el slot obsoleto
+    // y al recargar cargarEstadoTorre() sobrescribe la torre vacía → desaparecen plantas y el Diario.
+    if (state && state.torres && state.torres.length > 0) {
+      guardarEstadoTorreActual();
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     // Verificar que se guardó correctamente
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -7522,6 +7554,96 @@ function compactarStateFotos() {
       });
     }
   } catch(_) {}
+}
+
+/** Claves opcionales de localStorage que acompañan al estado principal */
+const LOCALSTORAGE_EXTRA_BACKUP_KEYS = [
+  'hc_auth',
+  TUTORIAL_ASIGNAR_LS,
+  TUTORIAL_EDITAR_LS,
+  TUTORIAL_TORRE_TAB_LS,
+  TORRE_SWIPE_HINT_LS,
+];
+
+function exportarEstadoHidroCultivo() {
+  try {
+    if (state && state.torres && state.torres.length > 0) guardarEstadoTorreActual();
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw || raw.length < 2) {
+      showToast('No hay datos que exportar', true);
+      return;
+    }
+    JSON.parse(raw);
+    const extraKeys = {};
+    LOCALSTORAGE_EXTRA_BACKUP_KEYS.forEach((k) => {
+      try {
+        const v = localStorage.getItem(k);
+        if (v != null && v !== '') extraKeys[k] = v;
+      } catch (e) {}
+    });
+    const bundle = {
+      hidrocultivoBackup: true,
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      app: 'HidroCultivo',
+      main: raw,
+      extraKeys,
+    };
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json;charset=utf-8' });
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = 'hidrocultivo-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('✅ Copia descargada — guárdala en un lugar seguro');
+  } catch (e) {
+    showToast('Error al exportar: ' + (e && e.message ? e.message : e), true);
+  }
+}
+
+function importarEstadoHidroCultivoClick() {
+  document.getElementById('inputImportEstado')?.click();
+}
+
+async function onImportEstadoFileSelected(ev) {
+  const input = ev.target;
+  const f = input && input.files && input.files[0];
+  if (input) input.value = '';
+  if (!f) return;
+  try {
+    const text = await f.text();
+    const parsed = JSON.parse(text);
+    let mainStr = null;
+    if (parsed && parsed.hidrocultivoBackup === true && typeof parsed.main === 'string') {
+      mainStr = parsed.main;
+    } else if (parsed && Array.isArray(parsed.torre)) {
+      mainStr = JSON.stringify(parsed);
+    }
+    if (!mainStr) {
+      showToast('Archivo no reconocido (usa una copia exportada desde esta app o el JSON completo del estado)', true);
+      return;
+    }
+    JSON.parse(mainStr);
+    if (!confirm('Se reemplazará todo el estado actual en este navegador por la copia. ¿Continuar?')) return;
+    if (!confirm('Segunda confirmación — no se puede deshacer.')) return;
+    localStorage.setItem(STORAGE_KEY, mainStr);
+    if (parsed.extraKeys && typeof parsed.extraKeys === 'object') {
+      Object.keys(parsed.extraKeys).forEach((k) => {
+        try {
+          const v = parsed.extraKeys[k];
+          if (v != null && String(v) !== '') localStorage.setItem(k, String(v));
+        } catch (e2) {}
+      });
+    }
+    showToast('✅ Copia importada — recargando…');
+    setTimeout(() => { location.reload(); }, 500);
+  } catch (e) {
+    showToast('Error al importar: ' + (e && e.message ? e.message : e), true);
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -7618,6 +7740,7 @@ function initApp() {
 
   // Inicializar sistema multi-torre
   initTorres();
+  reconciliarSlotTorreActivaAntesDeCargar();
   cargarEstadoTorre(state.torreActiva || 0);
   actualizarHeaderTorre();
   actualizarVistaRiegoPorTipoInstalacion();
@@ -24533,6 +24656,45 @@ function cambiarTorreActiva(idx) {
   if (document.getElementById('tab-meteo')?.classList.contains('active')) cargarMeteo();
   if (document.getElementById('tab-calendario')?.classList.contains('active')) renderCalendario();
   if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
+}
+
+/** Cestas con cultivo asignado (para detectar datos de torre más recientes en la raíz del state). */
+function contarPlantasEnTorre(torreArr) {
+  if (!torreArr || !Array.isArray(torreArr)) return 0;
+  let n = 0;
+  for (let ni = 0; ni < torreArr.length; ni++) {
+    const row = torreArr[ni];
+    if (!Array.isArray(row)) continue;
+    for (let ci = 0; ci < row.length; ci++) {
+      const c = row[ci];
+      if (c && String(c.variedad || '').trim() !== '') n++;
+    }
+  }
+  return n;
+}
+
+/**
+ * Tras versiones antiguas o guardados sin sync, state.torre podía tener plantas y el slot
+ * state.torres[idx].torre quedar vacío/obsoleto. Al cargar, se perdía la torre en pantalla.
+ * Copia la raíz al slot si la raíz lleva más plantas registradas.
+ */
+function reconciliarSlotTorreActivaAntesDeCargar() {
+  if (!state.torres || !state.torres.length) return;
+  const idx = state.torreActiva || 0;
+  const t = state.torres[idx];
+  if (!t) return;
+  const nSlot = contarPlantasEnTorre(t.torre);
+  const nRoot = contarPlantasEnTorre(state.torre);
+  if (nRoot > nSlot) {
+    try {
+      t.torre = JSON.parse(JSON.stringify(state.torre));
+    } catch (e) {}
+  }
+  if (!t.config && state.configTorre && typeof state.configTorre === 'object' && Object.keys(state.configTorre).length) {
+    try {
+      t.config = JSON.parse(JSON.stringify(state.configTorre));
+    } catch (e) {}
+  }
 }
 
 function guardarEstadoTorreActual() {
