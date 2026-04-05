@@ -19037,12 +19037,12 @@ function getCLPasos() {
 
   const pasosPrev6 = hwLista.length ? [{
     id:'6.0hw',
-    seccion:'📊 Paso 6 — Medir y ajustar',
+    seccion:'📊 Paso 6 — Equipo de medida',
     paso:'6.0',
     desc: esNft
       ? ('Sensores o medidores en tu NFT (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea tras el retorno; si el circuito es largo, espera unos minutos a que se estabilice.')
       : ('Sensores o medidores: constan en la torre ' + hwLista.join(', ') + '. Comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
-    nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. Los valores de los pasos siguientes deben coincidir con lo que anotarás después en Mediciones → dashboard.',
+    nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. El <strong>registro</strong> de esta recarga lo cierras en el paso <strong>6.4</strong> y lo verás en <strong>Mediciones</strong>.',
   }] : [];
 
   const nftBomb = esNft ? getNftBombaDesdeConfig(cfg) : null;
@@ -19654,6 +19654,7 @@ async function finalizarChecklist() {
     calmagMl: recargaData.calmagMl,
     vegaAMl: recargaData.vegaAMl, vegaBMl: recargaData.vegaBMl, vegaCMl: recargaData.vegaCMl,
     phMasMl: recargaData.phMasMl,
+    phMenosMl: recargaData.phMenosMl || '',
     colorAgua: recargaData.colorAgua,
     estadoPlantas: recargaData.estadoPlantas,
     icono: '🔄'
@@ -19971,7 +19972,7 @@ function importarMedicionesAlRegistro() {
       entry = {
         tipo: 'recarga', fecha: m.fecha, hora: m.hora, ...base,
         ecFinal: m.ec || '', phFinal: m.ph || '', tempAgua: m.temp || '', volFinal: m.vol || '',
-        calmagMl: '', vegaAMl: '', phMasMl: '',
+        calmagMl: '', vegaAMl: '', phMasMl: '', phMenosMl: '',
         notas, icono: '🔄',
       };
     } else {
@@ -20077,6 +20078,8 @@ function renderRegistro() {
           e.phFinal  ? '🧪 pH: ' + e.phFinal              : '',
           e.calmagMl ? '💊 CalMag: ' + e.calmagMl + 'ml'   : '',
           e.vegaAMl  ? '🌿 ' + [e.vegaAMl, e.vegaBMl, e.vegaCMl].filter(x => x != null && String(x).trim() !== '').join(' + ') + ' ml' : '',
+          (e.phMasMl != null && String(e.phMasMl).trim() !== '') ? '⬆️ pH+: ' + e.phMasMl + ' ml' : '',
+          (e.phMenosMl != null && String(e.phMenosMl).trim() !== '') ? '⬇️ pH−: ' + e.phMenosMl + ' ml' : '',
         ].filter(Boolean).join(' · ');
         if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'cosecha') {
@@ -20225,22 +20228,26 @@ function renderHistRecargas() {
         </div>
 
         <!-- Grid parámetros -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
-          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">CalMag</div>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--green)">${r.calmagMl || '—'}<span style="font-size:10px">ml</span></div>
+        <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:10px">
+          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">CalMag</div>
+            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--green)">${r.calmagMl || '—'}<span style="font-size:9px">ml</span></div>
           </div>
-          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">Abono</div>
-            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--blue);line-height:1.25">${[r.vegaAMl, r.vegaBMl, r.vegaCMl].filter(x => x != null && String(x).trim() !== '').join(' + ') || '—'}<span style="font-size:10px">ml</span></div>
+          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">Abono</div>
+            <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--blue);line-height:1.25">${[r.vegaAMl, r.vegaBMl, r.vegaCMl].filter(x => x != null && String(x).trim() !== '').join(' + ') || '—'}<span style="font-size:9px">ml</span></div>
           </div>
-          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">pH+</div>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--gold)">${r.phMasMl || '—'}<span style="font-size:10px">ml</span></div>
+          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">pH+</div>
+            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--gold)">${r.phMasMl || '—'}<span style="font-size:9px">ml</span></div>
           </div>
-          <div style="background:var(--bg3);border-radius:10px;padding:8px;text-align:center">
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;font-weight:600">pH Final</div>
-            <div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--blue)">${r.phFinal || '—'}</div>
+          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">pH−</div>
+            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:#7dd3fc">${r.phMenosMl || '—'}<span style="font-size:9px">ml</span></div>
+          </div>
+          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
+            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">pH final</div>
+            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--blue)">${r.phFinal || '—'}</div>
           </div>
         </div>
 
@@ -23727,7 +23734,7 @@ async function guardarMedicion() {
       vegaAMl: String(calcularMlParteNutriente(0)),
       vegaBMl: _nr.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
       vegaCMl: _nr.partes >= 3 ? String(calcularMlParteNutriente(2)) : '',
-      phMasMl: '', notas
+      phMasMl: '', phMenosMl: '', notas
     });
   }
 
