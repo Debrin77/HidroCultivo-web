@@ -5248,7 +5248,7 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
               <div id="torreVolDepWrap" style="margin-top:10px;padding-top:10px;border-top:1.5px solid #e5e7eb">
                 <label class="form-label" for="torreVolDepositoL" style="font-size:10px;font-weight:800;
                   color:#6b7280;text-transform:uppercase;letter-spacing:0.35px;margin-bottom:6px;display:block">
-                  Volumen del depósito (para mezclas)
+                  Capacidad máxima del depósito (L)
                 </label>
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                   <input type="number" id="torreVolDepositoL" class="form-input" min="5" max="100" step="1"
@@ -5256,10 +5256,24 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
                     aria-describedby="torreVolDepHint"
                     onchange="guardarVolDepositoDesdeTorre()"
                     style="max-width:104px;font-size:15px;font-weight:800;padding:8px 10px;border-radius:10px">
-                  <span style="font-size:13px;font-weight:800;color:#374151">litros</span>
+                  <span style="font-size:13px;font-weight:800;color:#374151">L máx.</span>
+                </div>
+                <label class="form-label" for="torreVolMezclaL" style="font-size:10px;font-weight:800;
+                  color:#6b7280;text-transform:uppercase;letter-spacing:0.35px;margin:10px 0 6px;display:block">
+                  Litros con los que mezclas (opcional)
+                </label>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <input type="number" id="torreVolMezclaL" class="form-input" min="1" max="100" step="0.5"
+                    inputmode="decimal" autocomplete="off"
+                    placeholder="igual al máximo"
+                    aria-describedby="torreVolDepHint"
+                    onchange="guardarVolDepositoDesdeTorre()"
+                    style="max-width:104px;font-size:15px;font-weight:800;padding:8px 10px;border-radius:10px">
+                  <span style="font-size:12px;font-weight:700;color:#64748b">L mezcla</span>
                 </div>
                 <div id="torreVolDepHint" style="font-size:10px;color:#6b7280;margin-top:6px;line-height:1.45">
-                  Checklist, Consejos y dosis usan este valor. El volumen en <strong>Mediciones</strong> es la lectura del día, no sustituye a esto.
+                  Las <strong>dosis</strong> (checklist, Consejos) usan los <strong>litros de mezcla</strong> si los indicas; si lo dejas vacío, se usa el máximo.
+                  Deja margen (p. ej. 19 L de 20) para correcciones de pH o EC. El volumen en <strong>Mediciones</strong> es la lectura del día.
                 </div>
               </div>
             </div>
@@ -6237,11 +6251,25 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
       <div class="torre-controls" id="setupVolDepositoWrap" style="margin-top:4px">
         <div class="torre-control-row">
           <div class="torre-control-label">
-            Volumen depósito
+            Capacidad máx. depósito
             <span class="torre-control-val" id="valVol">20<span style="font-size:12px;font-weight:600">L</span></span>
           </div>
           <input type="range" class="torre-slider" id="sliderVol"
             min="5" max="100" value="20" step="5" oninput="onSetupVolSliderInput()">
+        </div>
+        <p style="font-size:10px;color:#6b7280;margin:6px 0 8px;line-height:1.45">
+          Tope físico del recipiente (porcentaje de llenado y bomba). Las dosis usan los litros de mezcla si los indicas abajo.
+        </p>
+        <div class="torre-control-row" style="align-items:flex-start">
+          <div class="torre-control-label" style="flex:1;min-width:0">
+            Litros de mezcla (opcional)
+            <span style="display:block;font-size:10px;font-weight:500;color:#6b7280;margin-top:2px">
+              Vacío = llenar hasta el máximo. Si rellenas a menos (p. ej. 19 L en depósito de 20 L), las dosis se calculan sobre esos litros.
+            </span>
+          </div>
+          <input type="number" id="setupVolMezclaL" inputmode="decimal" min="0.5" step="0.1" placeholder="—"
+            style="width:88px;flex-shrink:0;padding:8px 10px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:15px"
+            oninput="onSetupVolMezclaInput()">
         </div>
       </div>
 
@@ -8263,7 +8291,7 @@ function generarSVGTorre() {
   const DEP_X  = (SVG_W - DEP_W) / 2;
 
   // Volumen actual del depósito
-  const volConfig  = cfg.volDeposito || VOL_OBJETIVO;
+  const volConfig  = getVolumenDepositoMaxLitros(cfg);
   const volActual  = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : volConfig * 0.8;
   const volPct     = Math.min(1, Math.max(0, volActual / volConfig));
   const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
@@ -9212,7 +9240,7 @@ function renderTorre() {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
     const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
     const pend = cfg.nftPendientePct ?? 2;
-    const vol = cfg.volDeposito || VOL_OBJETIVO;
+    const vol = getVolumenDepositoMaxLitros(cfg);
     const eqArr = cfg.equipamiento;
     const bombMain = getNftBombaDesdeConfig(cfg);
     const altShow =
@@ -9932,7 +9960,8 @@ function updateTorreStats() {
   const nut = getNutrienteTorre();
   const rawNombre = (state.torres?.[state.torreActiva || 0]?.nombre || '').trim();
   const torreNombre = rawNombre || 'Instalación';
-  const vol  = cfg.volDeposito || 20;
+  const volMax = getVolumenDepositoMaxLitros(cfg);
+  const volMez = getVolumenMezclaLitros(cfg);
   const esNftCfg = cfg.tipoInstalacion === 'nft';
 
   // Título torre
@@ -9948,19 +9977,27 @@ function updateTorreStats() {
   // Info depósito
   const depEl = document.getElementById('depositoTitulo');
   if (depEl) {
+    const volTxt =
+      volMez < volMax - 0.05
+        ? 'máx ' + volMax + ' L · mezcla ' + volMez + ' L'
+        : volMax + ' L';
     if (esNftCfg) {
-      depEl.textContent = 'Depósito para mezclas · ' + vol + ' L';
+      depEl.textContent = 'Depósito para mezclas · ' + volTxt;
     } else {
       const geom =
         (cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C';
-      depEl.textContent = torreNombre + ' — ' + geom + ' — ' + vol + 'L';
+      depEl.textContent = torreNombre + ' — ' + geom + ' — ' + volTxt;
     }
   }
 
   const volDepIn = document.getElementById('torreVolDepositoL');
   if (volDepIn && document.activeElement !== volDepIn) {
-    const vCfg = cfg.volDeposito != null && cfg.volDeposito > 0 ? cfg.volDeposito : VOL_OBJETIVO;
-    volDepIn.value = String(Math.max(5, Math.min(100, Math.round(vCfg))));
+    volDepIn.value = String(Math.max(5, Math.min(100, Math.round(volMax))));
+  }
+  const volMezIn = document.getElementById('torreVolMezclaL');
+  if (volMezIn && document.activeElement !== volMezIn) {
+    if (volMez < volMax - 0.05) volMezIn.value = String(volMez);
+    else volMezIn.value = '';
   }
 
   // Badge nutriente (strip + tarjeta arriba del esquema)
@@ -9978,24 +10015,42 @@ function updateTorreStats() {
   renderSistemaInstalacionSelect();
 }
 
-/** Editar volumen nominal del depósito desde la pestaña Torre (mismaclave que el asistente). */
+/** Editar capacidad máxima y litros de mezcla desde la pestaña Torre. */
 function guardarVolDepositoDesdeTorre() {
   const el = document.getElementById('torreVolDepositoL');
+  const elM = document.getElementById('torreVolMezclaL');
   if (!el) return;
-  let v = parseFloat(String(el.value).replace(',', '.'));
-  if (!Number.isFinite(v)) v = VOL_OBJETIVO;
-  v = Math.round(Math.max(5, Math.min(100, v)));
-  el.value = String(v);
+  let vMax = parseFloat(String(el.value).replace(',', '.'));
+  if (!Number.isFinite(vMax)) vMax = VOL_OBJETIVO;
+  vMax = Math.round(Math.max(5, Math.min(100, vMax)));
+  el.value = String(vMax);
+
+  let mezclaRaw = elM ? String(elM.value || '').trim().replace(',', '.') : '';
+  let volMezcla = null;
+  if (mezclaRaw !== '') {
+    const m = parseFloat(mezclaRaw);
+    if (Number.isFinite(m) && m > 0) {
+      volMezcla = Math.min(vMax, Math.max(0.5, Math.round(m * 10) / 10));
+      if (elM) elM.value = String(volMezcla);
+    } else if (elM) elM.value = '';
+  } else if (elM) elM.value = '';
 
   initTorres();
   if (!state.configTorre) state.configTorre = {};
-  if (state.configTorre.volDeposito === v) return;
+  const prevMax = state.configTorre.volDeposito;
+  const prevMez = state.configTorre.volMezclaLitros;
+  state.configTorre.volDeposito = vMax;
+  if (volMezcla != null && volMezcla < vMax - 0.02) state.configTorre.volMezclaLitros = volMezcla;
+  else delete state.configTorre.volMezclaLitros;
 
-  state.configTorre.volDeposito = v;
+  if (prevMax === vMax && prevMez === state.configTorre.volMezclaLitros) return;
+
   const tIdx = state.torreActiva || 0;
   if (state.torres && state.torres[tIdx]) {
     if (!state.torres[tIdx].config) state.torres[tIdx].config = { ...state.configTorre };
-    state.torres[tIdx].config.volDeposito = v;
+    state.torres[tIdx].config.volDeposito = vMax;
+    if (state.configTorre.volMezclaLitros != null) state.torres[tIdx].config.volMezclaLitros = state.configTorre.volMezclaLitros;
+    else delete state.torres[tIdx].config.volMezclaLitros;
   }
   guardarEstadoTorreActual();
   saveState();
@@ -10003,7 +10058,11 @@ function guardarVolDepositoDesdeTorre() {
   actualizarBadgesNutriente();
   updateDashboard();
   updateTorreStats();
-  showToast('Depósito: ' + v + ' L · mezclas y checklist usan este volumen');
+  const vm = getVolumenMezclaLitros(state.configTorre);
+  showToast(
+    'Depósito máx ' + vMax + ' L · cálculos de dosis con ' + vm + ' L' +
+      (vm < vMax - 0.05 ? ' (mezcla)' : '')
+  );
   refreshConsejosSiVisible();
 }
 
@@ -10761,6 +10820,25 @@ function abrirSetup() {
     lamEl.value = String(lm);
     onSliderNftLaminaInput();
   }
+  const sv = document.getElementById('sliderVol');
+  const svm = document.getElementById('setupVolMezclaL');
+  if (sv) {
+    const vmax = Number(c.volDeposito);
+    const snapped = Number.isFinite(vmax) && vmax > 0
+      ? Math.max(5, Math.min(100, Math.round(vmax / 5) * 5))
+      : 20;
+    sv.value = String(snapped);
+  }
+  if (svm) {
+    const maxL = parseInt(sv?.value || '20', 10);
+    const mez = Number(c.volMezclaLitros);
+    if (Number.isFinite(mez) && mez > 0 && mez < maxL - 0.02) {
+      svm.value = String(Math.round(mez * 10) / 10);
+    } else {
+      svm.value = '';
+    }
+  }
+
   const o = document.getElementById('setupOverlay');
   o.classList.add('open');
   renderNutrientesGrid();
@@ -10871,7 +10949,28 @@ function syncSetupPreviewDiagramPorTipoInstalacion() {
 function onSetupVolSliderInput() {
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
   else updateTorreBuilder();
+  const mezEl = document.getElementById('setupVolMezclaL');
+  if (mezEl && mezEl.value.trim()) {
+    const maxL = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+    const m = parseFloat(String(mezEl.value).replace(',', '.'));
+    if (Number.isFinite(m) && m > maxL) mezEl.value = String(maxL);
+  }
   if (typeof setupPagina !== 'undefined' && setupPagina >= 4) renderDosisSetup();
+  if (typeof setupPagina !== 'undefined' && setupPagina === 7) actualizarResumenSetup();
+}
+
+function onSetupVolMezclaInput() {
+  const maxL = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+  const el = document.getElementById('setupVolMezclaL');
+  if (!el) return;
+  const raw = el.value.trim();
+  if (raw) {
+    const m = parseFloat(String(raw).replace(',', '.'));
+    if (Number.isFinite(m) && m > maxL) el.value = String(maxL);
+    if (Number.isFinite(m) && m > 0 && m < 0.5) el.value = '0.5';
+  }
+  if (typeof setupPagina !== 'undefined' && setupPagina >= 4) renderDosisSetup();
+  if (typeof setupPagina !== 'undefined' && setupPagina === 7) actualizarResumenSetup();
 }
 
 /**
@@ -11672,7 +11771,7 @@ function nftTextoResumenInstalacion(cfg) {
   const hyd = getNftHidraulicaDesdeConfig(cfg);
   const ch = hyd.nCh;
   const hx = hyd.nHx;
-  const vol = cfg.volDeposito > 0 ? cfg.volDeposito : VOL_OBJETIVO;
+  const vol = getVolumenDepositoMaxLitros(cfg);
   const pend = cfg.nftPendientePct ?? 2;
   const tubo = cfg.nftTuboInteriorMm || 25;
   const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
@@ -11686,7 +11785,9 @@ function nftTextoResumenInstalacion(cfg) {
   if (disp === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraCaras != null) {
     extraDisp += ' · ' + hyd.escaleraNiveles + '×' + hyd.escaleraCaras + ' cara(s)';
   }
-  let s = nombre + ' — ' + ch + ' tubos × ' + hx + ' huecos — ' + vol + ' L · ' + dispTxt + extraDisp + ' · pend. ~' + pend + '%';
+  const vMez = getVolumenMezclaLitros(cfg);
+  const volTxt = vMez < vol - 0.05 ? vol + ' L (mezcla ' + vMez + ' L)' : vol + ' L';
+  let s = nombre + ' — ' + ch + ' tubos × ' + hx + ' huecos — ' + volTxt + ' · ' + dispTxt + extraDisp + ' · pend. ~' + pend + '%';
   if (altEff > 0) s += ' · ↑~' + altEff + ' cm';
   if (b) {
     s += ' · alim. Ø' + tubo + ' mm · bomba/depósito: ver checklist o asistente';
@@ -11740,7 +11841,8 @@ function renderTorreSistemaResumenTabla(cfg) {
         ? Math.round(Number(cfg.nftAlturaBombeoCm))
         : getNftAlturaBombeoEfectivaCm(cfg);
     const tuboRi = cfg.nftTuboInteriorMm || 25;
-    const vol = cfg.volDeposito > 0 ? cfg.volDeposito : typeof VOL_OBJETIVO !== 'undefined' ? VOL_OBJETIVO : 20;
+    const vol = getVolumenDepositoMaxLitros(cfg);
+    const vMez = getVolumenMezclaLitros(cfg);
     const pend = cfg.nftPendientePct ?? 2;
 
     if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
@@ -11750,7 +11852,10 @@ function renderTorreSistemaResumenTabla(cfg) {
     rows.push(['Huecos por canal', String(hyd.nHx)]);
     rows.push(['Huecos totales', String(hyd.nCh * hyd.nHx)]);
     rows.push(['Pendiente', '~' + pend + ' %']);
-    rows.push(['Depósito (mezclas)', String(vol) + ' L']);
+    rows.push([
+      'Depósito (cap. máx)',
+      String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
+    ]);
     rows.push(['Canal de cultivo', escHtmlUi(canalTxt + ' · long. ' + longM)]);
     rows.push(['Tubería riego (Ø)', 'Ø' + tuboRi + ' mm <span style="color:#64748b;font-size:11px">(tramo que limita)</span>']);
     if (altCm > 0) rows.push(['Altura bombeo', String(altCm) + ' cm']);
@@ -11772,13 +11877,17 @@ function renderTorreSistemaResumenTabla(cfg) {
   } else {
     const N = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || (typeof NUM_NIVELES !== 'undefined' ? NUM_NIVELES : 4);
     const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || (typeof NUM_CESTAS !== 'undefined' ? NUM_CESTAS : 5);
-    const vol = cfg.volDeposito > 0 ? cfg.volDeposito : typeof VOL_OBJETIVO !== 'undefined' ? VOL_OBJETIVO : 20;
+    const vol = getVolumenDepositoMaxLitros(cfg);
+    const vMez = getVolumenMezclaLitros(cfg);
     if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
     rows.push(['Sistema', 'Torre vertical']);
     rows.push(['Niveles', String(N)]);
     rows.push(['Cestas por nivel', String(C)]);
     rows.push(['Cestas totales', String(N * C)]);
-    rows.push(['Depósito (mezclas)', String(vol) + ' L']);
+    rows.push([
+      'Depósito (cap. máx)',
+      String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
+    ]);
   }
 
   let body = '';
@@ -14762,8 +14871,17 @@ function usarCalMagEnRecarga() {
   return usarPreferenciaCalMagRecargaGlobal();
 }
 
-function getSetupVolumen() {
-  return parseInt(document.getElementById('sliderVol')?.value || 20);
+function getSetupVolumenMaxLitros() {
+  return parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+}
+
+function getSetupVolumenMezclaLitros() {
+  const maxL = getSetupVolumenMaxLitros();
+  const raw = document.getElementById('setupVolMezclaL')?.value;
+  const m = parseFloat(String(raw || '').replace(',', '.'));
+  if (!Number.isFinite(m) || m <= 0) return maxL;
+  if (m >= maxL - 0.02) return maxL;
+  return Math.min(maxL, Math.max(0.5, Math.round(m * 10) / 10));
 }
 
 function getSetupECObjetivo() {
@@ -14815,7 +14933,8 @@ function renderDosisSetup() {
   const preview = document.getElementById('nutProtocoloPreview');
   if (!preview) return;
 
-  const vol    = getSetupVolumen();
+  const volMax = getSetupVolumenMaxLitros();
+  const vol    = getSetupVolumenMezclaLitros();
   const ecObj  = getSetupECObjetivo();
   const d      = calcularDosisSetup(setupNutriente, vol, ecObj);
   const nut    = d.nut;
@@ -14827,7 +14946,8 @@ function renderDosisSetup() {
   // Contexto del cálculo
   html += '<div style="font-size:11px;color:#6b7280;margin-bottom:8px;' +
     'background:#f8fafc;border-radius:8px;padding:6px 10px;line-height:1.7">' +
-    '📦 Depósito: <strong>' + vol + 'L</strong> · ' +
+    '📦 Depósito máx.: <strong>' + volMax + ' L</strong>' +
+    (vol < volMax - 0.05 ? ' · mezcla <strong>' + vol + ' L</strong>' : '') + ' · ' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d">(según cultivos)</span>' :
      ecObj.fuente === 'promedio' ? ' <span style="color:#f59e0b">⚠️ cultivos con EC diferente</span>' :
@@ -15115,6 +15235,12 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftEscaleraCaras;
     delete state.configTorre.nftEscaleraNivelesCara;
   }
+  const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
+  if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < vol - 0.02) {
+    state.configTorre.volMezclaLitros = Math.min(vol, Math.max(0.5, Math.round(mezParsed * 10) / 10));
+  } else {
+    delete state.configTorre.volMezclaLitros;
+  }
   invalidateMeteoNomiCache();
   const su = normalizaSustratoKey(setupData.sustrato);
   state.configTorre.sustrato = su;
@@ -15189,7 +15315,8 @@ function preguntarIniciarChecklist() {
   const cfg        = state.configTorre || {};
   const torre      = state.torres?.[state.torreActiva || 0];
   const nombreTorre = (torre?.nombre || '').trim() || 'Instalación';
-  const vol        = cfg.volDeposito || 18;
+  const volMax     = getVolumenDepositoMaxLitros(cfg);
+  const vol        = getVolumenMezclaLitros(cfg);
   const ecObj      = getECOptimaTorre();
 
   const mlCalMag   = calcularMlCalMag();
@@ -15249,7 +15376,8 @@ function preguntarIniciarChecklist() {
             '¡' + nombreTorre + ' lista!' +
           '</div>' +
           '<div style="font-size:12px;color:#6b7280;margin-top:3px">' +
-            vol + 'L · EC objetivo ' + ecObj.min + '–' + ecObj.max + ' µS/cm' +
+            (vol < volMax - 0.05 ? vol + ' L mezcla · máx ' + volMax + ' L · ' : vol + ' L · ') +
+            'EC objetivo ' + ecObj.min + '–' + ecObj.max + ' µS/cm' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -15410,12 +15538,12 @@ function aplicarConfigTorre() {
   // Actualizar constantes dinámicas — NUM_NIVELES y NUM_CESTAS ahora son variables
   window.NUM_NIVELES_ACTIVO = cfg.numNiveles;
   window.NUM_CESTAS_ACTIVO  = cfg.numCestas;
-  window.VOL_OBJETIVO_ACTIVO = cfg.volDeposito;
+  window.VOL_OBJETIVO_ACTIVO = getVolumenMezclaLitros(cfg);
 
   // Constantes de cálculo según nutriente activo (no solo cfg.nutriente por si quedó desincronizado)
   const nut = getNutrienteTorre();
   if (nut) {
-    const vAct = cfg.volDeposito || VOL_OBJETIVO;
+    const vAct = getVolumenMezclaLitros(cfg);
     window.EC_POR_ML_AB_ACTIVO = ecSubePorMlCorreccion(nut, vAct);
   }
   actualizarVisibilidadPanelInteriorGrow();
@@ -17893,7 +18021,30 @@ const EC_REFERENCIA_DOSIS_MICROS = 1300;
 const PH_MINUS_POR_ML   = 0.40;  // unidades pH por ml de pH- (75-81%) en 18L
 const PH_PLUS_POR_ML    = 0.34;  // unidades pH por ml de pH+ (25-30%) en 18L
                                   // Dato real: 8ml pH+ subieron de 3.5 a ~6.2 en 19.5L ≈ 0.34/ml
-const VOL_OBJETIVO      = 18;    // litros objetivo depósito
+const VOL_OBJETIVO      = 18;    // litros referencia calibración (tablas 18 L)
+
+/** Capacidad máxima del depósito (L) — tope físico del recipiente. `volDeposito` en config. */
+function getVolumenDepositoMaxLitros(cfg) {
+  cfg = cfg || state.configTorre || {};
+  const v = Number(cfg.volDeposito);
+  if (Number.isFinite(v) && v > 0) return Math.min(800, Math.max(1, Math.round(v * 10) / 10));
+  return VOL_OBJETIVO;
+}
+
+/**
+ * Litros con los que se calculan mezclas, checklist y Consejos (≤ máximo).
+ * Si no indicas «litros de mezcla», coincide con el máximo (comportamiento anterior).
+ */
+function getVolumenMezclaLitros(cfg) {
+  cfg = cfg || state.configTorre || {};
+  const maxL = getVolumenDepositoMaxLitros(cfg);
+  const mez = Number(cfg.volMezclaLitros);
+  if (Number.isFinite(mez) && mez > 0) {
+    const m = Math.round(mez * 10) / 10;
+    return Math.min(maxL, Math.max(0.5, m));
+  }
+  return maxL;
+}
 
 // ── Calcular ml de A+B necesarios para llegar a EC objetivo ─────────────────
 // Descuenta el CalMag ya disuelto (EC_CALMAG_BASE)
@@ -17919,7 +18070,7 @@ function calcularMlCalMag() {
   const nut = getNutrienteTorre();
   if (!nut.calmagNecesario) return 0;
   const cfg = state.configTorre || {};
-  const volObj = cfg.volDeposito || VOL_OBJETIVO;
+  const volObj = getVolumenMezclaLitros(cfg);
   return mlCalMagParaAguaBlanda(volObj);
 }
 
@@ -17974,7 +18125,7 @@ function evalEC(ec, vol) {
   if (isNaN(ec)) { setStatus('statusEC','empty','',''); setCard('cardEC',''); showCorreccion('correccionEC',''); return; }
 
   const nut = getNutrienteTorre();
-  const volActual  = isNaN(vol) ? (state.configTorre?.volDeposito || VOL_OBJETIVO) : vol;
+  const volActual  = isNaN(vol) ? getVolumenMezclaLitros(state.configTorre) : vol;
   // EC óptima según cultivos presentes (si no hay plantas, usa el nutriente)
   const ecOptima   = getECOptimaTorre();
   const ecMin      = ecOptima.min;
@@ -18042,7 +18193,7 @@ function evalPH(ph, vol) {
   }
 
   const nut       = getNutrienteTorre();
-  const volActual = isNaN(vol) ? (state.configTorre?.volDeposito || VOL_OBJETIVO) : vol;
+  const volActual = isNaN(vol) ? getVolumenMezclaLitros(state.configTorre) : vol;
   const factor    = volActual / VOL_OBJETIVO;
 
   // Rangos del nutriente activo
@@ -18186,7 +18337,7 @@ function evalVol(vol, ec, ph) {
   } else {
     const nut = getNutrienteTorre();
     const cfg = state.configTorre || {};
-    const volObj = cfg.volDeposito || VOL_OBJETIVO;
+    const volObj = getVolumenDepositoMaxLitros(cfg);
     const litrosAnadir = Math.ceil((volObj - vol) * 10) / 10;
     const ref = getRefDosisFabricante(nut.id);
     const calmagMl = usarCalMagEnRecarga() && nut.calmagNecesario
@@ -18273,7 +18424,7 @@ function generarPasosNutriente() {
   const nut    = getNutrienteTorre();
   const cfg    = state.configTorre || {};
   const refNut = getRefDosisFabricante(nut.id);
-  const vol    = cfg.volDeposito || 18;
+  const vol    = getVolumenMezclaLitros(cfg);
   const mlCM   = calcularMlCalMag();
   const mlP0   = calcularMlParteNutriente(0);
   const mlP1   = nut.partes >= 2 ? calcularMlParteNutriente(1) : mlP0;
@@ -18403,7 +18554,7 @@ function generarPasosNutriente() {
 function construirTextoChecklistPreliminar() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
-  const vol = cfg.volDeposito || VOL_OBJETIVO || 18;
+  const vol = getVolumenMezclaLitros(cfg);
   const partes = nut.partes || 2;
   const orden = (nut.orden && nut.orden.length >= partes)
     ? nut.orden
@@ -18446,6 +18597,8 @@ function checklistInstalacionCompletaParaRecarga() {
   if (!cfg || typeof cfg !== 'object') return false;
   const vol = Number(cfg.volDeposito);
   if (!Number.isFinite(vol) || vol < 1 || vol > 800) return false;
+  const vm = Number(cfg.volMezclaLitros);
+  if (Number.isFinite(vm) && vm > 0 && (vm > vol + 0.01 || vm < 0.5)) return false;
   if (!cfg.nutriente || !NUTRIENTES_DB.some(n => n.id === cfg.nutriente)) return false;
   const tipo = cfg.tipoInstalacion;
   if (tipo !== 'torre' && tipo !== 'nft') return false;
@@ -18469,7 +18622,7 @@ function cerrarOverlayChecklistDatosInstalacion() {
 /**
  * Aplica torre o NFT mínimos tras el cuestionario previo al checklist (reset / primera recarga sin asistente).
  */
-function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId) {
+function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMezclaOpt) {
   initTorres();
   const aguaOk = agua === 'osmosis' || agua === 'grifo' ? agua : 'destilada';
   const aguaMap = { destilada: 'destilada', osmosis: 'osmosis', grifo: 'grifo' };
@@ -18526,6 +18679,13 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId) {
     }
   }
 
+  const vmOpt = Number(volMezclaOpt);
+  if (Number.isFinite(vmOpt) && vmOpt > 0 && vmOpt < vol - 0.02) {
+    state.configTorre.volMezclaLitros = Math.min(vol, Math.max(0.5, Math.round(vmOpt * 10) / 10));
+  } else {
+    delete state.configTorre.volMezclaLitros;
+  }
+
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
@@ -18542,6 +18702,12 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   cerrarOverlayChecklistDatosInstalacion();
   const cfg = state.configTorre || {};
   const volIni = Number.isFinite(Number(cfg.volDeposito)) && Number(cfg.volDeposito) > 0 ? Math.round(Number(cfg.volDeposito)) : 20;
+  const capRef = Number.isFinite(Number(cfg.volDeposito)) && Number(cfg.volDeposito) > 0 ? Number(cfg.volDeposito) : volIni;
+  const vmIniRaw = Number(cfg.volMezclaLitros);
+  const mezIni =
+    Number.isFinite(vmIniRaw) && vmIniRaw > 0 && vmIniRaw < capRef - 0.02
+      ? String(Math.round(vmIniRaw * 10) / 10)
+      : '';
   const tipoIni = cfg.tipoInstalacion === 'nft' ? 'nft' : 'torre';
   const aguaIni = cfg.agua || state.configAgua || 'destilada';
   const nutIni = (cfg.nutriente && NUTRIENTES_DB.some(n => n.id === cfg.nutriente) ? cfg.nutriente : (getNutrienteTorre().id || 'canna_aqua'));
@@ -18575,9 +18741,13 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
           '<span style="font-size:13px;font-weight:700">NFT</span></label>' +
       '</div>' +
 
-      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Volumen del depósito (L)</label>' +
+      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Capacidad máxima del depósito (L)</label>' +
       '<input id="cldVolDeposito" type="number" inputmode="numeric" min="1" max="600" step="1" value="' + volIni + '"' +
+        ' style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:16px;margin-bottom:8px">' +
+      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Litros de mezcla (opcional)</label>' +
+      '<input id="cldVolMezcla" type="number" inputmode="decimal" min="0.5" max="600" step="0.1" placeholder="Vacío = hasta el máximo" value="' + mezIni.replace(/"/g, '') + '"' +
         ' style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:16px;margin-bottom:12px">' +
+      '<p style="font-size:10px;color:var(--muted,#94a3b8);line-height:1.45;margin:-8px 0 12px">Si no llenas hasta el tope (p. ej. 19 L en un depósito de 20 L), indícalo aquí: las dosis del checklist usarán esos litros.</p>' +
 
       '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Agua para la mezcla</label>' +
       '<select id="cldAgua" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:14px;margin-bottom:12px">' +
@@ -18607,16 +18777,30 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     const vol = parseInt(String(document.getElementById('cldVolDeposito').value || '0'), 10);
     const agua = document.getElementById('cldAgua').value || 'destilada';
     const nutId = document.getElementById('cldNutriente').value;
+    const mezStr = String(document.getElementById('cldVolMezcla')?.value || '').trim();
+    const volMez = parseFloat(String(mezStr).replace(',', '.'));
     if (!Number.isFinite(vol) || vol < 1 || vol > 600) {
       showToast('Indica un volumen de depósito entre 1 y 600 L', true);
       return;
+    }
+    let mezOpt = null;
+    if (mezStr !== '') {
+      if (!Number.isFinite(volMez) || volMez < 0.5) {
+        showToast('Litros de mezcla: mínimo 0,5 L o deja el campo vacío', true);
+        return;
+      }
+      if (volMez > vol + 0.01) {
+        showToast('Los litros de mezcla no pueden superar la capacidad máxima del depósito', true);
+        return;
+      }
+      if (volMez < vol - 0.02) mezOpt = volMez;
     }
     if (!nutId || !NUTRIENTES_DB.some(n => n.id === nutId)) {
       showToast('Elige un nutriente de la lista', true);
       return;
     }
     cerrarOverlayChecklistDatosInstalacion();
-    aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId);
+    aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, mezOpt);
     abrirChecklist(esPrimeraVezChecklist);
   };
 
@@ -18634,7 +18818,7 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
 
 function getCLPasos() {
   const cfg = state.configTorre || {};
-  const vol = cfg.volDeposito || VOL_OBJETIVO || 18;
+  const vol = getVolumenMezclaLitros(cfg);
   const ecOpt = getECOptimaTorre();
   const ecMin = ecOpt.min;
   const ecMax = ecOpt.max;
@@ -20259,7 +20443,7 @@ function mlAbonoParteDinamica(nut, partIndex, volLitros, ecMetaMicroS, ctx) {
 function calcularMlParteNutriente(partIndex) {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
-  const volObj = cfg.volDeposito || VOL_OBJETIVO;
+  const volObj = getVolumenMezclaLitros(cfg);
   const aguaGrifo = (cfg.agua || state.configAgua || 'destilada') === 'grifo';
   return mlAbonoParteDinamica(nut, partIndex, volObj, getRecargaEcMetaMicroS(), {
     modoSoft: !aguaGrifo,
@@ -20352,8 +20536,12 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
 
 function buildHtmlTablaPreparacionFabricante18L() {
   const cfg = state.configTorre || {};
-  const Vraw = (cfg.volDeposito != null && cfg.volDeposito > 0) ? cfg.volDeposito : VOL_OBJETIVO;
+  const Vraw = getVolumenMezclaLitros(cfg);
   const V = Math.round(Vraw * 10) / 10;
+  const vCap = getVolumenDepositoMaxLitros(cfg);
+  const capNota = V < vCap - 0.05
+    ? ' Capacidad máx. del depósito: <strong>' + vCap + ' L</strong> (esta tabla usa <strong>' + V + ' L</strong> de mezcla).'
+    : '';
   const ecUsada = getRecargaEcMetaMicroS();
   const aguaK = cfg.agua || state.configAgua || 'destilada';
   const aguaNom = aguaK === 'grifo' ? 'Grifo' : aguaK === 'osmosis' ? 'Ósmosis' : 'Destilada';
@@ -20384,7 +20572,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
       <div class="consejo-titulo" style="margin-bottom:8px">Mezcla dinámica · <strong>${meteoEscHtml(nutActivo.nombre)}</strong> · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span style="font-size:11px;font-weight:600;opacity:.88">(${ecOrigen})</span></div>
       <div class="consejo-ecph-note" style="margin-bottom:10px">
-        Solo el <strong>nutriente activo</strong> de la instalación (cámbialo en la pestaña Sistema o en la configuración). Misma regla que el checklist: volumen del depósito, EC objetivo y <code>ecPorMl</code>. ${leyendaBlanda}
+        Solo el <strong>nutriente activo</strong> de la instalación (cámbialo en la pestaña Sistema o en la configuración). Misma regla que el checklist: litros de mezcla (o capacidad máx. si no indicas margen), EC objetivo y <code>ecPorMl</code>.${capNota} ${leyendaBlanda}
         Columna <strong>grifo</strong>: pendiente hacia la misma EC restando la <strong>EC base</strong> del agua (Mediciones). La ficha bajo el nombre resume la orientación del fabricante.
         <strong>A+B simétricos</strong> y <strong>1 parte</strong>: cálculo EC. <strong>3 botellas</strong> y <strong>A+B distintas</strong>: tabla × volumen. Comprueba con el <strong>medidor</strong>.
       </div>
@@ -20465,7 +20653,8 @@ function abrirModalConsejosTablaPersonal(volSugerido) {
   const sel = document.getElementById('ctpNutrienteId');
   const vs = parseFloat(volSugerido);
   if (vIn) {
-    vIn.value = (!isNaN(vs) && vs > 0) ? String(vs) : String(cfg.volDeposito || VOL_OBJETIVO);
+    const defL = getVolumenMezclaLitros(cfg);
+    vIn.value = (!isNaN(vs) && vs > 0) ? String(vs) : String(defL);
   }
   if (sel) {
     try {
@@ -20628,7 +20817,8 @@ function htmlConsejoCard(cat, c) {
 function buildConsejosAguaNutrienteDinamico() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
-  const volObj = cfg.volDeposito || VOL_OBJETIVO;
+  const volMax = getVolumenDepositoMaxLitros(cfg);
+  const volObj = getVolumenMezclaLitros(cfg);
   const ecMin = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
   const pasos = (nut.protocolo || []).map(p =>
     '<li style="margin:0.35em 0">' + meteoEscHtml(p) + '</li>'
@@ -20681,8 +20871,11 @@ function buildConsejosAguaNutrienteDinamico() {
       partesRepos.map(p => meteoEscHtml(p)).join(' + ') + '. Remueve, espera unos minutos con difusor o bomba y mide de nuevo EC y pH.'
     : 'Si la EC ha bajado, usa la misma proporción que en tu última recarga completa o el checklist de la app.';
 
+  const volRefHtml = volObj < volMax - 0.05
+    ? 'mezcla de <strong>' + volObj + ' L</strong> (depósito hasta <strong>' + volMax + ' L</strong>)'
+    : '<strong>' + volObj + ' L</strong>';
   const textoRepos =
-    'Volumen de referencia en la app: <strong>' + volObj + ' L</strong>. Repone con la <strong>misma calidad de agua</strong> que usas en recargas (según tu configuración). ' +
+    'Volumen de referencia en la app: ' + volRefHtml + '. Repone con la <strong>misma calidad de agua</strong> que usas en recargas (según tu configuración). ' +
     '<strong>Si la EC sigue en rango</strong> para tus plantas, añade solo agua. ' + bloqueDosis;
 
   return htmlConsejoCard({
@@ -23380,15 +23573,17 @@ function renderSetupPlantasGrid() {
 
     // Mostrar EC objetivo y dosis calculadas
     const ecObj = getSetupECObjetivo();
-    const vol   = getSetupVolumen();
-    const d     = calcularDosisSetup(setupNutriente, vol, ecObj);
+    const volMax = getSetupVolumenMaxLitros();
+    const vol    = getSetupVolumenMezclaLitros();
+    const d      = calcularDosisSetup(setupNutriente, vol, ecObj);
     const nut   = d.nut;
     const dosisDiv  = document.getElementById('dosisSegunCultivo');
     const dosisText = document.getElementById('dosisSegunCultivoTexto');
     if (dosisDiv && dosisText) {
       dosisDiv.style.display = 'block';
       const orden = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B','Parte C'];
-      let txt = '📦 ' + vol + 'L · ⚡ EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm<br>';
+      let txt = '📦 ' + volMax + ' L máx' + (vol < volMax - 0.05 ? ' · mezcla ' + vol + ' L' : '') +
+        ' · ⚡ EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm<br>';
       if (d.mlCalMag > 0) txt += '• CalMag: <strong>' + d.mlCalMag + ' ml</strong><br>';
       // Mostrar TODAS las partes del nutriente
       if (nut.partes === 1) {
@@ -23447,7 +23642,9 @@ function actualizarResumenSetup() {
     ? (document.getElementById('sliderNftHuecos')?.value || 8)
     : (document.getElementById('sliderCestas')?.value  || 5);
   const pendTxt = isNft ? (document.getElementById('sliderNftPendiente')?.value || 2) + '% pendiente · ' : '';
-  const vol     = document.getElementById('sliderVol')?.value     || 20;
+  const volMax  = getSetupVolumenMaxLitros();
+  const volMez  = getSetupVolumenMezclaLitros();
+  const volTxtResume = volMez < volMax - 0.05 ? volMax + 'L máx · mezcla ' + volMez + 'L' : volMax + 'L';
   const nut     = NUTRIENTES_DB.find(n => n.id === (window.setupNutriente || 'canna_aqua'));
   const ubic    = setupData.ubicacion || window.setupUbicacion || 'exterior';
   const luzResumenTxt = {
@@ -23463,13 +23660,12 @@ function actualizarResumenSetup() {
   const plantasSel = [...setupPlantasSeleccionadas].map(k => plantasNombres[k]||k).join(', ') || 'Sin seleccionar';
 
   const ecObj  = getSetupECObjetivo();
-  const volNum = parseInt(vol);
   const montR = isNft ? readNftMontajeFromSetupUi() : { disposicion: 'mesa', alturaBombeoCm: 0 };
   const draftNFT = isNft ? buildNftDraftConfigFromSetupUi() : null;
   const hydNFT = isNft ? getNftHidraulicaDesdeConfig(draftNFT) : null;
   const bResumenNft = isNft ? getNftBombaDesdeConfig(draftNFT) : null;
   const altResNFT = isNft ? getNftAlturaBombeoEfectivaCm(draftNFT) : 0;
-  const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volNum, ecObj);
+  const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volMez, ecObj);
   const ordenR = (d.nut.orden && d.nut.orden.length >= d.nut.partes) ? d.nut.orden : ['Parte A','Parte B','Parte C'];
 
   let dosisHtml = '';
@@ -23493,7 +23689,7 @@ function actualizarResumenSetup() {
 
   el.innerHTML =
     (isNft
-      ? '🪴 NFT: <strong>' + (hydNFT ? hydNFT.nCh : niveles) + ' tubos × ' + cestas + ' huecos/canal · ' + pendTxt + vol + 'L</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong> · disposición <strong>' +
+      ? '🪴 NFT: <strong>' + (hydNFT ? hydNFT.nCh : niveles) + ' tubos × ' + cestas + ' huecos/canal · ' + pendTxt + volTxtResume + '</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong> · disposición <strong>' +
         (montR.disposicion === 'escalera' ? 'escalera' : montR.disposicion === 'pared' ? 'pared' : 'mesa') +
         (montR.disposicion === 'mesa' && montR.mesaMultinivel ? ' · multinivel' : '') +
         (montR.disposicion === 'escalera' && montR.escaleraCaras === 2 ? ' · A (2 caras)' : '') +
@@ -23503,7 +23699,7 @@ function actualizarResumenSetup() {
         (bResumenNft
           ? '⚡ NFT: circulación <strong>24 h</strong> · criterio bomba/depósito en el paso de equipo y en checklist (veredicto visible; cifras en «detalle técnico»).<br>'
           : '')
-      : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + vol + 'L</strong><br>') +
+      : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d;font-size:10px">(según cultivos)</span>' : '') + '<br>' +
@@ -24141,6 +24337,10 @@ function abrirSetupNuevaTorre() {
   document.getElementById('sliderNftCanales') && (document.getElementById('sliderNftCanales').value = '4');
   document.getElementById('sliderNftHuecos') && (document.getElementById('sliderNftHuecos').value = '8');
   document.getElementById('sliderNftPendiente') && (document.getElementById('sliderNftPendiente').value = '2');
+  const svNew = document.getElementById('sliderVol');
+  if (svNew) svNew.value = '20';
+  const svmNew = document.getElementById('setupVolMezclaL');
+  if (svmNew) svmNew.value = '';
   renderNutrientesGrid();
   updateTorreBuilder();
   renderSetupPage();
@@ -24257,8 +24457,10 @@ function actualizarBadgesNutriente() {
   if (dashTorreInfo) {
     const niv = cfg.numNiveles || 5;
     const ces = cfg.numCestas  || 5;
-    const vol = cfg.volDeposito || 18;
-    dashTorreInfo.textContent = niv + ' niveles · ' + ces + ' cestas · ' + vol + 'L · ' + nut.nombre;
+    const vMax = getVolumenDepositoMaxLitros(cfg);
+    const vMez = getVolumenMezclaLitros(cfg);
+    const volTxt = vMez < vMax - 0.05 ? vMax + 'L máx · ' + vMez + 'L mezcla' : vMax + 'L';
+    dashTorreInfo.textContent = niv + ' niveles · ' + ces + ' cestas · ' + volTxt + ' · ' + nut.nombre;
   }
 
   // Pestaña Medir — banner torre
