@@ -18951,6 +18951,51 @@ function getCLPasos() {
     });
   }
 
+  const aguaPrimer = cfg.agua || state.configAgua || 'destilada';
+  const vMaxRawPrimer = Number(cfg.volDeposito);
+  const volMaxPrimerIni = Number.isFinite(vMaxRawPrimer) && vMaxRawPrimer > 0 ? Math.round(vMaxRawPrimer) : 20;
+  const vmPrimer = Number(cfg.volMezclaLitros);
+  const mezPrimerVal =
+    Number.isFinite(vmPrimer) && vmPrimer > 0 && vmPrimer < volMaxPrimerIni - 0.02
+      ? String(Math.round(vmPrimer * 10) / 10)
+      : '';
+  const nutIdPrimer = cfg.nutriente && NUTRIENTES_DB.some(n => n.id === cfg.nutriente) ? cfg.nutriente : nut.id;
+  const optsNutPrimer = NUTRIENTES_DB.map(n => ({
+    value: n.id,
+    label: n.nombre,
+    selected: n.id === nutIdPrimer,
+  }));
+
+  const pasosConfigPrimerLlenado = [
+    { id: 'PC1', seccion: '⚙️ Depósito, agua y nutriente', paso: 'PC·1',
+      desc: 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.',
+      nota: 'El <strong>rango de EC</strong> recomendado por <strong>cultivos</strong> lo acotas en la pestaña <strong>Sistema</strong> (grupos de planta); en el paso <strong>PC·2</strong> fijas el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.',
+      campos: [
+        { id: 'clPrimerVolMax', label: 'Capacidad máx. depósito (L)', type: 'number', step: '1', placeholder: '20',
+          value: String(volMaxPrimerIni),
+          _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
+        { id: 'clPrimerVolMezcla', label: 'Litros de mezcla (opcional)', type: 'number', step: '0.1', placeholder: 'vacío = hasta el máximo',
+          value: mezPrimerVal,
+          _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
+        { id: 'clPrimerAgua', label: 'Agua para la mezcla', type: 'select', clase: 'wide',
+          opcionesVal: [
+            { value: 'destilada', label: 'Destilada', selected: aguaPrimer === 'destilada' },
+            { value: 'osmosis', label: 'Ósmosis', selected: aguaPrimer === 'osmosis' },
+            { value: 'grifo', label: 'Grifo', selected: aguaPrimer === 'grifo' },
+          ],
+          _clOnchange: 'onPrimerLlenadoAguaDesdeChecklist()' },
+        { id: 'clPrimerNutriente', label: 'Nutriente / marca', type: 'select', clase: 'wide',
+          opcionesVal: optsNutPrimer,
+          _clOnchange: 'onPrimerLlenadoNutrienteDesdeChecklist()' },
+      ],
+    },
+    { id: 'PC2', seccion: null, paso: 'PC·2',
+      desc: 'EC objetivo de esta recarga (µS/cm) y, si aplica, CalMag antes del abono.',
+      nota: 'Tras escribir el EC, <strong>sal del campo</strong> (toca fuera, Tab o Intro) para recalcular los ml de nutriente y CalMag en los pasos siguientes.',
+      campos: paso40campos,
+    },
+  ];
+
   const pasosPrev6 = hwLista.length ? [{
     id:'6.0hw',
     seccion:'📊 Paso 6 — Medir y ajustar',
@@ -19119,9 +19164,9 @@ function getCLPasos() {
     nota:'Previene algas y oxidación del hierro' },
   ];
 
-  const pasosCabeceraPrimerLlenado = [
+  const pasosLimpiezaPrimerLlenado = [
   { id:'PL0', seccion:'🚀 Primer llenado del depósito', paso:'PL·0',
-    desc:'Recorrido acortado: sin parada prolongada de bomba ni vaciado de solución usada (no aplica P1–P3 ni pasos 1.x).',
+    desc:'Tras confirmar depósito, agua, nutriente y EC arriba: limpieza del depósito vacío antes de la primera mezcla.',
     nota:'Si en realidad ya cultivabas y vas a recargar de verdad, cancela y abre de nuevo el checklist eligiendo <strong>Recarga completa</strong>.' },
   { id:'PL1', seccion:'🧹 Depósito antes del primer uso', paso:'PL·1',
     desc:'Limpiar el interior del depósito: agua oxigenada 3% — 15 ml en ~5 L de agua. Frotar paredes con esponja suave.',
@@ -19134,16 +19179,20 @@ function getCLPasos() {
   ];
 
   return [
-    ...(primerLlenado ? pasosCabeceraPrimerLlenado : pasosCabeceraRecargaCompleta),
+    ...(primerLlenado ? [...pasosConfigPrimerLlenado, ...pasosLimpiezaPrimerLlenado] : pasosCabeceraRecargaCompleta),
     ...pasoNftTuberiaRef,
     ...pasosNftExtra,
     ...(primerLlenado ? [] : pasosCubiertaDeposito),
 
   { id:'4.0', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.0',
-    desc:'Fija el EC objetivo (µS/cm) para calcular las mililitros de cada producto en el orden del fabricante. Por defecto usa el punto medio del rango óptimo de tus cultivos o del nutriente.',
-    nota:'Tras escribir el EC, <strong>sal del campo</strong> (toca fuera, Tab o Intro) para aplicarlo y recalcular los ml de los pasos siguientes. CalMag se actualiza al marcar o desmarcar.',
+    desc: primerLlenado
+      ? 'Mezcla nutritiva: volumen, agua, nutriente y EC los fijaste en <strong>PC·1</strong> y <strong>PC·2</strong>. A partir de 4.1 sigue el orden del fabricante.'
+      : 'Fija el EC objetivo (µS/cm) para calcular las mililitros de cada producto en el orden del fabricante. Por defecto usa el punto medio del rango óptimo de tus cultivos o del nutriente.',
+    nota: primerLlenado
+      ? 'Para cambiar EC, CalMag o volumen vuelve a <strong>PC·1 / PC·2</strong> o ajústalo en <strong>Sistema</strong> al terminar.'
+      : 'Tras escribir el EC, <strong>sal del campo</strong> (toca fuera, Tab o Intro) para aplicarlo y recalcular los ml de los pasos siguientes. CalMag se actualiza al marcar o desmarcar.',
     extraHtml:'<button type="button" class="btn btn-ghost" style="margin-top:8px;padding:8px 12px;font-size:12px;font-weight:700;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;width:100%" onclick="irConsejosTablaResumenEc()">📊 Ver tabla resumen EC / pH en Consejos</button>',
-    campos: paso40campos },
+    campos: primerLlenado ? [] : paso40campos },
 
   { id:'4.1', seccion:null, paso:'4.1',
     desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' + (esNft ? 'depósito NFT' : 'torre'),
@@ -19281,6 +19330,59 @@ function onChecklistRecargaPrefsChanged() {
   refreshConsejosSiVisible();
 }
 
+function onPrimerLlenadoVolDesdeChecklist() {
+  initTorres();
+  if (!state.configTorre) state.configTorre = {};
+  const elM = document.getElementById('clPrimerVolMax');
+  const elZ = document.getElementById('clPrimerVolMezcla');
+  let vMax = parseFloat(String(elM && elM.value).replace(',', '.'));
+  if (!Number.isFinite(vMax)) vMax = VOL_OBJETIVO;
+  vMax = Math.round(Math.max(5, Math.min(100, vMax)));
+  if (elM) elM.value = String(vMax);
+  state.configTorre.volDeposito = vMax;
+  const rawMez = elZ ? String(elZ.value || '').trim() : '';
+  const m = parseFloat(rawMez.replace(',', '.'));
+  if (rawMez !== '' && Number.isFinite(m) && m > 0 && m < vMax - 0.02) {
+    state.configTorre.volMezclaLitros = Math.min(vMax, Math.max(0.5, Math.round(m * 10) / 10));
+    if (elZ) elZ.value = String(state.configTorre.volMezclaLitros);
+  } else {
+    delete state.configTorre.volMezclaLitros;
+    if (elZ) elZ.value = '';
+  }
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try { actualizarBadgesNutriente(); } catch (e) {}
+  renderChecklist();
+  refreshConsejosSiVisible();
+}
+
+function onPrimerLlenadoAguaDesdeChecklist() {
+  const sel = document.getElementById('clPrimerAgua');
+  const v = sel && sel.value;
+  if (v === 'destilada' || v === 'osmosis' || v === 'grifo') setAgua(v);
+  initTorres();
+  guardarEstadoTorreActual();
+  saveState();
+  renderChecklist();
+  refreshConsejosSiVisible();
+}
+
+function onPrimerLlenadoNutrienteDesdeChecklist() {
+  const sel = document.getElementById('clPrimerNutriente');
+  const id = sel && sel.value;
+  if (!id || !NUTRIENTES_DB.some(n => n.id === id)) return;
+  initTorres();
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.nutriente = id;
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try { actualizarBadgesNutriente(); } catch (e) {}
+  renderChecklist();
+  refreshConsejosSiVisible();
+}
+
 function irConsejosTablaResumenEc() {
   try { cerrarChecklist(); } catch (_) {}
   const pq = document.getElementById('checklistPreguntaOverlay');
@@ -19306,10 +19408,22 @@ function renderChecklist() {
 
     const campos = p.campos ? p.campos.map(c => {
       if (c.type === 'select') {
+        let optsHtml;
+        if (c.opcionesVal && c.opcionesVal.length) {
+          optsHtml = c.opcionesVal.map(o => {
+            const val = String(o.value).replace(/"/g, '&quot;');
+            const lab = escHtmlUi(String(o.label != null ? o.label : o.value));
+            const sel = o.selected ? ' selected' : '';
+            return '<option value="' + val + '"' + sel + '>' + lab + '</option>';
+          }).join('');
+        } else {
+          optsHtml = (c.opciones || []).map(o => `<option>${escHtmlUi(String(o))}</option>`).join('');
+        }
+        const chg = c._clOnchange ? ' onchange="' + c._clOnchange + '"' : '';
         return `<div class="cl-field">
           <label>${c.label}</label>
-          <select id="${c.id}" class="${c.clase||''}">
-            ${c.opciones.map(o => `<option>${o}</option>`).join('')}
+          <select id="${c.id}" class="${c.clase||''}"${chg}>
+            ${optsHtml}
           </select>
         </div>`;
       }
