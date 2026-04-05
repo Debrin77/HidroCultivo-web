@@ -18014,6 +18014,18 @@ const RANGOS = {
   vol:  { min: 16,   max: 20,   warnLow: 14,   warnHigh: 20   },
 };
 
+/** Con EC objetivo explícito en torre (checklist / PC·2), Mediciones corrige fuera de ± este margen (µS/cm). */
+const EC_MEDICION_TOLERANCIA_OBJETIVO_US = 50;
+
+/** Litros de agua ~EC 0 para acercar ecActual a ecObjetivo (modelo EC·V constante). */
+function litrosAguaDiluirHastaEcUs(ecActual, volLitros, ecObjetivoUs) {
+  if (!Number.isFinite(ecActual) || !Number.isFinite(volLitros) || volLitros <= 0) return 0.1;
+  if (!Number.isFinite(ecObjetivoUs) || ecObjetivoUs < 50) return 0.1;
+  if (ecActual <= ecObjetivoUs) return 0;
+  const V = volLitros * (ecActual / ecObjetivoUs - 1);
+  return Math.max(0.1, Math.ceil(V * 10) / 10);
+}
+
 // Datos reales Canna Aqua Vega A+B:
 // 36ml A + 36ml B en 18L = EC ~0.90 mS/cm = 900 µS/cm (con agua EC 0.0)
 // Por tanto: 1ml A + 1ml B sube EC = 900/36 = 25 µS/cm en 18L
@@ -18144,7 +18156,59 @@ function evalEC(ec, vol) {
   const ecMax      = ecOptima.max;
   const ecIdeal    = Math.round((ecMin + ecMax) / 2);
   const ecCritica  = Math.round(ecMin * 0.7);
-  const ecAlta     = Math.round(ecMax * 1.15);
+
+  const cfgTorre = state.configTorre || {};
+  const ecManualRaw = cfgTorre.checklistEcObjetivoUs;
+  const ecObjExplicito = Number.isFinite(ecManualRaw) && ecManualRaw >= 200 && ecManualRaw <= 6000
+    ? Math.round(ecManualRaw)
+    : null;
+  const tol = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
+
+  if (ecObjExplicito != null) {
+    const bandaLo = ecObjExplicito - tol;
+    const bandaHi = ecObjExplicito + tol;
+    if (ec >= bandaLo && ec <= bandaHi) {
+      setStatus('statusEC', 'ok', '✅', 'EC dentro del margen respecto al objetivo (' + ecObjExplicito + ' ±' + tol + ' µS/cm)');
+      setCard('cardEC', 'ok');
+      showCorreccion('correccionEC', '');
+      return;
+    }
+    if (ec < bandaLo) {
+      const deficit = Math.max(0, ecObjExplicito - ec);
+      const mlAB = mlCorreccionEcBaja(nut, volActual, deficit);
+      const slopeEc = ecSubePorMlCorreccion(nut, volActual);
+      const nivel = ec < ecCritica ? 'bad' : 'warn';
+      const orden = nut.orden || ['Parte A', 'Parte B'];
+      setStatus('statusEC', nivel, ec < ecCritica ? '🔴' : '🟡',
+        ec < ecCritica ? 'EC crítica — deficiencias inminentes' : 'EC baja respecto al objetivo ' + ecObjExplicito + ' µS/cm');
+      setCard('cardEC', ec < ecCritica ? 'alert' : 'warn');
+      const sufEc = dosisSufijoNutriente(nut);
+      let correccionHtml = '<div class="correccion-title">💊 Corrección EC — ' + nut.nombre + ' (objetivo ' + ecObjExplicito + ' µS/cm)</div>';
+      if (nut.partes === 1) {
+        correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+      } else if (nut.partes === 2) {
+        correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+        correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+      } else if (nut.partes === 3) {
+        correccionHtml += '<div class="correccion-item"><span>' + orden[0] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+        correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+        correccionHtml += '<div class="correccion-item"><span>' + orden[2] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
+      }
+      correccionHtml += '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras corrección</span><span class="correccion-valor">~' + Math.round(ec + mlAB * slopeEc) + ' µS/cm</span></div>';
+      showCorreccion('correccionEC', correccionHtml);
+      return;
+    }
+    const litrosAgua = litrosAguaDiluirHastaEcUs(ec, volActual, ecObjExplicito);
+    const ecEst = Math.round(ec * volActual / (volActual + litrosAgua));
+    setStatus('statusEC', 'warn', '🟡', 'EC alta respecto al objetivo ' + ecObjExplicito + ' µS/cm — diluir');
+    setCard('cardEC', 'warn');
+    showCorreccion('correccionEC',
+      '<div class="correccion-title">💊 Dilución hacia objetivo ' + ecObjExplicito + ' µS/cm</div>' +
+      '<div class="correccion-item"><span>Añadir agua destilada / ósmosis</span><span class="correccion-valor">+' + litrosAgua + ' L</span></div>' +
+      '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras dilución</span><span class="correccion-valor">~' + ecEst + ' µS/cm</span></div>'
+    );
+    return;
+  }
 
   if (ec >= ecMin && ec <= ecMax) {
     const ecOptima2 = getECOptimaTorre();
@@ -23773,7 +23837,23 @@ async function guardarMedicion() {
 
   // ── 3. INTENTAR ENVIAR A GOOGLE SHEETS (opcional) ────────────────────────
   const alertas = [];
-  if (ec && (parseFloat(ec) < 1300 || parseFloat(ec) > 1400)) alertas.push('EC ' + ec + ' fuera de rango');
+  const ecNumSheets = ec ? parseFloat(String(ec).replace(',', '.')) : NaN;
+  if (ec && Number.isFinite(ecNumSheets)) {
+    const cfgS = state.configTorre || {};
+    const mObj = cfgS.checklistEcObjetivoUs;
+    if (Number.isFinite(mObj) && mObj >= 200 && mObj <= 6000) {
+      const o = Math.round(mObj);
+      const t = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
+      if (ecNumSheets < o - t || ecNumSheets > o + t) {
+        alertas.push('EC ' + ec + ' µS/cm fuera del margen del objetivo (' + o + ' ±' + t + ')');
+      }
+    } else {
+      const eo = getECOptimaTorre();
+      if (ecNumSheets < eo.min || ecNumSheets > eo.max) {
+        alertas.push('EC ' + ec + ' µS/cm fuera del rango cultivo (' + eo.min + '–' + eo.max + ')');
+      }
+    }
+  }
   if (ph && (parseFloat(ph) < 5.7  || parseFloat(ph) > 6.4))  alertas.push('pH ' + ph + ' fuera de rango');
   if (temp && (parseFloat(temp) < 18 || parseFloat(temp) > 22)) alertas.push('Temp ' + temp + '°C fuera de rango');
   if (vol && parseFloat(vol) < 16) alertas.push('Vol ' + vol + 'L bajo');
@@ -24738,7 +24818,16 @@ function actualizarBadgesNutriente() {
 
   const rangeEC = document.getElementById('paramRangeEC');
   const rangePH = document.getElementById('paramRangePH');
-  if (rangeEC) rangeEC.textContent = ecMin + ' – ' + ecMax + ' µS/cm';
+  if (rangeEC) {
+    const mEc = cfg.checklistEcObjetivoUs;
+    if (Number.isFinite(mEc) && mEc >= 200 && mEc <= 6000) {
+      const o = Math.round(mEc);
+      rangeEC.textContent =
+        'Objetivo ' + o + ' ±' + EC_MEDICION_TOLERANCIA_OBJETIVO_US + ' µS/cm · cultivo ' + ecMin + '–' + ecMax;
+    } else {
+      rangeEC.textContent = ecMin + ' – ' + ecMax + ' µS/cm';
+    }
+  }
   if (rangePH) rangePH.textContent = phMin + ' – ' + phMax;
 
   // Dashboard
