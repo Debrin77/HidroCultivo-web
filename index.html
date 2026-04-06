@@ -4412,11 +4412,13 @@ function generarSVGDwc() {
   const W = 400;
   const H = 518;
 
+  /* Mismo ancho exterior para tapa (cenital) y depósito (frente), alineados. */
+  const blockW = Math.min(320, Math.max(228, 28 + C * 30));
+  const planLeft = (W - blockW) / 2;
+  const planW = blockW;
   const planTop = 54;
   const planPad = 10;
-  let planW = Math.min(292, 36 + C * 34);
-  let planH = Math.min(200, 28 + N * 30);
-  const planLeft = (W - planW) / 2;
+  const planH = Math.min(200, 28 + N * 30);
   const planInnerX = planLeft + planPad;
   const planInnerY = planTop + planPad;
   const planInnerW = planW - planPad * 2;
@@ -4545,9 +4547,9 @@ function generarSVGDwc() {
 
   const planBottom = planTop + planH;
   const tankStartY = planBottom + 48;
-  const tankW = 236;
+  const tankW = blockW;
   const tankH = 108;
-  const tankX = (W - tankW) / 2;
+  const tankX = planLeft;
   const rimH = 14;
   const innerPad = 10;
   const innerX = tankX + innerPad;
@@ -4608,9 +4610,10 @@ function generarSVGDwc() {
   s += `<text x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="#475569" font-size="9.5" font-weight="800" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
   s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="5 4"/>`;
 
-  /* ── Alzado depósito ── */
+  /* ── Alzado depósito (mismo ancho que tapa) ── */
+  const tankFaceInset = 4;
   s += `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>`;
-  s += `<rect x="${tankX + 3}" y="${tankStartY + rimH - 2}" width="${tankW - 6}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>`;
+  s += `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>`;
   s += `<rect x="${innerX}" y="${innerY}" width="${innerW}" height="${innerH}" rx="5" fill="rgba(255,255,255,0.35)" stroke="none"/>`;
 
   s += `<g clip-path="url(#dwcTankInnerClip)">`;
