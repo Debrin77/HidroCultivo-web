@@ -8163,6 +8163,83 @@ function dwcFormatHtmlRecomendacionDifusorCore(rec) {
   );
 }
 
+/**
+ * Pestaña Sistema DWC: un solo texto de resultado (sin títulos ni referencias a otras pantallas).
+ */
+function dwcFormatSistemaDwcDifusorSoloResultado(rec, lit) {
+  if (!rec || !lit) return '';
+  const L = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
+  const W = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
+  const P = _dwcParseOptCm('sysDwcProfCm', 5, 200);
+  let inicio;
+  if (L != null && W != null && P != null) {
+    inicio =
+      'Para un depósito de ' +
+      L +
+      '×' +
+      W +
+      '×' +
+      P +
+      ' cm (~' +
+      rec.vol +
+      ' L de agua/solución) y ' +
+      rec.nTotal +
+      ' cestas en depósito (rejilla ' +
+      rec.nFilas +
+      '×' +
+      rec.nPorFila +
+      '), ';
+  } else if (lit.fuente === 'mezcla') {
+    inicio =
+      'Para ~' +
+      rec.vol +
+      ' L de agua/solución en depósito (mezcla configurada; máx. ~' +
+      lit.vMax +
+      ' L) y ' +
+      rec.nTotal +
+      ' cestas (rejilla ' +
+      rec.nFilas +
+      '×' +
+      rec.nPorFila +
+      '), ';
+  } else {
+    inicio =
+      'Para ~' +
+      rec.vol +
+      ' L de agua/solución en depósito y ' +
+      rec.nTotal +
+      ' cestas (rejilla ' +
+      rec.nFilas +
+      '×' +
+      rec.nPorFila +
+      '), ';
+  }
+
+  const fondoGrande = rec.vol >= 40 || rec.salidasSug >= 4;
+  let reparto =
+    'Reparte el oxígeno con al menos ' +
+    rec.salidasSug +
+    ' salida(s) de aire al fondo del depósito.';
+  if (fondoGrande) {
+    reparto +=
+      ' Si el fondo es grande, es preferible varias líneas o varias piedras o discos más pequeños bien repartidos que un solo difusor grande centrado.';
+  } else if (rec.salidasSug > 1) {
+    reparto += ' Separa las salidas para cubrir el fondo.';
+  }
+
+  return (
+    inicio +
+    'se recomienda una instalación capaz de oxigenar con un caudal de aire orientativo de ' +
+    rec.min +
+    '–' +
+    rec.fuerte +
+    ' L/min (referencia ~' +
+    rec.reco +
+    ' L/min). ' +
+    reparto
+  );
+}
+
 function refrescarDwcDifusorChecklist() {
   const el = document.getElementById('clDwcDifusorRecomendacion');
   if (!el) return;
@@ -8358,28 +8435,7 @@ function refreshDwcSistemaMedidasUI() {
       oxEl.style.background = '#f0f9ff';
       oxEl.style.border = '1px solid #bae6fd';
       oxEl.style.borderRadius = '10px';
-      let notaVol = '';
-      if (par.lit.fuente === 'medidas') {
-        notaVol =
-          '<p style="margin:0 0 6px;font-size:9px;color:#64748b">Volumen del cálculo: <strong>L×A×P</strong> del formulario (alinear con litros de mezcla guardados si rellenas menos).</p>';
-      } else if (par.lit.fuente === 'mezcla') {
-        notaVol =
-          '<p style="margin:0 0 6px;font-size:9px;color:#64748b">Volumen: <strong>' +
-          par.lit.vol +
-          ' L</strong> de mezcla en la app (máx. ~' +
-          par.lit.vMax +
-          ' L).</p>';
-      } else {
-        notaVol =
-          '<p style="margin:0 0 6px;font-size:9px;color:#64748b">Volumen: <strong>' +
-          par.lit.vol +
-          ' L</strong> según capacidad en la app.</p>';
-      }
-      oxEl.innerHTML =
-        '<span style="font-weight:800;color:#0369a1;display:block;margin-bottom:4px">Aire · difusor (orientativo)</span>' +
-        notaVol +
-        dwcFormatHtmlRecomendacionDifusorCore(par.rec) +
-        '<p style="margin:8px 0 0;font-size:9px;color:#64748b">Mismo criterio en <strong>checklist DWC</strong> (D·0) y <strong>Consejos → DWC</strong>.</p>';
+      oxEl.textContent = dwcFormatSistemaDwcDifusorSoloResultado(par.rec, par.lit);
     } else {
       oxEl.style.display = 'block';
       oxEl.style.padding = '0';
@@ -8391,7 +8447,7 @@ function refreshDwcSistemaMedidasUI() {
       oxEl.style.border = 'none';
       oxEl.style.borderRadius = '0';
       oxEl.textContent =
-        'Oxigenación: indica L, A y P o configura litros del depósito para estimar bomba y difusores.';
+        'Indica L, A y P del depósito o configura el volumen para obtener la recomendación de L/min y difusores.';
     }
   }
 }
