@@ -10928,6 +10928,47 @@ function setupBack() {
   }
 }
 
+/** Preview asistente paso 1 — DWC: tapa vista superior con orificios en rejilla. */
+function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
+  previewEl.innerHTML = '';
+  previewEl.style.position = 'relative';
+  previewEl.style.height = 'auto';
+  const wrap = document.createElement('div');
+  wrap.className = 'dwc-setup-lid-wrap';
+  wrap.setAttribute('role', 'img');
+  wrap.setAttribute(
+    'aria-label',
+    'Vista superior de la tapa del cubo DWC: ' +
+      filas +
+      ' filas de orificios y ' +
+      cols +
+      ' macetas por fila.'
+  );
+  const side = Math.min(132, Math.max(84, Math.round(10.5 * Math.max(filas, cols, 4))));
+  const plate = document.createElement('div');
+  plate.className = 'dwc-setup-lid-plate';
+  plate.style.width = side + 'px';
+  plate.style.height = side + 'px';
+  plate.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+  plate.style.gridTemplateRows = 'repeat(' + filas + ', 1fr)';
+  for (let i = 0; i < filas * cols; i++) {
+    const hole = document.createElement('div');
+    hole.className = 'dwc-setup-lid-hole';
+    plate.appendChild(hole);
+  }
+  const cap = document.createElement('div');
+  cap.className = 'dwc-setup-lid-caption';
+  cap.textContent = filas + ' filas × ' + cols + ' macetas · tapa';
+  const tank = document.createElement('div');
+  tank.className = 'dwc-setup-lid-tank';
+  tank.title = 'Depósito · ~' + volLitros + ' L de solución';
+  tank.style.width = Math.min(side + 8, 112) + 'px';
+  wrap.appendChild(plate);
+  wrap.appendChild(cap);
+  wrap.appendChild(tank);
+  previewEl.appendChild(wrap);
+}
+
 function updateTorreBuilder() {
   if (setupTipoInstalacion === 'nft') {
     updateNftSetupPreview();
@@ -10941,9 +10982,17 @@ function updateTorreBuilder() {
   document.getElementById('valCestas').textContent  = cestas;
   document.getElementById('valVol').textContent = vol;
 
-  // Actualizar preview visual de la torre
   const preview = document.getElementById('torrePreview');
   if (!preview) return;
+
+  if (setupTipoInstalacion === 'dwc') {
+    preview.classList.add('torre-preview--dwc');
+    renderDwcLidSetupPreview(preview, niveles, cestas, vol);
+    return;
+  }
+  preview.classList.remove('torre-preview--dwc');
+
+  // Actualizar preview visual de la torre vertical
   preview.innerHTML = '';
 
   // Pipe central

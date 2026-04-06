@@ -3693,6 +3693,59 @@ button.toggle-switch {
   border-radius: 3px;
   transition: height 0.3s;
 }
+/* Asistente DWC: vista superior tapa con orificios (filas × macetas/fila) */
+.torre-preview.torre-preview--dwc {
+  width: auto;
+  min-width: 96px;
+  max-width: 220px;
+  align-self: center;
+}
+.dwc-setup-lid-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.dwc-setup-lid-plate {
+  display: grid;
+  box-sizing: border-box;
+  padding: 9px;
+  gap: 4px;
+  border-radius: 14px;
+  background: linear-gradient(155deg, #e2e8f0 0%, #cbd5e1 42%, #94a3b8 100%);
+  border: 2px solid #64748b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 -2px 6px rgba(15, 23, 42, 0.07),
+    0 4px 14px rgba(15, 23, 42, 0.14);
+}
+.dwc-setup-lid-hole {
+  border-radius: 50%;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  background: radial-gradient(circle at 32% 28%, #64748b, #0f172a 52%, #1e293b 80%);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.55),
+    0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.dwc-setup-lid-caption {
+  font-family: var(--font-display, system-ui, sans-serif);
+  font-size: 9px;
+  font-weight: 800;
+  color: #0369a1;
+  letter-spacing: 0.03em;
+  text-align: center;
+  line-height: 1.25;
+  max-width: 132px;
+}
+.dwc-setup-lid-tank {
+  height: 20px;
+  border-radius: 6px 6px 11px 11px;
+  background: linear-gradient(180deg, #7dd3fc 0%, #0ea5e9 38%, #0284c7 100%);
+  opacity: 0.92;
+  box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.12);
+}
 .torre-preview.nft-schematic-host {
   width: 100%;
   max-width: 100%;
