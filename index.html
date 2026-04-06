@@ -1100,48 +1100,38 @@
             <div>
               <label class="form-label" for="sysDwcLargoCm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">L cm</label>
               <input type="number" id="sysDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Largo depósito cm"
-                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
+                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
               <label class="form-label" for="sysDwcAnchoCm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">A cm</label>
               <input type="number" id="sysDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Ancho depósito cm"
-                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
+                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
               <label class="form-label" for="sysDwcProfCm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">P cm</label>
               <input type="number" id="sysDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Profundidad útil cm"
+                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div>
-              <label class="form-label" for="sysDwcPotRimMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Ø mm</label>
+              <label class="form-label" for="sysDwcPotRimMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Diám. cesta (mm)</label>
               <input type="number" id="sysDwcPotRimMm" min="25" max="120" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Diámetro cesta mm"
-                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
+                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
-              <label class="form-label" for="sysDwcPotHmm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">H mm</label>
+              <label class="form-label" for="sysDwcPotHmm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Alt. cesta (mm)</label>
               <input type="number" id="sysDwcPotHmm" min="30" max="200" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Altura cesta mm"
+                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-            <div>
-              <label class="form-label" for="sysDwcTapaMarcoMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Marco mm</label>
-              <input type="number" id="sysDwcTapaMarcoMm" min="0" max="80" step="1" placeholder="0" inputmode="numeric" autocomplete="off" aria-label="Marco tapa mm por lado"
-                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
-                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
-            </div>
-            <div>
-              <label class="form-label" for="sysDwcTapaHuecoMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Hueco mm</label>
-              <input type="number" id="sysDwcTapaHuecoMm" min="0" max="40" step="1" placeholder="4" inputmode="numeric" autocomplete="off" aria-label="Hueco entre cestas mm"
-                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
-                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
-            </div>
-          </div>
+          <p id="sysDwcVolumenLitrosHint" style="display:none;margin:0 0 10px;font-size:12px;font-weight:800;color:#0e7490;line-height:1.45" role="status"></p>
+          <p id="sysDwcOxigenacionHint" style="display:none;margin:0 0 10px" role="status"></p>
           <p id="sysDwcTapaCestasHint" style="display:none;margin:0 0 10px;font-size:11px;line-height:1.45;font-weight:600" role="status"></p>
           <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
             <input type="checkbox" id="sysDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
@@ -1355,7 +1345,7 @@
         <span id="compatAlertText"></span>
       </div>
 
-      <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip">
+      <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip" role="region" aria-label="Nutriente de esta instalación">
         <div style="display:flex;align-items:center;gap:10px;min-width:0">
           <span class="torre-strip-flag" id="torreBadgeBandera" aria-hidden="true">🧪</span>
           <div class="torre-strip-meta">
@@ -1372,26 +1362,6 @@
           </button>
         </div>
       </div>
-
-      <button type="button" id="torreBadgeNutriente"
-        style="display:flex;align-items:center;gap:10px;background:linear-gradient(180deg,#fff,#f8fafc);
-          border:1px solid rgba(15,23,42,0.1);border-radius:12px;padding:11px 14px;margin-bottom:10px;
-          cursor:pointer;width:100%;font:inherit;text-align:left;color:inherit;
-          appearance:none;-webkit-appearance:none;box-sizing:border-box;
-          box-shadow:0 1px 3px rgba(15,23,42,0.05)"
-        onclick="cambiarNutriente()" aria-label="Cambiar nutriente activo de la torre">
-        <span class="torre-strip-flag" id="torreBadgeFlag" aria-hidden="true">🧪</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:10px;font-weight:800;color:#64748b;
-            text-transform:uppercase;letter-spacing:0.12em">Nutriente activo</div>
-          <div id="torreBadgeNombre"
-            style="font-family:var(--font-display);font-size:13px;font-weight:900;
-              color:#15803d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px">
-            —</div>
-        </div>
-        <span style="font-size:11px;color:#15803d;font-weight:800;
-          white-space:nowrap">Cambiar ›</span>
-      </button>
 
       <!-- Tabla resumen de variedades -->
       <div id="tablaVariedades" style="margin-top:4px;margin-bottom:8px"></div>
@@ -6423,16 +6393,18 @@ function updateTorreStats() {
     else volMezIn.value = '';
   }
 
-  // Badge nutriente (strip + tarjeta arriba del esquema)
-  const flagEl   = document.getElementById('torreBadgeFlag');
+  // Badge nutriente (franja bajo el esquema: nombre + EC/pH + Cambiar)
   const bandEl   = document.getElementById('torreBadgeBandera');
   const nomStrip = document.getElementById('torreBadgeStripNombre');
-  const nomCard  = document.getElementById('torreBadgeNombre');
   const nb       = nut.nombre || '—';
-  if (flagEl)   flagEl.textContent = nut.bandera || '🧪';
   if (bandEl)   bandEl.textContent = nut.bandera || '🧪';
   if (nomStrip) nomStrip.textContent = nb;
-  if (nomCard)  nomCard.textContent = nb;
+
+  if (esDwcCfg) {
+    try {
+      refreshDwcSistemaMedidasUI();
+    } catch (eDwcSysUi) {}
+  }
 
   actualizarAvisoCestasSinFecha();
   renderSistemaInstalacionSelect();
@@ -7844,7 +7816,7 @@ function sincronizarSistemaNftMontajeUI() {
       dwcInfo.style.display = 'block';
       syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
       try {
-        refreshDwcTapHintSistema();
+        refreshDwcSistemaMedidasUI();
       } catch (eDwcHint) {}
     } else {
       dwcInfo.style.display = 'none';
@@ -8008,8 +7980,6 @@ const DWC_FORM_IDS_SISTEMA = {
   prof: 'sysDwcProfCm',
   rim: 'sysDwcPotRimMm',
   alt: 'sysDwcPotHmm',
-  marco: 'sysDwcTapaMarcoMm',
-  hueco: 'sysDwcTapaHuecoMm',
   cupulas: 'sysDwcCupulas',
   aire: 'sysDwcEntradaAire',
 };
@@ -8067,6 +8037,67 @@ function getDwcCapacidadLitrosFromSetupInputs() {
   const litros = (L * W * P) / 1000;
   if (!Number.isFinite(litros) || litros <= 0) return null;
   return Math.round(litros * 10) / 10;
+}
+
+/** Litros útiles del depósito desde campos de la pestaña Sistema (misma fórmula que el asistente). */
+function getDwcCapacidadLitrosFromSistemaInputs() {
+  const L = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
+  const W = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
+  const P = _dwcParseOptCm('sysDwcProfCm', 5, 200);
+  if (L == null || W == null || P == null) return null;
+  const litros = (L * W * P) / 1000;
+  if (!Number.isFinite(litros) || litros <= 0) return null;
+  return Math.round(litros * 10) / 10;
+}
+
+/**
+ * Litros de solución para recomendar oxigenación en DWC (mezcla si está por debajo del máx.; si no, capacidad máx. de la config).
+ */
+function getDwcLitrosOxigenacionReferencia(cfg) {
+  cfg = cfg || state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
+  const vMax = getVolumenDepositoMaxLitros(cfg);
+  const vMez = getVolumenMezclaLitros(cfg);
+  if (!Number.isFinite(vMax) || vMax <= 0) return null;
+  const vol = vMez < vMax - 0.05 ? vMez : vMax;
+  return {
+    vol: Math.round(vol * 10) / 10,
+    vMax: Math.round(vMax * 10) / 10,
+    usaMezcla: vMez < vMax - 0.05,
+  };
+}
+
+/**
+ * Caudal de aire orientativo (L/min) según volumen DWC: regla habitual ~1 L/min por 10 L de solución (banda 0,5–1,5 L/min por 10 L).
+ * @returns {{min:number, reco:number, fuerte:number}|null}
+ */
+function dwcCaudalAireOrientativoLmin(volLitros) {
+  const v = Number(volLitros);
+  if (!Number.isFinite(v) || v <= 0) return null;
+  return {
+    min: Math.max(0.4, Math.round(v * 0.05 * 10) / 10),
+    reco: Math.max(0.8, Math.round(v * 0.1 * 10) / 10),
+    fuerte: Math.max(1.2, Math.round(v * 0.15 * 10) / 10),
+  };
+}
+
+/**
+ * Litros para el aviso de oxigenación en Sistema DWC: prioriza L×A×P del formulario; si no, config (mezcla / máx.).
+ */
+function getDwcLitrosOxigenacionParaSistemaUI(cfg) {
+  cfg = cfg || state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
+  const desdeForm = getDwcCapacidadLitrosFromSistemaInputs();
+  if (desdeForm != null && desdeForm > 0) {
+    return { vol: desdeForm, fuente: 'medidas' };
+  }
+  const ref = getDwcLitrosOxigenacionReferencia(cfg);
+  if (!ref) return null;
+  return {
+    vol: ref.vol,
+    fuente: ref.usaMezcla ? 'mezcla' : 'max',
+    vMax: ref.vMax,
+  };
 }
 
 /** Hueco por defecto entre aros de cestas en la tapa (mm) si no indicas otro. */
@@ -8187,6 +8218,91 @@ function refreshDwcTapHintSetup() {
   el.textContent = '⚠️ ' + ev.msg;
 }
 
+/** Actualiza volumen estimado (L), oxigenación/difusor (L/min) y aviso de rejilla en la pestaña Sistema DWC. */
+function refreshDwcSistemaMedidasUI() {
+  const volEl = document.getElementById('sysDwcVolumenLitrosHint');
+  const oxEl = document.getElementById('sysDwcOxigenacionHint');
+  const cfg = state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') {
+    if (volEl) {
+      volEl.style.display = 'none';
+      volEl.textContent = '';
+    }
+    if (oxEl) {
+      oxEl.style.display = 'none';
+      oxEl.textContent = '';
+    }
+    try {
+      refreshDwcTapHintSistema();
+    } catch (e) {}
+    return;
+  }
+  if (volEl) {
+    const cap = getDwcCapacidadLitrosFromSistemaInputs();
+    if (cap != null && cap > 0) {
+      volEl.style.display = 'block';
+      volEl.textContent =
+        'Volumen útil estimado del depósito: ~' + cap + ' L (largo × ancho × prof. en cm ÷ 1000).';
+    } else {
+      volEl.style.display = 'none';
+      volEl.textContent = '';
+    }
+  }
+  if (oxEl) {
+    const litRef = getDwcLitrosOxigenacionParaSistemaUI(cfg);
+    const c = litRef ? dwcCaudalAireOrientativoLmin(litRef.vol) : null;
+    if (litRef && c) {
+      oxEl.style.display = 'block';
+      oxEl.style.padding = '8px 10px';
+      oxEl.style.fontSize = '10px';
+      oxEl.style.lineHeight = '1.5';
+      oxEl.style.fontWeight = '600';
+      oxEl.style.color = '#0c4a6e';
+      oxEl.style.background = '#f0f9ff';
+      oxEl.style.border = '1px solid #bae6fd';
+      oxEl.style.borderRadius = '10px';
+      let pref = '';
+      if (litRef.fuente === 'medidas') {
+        pref = 'Con el volumen calculado arriba (~' + litRef.vol + ' L), ';
+      } else if (litRef.fuente === 'mezcla') {
+        pref =
+          'Con ~' +
+          litRef.vol +
+          ' L de mezcla guardados en la app (tope depósito ~' +
+          litRef.vMax +
+          ' L), ';
+      } else {
+        pref = 'Con ~' + litRef.vol + ' L según capacidad del depósito en la app, ';
+      }
+      oxEl.innerHTML =
+        '<span style="font-weight:800;color:#0369a1;display:block;margin-bottom:4px">Aire · difusor (orientativo)</span>' +
+        pref +
+        'un caudal habitual en DWC ronda <strong>' +
+        c.min +
+        '–' +
+        c.fuerte +
+        ' L/min</strong> en total (~<strong>' +
+        c.reco +
+        ' L/min</strong> de referencia; ~1 L/min por 10 L de solución). Reparte burbujas al fondo (piedra plana, disco o bolas). Más detalle en <strong>Consejos → DWC</strong>.';
+    } else {
+      oxEl.style.display = 'block';
+      oxEl.style.padding = '0';
+      oxEl.style.fontSize = '10px';
+      oxEl.style.lineHeight = '1.45';
+      oxEl.style.fontWeight = '600';
+      oxEl.style.color = '#64748b';
+      oxEl.style.background = 'transparent';
+      oxEl.style.border = 'none';
+      oxEl.style.borderRadius = '0';
+      oxEl.textContent =
+        'Oxigenación: indica L, A y P del depósito o configura litros del depósito para ver un rango de L/min orientativo.';
+    }
+  }
+  try {
+    refreshDwcTapHintSistema();
+  } catch (e2) {}
+}
+
 function refreshDwcTapHintSistema() {
   const el = document.getElementById('sysDwcTapaCestasHint');
   if (!el) return;
@@ -8201,9 +8317,14 @@ function refreshDwcTapHintSistema() {
   const rim = _dwcParseOptMm('sysDwcPotRimMm', 25, 120);
   const L = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
   const W = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
-  const mh = _dwcParseMarcoHuecoMmIds('sysDwcTapaMarcoMm', 'sysDwcTapaHuecoMm');
-  const marcoE = mh.marco != null ? mh.marco : 0;
-  const huecoE = mh.hueco != null ? mh.hueco : DWC_TAPA_HUECO_DEFAULT_MM;
+  let marcoE = 0;
+  let huecoE = DWC_TAPA_HUECO_DEFAULT_MM;
+  if (cfg.dwcTapaMarcoPorLadoMm != null && Number.isFinite(Number(cfg.dwcTapaMarcoPorLadoMm)) && Number(cfg.dwcTapaMarcoPorLadoMm) >= 0) {
+    marcoE = Number(cfg.dwcTapaMarcoPorLadoMm);
+  }
+  if (cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0) {
+    huecoE = Number(cfg.dwcTapaHuecoMm);
+  }
   const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE);
   if (ev.estado === 'incompleto') {
     el.style.display = 'none';
@@ -8361,7 +8482,7 @@ function aplicarSistemaDwcDesdeFormulario() {
     renderTorreSistemaResumenTabla(cfg);
   } catch (e) {}
   try {
-    refreshDwcTapHintSistema();
+    refreshDwcSistemaMedidasUI();
   } catch (eH) {}
   showToast('Datos DWC guardados');
 }
@@ -18378,6 +18499,49 @@ function buildConsejosNftHidraulica() {
   return dyn + formula + docWrap;
 }
 
+function buildConsejosDwcDifusorBloque() {
+  const cat = CONSEJOS_DATA.dwc;
+  const ref = getDwcLitrosOxigenacionReferencia(state.configTorre);
+  let dyn = '';
+  if (ref) {
+    const c = dwcCaudalAireOrientativoLmin(ref.vol);
+    if (c) {
+      const ctx = ref.usaMezcla
+        ? 'Para los <strong>~' + ref.vol + ' L</strong> de mezcla que tienes configurados (tope del depósito en la app ~' + ref.vMax + ' L)'
+        : 'Para el volumen que usas en la app (<strong>~' + ref.vol + ' L</strong>)';
+      dyn =
+        '<div style="margin:12px 0 0;padding:10px 12px;background:rgba(8,145,178,0.08);border-radius:10px;border:1px solid rgba(8,145,178,0.25)">' +
+        '<div style="font-size:11px;font-weight:800;color:#0e7490;margin-bottom:6px">Caudal orientativo según tus litros</div>' +
+        '<p style="margin:0;line-height:1.55;font-size:12px;color:var(--text)">' +
+        ctx +
+        ', en DWC casero suele citarse del orden de <strong>~1 L/min de aire por cada 10 L de solución</strong> como referencia cómoda (sube si hace mucho calor o hay mucha raíz). ' +
+        'Eso equivale aquí a un rango aproximado de <strong>' +
+        c.min +
+        '–' +
+        c.fuerte +
+        ' L/min</strong> en total hacia el depósito, con un valor central ~<strong>' +
+        c.reco +
+        ' L/min</strong>. Elige bomba y número de <strong>salidas</strong> (una piedra plana, dos bolas/discos en zonas distintas, etc.) para repartir burbujas. Revisa en la ficha de la bomba el caudal a la <strong>profundidad</strong> de tu agua.</p></div>';
+    }
+  } else {
+    dyn =
+      '<p style="margin:12px 0 0;line-height:1.55;color:var(--muted)">Activa una instalación <strong>DWC</strong> y revisa los <strong>litros del depósito</strong> en Sistema para ver aquí un rango de L/min calculado con tu volumen.</p>';
+  }
+  return htmlInnerConsejoCard(cat, {
+    icono: '💨',
+    titulo: 'Bomba de aire y difusor según litros',
+    html:
+      '<p style="margin:0;line-height:1.55">La solución nutritiva se oxigena con <strong>bomba de aire</strong> + <strong>difusor</strong> en el fondo. En webs y tiendas de hidroponía lo habitual son <strong>piedras porosas planas</strong> o barras (burbujeo repartido en horizontal), <strong>discos</strong>, <strong>bolas</strong> y cilindros microporosos: elige según el fondo de tu cubo y que el aire <strong>no quede solo en un rincón</strong>.</p>' +
+      '<p style="margin:10px 0 0;line-height:1.55">Burbujas <strong>más finas</strong> suelen intercambiar mejor oxígeno con el agua, pero tapan antes el poro; la bomba debe ser capaz de <strong>vencer la profundidad</strong> del líquido (altura de agua / manguera).</p>' +
+      dyn +
+      '<p style="margin:10px 0 0;font-size:11px;color:var(--muted);line-height:1.45">Orientativo; temperatura, número de plantas y forma del depósito cambian lo que necesitas. Si huele mal o las raíces se ablandan, sube aeración o limpia/sustituye el difusor.</p>',
+    alerta: {
+      tipo: 'warn',
+      txt: '⚠️ No sustituye el dato del fabricante de la bomba ni un medidor de oxígeno disuelto.',
+    },
+  });
+}
+
 function buildConsejosDwc() {
   const cat = CONSEJOS_DATA.dwc;
   const intro = htmlConsejoCard(cat, {
@@ -18395,7 +18559,7 @@ function buildConsejosDwc() {
     titulo: 'Litros y dosis',
     texto:
       'Con <strong>L, A y P</strong> (profundidad útil) se estima la capacidad bruta. Si indicas <strong>litros de mezcla</strong> por debajo del máximo, checklist y <strong>Consejos → Agua y EC</strong> escalan nutrientes con ese volumen. Si lo dejas vacío, la app usa la capacidad calculada o un valor orientativo interno.',
-    alerta: { tipo: 'ok', txt: '✅ En el asistente DWC aparece la capacidad estimada al rellenar largo, ancho y profundidad.' },
+    alerta: { tipo: 'ok', txt: '✅ En Sistema y en el asistente verás los litros útiles al completar largo, ancho y profundidad.' },
   });
   const nivelDep = htmlConsejoCard(cat, {
     icono: '📍',
@@ -18404,11 +18568,12 @@ function buildConsejosDwc() {
       'Orientativo: la plántula suele ir casi al ras del <strong>fondo de la maceta</strong>; con raíces largas cuelgan en líquido <strong>oxigenado</strong>. La app no fija un porcentaje de llenado: lo crítico es el <strong>aireador 24 h</strong>. EC, pH y volumen los controlas en <strong>Mediciones</strong> y en las recargas.',
     alerta: { tipo: 'info', txt: 'ℹ️ En DWC no hay riego por goteo: el difusor mantiene oxígeno disuelto en el depósito.' },
   });
+  const difusor = buildConsejosDwcDifusorBloque();
   const med = htmlConsejoCard(cat, {
     icono: '📐',
     titulo: 'Qué es cada medida en Sistema',
     texto:
-      '<strong>L, A, P</strong> = largo, ancho y profundidad <em>útil</em> del depósito (cm). <strong>Ø</strong> = diámetro del <strong>aro</strong> de la cesta que apoya en el hueco de la tapa (mm). <strong>H</strong> = altura de la cesta hasta las raíces (mm). <strong>Marco</strong> = borde de tapa sin perforar, por lado (mm). <strong>Hueco</strong> = separación libre entre cestas (mm). Con marco, hueco y Ø la app comprueba si las cestas de tu rejilla <strong>caben en la zona útil de la tapa</strong> (mensaje bajo los campos en Sistema).',
+      '<strong>L, A, P</strong> = largo, ancho y profundidad <em>útil</em> del depósito (cm); el <strong>volumen en litros</strong> se muestra en Sistema como L×A×P÷1000. <strong>Diám. cesta</strong> = aro en la tapa (mm); <strong>alt. cesta</strong> hasta las raíces (mm). <strong>Marco</strong> y <strong>hueco</strong> entre cestas se ajustan en el <strong>asistente DWC</strong>; si no los guardaste, el aviso de rejilla en Sistema usa marco 0 y 4 mm. Con eso comprueba si <strong>caben</strong> filas × cestas en la tapa.',
     alerta: { tipo: 'warn', txt: '⚠️ Comprobación orientativa: contrasta con tu tapa real y el diámetro nominal del fabricante.' },
   });
   const extras = htmlConsejoCard(cat, {
@@ -18430,7 +18595,7 @@ function buildConsejosDwc() {
     '<div id="mountDwcCestasGuiaConsejos"></div>' +
     '</div>' +
     '</div>';
-  return intro + vol + nivelDep + med + extras + tabla;
+  return intro + vol + nivelDep + difusor + med + extras + tabla;
 }
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */
@@ -22067,16 +22232,12 @@ function actualizarBadgesNutriente() {
   if (medirTorreEmoji)  medirTorreEmoji.textContent  = torre.emoji || '🌿';
   if (medirTorreNombre) medirTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
 
-  // Pestaña Torre — strip superior + tarjeta nutriente
+  // Pestaña Sistema — franja nutriente (una sola; antes había tarjeta duplicada debajo)
   const torreBandera = document.getElementById('torreBadgeBandera');
   const torreNomStrip = document.getElementById('torreBadgeStripNombre');
-  const torreNomCard  = document.getElementById('torreBadgeNombre');
   const torreEC      = document.getElementById('torreBadgeEC');
-  const torreFlagCard = document.getElementById('torreBadgeFlag');
   if (torreBandera) torreBandera.textContent = nut.bandera || '🧪';
   if (torreNomStrip) torreNomStrip.textContent = nut.nombre;
-  if (torreNomCard)  torreNomCard.textContent  = nut.nombre;
-  if (torreFlagCard) torreFlagCard.textContent = nut.bandera || '🧪';
   if (torreEC) {
     const ecMinT = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
     const ecMaxT = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
