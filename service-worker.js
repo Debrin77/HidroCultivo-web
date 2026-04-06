@@ -1,8 +1,8 @@
 /**
- * HidroCultivo — Service Worker mínimo (PWA + TWA Bubblewrap).
- * Precache: shell offline básico. APIs (Open-Meteo, etc.) siempre red.
+ * HidroCultivo — Service Worker ligero (PWA).
+ * Precache: shell offline básico. APIs (Open-Meteo, etc.) siguen yendo a red.
  */
-const CACHE_NAME = 'hidrocultivo-shell-v2';
+const CACHE_NAME = 'hidrocultivo-shell-v3';
 const PRECACHE_URLS = [
   './index.html',
   './manifest.json',
@@ -16,9 +16,18 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then((cache) =>
+        Promise.all(
+          PRECACHE_URLS.map((url) =>
+            cache.add(url).catch((err) => {
+              console.warn('[HidroCultivo SW] precache omitido:', url, err);
+              return null;
+            })
+          )
+        )
+      )
       .then(() => self.skipWaiting())
-      .catch((err) => console.warn('[HidroCultivo SW] precache', err))
+      .catch((err) => console.warn('[HidroCultivo SW] install', err))
   );
 });
 

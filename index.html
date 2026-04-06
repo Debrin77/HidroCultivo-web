@@ -1403,14 +1403,20 @@
       <div class="hc-card-slate">
         <div class="hc-kicker">Copia de seguridad local</div>
         <p class="hc-help-muted">
-          Todo sigue guardándose en <strong>este navegador</strong> (<code class="hc-code-tiny">localStorage</code>). La exportación descarga un archivo JSON a tu móvil u ordenador: no sube nada a internet.
-          Tras importar se recarga la página. Las fotos del diario están en almacenamiento aparte del navegador: en <strong>otro dispositivo</strong> puede que haya que volver a subirlas; en el mismo suelen conservarse si no borraste datos del sitio.
+          Tus datos viven en <strong>este dispositivo</strong> (en la “caja” del navegador o de la app instalada). <strong>Exportar estado</strong> baja un archivo <code class="hc-code-tiny">.json</code> solo a tu móvil u ordenador: no se sube a ningún servidor.
+          Conviene hacer una copia de vez en cuando y guardarla en Archivos, la nube o el PC.
+        </p>
+        <p class="hc-help-muted" style="margin-top:8px">
+          Al <strong>importar</strong> se sustituye todo lo guardado aquí por la copia (la página se recarga). Las <strong>fotos del diario</strong> pueden no viajar en ese archivo: en otro aparato quizá haya que volver a enlazarlas.
+        </p>
+        <p class="hc-help-muted" style="margin-top:8px;font-size:10px;line-height:1.45">
+          <strong>App en el móvil:</strong> en Android, el botón <strong>📲 Instalar</strong> del encabezado (si aparece) o el menú del navegador. En <strong>iPhone</strong>, Safari → <strong>Compartir</strong> → <strong>Añadir a la pantalla de inicio</strong> (Apple no muestra el mismo aviso que en Android).
         </p>
         <div class="hc-grid-2">
           <button type="button" class="hc-btn-tap hc-btn-backup-export" onclick="exportarEstadoHidroCultivo()">
             ⬇️ Exportar estado
           </button>
-          <!-- Safari iOS: input con display:none + .click() a menudo no abre el selector; input superpuesto al botón sí -->
+          <!-- Safari iOS: input superpuesto al botón abre mejor el selector que input oculto + .click() -->
           <label class="hc-btn-tap hc-btn-backup-import"
             style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0;-webkit-tap-highlight-color:transparent;text-align:center">
             <span style="pointer-events:none">⬆️ Importar estado</span>
@@ -1422,7 +1428,7 @@
           </label>
         </div>
         <p class="hc-help-muted" style="font-size:10px;margin-top:10px;line-height:1.45">
-          <strong>iPhone / iPad:</strong> pulsa <strong>Importar estado</strong> y en el panel usa <strong>Examinar</strong> o <strong>Archivos</strong>. Si no ves el <code class="hc-code-tiny">.json</code>, ábrelo antes en la app <strong>Archivos</strong> (Descargas, iCloud…); debe ser el archivo generado con <strong>Exportar estado</strong>.
+          <strong>Importar en iPhone / iPad:</strong> pulsa el botón y elige <strong>Examinar</strong> o <strong>Archivos</strong>. Si no ves el <code class="hc-code-tiny">.json</code>, ubícalo antes en la app <strong>Archivos</strong> (Descargas, iCloud…). Solo sirven copias generadas con <strong>Exportar estado</strong> desde esta app.
         </p>
       </div>
 
@@ -22660,17 +22666,36 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Instalar PWA manualmente
+/** Safari iOS / iPadOS no dispara beforeinstallprompt: la instalación es manual. */
+function esPlataformaIOSWeb() {
+  const ua = navigator.userAgent || '';
+  const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return iOS;
+}
+
+// Instalar PWA manualmente (Chrome/Edge/Android) o indicar pasos en iOS
 function instalarPWA() {
   if (deferredPrompt) {
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(result => {
       if (result.outcome === 'accepted') {
-        showToast('✅ Instalando HidroCultivo...');
+        showToast('✅ Instalando HidroCultivo…');
       }
       deferredPrompt = null;
     });
+    return;
   }
+  if (esPlataformaIOSWeb()) {
+    showToast(
+      'En iPhone/iPad: Safari → icono compartir ↑ → «Añadir a la pantalla de inicio». Así tendrás icono propio como una app.',
+      false
+    );
+    return;
+  }
+  showToast(
+    'Si no aparece el instalador, usa el menú del navegador («Instalar app» o «Crear acceso directo»). En escritorio suele salir tras usar la página un rato.',
+    false
+  );
 }
 
 // Detectar instalación PWA
