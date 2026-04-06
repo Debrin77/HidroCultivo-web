@@ -788,6 +788,10 @@ body::before { display: none; }
 #torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram {
   filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.06));
 }
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram {
+  min-height: min(40vh, 460px);
+  overflow: visible;
+}
 /* NFT: el diagrama puede crecer en altura; el scroll es en el contenedor */
 .torre-sistema-resumen-wrap {
   margin: 12px 10px 6px;
@@ -875,6 +879,9 @@ body::before { display: none; }
   }
   #torreSVGWrap.torre-svg-canvas svg.nft-serpentine--pared {
     min-height: min(56vh, 640px);
+  }
+  #torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram {
+    min-height: min(48vh, 520px);
   }
 }
 #torreSVGWrap.torre-svg-canvas .nft-schema-legend text {

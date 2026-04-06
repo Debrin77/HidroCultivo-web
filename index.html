@@ -4388,6 +4388,303 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
   return out;
 }
 
+/** Torre vertical con giro 3D; NFT y DWC usan diagramas propios. */
+function torreSvgEsTorreVerticalGiratoria() {
+  const t = state.configTorre?.tipoInstalacion;
+  return t !== 'nft' && t !== 'dwc';
+}
+
+/**
+ * DWC: cubo/recipiente en perspectiva con solución visible, tapa con rejilla lógica
+ * (filas × columnas = macetas tocables). Sin torre vertical ni giro.
+ */
+function generarSVGDwc() {
+  const cfg = state.configTorre || {};
+  const N = Math.max(1, Math.min(12, cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES));
+  const C = Math.max(1, Math.min(12, cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS));
+  const ta = torreSvgAnimacionesActivas();
+  const volConfig = getVolumenDepositoMaxLitros(cfg);
+  const volActual = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : volConfig * 0.82;
+  const volPct = Math.min(1, Math.max(0, volActual / Math.max(1, volConfig)));
+  const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
+  const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
+
+  const W = 400;
+  const H = 438;
+  const lidTL = { x: 86, y: 112 };
+  const lidTR = { x: 318, y: 100 };
+  const lidBL = { x: 52, y: 212 };
+  const lidBR = { x: 342, y: 204 };
+
+  function lidXY(u, v) {
+    const a = (1 - u) * (1 - v);
+    const b = u * (1 - v);
+    const c = (1 - u) * v;
+    const d = u * v;
+    return {
+      x: a * lidTL.x + b * lidTR.x + c * lidBL.x + d * lidBR.x,
+      y: a * lidTL.y + b * lidTR.y + c * lidBL.y + d * lidBR.y,
+    };
+  }
+
+  const pStep = lidXY(1 / Math.max(C, 2), 0);
+  const p0 = lidXY(0, 0);
+  const stepU = Math.hypot(pStep.x - p0.x, pStep.y - p0.y) || 1;
+  const Rpot = Math.max(9, Math.min(16, stepU * 0.44));
+
+  function macetaSvg(n, c, cx, cy, r) {
+    const dat =
+      state.torre && state.torre[n] && state.torre[n][c]
+        ? state.torre[n][c]
+        : { variedad: '', fecha: '', fotos: [] };
+    const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
+    const est = dat.variedad ? getEstado(dat.variedad, dias) : '';
+    const diasT = DIAS_COSECHA[dat.variedad] || 50;
+    const pct = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
+    let fill, stroke, phaseEmoji;
+    if (!dat.variedad) {
+      fill = '#f8fafc';
+      stroke = '#94a3b8';
+      phaseEmoji = '';
+    } else if (est === 'plantula') {
+      fill = '#eff6ff';
+      stroke = '#2563eb';
+      phaseEmoji = getEmoji(est);
+    } else if (est === 'crecimiento') {
+      fill = '#f0fdf4';
+      stroke = '#15803d';
+      phaseEmoji = getEmoji(est);
+    } else if (est === 'madurez') {
+      fill = '#fffbeb';
+      stroke = '#b45309';
+      phaseEmoji = getEmoji(est);
+    } else {
+      fill = '#faf5ff';
+      stroke = '#7c3aed';
+      phaseEmoji = getEmoji(est);
+    }
+    const clipId = `dwc_clip_${n}_${c}`;
+    const isSelected = !!(window.editingCesta && editingCesta.nivel === n && editingCesta.cesta === c);
+    const multiKey = n + ',' + c;
+    const isMultiSel = torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
+    const fotos = (dat.fotos || []).filter((f) => f && f.data);
+    const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
+    const varTxt = dat.variedad ? String(dat.variedad) : 'vacía';
+    const ariaCesta = escAriaAttr(
+      `Maceta fila ${n + 1} columna ${c + 1}, ${varTxt}` +
+        (dias ? ', día ' + dias + ' de cultivo' : '') +
+        '. Pulsa para abrir ficha o asignar cultivo.'
+    );
+
+    let o = '';
+    o += `<ellipse cx="${cx.toFixed(1)}" cy="${(cy + 4).toFixed(1)}" rx="${(r * 1.08).toFixed(1)}" ry="${(r * 0.55).toFixed(1)}"
+      fill="rgba(15,23,42,0.07)" opacity="0.85"/>`;
+    o += `<g data-n="${n}" data-c="${c}" class="hc-cesta dwc-maceta" role="button" tabindex="0" aria-label="${ariaCesta}" style="cursor:pointer;pointer-events:all">`;
+    o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2.2"/>`;
+    if (isMultiSel) {
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 5).toFixed(1)}"
+        fill="none" stroke="#f59e0b" stroke-width="2.6" stroke-dasharray="4 3" opacity="0.95"/>`;
+    }
+    if (isSelected) {
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 4).toFixed(1)}"
+        fill="none" stroke="#22c55e" stroke-width="2.5" opacity="0.9"/>`;
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 7.5).toFixed(1)}"
+        fill="none" stroke="rgba(34,197,94,0.22)" stroke-width="5" opacity="0.85"/>`;
+    }
+    if (ultimaFoto?.data) {
+      o += `<defs><clipPath id="${clipId}"><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r - 1.5).toFixed(1)}"/></clipPath></defs>`;
+      o += `<image href="${ultimaFoto.data}" x="${(cx - r).toFixed(1)}" y="${(cy - r).toFixed(1)}"
+        width="${(r * 2).toFixed(1)}" height="${(r * 2).toFixed(1)}" preserveAspectRatio="xMidYMid slice"
+        clip-path="url(#${clipId})" opacity="0.93"></image>`;
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r - 0.5).toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.1"/>`;
+    }
+    if (pct > 0 && pct < 100) {
+      const r2 = r + 5;
+      const ang2 = (pct / 100) * 2 * Math.PI - Math.PI / 2;
+      const x1e = cx + r2 * Math.cos(-Math.PI / 2);
+      const y1e = cy + r2 * Math.sin(-Math.PI / 2);
+      const x2e = cx + r2 * Math.cos(ang2);
+      const y2e = cy + r2 * Math.sin(ang2);
+      o += `<path d="M${x1e.toFixed(1)},${y1e.toFixed(1)} A${r2.toFixed(1)},${r2.toFixed(1)} 0 ${pct > 50 ? 1 : 0},1 ${x2e.toFixed(1)},${y2e.toFixed(1)}"
+        fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="round" opacity="0.5"/>`;
+    }
+    if (phaseEmoji) {
+      o += `<text x="${cx.toFixed(1)}" y="${(cy - r - 5).toFixed(1)}" font-size="14" text-anchor="middle" opacity="0.95">${phaseEmoji}</text>`;
+    } else if (!ultimaFoto?.data) {
+      o += `<text x="${cx.toFixed(1)}" y="${(cy + 4).toFixed(1)}" font-family="Inconsolata,monospace" font-size="11" font-weight="600" text-anchor="middle" fill="#cbd5e1">·</text>`;
+    }
+    if (dias > 0 && phaseEmoji) {
+      o += `<text x="${cx.toFixed(1)}" y="${(cy + r + 12).toFixed(1)}" font-family="Inconsolata,monospace"
+        font-size="8" font-weight="700" fill="${stroke}" text-anchor="middle">${dias}d</text>`;
+    } else {
+      o += `<text x="${cx.toFixed(1)}" y="${(cy + r + 12).toFixed(1)}" font-family="Inconsolata,monospace"
+        font-size="7.5" fill="#94a3b8" text-anchor="middle">${c + 1}</text>`;
+    }
+    const notasRaw = state.torre && state.torre[n] && state.torre[n][c] ? state.torre[n][c].notas : '';
+    const hasNotas = !!(notasRaw && String(notasRaw).trim().length > 0);
+    if (ultimaFoto?.data) {
+      o += `<rect x="${(cx - r + 2).toFixed(1)}" y="${(cy - r + 2).toFixed(1)}" width="14" height="10" rx="2"
+        fill="#0f172a" opacity="0.88"/><text x="${(cx - r + 9).toFixed(1)}" y="${(cy - r + 10).toFixed(1)}" font-family="Inconsolata,monospace" font-size="7" font-weight="800" text-anchor="middle" fill="#f8fafc">F</text>`;
+    }
+    if (hasNotas) {
+      o += `<rect x="${(cx + r - 16).toFixed(1)}" y="${(cy - r + 2).toFixed(1)}" width="14" height="10" rx="2"
+        fill="#334155" opacity="0.9"/><text x="${(cx + r - 9).toFixed(1)}" y="${(cy - r + 10).toFixed(1)}" font-family="Inconsolata,monospace" font-size="7" font-weight="800" text-anchor="middle" fill="#f8fafc">N</text>`;
+    }
+    if (est === 'cosecha') {
+      o += `<circle cx="${(cx + r - 2).toFixed(1)}" cy="${(cy - r + 2).toFixed(1)}" r="5" fill="#7c3aed">${
+        ta ? `<animate attributeName="r" values="4;6.5;4" dur="1.5s" repeatCount="indefinite"/>` : ''
+      }</circle>`;
+      o += `<text x="${(cx + r - 2).toFixed(1)}" y="${(cy - r + 6).toFixed(1)}" font-size="7" text-anchor="middle" fill="white">✓</text>`;
+    }
+    o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r * 1.55).toFixed(1)}"
+      fill="rgba(0,0,0,0)" stroke="none" pointer-events="all" class="hc-cesta-hit"/>`;
+    o += `</g>`;
+    return o;
+  }
+
+  let s = '';
+  s += `<defs>
+    <linearGradient id="dwcBgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ecfeff"/><stop offset="55%" stop-color="#f0fdfa"/><stop offset="100%" stop-color="#eff6ff"/>
+    </linearGradient>
+    <linearGradient id="dwcWaterGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.55"/><stop offset="40%" stop-color="#0ea5e9" stop-opacity="0.88"/><stop offset="100%" stop-color="#0369a1" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="dwcTankWall" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#e2e8f0"/><stop offset="50%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#cbd5e1"/>
+    </linearGradient>
+    <linearGradient id="dwcLidGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <filter id="dwcSoftSh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.14"/>
+    </filter>
+    <clipPath id="dwcWaterClip">
+      <polygon points="48,218 48,380 198,400 198,250"/>
+    </clipPath>
+  </defs>`;
+
+  s += `<rect width="${W}" height="${H}" fill="url(#dwcBgGrad)"/>`;
+
+  s += `<text x="${W / 2}" y="36" text-anchor="middle" fill="#0f172a" font-size="18" font-weight="900" font-family="Syne,system-ui,sans-serif">DWC · AGUA PROFUNDA</text>`;
+  s += `<text x="${W / 2}" y="56" text-anchor="middle" fill="#64748b" font-size="11.5" font-weight="600">Tapa vista en perspectiva · ${N}×${C} macetas</text>`;
+
+  /* Suelo / sombra del cubo */
+  s += `<ellipse cx="210" cy="392" rx="168" ry="22" fill="#0f172a" opacity="0.06"/>`;
+
+  /* Pared trasera */
+  s += `<path d="M 52 118 L 326 104 L 326 360 L 52 382 Z" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1.2" opacity="0.55"/>`;
+
+  /* Volumen de solución (corte lateral): superficie según volPct */
+  const waterTopY = 250 + (1 - volPct) * 118;
+  s += `<g clip-path="url(#dwcWaterClip)">`;
+  s += `<rect x="48" y="218" width="150" height="${Math.max(0, waterTopY - 218).toFixed(1)}" fill="#f0f9ff" opacity="0.35"/>`;
+  s += `<rect x="48" y="${waterTopY.toFixed(1)}" width="150" height="${(400 - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
+  if (ta) {
+    s += `<path d="M 62 280 Q 95 265 128 280 T 192 278" fill="none" stroke="#7dd3fc" stroke-width="1.2" opacity="0.35">
+      <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2.8s" repeatCount="indefinite"/>
+    </path>`;
+    s += `<path d="M 72 320 Q 110 300 155 318" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.3">
+      <animate attributeName="opacity" values="0.15;0.45;0.15" dur="3.2s" repeatCount="indefinite"/>
+    </path>`;
+  }
+  s += `</g>`;
+  s += `<polygon points="48,218 198,250 198,400 48,380" fill="none" stroke="#0ea5e9" stroke-width="2" opacity="0.5"/>`;
+  s += `<text x="92" y="240" font-family="Inconsolata,monospace" font-size="8" fill="#0369a1" font-weight="700" opacity="0.85">NUTRIENTE</text>`;
+
+  /* Cara frontal del recipiente */
+  s += `<path filter="url(#dwcSoftSh)" d="M 198 250 L 352 228 L 352 372 L 198 400 Z" fill="url(#dwcTankWall)" stroke="#94a3b8" stroke-width="1.4"/>`;
+  s += `<line x1="198" y1="250" x2="198" y2="400" stroke="#64748b" stroke-width="1" opacity="0.35"/>`;
+
+  /* Tapa (paralelogramo) + rejilla decorativa */
+  s += `<polygon points="${lidTL.x},${lidTL.y} ${lidTR.x},${lidTR.y} ${lidBR.x},${lidBR.y} ${lidBL.x},${lidBL.y}"
+    fill="url(#dwcLidGrad)" stroke="#64748b" stroke-width="1.6"/>`;
+  for (let gi = 1; gi < C; gi++) {
+    const u = gi / C;
+    const a = lidXY(u, 0);
+    const b = lidXY(u, 1);
+    s += `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="#cbd5e1" stroke-width="0.9"/>`;
+  }
+  for (let gj = 1; gj < N; gj++) {
+    const v = gj / N;
+    const a = lidXY(0, v);
+    const b = lidXY(1, v);
+    s += `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="#cbd5e1" stroke-width="0.9"/>`;
+  }
+
+  /* Raíces sugeridas (decorativo) */
+  s += `<g opacity="0.22" stroke="#0369a1" stroke-width="1.2" fill="none">`;
+  for (let i = 0; i < 5; i++) {
+    const bx = 230 + i * 28;
+    s += `<path d="M ${bx} 232 Q ${bx + 6} 290 ${bx - 4} 340"/>`;
+  }
+  s += `</g>`;
+
+  /* Macetas: orden por fila/col */
+  const cells = [];
+  for (let n = 0; n < N; n++) {
+    for (let c = 0; c < C; c++) {
+      const u = (c + 0.5) / C;
+      const v = (n + 0.5) / N;
+      const p = lidXY(u, v);
+      cells.push({ n, c, cx: p.x, cy: p.y - 2, z: v * 2 + u * 0.3 });
+    }
+  }
+  cells.sort((a, b) => a.z - b.z);
+  cells.forEach((cell) => {
+    s += macetaSvg(cell.n, cell.c, cell.cx, cell.cy, Rpot);
+  });
+
+  /* Difusor + burbujas en el corte de agua */
+  if (tieneDifusor) {
+    const ax = 130;
+    const ay = 368;
+    s += `<line x1="${ax}" y1="92" x2="${ax}" y2="${ay - 8}" stroke="#64748b" stroke-width="1.6" stroke-dasharray="4 3"/>`;
+    s += `<ellipse cx="${ax}" cy="${ay}" rx="14" ry="7" fill="#9ca3af" stroke="#57534e" stroke-width="1.2"/>`;
+    s += `<text x="${ax}" y="${ay + 22}" font-family="Inconsolata,monospace" font-size="7.5" fill="#475569" text-anchor="middle" font-weight="700">AIRE</text>`;
+    if (ta) {
+      for (let i = 0; i < 7; i++) {
+        const dx = (i % 5 - 2) * 5 + (i % 2) * 2;
+        const delay = (i * 0.22).toFixed(2);
+        const dur = (1.1 + i * 0.12).toFixed(2);
+        const y0 = ay - 4;
+        const y1 = waterTopY + 14;
+        s += `<circle cx="${ax + dx}" cy="${y0}" r="${1.5 + (i % 2)}" fill="#e0f2fe" opacity="0">
+          <animate attributeName="cy" from="${y0}" to="${y1}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
+          <animate attributeName="opacity" values="0;0.85;0.85;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+        </circle>`;
+      }
+    }
+  }
+
+  if (tieneCalentador) {
+    s += `<g transform="translate(308,312)">`;
+    s += `<rect x="-6" y="-4" width="12" height="36" rx="6" fill="#f97316" stroke="#c2410c" stroke-width="1.2"/>`;
+    s += `<circle cx="0" cy="-10" r="4.5" fill="#fbbf24">${ta ? `<animate attributeName="opacity" values="0.55;1;0.55" dur="1.4s" repeatCount="indefinite"/>` : ''}</circle>`;
+    s += `<text x="0" y="44" font-family="Inconsolata,monospace" font-size="7" fill="#c2410c" text-anchor="middle" font-weight="800">°C</text>`;
+    s += `</g>`;
+  }
+
+  const volCol = volPct < 0.45 ? '#e11d48' : volPct < 0.68 ? '#d97706' : '#0284c7';
+  s += `<rect x="248" y="318" width="92" height="44" rx="10" fill="rgba(255,255,255,0.92)" stroke="#e2e8f0" stroke-width="1"/>`;
+  s += `<text x="294" y="338" font-family="Syne,sans-serif" font-size="13" font-weight="800" fill="${volCol}" text-anchor="middle">${volActual} L</text>`;
+  s += `<text x="294" y="354" font-family="Inconsolata,monospace" font-size="7.5" fill="#64748b" text-anchor="middle">≈ depósito DWC</text>`;
+
+  const pieTxt =
+    torreInteraccionModo === 'asignar'
+      ? 'Asignar: elige cultivo arriba · toca macetas en la tapa o usa Lista'
+      : 'Editar: maceta en la tapa o Lista · Esquema ilustrativo (no escala real)';
+  s += `<text x="${W / 2}" y="${H - 8}" font-family="Inconsolata,monospace" font-size="8" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
+
+  const pad = 14;
+  const vbW = W + pad * 2;
+  const vbH = H + pad * 2;
+  return (
+    `<svg class="torre-svg-diagram dwc-svg-diagram" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" style="max-width:100%;display:block;margin:0 auto" role="img" aria-labelledby="dwcDiagTitle">` +
+    `<title id="dwcDiagTitle">DWC: recipiente con solución, tapa con ${N} por ${C} macetas. Toca una maceta para la ficha.</title>${s}</svg>`
+  );
+}
+
 function generarSVGTorre() {
   // Usar configuración REAL de la torre activa
   const cfg = state.configTorre || {};
@@ -5332,8 +5629,8 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<strong>Lista</strong> = acceso lineal (cada fila = un tubo).';
     } else if (esDwc) {
       intro.innerHTML =
-        '<strong>DWC</strong> · Vista <strong>lógica</strong> del cubo/depósito: cada celda es una <strong>maceta</strong> en la tapa (filas × columnas). ' +
-        'No dibuja el volumen de agua: sirve para fichas, variedades y diario. <strong>Lista</strong> recorre filas y macetas.';
+        '<strong>DWC</strong> · Esquema en <strong>perspectiva</strong> (recipiente + solución + tapa en rejilla): cada círculo es una <strong>maceta</strong> (filas × columnas). ' +
+        'Ilustrativo para fichas y diario; el nivel de solución sigue tu medición/volumen configurado. <strong>Lista</strong> recorre filas y macetas.';
     } else {
       intro.innerHTML =
         '<strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real). ' +
@@ -5393,6 +5690,8 @@ function renderTorre() {
     disposeNftThreeIfAny(wrap);
   }
 
+  const esDwc = cfg.tipoInstalacion === 'dwc';
+
   if (esNft) {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
     const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
@@ -5423,6 +5722,15 @@ function renderTorre() {
     wrap.setAttribute(
       'aria-label',
       'NFT: esquema 2D con flujo de agua en azul. Toca un hueco para la ficha o usa Lista.'
+    );
+    try {
+      bindTorreCestas(wrap);
+    } catch (e2) {}
+  } else if (esDwc) {
+    wrap.innerHTML = generarSVGDwc();
+    wrap.setAttribute(
+      'aria-label',
+      'DWC: recipiente con solución y tapa en perspectiva. Toca una maceta para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
@@ -5471,7 +5779,7 @@ function torreNormRotRad(r) {
   return x;
 }
 function torrePintarCestasSolo(wrap) {
-  if (!wrap || state.configTorre?.tipoInstalacion === 'nft') return;
+  if (!wrap || !torreSvgEsTorreVerticalGiratoria()) return;
   const cfg = state.configTorre || {};
   const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
   const rot = cfg._torreRotRad || 0;
@@ -5521,7 +5829,7 @@ function initTorreGestos(wrap) {
     raf = requestAnimationFrame(() => {
       raf = 0;
       if (!wrap.isConnected) return;
-      if (state.configTorre?.tipoInstalacion === 'nft') return;
+      if (!torreSvgEsTorreVerticalGiratoria()) return;
       if (dragRotating && wrap.querySelector('#hc-baskets-n-0')) {
         pintarSoloCestas();
       } else {
@@ -5535,7 +5843,7 @@ function initTorreGestos(wrap) {
   };
 
   const onDown = (clientX) => {
-    if (state.configTorre?.tipoInstalacion === 'nft') return;
+    if (!torreSvgEsTorreVerticalGiratoria()) return;
     try {
       if (localStorage.getItem(TORRE_SWIPE_HINT_LS) !== '1') {
         localStorage.setItem(TORRE_SWIPE_HINT_LS, '1');
@@ -5696,7 +6004,7 @@ function bindTorreCestas(wrap, opts = {}) {
 
 /** Flechas de giro solo en el SVG, a lados del depósito (torre vertical). Mantener pulsado = giro continuo. */
 function bindTorreRotFlechas(wrap) {
-  if (!wrap || state.configTorre?.tipoInstalacion === 'nft') return;
+  if (!wrap || !torreSvgEsTorreVerticalGiratoria()) return;
   wrap.querySelectorAll('.hc-torre-rot-flecha').forEach(g => {
     const dirRaw = parseInt(g.getAttribute('data-rot-dir'), 10);
     const dir = dirRaw === -1 ? -1 : 1;
@@ -5753,7 +6061,7 @@ function bindTorreRotFlechas(wrap) {
 }
 
 function rotarTorrePaso(dir = 1) {
-  if (state.configTorre?.tipoInstalacion === 'nft') return;
+  if (!torreSvgEsTorreVerticalGiratoria()) return;
   const step = (2 * Math.PI) / Math.max(3, torreGetNumCestasParaRot());
   if (!state.configTorre) state.configTorre = {};
   const cur = state.configTorre._torreRotRad || 0;
