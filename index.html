@@ -1699,6 +1699,37 @@
             <div class="riego-stat-label">% ON / ciclo</div>
           </div>
         </div>
+
+        <div class="mediodia-header" style="margin-top:14px;opacity:0.95">🌙 Programa nocturno — 21:00 a 07:00h</div>
+        <p id="resNocNota" style="margin:6px 0 12px;font-size:12px;line-height:1.55;color:var(--muted);display:none"></p>
+        <div class="riego-programa">
+          <div class="riego-bloque">
+            <div class="riego-bloque-val" id="resNocON">—</div>
+            <div class="riego-bloque-label">min ON</div>
+          </div>
+          <div class="riego-bloque">
+            <div class="riego-bloque-val off" id="resNocOFF">—</div>
+            <div class="riego-bloque-label">min OFF</div>
+          </div>
+        </div>
+        <div class="riego-stats-row">
+          <div class="riego-stat">
+            <div class="riego-stat-val" id="resNocCiclos">—</div>
+            <div class="riego-stat-label">Ciclos/noche</div>
+          </div>
+          <div class="riego-stat">
+            <div class="riego-stat-val" id="resNocTotal">—</div>
+            <div class="riego-stat-label">Min bomba</div>
+          </div>
+          <div class="riego-stat">
+            <div class="riego-stat-val" id="resNocEspaciado">—</div>
+            <div class="riego-stat-label">Espaciado</div>
+          </div>
+          <div class="riego-stat">
+            <div class="riego-stat-val" id="resNocDuty">—</div>
+            <div class="riego-stat-label">% ON / ciclo</div>
+          </div>
+        </div>
         </div><!-- /riegoCiclosTorreWrap -->
 
         <!-- Datos clima usados -->
@@ -20031,6 +20062,66 @@ function riegoIndicesMediodiaPorIso(dayIndices, timesIso) {
   });
 }
 
+/** Ventana nocturna alineada al programa diurno 07:00–21:00: 21:00–07:00 (misma fecha civil del modelo). */
+function riegoIndicesNocturnosPorIso(dayIndices, timesIso) {
+  if (!dayIndices || !timesIso) return [];
+  return dayIndices.filter(i => {
+    const h = parseInt(String(timesIso[i]).slice(11, 13), 10);
+    if (!Number.isFinite(h)) return false;
+    return h >= 21 || h <= 6;
+  });
+}
+
+/**
+ * Demanda relativa nocturna (recarga de sustrato; sin fotosíntesis, sin refuerzo UV).
+ * Tmin nocturna / VPD nocturno / viento / ET₀ nocturno / lluvia. ~0.40–1.22.
+ */
+function riegoIndiceDemandaNocturna(params) {
+  const vpd = Math.max(0.05, Math.min(2.2, params.vpdKpa || 0.35));
+  const viento = Math.max(0, params.vientoKmh || 0);
+  const probLluvia = Math.max(0, Math.min(100, params.probLluvia ?? 0));
+  const tempMin = Number(params.tempMin);
+  let d = 0.38 + vpd * 0.42;
+  if (Number.isFinite(tempMin)) {
+    if (tempMin >= 18) {
+      d *= 1.02 + Math.min(0.14, (tempMin - 18) * 0.009);
+    }
+    if (tempMin >= 23) d *= 1.04;
+  }
+  if (viento >= 7) d *= 1 + Math.min(0.2, (viento - 7) * 0.007);
+  if (viento >= 18) d *= 1.04;
+  if (probLluvia >= 38) d *= 1 - 0.07 * ((probLluvia - 38) / 62);
+  const et0n = params.et0NightMm;
+  if (et0n != null && typeof et0n === 'number' && et0n > 0.02) {
+    const r = et0n / 0.32;
+    d *= Math.max(0.9, Math.min(1.14, 0.85 + 0.22 * Math.min(1.6, r)));
+  }
+  if (params.toldo) d *= 0.96;
+  return Math.max(0.4, Math.min(1.22, d));
+}
+
+function riegoStatsNocturnosFromHourly(dayIndices, timesIso, tempArr, rhArr, windArr) {
+  const nightIdx = riegoIndicesNocturnosPorIso(dayIndices, timesIso);
+  if (!nightIdx.length || !Array.isArray(tempArr) || !Array.isArray(rhArr)) return null;
+  const t = riegoMediaDeIndices(tempArr, nightIdx);
+  const rh = riegoMediaDeIndices(rhArr, nightIdx);
+  let vientoMax = NaN;
+  if (Array.isArray(windArr) && windArr.length) {
+    let mx = 0;
+    let any = false;
+    for (let j = 0; j < nightIdx.length; j++) {
+      const v = windArr[nightIdx[j]];
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        mx = Math.max(mx, v);
+        any = true;
+      }
+    }
+    if (any) vientoMax = mx;
+  }
+  if (!Number.isFinite(t) || !Number.isFinite(rh)) return null;
+  return { temp: t, rh, vientoMax, nHoras: nightIdx.length };
+}
+
 /**
  * Riego al aire libre — cadena de cálculo (orden):
  * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) alineado al **mismo día civil** que daily[0|1];
@@ -20041,6 +20132,7 @@ function riegoIndicesMediodiaPorIso(dayIndices, timesIso) {
  * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
+ * 8) Nocturno (solo torre goteo): ventana 21:00–07:00 (~600 min), demanda riegoIndiceDemandaNocturna (VPD/viento/Tmin/lluvia/ET₀ nocturno, sin UV), Kc ≈ 0,36×Kc medio (0,25–0,48), ON acotado 3–5 min, OFF más largo; interior: demanda ≈ 0,52×demanda día (acotada) con VPD de sala.
  * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 13–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
@@ -20072,7 +20164,7 @@ async function calcularRiego() {
     const urlECMWF = 'https://api.open-meteo.com/v1/forecast?' +
       'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,precipitation_probability_max,precipitation_sum' +
-      '&hourly=relative_humidity_2m,temperature_2m' +
+      '&hourly=relative_humidity_2m,temperature_2m,windspeed_10m' +
       `&forecast_days=${diasForecast}&timezone=auto&models=ecmwf_ifs`;
 
     // Modelo default para UV (ECMWF IFS no expone uv_index_max en daily). Mismos días que en Meteo (7)
@@ -20107,24 +20199,19 @@ async function calcularRiego() {
     const times = data.hourly?.time;
     const rhArr = data.hourly?.relative_humidity_2m;
     const tempHArr = data.hourly?.temperature_2m;
+    const windHArr = data.hourly?.windspeed_10m;
 
-    let et0Day = null;
+    let etArrHourly = null;
+    let etTimesHourly = null;
     try {
       const resET0 = await fetch(urlET0);
       const dEt0 = await resET0.json();
-      const etArr = dEt0.hourly?.et0_fao_evapotranspiration;
-      const etTimes = dEt0.hourly?.time;
-      if (Array.isArray(etArr) && etArr.length) {
-        let etIdx = riegoHourlyIndicesPorFecha(etTimes, dailyDateStr);
-        if (!etIdx && etArr.length >= offsetHoras + 24) {
-          etIdx = [];
-          for (let k = 0; k < 24; k++) etIdx.push(offsetHoras + k);
-        }
-        if (etIdx && etIdx.length) {
-          et0Day = etIdx.reduce((a, i) => a + (typeof etArr[i] === 'number' ? etArr[i] : 0), 0);
-        }
-      }
+      etArrHourly = dEt0.hourly?.et0_fao_evapotranspiration;
+      etTimesHourly = dEt0.hourly?.time;
     } catch (_) { /* ET₀ opcional (FAO-56 Open-Meteo) */ }
+
+    let et0Day = null;
+    let et0NightSum = null;
 
     let dayHourIdx = riegoHourlyIndicesPorFecha(times, dailyDateStr);
     if (!dayHourIdx && Array.isArray(rhArr) && rhArr.length >= offsetHoras + 24) {
@@ -20160,6 +20247,22 @@ async function calcularRiego() {
       humMedia = 55;
       temp1315 = Math.round(tempMedia);
       hum1315 = humMedia;
+    }
+
+    if (Array.isArray(etArrHourly) && etArrHourly.length && etTimesHourly) {
+      let etIdx = riegoHourlyIndicesPorFecha(etTimesHourly, dailyDateStr);
+      if (!etIdx && etArrHourly.length >= offsetHoras + 24) {
+        etIdx = [];
+        for (let k = 0; k < 24; k++) etIdx.push(offsetHoras + k);
+      }
+      if (etIdx && etIdx.length) {
+        et0Day = etIdx.reduce((a, i) => a + (typeof etArrHourly[i] === 'number' ? etArrHourly[i] : 0), 0);
+        const nightEtI = riegoIndicesNocturnosPorIso(etIdx, etTimesHourly);
+        if (nightEtI.length) {
+          const s = nightEtI.reduce((a, i) => a + (typeof etArrHourly[i] === 'number' ? etArrHourly[i] : 0), 0);
+          et0NightSum = Math.round(s * 1000) / 1000;
+        }
+      }
     }
 
     const toldoAct = toldoDesplegado;
@@ -20253,10 +20356,12 @@ async function calcularRiego() {
       if (esNftRiego && climaNft) climaNft.innerHTML = bloqueClima;
       if (esDwcRiego && climaDwc) climaDwc.innerHTML = bloqueClima;
 
-      ['resMinON', 'resMinOFF', 'resCiclos', 'resTotalON', 'resEspaciado', 'resDutyCiclo', 'resMedioON', 'resMedioOFF', 'resMedioCiclos', 'resMedioTotal', 'resMedioDutyCiclo'].forEach(id => {
+      ['resMinON', 'resMinOFF', 'resCiclos', 'resTotalON', 'resEspaciado', 'resDutyCiclo', 'resMedioON', 'resMedioOFF', 'resMedioCiclos', 'resMedioTotal', 'resMedioDutyCiclo', 'resNocON', 'resNocOFF', 'resNocCiclos', 'resNocTotal', 'resNocEspaciado', 'resNocDuty'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = '—';
       });
+      const nocNotaNft = document.getElementById('resNocNota');
+      if (nocNotaNft) { nocNotaNft.style.display = 'none'; nocNotaNft.textContent = ''; }
 
       state.ultimoRiego = {
         nftContinuo24h: esNftRiego,
@@ -20324,6 +20429,68 @@ async function calcularRiego() {
     const totalONMedio = minONMedio * ciclosMedio;
     const dutyMedioPct = Math.round((100 * minONMedio) / (minONMedio + minOFFMedio));
 
+    // ── Programa nocturno 21:00–07:00 (recarga sustrato; ON 3–5 min) ─────────
+    const statsNoct = riegoStatsNocturnosFromHourly(dayHourIdx, times, tempHArr, rhArr, windHArr);
+    const dTNocPlanta = dTempPlanta * 0.38;
+    let tempNocUse;
+    let rhNocUse;
+    let vientoNocKmh;
+    if (statsNoct) {
+      tempNocUse = statsNoct.temp + dTNocPlanta + (toldoAct ? -0.35 : 0);
+      rhNocUse = statsNoct.rh;
+      vientoNocKmh = Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
+        ? statsNoct.vientoMax
+        : viento * 0.62;
+    } else {
+      tempNocUse = tempMin + dTNocPlanta + 0.6 + (toldoAct ? -0.35 : 0);
+      rhNocUse = Math.min(94, humMedia + 9);
+      vientoNocKmh = viento * 0.55;
+    }
+    let demandaNocRaw;
+    let vpdNocVal;
+    let demandaNoc;
+    if (esInterior) {
+      vpdNocVal = vpdInterior;
+      demandaNocRaw = Math.max(0.42, Math.min(0.95, demandaDia * 0.52));
+      demandaNoc = Math.max(0.38, Math.min(1.02, demandaNocRaw));
+    } else {
+      vpdNocVal = riegoVPDkPa(tempNocUse, rhNocUse);
+      demandaNocRaw = riegoIndiceDemandaNocturna({
+        vpdKpa: vpdNocVal,
+        vientoKmh: vientoNocKmh,
+        tempMin,
+        probLluvia,
+        et0NightMm: et0NightSum,
+        toldo: toldoAct
+      });
+      demandaNoc = demandaNocRaw * multFase;
+      demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
+      if (sensRiego.mult !== 1) {
+        demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc * sensRiego.mult));
+      }
+    }
+    const windSkipProxy = statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
+      ? statsNoct.vientoMax
+      : viento * 0.52;
+    let nocSkip = false;
+    if (!esInterior && demandaNoc < 0.415 && vpdNocVal < 0.29 && windSkipProxy < 6.5) {
+      nocSkip = true;
+    }
+    const kcNoc = Math.max(0.25, Math.min(0.48, kcMedio * 0.36));
+    const cicloNoc0 = riegoMinutosDesdeDemanda(demandaNoc, nPlantas, kcNoc, sustrato, esInterior);
+    let minONNoc = Math.min(5, Math.max(3, cicloNoc0.minON));
+    let minOFFNoc = Math.max(
+      esInterior ? 26 : 36,
+      Math.round(cicloNoc0.minOFF * (1.08 + sustrato.retencion * 0.055))
+    );
+    const minCicloNoc = minONNoc + minOFFNoc;
+    let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
+    ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
+    if (!nocSkip && ciclosNoc === 0 && minCicloNoc <= 600 && demandaNoc >= 0.48) ciclosNoc = 1;
+    const totalONNoc = minONNoc * ciclosNoc;
+    const espNoc = ciclosNoc > 0 ? Math.round(600 / ciclosNoc) : 0;
+    const dutyNocPct = ciclosNoc > 0 ? Math.round((100 * minONNoc) / minCicloNoc) : 0;
+
     // ── Mostrar resultados ────────────────────────────────────────────────
     document.getElementById('resMinON').textContent    = minON;
     document.getElementById('resMinOFF').textContent   = minOFF;
@@ -20339,6 +20506,32 @@ async function calcularRiego() {
     document.getElementById('resMedioTotal').textContent  = totalONMedio;
     const elMedDuty = document.getElementById('resMedioDutyCiclo');
     if (elMedDuty) elMedDuty.textContent = dutyMedioPct + '%';
+
+    const elNocON = document.getElementById('resNocON');
+    const elNocOFF = document.getElementById('resNocOFF');
+    const elNocC = document.getElementById('resNocCiclos');
+    const elNocT = document.getElementById('resNocTotal');
+    const elNocE = document.getElementById('resNocEspaciado');
+    const elNocD = document.getElementById('resNocDuty');
+    const elNocNota = document.getElementById('resNocNota');
+    if (elNocON) elNocON.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(minONNoc);
+    if (elNocOFF) elNocOFF.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(minOFFNoc);
+    if (elNocC) elNocC.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(ciclosNoc);
+    if (elNocT) elNocT.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(totalONNoc);
+    if (elNocE) elNocE.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(espNoc);
+    if (elNocD) elNocD.textContent = nocSkip || ciclosNoc === 0 ? '—' : dutyNocPct + '%';
+    if (elNocNota) {
+      if (nocSkip) {
+        elNocNota.style.display = 'block';
+        elNocNota.innerHTML = 'Noche <strong>húmeda, poco ventosa</strong> y demanda baja: no se sugiere pulso extra de recarga (riesgo de encharcar).';
+      } else if (ciclosNoc === 0) {
+        elNocNota.style.display = 'block';
+        elNocNota.textContent = 'Con los límites de pausa nocturna no cabe ningún ciclo en 10 h; revisa manualmente si el sustrato lo necesita.';
+      } else {
+        elNocNota.style.display = 'none';
+        elNocNota.textContent = '';
+      }
+    }
 
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
     const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
@@ -20356,14 +20549,24 @@ async function calcularRiego() {
     const vpdMedTxt = Math.round(vpdMediodia * 1000) / 1000;
     const demDiaTxt = Math.round(demandaDia * 100) / 100;
     const demMedTxt = Math.round(demandaMed * 100) / 100;
+    const demNocTxt = Math.round(demandaNoc * 100) / 100;
+    const vpdNocTxt = Math.round(vpdNocVal * 1000) / 1000;
+    const et0NocTxt = et0NightSum != null && Number.isFinite(et0NightSum) ? String(et0NightSum) : '—';
+    const windNocTxt = Math.round(vientoNocKmh * 10) / 10;
+    const tempNocTxt = Math.round(tempNocUse * 10) / 10;
+    const rhNocTxt = Math.round(rhNocUse);
     const fechaModTxt = escHtmlUi(dailyDateStr || '—');
     let notaRedondeo = '';
     if (!esInterior && (demDiaTxt !== demMedTxt || vpdDiaTxt !== vpdMedTxt) && minON === minONMedio && minOFF === minOFFMedio) {
       notaRedondeo =
         '<br><span style="opacity:0.78;font-size:10px;line-height:1.45">ℹ️ La demanda o el VPD cambian entre «día» y «mediodía», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
     }
+    const lineaNocClima = esInterior
+      ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice).'
+      : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '.';
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong style="color:var(--white)">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
+      lineaNocClima +
       '<br><span style="opacity:0.88;font-size:11px;line-height:1.5">📆 Día en el modelo: <strong>' + fechaModTxt +
       '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs 13–15 h + pico radiación) · Demanda rel. ' +
       demDiaTxt + ' / ' + demMedTxt + ' (general / mediodía).</span>' +
@@ -20377,9 +20580,19 @@ async function calcularRiego() {
     state.ultimoRiego = { minON, minOFF, ciclos, totalON, espaciado,
       minONMedio, minOFFMedio, ciclosMedio, totalONMedio,
       dutyCicloPct, dutyMedioPct,
+      minONNoc: nocSkip || ciclosNoc === 0 ? null : minONNoc,
+      minOFFNoc: nocSkip || ciclosNoc === 0 ? null : minOFFNoc,
+      ciclosNoc: nocSkip || ciclosNoc === 0 ? 0 : ciclosNoc,
+      totalONNoc: nocSkip || ciclosNoc === 0 ? 0 : totalONNoc,
+      espaciadoNoc: nocSkip || ciclosNoc === 0 ? null : espNoc,
+      dutyNocPct: nocSkip || ciclosNoc === 0 ? null : dutyNocPct,
+      demandaNoc: Math.round(demandaNoc * 1000) / 1000,
+      vpdNoc: Math.round(vpdNocVal * 1000) / 1000,
+      nocSkip,
       factorON: Math.round(factorON*100)/100,
       factorOFF: Math.round(factorOFF*100)/100,
       kcMedio,
+      kcNoc: Math.round(kcNoc * 1000) / 1000,
       faseCultivoRiego: riegoFaseCultivoKeyEfectiva(edadSem),
       faseCultivoRiegoAuto: state.configTorre?.faseCultivoRiegoAuto !== false,
       multFaseCultivo: Math.round(multFase * 100) / 100,
