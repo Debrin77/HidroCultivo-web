@@ -1411,6 +1411,7 @@
         </p>
         <p class="hc-help-muted" style="margin-top:8px;font-size:10px;line-height:1.45">
           <strong>App en el móvil:</strong> en Android, el botón <strong>📲 Instalar</strong> del encabezado (si aparece) o el menú del navegador. En <strong>iPhone</strong>, Safari → <strong>Compartir</strong> → <strong>Añadir a la pantalla de inicio</strong> (Apple no muestra el mismo aviso que en Android).
+          <strong>App Capacitor</strong> (compilada desde el repo): al exportar se abre la hoja del sistema para guardar o compartir el <code class="hc-code-tiny">.json</code> (AirDrop, archivos, etc.).
         </p>
         <div class="hc-grid-2">
           <button type="button" class="hc-btn-tap hc-btn-backup-export" onclick="exportarEstadoHidroCultivo()">
@@ -3186,6 +3187,7 @@
     </div>
   </template>
 
+  <script src="js/backup-capacitor.js"></script>
   <script src="js/cultivos-db.js"></script>
   <script src="js/state-torre-logic.js"></script>
   <script src="js/ui-tabs.js"></script>
@@ -3520,7 +3522,7 @@ const LOCALSTORAGE_EXTRA_BACKUP_KEYS = [
   TORRE_SWIPE_HINT_LS,
 ];
 
-function exportarEstadoHidroCultivo() {
+async function exportarEstadoHidroCultivo() {
   try {
     if (state && state.torres && state.torres.length > 0) guardarEstadoTorreActual();
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -3544,11 +3546,27 @@ function exportarEstadoHidroCultivo() {
       main: raw,
       extraKeys,
     };
-    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json;charset=utf-8' });
+    const json = JSON.stringify(bundle, null, 2);
+    const fname = 'hidrocultivo-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+
+    const cap = window.hcCapacitorBackup;
+    if (cap && typeof cap.isNative === 'function' && typeof cap.exportAndShare === 'function') {
+      try {
+        if (await cap.isNative()) {
+          await cap.exportAndShare(json, fname);
+          showToast('✅ Copia lista — elige dónde guardarla o compartir');
+          return;
+        }
+      } catch (e) {
+        showToast('Compartir (nativo): ' + (e && e.message ? e.message : e) + ' — probando descarga', true);
+      }
+    }
+
+    const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
     const a = document.createElement('a');
     const url = URL.createObjectURL(blob);
     a.href = url;
-    a.download = 'hidrocultivo-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+    a.download = fname;
     a.rel = 'noopener';
     document.body.appendChild(a);
     a.click();

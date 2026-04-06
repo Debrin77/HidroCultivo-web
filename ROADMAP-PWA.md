@@ -44,12 +44,12 @@ Cuando quieras:
 - **Compartir** la copia (AirDrop, Drive, correo) desde la app.
 - Opcional: publicar en **App Store** / **Google Play** (cuentas de desarrollador, revisión en Apple).
 
-Pasos de alto nivel (sin implementar aquí):
+Pasos en este repo (ver **`CAPACITOR.md`**):
 
-1. Añadir **Capacitor** al proyecto; `webDir` apuntando al build estático (o la carpeta que ya sirves).
-2. Plugins típicos: **@capacitor/filesystem**, **@capacitor/share** (y si hace falta **Filesystem** con permisos de documentos).
-3. Sustituir o complementar el flujo actual de export/import: mismo JSON (`hidrocultivoBackup` + `main` + `extraKeys`), pero leyendo/escribiendo vía API nativa donde proceda.
-4. Mantener **una sola función** de validación/aplicación del backup en JS compartido entre web y shell.
+1. **`npm run cap:sync`** — genera `www/`, bundle nativo de exportación (Share + Filesystem) y sincroniza Android/iOS.
+2. Plugins: **@capacitor/filesystem**, **@capacitor/share**. Export en nativo abre la hoja de compartir; import sigue con file input.
+3. La **web y Pages** siguen sirviendo la raíz (`js/backup-capacitor.js` es un stub que no hace nada en navegador).
+4. Validación/aplicación del backup: misma lógica `onImportEstadoFileSelected` / `localStorage` en web y nativo.
 
 ---
 
