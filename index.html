@@ -1095,97 +1095,70 @@
 
       <div id="sistemaDwcAyudaCard" style="display:none;background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4;border-radius:14px;
         padding:12px 14px;margin-bottom:10px">
-        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
-          DWC — cubo con tapa y macetas (rejilla)
+        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">
+          DWC · medidas (opcional)
         </div>
-        <p style="font-size:11px;color:#0f172a;line-height:1.5;margin:0 0 8px;font-weight:600">
-          Como en los kits habituales: <strong>depósito rectangular</strong> (mejor <strong>opaco</strong>), <strong>tapa con orificios</strong> y <strong>cestas / net pots</strong> donde cuelgan las raíces en la solución.
-          <strong>Bomba de aire 24 h</strong> con piedra o difusor (a menudo la manguera entra por un <strong>recorte en tapa o borde</strong>). Opcional: <strong>cúpulas</strong> de humedad sobre la plántula.
-          Control de <strong>nivel</strong>, <strong>EC</strong> y <strong>pH</strong> en <strong>Mediciones</strong>; temperatura del agua ~18–22&nbsp;°C y solución renovada cada ~10–14 días en uso normal.
-        </p>
-        <p style="font-size:10px;color:#0c4a6e;line-height:1.35;margin:0 0 8px;padding:7px 9px;background:rgba(255,255,255,0.72);border-radius:10px;border:1px solid #a5f3fc;font-weight:600">
-          <strong>Nivel:</strong> plántula casi al ras del fondo de la net pot (≈0–2&nbsp;cm por debajo es habitual; burbujeo humedece). Raíz larga en líquido <strong>oxigenado</strong>. Sin % universal en guías serias: <strong>aire 24 h</strong> y agua ~18–22&nbsp;°C marcan más que un “tanto % de cesta mojada”.
-        </p>
-        <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 12px">
-          En la app, <strong>filas × cestas</strong> = huecos de la tapa (p. ej. 2×3). El <strong>sustrato</strong> por cesta lo eliges en el asistente (agua y sustrato) y en Mediciones. Las <strong>dosis</strong> usan los litros del depósito. Los mismos campos opcionales están en el <strong>paso 1 del asistente</strong> si configuras una instalación nueva.
-        </p>
         <div style="background:#fff;border:1.5px solid rgba(6,182,212,0.35);border-radius:12px;padding:12px 12px 10px">
-          <div style="font-size:9px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
-            Medidas y accesorios (opcional)
-          </div>
-          <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 10px">
-            Solo referencia para ti; si las dejas vacías no afecta a cálculos. Valores orientativos kit pequeño: cesta ~Ø44&nbsp;mm, ~75&nbsp;mm alto; cúpula ~Ø45&nbsp;mm.
-          </p>
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
             <div>
-              <label class="form-label" for="sysDwcLargoCm" style="font-size:9px;font-weight:700;color:#475569">Dep. largo (cm)</label>
-              <input type="number" id="sysDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              <label class="form-label" for="sysDwcLargoCm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">L cm</label>
+              <input type="number" id="sysDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Largo depósito cm"
                 oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
-              <label class="form-label" for="sysDwcAnchoCm" style="font-size:9px;font-weight:700;color:#475569">Dep. ancho (cm)</label>
-              <input type="number" id="sysDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              <label class="form-label" for="sysDwcAnchoCm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">A cm</label>
+              <input type="number" id="sysDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Ancho depósito cm"
                 oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
-              <label class="form-label" for="sysDwcProfCm" style="font-size:9px;font-weight:700;color:#475569">Prof. útil (cm)</label>
-              <input type="number" id="sysDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
-                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-            <div>
-              <label class="form-label" for="sysDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569"
-                title="Diámetro del aro de la cesta donde apoya en el hueco de la tapa">Diámetro cesta (mm)</label>
-              <input type="number" id="sysDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
-                title="Diámetro exterior de la cesta en el plano de la tapa"
-                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
-                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
-            </div>
-            <div>
-              <label class="form-label" for="sysDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569"
-                title="Altura de la cesta desde la tapa hasta el fondo (cuánto cuelga en el agua)">Altura cesta (mm)</label>
-              <input type="number" id="sysDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
-                title="De la tapa al fondo de la cesta"
+              <label class="form-label" for="sysDwcProfCm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">P cm</label>
+              <input type="number" id="sysDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Profundidad útil cm"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
             <div>
-              <label class="form-label" for="sysDwcTapaMarcoMm" style="font-size:9px;font-weight:700;color:#475569"
-                title="Zona no perforada alrededor del perímetro (por lado)">Marco tapa (mm/lado)</label>
-              <input type="number" id="sysDwcTapaMarcoMm" min="0" max="80" step="1" placeholder="0" inputmode="numeric" autocomplete="off"
-                title="Se resta 2× este valor al largo y al ancho para el aviso de rejilla"
+              <label class="form-label" for="sysDwcPotRimMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Ø mm</label>
+              <input type="number" id="sysDwcPotRimMm" min="25" max="120" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Diámetro cesta mm"
+                title="Aro de la cesta en la tapa"
                 oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
-              <label class="form-label" for="sysDwcTapaHuecoMm" style="font-size:9px;font-weight:700;color:#475569"
-                title="Separación entre aros de cestas; vacío = 4 mm">Entre cestas (mm)</label>
-              <input type="number" id="sysDwcTapaHuecoMm" min="0" max="40" step="1" placeholder="4" inputmode="numeric" autocomplete="off"
-                title="Vacío: 4 mm por defecto en el cálculo"
+              <label class="form-label" for="sysDwcPotHmm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">H mm</label>
+              <input type="number" id="sysDwcPotHmm" min="30" max="200" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Altura cesta mm"
+                title="De tapa a fondo de cesta"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <label class="form-label" for="sysDwcTapaMarcoMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Marco mm</label>
+              <input type="number" id="sysDwcTapaMarcoMm" min="0" max="80" step="1" placeholder="0" inputmode="numeric" autocomplete="off" aria-label="Marco tapa mm por lado"
+                title="Borde sin huecos, por lado"
+                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+            <div>
+              <label class="form-label" for="sysDwcTapaHuecoMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Hueco mm</label>
+              <input type="number" id="sysDwcTapaHuecoMm" min="0" max="40" step="1" placeholder="4" inputmode="numeric" autocomplete="off" aria-label="Hueco entre cestas mm"
+                title="Vacío: 4 mm por defecto"
                 oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
           </div>
-          <p style="font-size:8px;color:#64748b;line-height:1.4;margin:-2px 0 8px">
-            Opcional para el aviso de rejilla: <strong>marco</strong> = borde sin huecos; <strong>entre cestas</strong> = hueco entre aros (por defecto 4&nbsp;mm si lo dejas vacío).
-          </p>
-          <p style="font-size:9px;color:#64748b;line-height:1.35;margin:-2px 0 10px">
-            <strong>Cesta (net pot):</strong> el <strong>diámetro</strong> es el aro que apoya en el hueco de la <strong>tapa</strong>; la <strong>altura</strong> es cuánto baja hacia el depósito. Con <strong>largo y ancho del depósito</strong> + <strong>filas × cestas</strong> del esquema, la app comprueba si la rejilla cabe (orientativo).
-          </p>
-          <p id="sysDwcTapaCestasHint" style="display:none;margin:0 0 10px" role="status"></p>
-          <div id="mountDwcCestasGuiaSistema"></div>
-          <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 8px">
+          <p id="sysDwcTapaCestasHint" style="display:none;margin:0 0 10px;font-size:11px;line-height:1.45;font-weight:600" role="status"></p>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
             <input type="checkbox" id="sysDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
-            <span>Uso <strong>cúpulas</strong> / tapas de humedad sobre macetas (germinación o clima seco)</span>
+            <span>Cúpulas / humedad</span>
           </label>
           <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 10px">
             <input type="checkbox" id="sysDwcEntradaAire" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
-            <span>Tengo <strong>entrada de manguera de aire</strong> en tapa o borde del depósito</span>
+            <span>Entrada aire (tapa o borde)</span>
           </label>
+          <p style="font-size:8px;color:#94a3b8;margin:0 0 8px;line-height:1.35">Contexto y tabla de tamaños: <strong>Consejos → DWC</strong>.</p>
           <button type="button" onclick="aplicarSistemaDwcDesdeFormulario()"
             style="width:100%;padding:10px 12px;border-radius:12px;border:2px solid #0891b2;background:linear-gradient(180deg,#ecfeff,#cffafe);
             font-family:var(--font-display);font-size:13px;font-weight:800;color:#0e7490;cursor:pointer">
@@ -8284,22 +8257,26 @@ function refreshDwcTapHintSistema() {
   el.textContent = '⚠️ ' + ev.msg;
 }
 
-/** Inserta la guía de tamaños DWC (una sola plantilla HTML) en Sistema y asistente. */
+/** Inserta la guía de tamaños DWC (plantilla) en el asistente; en Consejos se monta al abrir la categoría. */
 function mountDwcCestasGuiaClones() {
   const tpl = document.getElementById('tplDwcCestasGuia');
   if (!tpl || !tpl.content) return;
-  [
-    { mountId: 'mountDwcCestasGuiaSetup', sistema: false },
-    { mountId: 'mountDwcCestasGuiaSistema', sistema: true },
-  ].forEach(({ mountId, sistema }) => {
-    const mount = document.getElementById(mountId);
-    if (!mount || mount.getAttribute('data-dwc-guia-mounted') === '1') return;
-    const frag = tpl.content.cloneNode(true);
-    const root = frag.querySelector('.dwc-cestas-guia');
-    if (root && sistema) root.classList.add('dwc-cestas-guia--sistema');
-    mount.appendChild(frag);
-    mount.setAttribute('data-dwc-guia-mounted', '1');
-  });
+  const mount = document.getElementById('mountDwcCestasGuiaSetup');
+  if (!mount || mount.getAttribute('data-dwc-guia-mounted') === '1') return;
+  mount.appendChild(tpl.content.cloneNode(true));
+  mount.setAttribute('data-dwc-guia-mounted', '1');
+}
+
+function mountDwcCestasGuiaEnPanelConsejos() {
+  const m = document.getElementById('mountDwcCestasGuiaConsejos');
+  if (!m) return;
+  m.innerHTML = '';
+  const tpl = document.getElementById('tplDwcCestasGuia');
+  if (!tpl || !tpl.content) return;
+  const frag = tpl.content.cloneNode(true);
+  const root = frag.querySelector('.dwc-cestas-guia');
+  if (root) root.classList.add('dwc-cestas-guia--sistema');
+  m.appendChild(frag);
 }
 
 function onSetupDwcMedidasInput() {
@@ -17512,6 +17489,11 @@ const CONSEJOS_DATA = {
     consejos: [],
     soloNftDoc: true,
   },
+  dwc: {
+    nombre: '🌊 DWC', color: '#0891b2', bg: 'rgba(8,145,178,0.12)',
+    consejos: [],
+    soloDwcDoc: true,
+  },
   clima: {
     nombre: '🌡️ Clima', color: '#b45309', bg: 'rgba(217,119,6,0.1)',
     consejos: [
@@ -18421,6 +18403,54 @@ function buildConsejosNftHidraulica() {
   return dyn + formula + docWrap;
 }
 
+function buildConsejosDwc() {
+  const cat = CONSEJOS_DATA.dwc;
+  const intro = htmlConsejoCard(cat, {
+    icono: '🌊',
+    titulo: 'DWC en esta app',
+    texto:
+      'En <strong>Deep Water Culture</strong> las raíces cuelgan en un depósito con la <strong>misma solución</strong> para todas las plantas. Aquí se modela como cubo con tapa: la rejilla de orificios sigue <strong>filas × cestas</strong> (Torre / Sistema). El diagrama y el riego usan esa cuadrícula; las medidas del depósito sirven sobre todo para <strong>capacidad en litros</strong> y el contexto visual.',
+    alerta: {
+      tipo: 'info',
+      txt: 'ℹ️ Misma EC y mismo pH en todo el depósito: mezcla solo cultivos compatibles (véase compatibilidad de cultivos en torre).',
+    },
+  });
+  const vol = htmlConsejoCard(cat, {
+    icono: '💧',
+    titulo: 'Litros y dosis',
+    texto:
+      'Con <strong>L, A y P</strong> (profundidad útil) se estima la capacidad bruta. Si indicas <strong>litros de mezcla</strong> por debajo del máximo, checklist y <strong>Consejos → Agua y EC</strong> escalan nutrientes con ese volumen. Si lo dejas vacío, la app usa la capacidad calculada o un valor orientativo interno.',
+    alerta: { tipo: 'ok', txt: '✅ En el asistente DWC aparece la capacidad estimada al rellenar largo, ancho y profundidad.' },
+  });
+  const med = htmlConsejoCard(cat, {
+    icono: '📐',
+    titulo: 'Qué es cada medida en Sistema',
+    texto:
+      '<strong>L, A, P</strong> = largo, ancho y profundidad <em>útil</em> del depósito (cm). <strong>Ø</strong> = diámetro del <strong>aro</strong> de la cesta que apoya en el hueco de la tapa (mm). <strong>H</strong> = altura de la cesta hasta las raíces (mm). <strong>Marco</strong> = borde de tapa sin perforar, por lado (mm). <strong>Hueco</strong> = separación libre entre cestas (mm). Con marco, hueco y Ø la app comprueba si las cestas de tu rejilla <strong>caben en la zona útil de la tapa</strong> (mensaje bajo los campos en Sistema).',
+    alerta: { tipo: 'warn', txt: '⚠️ Comprobación orientativa: contrasta con tu tapa real y el diámetro nominal del fabricante.' },
+  });
+  const extras = htmlConsejoCard(cat, {
+    icono: '🫧',
+    titulo: 'Cúpulas y entrada de aire',
+    texto:
+      'Las casillas <strong>cúpulas / humedad</strong> y <strong>entrada de aire</strong> documentan tu montaje para el registro; no sustituyen el cálculo hidráulico detallado (como en NFT).',
+    alerta: null,
+  });
+  const tabla =
+    '<div class="consejo-card">' +
+    '<div class="consejo-header">' +
+    '<div class="consejo-icon" style="background:' +
+    cat.bg +
+    '">📋</div>' +
+    '<div><div class="consejo-titulo">Tamaños de cesta (referencia)</div></div>' +
+    '</div>' +
+    '<div class="consejo-texto" style="padding-top:4px">' +
+    '<div id="mountDwcCestasGuiaConsejos"></div>' +
+    '</div>' +
+    '</div>';
+  return intro + vol + med + extras + tabla;
+}
+
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */
 function htmlInnerConsejoCard(cat, c) {
   return `
@@ -18454,6 +18484,12 @@ function renderConsejosLista() {
 
   if (consejoCatActiva === 'nft') {
     lista.innerHTML = buildConsejosNftHidraulica();
+    return;
+  }
+
+  if (consejoCatActiva === 'dwc') {
+    lista.innerHTML = buildConsejosDwc();
+    mountDwcCestasGuiaEnPanelConsejos();
     return;
   }
 
