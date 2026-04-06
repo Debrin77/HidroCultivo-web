@@ -3753,7 +3753,7 @@ button.toggle-switch {
   opacity: 0.92;
   box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.12);
 }
-/* Guía tamaños cesta DWC (#tplDwcCestasGuia → asistente; Consejos → DWC clona al abrir la categoría) */
+/* Guía tamaños cesta DWC: plantilla #tplDwcCestasGuia, solo montada en Consejos → DWC */
 .dwc-cestas-guia {
   margin: 0 0 12px;
   border-radius: 12px;

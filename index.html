@@ -1095,9 +1095,6 @@
 
       <div id="sistemaDwcAyudaCard" style="display:none;background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4;border-radius:14px;
         padding:12px 14px;margin-bottom:10px">
-        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">
-          DWC · medidas (opcional)
-        </div>
         <div style="background:#fff;border:1.5px solid rgba(6,182,212,0.35);border-radius:12px;padding:12px 12px 10px">
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
             <div>
@@ -1122,14 +1119,12 @@
             <div>
               <label class="form-label" for="sysDwcPotRimMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Ø mm</label>
               <input type="number" id="sysDwcPotRimMm" min="25" max="120" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Diámetro cesta mm"
-                title="Aro de la cesta en la tapa"
                 oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
               <label class="form-label" for="sysDwcPotHmm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">H mm</label>
               <input type="number" id="sysDwcPotHmm" min="30" max="200" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Altura cesta mm"
-                title="De tapa a fondo de cesta"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
           </div>
@@ -1137,14 +1132,12 @@
             <div>
               <label class="form-label" for="sysDwcTapaMarcoMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Marco mm</label>
               <input type="number" id="sysDwcTapaMarcoMm" min="0" max="80" step="1" placeholder="0" inputmode="numeric" autocomplete="off" aria-label="Marco tapa mm por lado"
-                title="Borde sin huecos, por lado"
                 oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
               <label class="form-label" for="sysDwcTapaHuecoMm" style="font-size:8px;font-weight:800;color:#475569;letter-spacing:0.04em">Hueco mm</label>
               <input type="number" id="sysDwcTapaHuecoMm" min="0" max="40" step="1" placeholder="4" inputmode="numeric" autocomplete="off" aria-label="Hueco entre cestas mm"
-                title="Vacío: 4 mm por defecto"
                 oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
@@ -1158,7 +1151,6 @@
             <input type="checkbox" id="sysDwcEntradaAire" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
             <span>Entrada aire (tapa o borde)</span>
           </label>
-          <p style="font-size:8px;color:#94a3b8;margin:0 0 8px;line-height:1.35">Contexto y tabla de tamaños: <strong>Consejos → DWC</strong>.</p>
           <button type="button" onclick="aplicarSistemaDwcDesdeFormulario()"
             style="width:100%;padding:10px 12px;border-radius:12px;border:2px solid #0891b2;background:linear-gradient(180deg,#ecfeff,#cffafe);
             font-family:var(--font-display);font-size:13px;font-weight:800;color:#0e7490;cursor:pointer">
@@ -2120,11 +2112,11 @@
 
       <div id="setupDwcDetalleWrap" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;
         background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4">
-        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
-          DWC — depósito, cestas y accesorios
+        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
+          DWC
         </div>
-        <p style="font-size:10px;color:#475569;line-height:1.45;margin:0 0 10px">
-          Opcional: mismos datos que en <strong>Sistema</strong>. <strong>Nivel y nutrientes</strong> en <strong>Mediciones</strong>. <span style="color:#0e7490;font-weight:700">Nivel:</span> plántula casi al ras del fondo de la maceta; raíces largas en líquido burbujeado — sin % fijo, lo es el <strong>aire 24 h</strong>.
+        <p style="font-size:9px;color:#64748b;margin:0 0 10px;line-height:1.35">
+          Mismos campos que en <strong>Sistema</strong>. Explicación y <strong>tabla de tamaños de cesta</strong>: <strong>Consejos → DWC</strong>.
         </p>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
           <div>
@@ -2184,14 +2176,7 @@
               style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
           </div>
         </div>
-        <p style="font-size:8px;color:#64748b;line-height:1.4;margin:0 0 8px">
-          Opcional: <strong>marco</strong> resta borde sin huecos; <strong>entre cestas</strong> ajusta el hueco entre aros (por defecto 4&nbsp;mm si vacío).
-        </p>
-        <p style="font-size:9px;color:#475569;line-height:1.35;margin:0 0 8px">
-          <strong>Cesta (net pot):</strong> el <strong>diámetro</strong> coincide con el hueco en la <strong>tapa</strong>; la <strong>altura</strong> es cuánto cuelga en el agua. Con <strong>largo y ancho del depósito</strong> y los deslizadores de <strong>filas × cestas</strong>, la app avisa si la rejilla cabe (orientativo).
-        </p>
         <p id="setupDwcTapaCestasHint" style="display:none;margin:0 0 10px" role="status"></p>
-        <div id="mountDwcCestasGuiaSetup"></div>
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
           <input type="checkbox" id="setupDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
             onchange="try{actualizarResumenSetup()}catch(e){}">
@@ -8255,16 +8240,6 @@ function refreshDwcTapHintSistema() {
   el.style.border = '1.5px solid #fde68a';
   el.style.color = '#92400e';
   el.textContent = '⚠️ ' + ev.msg;
-}
-
-/** Inserta la guía de tamaños DWC (plantilla) en el asistente; en Consejos se monta al abrir la categoría. */
-function mountDwcCestasGuiaClones() {
-  const tpl = document.getElementById('tplDwcCestasGuia');
-  if (!tpl || !tpl.content) return;
-  const mount = document.getElementById('mountDwcCestasGuiaSetup');
-  if (!mount || mount.getAttribute('data-dwc-guia-mounted') === '1') return;
-  mount.appendChild(tpl.content.cloneNode(true));
-  mount.setAttribute('data-dwc-guia-mounted', '1');
 }
 
 function mountDwcCestasGuiaEnPanelConsejos() {
@@ -18422,6 +18397,13 @@ function buildConsejosDwc() {
       'Con <strong>L, A y P</strong> (profundidad útil) se estima la capacidad bruta. Si indicas <strong>litros de mezcla</strong> por debajo del máximo, checklist y <strong>Consejos → Agua y EC</strong> escalan nutrientes con ese volumen. Si lo dejas vacío, la app usa la capacidad calculada o un valor orientativo interno.',
     alerta: { tipo: 'ok', txt: '✅ En el asistente DWC aparece la capacidad estimada al rellenar largo, ancho y profundidad.' },
   });
+  const nivelDep = htmlConsejoCard(cat, {
+    icono: '📍',
+    titulo: 'Nivel de solución y planta',
+    texto:
+      'Orientativo: la plántula suele ir casi al ras del <strong>fondo de la maceta</strong>; con raíces largas cuelgan en líquido <strong>oxigenado</strong>. La app no fija un porcentaje de llenado: lo crítico es el <strong>aireador 24 h</strong>. EC, pH y volumen los controlas en <strong>Mediciones</strong> y en las recargas.',
+    alerta: { tipo: 'info', txt: 'ℹ️ En DWC no hay riego por goteo: el difusor mantiene oxígeno disuelto en el depósito.' },
+  });
   const med = htmlConsejoCard(cat, {
     icono: '📐',
     titulo: 'Qué es cada medida en Sistema',
@@ -18448,7 +18430,7 @@ function buildConsejosDwc() {
     '<div id="mountDwcCestasGuiaConsejos"></div>' +
     '</div>' +
     '</div>';
-  return intro + vol + med + extras + tabla;
+  return intro + vol + nivelDep + med + extras + tabla;
 }
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */
@@ -22459,8 +22441,6 @@ async function migrarFotosAIDB() {
   }
   return migradas;
 }
-
-mountDwcCestasGuiaClones();
 
 </script>
 </body>
