@@ -1107,24 +1107,26 @@
           <strong>Nivel:</strong> plántula casi al ras del fondo de la net pot (≈0–2&nbsp;cm por debajo es habitual; burbujeo humedece). Raíz larga en líquido <strong>oxigenado</strong>. Sin % universal en guías serias: <strong>aire 24 h</strong> y agua ~18–22&nbsp;°C marcan más que un “tanto % de cesta mojada”.
         </p>
         <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 12px">
-          En la app, <strong>filas × macetas</strong> = huecos de la tapa (p. ej. 2×3). El <strong>sustrato</strong> por maceta lo eliges en el asistente (agua y sustrato) y en Mediciones. Las <strong>dosis</strong> usan los litros del depósito. Los mismos campos opcionales están en el <strong>paso 1 del asistente</strong> si configuras una instalación nueva.
+          En la app, <strong>filas × cestas</strong> = huecos de la tapa (p. ej. 2×3). El <strong>sustrato</strong> por cesta lo eliges en el asistente (agua y sustrato) y en Mediciones. Las <strong>dosis</strong> usan los litros del depósito. Los mismos campos opcionales están en el <strong>paso 1 del asistente</strong> si configuras una instalación nueva.
         </p>
         <div style="background:#fff;border:1.5px solid rgba(6,182,212,0.35);border-radius:12px;padding:12px 12px 10px">
           <div style="font-size:9px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
             Medidas y accesorios (opcional)
           </div>
           <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 10px">
-            Solo referencia para ti; si las dejas vacías no afecta a cálculos. Valores orientativos kit pequeño: maceta ~Ø44&nbsp;mm borde, ~75&nbsp;mm alto; cúpula ~Ø45&nbsp;mm.
+            Solo referencia para ti; si las dejas vacías no afecta a cálculos. Valores orientativos kit pequeño: cesta ~Ø44&nbsp;mm, ~75&nbsp;mm alto; cúpula ~Ø45&nbsp;mm.
           </p>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
             <div>
               <label class="form-label" for="sysDwcLargoCm" style="font-size:9px;font-weight:700;color:#475569">Dep. largo (cm)</label>
               <input type="number" id="sysDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
               <label class="form-label" for="sysDwcAnchoCm" style="font-size:9px;font-weight:700;color:#475569">Dep. ancho (cm)</label>
               <input type="number" id="sysDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
@@ -1136,22 +1138,45 @@
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
             <div>
               <label class="form-label" for="sysDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569"
-                title="Diámetro del aro superior de la net pot, donde apoya en el orificio de la tapa">Ø borde maceta (mm)</label>
+                title="Diámetro del aro de la cesta donde apoya en el hueco de la tapa">Diámetro cesta (mm)</label>
               <input type="number" id="sysDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
-                title="Aro donde la cesta se apoya en la tapa"
+                title="Diámetro exterior de la cesta en el plano de la tapa"
+                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
               <label class="form-label" for="sysDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569"
-                title="Altura total de la net pot desde el borde hasta el fondo (cuánto cuelga hacia el agua)">Altura maceta (mm)</label>
+                title="Altura de la cesta desde la tapa hasta el fondo (cuánto cuelga en el agua)">Altura cesta (mm)</label>
               <input type="number" id="sysDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
                 title="De la tapa al fondo de la cesta"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
           </div>
-          <p style="font-size:9px;color:#64748b;line-height:1.35;margin:-2px 0 10px">
-            Son medidas de tu <strong>cesta rejilla (net pot)</strong>: el Ø es el <strong>aro donde apoya en la tapa</strong>; la altura, <strong>cuánto baja hacia el depósito</strong>. Opcional — solo referencia en la app.
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <div>
+              <label class="form-label" for="sysDwcTapaMarcoMm" style="font-size:9px;font-weight:700;color:#475569"
+                title="Zona no perforada alrededor del perímetro (por lado)">Marco tapa (mm/lado)</label>
+              <input type="number" id="sysDwcTapaMarcoMm" min="0" max="80" step="1" placeholder="0" inputmode="numeric" autocomplete="off"
+                title="Se resta 2× este valor al largo y al ancho para el aviso de rejilla"
+                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+            <div>
+              <label class="form-label" for="sysDwcTapaHuecoMm" style="font-size:9px;font-weight:700;color:#475569"
+                title="Separación entre aros de cestas; vacío = 4 mm">Entre cestas (mm)</label>
+              <input type="number" id="sysDwcTapaHuecoMm" min="0" max="40" step="1" placeholder="4" inputmode="numeric" autocomplete="off"
+                title="Vacío: 4 mm por defecto en el cálculo"
+                oninput="try{refreshDwcTapHintSistema()}catch(e){}"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+          </div>
+          <p style="font-size:8px;color:#64748b;line-height:1.4;margin:-2px 0 8px">
+            Opcional para el aviso de rejilla: <strong>marco</strong> = borde sin huecos; <strong>entre cestas</strong> = hueco entre aros (por defecto 4&nbsp;mm si lo dejas vacío).
           </p>
+          <p style="font-size:9px;color:#64748b;line-height:1.35;margin:-2px 0 10px">
+            <strong>Cesta (net pot):</strong> el <strong>diámetro</strong> es el aro que apoya en el hueco de la <strong>tapa</strong>; la <strong>altura</strong> es cuánto baja hacia el depósito. Con <strong>largo y ancho del depósito</strong> + <strong>filas × cestas</strong> del esquema, la app comprueba si la rejilla cabe (orientativo).
+          </p>
+          <p id="sysDwcTapaCestasHint" style="display:none;margin:0 0 10px" role="status"></p>
           <div id="mountDwcCestasGuiaSistema"></div>
           <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 8px">
             <input type="checkbox" id="sysDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
@@ -2123,7 +2148,7 @@
       <div id="setupDwcDetalleWrap" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;
         background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4">
         <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
-          DWC — depósito, macetas y accesorios
+          DWC — depósito, cestas y accesorios
         </div>
         <p style="font-size:10px;color:#475569;line-height:1.45;margin:0 0 10px">
           Opcional: mismos datos que en <strong>Sistema</strong>. <strong>Nivel y nutrientes</strong> en <strong>Mediciones</strong>. <span style="color:#0e7490;font-weight:700">Nivel:</span> plántula casi al ras del fondo de la maceta; raíces largas en líquido burbujeado — sin % fijo, lo es el <strong>aire 24 h</strong>.
@@ -2152,24 +2177,47 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
           <div>
             <label class="form-label" for="setupDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569"
-              title="Diámetro del aro superior donde la net pot apoya en la tapa">Ø borde maceta (mm)</label>
+              title="Diámetro del aro de la cesta donde apoya en el hueco de la tapa">Diámetro cesta (mm)</label>
             <input type="number" id="setupDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
+              oninput="try{refreshDwcTapHintSetup()}catch(e){}"
               onchange="try{actualizarResumenSetup()}catch(e){}"
-              title="Aro donde la cesta se apoya en la tapa"
+              title="Diámetro exterior de la cesta en el plano de la tapa"
               style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
           </div>
           <div>
             <label class="form-label" for="setupDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569"
-              title="Altura de la net pot desde el borde hasta el fondo">Altura maceta (mm)</label>
+              title="Altura de la cesta desde la tapa hasta el fondo">Altura cesta (mm)</label>
             <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
               onchange="try{actualizarResumenSetup()}catch(e){}"
               title="De la tapa al fondo de la cesta"
               style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
           </div>
         </div>
-        <p style="font-size:9px;color:#475569;line-height:1.35;margin:0 0 8px">
-          <strong>Net pot:</strong> Ø del <strong>aro en la tapa</strong>; altura = <strong>cuánto cuelga</strong> hacia el agua. Opcional, solo referencia.
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label class="form-label" for="setupDwcTapaMarcoMm" style="font-size:9px;font-weight:700;color:#475569"
+              title="Zona no perforada alrededor del perímetro (por lado)">Marco tapa (mm/lado)</label>
+            <input type="number" id="setupDwcTapaMarcoMm" min="0" max="80" step="1" placeholder="0" inputmode="numeric" autocomplete="off"
+              title="Se resta 2× este valor al largo y al ancho para el aviso de rejilla"
+              oninput="try{refreshDwcTapHintSetup()}catch(e){}"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="setupDwcTapaHuecoMm" style="font-size:9px;font-weight:700;color:#475569"
+              title="Separación entre aros de cestas; vacío = 4 mm">Entre cestas (mm)</label>
+            <input type="number" id="setupDwcTapaHuecoMm" min="0" max="40" step="1" placeholder="4" inputmode="numeric" autocomplete="off"
+              title="Vacío: 4 mm por defecto en el cálculo"
+              oninput="try{refreshDwcTapHintSetup()}catch(e){}"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+        </div>
+        <p style="font-size:8px;color:#64748b;line-height:1.4;margin:0 0 8px">
+          Opcional: <strong>marco</strong> resta borde sin huecos; <strong>entre cestas</strong> ajusta el hueco entre aros (por defecto 4&nbsp;mm si vacío).
         </p>
+        <p style="font-size:9px;color:#475569;line-height:1.35;margin:0 0 8px">
+          <strong>Cesta (net pot):</strong> el <strong>diámetro</strong> coincide con el hueco en la <strong>tapa</strong>; la <strong>altura</strong> es cuánto cuelga en el agua. Con <strong>largo y ancho del depósito</strong> y los deslizadores de <strong>filas × cestas</strong>, la app avisa si la rejilla cabe (orientativo).
+        </p>
+        <p id="setupDwcTapaCestasHint" style="display:none;margin:0 0 10px" role="status"></p>
         <div id="mountDwcCestasGuiaSetup"></div>
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
           <input type="checkbox" id="setupDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
@@ -2510,7 +2558,7 @@
 
       </div>
 
-      <!-- Tamaño de cestas (oculto en DWC: se deduce del Ø borde maceta en mm arriba) -->
+      <!-- Tamaño de cestas (oculto en DWC: se deduce del diámetro cesta en mm en el bloque DWC) -->
       <div id="setupBloqueTamanoCestas">
       <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
         color:#374151;margin-bottom:8px;margin-top:4px">
@@ -3161,7 +3209,7 @@
         </table>
       </div>
       <p class="dwc-cestas-guia-foot">
-        <strong>Orientativo:</strong> los mm son aproximados (2"&nbsp;≈&nbsp;51&nbsp;mm, 3"&nbsp;≈&nbsp;76&nbsp;mm según fabricante). Lo que debe coincidir con tu tapa es el <strong>Ø del aro</strong> donde apoya la cesta.
+        <strong>Orientativo:</strong> los mm son aproximados (2"&nbsp;≈&nbsp;51&nbsp;mm, 3"&nbsp;≈&nbsp;76&nbsp;mm según fabricante). En la tapa debe coincidir el <strong>diámetro de la cesta</strong> (aro que apoya en el hueco).
       </p>
     </div>
   </template>
@@ -6098,7 +6146,7 @@ function updateTorreStats() {
       depEl.textContent = 'Depósito para mezclas · ' + volTxt;
     } else if (esDwcCfg) {
       const geom =
-        (cfg.numNiveles || '—') + ' filas × ' + (cfg.numCestas || '—') + ' macetas';
+        (cfg.numNiveles || '—') + ' filas × ' + (cfg.numCestas || '—') + ' cestas';
       depEl.textContent = torreNombre + ' — DWC — ' + geom + ' — ' + volTxt;
     } else {
       const geom =
@@ -7057,7 +7105,7 @@ function refrescarSetupTipoInstalacionUI() {
   if (dn && dc) {
     if (setupTipoInstalacion === 'dwc') {
       dn.textContent = 'Filas en la tapa';
-      dc.textContent = 'Macetas por fila';
+      dc.textContent = 'Cestas por fila';
     } else {
       dn.textContent = 'Niveles';
       dc.textContent = 'Cestas por nivel';
@@ -7065,7 +7113,12 @@ function refrescarSetupTipoInstalacionUI() {
   }
   const cestaBlk = document.getElementById('setupBloqueTamanoCestas');
   if (cestaBlk) cestaBlk.style.display = setupTipoInstalacion === 'dwc' ? 'none' : '';
-  if (setupPagina !== 1) return;
+  if (setupPagina !== 1) {
+    try {
+      refreshDwcTapHintSetup();
+    } catch (eTapEarly) {}
+    return;
+  }
   const isNft = setupTipoInstalacion === 'nft';
   const tw = document.getElementById('setupTorreBuilderWrap');
   const nw = document.getElementById('setupNftBuilderWrap');
@@ -7081,7 +7134,7 @@ function refrescarSetupTipoInstalacionUI() {
     st.textContent = isNft
       ? 'Canales en paralelo, huecos por canal y pendiente. La rejilla usa un nivel por canal.'
       : setupTipoInstalacion === 'dwc'
-        ? 'Cubo con tapa: filas × macetas = orificios; litros = solución. Abajo puedes anotar medidas del depósito, maceta, cúpulas y entrada de aire (también en Sistema).'
+        ? 'Cubo con tapa: filas × cestas = orificios; litros = solución. Abajo: medidas del depósito, diámetro y altura de cesta, cúpulas y aire (también en Sistema).'
         : 'Configura las dimensiones de tu sistema hidropónico vertical';
   }
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
@@ -7532,6 +7585,9 @@ function sincronizarSistemaNftMontajeUI() {
     if (cfg && cfg.tipoInstalacion === 'dwc') {
       dwcInfo.style.display = 'block';
       syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
+      try {
+        refreshDwcTapHintSistema();
+      } catch (eDwcHint) {}
     } else {
       dwcInfo.style.display = 'none';
     }
@@ -7694,6 +7750,8 @@ const DWC_FORM_IDS_SISTEMA = {
   prof: 'sysDwcProfCm',
   rim: 'sysDwcPotRimMm',
   alt: 'sysDwcPotHmm',
+  marco: 'sysDwcTapaMarcoMm',
+  hueco: 'sysDwcTapaHuecoMm',
   cupulas: 'sysDwcCupulas',
   aire: 'sysDwcEntradaAire',
 };
@@ -7703,6 +7761,8 @@ const DWC_FORM_IDS_SETUP = {
   prof: 'setupDwcProfCm',
   rim: 'setupDwcPotRimMm',
   alt: 'setupDwcPotHmm',
+  marco: 'setupDwcTapaMarcoMm',
+  hueco: 'setupDwcTapaHuecoMm',
   cupulas: 'setupDwcCupulas',
   aire: 'setupDwcEntradaAire',
 };
@@ -7721,6 +7781,25 @@ function _dwcParseOptMm(id, min, max) {
   return v;
 }
 
+/** Marco tapa (mm por lado) y hueco entre cestas: vacío = usar defectos en el aviso (marco 0, hueco 4 mm). */
+function _dwcParseMarcoHuecoMmIds(marcoId, huecoId) {
+  const elM = document.getElementById(marcoId);
+  const elH = document.getElementById(huecoId);
+  const rawM = elM ? String(elM.value != null ? elM.value : '').trim() : '';
+  const rawH = elH ? String(elH.value != null ? elH.value : '').trim() : '';
+  let marco = null;
+  let hueco = null;
+  if (rawM !== '') {
+    const m = parseInt(rawM, 10);
+    if (Number.isFinite(m) && m >= 0 && m <= 80) marco = m;
+  }
+  if (rawH !== '') {
+    const h = parseInt(rawH, 10);
+    if (Number.isFinite(h) && h >= 0 && h <= 40) hueco = h;
+  }
+  return { marco, hueco };
+}
+
 /** Litros útiles del depósito DWC si largo×ancho×prof. (cm) están completos en el asistente o Sistema. */
 function getDwcCapacidadLitrosFromSetupInputs() {
   const L = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
@@ -7730,6 +7809,179 @@ function getDwcCapacidadLitrosFromSetupInputs() {
   const litros = (L * W * P) / 1000;
   if (!Number.isFinite(litros) || litros <= 0) return null;
   return Math.round(litros * 10) / 10;
+}
+
+/** Hueco por defecto entre aros de cestas en la tapa (mm) si no indicas otro. */
+const DWC_TAPA_HUECO_DEFAULT_MM = 4;
+
+function dwcGridSpanMm(count, rimDiameterMm, gutterMm) {
+  const g = Number(gutterMm);
+  const gutter = Number.isFinite(g) && g >= 0 ? g : DWC_TAPA_HUECO_DEFAULT_MM;
+  const n = parseInt(String(count), 10);
+  const d = Number(rimDiameterMm);
+  if (!Number.isFinite(n) || n < 1 || !Number.isFinite(d) || d <= 0) return null;
+  return n * d + Math.max(0, n - 1) * gutter;
+}
+
+/**
+ * Comprueba si filas × cestas/fila y Ø cesta caben en largo × ancho de tapa (cualquier orientación).
+ * @param {number} [marcoPorLadoMm=0] resta 2× este valor a cada dimensión interior útil (marco no perforado).
+ * @param {number} [gutterMm] separación entre cestas; por defecto DWC_TAPA_HUECO_DEFAULT_MM.
+ */
+function dwcEvaluarCapestEnTapa(filas, cols, rimMm, largoCm, anchoCm, marcoPorLadoMm, gutterMm) {
+  if (rimMm == null || largoCm == null || anchoCm == null) return { estado: 'incompleto' };
+  const marco = Number.isFinite(Number(marcoPorLadoMm)) && Number(marcoPorLadoMm) >= 0 ? Number(marcoPorLadoMm) : 0;
+  const hueco =
+    Number.isFinite(Number(gutterMm)) && Number(gutterMm) >= 0 ? Number(gutterMm) : DWC_TAPA_HUECO_DEFAULT_MM;
+  const spanC = dwcGridSpanMm(cols, rimMm, hueco);
+  const spanR = dwcGridSpanMm(filas, rimMm, hueco);
+  if (spanC == null || spanR == null) return { estado: 'incompleto' };
+  const Lmm = largoCm * 10 - 2 * marco;
+  const Wmm = anchoCm * 10 - 2 * marco;
+  if (Lmm <= 0 || Wmm <= 0) {
+    return {
+      estado: 'no',
+      msg:
+        'El marco de tapa (' +
+        marco +
+        ' mm por lado) deja un área útil nula o negativa respecto a ' +
+        largoCm +
+        '×' +
+        anchoCm +
+        ' cm. Reduce el marco o revisa medidas del depósito.',
+    };
+  }
+  const fit1 = spanC <= Lmm && spanR <= Wmm;
+  const fit2 = spanC <= Wmm && spanR <= Lmm;
+  if (fit1 || fit2) return { estado: 'ok', spanC, spanR, Lmm, Wmm, marco, hueco };
+  return {
+    estado: 'no',
+    msg:
+      'Con ' +
+      cols +
+      ' cestas/fila × ' +
+      filas +
+      ' filas, Ø ' +
+      rimMm +
+      ' mm y ' +
+      hueco +
+      ' mm entre cestas, hace falta ~' +
+      Math.round(spanC) +
+      '×' +
+      Math.round(spanR) +
+      ' mm. Útil en tapa (tras marco ' +
+      marco +
+      ' mm/lado): ~' +
+      Math.round(Lmm) +
+      '×' +
+      Math.round(Wmm) +
+      ' mm. Revisa orientación, rejilla o ajustes.',
+  };
+}
+
+function refreshDwcTapHintSetup() {
+  const el = document.getElementById('setupDwcTapaCestasHint');
+  if (!el) return;
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') {
+    el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+  const filas = parseInt(document.getElementById('sliderNiveles')?.value || '0', 10);
+  const cols = parseInt(document.getElementById('sliderCestas')?.value || '0', 10);
+  const rim = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
+  const L = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
+  const W = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
+  const mh = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
+  const marcoE = mh.marco != null ? mh.marco : 0;
+  const huecoE = mh.hueco != null ? mh.hueco : DWC_TAPA_HUECO_DEFAULT_MM;
+  const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE);
+  if (ev.estado === 'incompleto') {
+    el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+  el.style.display = 'block';
+  el.style.borderRadius = '10px';
+  el.style.padding = '8px 10px';
+  el.style.fontSize = '10px';
+  el.style.lineHeight = '1.45';
+  el.style.fontWeight = '600';
+  if (ev.estado === 'ok') {
+    el.style.background = '#ecfdf5';
+    el.style.border = '1.5px solid #86efac';
+    el.style.color = '#14532d';
+    el.textContent =
+      '✓ La rejilla cabe en el área útil de la tapa (~' +
+      Math.round(ev.Lmm) +
+      '×' +
+      Math.round(ev.Wmm) +
+      ' mm; marco ' +
+      ev.marco +
+      ' mm/lado, ' +
+      ev.hueco +
+      ' mm entre cestas). Orientativo.';
+    return;
+  }
+  el.style.background = '#fffbeb';
+  el.style.border = '1.5px solid #fde68a';
+  el.style.color = '#92400e';
+  el.textContent = '⚠️ ' + ev.msg;
+}
+
+function refreshDwcTapHintSistema() {
+  const el = document.getElementById('sysDwcTapaCestasHint');
+  if (!el) return;
+  const cfg = state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') {
+    el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+  const filas = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
+  const cols = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
+  const rim = _dwcParseOptMm('sysDwcPotRimMm', 25, 120);
+  const L = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
+  const W = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
+  const mh = _dwcParseMarcoHuecoMmIds('sysDwcTapaMarcoMm', 'sysDwcTapaHuecoMm');
+  const marcoE = mh.marco != null ? mh.marco : 0;
+  const huecoE = mh.hueco != null ? mh.hueco : DWC_TAPA_HUECO_DEFAULT_MM;
+  const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE);
+  if (ev.estado === 'incompleto') {
+    el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+  el.style.display = 'block';
+  el.style.borderRadius = '10px';
+  el.style.padding = '8px 10px';
+  el.style.fontSize = '10px';
+  el.style.lineHeight = '1.45';
+  el.style.fontWeight = '600';
+  if (ev.estado === 'ok') {
+    el.style.background = '#ecfdf5';
+    el.style.border = '1.5px solid #86efac';
+    el.style.color = '#14532d';
+    el.textContent =
+      '✓ Rejilla ' +
+      cols +
+      '×' +
+      filas +
+      ' cabe (~' +
+      Math.round(ev.Lmm) +
+      '×' +
+      Math.round(ev.Wmm) +
+      ' mm útil; marco ' +
+      ev.marco +
+      ' mm/lado, ' +
+      ev.hueco +
+      ' mm entre cestas). Orientativo.';
+    return;
+  }
+  el.style.background = '#fffbeb';
+  el.style.border = '1.5px solid #fde68a';
+  el.style.color = '#92400e';
+  el.textContent = '⚠️ ' + ev.msg;
 }
 
 /** Inserta la guía de tamaños DWC (una sola plantilla HTML) en Sistema y asistente. */
@@ -7790,9 +8042,16 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   if (!cfg.dwcCupulas) delete cfg.dwcCupulas;
   cfg.dwcEntradaAireManguera = document.getElementById(ids.aire)?.checked === true;
   if (!cfg.dwcEntradaAireManguera) delete cfg.dwcEntradaAireManguera;
+  if (ids.marco && ids.hueco) {
+    const mh = _dwcParseMarcoHuecoMmIds(ids.marco, ids.hueco);
+    if (mh.marco != null) cfg.dwcTapaMarcoPorLadoMm = mh.marco;
+    else delete cfg.dwcTapaMarcoPorLadoMm;
+    if (mh.hueco != null) cfg.dwcTapaHuecoMm = mh.hueco;
+    else delete cfg.dwcTapaHuecoMm;
+  }
 }
 
-/** DWC: rellena tamanoCesta / tamanoCestaCustom desde Ø borde maceta (mm) para no duplicar la pregunta en el asistente. */
+/** DWC: rellena tamanoCesta / tamanoCestaCustom desde Ø cesta en mm (asistente) para no duplicar el bloque de tamaños. */
 function dwcSincronizarTamanoCestaDesdeRim(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
   const rim = cfg.dwcNetPotRimMm;
@@ -7829,6 +8088,8 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   setVal(ids.prof, c.dwcDepositoProfCm);
   setVal(ids.rim, c.dwcNetPotRimMm);
   setVal(ids.alt, c.dwcNetPotHeightMm);
+  if (ids.marco) setVal(ids.marco, c.dwcTapaMarcoPorLadoMm);
+  if (ids.hueco) setVal(ids.hueco, c.dwcTapaHuecoMm);
   const cu = document.getElementById(ids.cupulas);
   if (cu) cu.checked = c.dwcCupulas === true;
   const air = document.getElementById(ids.aire);
@@ -7847,6 +8108,9 @@ function aplicarSistemaDwcDesdeFormulario() {
   try {
     renderTorreSistemaResumenTabla(cfg);
   } catch (e) {}
+  try {
+    refreshDwcTapHintSistema();
+  } catch (eH) {}
   showToast('Datos DWC guardados');
 }
 
@@ -8236,8 +8500,8 @@ function renderTorreSistemaResumenTabla(cfg) {
     if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
     rows.push(['Sistema', esDwcTab ? 'DWC' : 'Torre vertical']);
     rows.push([esDwcTab ? 'Filas' : 'Niveles', String(N)]);
-    rows.push([esDwcTab ? 'Macetas por fila' : 'Cestas por nivel', String(C)]);
-    rows.push([esDwcTab ? 'Macetas totales' : 'Cestas totales', String(N * C)]);
+    rows.push([esDwcTab ? 'Cestas por fila' : 'Cestas por nivel', String(C)]);
+    rows.push([esDwcTab ? 'Cestas totales' : 'Cestas totales', String(N * C)]);
     rows.push([
       'Depósito (cap. máx)',
       String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
@@ -8252,7 +8516,7 @@ function renderTorreSistemaResumenTabla(cfg) {
     if (esDwcTab) {
       const suK = normalizaSustratoKey(cfg.sustrato || state.configSustrato || 'esponja');
       const suN = CONFIG_SUSTRATO[suK]?.nombre || suK;
-      rows.push(['Sustrato (referencia macetas)', escHtmlUi(suN)]);
+      rows.push(['Sustrato (referencia cestas)', escHtmlUi(suN)]);
       const l = cfg.dwcDepositoLargoCm;
       const w = cfg.dwcDepositoAnchoCm;
       const p = cfg.dwcDepositoProfCm;
@@ -8266,9 +8530,16 @@ function renderTorreSistemaResumenTabla(cfg) {
       const hp = cfg.dwcNetPotHeightMm;
       if (rim != null || hp != null) {
         rows.push([
-          'Maceta net pot',
+          'Cesta (net pot)',
           escHtmlUi((rim != null ? 'Ø ' + rim + ' mm' : '—') + (hp != null ? ' · alto ' + hp + ' mm' : '')),
         ]);
+      }
+      const mTap = cfg.dwcTapaMarcoPorLadoMm;
+      const hTap = cfg.dwcTapaHuecoMm;
+      if ((mTap != null && Number.isFinite(Number(mTap))) || (hTap != null && Number.isFinite(Number(hTap)))) {
+        const mTxt = mTap != null && Number.isFinite(Number(mTap)) ? Number(mTap) + ' mm/lado' : '—';
+        const hTxt = hTap != null && Number.isFinite(Number(hTap)) ? Number(hTap) + ' mm' : 'def. 4 mm';
+        rows.push(['Tapa (rejilla · referencia)', escHtmlUi('Marco ' + mTxt + ' · entre cestas ' + hTxt)]);
       }
       const acc = [];
       if (cfg.dwcCupulas === true) acc.push('Cúpulas / humedad');
@@ -11061,7 +11332,7 @@ function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
       filas +
       ' filas de orificios y ' +
       cols +
-      ' macetas por fila.'
+      ' cestas por fila.'
   );
   const side = Math.min(132, Math.max(84, Math.round(10.5 * Math.max(filas, cols, 4))));
   const plate = document.createElement('div');
@@ -11077,7 +11348,7 @@ function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
   }
   const cap = document.createElement('div');
   cap.className = 'dwc-setup-lid-caption';
-  cap.textContent = filas + ' filas × ' + cols + ' macetas · tapa';
+  cap.textContent = filas + ' filas × ' + cols + ' cestas · tapa';
   const tank = document.createElement('div');
   tank.className = 'dwc-setup-lid-tank';
   tank.title = 'Depósito · ~' + volLitros + ' L de solución';
@@ -11123,6 +11394,9 @@ function updateTorreBuilder() {
   if (setupTipoInstalacion === 'dwc') {
     preview.classList.add('torre-preview--dwc');
     renderDwcLidSetupPreview(preview, niveles, cestas, volDepDwc);
+    try {
+      refreshDwcTapHintSetup();
+    } catch (eHint) {}
     return;
   }
   preview.classList.remove('torre-preview--dwc');
@@ -20627,12 +20901,15 @@ function actualizarResumenSetup() {
     const rimD = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
     const hD = _dwcParseOptMm('setupDwcPotHmm', 30, 200);
     if (rimD != null || hD != null) {
-      geoDwcRes += ' · maceta';
+      geoDwcRes += ' · cesta';
       if (rimD != null) geoDwcRes += ' Ø' + rimD + ' mm';
       if (hD != null) geoDwcRes += ' · ' + hD + ' mm alto';
     }
     if (document.getElementById('setupDwcCupulas')?.checked) geoDwcRes += ' · cúpulas';
     if (document.getElementById('setupDwcEntradaAire')?.checked) geoDwcRes += ' · entrada aire';
+    const mhG = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
+    if (mhG.marco != null && mhG.marco > 0) geoDwcRes += ' · marco tapa ' + mhG.marco + ' mm/lado';
+    if (mhG.hueco != null) geoDwcRes += ' · entre cestas ' + mhG.hueco + ' mm';
   }
 
   el.innerHTML =
@@ -20648,7 +20925,7 @@ function actualizarResumenSetup() {
           ? '⚡ NFT: circulación <strong>24 h</strong> · criterio bomba/depósito en el paso de equipo y en checklist (veredicto visible; cifras en «detalle técnico»).<br>'
           : '')
       : isDwc
-        ? '🌊 DWC: <strong>' + niveles + ' filas × ' + cestas + ' macetas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
+        ? '🌊 DWC: <strong>' + niveles + ' filas × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
         : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
@@ -21273,7 +21550,7 @@ function renderListaTorres() {
     const geomTxt = cfgT.tipoInstalacion === 'nft'
       ? ((cfgT.nftNumCanales || cfgT.numNiveles || 4) + ' canales × ' + (cfgT.nftHuecosPorCanal || cfgT.numCestas || 8) + ' huecos')
       : cfgT.tipoInstalacion === 'dwc'
-        ? ((cfgT.numNiveles || 5) + ' filas × ' + (cfgT.numCestas || 5) + ' macetas')
+        ? ((cfgT.numNiveles || 5) + ' filas × ' + (cfgT.numCestas || 5) + ' cestas')
         : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
 
     return `<div style="display:flex;align-items:center;gap:10px;padding:12px;
