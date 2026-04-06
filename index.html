@@ -20123,6 +20123,69 @@ function riegoStatsNocturnosFromHourly(dayIndices, timesIso, tempArr, rhArr, win
 }
 
 /**
+ * Omitir pulsos nocturnos si demanda < demMax ∧ VPD < vpdMax ∧ viento nocturno < windMax (km/h).
+ * Tª mín. baja → más fácil omitir (sustrato pierde poco); Tª mín. alta / ΣET₀ nocturno → más estricto.
+ * Prob. lluvia alta → algo más permisivo. ET₀ nocturno fuerte hace casi imposible omitir por los cortes inferiores.
+ */
+function riegoNocUmbralesOmitir(tempMinDiaria, probLluviaPct, et0NightMm) {
+  const t = Number(tempMinDiaria);
+  let demMax = 0.405;
+  let vpdMax = 0.292;
+  let windMax = 6.6;
+
+  if (Number.isFinite(t)) {
+    if (t <= 5) {
+      demMax = 0.468; vpdMax = 0.355; windMax = 9.6;
+    } else if (t <= 9) {
+      demMax = 0.448; vpdMax = 0.332; windMax = 8.7;
+    } else if (t <= 13) {
+      demMax = 0.428; vpdMax = 0.312; windMax = 7.85;
+    } else if (t <= 17) {
+      demMax = 0.404; vpdMax = 0.288; windMax = 6.95;
+    } else if (t <= 21) {
+      demMax = 0.384; vpdMax = 0.268; windMax = 6.1;
+    } else if (t <= 25) {
+      demMax = 0.364; vpdMax = 0.248; windMax = 5.35;
+    } else {
+      demMax = 0.348; vpdMax = 0.232; windMax = 4.85;
+    }
+  }
+
+  const p = Math.max(0, Math.min(100, Number(probLluviaPct) || 0));
+  if (p >= 42) {
+    const x = Math.min(40, p - 42);
+    demMax += 0.01 + x * 0.00052;
+    vpdMax += 0.007 + x * 0.00042;
+    windMax += 0.34 + x * 0.017;
+  }
+
+  const et0 = et0NightMm;
+  if (et0 != null && typeof et0 === 'number' && Number.isFinite(et0) && et0 > 0.055) {
+    const ex = Math.min(0.32, et0 - 0.055);
+    demMax -= 0.026 + ex * 0.44;
+    vpdMax -= 0.016 + ex * 0.36;
+    windMax -= 0.5 + ex * 5.8;
+  }
+
+  demMax = Math.max(0.332, Math.min(0.488, demMax));
+  vpdMax = Math.max(0.192, Math.min(0.368, vpdMax));
+  windMax = Math.max(4.45, Math.min(10.6, windMax));
+
+  return { demMax, vpdMax, windMax };
+}
+
+/** Demanda mínima para forzar al menos 1 ciclo nocturno si cabe en 10 h (más baja en noches frías). */
+function riegoNocDemandaMin1Ciclo(tempMinDiaria) {
+  const t = Number(tempMinDiaria);
+  if (!Number.isFinite(t)) return 0.468;
+  if (t <= 8) return 0.428;
+  if (t <= 14) return 0.448;
+  if (t <= 20) return 0.472;
+  if (t <= 26) return 0.498;
+  return 0.512;
+}
+
+/**
  * Riego al aire libre — cadena de cálculo (orden):
  * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) alineado al **mismo día civil** que daily[0|1];
  *    UV (modelo best_match) y ET₀ FAO horaria sumada a mm/día de ese mismo día (no bloques fijos 24 h desde el inicio de la serie).
@@ -20132,7 +20195,7 @@ function riegoStatsNocturnosFromHourly(dayIndices, timesIso, tempArr, rhArr, win
  * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
- * 8) Nocturno (solo torre goteo): ventana 21:00–07:00 (~600 min), demanda riegoIndiceDemandaNocturna (VPD/viento/Tmin/lluvia/ET₀ nocturno, sin UV), Kc ≈ 0,36×Kc medio (0,25–0,48), ON acotado 3–5 min, OFF más largo; interior: demanda ≈ 0,52×demanda día (acotada) con VPD de sala.
+ * 8) Nocturno (solo torre goteo): ventana 21:00–07:00 (~600 min), demanda riegoIndiceDemandaNocturna (VPD/viento/Tmin/lluvia/ET₀ nocturno, sin UV), Kc ≈ 0,36×Kc medio (0,25–0,48), ON acotado 3–5 min, OFF más largo; interior: demanda ≈ 0,52×demanda día (acotada) con VPD de sala. Omitir pulsos: riegoNocUmbralesOmitir(Tmin, prob. lluvia, ΣET₀ noche) — invierno/húmedo más permisivo; verano/seco más estricto.
  * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 13–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
@@ -20472,9 +20535,18 @@ async function calcularRiego() {
     const windSkipProxy = statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
       ? statsNoct.vientoMax
       : viento * 0.52;
+    const umbNocSkip = riegoNocUmbralesOmitir(tempMin, probLluvia, et0NightSum);
     let nocSkip = false;
-    if (!esInterior && demandaNoc < 0.415 && vpdNocVal < 0.29 && windSkipProxy < 6.5) {
-      nocSkip = true;
+    if (!esInterior) {
+      const secaNoc = et0NightSum != null && typeof et0NightSum === 'number' && et0NightSum >= 0.19;
+      if (
+        !secaNoc &&
+        demandaNoc < umbNocSkip.demMax &&
+        vpdNocVal < umbNocSkip.vpdMax &&
+        windSkipProxy < umbNocSkip.windMax
+      ) {
+        nocSkip = true;
+      }
     }
     const kcNoc = Math.max(0.25, Math.min(0.48, kcMedio * 0.36));
     const cicloNoc0 = riegoMinutosDesdeDemanda(demandaNoc, nPlantas, kcNoc, sustrato, esInterior);
@@ -20486,7 +20558,9 @@ async function calcularRiego() {
     const minCicloNoc = minONNoc + minOFFNoc;
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
     ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
-    if (!nocSkip && ciclosNoc === 0 && minCicloNoc <= 600 && demandaNoc >= 0.48) ciclosNoc = 1;
+    if (!nocSkip && ciclosNoc === 0 && minCicloNoc <= 600 && demandaNoc >= riegoNocDemandaMin1Ciclo(tempMin)) {
+      ciclosNoc = 1;
+    }
     const totalONNoc = minONNoc * ciclosNoc;
     const espNoc = ciclosNoc > 0 ? Math.round(600 / ciclosNoc) : 0;
     const dutyNocPct = ciclosNoc > 0 ? Math.round((100 * minONNoc) / minCicloNoc) : 0;
@@ -20523,7 +20597,7 @@ async function calcularRiego() {
     if (elNocNota) {
       if (nocSkip) {
         elNocNota.style.display = 'block';
-        elNocNota.innerHTML = 'Noche <strong>húmeda, poco ventosa</strong> y demanda baja: no se sugiere pulso extra de recarga (riesgo de encharcar).';
+        elNocNota.innerHTML = 'Noche <strong>húmeda, poco ventosa</strong> y demanda baja según Tª mín., lluvia prevista y secado nocturno: no se sugiere pulso extra de recarga (riesgo de encharcar).';
       } else if (ciclosNoc === 0) {
         elNocNota.style.display = 'block';
         elNocNota.textContent = 'Con los límites de pausa nocturna no cabe ningún ciclo en 10 h; revisa manualmente si el sustrato lo necesita.';
