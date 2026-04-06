@@ -3746,6 +3746,70 @@ button.toggle-switch {
   opacity: 0.92;
   box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.12);
 }
+/* Guía tamaños cesta DWC (clonada desde #tplDwcCestasGuia → asistente + Sistema) */
+.dwc-cestas-guia {
+  margin: 0 0 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1.5px solid rgba(6, 182, 212, 0.45);
+}
+.dwc-cestas-guia--sistema {
+  border-color: rgba(6, 182, 212, 0.35);
+}
+.dwc-cestas-guia-title {
+  font-size: 9px;
+  font-weight: 800;
+  color: #9a3412;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, #ffedd5, #fed7aa);
+}
+.dwc-cestas-guia-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.dwc-cestas-guia-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 280px;
+  font-size: 10px;
+  line-height: 1.35;
+}
+.dwc-cestas-guia-table thead th {
+  text-align: left;
+  padding: 6px 8px;
+  font-weight: 800;
+  color: #78350f;
+  border-bottom: 1px solid #fed7aa;
+  background: #fff7ed;
+}
+.dwc-cestas-guia-table tbody td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+  color: #475569;
+}
+.dwc-cestas-guia-table tbody td.dwc-cestas-guia-diam {
+  font-weight: 700;
+  color: #0f172a;
+}
+.dwc-cestas-guia-table tbody tr.dwc-cestas-guia-row-alt {
+  background: #fafafa;
+}
+.dwc-cestas-guia-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.dwc-cestas-guia-foot {
+  font-size: 8px;
+  color: #64748b;
+  line-height: 1.4;
+  margin: 0;
+  padding: 7px 10px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
 .torre-preview.nft-schematic-host {
   width: 100%;
   max-width: 100%;

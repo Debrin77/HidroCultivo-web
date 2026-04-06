@@ -1152,6 +1152,7 @@
           <p style="font-size:9px;color:#64748b;line-height:1.35;margin:-2px 0 10px">
             Son medidas de tu <strong>cesta rejilla (net pot)</strong>: el Ø es el <strong>aro donde apoya en la tapa</strong>; la altura, <strong>cuánto baja hacia el depósito</strong>. Opcional — solo referencia en la app.
           </p>
+          <div id="mountDwcCestasGuiaSistema"></div>
           <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 8px">
             <input type="checkbox" id="sysDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
             <span>Uso <strong>cúpulas</strong> / tapas de humedad sobre macetas (germinación o clima seco)</span>
@@ -2119,6 +2120,69 @@
       </div>
       </div>
 
+      <div id="setupDwcDetalleWrap" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;
+        background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4">
+        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
+          DWC — depósito, macetas y accesorios
+        </div>
+        <p style="font-size:10px;color:#475569;line-height:1.45;margin:0 0 10px">
+          Opcional: mismos datos que en <strong>Sistema</strong>. <strong>Nivel y nutrientes</strong> en <strong>Mediciones</strong>. <span style="color:#0e7490;font-weight:700">Nivel:</span> plántula casi al ras del fondo de la maceta; raíces largas en líquido burbujeado — sin % fijo, lo es el <strong>aire 24 h</strong>.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <label class="form-label" for="setupDwcLargoCm" style="font-size:9px;font-weight:700;color:#475569">Largo dep. (cm)</label>
+            <input type="number" id="setupDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              oninput="onSetupDwcMedidasInput()"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="setupDwcAnchoCm" style="font-size:9px;font-weight:700;color:#475569">Ancho (cm)</label>
+            <input type="number" id="setupDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              oninput="onSetupDwcMedidasInput()"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="setupDwcProfCm" style="font-size:9px;font-weight:700;color:#475569">Prof. útil (cm)</label>
+            <input type="number" id="setupDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              oninput="onSetupDwcMedidasInput()"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+        </div>
+        <p id="setupDwcCapacidadEstimada" style="font-size:10px;font-weight:700;color:#0e7490;margin:-4px 0 10px;line-height:1.35;display:none" role="status"></p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+          <div>
+            <label class="form-label" for="setupDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569"
+              title="Diámetro del aro superior donde la net pot apoya en la tapa">Ø borde maceta (mm)</label>
+            <input type="number" id="setupDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
+              onchange="try{actualizarResumenSetup()}catch(e){}"
+              title="Aro donde la cesta se apoya en la tapa"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="setupDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569"
+              title="Altura de la net pot desde el borde hasta el fondo">Altura maceta (mm)</label>
+            <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
+              onchange="try{actualizarResumenSetup()}catch(e){}"
+              title="De la tapa al fondo de la cesta"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+        </div>
+        <p style="font-size:9px;color:#475569;line-height:1.35;margin:0 0 8px">
+          <strong>Net pot:</strong> Ø del <strong>aro en la tapa</strong>; altura = <strong>cuánto cuelga</strong> hacia el agua. Opcional, solo referencia.
+        </p>
+        <div id="mountDwcCestasGuiaSetup"></div>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
+          <input type="checkbox" id="setupDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
+            onchange="try{actualizarResumenSetup()}catch(e){}">
+          <span>Cúpulas / tapas de humedad</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0">
+          <input type="checkbox" id="setupDwcEntradaAire" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
+            onchange="try{actualizarResumenSetup()}catch(e){}">
+          <span>Entrada de manguera de aire (tapa o borde)</span>
+        </label>
+      </div>
+
       <div id="setupNftBuilderWrap" style="display:none">
         <div class="torre-builder">
           <div>
@@ -2321,21 +2385,23 @@
       </div>
 
       <div class="torre-controls" id="setupVolDepositoWrap" style="margin-top:4px">
-        <div class="torre-control-row">
-          <div class="torre-control-label">
-            Capacidad máx. depósito
-            <span class="torre-control-val" id="valVol">20<span style="font-size:12px;font-weight:600">L</span></span>
+        <div id="setupVolCapacidadMaxWrap">
+          <div class="torre-control-row">
+            <div class="torre-control-label">
+              Capacidad máx. depósito
+              <span class="torre-control-val" id="valVol">20<span style="font-size:12px;font-weight:600">L</span></span>
+            </div>
+            <input type="range" class="torre-slider" id="sliderVol"
+              min="5" max="100" value="20" step="5" oninput="onSetupVolSliderInput()">
           </div>
-          <input type="range" class="torre-slider" id="sliderVol"
-            min="5" max="100" value="20" step="5" oninput="onSetupVolSliderInput()">
+          <p id="setupVolCapacidadAyuda" style="font-size:10px;color:#6b7280;margin:6px 0 8px;line-height:1.45">
+            Tope físico del recipiente (porcentaje de llenado y bomba). Las dosis usan los litros de mezcla si los indicas abajo.
+          </p>
         </div>
-        <p style="font-size:10px;color:#6b7280;margin:6px 0 8px;line-height:1.45">
-          Tope físico del recipiente (porcentaje de llenado y bomba). Las dosis usan los litros de mezcla si los indicas abajo.
-        </p>
         <div class="torre-control-row" style="align-items:flex-start">
           <div class="torre-control-label" style="flex:1;min-width:0">
-            Litros de mezcla (opcional)
-            <span style="display:block;font-size:10px;font-weight:500;color:#6b7280;margin-top:2px">
+            <span id="setupVolMezclaLabel">Litros de mezcla (opcional)</span>
+            <span id="setupVolMezclaAyuda" style="display:block;font-size:10px;font-weight:500;color:#6b7280;margin-top:2px">
               Vacío = llenar hasta el máximo. Si rellenas a menos (p. ej. 19 L en depósito de 20 L), las dosis se calculan sobre esos litros.
             </span>
           </div>
@@ -2343,67 +2409,6 @@
             style="width:88px;flex-shrink:0;padding:8px 10px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:15px"
             oninput="onSetupVolMezclaInput()">
         </div>
-      </div>
-
-      <div id="setupDwcDetalleWrap" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;
-        background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4">
-        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
-          DWC — depósito, macetas y accesorios
-        </div>
-        <p style="font-size:10px;color:#475569;line-height:1.45;margin:0 0 10px">
-          Opcional: mismos datos que en <strong>Sistema</strong>. <strong>Nivel y nutrientes</strong> en <strong>Mediciones</strong>. <span style="color:#0e7490;font-weight:700">Nivel:</span> plántula casi al ras del fondo de la maceta; raíces largas en líquido burbujeado — sin % fijo, lo es el <strong>aire 24 h</strong>.
-        </p>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-          <div>
-            <label class="form-label" for="setupDwcLargoCm" style="font-size:9px;font-weight:700;color:#475569">Largo dep. (cm)</label>
-            <input type="number" id="setupDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
-              onchange="try{actualizarResumenSetup()}catch(e){}"
-              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
-          </div>
-          <div>
-            <label class="form-label" for="setupDwcAnchoCm" style="font-size:9px;font-weight:700;color:#475569">Ancho (cm)</label>
-            <input type="number" id="setupDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
-              onchange="try{actualizarResumenSetup()}catch(e){}"
-              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
-          </div>
-          <div>
-            <label class="form-label" for="setupDwcProfCm" style="font-size:9px;font-weight:700;color:#475569">Prof. útil (cm)</label>
-            <input type="number" id="setupDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
-              onchange="try{actualizarResumenSetup()}catch(e){}"
-              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
-          <div>
-            <label class="form-label" for="setupDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569"
-              title="Diámetro del aro superior donde la net pot apoya en la tapa">Ø borde maceta (mm)</label>
-            <input type="number" id="setupDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
-              onchange="try{actualizarResumenSetup()}catch(e){}"
-              title="Aro donde la cesta se apoya en la tapa"
-              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
-          </div>
-          <div>
-            <label class="form-label" for="setupDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569"
-              title="Altura de la net pot desde el borde hasta el fondo">Altura maceta (mm)</label>
-            <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
-              onchange="try{actualizarResumenSetup()}catch(e){}"
-              title="De la tapa al fondo de la cesta"
-              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
-          </div>
-        </div>
-        <p style="font-size:9px;color:#475569;line-height:1.35;margin:0 0 8px">
-          <strong>Net pot:</strong> Ø del <strong>aro en la tapa</strong>; altura = <strong>cuánto cuelga</strong> hacia el agua. Opcional, solo referencia.
-        </p>
-        <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
-          <input type="checkbox" id="setupDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
-            onchange="try{actualizarResumenSetup()}catch(e){}">
-          <span>Cúpulas / tapas de humedad</span>
-        </label>
-        <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0">
-          <input type="checkbox" id="setupDwcEntradaAire" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
-            onchange="try{actualizarResumenSetup()}catch(e){}">
-          <span>Entrada de manguera de aire (tapa o borde)</span>
-        </label>
       </div>
 
       <!-- Tubo y bomba — solo para torres DIY/personalizadas -->
@@ -3123,6 +3128,43 @@
     <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
   </div>
 </div>
+
+  <template id="tplDwcCestasGuia">
+    <div class="dwc-cestas-guia" aria-label="Guía orientativa de tamaños de cesta DWC">
+      <div class="dwc-cestas-guia-title">Tamaños recomendados para cestas DWC</div>
+      <div class="dwc-cestas-guia-scroll">
+        <table class="dwc-cestas-guia-table">
+          <thead>
+            <tr>
+              <th scope="col">Diámetro de cesta</th>
+              <th scope="col">Sustrato ideal</th>
+              <th scope="col">Observaciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="dwc-cestas-guia-diam">2" (≈50&nbsp;mm)</td>
+              <td>Esponja hidropónica</td>
+              <td>Perfecto para lechugas</td>
+            </tr>
+            <tr class="dwc-cestas-guia-row-alt">
+              <td class="dwc-cestas-guia-diam">3" (≈75&nbsp;mm)</td>
+              <td>Esponja + arlita</td>
+              <td>Más estabilidad</td>
+            </tr>
+            <tr>
+              <td class="dwc-cestas-guia-diam">Net pots grandes</td>
+              <td>Arlita + esponja</td>
+              <td>Para plantas pesadas</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="dwc-cestas-guia-foot">
+        <strong>Orientativo:</strong> los mm son aproximados (2"&nbsp;≈&nbsp;51&nbsp;mm, 3"&nbsp;≈&nbsp;76&nbsp;mm según fabricante). Lo que debe coincidir con tu tapa es el <strong>Ø del aro</strong> donde apoya la cesta.
+      </p>
+    </div>
+  </template>
 
   <script src="js/cultivos-db.js"></script>
   <script src="js/state-torre-logic.js"></script>
@@ -7044,6 +7086,31 @@ function refrescarSetupTipoInstalacionUI() {
   }
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
   if (dwcWizard) dwcWizard.style.display = setupTipoInstalacion === 'dwc' ? 'block' : 'none';
+  const capMaxWrap = document.getElementById('setupVolCapacidadMaxWrap');
+  if (capMaxWrap) capMaxWrap.style.display = setupTipoInstalacion === 'dwc' ? 'none' : '';
+  const dwcCapHint = document.getElementById('setupDwcCapacidadEstimada');
+  if (dwcCapHint && setupTipoInstalacion !== 'dwc') {
+    dwcCapHint.style.display = 'none';
+    dwcCapHint.textContent = '';
+  }
+  const mezLab = document.getElementById('setupVolMezclaLabel');
+  const mezAyuda = document.getElementById('setupVolMezclaAyuda');
+  if (mezLab && mezAyuda) {
+    if (setupTipoInstalacion === 'dwc') {
+      mezLab.textContent = 'Litros con los que vas a trabajar (opcional)';
+      mezAyuda.textContent =
+        'Vacío = usamos la capacidad calculada con las medidas del depósito. Si aún no las pusiste, un valor orientativo interno. Si llenas menos, las dosis usan esos litros.';
+    } else {
+      mezLab.textContent = 'Litros de mezcla (opcional)';
+      mezAyuda.textContent =
+        'Vacío = llenar hasta el máximo. Si rellenas a menos (p. ej. 19 L en depósito de 20 L), las dosis se calculan sobre esos litros.';
+    }
+  }
+  if (setupTipoInstalacion === 'dwc') {
+    try {
+      onSetupDwcMedidasInput();
+    } catch (eDwcVol) {}
+  }
   syncSetupPreviewDiagramPorTipoInstalacion();
   if (isNft) {
     refrescarDocTuberiaNftSetup();
@@ -7066,7 +7133,7 @@ function onSetupVolSliderInput() {
   else updateTorreBuilder();
   const mezEl = document.getElementById('setupVolMezclaL');
   if (mezEl && mezEl.value.trim()) {
-    const maxL = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+    const maxL = getSetupVolumenMaxLitros();
     const m = parseFloat(String(mezEl.value).replace(',', '.'));
     if (Number.isFinite(m) && m > maxL) mezEl.value = String(maxL);
   }
@@ -7075,7 +7142,7 @@ function onSetupVolSliderInput() {
 }
 
 function onSetupVolMezclaInput() {
-  const maxL = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+  const maxL = getSetupVolumenMaxLitros();
   const el = document.getElementById('setupVolMezclaL');
   if (!el) return;
   const raw = el.value.trim();
@@ -7652,6 +7719,58 @@ function _dwcParseOptMm(id, min, max) {
   const v = parseInt(String(el && el.value != null ? el.value : '').trim(), 10);
   if (!Number.isFinite(v) || v < min || v > max) return null;
   return v;
+}
+
+/** Litros útiles del depósito DWC si largo×ancho×prof. (cm) están completos en el asistente o Sistema. */
+function getDwcCapacidadLitrosFromSetupInputs() {
+  const L = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
+  const W = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
+  const P = _dwcParseOptCm('setupDwcProfCm', 5, 200);
+  if (L == null || W == null || P == null) return null;
+  const litros = (L * W * P) / 1000;
+  if (!Number.isFinite(litros) || litros <= 0) return null;
+  return Math.round(litros * 10) / 10;
+}
+
+/** Inserta la guía de tamaños DWC (una sola plantilla HTML) en Sistema y asistente. */
+function mountDwcCestasGuiaClones() {
+  const tpl = document.getElementById('tplDwcCestasGuia');
+  if (!tpl || !tpl.content) return;
+  [
+    { mountId: 'mountDwcCestasGuiaSetup', sistema: false },
+    { mountId: 'mountDwcCestasGuiaSistema', sistema: true },
+  ].forEach(({ mountId, sistema }) => {
+    const mount = document.getElementById(mountId);
+    if (!mount || mount.getAttribute('data-dwc-guia-mounted') === '1') return;
+    const frag = tpl.content.cloneNode(true);
+    const root = frag.querySelector('.dwc-cestas-guia');
+    if (root && sistema) root.classList.add('dwc-cestas-guia--sistema');
+    mount.appendChild(frag);
+    mount.setAttribute('data-dwc-guia-mounted', '1');
+  });
+}
+
+function onSetupDwcMedidasInput() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  try {
+    actualizarResumenSetup();
+  } catch (e) {}
+  const hint = document.getElementById('setupDwcCapacidadEstimada');
+  const cap = getDwcCapacidadLitrosFromSetupInputs();
+  if (hint) {
+    if (cap != null && cap > 0) {
+      hint.style.display = 'block';
+      hint.textContent =
+        'Capacidad bruta estimada: ~' +
+        cap +
+        ' L (largo × ancho × prof. útil en cm ÷ 1000).';
+    } else {
+      hint.style.display = 'none';
+      hint.textContent = '';
+    }
+  }
+  updateTorreBuilder();
+  onSetupVolMezclaInput();
 }
 
 /** Rellena cfg con campos DWC desde inputs (pestaña Sistema o asistente). */
@@ -10976,18 +11095,34 @@ function updateTorreBuilder() {
   }
   const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);
   const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
-  const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20);
+  const volSlider = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+  const dwcCap = getDwcCapacidadLitrosFromSetupInputs();
+  const volDepDwc =
+    dwcCap != null && dwcCap > 0 ? Math.round(dwcCap * 10) / 10 : volSlider;
 
   document.getElementById('valNiveles').textContent = niveles;
   document.getElementById('valCestas').textContent  = cestas;
-  document.getElementById('valVol').textContent = vol;
+  const elVol = document.getElementById('valVol');
+  if (elVol) {
+    if (setupTipoInstalacion === 'dwc' && dwcCap != null && dwcCap > 0) {
+      elVol.innerHTML =
+        volDepDwc + '<span style="font-size:12px;font-weight:600">L</span>';
+    } else if (setupTipoInstalacion === 'dwc') {
+      elVol.innerHTML =
+        volSlider +
+        '<span style="font-size:12px;font-weight:600">L</span>' +
+        '<span style="font-size:9px;font-weight:600;color:#94a3b8"> (aprox.)</span>';
+    } else {
+      elVol.textContent = volSlider;
+    }
+  }
 
   const preview = document.getElementById('torrePreview');
   if (!preview) return;
 
   if (setupTipoInstalacion === 'dwc') {
     preview.classList.add('torre-preview--dwc');
-    renderDwcLidSetupPreview(preview, niveles, cestas, vol);
+    renderDwcLidSetupPreview(preview, niveles, cestas, volDepDwc);
     return;
   }
   preview.classList.remove('torre-preview--dwc');
@@ -11028,8 +11163,8 @@ function updateTorreBuilder() {
   dep.style.bottom = '0';
   dep.style.left = '50%';
   dep.style.transform = 'translateX(-50%)';
-  dep.style.width = Math.min(70, 30 + vol * 0.5) + 'px';
-  dep.title = vol + 'L';
+  dep.style.width = Math.min(70, 30 + volSlider * 0.5) + 'px';
+  dep.title = volSlider + 'L';
   preview.appendChild(dep);
 }
 
@@ -11189,6 +11324,12 @@ function usarCalMagEnRecarga() {
 }
 
 function getSetupVolumenMaxLitros() {
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'dwc') {
+    const dwcCap = getDwcCapacidadLitrosFromSetupInputs();
+    if (dwcCap != null && dwcCap > 0) {
+      return Math.min(800, Math.max(1, Math.round(dwcCap * 10) / 10));
+    }
+  }
   return parseInt(document.getElementById('sliderVol')?.value || 20, 10);
 }
 
@@ -11441,8 +11582,14 @@ function guardarSetupYContinuar() {
       niveles = Math.min(24, Math.max(1, nftNvSlider * nftMont.escaleraCaras));
     }
   }
-  const vol     = parseInt(document.getElementById('sliderVol')?.value     || 20, 10);
+  let vol       = parseInt(document.getElementById('sliderVol')?.value     || 20, 10);
   const nftPend = isNft ? parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10) : null;
+  if (isDwc) {
+    const dwcCapG = getDwcCapacidadLitrosFromSetupInputs();
+    if (dwcCapG != null && dwcCapG > 0) {
+      vol = Math.min(800, Math.max(1, Math.round(dwcCapG)));
+    }
+  }
 
   const sensHwGuardar = {
     ec: !!(setupData.sensoresHardware && setupData.sensoresHardware.ec),
@@ -21699,6 +21846,8 @@ async function migrarFotosAIDB() {
   }
   return migradas;
 }
+
+mountDwcCestasGuiaClones();
 
 </script>
 </body>
