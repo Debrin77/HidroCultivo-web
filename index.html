@@ -253,6 +253,7 @@
         <button type="button" class="quick-btn" id="btnActivarNotif"
           onclick="activarNotificacionesDesdeInicio(event)"
           aria-label="Activar notificaciones y alertas"
+          title="Avisos del sistema: recarga, mediciones, cosecha y MeteoAlarm solo si el aviso nombra tu municipio (si ya diste permiso)."
           style="border-color:rgba(59,130,246,0.3);display:none">
           <span class="quick-btn-icon" aria-hidden="true">🔔</span>
           <span>Activar alertas</span>
@@ -394,8 +395,8 @@
         <div class="config-section" id="panelLocalidadMeteo">
           <div class="config-section-title" id="labelLocalidadMeteo">📍 Municipio de la torre (avisos oficiales)</div>
           <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:8px">
-            Escribe el <strong>municipio o localidad</strong> donde está la instalación. Los avisos MeteoAlarm se filtran si el texto del aviso nombra ese municipio
-            (no provincia ni comunidad). <strong>Independiente</strong> del municipio del grifo: si usas destilada u ósmosis puedes (y debes) indicar aquí tu pueblo igualmente.
+            Escribe el <strong>municipio o localidad</strong> de la instalación (o activa GPS: se rellena el pueblo desde las coordenadas). Solo verás avisos MeteoAlarm si el texto del aviso <strong>nombra ese municipio</strong>, no avisos solo por comarca o provincia.
+            <strong>Independiente</strong> del municipio del grifo: si usas destilada u ósmosis puedes (y debes) indicar aquí tu pueblo igualmente.
             <strong>Bilingüismo:</strong> en avisos oficiales el mismo pueblo puede aparecer en <em>castellano</em> o <em>valenciano</em> (p. ej. Castellón / Castelló de la Plana, Alacant / Alicante). La app reconoce variantes habituales para no perderte avisos.
           </div>
           <input type="text" id="inputLocalidadMeteo" placeholder="Ej: Castelló de la Plana, Castellón, Almassora…"
@@ -3731,6 +3732,7 @@ function initApp() {
   aplicarConfigTorre();
   mostrarBtnNotificaciones();
   setTimeout(programarRecordatorios, 2000);
+  setTimeout(() => { void refrescarAvisosMeteoalarmEnSegundoPlano(); }, 4500);
   // Badges DESPUÉS de cargar config y torre
   setTimeout(actualizarBadgesNutriente, 100);
 
@@ -3907,7 +3909,7 @@ function activarNotificacionesDesdeInicio(ev) {
   const el = ev.currentTarget;
   pedirPermisoNotificaciones().then(ok => {
     if (ok) {
-      showToast('🔔 Notificaciones activadas');
+      showToast('🔔 Notificaciones activadas (recarga, medición, cosecha, MeteoAlarm si nombra tu municipio)');
       el.style.display = 'none';
     } else {
       showToast('Actívalas en Ajustes del navegador', true);
@@ -21326,10 +21328,12 @@ function parseMeteoalarmAtomEntries(xmlText) {
     const event = meteoCapTag(entry, 'event');
     if (!title && !areaDesc) return;
 
+    // MeteoAlarm España: el <title> puede ir en inglés (Yellow…) o en español (Amarillo…)
     let tipo = '';
-    if (/Red /i.test(title) || sev === 'Extreme') tipo = 'bad';
-    else if (/Orange /i.test(title) || sev === 'Severe') tipo = 'severe';
-    else if (/Yellow /i.test(title) || sev === 'Moderate') tipo = 'warn';
+    const titleS = title || '';
+    if (/\bRed\b|\bRojo\b/i.test(titleS) || sev === 'Extreme') tipo = 'bad';
+    else if (/\bOrange\b|\bNaranja\b/i.test(titleS) || sev === 'Severe') tipo = 'severe';
+    else if (/\bYellow\b|\bAmarillo\b/i.test(titleS) || sev === 'Moderate') tipo = 'warn';
     if (!tipo) return;
 
     const ident = meteoCapTag(entry, 'identifier') || title + areaDesc;
@@ -21339,22 +21343,35 @@ function parseMeteoalarmAtomEntries(xmlText) {
     const icon = tipo === 'bad' ? '🔴' : tipo === 'severe' ? '🟠' : '🟡';
     const titulo = title || ((event || 'Aviso') + ' — ' + areaDesc);
     const txt = areaDesc ? ('Zona: ' + areaDesc) : (event || '');
-    out.push({ tipo, icon, titulo, txt, areaDesc, title });
+    out.push({ tipo, icon, titulo, txt, areaDesc, title, identifier: ident });
   });
   return out;
 }
 
-function ordenarMeteoalarmPorRelevancia(items, municipioFiltro) {
-  return items.slice().sort((a, b) => {
-    const pri = { bad: 0, severe: 1, warn: 2 };
-    const pa = pri[a.tipo] ?? 3;
-    const pb = pri[b.tipo] ?? 3;
-    if (pa !== pb) return pa - pb;
-    const ra = meteoalarmMunicipioCoincide(municipioFiltro, a.areaDesc, a.title);
-    const rb = meteoalarmMunicipioCoincide(municipioFiltro, b.areaDesc, b.title);
-    if (ra !== rb) return ra ? -1 : 1;
-    return 0;
-  });
+/** Municipio/localidad efectiva (campo avisos, Nominatim con coords de la torre, o primera parte de «ciudad»). */
+function getMeteoUbicacionTorreContexto() {
+  const cfg = state.configTorre || {};
+  const municipioFiltro = getMunicipioMeteoFiltro();
+  const lat = parseFloat(cfg.lat);
+  const lon = parseFloat(cfg.lon);
+  return { municipioFiltro, lat, lon };
+}
+
+function tieneDatosUbicacionParaAvisosMeteo(ctx) {
+  const m = (ctx.municipioFiltro || '').trim();
+  return m.length >= 2;
+}
+
+/** Solo avisos cuyo texto nombra el mismo municipio/localidad que la torre (no comarca ni provincia solas). */
+function meteoalarmAfectaUbicacionTorre(it, ctx) {
+  const m = (ctx.municipioFiltro || '').trim();
+  if (m.length < 2) return false;
+  return meteoalarmMunicipioCoincide(m, it.areaDesc, it.title);
+}
+
+function ordenarMeteoalarmPorRelevancia(items) {
+  const pri = { bad: 0, severe: 1, warn: 2 };
+  return items.slice().sort((a, b) => (pri[a.tipo] ?? 3) - (pri[b.tipo] ?? 3));
 }
 
 /** GPS solo para completar ubicación de avisos si falta texto (no sustituye la ciudad que tú escribiste en la torre). */
@@ -21489,7 +21506,7 @@ function buildAvisosMeteoHeuristicas() {
 
   if (isFinite(viento)) {
     if (viento >= 70) alertas.push({ tipo: 'bad', icon: '💨', titulo: 'Viento muy fuerte (' + viento + ' km/h)', txt: 'Asegura la torre, revisa estabilidad y sujeciones.' });
-    else if (viento >= 50) alertas.push({ tipo: 'warn', icon: '💨', titulo: 'Viento fuerte (' + viento + ' km/h)', txt: 'Aumenta transpiración y estrés. Vigila riego y anclajes.' });
+    else if (viento >= 40) alertas.push({ tipo: 'warn', icon: '💨', titulo: 'Viento fuerte (' + viento + ' km/h)', txt: 'Aumenta transpiración y estrés. Vigila riego y anclajes.' });
   }
   if (isFinite(prob)) {
     if (prob >= 85 && mm >= 15) alertas.push({ tipo: 'warn', icon: '🌧️', titulo: 'Lluvia probable (' + prob + '%)', txt: 'Acumulado estimado ~' + mm + ' mm. Protege nutrientes/electricidad si estás en exterior.' });
@@ -21516,40 +21533,89 @@ function meteoAlertaRowHtml(a) {
     '</div>';
 }
 
+function enviarNotificacionSiAcordado(titulo, cuerpo, icono) {
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  try {
+    new Notification(titulo, {
+      body: cuerpo || '',
+      icon: icono || 'icons/icon-192.png',
+      badge: 'icons/icon-192.png',
+      tag: 'hidrocultivo-meteo',
+    });
+  } catch (_) {}
+}
+
+/**
+ * Si hay permiso de notificaciones, comprueba MeteoAlarm al abrir la app (sin pasar por la pestaña).
+ */
+async function refrescarAvisosMeteoalarmEnSegundoPlano() {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  try {
+    await refreshMeteoNominatimContext();
+    let ctx = getMeteoUbicacionTorreContexto();
+    if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) return;
+    const xml = await fetchMeteoalarmSpainProxied();
+    const items = parseMeteoalarmAtomEntries(xml);
+    const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
+    if (relevantes.length) maybeNotificarMeteoalarmRelevantes(relevantes);
+  } catch (_) {}
+}
+
+/** Una notificación por conjunto de avisos/día (si ya hay permiso). */
+function maybeNotificarMeteoalarmRelevantes(relevantes) {
+  if (!relevantes || relevantes.length === 0) return;
+  const ids = relevantes.map(r => r.identifier || r.titulo).slice().sort().join('¦');
+  const day = new Date().toISOString().slice(0, 10);
+  const key = day + '|' + ids;
+  if (state._meteoAlarmUltimoPushKey === key) return;
+  state._meteoAlarmUltimoPushKey = key;
+  saveState();
+  const iconoNivel = relevantes.some(r => r.tipo === 'bad') ? '🔴'
+    : relevantes.some(r => r.tipo === 'severe') ? '🟠' : '🟡';
+  const cuerpo = relevantes.map(r => r.titulo).slice(0, 3).join(' · ');
+  enviarNotificacionSiAcordado(
+    iconoNivel + ' HidroCultivo — Aviso meteorológico (tu municipio)',
+    cuerpo + (relevantes.length > 3 ? '…' : ''),
+    'icons/icon-192.png'
+  );
+}
+
 async function renderMeteoAvisosPanelCompleto() {
   const wrap = document.getElementById('meteoAvisosOficiales');
   if (!wrap) return;
   wrap.style.display = 'flex';
 
   await refreshMeteoNominatimContext();
-  let municipioFiltro = getMunicipioMeteoFiltro();
+  let ctx = getMeteoUbicacionTorreContexto();
 
-  if (!municipioFiltro) {
+  if (!ctx.municipioFiltro && (!Number.isFinite(ctx.lat) || !Number.isFinite(ctx.lon))) {
     await ensureGpsUbicacionMeteoAvisos();
     await refreshMeteoNominatimContext();
-    municipioFiltro = getMunicipioMeteoFiltro();
+    ctx = getMeteoUbicacionTorreContexto();
   }
 
   const parts = [];
 
-  if (!municipioFiltro) {
+  if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) {
     parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📍</span><span style="font-size:11px">' +
-    'Sin <strong>municipio</strong> para filtrar avisos: indícalo en <strong>Mediciones → Municipio de la torre (avisos oficiales)</strong> o en el asistente de ubicación. No usa provincia ni CCAA. Si activas GPS, se rellenará el pueblo detectado. ' +
+    'Sin <strong>municipio/localidad</strong> para cruzar con MeteoAlarm: indícalo en <strong>Mediciones</strong> o activa <strong>GPS</strong> al cargar avisos (se deduce el pueblo por coordenadas). Solo se muestran avisos que <strong>nomen tu municipio</strong>, no los de comarcas o provincias enteras. ' +
     '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
   } else {
     try {
       const xml = await fetchMeteoalarmSpainProxied();
       const items = parseMeteoalarmAtomEntries(xml);
-      const relevantes = items.filter(it => meteoalarmMunicipioCoincide(municipioFiltro, it.areaDesc, it.title));
-      const etiquetaZona = municipioFiltro;
+      const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
+      const etiquetaZona = ctx.municipioFiltro.trim();
 
       parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 6px">' +
-        'Avisos si nombran tu municipio («' + meteoEscHtml(etiquetaZona) + '») · MeteoAlarm</div>');
+        'MeteoAlarm solo si nombran «' + meteoEscHtml(etiquetaZona) + '»</div>');
 
       if (relevantes.length > 0) {
+        maybeNotificarMeteoalarmRelevantes(relevantes);
         const fuertes = relevantes.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
         const amarillas = relevantes.filter(it => it.tipo === 'warn');
-        let mostrar = ordenarMeteoalarmPorRelevancia(fuertes, municipioFiltro).slice(0, 8);
+        let mostrar = ordenarMeteoalarmPorRelevancia(fuertes).slice(0, 8);
         const ya = new Set(mostrar.map(x => x.titulo));
         amarillas.forEach(y => {
           if (!ya.has(y.titulo) && mostrar.length < 10) {
@@ -21562,8 +21628,8 @@ async function renderMeteoAvisosPanelCompleto() {
         parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay entradas activas en el feed nacional ahora, o el servicio no respondió. ' +
           '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
       } else {
-        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay avisos MeteoAlarm (amarillo/naranja/rojo) que <strong>nombren tu municipio</strong> en este momento. ' +
-          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET — avisos por municipio</a>.</span></div>');
+        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay avisos activos que <strong>nombren tu municipio</strong> en este momento. ' +
+          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
       }
     } catch (e) {
       parts.push('<div class="meteo-alerta-item warn">' +
