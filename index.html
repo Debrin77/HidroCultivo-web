@@ -1131,8 +1131,8 @@
             </div>
           </div>
           <p id="sysDwcVolumenLitrosHint" style="display:none;margin:0 0 10px;font-size:12px;font-weight:800;color:#0e7490;line-height:1.45" role="status"></p>
-          <p id="sysDwcOxigenacionHint" style="display:none;margin:0 0 10px" role="status"></p>
           <p id="sysDwcTapaCestasHint" style="display:none;margin:0 0 10px;font-size:11px;line-height:1.45;font-weight:600" role="status"></p>
+          <p id="sysDwcOxigenacionHint" style="display:none;margin:0 0 10px" role="status"></p>
           <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
             <input type="checkbox" id="sysDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
             <span>Cúpulas / humedad</span>
@@ -6459,6 +6459,12 @@ function guardarVolDepositoDesdeTorre() {
       (vm < vMax - 0.05 ? ' (mezcla)' : '')
   );
   refreshConsejosSiVisible();
+  const clOv = document.getElementById('checklistOverlay');
+  if (clOv && clOv.classList.contains('open') && (state.configTorre || {}).tipoInstalacion === 'dwc') {
+    try {
+      refrescarDwcDifusorChecklist();
+    } catch (eDifCl) {}
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -8082,6 +8088,94 @@ function dwcCaudalAireOrientativoLmin(volLitros) {
 }
 
 /**
+ * Recomendación de bomba/difusor DWC: volumen de solución real (L) + filas × cestas (más cestas → más demanda de O₂, orientativo ~2,5% extra por cesta respecto a la primera, tope ×1,35).
+ * Salidas de difusor: ~1 punto cada ~18 L (máx. 6 en montajes caseros típicos).
+ */
+function dwcCalcDifusorRecomendacion(volLitros, nFilas, nPorFila) {
+  const nf = Math.max(1, parseInt(String(nFilas != null ? nFilas : 1), 10) || 1);
+  const nc = Math.max(1, parseInt(String(nPorFila != null ? nPorFila : 1), 10) || 1);
+  const nTotal = nf * nc;
+  const v = Number(volLitros);
+  if (!Number.isFinite(v) || v <= 0) return null;
+  const base = dwcCaudalAireOrientativoLmin(v);
+  if (!base) return null;
+  const factorDem = Math.min(1.35, 1 + Math.max(0, nTotal - 1) * 0.025);
+  const sc = x => Math.round(x * factorDem * 10) / 10;
+  const salidasSug = Math.min(6, Math.max(1, Math.ceil(v / 18)));
+  return {
+    vol: Math.round(v * 10) / 10,
+    nTotal,
+    nFilas: nf,
+    nPorFila: nc,
+    factorDem: Math.round(factorDem * 100) / 100,
+    min: Math.max(0.4, sc(base.min)),
+    reco: Math.max(0.8, sc(base.reco)),
+    fuerte: Math.max(1.2, sc(base.fuerte)),
+    salidasSug,
+  };
+}
+
+/** Litros = getVolumenMezclaLitros (solución real en la app). */
+function dwcRecomendacionDifusorCompletaDesdeConfig(cfg) {
+  cfg = cfg || state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
+  const vol = getVolumenMezclaLitros(cfg);
+  if (!Number.isFinite(vol) || vol <= 0) return null;
+  const nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
+  const nc = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
+  return dwcCalcDifusorRecomendacion(vol, nf, nc);
+}
+
+/** Igual que checklist pero el volumen puede salir de L×A×P del formulario Sistema si están completos. */
+function dwcRecomendacionDifusorParaSistemaUI(cfg) {
+  cfg = cfg || state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
+  const lit = getDwcLitrosOxigenacionParaSistemaUI(cfg);
+  if (!lit) return null;
+  const nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
+  const nc = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
+  const rec = dwcCalcDifusorRecomendacion(lit.vol, nf, nc);
+  if (!rec) return null;
+  return { rec, lit };
+}
+
+function dwcFormatHtmlRecomendacionDifusorCore(rec) {
+  if (!rec) return '';
+  return (
+    '<p style="margin:0 0 8px;line-height:1.55"><strong>~' +
+    rec.vol +
+    ' L</strong> de solución · rejilla <strong>' +
+    rec.nTotal +
+    ' cestas</strong> (' +
+    rec.nFilas +
+    '×' +
+    rec.nPorFila +
+    '): caudal de aire orientativo <strong>' +
+    rec.min +
+    '–' +
+    rec.fuerte +
+    ' L/min</strong> en total (~<strong>' +
+    rec.reco +
+    ' L/min</strong> referencia; base ~1 L/min por 10 L + factor de cestas).</p>' +
+    '<p style="margin:0;line-height:1.55"><strong>Difusores:</strong> <strong>' +
+    rec.salidasSug +
+    '</strong> punto(s) al fondo (piedra plana, disco microporoso o bola por salida), repartidos. Comprueba en la bomba el caudal a la <strong>profundidad</strong> de tu agua.</p>'
+  );
+}
+
+function refrescarDwcDifusorChecklist() {
+  const el = document.getElementById('clDwcDifusorRecomendacion');
+  if (!el) return;
+  const rec = dwcRecomendacionDifusorCompletaDesdeConfig(state.configTorre);
+  if (!rec) {
+    el.innerHTML =
+      '<p style="margin:0;font-weight:600">Completa <strong>capacidad máxima y litros de mezcla</strong> en Sistema o en <strong>PC·1</strong> (primer llenado) para calcular bomba y difusores con tu volumen real.</p>';
+    return;
+  }
+  el.innerHTML = dwcFormatHtmlRecomendacionDifusorCore(rec);
+}
+
+/**
  * Litros para el aviso de oxigenación en Sistema DWC: prioriza L×A×P del formulario; si no, config (mezcla / máx.).
  */
 function getDwcLitrosOxigenacionParaSistemaUI(cfg) {
@@ -8248,10 +8342,13 @@ function refreshDwcSistemaMedidasUI() {
       volEl.textContent = '';
     }
   }
+  try {
+    refreshDwcTapHintSistema();
+  } catch (e2) {}
+
   if (oxEl) {
-    const litRef = getDwcLitrosOxigenacionParaSistemaUI(cfg);
-    const c = litRef ? dwcCaudalAireOrientativoLmin(litRef.vol) : null;
-    if (litRef && c) {
+    const par = dwcRecomendacionDifusorParaSistemaUI(cfg);
+    if (par && par.rec) {
       oxEl.style.display = 'block';
       oxEl.style.padding = '8px 10px';
       oxEl.style.fontSize = '10px';
@@ -8261,29 +8358,28 @@ function refreshDwcSistemaMedidasUI() {
       oxEl.style.background = '#f0f9ff';
       oxEl.style.border = '1px solid #bae6fd';
       oxEl.style.borderRadius = '10px';
-      let pref = '';
-      if (litRef.fuente === 'medidas') {
-        pref = 'Con el volumen calculado arriba (~' + litRef.vol + ' L), ';
-      } else if (litRef.fuente === 'mezcla') {
-        pref =
-          'Con ~' +
-          litRef.vol +
-          ' L de mezcla guardados en la app (tope depósito ~' +
-          litRef.vMax +
-          ' L), ';
+      let notaVol = '';
+      if (par.lit.fuente === 'medidas') {
+        notaVol =
+          '<p style="margin:0 0 6px;font-size:9px;color:#64748b">Volumen del cálculo: <strong>L×A×P</strong> del formulario (alinear con litros de mezcla guardados si rellenas menos).</p>';
+      } else if (par.lit.fuente === 'mezcla') {
+        notaVol =
+          '<p style="margin:0 0 6px;font-size:9px;color:#64748b">Volumen: <strong>' +
+          par.lit.vol +
+          ' L</strong> de mezcla en la app (máx. ~' +
+          par.lit.vMax +
+          ' L).</p>';
       } else {
-        pref = 'Con ~' + litRef.vol + ' L según capacidad del depósito en la app, ';
+        notaVol =
+          '<p style="margin:0 0 6px;font-size:9px;color:#64748b">Volumen: <strong>' +
+          par.lit.vol +
+          ' L</strong> según capacidad en la app.</p>';
       }
       oxEl.innerHTML =
         '<span style="font-weight:800;color:#0369a1;display:block;margin-bottom:4px">Aire · difusor (orientativo)</span>' +
-        pref +
-        'un caudal habitual en DWC ronda <strong>' +
-        c.min +
-        '–' +
-        c.fuerte +
-        ' L/min</strong> en total (~<strong>' +
-        c.reco +
-        ' L/min</strong> de referencia; ~1 L/min por 10 L de solución). Reparte burbujas al fondo (piedra plana, disco o bolas). Más detalle en <strong>Consejos → DWC</strong>.';
+        notaVol +
+        dwcFormatHtmlRecomendacionDifusorCore(par.rec) +
+        '<p style="margin:8px 0 0;font-size:9px;color:#64748b">Mismo criterio en <strong>checklist DWC</strong> (D·0) y <strong>Consejos → DWC</strong>.</p>';
     } else {
       oxEl.style.display = 'block';
       oxEl.style.padding = '0';
@@ -8295,12 +8391,9 @@ function refreshDwcSistemaMedidasUI() {
       oxEl.style.border = 'none';
       oxEl.style.borderRadius = '0';
       oxEl.textContent =
-        'Oxigenación: indica L, A y P del depósito o configura litros del depósito para ver un rango de L/min orientativo.';
+        'Oxigenación: indica L, A y P o configura litros del depósito para estimar bomba y difusores.';
     }
   }
-  try {
-    refreshDwcTapHintSistema();
-  } catch (e2) {}
 }
 
 function refreshDwcTapHintSistema() {
@@ -16257,6 +16350,23 @@ function getCLPasos() {
   }] : [];
 
   const nftBomb = esNft ? getNftBombaDesdeConfig(cfg) : null;
+
+  const pasosDwcOxigenacion = esDwc
+    ? [
+        {
+          id: 'D0',
+          seccion: '💨 DWC — Bomba de aire y difusores',
+          paso: 'D·0',
+          desc:
+            'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Sistema.',
+          nota:
+            'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
+          postCamposHtml:
+            '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:#f0f9ff;border:1.5px solid #7dd3fc;font-size:11px;line-height:1.55;font-weight:600;color:#0c4a6e" role="status" aria-live="polite"></div>',
+        },
+      ]
+    : [];
+
   const pasoNftTuberiaRef = esNft
     ? [{
       id: 'Nref',
@@ -16451,6 +16561,7 @@ function getCLPasos() {
 
   return [
     ...(primerLlenado ? [...pasosConfigPrimerLlenado, ...pasosLimpiezaPrimerLlenado] : pasosCabeceraRecargaCompleta),
+    ...pasosDwcOxigenacion,
     ...pasoNftTuberiaRef,
     ...pasosNftExtra,
     ...(primerLlenado ? [] : pasosCubiertaDeposito),
@@ -16785,6 +16896,11 @@ function renderChecklist() {
     try { refrescarUIMensajeBombaUsuarioNft('checklist'); } catch (e) {}
     try { actualizarMensajeNftCanalChecklist(); } catch (e) {}
     try { refrescarNftLayoutResumenChecklist(); } catch (e) {}
+  }
+  if ((state.configTorre || {}).tipoInstalacion === 'dwc') {
+    try {
+      refrescarDwcDifusorChecklist();
+    } catch (eDwcDif) {}
   }
 }
 
@@ -18501,31 +18617,20 @@ function buildConsejosNftHidraulica() {
 
 function buildConsejosDwcDifusorBloque() {
   const cat = CONSEJOS_DATA.dwc;
-  const ref = getDwcLitrosOxigenacionReferencia(state.configTorre);
+  const rec =
+    (state.configTorre || {}).tipoInstalacion === 'dwc'
+      ? dwcRecomendacionDifusorCompletaDesdeConfig(state.configTorre)
+      : null;
   let dyn = '';
-  if (ref) {
-    const c = dwcCaudalAireOrientativoLmin(ref.vol);
-    if (c) {
-      const ctx = ref.usaMezcla
-        ? 'Para los <strong>~' + ref.vol + ' L</strong> de mezcla que tienes configurados (tope del depósito en la app ~' + ref.vMax + ' L)'
-        : 'Para el volumen que usas en la app (<strong>~' + ref.vol + ' L</strong>)';
-      dyn =
-        '<div style="margin:12px 0 0;padding:10px 12px;background:rgba(8,145,178,0.08);border-radius:10px;border:1px solid rgba(8,145,178,0.25)">' +
-        '<div style="font-size:11px;font-weight:800;color:#0e7490;margin-bottom:6px">Caudal orientativo según tus litros</div>' +
-        '<p style="margin:0;line-height:1.55;font-size:12px;color:var(--text)">' +
-        ctx +
-        ', en DWC casero suele citarse del orden de <strong>~1 L/min de aire por cada 10 L de solución</strong> como referencia cómoda (sube si hace mucho calor o hay mucha raíz). ' +
-        'Eso equivale aquí a un rango aproximado de <strong>' +
-        c.min +
-        '–' +
-        c.fuerte +
-        ' L/min</strong> en total hacia el depósito, con un valor central ~<strong>' +
-        c.reco +
-        ' L/min</strong>. Elige bomba y número de <strong>salidas</strong> (una piedra plana, dos bolas/discos en zonas distintas, etc.) para repartir burbujas. Revisa en la ficha de la bomba el caudal a la <strong>profundidad</strong> de tu agua.</p></div>';
-    }
+  if (rec) {
+    dyn =
+      '<div style="margin:12px 0 0;padding:10px 12px;background:rgba(8,145,178,0.08);border-radius:10px;border:1px solid rgba(8,145,178,0.25)">' +
+      '<div style="font-size:11px;font-weight:800;color:#0e7490;margin-bottom:6px">Según litros de mezcla y cestas (mismo criterio que checklist y Sistema)</div>' +
+      dwcFormatHtmlRecomendacionDifusorCore(rec) +
+      '</div>';
   } else {
     dyn =
-      '<p style="margin:12px 0 0;line-height:1.55;color:var(--muted)">Activa una instalación <strong>DWC</strong> y revisa los <strong>litros del depósito</strong> en Sistema para ver aquí un rango de L/min calculado con tu volumen.</p>';
+      '<p style="margin:12px 0 0;line-height:1.55;color:var(--muted)">Activa una instalación <strong>DWC</strong> y revisa volumen y rejilla en <strong>Sistema</strong> para ver aquí la recomendación de bomba y difusores.</p>';
   }
   return htmlInnerConsejoCard(cat, {
     icono: '💨',
