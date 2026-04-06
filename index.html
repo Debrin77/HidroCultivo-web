@@ -1135,16 +1135,23 @@
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
             <div>
-              <label class="form-label" for="sysDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569">Maceta Ø borde (mm)</label>
+              <label class="form-label" for="sysDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569"
+                title="Diámetro del aro superior de la net pot, donde apoya en el orificio de la tapa">Ø borde maceta (mm)</label>
               <input type="number" id="sysDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
+                title="Aro donde la cesta se apoya en la tapa"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
             <div>
-              <label class="form-label" for="sysDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569">Maceta altura (mm)</label>
+              <label class="form-label" for="sysDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569"
+                title="Altura total de la net pot desde el borde hasta el fondo (cuánto cuelga hacia el agua)">Altura maceta (mm)</label>
               <input type="number" id="sysDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
+                title="De la tapa al fondo de la cesta"
                 style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
             </div>
           </div>
+          <p style="font-size:9px;color:#64748b;line-height:1.35;margin:-2px 0 10px">
+            Son medidas de tu <strong>cesta rejilla (net pot)</strong>: el Ø es el <strong>aro donde apoya en la tapa</strong>; la altura, <strong>cuánto baja hacia el depósito</strong>. Opcional — solo referencia en la app.
+          </p>
           <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 8px">
             <input type="checkbox" id="sysDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
             <span>Uso <strong>cúpulas</strong> / tapas de humedad sobre macetas (germinación o clima seco)</span>
@@ -1425,8 +1432,9 @@
           🔄 Actualizar torre
         </button>
 
-        <button type="button" class="hc-btn-tap hc-btn-torre-nueva" onclick="abrirSetupNuevaTorre()">
-          ➕ Nueva torre
+        <button type="button" class="hc-btn-tap hc-btn-torre-nueva" onclick="abrirSetupNuevaTorre()"
+          aria-label="Crear nuevo sistema (instalación)">
+          ➕ Nuevo sistema
         </button>
 
       </div>
@@ -2365,20 +2373,27 @@
               style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
           <div>
-            <label class="form-label" for="setupDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569">Maceta Ø borde (mm)</label>
+            <label class="form-label" for="setupDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569"
+              title="Diámetro del aro superior donde la net pot apoya en la tapa">Ø borde maceta (mm)</label>
             <input type="number" id="setupDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
               onchange="try{actualizarResumenSetup()}catch(e){}"
+              title="Aro donde la cesta se apoya en la tapa"
               style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
           </div>
           <div>
-            <label class="form-label" for="setupDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569">Maceta alto (mm)</label>
+            <label class="form-label" for="setupDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569"
+              title="Altura de la net pot desde el borde hasta el fondo">Altura maceta (mm)</label>
             <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
               onchange="try{actualizarResumenSetup()}catch(e){}"
+              title="De la tapa al fondo de la cesta"
               style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
           </div>
         </div>
+        <p style="font-size:9px;color:#475569;line-height:1.35;margin:0 0 8px">
+          <strong>Net pot:</strong> Ø del <strong>aro en la tapa</strong>; altura = <strong>cuánto cuelga</strong> hacia el agua. Opcional, solo referencia.
+        </p>
         <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
           <input type="checkbox" id="setupDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
             onchange="try{actualizarResumenSetup()}catch(e){}">
@@ -2490,7 +2505,8 @@
 
       </div>
 
-      <!-- Tamaño de cestas -->
+      <!-- Tamaño de cestas (oculto en DWC: se deduce del Ø borde maceta en mm arriba) -->
+      <div id="setupBloqueTamanoCestas">
       <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
         color:#374151;margin-bottom:8px;margin-top:4px">
         🧺 Tamaño de cestas
@@ -2543,6 +2559,7 @@
       <!-- Info planta según cesta -->
       <div id="cestaInfo" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;
         padding:8px 12px;font-size:11px;color:#15803d;margin-bottom:12px;display:none"></div>
+      </div>
 
       <!-- Ubicación interior/exterior -->
       <div style="margin-bottom:8px;font-family:var(--font-display);font-size:14px;font-weight:700;color:#374151">
@@ -2865,8 +2882,8 @@
 
       <div id="infoVarTorres" style="display:none;background:#fffbeb;border:1.5px solid #fcd34d;
         border-radius:12px;padding:12px 14px;font-size:12px;color:#92400e;line-height:1.7">
-        💡 Podrás añadir y configurar cada torre adicional desde la pestaña <strong>Sistema</strong>
-        usando el botón <strong>➕ Añadir nueva torre</strong>. Cada torre tendrá su propio
+        💡 Podrás añadir y configurar cada instalación adicional desde la pestaña <strong>Sistema</strong>
+        usando el botón <strong>➕ Nuevo sistema</strong>. Cada una tendrá su propio
         nutriente, historial de mediciones y plantas.
       </div>
 
@@ -2906,8 +2923,8 @@
     <div id="listaTorres" style="margin-bottom:14px"></div>
 
     <button type="button" class="btn btn-primary" onclick="crearNuevaTorre()"
-      id="btnCrearTorre" style="margin-bottom:8px">
-      ➕ Añadir nueva torre
+      id="btnCrearTorre" style="margin-bottom:8px" aria-label="Crear nuevo sistema">
+      ➕ Nuevo sistema
     </button>
     <button type="button" class="btn btn-ghost" onclick="cerrarModalTorres()">Cerrar</button>
   </div>
@@ -7004,6 +7021,8 @@ function refrescarSetupTipoInstalacionUI() {
       dc.textContent = 'Cestas por nivel';
     }
   }
+  const cestaBlk = document.getElementById('setupBloqueTamanoCestas');
+  if (cestaBlk) cestaBlk.style.display = setupTipoInstalacion === 'dwc' ? 'none' : '';
   if (setupPagina !== 1) return;
   const isNft = setupTipoInstalacion === 'nft';
   const tw = document.getElementById('setupTorreBuilderWrap');
@@ -7654,6 +7673,31 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   if (!cfg.dwcEntradaAireManguera) delete cfg.dwcEntradaAireManguera;
 }
 
+/** DWC: rellena tamanoCesta / tamanoCestaCustom desde Ø borde maceta (mm) para no duplicar la pregunta en el asistente. */
+function dwcSincronizarTamanoCestaDesdeRim(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
+  const rim = cfg.dwcNetPotRimMm;
+  if (!Number.isFinite(rim) || rim < 25) return;
+  const cm = rim / 10;
+  const snaps = [['38', 3.8], ['40', 4], ['50', 5], ['75', 7.5], ['100', 10]];
+  let bestKey = '50';
+  let bestDist = Infinity;
+  for (let i = 0; i < snaps.length; i++) {
+    const d = Math.abs(cm - snaps[i][1]);
+    if (d < bestDist) {
+      bestDist = d;
+      bestKey = snaps[i][0];
+    }
+  }
+  if (bestDist <= 0.35) {
+    cfg.tamanoCesta = bestKey;
+    cfg.tamanoCestaCustom = '';
+  } else {
+    cfg.tamanoCesta = 'custom';
+    cfg.tamanoCestaCustom = String(Math.round(cm * 10) / 10);
+  }
+}
+
 function syncDwcFormInputsDesdeConfig(c, ids) {
   if (!ids) return;
   c = c || {};
@@ -7677,6 +7721,7 @@ function aplicarSistemaDwcDesdeFormulario() {
   initTorres();
   const cfg = state.configTorre;
   dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
+  dwcSincronizarTamanoCestaDesdeRim(cfg);
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
@@ -11461,6 +11506,7 @@ function guardarSetupYContinuar() {
   }
   if (isDwc) {
     dwcMergeCamposFormularioEnCfg(state.configTorre, DWC_FORM_IDS_SETUP);
+    dwcSincronizarTamanoCestaDesdeRim(state.configTorre);
   }
   const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
   if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < vol - 0.02) {
