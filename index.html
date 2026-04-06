@@ -1093,6 +1093,71 @@
         </button>
       </div>
 
+      <div id="sistemaDwcAyudaCard" style="display:none;background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4;border-radius:14px;
+        padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">
+          DWC — cubo con tapa y macetas (rejilla)
+        </div>
+        <p style="font-size:11px;color:#0f172a;line-height:1.5;margin:0 0 8px;font-weight:600">
+          Como en los kits habituales: <strong>depósito rectangular</strong> (mejor <strong>opaco</strong>), <strong>tapa con orificios</strong> y <strong>cestas / net pots</strong> donde cuelgan las raíces en la solución.
+          <strong>Bomba de aire 24 h</strong> con piedra o difusor (a menudo la manguera entra por un <strong>recorte en tapa o borde</strong>). Opcional: <strong>cúpulas</strong> de humedad sobre la plántula.
+          Control de <strong>nivel</strong>, <strong>EC</strong> y <strong>pH</strong> en <strong>Mediciones</strong>; temperatura del agua ~18–22&nbsp;°C y solución renovada cada ~10–14 días en uso normal.
+        </p>
+        <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 12px">
+          En la app, <strong>filas × macetas</strong> = huecos de la tapa (p. ej. 2×3). El <strong>sustrato</strong> por maceta lo eliges en el asistente (agua y sustrato) y en Mediciones. Las <strong>dosis</strong> usan los litros del depósito. Los mismos campos opcionales están en el <strong>paso 1 del asistente</strong> si configuras una instalación nueva.
+        </p>
+        <div style="background:#fff;border:1.5px solid rgba(6,182,212,0.35);border-radius:12px;padding:12px 12px 10px">
+          <div style="font-size:9px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
+            Medidas y accesorios (opcional)
+          </div>
+          <p style="font-size:10px;color:#64748b;line-height:1.45;margin:0 0 10px">
+            Solo referencia para ti; si las dejas vacías no afecta a cálculos. Valores orientativos kit pequeño: maceta ~Ø44&nbsp;mm borde, ~75&nbsp;mm alto; cúpula ~Ø45&nbsp;mm.
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <label class="form-label" for="sysDwcLargoCm" style="font-size:9px;font-weight:700;color:#475569">Dep. largo (cm)</label>
+              <input type="number" id="sysDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+            <div>
+              <label class="form-label" for="sysDwcAnchoCm" style="font-size:9px;font-weight:700;color:#475569">Dep. ancho (cm)</label>
+              <input type="number" id="sysDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+            <div>
+              <label class="form-label" for="sysDwcProfCm" style="font-size:9px;font-weight:700;color:#475569">Prof. útil (cm)</label>
+              <input type="number" id="sysDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+            <div>
+              <label class="form-label" for="sysDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569">Maceta Ø borde (mm)</label>
+              <input type="number" id="sysDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+            <div>
+              <label class="form-label" for="sysDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569">Maceta altura (mm)</label>
+              <input type="number" id="sysDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
+                style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:13px;font-weight:700">
+            </div>
+          </div>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 8px">
+            <input type="checkbox" id="sysDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
+            <span>Uso <strong>cúpulas</strong> / tapas de humedad sobre macetas (germinación o clima seco)</span>
+          </label>
+          <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 10px">
+            <input type="checkbox" id="sysDwcEntradaAire" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2">
+            <span>Tengo <strong>entrada de manguera de aire</strong> en tapa o borde del depósito</span>
+          </label>
+          <button type="button" onclick="aplicarSistemaDwcDesdeFormulario()"
+            style="width:100%;padding:10px 12px;border-radius:12px;border:2px solid #0891b2;background:linear-gradient(180deg,#ecfeff,#cffafe);
+            font-family:var(--font-display);font-size:13px;font-weight:800;color:#0e7490;cursor:pointer">
+            Guardar datos DWC
+          </button>
+        </div>
+      </div>
+
       <!-- Esquema / lista y gráfico del sistema (NFT o torre): sin cortar con resumen ni nutriente -->
       <div class="torre-container">
         <div id="torreEsquemaSub" class="torre-esquema-intro">
@@ -1569,7 +1634,21 @@
               No aplica un programa de ciclos ni temporizador como en torre vertical; aquí solo tienes <strong>referencia del clima</strong>.
             </p>
             <div class="card-title" style="margin:0 0 8px;font-size:13px">🌤️ Datos climáticos</div>
-            <div id="riegoClimaUsadoNft" style="font-size:14px;color:var(--white);line-height:1.85;font-weight:500"></div>
+            <div id="riegoClimaUsadoNft" style="font-size:14px;color:var(--white);line-height:1.85;font-weight:500">            </div>
+          </div>
+        </div>
+
+        <div id="riegoDwcPanel" style="display:none;margin-bottom:14px;padding:18px 16px;border-radius:16px;background:linear-gradient(165deg,#ecfeff 0%,#e0f2fe 52%,#cffafe 100%);border:2px solid #0891b2;box-shadow:0 8px 26px rgba(8,145,178,0.14)">
+          <div style="padding:0">
+            <div style="font-size:17px;font-weight:900;color:#0e7490;letter-spacing:0.02em;line-height:1.3;margin-bottom:8px">
+              Oxigenación continua (DWC)
+            </div>
+            <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:var(--white);font-weight:600">
+              En <strong>DWC</strong> no hay programa de riego por goteo: la <strong>bomba de aire</strong> debe mantener burbujas en el depósito <strong>todo el día</strong>.
+              Vigila <strong>temperatura del agua</strong> y el estado del difusor. Aquí solo tienes <strong>referencia del clima</strong> para el follaje (toldo, estrés térmico).
+            </p>
+            <div class="card-title" style="margin:0 0 8px;font-size:13px">🌤️ Datos climáticos</div>
+            <div id="riegoClimaUsadoDwc" style="font-size:14px;color:var(--white);line-height:1.85;font-weight:500"></div>
           </div>
         </div>
 
@@ -1926,28 +2005,35 @@
     <div class="setup-page active" id="spage0">
       <div class="setup-title">Configura tu instalación</div>
       <div class="setup-subtitle">
-        Elige primero el tipo de sistema: torre vertical o NFT. Cada uno guarda su propia geometría, nutrientes y
-        <strong>checklist de recarga</strong> (el de NFT incluye pasos de canales, película de agua y retornos).
-        Puedes tener las dos conviviendo y cambiar entre ellas en Inicio.
+        Elige el tipo de sistema: <strong>torre vertical</strong>, <strong>NFT</strong> o <strong>DWC</strong> (cultivo en agua profunda oxigenada).
+        Cada uno guarda geometría, nutrientes y <strong>checklist de recarga</strong> (NFT: canales y película; DWC: bomba de aire y depósito único).
+        Puedes convivir varias instalaciones y cambiarlas en Inicio.
       </div>
 
       <div id="setupTipoInstalacionPanel" style="margin:16px 0">
         <div style="font-size:11px;font-weight:800;color:#6b7280;
           text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px">Tipo de sistema</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
           <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupCardTipoTorre"
             onclick="seleccionarTipoInstalacionSetup('torre')"
             aria-pressed="false" aria-label="Torre vertical: niveles y cestas">
-            <div style="font-size:28px;margin-bottom:6px" aria-hidden="true">🌿</div>
-            <div style="font-size:14px;font-weight:900;color:#374151">Torre / vertical</div>
-            <div style="font-size:10px;color:#6b7280;margin-top:4px;line-height:1.35">Niveles, cestas, tubo si aplica</div>
+            <div style="font-size:26px;margin-bottom:6px" aria-hidden="true">🌿</div>
+            <div style="font-size:13px;font-weight:900;color:#374151">Torre</div>
+            <div style="font-size:9px;color:#6b7280;margin-top:4px;line-height:1.35">Niveles y cestas</div>
           </button>
           <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupCardTipoNft"
             onclick="seleccionarTipoInstalacionSetup('nft')"
             aria-pressed="false" aria-label="NFT: película nutricional y canales">
-            <div style="font-size:28px;margin-bottom:6px" aria-hidden="true">🪴</div>
-            <div style="font-size:14px;font-weight:900;color:#374151">NFT</div>
-            <div style="font-size:10px;color:#6b7280;margin-top:4px;line-height:1.35">Canales, pendiente, depósito</div>
+            <div style="font-size:26px;margin-bottom:6px" aria-hidden="true">🪴</div>
+            <div style="font-size:13px;font-weight:900;color:#374151">NFT</div>
+            <div style="font-size:9px;color:#6b7280;margin-top:4px;line-height:1.35">Canales y depósito</div>
+          </button>
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupCardTipoDwc"
+            onclick="seleccionarTipoInstalacionSetup('dwc')"
+            aria-pressed="false" aria-label="DWC: depósito con macetas en tapa y oxigenación">
+            <div style="font-size:26px;margin-bottom:6px" aria-hidden="true">🌊</div>
+            <div style="font-size:13px;font-weight:900;color:#374151">DWC</div>
+            <div style="font-size:9px;color:#6b7280;margin-top:4px;line-height:1.35">Agua profunda + aire</div>
           </button>
         </div>
       </div>
@@ -1968,13 +2054,16 @@
         <div style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">
           Tipo de sistema
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
           <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupInlineTipoTorre"
             onclick="seleccionarTipoInstalacionSetup('torre')"
-            aria-pressed="false" aria-label="Torre vertical">🌿 Torre / vertical</button>
+            aria-pressed="false" aria-label="Torre vertical">🌿 Torre</button>
           <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupInlineTipoNft"
             onclick="seleccionarTipoInstalacionSetup('nft')"
             aria-pressed="false" aria-label="NFT">🪴 NFT</button>
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupInlineTipoDwc"
+            onclick="seleccionarTipoInstalacionSetup('dwc')"
+            aria-pressed="false" aria-label="DWC">🌊 DWC</button>
         </div>
       </div>
 
@@ -2001,7 +2090,7 @@
         <div class="torre-controls">
           <div class="torre-control-row">
             <div class="torre-control-label">
-              Niveles
+              <span id="setupTorreDimNivel">Niveles</span>
               <span class="torre-control-val" id="valNiveles">5</span>
             </div>
             <input type="range" class="torre-slider" id="sliderNiveles"
@@ -2009,7 +2098,7 @@
           </div>
           <div class="torre-control-row">
             <div class="torre-control-label">
-              Cestas por nivel
+              <span id="setupTorreDimCesta">Cestas por nivel</span>
               <span class="torre-control-val" id="valCestas">5</span>
             </div>
             <input type="range" class="torre-slider" id="sliderCestas"
@@ -2243,6 +2332,60 @@
             style="width:88px;flex-shrink:0;padding:8px 10px;border-radius:10px;border:1.5px solid #e5e7eb;font-size:15px"
             oninput="onSetupVolMezclaInput()">
         </div>
+      </div>
+
+      <div id="setupDwcDetalleWrap" style="display:none;margin-top:12px;padding:12px 14px;border-radius:14px;
+        background:linear-gradient(180deg,#ecfeff 0%,#e0f2fe 100%);border:1.5px solid #06b6d4">
+        <div style="font-size:10px;font-weight:800;color:#0e7490;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">
+          DWC — depósito, macetas y accesorios
+        </div>
+        <p style="font-size:10px;color:#475569;line-height:1.45;margin:0 0 10px">
+          Opcional: mismos datos que en <strong>Sistema</strong>. <strong>Nivel y nutrientes</strong> los registrarás en <strong>Mediciones</strong> (EC, pH, volumen).
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <label class="form-label" for="setupDwcLargoCm" style="font-size:9px;font-weight:700;color:#475569">Largo dep. (cm)</label>
+            <input type="number" id="setupDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              onchange="try{actualizarResumenSetup()}catch(e){}"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="setupDwcAnchoCm" style="font-size:9px;font-weight:700;color:#475569">Ancho (cm)</label>
+            <input type="number" id="setupDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              onchange="try{actualizarResumenSetup()}catch(e){}"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="setupDwcProfCm" style="font-size:9px;font-weight:700;color:#475569">Prof. útil (cm)</label>
+            <input type="number" id="setupDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+              onchange="try{actualizarResumenSetup()}catch(e){}"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div>
+            <label class="form-label" for="setupDwcPotRimMm" style="font-size:9px;font-weight:700;color:#475569">Maceta Ø borde (mm)</label>
+            <input type="number" id="setupDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 44" inputmode="numeric" autocomplete="off"
+              onchange="try{actualizarResumenSetup()}catch(e){}"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+          <div>
+            <label class="form-label" for="setupDwcPotHmm" style="font-size:9px;font-weight:700;color:#475569">Maceta alto (mm)</label>
+            <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
+              onchange="try{actualizarResumenSetup()}catch(e){}"
+              style="width:100%;margin-top:4px;padding:7px 8px;border-radius:8px;border:1.5px solid #bae6fd;font-size:13px;font-weight:700">
+          </div>
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0 0 6px">
+          <input type="checkbox" id="setupDwcCupulas" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
+            onchange="try{actualizarResumenSetup()}catch(e){}">
+          <span>Cúpulas / tapas de humedad</span>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:11px;font-weight:600;color:#0f172a;cursor:pointer;margin:0">
+          <input type="checkbox" id="setupDwcEntradaAire" style="margin-top:2px;width:16px;height:16px;accent-color:#0891b2"
+            onchange="try{actualizarResumenSetup()}catch(e){}">
+          <span>Entrada de manguera de aire (tapa o borde)</span>
+        </label>
       </div>
 
       <!-- Tubo y bomba — solo para torres DIY/personalizadas -->
@@ -3863,13 +4006,15 @@ function renderTorreLista() {
   if (!el) return;
   const cfg = state.configTorre || {};
   const esNft = cfg.tipoInstalacion === 'nft';
+  const esDwc = cfg.tipoInstalacion === 'dwc';
   const N = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
   const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS;
   let h = '<div class="torre-lista-block">';
   for (let n = 0; n < N; n++) {
-    h += '<div class="torre-lista-nivel-title">' + (esNft ? 'Canal ' : 'Nivel ') + (n + 1) + '</div>';
+    h += '<div class="torre-lista-nivel-title">' +
+      (esNft ? 'Canal ' : esDwc ? 'Fila ' : 'Nivel ') + (n + 1) + '</div>';
     h += '<div class="torre-lista-grid" role="group" aria-label="' +
-      (esNft ? 'Huecos del canal ' : 'Cestas del nivel ') + (n + 1) + '">';
+      (esNft ? 'Huecos del canal ' : esDwc ? 'Macetas de la fila ' : 'Cestas del nivel ') + (n + 1) + '">';
     for (let c = 0; c < C; c++) {
       const dat = state.torre?.[n]?.[c] || {};
       const col = torreListaColorCesta(n, c);
@@ -3889,7 +4034,7 @@ function renderTorreLista() {
       const fkAttr = ultFotoKey
         ? ' data-foto-key="' + String(ultFotoKey).replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"'
         : '';
-      let ariaLabel = (esNft ? 'Hueco ' : 'Cesta ') + (c + 1) + ', ' + (dat.variedad ? titLista : tit) + ', ' + sub;
+      let ariaLabel = (esNft ? 'Hueco ' : esDwc ? 'Maceta ' : 'Cesta ') + (c + 1) + ', ' + (dat.variedad ? titLista : tit) + ', ' + sub;
       if (faseTit) ariaLabel += ', fase: ' + faseTit;
       ariaLabel = ariaLabel.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       h += '<button type="button" class="torre-lista-cesta-btn" data-n="' + n + '" data-c="' + c + '" ' +
@@ -4525,20 +4670,27 @@ function actualizarBarraMultiSel() {
 }
 
 function sincronizarTextosPanelInteraccionSistema() {
-  const esNft = state.configTorre?.tipoInstalacion === 'nft';
+  const t = tipoInstalacionNormalizado(state.configTorre);
+  const esNft = t === 'nft';
+  const esDwc = t === 'dwc';
   const tit = document.getElementById('torreInteraccionTitulo');
   const modRap = document.getElementById('torreAssignModoRapidoTxt');
   const finHint = document.getElementById('torreAssignFinalizarHint');
-  if (tit) tit.textContent = esNft ? 'Huecos en el sistema NFT' : 'Cestas en la torre';
+  if (tit) {
+    tit.textContent = esNft ? 'Huecos en el sistema NFT'
+      : esDwc ? 'Macetas en el DWC' : 'Cestas en la torre';
+  }
   if (modRap) {
     modRap.textContent = esNft
       ? 'Modo rápido: un toque = asignar ese hueco al instante'
-      : 'Modo rápido: un toque = asignar esa cesta al instante';
+      : esDwc
+        ? 'Modo rápido: un toque = asignar esa maceta al instante'
+        : 'Modo rápido: un toque = asignar esa cesta al instante';
   }
   if (finHint) {
     finHint.innerHTML = esNft
       ? 'Cuando termines, pulsa aquí para volver a <strong>Editar ficha</strong> y guardar el sistema (igual que «Actualizar torre»).'
-      : 'Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (igual que «Actualizar torre»).';
+      : 'Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la instalación (igual que «Actualizar torre»).';
   }
 }
 
@@ -4549,15 +4701,21 @@ function actualizarTorreAssignAyuda() {
     el.textContent = '';
     return;
   }
-  const esNft = state.configTorre?.tipoInstalacion === 'nft';
+  const t = tipoInstalacionNormalizado(state.configTorre);
+  const esNft = t === 'nft';
+  const esDwc = t === 'dwc';
   if (torreAsignarInstantaneo) {
     el.innerHTML = esNft
       ? 'Elige cultivo y fecha; luego <strong>cada toque en un hueco del esquema</strong> (o en Lista) lo rellena al momento. Al terminar, pulsa <strong>Finalizar asignación</strong>.'
-      : 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera. Al terminar, pulsa <strong>Finalizar asignación</strong>.';
+      : esDwc
+        ? 'Elige cultivo y fecha; luego <strong>cada toque en una maceta</strong> del esquema (o en Lista) la rellena al momento. Al terminar, pulsa <strong>Finalizar asignación</strong>.'
+        : 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera. Al terminar, pulsa <strong>Finalizar asignación</strong>.';
   } else {
     el.innerHTML = esNft
       ? 'Elige cultivo y fecha; <strong>toca varios huecos</strong> en el esquema o en Lista (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo uno marcado para quitarlo. Luego <strong>Finalizar asignación</strong>.'
-      : 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Cuando hayas acabado, pulsa <strong>Finalizar asignación</strong>.';
+      : esDwc
+        ? 'Elige cultivo y fecha; <strong>toca varias macetas</strong> en el esquema o en Lista (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Luego <strong>Finalizar asignación</strong>.'
+        : 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Cuando hayas acabado, pulsa <strong>Finalizar asignación</strong>.';
   }
 }
 
@@ -4703,6 +4861,11 @@ function actualizarTorreEditarAyuda() {
   if (state.configTorre?.tipoInstalacion === 'nft') {
     el.innerHTML =
       'Con <strong>Editar ficha</strong>, toca un <strong>hueco</strong> en el esquema NFT o en <strong>Lista</strong> para abrir la ficha (variedad, fecha, fotos y notas).';
+    return;
+  }
+  if (state.configTorre?.tipoInstalacion === 'dwc') {
+    el.innerHTML =
+      'Con <strong>Editar ficha</strong>, toca una <strong>maceta</strong> en el esquema DWC o en <strong>Lista</strong>: ficha con variedad, fecha, fotos y notas.';
     return;
   }
   el.innerHTML = 'Toca una cesta en el <strong>esquema</strong> (de cara) o usa <strong>Lista</strong> abajo: ficha con variedad, fecha, fotos y notas. Flechas al depósito o desliza para ver el reverso.';
@@ -5040,6 +5203,7 @@ function finalizarAsignacionCultivos() {
 function actualizarChromePanelEsquemaPorTipo() {
   const cfg = state.configTorre || {};
   const esNft = cfg.tipoInstalacion === 'nft';
+  const esDwc = cfg.tipoInstalacion === 'dwc';
   const intro = document.getElementById('torreEsquemaSub');
   if (intro) {
     if (esNft) {
@@ -5056,6 +5220,10 @@ function actualizarChromePanelEsquemaPorTipo() {
         'Esquema <strong>2D</strong>: recorrido del agua en <strong>azul discontinuo</strong> (animado si «Animaciones suaves» está activo). <strong>Toca un hueco</strong> para la ficha. ' +
         'Indica <strong>altura al 1.º canal</strong> en asistente o Sistema para la bomba. ' +
         '<strong>Lista</strong> = acceso lineal (cada fila = un tubo).';
+    } else if (esDwc) {
+      intro.innerHTML =
+        '<strong>DWC</strong> · Vista <strong>lógica</strong> del cubo/depósito: cada celda es una <strong>maceta</strong> en la tapa (filas × columnas). ' +
+        'No dibuja el volumen de agua: sirve para fichas, variedades y diario. <strong>Lista</strong> recorre filas y macetas.';
     } else {
       intro.innerHTML =
         '<strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real). ' +
@@ -5071,6 +5239,14 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<span class="k-niv">Canales</span>' +
         '<span style="color:#cbd5e1;font-weight:400">·</span>' +
         '<span class="k-ces">Huecos</span>';
+    } else if (esDwc) {
+      leg.innerHTML =
+        '<span class="k-dep">Depósito</span>' +
+        '<span style="color:#cbd5e1;font-weight:400">·</span>' +
+        '<span class="k-niv">Filas</span>' +
+        '<span style="color:#cbd5e1;font-weight:400">·</span>' +
+        '<span class="k-ces">Macetas</span>' +
+        '<span class="k-hint"> · tocar</span>';
     } else {
       leg.innerHTML =
         '<span class="k-dep">Depósito</span>' +
@@ -5361,7 +5537,8 @@ function bindTorreCestas(wrap, opts = {}) {
       startX = ev.clientX; startY = ev.clientY;
       t = setTimeout(() => {
         const dat = (state.torre?.[n]?.[c]) || {};
-        const vacioLbl = state.configTorre?.tipoInstalacion === 'nft' ? 'Hueco vacío' : 'Cesta vacía';
+        const _ti = tipoInstalacionNormalizado(state.configTorre);
+        const vacioLbl = _ti === 'nft' ? 'Hueco vacío' : _ti === 'dwc' ? 'Maceta vacía' : 'Cesta vacía';
         const variedad = dat.variedad || vacioLbl;
         const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
         const fotos = (dat.fotos || []).length;
@@ -5834,11 +6011,14 @@ function updateTorreStats() {
   const volMax = getVolumenDepositoMaxLitros(cfg);
   const volMez = getVolumenMezclaLitros(cfg);
   const esNftCfg = cfg.tipoInstalacion === 'nft';
+  const esDwcCfg = cfg.tipoInstalacion === 'dwc';
 
   // Título torre
   renderTablaVariedades();
   const ttEl = document.getElementById('torreTabTitle');
-  if (ttEl) ttEl.textContent = torreNombre + (esNftCfg ? ' · NFT' : '');
+  if (ttEl) {
+    ttEl.textContent = torreNombre + (esNftCfg ? ' · NFT' : esDwcCfg ? ' · DWC' : '');
+  }
 
   const nomInpTorre = document.getElementById('torreNombreInstalacionInput');
   if (nomInpTorre && document.activeElement !== nomInpTorre) {
@@ -5854,6 +6034,10 @@ function updateTorreStats() {
         : volMax + ' L';
     if (esNftCfg) {
       depEl.textContent = 'Depósito para mezclas · ' + volTxt;
+    } else if (esDwcCfg) {
+      const geom =
+        (cfg.numNiveles || '—') + ' filas × ' + (cfg.numCestas || '—') + ' macetas';
+      depEl.textContent = torreNombre + ' — DWC — ' + geom + ' — ' + volTxt;
     } else {
       const geom =
         (cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C';
@@ -6566,8 +6750,15 @@ const NUTRIENTES_DB = [
 
 let setupPagina = 0;
 let setupTipoTorre = 'custom';
-/** 'torre' | 'nft' | '' (nueva instalación: hay que elegir en paso 0) */
+/** 'torre' | 'nft' | 'dwc' | '' (nueva instalación: hay que elegir en paso 0) */
 let setupTipoInstalacion = 'torre';
+
+/** Normaliza tipo de instalación guardado en config. */
+function tipoInstalacionNormalizado(cfg) {
+  const t = cfg && cfg.tipoInstalacion;
+  if (t === 'nft' || t === 'dwc' || t === 'torre') return t;
+  return 'torre';
+}
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 /** NFT: Ø interior línea de alimentación/distribución desde bomba (no el canal de cultivo 75–110 mm), mm — 16–40 */
 let setupNftTuboMm = 25;
@@ -6637,7 +6828,7 @@ function abrirSetup() {
     humedad: !!sh.humedad,
   };
   const c = state.configTorre || {};
-  setupTipoInstalacion = c.tipoInstalacion === 'nft' ? 'nft' : 'torre';
+  setupTipoInstalacion = tipoInstalacionNormalizado(c);
   const snc = document.getElementById('sliderNftCanales');
   const snh = document.getElementById('sliderNftHuecos');
   const snp = document.getElementById('sliderNftPendiente');
@@ -6709,12 +6900,15 @@ function abrirSetup() {
       svm.value = '';
     }
   }
+  try {
+    syncDwcFormInputsDesdeConfig(c, DWC_FORM_IDS_SETUP);
+  } catch (eDwc) {}
 
   const o = document.getElementById('setupOverlay');
   o.classList.add('open');
   renderNutrientesGrid();
-  if (setupTipoInstalacion === 'torre') updateTorreBuilder();
-  else updateNftSetupPreview();
+  if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+  else updateTorreBuilder();
   renderSetupPage();
   setTimeout(function () {
     const lhIn = document.getElementById('nftBombaUsuarioLh');
@@ -6743,8 +6937,8 @@ function cerrarSetup() {
 }
 
 function iniciarConfiguracionTorre() {
-  if (setupEsNuevaTorre && setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft') {
-    showToast('Elige Torre / vertical o NFT antes de continuar', true);
+  if (setupEsNuevaTorre && setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc') {
+    showToast('Elige Torre, NFT o DWC antes de continuar', true);
     return;
   }
   setupTipoTorre = 'custom';
@@ -6753,14 +6947,17 @@ function iniciarConfiguracionTorre() {
 }
 
 function seleccionarTipoInstalacionSetup(tipo) {
-  setupTipoInstalacion = tipo === 'nft' ? 'nft' : 'torre';
+  if (tipo === 'nft') setupTipoInstalacion = 'nft';
+  else if (tipo === 'dwc') setupTipoInstalacion = 'dwc';
+  else setupTipoInstalacion = 'torre';
   refrescarSetupTipoInstalacionUI();
 }
 
 function refrescarSetupTipoInstalacionUI() {
   const torreCard = document.getElementById('setupCardTipoTorre');
   const nftCard = document.getElementById('setupCardTipoNft');
-  [torreCard, nftCard].forEach(card => {
+  const dwcCard = document.getElementById('setupCardTipoDwc');
+  [torreCard, nftCard, dwcCard].forEach(card => {
     if (!card) return;
     card.classList.remove('selected');
     card.setAttribute('aria-pressed', 'false');
@@ -6771,10 +6968,14 @@ function refrescarSetupTipoInstalacionUI() {
   } else if (setupTipoInstalacion === 'nft' && nftCard) {
     nftCard.classList.add('selected');
     nftCard.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'dwc' && dwcCard) {
+    dwcCard.classList.add('selected');
+    dwcCard.setAttribute('aria-pressed', 'true');
   }
   const inlTorre = document.getElementById('setupInlineTipoTorre');
   const inlNft = document.getElementById('setupInlineTipoNft');
-  [inlTorre, inlNft].forEach(btn => {
+  const inlDwc = document.getElementById('setupInlineTipoDwc');
+  [inlTorre, inlNft, inlDwc].forEach(btn => {
     if (!btn) return;
     btn.classList.remove('selected');
     btn.setAttribute('aria-pressed', 'false');
@@ -6785,6 +6986,20 @@ function refrescarSetupTipoInstalacionUI() {
   } else if (setupTipoInstalacion === 'nft' && inlNft) {
     inlNft.classList.add('selected');
     inlNft.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'dwc' && inlDwc) {
+    inlDwc.classList.add('selected');
+    inlDwc.setAttribute('aria-pressed', 'true');
+  }
+  const dn = document.getElementById('setupTorreDimNivel');
+  const dc = document.getElementById('setupTorreDimCesta');
+  if (dn && dc) {
+    if (setupTipoInstalacion === 'dwc') {
+      dn.textContent = 'Filas en la tapa';
+      dc.textContent = 'Macetas por fila';
+    } else {
+      dn.textContent = 'Niveles';
+      dc.textContent = 'Cestas por nivel';
+    }
   }
   if (setupPagina !== 1) return;
   const isNft = setupTipoInstalacion === 'nft';
@@ -6794,12 +7009,19 @@ function refrescarSetupTipoInstalacionUI() {
   if (nw) nw.style.display = isNft ? 'block' : 'none';
   const t1 = document.getElementById('spage1Title');
   const st = document.getElementById('spage1Subtitle');
-  if (t1) t1.textContent = isNft ? '🪴 Tu sistema NFT' : '🌿 Tu torre';
+  if (t1) {
+    t1.textContent = isNft ? '🪴 Tu sistema NFT'
+      : setupTipoInstalacion === 'dwc' ? '🌊 Tu DWC' : '🌿 Tu torre';
+  }
   if (st) {
     st.textContent = isNft
       ? 'Canales en paralelo, huecos por canal y pendiente. La rejilla usa un nivel por canal.'
-      : 'Configura las dimensiones de tu sistema hidropónico vertical';
+      : setupTipoInstalacion === 'dwc'
+        ? 'Cubo con tapa: filas × macetas = orificios; litros = solución. Abajo puedes anotar medidas del depósito, maceta, cúpulas y entrada de aire (también en Sistema).'
+        : 'Configura las dimensiones de tu sistema hidropónico vertical';
   }
+  const dwcWizard = document.getElementById('setupDwcDetalleWrap');
+  if (dwcWizard) dwcWizard.style.display = setupTipoInstalacion === 'dwc' ? 'block' : 'none';
   syncSetupPreviewDiagramPorTipoInstalacion();
   if (isNft) {
     refrescarDocTuberiaNftSetup();
@@ -7215,7 +7437,16 @@ function redimensionarMatrizTorreNftPreservando(cfg) {
 
 function sincronizarSistemaNftMontajeUI() {
   const card = document.getElementById('sistemaNftMontajeCard');
+  const dwcInfo = document.getElementById('sistemaDwcAyudaCard');
   const cfg = state.configTorre;
+  if (dwcInfo) {
+    if (cfg && cfg.tipoInstalacion === 'dwc') {
+      dwcInfo.style.display = 'block';
+      syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
+    } else {
+      dwcInfo.style.display = 'none';
+    }
+  }
   if (!card) return;
   if (!cfg || cfg.tipoInstalacion !== 'nft') {
     card.style.display = 'none';
@@ -7366,6 +7597,90 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
     } catch (e2) {}
   }
   showToast('Montaje NFT aplicado');
+}
+
+const DWC_FORM_IDS_SISTEMA = {
+  largo: 'sysDwcLargoCm',
+  ancho: 'sysDwcAnchoCm',
+  prof: 'sysDwcProfCm',
+  rim: 'sysDwcPotRimMm',
+  alt: 'sysDwcPotHmm',
+  cupulas: 'sysDwcCupulas',
+  aire: 'sysDwcEntradaAire',
+};
+const DWC_FORM_IDS_SETUP = {
+  largo: 'setupDwcLargoCm',
+  ancho: 'setupDwcAnchoCm',
+  prof: 'setupDwcProfCm',
+  rim: 'setupDwcPotRimMm',
+  alt: 'setupDwcPotHmm',
+  cupulas: 'setupDwcCupulas',
+  aire: 'setupDwcEntradaAire',
+};
+
+function _dwcParseOptCm(id, min, max) {
+  const el = document.getElementById(id);
+  const v = parseFloat(String(el && el.value != null ? el.value : '').replace(',', '.'));
+  if (!Number.isFinite(v) || v < min || v > max) return null;
+  return Math.round(v * 10) / 10;
+}
+
+function _dwcParseOptMm(id, min, max) {
+  const el = document.getElementById(id);
+  const v = parseInt(String(el && el.value != null ? el.value : '').trim(), 10);
+  if (!Number.isFinite(v) || v < min || v > max) return null;
+  return v;
+}
+
+/** Rellena cfg con campos DWC desde inputs (pestaña Sistema o asistente). */
+function dwcMergeCamposFormularioEnCfg(cfg, ids) {
+  if (!cfg || !ids) return;
+  const L = _dwcParseOptCm(ids.largo, 5, 300);
+  const W = _dwcParseOptCm(ids.ancho, 5, 300);
+  const P = _dwcParseOptCm(ids.prof, 5, 200);
+  const rim = _dwcParseOptMm(ids.rim, 25, 120);
+  const hPot = _dwcParseOptMm(ids.alt, 30, 200);
+  if (L != null) cfg.dwcDepositoLargoCm = L; else delete cfg.dwcDepositoLargoCm;
+  if (W != null) cfg.dwcDepositoAnchoCm = W; else delete cfg.dwcDepositoAnchoCm;
+  if (P != null) cfg.dwcDepositoProfCm = P; else delete cfg.dwcDepositoProfCm;
+  if (rim != null) cfg.dwcNetPotRimMm = rim; else delete cfg.dwcNetPotRimMm;
+  if (hPot != null) cfg.dwcNetPotHeightMm = hPot; else delete cfg.dwcNetPotHeightMm;
+  cfg.dwcCupulas = document.getElementById(ids.cupulas)?.checked === true;
+  if (!cfg.dwcCupulas) delete cfg.dwcCupulas;
+  cfg.dwcEntradaAireManguera = document.getElementById(ids.aire)?.checked === true;
+  if (!cfg.dwcEntradaAireManguera) delete cfg.dwcEntradaAireManguera;
+}
+
+function syncDwcFormInputsDesdeConfig(c, ids) {
+  if (!ids) return;
+  c = c || {};
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val != null && val !== '' ? String(val) : '';
+  };
+  setVal(ids.largo, c.dwcDepositoLargoCm);
+  setVal(ids.ancho, c.dwcDepositoAnchoCm);
+  setVal(ids.prof, c.dwcDepositoProfCm);
+  setVal(ids.rim, c.dwcNetPotRimMm);
+  setVal(ids.alt, c.dwcNetPotHeightMm);
+  const cu = document.getElementById(ids.cupulas);
+  if (cu) cu.checked = c.dwcCupulas === true;
+  const air = document.getElementById(ids.aire);
+  if (air) air.checked = c.dwcEntradaAireManguera === true;
+}
+
+function aplicarSistemaDwcDesdeFormulario() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  initTorres();
+  const cfg = state.configTorre;
+  dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try {
+    renderTorreSistemaResumenTabla(cfg);
+  } catch (e) {}
+  showToast('Datos DWC guardados');
 }
 
 /**
@@ -7750,15 +8065,49 @@ function renderTorreSistemaResumenTabla(cfg) {
     const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || (typeof NUM_CESTAS !== 'undefined' ? NUM_CESTAS : 5);
     const vol = getVolumenDepositoMaxLitros(cfg);
     const vMez = getVolumenMezclaLitros(cfg);
+    const esDwcTab = cfg.tipoInstalacion === 'dwc';
     if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
-    rows.push(['Sistema', 'Torre vertical']);
-    rows.push(['Niveles', String(N)]);
-    rows.push(['Cestas por nivel', String(C)]);
-    rows.push(['Cestas totales', String(N * C)]);
+    rows.push(['Sistema', esDwcTab ? 'DWC' : 'Torre vertical']);
+    rows.push([esDwcTab ? 'Filas' : 'Niveles', String(N)]);
+    rows.push([esDwcTab ? 'Macetas por fila' : 'Cestas por nivel', String(C)]);
+    rows.push([esDwcTab ? 'Macetas totales' : 'Cestas totales', String(N * C)]);
     rows.push([
       'Depósito (cap. máx)',
       String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
     ]);
+    const eqArrDw = cfg.equipamiento;
+    if (esDwcTab && Array.isArray(eqArrDw) && eqArrDw.length) {
+      const bitsD = [];
+      if (eqArrDw.includes('calentador')) bitsD.push('Calentador');
+      if (eqArrDw.includes('difusor')) bitsD.push('Aireador / difusor');
+      if (bitsD.length) rows.push(['Equipo habitual', bitsD.join(' · ')]);
+    }
+    if (esDwcTab) {
+      const suK = normalizaSustratoKey(cfg.sustrato || state.configSustrato || 'esponja');
+      const suN = CONFIG_SUSTRATO[suK]?.nombre || suK;
+      rows.push(['Sustrato (referencia macetas)', escHtmlUi(suN)]);
+      const l = cfg.dwcDepositoLargoCm;
+      const w = cfg.dwcDepositoAnchoCm;
+      const p = cfg.dwcDepositoProfCm;
+      if (l != null || w != null || p != null) {
+        const dL = l != null ? l + ' cm' : '—';
+        const dW = w != null ? w + ' cm' : '—';
+        const dP = p != null ? p + ' cm' : '—';
+        rows.push(['Depósito físico (largo × ancho × prof.)', escHtmlUi(dL + ' × ' + dW + ' × ' + dP)]);
+      }
+      const rim = cfg.dwcNetPotRimMm;
+      const hp = cfg.dwcNetPotHeightMm;
+      if (rim != null || hp != null) {
+        rows.push([
+          'Maceta net pot',
+          escHtmlUi((rim != null ? 'Ø ' + rim + ' mm' : '—') + (hp != null ? ' · alto ' + hp + ' mm' : '')),
+        ]);
+      }
+      const acc = [];
+      if (cfg.dwcCupulas === true) acc.push('Cúpulas / humedad');
+      if (cfg.dwcEntradaAireManguera === true) acc.push('Entrada manguera de aire');
+      if (acc.length) rows.push(['Accesorios', escHtmlUi(acc.join(' · '))]);
+    }
   }
 
   let body = '';
@@ -10963,8 +11312,8 @@ function guardarSetupYContinuar() {
       document.getElementById('setupNombreInstalacionInput')?.focus();
       return;
     }
-    if (setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft') {
-      showToast('Elige Torre / vertical o NFT en el primer paso del asistente', true);
+    if (setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc') {
+      showToast('Elige Torre, NFT o DWC en el primer paso del asistente', true);
       setupPagina = 0;
       renderSetupPage();
       return;
@@ -10972,6 +11321,7 @@ function guardarSetupYContinuar() {
   }
 
   const isNft = setupTipoInstalacion === 'nft';
+  const isDwc = setupTipoInstalacion === 'dwc';
   let niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
   let cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5, 10);
   let nftNvSlider = 4;
@@ -11013,7 +11363,7 @@ function guardarSetupYContinuar() {
   setupData.horasLuz = horasLuzGuardar;
 
   state.configTorre = {
-    tipoInstalacion: isNft ? 'nft' : 'torre',
+    tipoInstalacion: isNft ? 'nft' : isDwc ? 'dwc' : 'torre',
     tipoTorre:    'custom',
     numNiveles:   niveles,
     numCestas:    cestas,
@@ -11106,6 +11456,9 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftEscaleraCaras;
     delete state.configTorre.nftEscaleraNivelesCara;
   }
+  if (isDwc) {
+    dwcMergeCamposFormularioEnCfg(state.configTorre, DWC_FORM_IDS_SETUP);
+  }
   const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
   if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < vol - 0.02) {
     state.configTorre.volMezclaLitros = Math.min(vol, Math.max(0.5, Math.round(mezParsed * 10) / 10));
@@ -11142,7 +11495,7 @@ function guardarSetupYContinuar() {
     const nuevaTorre = {
       id: Date.now(),
       nombre: setupNombreNuevaTorre,
-      emoji: isNft ? '🪴' : EMOJIS[nTorres % EMOJIS.length],
+      emoji: isNft ? '🪴' : isDwc ? '🌊' : EMOJIS[nTorres % EMOJIS.length],
       config: { ...state.configTorre },
       torre: JSON.parse(JSON.stringify(state.torre)),
       modoActual: 'lechuga',
@@ -11227,7 +11580,12 @@ function preguntarIniciarChecklist() {
   overlay.id = 'checklistPreguntaOverlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-label', cfg.tipoInstalacion === 'nft' ? 'Iniciar checklist NFT' : 'Iniciar checklist de torre');
+  overlay.setAttribute(
+    'aria-label',
+    cfg.tipoInstalacion === 'nft' ? 'Iniciar checklist NFT'
+      : cfg.tipoInstalacion === 'dwc' ? 'Iniciar checklist DWC'
+      : 'Iniciar checklist de torre'
+  );
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;' +
     'display:flex;align-items:flex-end;justify-content:center;' +
     'padding-bottom:env(safe-area-inset-bottom,0px)';
@@ -14477,11 +14835,19 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
 
   const clTit = document.getElementById('checklistTitle');
   if (clTit) {
-    const esNft = state.configTorre && state.configTorre.tipoInstalacion === 'nft';
+    const tCh = tipoInstalacionNormalizado(state.configTorre || {});
+    const titPrimer =
+      tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
+      : tCh === 'dwc' ? '🌊 Primer llenado DWC — checklist'
+      : '🌿 Primer llenado — checklist';
+    const titRecarga =
+      tCh === 'nft' ? '🪴 Recarga NFT — checklist'
+      : tCh === 'dwc' ? '🌊 Recarga DWC — checklist'
+      : '🌿 HidroCultivo — Recarga';
     if (clRutaChecklist === 'primer_llenado') {
-      clTit.textContent = esNft ? '🪴 Primer llenado NFT — checklist' : '🌿 Primer llenado — checklist';
+      clTit.textContent = titPrimer;
     } else {
-      clTit.textContent = esNft ? '🪴 Recarga NFT — checklist' : '🌿 HidroCultivo — Recarga';
+      clTit.textContent = titRecarga;
     }
   }
 
@@ -14512,6 +14878,7 @@ function generarPasosNutriente() {
   const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
   const suf    = dosisSufijoNutriente(nut);
   const pasos  = [];
+  const esDwcNut = cfg.tipoInstalacion === 'dwc';
 
   // PASO 4.2 — CalMag (solo si el usuario / agua lo activan)
   if (usarCalMagEnRecarga() && mlCM > 0) {
@@ -14592,10 +14959,14 @@ function generarPasosNutriente() {
 
   pasos.push({
     id:'4.7', seccion:null, paso:'4.7',
-    desc: 'Encender bomba con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — seguro para las raíces',
+    desc: esDwcNut
+      ? ('Encender el <strong>aireador</strong> con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — raíces oxigenadas en el depósito')
+      : 'Encender bomba con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — seguro para las raíces',
     nota: tieneBuffer
       ? 'No corrijas más el pH hasta medir con calma (recordatorio en 4.8 y registro en paso 6).'
-      : 'Sistema listo para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.'
+      : (esDwcNut
+        ? 'DWC: el difusor homogeneiza y oxigena; control de nivel y nutrientes en <strong>Mediciones</strong>.'
+        : 'Sistema listo para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.')
   });
 
   pasos.push({
@@ -14631,14 +15002,17 @@ function construirTextoChecklistPreliminar() {
     }
   }
   const esNft = cfg.tipoInstalacion === 'nft';
+  const esDwc = cfg.tipoInstalacion === 'dwc';
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
     p1Partes.join(' + ') + '. Remover bien.' +
-    (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '');
+    (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '') +
+    (esDwc ? ' En DWC, humedece coronas/net cups o el arranque de cada maceta antes del vaciado prolongado.' : '');
   const stockExtra = orden.slice(0, partes).join(', ');
   let p2 = 'Verificar stock: agua destilada u ósmosis' +
     (usarCalMagEnRecarga() ? ', CalMag' : '') +
     ', ' + stockExtra + ', pH+, agua oxigenada 3%, esponja';
   if (esNft) p2 += ', cepillo suave o tubo flexible para canales, comprobación de pendiente';
+  if (esDwc) p2 += ', repuestos de difusor o piedra porosa, manguera de aire';
   const ecO = getECOptimaTorre();
   const provMs = Math.min(1.2, Math.max(0.35, ((ecO.min + ecO.max) / 2000) * 0.06));
   return { descP1: desc, descP2: p2, placeholderProv: provMs.toFixed(2) };
@@ -14657,7 +15031,7 @@ function checklistInstalacionCompletaParaRecarga() {
   if (Number.isFinite(vm) && vm > 0 && (vm > vol + 0.01 || vm < 0.5)) return false;
   if (!cfg.nutriente || !NUTRIENTES_DB.some(n => n.id === cfg.nutriente)) return false;
   const tipo = cfg.tipoInstalacion;
-  if (tipo !== 'torre' && tipo !== 'nft') return false;
+  if (tipo !== 'torre' && tipo !== 'nft' && tipo !== 'dwc') return false;
 
   if (cfg.checklistInstalacionConfirmada === true) return true;
 
@@ -14676,7 +15050,7 @@ function cerrarOverlayChecklistDatosInstalacion() {
 }
 
 /**
- * Aplica torre o NFT mínimos tras el cuestionario previo al checklist (reset / primera recarga sin asistente).
+ * Aplica torre, NFT o DWC mínimos tras el cuestionario previo al checklist (reset / primera recarga sin asistente).
  */
 function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMezclaOpt) {
   initTorres();
@@ -14720,6 +15094,19 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
       nftLaminaAguaMm: 3,
     });
     redimensionarMatrizTorreNftPreservando(state.configTorre);
+  } else if (tipo === 'dwc') {
+    state.configTorre = Object.assign({}, baseComun, {
+      tipoInstalacion: 'dwc',
+      numNiveles: NUM_NIVELES,
+      numCestas: NUM_CESTAS,
+    });
+    state.torre = [];
+    for (let n = 0; n < NUM_NIVELES; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < NUM_CESTAS; c++) {
+        state.torre[n].push({ variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] });
+      }
+    }
   } else {
     state.configTorre = Object.assign({}, baseComun, {
       tipoInstalacion: 'torre',
@@ -14764,7 +15151,10 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     Number.isFinite(vmIniRaw) && vmIniRaw > 0 && vmIniRaw < capRef - 0.02
       ? String(Math.round(vmIniRaw * 10) / 10)
       : '';
-  const tipoIni = cfg.tipoInstalacion === 'nft' ? 'nft' : 'torre';
+  const tipoIni =
+    cfg.tipoInstalacion === 'nft' ? 'nft'
+    : cfg.tipoInstalacion === 'dwc' ? 'dwc'
+    : 'torre';
   const aguaIni = cfg.agua || state.configAgua || 'destilada';
   const nutIni = (cfg.nutriente && NUTRIENTES_DB.some(n => n.id === cfg.nutriente) ? cfg.nutriente : (getNutrienteTorre().id || 'canna_aqua'));
   const optsNut = NUTRIENTES_DB.map(n =>
@@ -14784,17 +15174,20 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     '<div style="background:var(--bg2,#1e293b);border:1.5px solid var(--border,#334155);border-radius:20px 20px 12px 12px;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:18px;color:var(--white,#f8fafc)">' +
       '<div id="cldTitulo" style="font-family:var(--font-display);font-size:17px;font-weight:900;margin-bottom:6px">Antes del checklist de recarga</div>' +
       '<p style="font-size:12px;color:var(--muted,#94a3b8);line-height:1.5;margin:0 0 14px">' +
-        'Indica cómo es <strong>esta</strong> instalación para que volumen, agua, nutriente y pasos (torre o NFT) coincidan con tu montaje real. ' +
+        'Indica cómo es <strong>esta</strong> instalación para que volumen, agua, nutriente y pasos (torre, NFT o DWC) coincidan con tu montaje real. ' +
         'Puedes afinar todo después en <strong>Sistema</strong> o con el asistente completo.</p>' +
 
       '<div style="font-size:11px;font-weight:800;color:#86efac;margin-bottom:6px">Tipo de sistema</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">' +
         '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
           '<input type="radio" name="cldTipoInst" value="torre"' + (tipoIni === 'torre' ? ' checked' : '') + '>' +
-          '<span style="font-size:13px;font-weight:700">Torre vertical</span></label>' +
+          '<span style="font-size:13px;font-weight:700">Torre</span></label>' +
         '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
           '<input type="radio" name="cldTipoInst" value="nft"' + (tipoIni === 'nft' ? ' checked' : '') + '>' +
           '<span style="font-size:13px;font-weight:700">NFT</span></label>' +
+        '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
+          '<input type="radio" name="cldTipoInst" value="dwc"' + (tipoIni === 'dwc' ? ' checked' : '') + '>' +
+          '<span style="font-size:13px;font-weight:700">DWC</span></label>' +
       '</div>' +
 
       '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Capacidad máxima del depósito (L)</label>' +
@@ -14886,6 +15279,7 @@ function getCLPasos() {
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
   const esNft = cfg.tipoInstalacion === 'nft';
+  const esDwc = cfg.tipoInstalacion === 'dwc';
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
   const nftCh = nftHyd ? nftHyd.nCh : 0;
   const nftHx = nftHyd ? nftHyd.nHx : 0;
@@ -14964,7 +15358,9 @@ function getCLPasos() {
     paso:'6.0',
     desc: esNft
       ? ('Sensores o medidores en tu NFT (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea tras el retorno; si el circuito es largo, espera unos minutos a que se estabilice.')
-      : ('Sensores o medidores: constan en la torre ' + hwLista.join(', ') + '. Comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
+      : esDwc
+        ? ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.')
+        : ('Sensores o medidores: constan en la torre ' + hwLista.join(', ') + '. Comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. El <strong>registro</strong> de esta recarga lo cierras en el paso <strong>6.4</strong> y lo verás en <strong>Mediciones</strong>.',
   }] : [];
 
@@ -15063,23 +15459,32 @@ function getCLPasos() {
   { id:'P1', seccion:'🌙 Preparación', paso:'P1',
     desc: pre.descP1,
     nota:'Para mantener raíces húmedas durante los 45 min sin bomba · Dosis escaladas desde tu depósito de ' + vol + 'L y ' + nut.nombre +
-      (esNft ? ' · NFT: prioriza humedad en raíces expuestas y entradas de canal.' : ''),
+      (esNft ? ' · NFT: prioriza humedad en raíces expuestas y entradas de canal.' : '') +
+      (esDwc ? ' · DWC: prioriza raíces sumergidas y oxigenación al reanudar.' : ''),
     campos:[{ id:'clEcProvisional', label:'EC provisional:', unit:'mS/cm', type:'number', step:'0.01', placeholder: pre.placeholderProv }] },
   { id:'P2', seccion:null, paso:'P2',
     desc: pre.descP2,
     nota:'Comprar lo faltante antes de empezar' },
   { id:'P3', seccion:null, paso:'P3',
     desc:'Poner toldo si hay sol directo o temperatura > 20°C',
-    nota: esNft ? 'En NFT el sol directo seca rápido la película y las plántulas al inicio del canal' : 'Reduce transpiración durante los 45 min sin bomba' },
+    nota: esNft ? 'En NFT el sol directo seca rápido la película y las plántulas al inicio del canal'
+      : esDwc ? 'En DWC el sol calienta depósito y follaje; toldo y depósito opaco reducen estrés y algas'
+      : 'Reduce transpiración durante los 45 min sin bomba' },
 
   { id:'1.1', seccion:'⏹️ Paso 1 — Apagar y riego provisional', paso:'1.1',
-    desc:'Apagar la bomba de riego',
+    desc: esDwc
+      ? 'Apagar el aireador (y la bomba de agua si hubiera recirculación auxiliar) antes de vaciar'
+      : 'Apagar la bomba de riego',
     campos:[{ id:'clHoraApagado', label:'Hora apagado:', type:'time', clase:'wide' }] },
   { id:'1.2', seccion:null, paso:'1.2',
     desc: esNft
       ? ('Riego provisional por canal: humedecer copas, cubetas o el inicio de cada línea con solución (≈50–150 ml según longitud). Ningún tramo debe quedar seco.')
-      : 'Regar manualmente cada cesta con solución provisional: 50-100 ml por cesta',
-    nota: esNft ? ('Reparte en los ' + nftCh + ' canales si comparten bomba — prioridad al arranque de cada uno.') : 'Mantener esponjas húmedas' },
+      : esDwc
+        ? 'Con solución provisional, humedecer coronas/net cups y comprobar que las raíces no queden al aire en ninguna maceta'
+        : 'Regar manualmente cada cesta con solución provisional: 50-100 ml por cesta',
+    nota: esNft ? ('Reparte en los ' + nftCh + ' canales si comparten bomba — prioridad al arranque de cada uno.')
+      : esDwc ? 'Mantén cubierta húmeda y raíces en contacto con líquido hasta rellenar de nuevo'
+      : 'Mantener esponjas húmedas' },
   { id:'1.3', seccion:null, paso:'1.3', alert:true,
     desc:'⚠️ Máximo 45 minutos sin bomba — anotar hora límite',
     nota:'Estrés hídrico irreversible si se supera' },
@@ -15087,17 +15492,25 @@ function getCLPasos() {
   { id:'1.4', seccion:null, paso:'1.4', alert:true,
     desc: esNft
       ? '✂️ COSECHAR o retirar plantas maduras antes de vaciar — en NFT la materia orgánica y raíces en canales estrechos generan biofilm y cortan la película'
-      : '✂️ COSECHAR PRIMERO todas las plantas maduras antes de limpiar',
+      : esDwc
+        ? '✂️ COSECHAR o retirar plantas maduras antes de vaciar — restos de raíz en el depósito degradan la mezcla y favorecen algas'
+        : '✂️ COSECHAR PRIMERO todas las plantas maduras antes de limpiar',
     nota: esNft
       ? 'Orden: 1º Vaciar carga madura del canal · 2º Limpiar canales/retornos · 3º Nueva solución'
-      : '⚠️ CRÍTICO: Las raíces maduras miden 30-40cm y al sacar las cestas se rompen inevitablemente. Los fragmentos de raíz en el depósito fermentan, generan espuma y suben el pH. Orden correcto: 1º Cosechar → 2º Limpiar → 3º Trasplantar' },
+      : esDwc
+        ? 'Orden: 1º Retirar carga madura · 2º Limpiar depósito y difusores · 3º Nueva solución'
+        : '⚠️ CRÍTICO: Las raíces maduras miden 30-40cm y al sacar las cestas se rompen inevitablemente. Los fragmentos de raíz en el depósito fermentan, generan espuma y suben el pH. Orden correcto: 1º Cosechar → 2º Limpiar → 3º Trasplantar' },
   { id:'1.5', seccion:null, paso:'1.5',
     desc: esNft
       ? 'Plantas jóvenes que siguen: no sacar raíces al aire; si mueves una copa, mantén sumersión en solución del depósito actual'
-      : 'Si hay plantas en crecimiento que NO se cosechan: dejarlas en su sitio durante toda la limpieza',
+      : esDwc
+        ? 'Plantas que siguen: no dejar raíces al aire; si mueves una maceta, mantén sumersión en solución del depósito actual'
+        : 'Si hay plantas en crecimiento que NO se cosechan: dejarlas en su sitio durante toda la limpieza',
     nota: esNft
       ? 'En NFT las raíces suelen colgar en el canal — evita que queden al descubierto más de unos segundos'
-      : 'Prepara un cubo con solución del depósito actual por si necesitas mover alguna planta de forma imprescindible — mantén las raíces sumergidas en todo momento' },
+      : esDwc
+        ? 'En DWC las raíces cuelgan en el depósito — minimiza el tiempo fuera del líquido'
+        : 'Prepara un cubo con solución del depósito actual por si necesitas mover alguna planta de forma imprescindible — mantén las raíces sumergidas en todo momento' },
 
   { id:'2.1', seccion:'🧹 Paso 2 — Vaciar y limpiar', paso:'2.1',
     desc:'Vaciar completamente el depósito y anotar color del agua',
@@ -15117,7 +15530,9 @@ function getCLPasos() {
   { id:'2.5', seccion:null, paso:'2.5',
     desc: esNft
       ? 'Limpiar canales NFT, espigas, retornos al depósito y bomba; retirar restos de raíz en codos y bajantes'
-      : 'Limpiar tubos, bomba exterior y conexiones' },
+      : esDwc
+        ? 'Limpiar difusores, mangueras de aire, tapa y paredes del depósito; retirar raíces flotantes y biofilm'
+        : 'Limpiar tubos, bomba exterior y conexiones' },
   ];
 
   const pasosCubiertaDeposito = [
@@ -15134,7 +15549,9 @@ function getCLPasos() {
     desc:'Limpiar el interior del depósito: agua oxigenada 3% — 15 ml en ~5 L de agua. Frotar paredes con esponja suave.',
     nota: esNft
       ? 'Quita polvo, restos de fabricación o films sueltos. Canales nuevos: enjuagar; una limpieza tipo «recarga» (biofilm, raíces) la harás cuando el sistema ya haya estado en uso.'
-      : 'Quita polvo, grasa o restos industriales. Con tubo/bomba nuevos, un enjuague previo evita residuos en la primera mezcla.' },
+      : esDwc
+        ? 'Quita polvo y residuos; enjuaga difusores y líneas de aire nuevas. DWC depende de agua limpia y burbujeo uniforme desde el primer día.'
+        : 'Quita polvo, grasa o restos industriales. Con tubo/bomba nuevos, un enjuague previo evita residuos en la primera mezcla.' },
   { id:'PL2', seccion:null, paso:'PL·2',
     desc:'Aclarar con agua limpia — mínimo 2 veces',
     nota:'Sin olor a oxigenada antes de llenar con agua para el paso 4 (mezcla nutritiva).' },
@@ -15147,7 +15564,8 @@ function getCLPasos() {
     ...(primerLlenado ? [] : pasosCubiertaDeposito),
 
   { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
-    desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' + (esNft ? 'depósito NFT' : 'torre') +
+    desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
+      (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : 'torre') +
       (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'),
     nota: primerLlenado
       ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.'
@@ -15160,13 +15578,15 @@ function getCLPasos() {
   { id:'5.1', seccion:'🔌 Paso 5 — Verificar sistema', paso:'5.1',
     desc: esNft
       ? ('Con la bomba en marcha (24 h): película continua en los ' + nftCh + ' canales; sin tramos secos al inicio ni charcos al final (pendiente ~1–2 % típico). Si anotaste la placa en el checklist, ya tienes el <strong>cumple / no cumple</strong> orientativo.')
-      : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
+      : esDwc
+        ? 'Con el aireador en marcha (24 h): burbujeo uniforme en todo el depósito; sin zonas muertas ni ruido de succión en seco'
+        : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
-      { id:'clMinSinBomba', label:'Min sin bomba:', type:'number', placeholder:'40' }
+      { id:'clMinSinBomba', label: esDwc ? 'Min sin aireador:' : 'Min sin bomba:', type:'number', placeholder:'40' }
     ] },
   { id:'5.2', seccion:null, paso:'5.2',
-    desc:'Encender difusor de aire' },
+    desc: esDwc ? 'Revisar difusores y caudal de aire (piedras porosas, obstrucciones, fugas en manguera)' : 'Encender difusor de aire' },
   { id:'5.3', seccion:null, paso:'5.3',
     desc:'Encender calentador — objetivo 20°C',
     campos:[{ id:'clTempAguaInicial', label:'Temp inicial:', unit:'°C', type:'number', step:'0.1', placeholder:'17' }] },
@@ -15193,11 +15613,15 @@ function getCLPasos() {
   { id:'7.1', seccion:'✅ Paso 7 — Verificación final', paso:'7.1',
     desc: esNft
       ? ('Película de agua visible en todos los canales; retorno limpio al depósito; sin ruidos de cavitación en la bomba')
-      : ('Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre') },
+      : esDwc
+        ? 'Burbujeo estable; temperatura de agua razonable; depósito opaco y tapa bien cerrada'
+        : ('Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre') },
   { id:'7.2', seccion:null, paso:'7.2',
     desc: esNft
       ? 'Tras 30 min: plantas turgentes y entradas de canal sin marchitez; sin “chorros” que dañen plántulas'
-      : 'Observar las plantas 30 minutos después — sin signos de estrés',
+      : esDwc
+        ? 'Tras 30 min: follaje turgente; sin olor rancio ni espuma excesiva en el depósito'
+        : 'Observar las plantas 30 minutos después — sin signos de estrés',
     campos:[{
       id:'clEstadoPlantas', label:'Estado:', type:'select',
       opciones:['Turgentes — correcto','Ligeramente lacias','Muy lacias — revisar bomba']
@@ -15205,7 +15629,9 @@ function getCLPasos() {
   { id:'7.3', seccion:null, paso:'7.3',
     desc: esNft
       ? 'Anotar en Historial / Mediciones; los próximos días ajusta caudal o pendiente si algún canal se queda corto de película'
-      : 'Ejecutar cálculo de riego en la app — verificar que los valores son correctos' },
+      : esDwc
+        ? 'Registrar en Historial / Mediciones; vigilar temperatura del agua, EC y estado del aireador en los días siguientes'
+        : 'Ejecutar cálculo de riego en la app — verificar que los valores son correctos' },
 ]; }
 
 function getCLTotal() { return getCLPasos().length; }
@@ -17947,9 +18373,10 @@ function initDiaRiego() {
   }
 }
 
-/** Controles de riego tipo torre vs NFT (cálculo solo en torre). */
+/** Controles de riego: torre (cálculo) vs NFT/DWC (solo clima de referencia). */
 function actualizarVistaRiegoPorTipoInstalacion() {
-  const esNft = state.configTorre?.tipoInstalacion === 'nft';
+  const tipo = tipoInstalacionNormalizado(state.configTorre || {});
+  const esModoClima = tipo === 'nft' || tipo === 'dwc';
   const torreControls = document.getElementById('riegoTorreSoloWrap');
   const btnCalc = document.getElementById('btnCalcRiego');
   const titleEl = document.getElementById('riegoSectionTitle');
@@ -17958,35 +18385,41 @@ function actualizarVistaRiegoPorTipoInstalacion() {
   const btnHoy = document.getElementById('btnRiegoHoy');
   const btnManana = document.getElementById('btnRiegoManana');
 
-  if (torreControls) torreControls.style.display = esNft ? 'none' : '';
-  if (diaGrp) diaGrp.style.display = esNft ? 'none' : 'flex';
-  if (diaInfo) diaInfo.style.display = esNft ? 'none' : '';
+  if (torreControls) torreControls.style.display = esModoClima ? 'none' : '';
+  if (diaGrp) diaGrp.style.display = esModoClima ? 'none' : 'flex';
+  if (diaInfo) diaInfo.style.display = esModoClima ? 'none' : '';
   if (btnCalc) {
-    btnCalc.style.display = esNft ? 'none' : '';
-    btnCalc.hidden = esNft;
+    btnCalc.style.display = esModoClima ? 'none' : '';
+    btnCalc.hidden = esModoClima;
   }
 
   if (titleEl) {
-    titleEl.innerHTML = esNft
-      ? '🪴 Riego <span class="accent">NFT</span> <span style="font-size:0.72em;font-weight:700;color:var(--muted)">· clima de referencia</span>'
-      : '💧 Cálculo de <span class="accent">Riego</span>';
+    if (tipo === 'nft') {
+      titleEl.innerHTML =
+        '🪴 Riego <span class="accent">NFT</span> <span style="font-size:0.72em;font-weight:700;color:var(--muted)">· clima de referencia</span>';
+    } else if (tipo === 'dwc') {
+      titleEl.innerHTML =
+        '🌊 Riego <span class="accent">DWC</span> <span style="font-size:0.72em;font-weight:700;color:var(--muted)">· clima de referencia</span>';
+    } else {
+      titleEl.innerHTML = '💧 Cálculo de <span class="accent">Riego</span>';
+    }
   }
   if (diaGrp) {
     diaGrp.setAttribute(
       'aria-label',
-      esNft ? 'Día para mostrar datos meteorológicos de referencia' : 'Día para el cálculo de riego'
+      esModoClima ? 'Día para mostrar datos meteorológicos de referencia' : 'Día para el cálculo de riego'
     );
   }
   if (btnHoy) {
     btnHoy.setAttribute(
       'aria-label',
-      esNft ? 'Mostrar datos meteorológicos de hoy' : 'Calcular riego para hoy'
+      esModoClima ? 'Mostrar datos meteorológicos de hoy' : 'Calcular riego para hoy'
     );
   }
   if (btnManana) {
     btnManana.setAttribute(
       'aria-label',
-      esNft ? 'Mostrar previsión meteorológica de mañana' : 'Calcular riego para mañana con previsión meteorológica'
+      esModoClima ? 'Mostrar previsión meteorológica de mañana' : 'Calcular riego para mañana con previsión meteorológica'
     );
   }
 }
@@ -18401,7 +18834,8 @@ async function calcularRiego() {
 
   try {
     // ── Obtener datos Open-Meteo ──────────────────────────────────────────
-    const idx = state.configTorre?.tipoInstalacion === 'nft' ? 0 : (diaRiego === 'manana' ? 1 : 0);
+    const tipoRiego = tipoInstalacionNormalizado(state.configTorre || {});
+    const idx = (tipoRiego === 'nft' || tipoRiego === 'dwc') ? 0 : (diaRiego === 'manana' ? 1 : 0);
     const offsetHoras = idx * 24;
 
     /* ≥3 días: cubre mañana completa a cualquier hora; evita que "hoy"/"mañana" compartan el mismo trozo horario cuando la serie no empieza a medianoche. */
@@ -18557,12 +18991,16 @@ async function calcularRiego() {
       demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * sensRiego.mult));
     }
 
-    const esNftRiego = state.configTorre?.tipoInstalacion === 'nft';
-    if (esNftRiego) {
-      const climaNft = document.getElementById('riegoClimaUsadoNft');
+    const esNftRiego = tipoRiego === 'nft';
+    const esDwcRiego = tipoRiego === 'dwc';
+    if (esNftRiego || esDwcRiego) {
       const panelNft = document.getElementById('riegoNftPanel');
+      const panelDwc = document.getElementById('riegoDwcPanel');
+      const climaNft = document.getElementById('riegoClimaUsadoNft');
+      const climaDwc = document.getElementById('riegoClimaUsadoDwc');
       const blockTorre = document.getElementById('riegoTorreResultBlock');
-      if (panelNft) panelNft.style.display = 'block';
+      if (panelNft) panelNft.style.display = esNftRiego ? 'block' : 'none';
+      if (panelDwc) panelDwc.style.display = esDwcRiego ? 'block' : 'none';
       if (blockTorre) blockTorre.style.display = 'none';
 
       const precipMmN = Math.round((Number(data.daily.precipitation_sum[idx]) || 0) * 10) / 10;
@@ -18578,14 +19016,14 @@ async function calcularRiego() {
         !esInterior && Number.isFinite(Number(uvEfectivo)) && Number(uvEfectivo) >= 7
           ? '<br><br><span style="opacity:0.95;font-size:13px;line-height:1.5;display:block">💡 <strong>UV elevado:</strong> conviene <strong>toldo</strong>, <strong>malla sombra</strong> (p. ej. 30–50 %) o sombra parcial para moderar estrés y calor en el follaje.</span>'
           : '';
-      if (climaNft) {
-        climaNft.innerHTML =
-          '<span style="font-size:14px;line-height:1.7;display:block">' + lineaClimaN + '</span>' +
-          (esInterior
-            ? '<br><br><span style="opacity:0.92;font-size:13px;line-height:1.5">🏠 Interior — datos de la ubicación guardada (referencia).</span>'
-            : '') +
-          uvTipNft;
-      }
+      const bloqueClima =
+        '<span style="font-size:14px;line-height:1.7;display:block">' + lineaClimaN + '</span>' +
+        (esInterior
+          ? '<br><br><span style="opacity:0.92;font-size:13px;line-height:1.5">🏠 Interior — datos de la ubicación guardada (referencia).</span>'
+          : '') +
+        uvTipNft;
+      if (esNftRiego && climaNft) climaNft.innerHTML = bloqueClima;
+      if (esDwcRiego && climaDwc) climaDwc.innerHTML = bloqueClima;
 
       ['resMinON', 'resMinOFF', 'resCiclos', 'resTotalON', 'resEspaciado', 'resDutyCiclo', 'resMedioON', 'resMedioOFF', 'resMedioCiclos', 'resMedioTotal', 'resMedioDutyCiclo'].forEach(id => {
         const el = document.getElementById(id);
@@ -18593,7 +19031,8 @@ async function calcularRiego() {
       });
 
       state.ultimoRiego = {
-        nftContinuo24h: true,
+        nftContinuo24h: esNftRiego,
+        dwcOxigenacion24h: esDwcRiego,
         fecha: new Date().toLocaleDateString('es-ES'),
         vpd,
         vpdMediodia: Math.round(vpdMediodia * 100) / 100,
@@ -18606,8 +19045,10 @@ async function calcularRiego() {
     }
 
     const panelNftT = document.getElementById('riegoNftPanel');
+    const panelDwcT = document.getElementById('riegoDwcPanel');
     const blockTorreT = document.getElementById('riegoTorreResultBlock');
     if (panelNftT) panelNftT.style.display = 'none';
+    if (panelDwcT) panelDwcT.style.display = 'none';
     if (blockTorreT) blockTorreT.style.display = '';
 
     const ciclo = riegoMinutosDesdeDemanda(
@@ -19879,6 +20320,7 @@ function actualizarResumenSetup() {
   const el = document.getElementById('setupResumenContent');
   if (!el) return;
   const isNft = setupTipoInstalacion === 'nft';
+  const isDwc = setupTipoInstalacion === 'dwc';
   const niveles = isNft
     ? (document.getElementById('sliderNftCanales')?.value || 4)
     : (document.getElementById('sliderNiveles')?.value || 5);
@@ -19931,6 +20373,23 @@ function actualizarResumenSetup() {
     ? '📟 Sensores / medidores: <strong>' + hwLM.join(', ') + '</strong> (valores manualmente en Mediciones)<br>'
     : '📟 Sensores / medidores: <strong>sin marcar</strong> (configúralo en paso Equipamiento o en Mediciones)<br>';
 
+  let geoDwcRes = '';
+  if (isDwc) {
+    const Ld = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
+    const Wd = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
+    const Pd = _dwcParseOptCm('setupDwcProfCm', 5, 200);
+    if (Ld != null && Wd != null && Pd != null) geoDwcRes += ' · dep. ' + Ld + '×' + Wd + '×' + Pd + ' cm';
+    const rimD = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
+    const hD = _dwcParseOptMm('setupDwcPotHmm', 30, 200);
+    if (rimD != null || hD != null) {
+      geoDwcRes += ' · maceta';
+      if (rimD != null) geoDwcRes += ' Ø' + rimD + ' mm';
+      if (hD != null) geoDwcRes += ' · ' + hD + ' mm alto';
+    }
+    if (document.getElementById('setupDwcCupulas')?.checked) geoDwcRes += ' · cúpulas';
+    if (document.getElementById('setupDwcEntradaAire')?.checked) geoDwcRes += ' · entrada aire';
+  }
+
   el.innerHTML =
     (isNft
       ? '🪴 NFT: <strong>' + (hydNFT ? hydNFT.nCh : niveles) + ' tubos × ' + cestas + ' huecos/canal · ' + pendTxt + volTxtResume + '</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong> · disposición <strong>' +
@@ -19943,7 +20402,9 @@ function actualizarResumenSetup() {
         (bResumenNft
           ? '⚡ NFT: circulación <strong>24 h</strong> · criterio bomba/depósito en el paso de equipo y en checklist (veredicto visible; cifras en «detalle técnico»).<br>'
           : '')
-      : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong><br>') +
+      : isDwc
+        ? '🌊 DWC: <strong>' + niveles + ' filas × ' + cestas + ' macetas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
+        : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d;font-size:10px">(según cultivos)</span>' : '') + '<br>' +
@@ -20523,7 +20984,8 @@ function renderSistemaInstalacionSelect() {
     opt.value = String(i);
     const nom = ((t?.nombre || '').trim() || 'Instalación ' + (i + 1));
     const emoji = t?.emoji || '🌿';
-    const tipo = (t?.config?.tipoInstalacion === 'nft') ? 'NFT' : 'Torre vertical';
+    const ti = t?.config?.tipoInstalacion;
+    const tipo = ti === 'nft' ? 'NFT' : ti === 'dwc' ? 'DWC' : 'Torre vertical';
     opt.textContent = emoji + ' ' + nom + ' · ' + tipo;
     sel.appendChild(opt);
   });
@@ -20565,7 +21027,9 @@ function renderListaTorres() {
     const cfgT = t.config || {};
     const geomTxt = cfgT.tipoInstalacion === 'nft'
       ? ((cfgT.nftNumCanales || cfgT.numNiveles || 4) + ' canales × ' + (cfgT.nftHuecosPorCanal || cfgT.numCestas || 8) + ' huecos')
-      : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
+      : cfgT.tipoInstalacion === 'dwc'
+        ? ((cfgT.numNiveles || 5) + ' filas × ' + (cfgT.numCestas || 5) + ' macetas')
+        : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
 
     return `<div style="display:flex;align-items:center;gap:10px;padding:12px;
       border-radius:14px;border:2px solid ${isActiva ? '#16a34a' : '#e5e7eb'};
@@ -20581,7 +21045,7 @@ function renderListaTorres() {
         <span style="display:block;font-family:var(--font-display);font-size:14px;font-weight:800;
           color:${isActiva ? '#15803d' : '#111827'}">${(t.nombre || '').trim() || 'Instalación'}</span>
         <span style="display:block;font-size:11px;color:#6b7280;margin-top:2px">
-          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
+          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : cfgT.tipoInstalacion === 'dwc' ? '🌊 DWC · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
           ${isActiva ? ' · <strong style="color:#15803d">Activa</strong>' : ''}
         </span>
       </span>
