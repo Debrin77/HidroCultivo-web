@@ -1400,9 +1400,6 @@
 
       </div>
 
-      <input type="file" id="inputImportEstado" accept="application/json,.json" style="display:none"
-        aria-hidden="true" onchange="onImportEstadoFileSelected(event)">
-
       <div class="hc-card-slate">
         <div class="hc-kicker">Copia de seguridad local</div>
         <p class="hc-help-muted">
@@ -1413,10 +1410,20 @@
           <button type="button" class="hc-btn-tap hc-btn-backup-export" onclick="exportarEstadoHidroCultivo()">
             ⬇️ Exportar estado
           </button>
-          <button type="button" class="hc-btn-tap hc-btn-backup-import" onclick="importarEstadoHidroCultivoClick()">
-            ⬆️ Importar estado
-          </button>
+          <!-- Safari iOS: input con display:none + .click() a menudo no abre el selector; input superpuesto al botón sí -->
+          <label class="hc-btn-tap hc-btn-backup-import"
+            style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;margin:0;-webkit-tap-highlight-color:transparent;text-align:center">
+            <span style="pointer-events:none">⬆️ Importar estado</span>
+            <input type="file" id="inputImportEstado"
+              accept=".json,application/json,text/json,text/plain,*/*"
+              aria-label="Importar copia JSON de seguridad"
+              onchange="onImportEstadoFileSelected(event)"
+              style="position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:64px;margin:0;padding:0;border:0;min-height:48px">
+          </label>
         </div>
+        <p class="hc-help-muted" style="font-size:10px;margin-top:10px;line-height:1.45">
+          <strong>iPhone / iPad:</strong> pulsa <strong>Importar estado</strong> y en el panel usa <strong>Examinar</strong> o <strong>Archivos</strong>. Si no ves el <code class="hc-code-tiny">.json</code>, ábrelo antes en la app <strong>Archivos</strong> (Descargas, iCloud…); debe ser el archivo generado con <strong>Exportar estado</strong>.
+        </p>
       </div>
 
     </div>
@@ -3517,7 +3524,15 @@ function exportarEstadoHidroCultivo() {
 }
 
 function importarEstadoHidroCultivoClick() {
-  document.getElementById('inputImportEstado')?.click();
+  const el = document.getElementById('inputImportEstado');
+  if (!el) return;
+  try {
+    if (typeof el.showPicker === 'function') {
+      el.showPicker();
+      return;
+    }
+  } catch (e) {}
+  el.click();
 }
 
 async function onImportEstadoFileSelected(ev) {
@@ -7166,6 +7181,8 @@ let setupCoordenadas = { lat: 39.9864, lon: -0.0495, ciudad: 'Castelló de la Pl
 const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
 function abrirSetup() {
+  // Reconfigurar instalación existente (no crear ranura nueva) salvo que se abra «Nuevo sistema»
+  setupEsNuevaTorre = false;
   setupPagina = 0;
   const sh = (state.configTorre && state.configTorre.sensoresHardware) || {};
   setupData.sensoresHardware = {
@@ -12387,6 +12404,50 @@ function guardarSetupYContinuar() {
     }
   }
 
+  const tipoNuevoPrevio = isNft ? 'nft' : isDwc ? 'dwc' : 'torre';
+
+  initTorres();
+  const idxSlotGuardar = state.torreActiva || 0;
+  /** Guardar la instalación activa tal como está en memoria antes de que el asistente la sobrescriba. */
+  guardarEstadoTorreActual();
+
+  const tipoEnSlotAntes = tipoInstalacionNormalizado(state.torres[idxSlotGuardar]?.config);
+
+  let crearNuevaPorCambioTipo = false;
+  if (!setupEsNuevaTorre && state.torres[idxSlotGuardar] && tipoEnSlotAntes !== tipoNuevoPrevio) {
+    if (state.torres.length >= MAX_TORRES) {
+      showToast(
+        'Cambiar el tipo de instalación crearía una instalación nueva, pero ya tienes el máximo (' +
+          MAX_TORRES +
+          '). Elimina una con la papelera en la lista de instalaciones o ajusta el tipo en otra ranura libre.',
+        true
+      );
+      return;
+    }
+    const etiquetas = { torre: 'torre vertical', nft: 'NFT', dwc: 'DWC' };
+    const nomAnt = etiquetas[tipoEnSlotAntes] || tipoEnSlotAntes;
+    const nomNuevo = etiquetas[tipoNuevoPrevio] || tipoNuevoPrevio;
+    if (
+      !confirm(
+        'La instalación activa es ' +
+          nomAnt +
+          ' y en el asistente has elegido ' +
+          nomNuevo +
+          '.\n\n' +
+          'Para no borrar la instalación anterior, se creará una instalación nueva con estos datos; la de ' +
+          nomAnt +
+          ' seguirá en la lista (selector de instalación arriba).\n\n¿Continuar?'
+      )
+    ) {
+      return;
+    }
+    crearNuevaPorCambioTipo = true;
+    const pref = tipoNuevoPrevio === 'dwc' ? 'DWC' : tipoNuevoPrevio === 'nft' ? 'NFT' : 'Torre';
+    setupNombreNuevaTorre = pref + ' ' + (state.torres.length + 1);
+  }
+
+  const usarNuevaEntrada = setupEsNuevaTorre || crearNuevaPorCambioTipo;
+
   const sensHwGuardar = {
     ec: !!(setupData.sensoresHardware && setupData.sensoresHardware.ec),
     ph: !!(setupData.sensoresHardware && setupData.sensoresHardware.ph),
@@ -12528,9 +12589,9 @@ function guardarSetupYContinuar() {
   state.configTorre.cultivosIniciales = [...setupPlantasSeleccionadas];
   state.configTorre.multiplesT = setupNumTorres;
 
-  if (setupEsNuevaTorre) {
-    // ── NUEVA TORRE: crear entrada en state.torres ────────────────────────
-    setupEsNuevaTorre = false; // resetear flag
+  if (usarNuevaEntrada) {
+    // ── NUEVA ENTRADA EN state.torres (nueva instalación o cambio de tipología) ──
+    setupEsNuevaTorre = false;
     const EMOJIS = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
     const nTorres = (state.torres || []).length;
     const nuevaTorre = {
@@ -12543,7 +12604,6 @@ function guardarSetupYContinuar() {
       mediciones: [],
       registro: [],
     };
-    guardarEstadoTorreActual(); // guardar la torre actual antes de cambiar
     if (!state.torres) state.torres = [];
     state.torres.push(nuevaTorre);
     const newIdx = state.torres.length - 1;
@@ -12551,7 +12611,6 @@ function guardarSetupYContinuar() {
     state.torre       = nuevaTorre.torre;
     state.mediciones  = [];
     state.registro    = [];
-    // state.configTorre ya está actualizado arriba
   } else {
     // ── RECONFIGURAR TORRE EXISTENTE ──────────────────────────────────────
     const tIdx = state.torreActiva || 0;
