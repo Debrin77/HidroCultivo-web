@@ -1703,6 +1703,7 @@
         </div>
 
         <div class="mediodia-header" style="margin-top:14px;opacity:0.95">🌙 Programa nocturno — 21:00 a 07:00h</div>
+        <p style="margin:0 0 8px;font-size:11px;line-height:1.5;color:var(--muted);opacity:0.92">Al aire libre, el riego nocturno <strong>no es rutina</strong>: solo si se cumple una <strong>excepción</strong> climática, se sugiere un <strong>refresco corto</strong> (p. ej. <strong>~30 s hacia las 04:00</strong>), como muchos cultivadores hacen sin tocar el resto del programa. Los ciclos <strong>07:00–21:00</strong> y <strong>mediodía</strong> siguen basados solo en <strong>climatología y cultivo</strong>.</p>
         <p id="resNocNota" style="margin:6px 0 12px;font-size:12px;line-height:1.55;color:var(--muted);display:none"></p>
         <div class="riego-programa">
           <div class="riego-bloque">
@@ -1920,9 +1921,10 @@
 
       <!-- Panel diario fotográfico -->
       <div id="histDiarioPanel" role="tabpanel" aria-labelledby="htab-diario" aria-hidden="true" style="display:none">
+        <div id="diarioSistemaCompletoWrap" style="margin-bottom:18px"></div>
         <div style="font-size:11px;font-weight:700;color:var(--muted);
           text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">
-          Selecciona una planta para ver su diario de seguimiento
+          Diario por planta — elige un cultivo
         </div>
         <div id="diarioPlantaSelector" style="display:flex;flex-direction:column;gap:8px"></div>
         <div id="diarioContenido"></div>
@@ -3509,7 +3511,21 @@ function compactarStateFotos() {
     if (Array.isArray(state.registro)) {
       state.registro.forEach(e => {
         if (e && e.tipo === 'foto' && e.fotoData) delete e.fotoData;
+        if (e && e.tipo === 'foto_sistema' && e.fotoData) delete e.fotoData;
       });
+    }
+    if (state.fotosSistemaCompleto && Array.isArray(state.fotosSistemaCompleto.fotos)) {
+      const arr = state.fotosSistemaCompleto.fotos;
+      let lastWithData = null;
+      for (let i = arr.length - 1; i >= 0; i--) {
+        if (arr[i]?.data) {
+          lastWithData = arr[i];
+          break;
+        }
+      }
+      state.fotosSistemaCompleto.fotos = lastWithData
+        ? [{ ...lastWithData, data: lastWithData.data }]
+        : [];
     }
   } catch(_) {}
 }
@@ -12660,6 +12676,7 @@ function guardarSetupYContinuar() {
       modoActual: 'lechuga',
       mediciones: [],
       registro: [],
+      fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
     };
     if (!state.torres) state.torres = [];
     state.torres.push(nuevaTorre);
@@ -13379,7 +13396,204 @@ function contarFotosCesta(cesta) {
   return (cesta.fotos || []).filter(f => f && f.data).length;
 }
 
+const MAX_FOTOS_SISTEMA_COMPLETO = 50;
+
+function ensureFotosSistemaCompletoState() {
+  if (!state.fotosSistemaCompleto || typeof state.fotosSistemaCompleto !== 'object') {
+    state.fotosSistemaCompleto = { fotoKeys: [], fotos: [] };
+  }
+  if (!Array.isArray(state.fotosSistemaCompleto.fotoKeys)) state.fotosSistemaCompleto.fotoKeys = [];
+  if (!Array.isArray(state.fotosSistemaCompleto.fotos)) state.fotosSistemaCompleto.fotos = [];
+}
+
+function agregarFotoSistemaCompletoCatch(ev) {
+  void agregarFotoSistemaCompleto(ev).catch(() => showToast('No se pudo guardar la foto', true));
+}
+
+function agregarFotoSistemaCompleto(event) {
+  const file = event.target && event.target.files && event.target.files[0];
+  if (!file) return Promise.resolve();
+  const inputEl = event.target;
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => {
+      try { if (inputEl) inputEl.value = ''; } catch (_) {}
+      reject(reader.error);
+    };
+    reader.onload = function(e) {
+      const base64 = e.target.result;
+      const img = new Image();
+      img.onerror = () => {
+        try { if (inputEl) inputEl.value = ''; } catch (_) {}
+        reject(new Error('No se pudo leer la imagen'));
+      };
+      img.onload = async function() {
+        try {
+          initTorres();
+          const canvas = document.createElement('canvas');
+          const maxW = 1000;
+          const ratio = Math.min(maxW / img.width, maxW / img.height, 1);
+          canvas.width = Math.round(img.width * ratio);
+          canvas.height = Math.round(img.height * ratio);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressed = canvas.toDataURL('image/jpeg', 0.52);
+
+          ensureFotosSistemaCompletoState();
+          const slot = state.fotosSistemaCompleto;
+          while (slot.fotoKeys.length >= MAX_FOTOS_SISTEMA_COMPLETO) {
+            const oldKey = slot.fotoKeys.shift();
+            if (oldKey) {
+              try { await borrarFotoIDB(oldKey); } catch (_) {}
+              slot.fotos = (slot.fotos || []).filter(f => f && f.key !== oldKey);
+              if (state.registro) {
+                state.registro = state.registro.filter(
+                  r => !(r.tipo === 'foto_sistema' && r.fotoKey === oldKey)
+                );
+              }
+            }
+          }
+
+          const now = new Date();
+          const torreIdx = state.torreActiva || 0;
+          const fotoKey =
+            'foto_sistema_t' + torreIdx + '_' + now.toISOString().replace(/[:.]/g, '_');
+          const foto = {
+            data: compressed,
+            fecha: now.toLocaleDateString('es-ES'),
+            hora: now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+            isoDate: now.toISOString(),
+            tipo: 'sistema_completo',
+            notas: '',
+          };
+          await guardarFotoIDB(fotoKey, { ...foto, key: fotoKey });
+          slot.fotoKeys.push(fotoKey);
+          if (!slot.fotos) slot.fotos = [];
+          slot.fotos.push({ ...foto, key: fotoKey });
+          while (slot.fotos.length > 2) {
+            const old = slot.fotos.shift();
+            if (old) old.data = null;
+          }
+
+          addRegistro('foto_sistema', {
+            fotoKey,
+            fotoFecha: foto.fecha,
+            icono: '🏗',
+          });
+          guardarEstadoTorreActual();
+          saveState();
+          renderDiarioBloqueSistema();
+          showToast('🏗 Foto del sistema guardada');
+          resolve();
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.src = base64;
+    };
+    reader.readAsDataURL(file);
+    try { if (inputEl) inputEl.value = ''; } catch (_) {}
+  });
+}
+
+async function hydrateDiarioSistemaThumbs(wrap) {
+  if (!wrap) return;
+  for (const slot of wrap.querySelectorAll('.diario-sistema-thumb')) {
+    const key = slot.getAttribute('data-foto-key');
+    if (!key) continue;
+    try {
+      const o = await leerFotoIDB(key);
+      if (!o || !o.data) continue;
+      const img = document.createElement('img');
+      img.src = o.data;
+      img.alt = 'Instalación ' + (o.fecha || '');
+      img.style.cssText =
+        'width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;border-radius:10px';
+      img.addEventListener('click', () =>
+        verFotoCompletaDiario(o.data, 'Vista del sistema', o.fecha || '')
+      );
+      slot.innerHTML = '';
+      slot.appendChild(img);
+    } catch (_) {}
+  }
+}
+
+function renderDiarioBloqueSistema() {
+  const wrap = document.getElementById('diarioSistemaCompletoWrap');
+  if (!wrap) return;
+  ensureFotosSistemaCompletoState();
+  const keys = [...state.fotosSistemaCompleto.fotoKeys].reverse();
+  const n = keys.length;
+  const filasTimel =
+    n === 0
+      ? '<div style="font-size:12px;color:var(--muted);padding:10px 0;line-height:1.5">Aún no hay fotos de conjunto. <strong>Aléjate un poco</strong> para que salga torre, depósito y entorno; conviene repetir desde la <strong>misma esquina</strong> para comparar.</div>'
+      : '<div class="diario-sistema-timeline" style="display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;-webkit-overflow-scrolling:touch">' +
+        keys
+          .map(function(key, i) {
+            const safe = String(key)
+              .replace(/&/g, '&amp;')
+              .replace(/"/g, '&quot;')
+              .replace(/</g, '&lt;');
+            return (
+              '<div style="flex:0 0 auto;width:112px">' +
+              '<div class="diario-sistema-thumb" data-foto-key="' +
+              safe +
+              '" style="width:112px;height:84px;background:#f3f4f6;border-radius:12px;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:22px;color:#9ca3af">🏗</div>' +
+              '<button type="button" onclick="borrarFotoSistemaCompletoDes(' +
+              i +
+              ')" style="margin-top:6px;width:100%;font-size:10px;padding:4px 6px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;cursor:pointer;font-weight:700">Quitar</button></div>'
+            );
+          })
+          .join('') +
+        '</div>';
+
+  wrap.innerHTML =
+    '<div style="background:linear-gradient(135deg,#ecfdf5 0%,#f0fdf4 100%);border:1.5px solid #86efac;border-radius:16px;padding:14px 14px 12px">' +
+    '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#047857;margin-bottom:4px">🏗 Vista del sistema completo</div>' +
+    '<div style="font-size:11px;color:#15803d;line-height:1.5;margin-bottom:10px">Registra la <strong>evolución de toda la instalación</strong> (no una sola maceta). Las fotos por cultivo siguen en cada <strong>ficha de planta</strong>. Estas entradas también salen en <strong>Historial → Registro</strong>.</div>' +
+    '<div class="hc-foto-grid" style="margin-bottom:10px">' +
+    '<label class="hc-label-foto hc-label-foto--green" aria-label="Foto del sistema con la cámara">' +
+    '<span class="hc-foto-emoji" aria-hidden="true">📷</span><span>Cámara</span>' +
+    '<input type="file" accept="image/*" capture="environment" class="hc-sr-file-input" onchange="agregarFotoSistemaCompletoCatch(event)">' +
+    '</label>' +
+    '<label class="hc-label-foto hc-label-foto--blue" aria-label="Foto del sistema desde galería">' +
+    '<span class="hc-foto-emoji" aria-hidden="true">🖼</span><span>Galería</span>' +
+    '<input type="file" accept="image/*" class="hc-sr-file-input" onchange="agregarFotoSistemaCompletoCatch(event)">' +
+    '</label></div>' +
+    (n > 0
+      ? '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Línea de tiempo (' +
+        n +
+        ')</div>'
+      : '') +
+    filasTimel +
+    '</div>';
+  void hydrateDiarioSistemaThumbs(wrap);
+}
+
+async function borrarFotoSistemaCompletoDes(idxDesdeReciente) {
+  ensureFotosSistemaCompletoState();
+  const keys = [...state.fotosSistemaCompleto.fotoKeys];
+  const ordered = keys.slice().reverse();
+  const key = ordered[idxDesdeReciente];
+  if (!key) return;
+  if (!confirm('¿Quitar esta foto del sistema?')) return;
+  try {
+    await borrarFotoIDB(key);
+  } catch (_) {}
+  state.fotosSistemaCompleto.fotoKeys = keys.filter(k => k !== key);
+  state.fotosSistemaCompleto.fotos = (state.fotosSistemaCompleto.fotos || []).filter(f => f && f.key !== key);
+  if (state.registro) {
+    state.registro = state.registro.filter(r => !(r.tipo === 'foto_sistema' && r.fotoKey === key));
+  }
+  guardarEstadoTorreActual();
+  saveState();
+  renderDiarioBloqueSistema();
+  const rp = document.getElementById('histRegistroPanel');
+  if (rp && rp.style.display !== 'none' && typeof renderRegistro === 'function') renderRegistro();
+  showToast('🗑 Foto del sistema eliminada');
+}
+
 async function renderDiarioSelector() {
+  renderDiarioBloqueSistema();
   const sel = document.getElementById('diarioPlantaSelector');
   const contenido = document.getElementById('diarioContenido');
   if (!sel) return;
@@ -13923,9 +14137,19 @@ function borrarMedicion(idx) {
 function borrarEntradaRegistro(idx) {
   if (!confirm('¿Borrar esta entrada del registro?')) return;
   if (!state.registro) return;
+  const entry = state.registro[idx];
+  if (entry && entry.tipo === 'foto_sistema' && entry.fotoKey) {
+    void borrarFotoIDB(entry.fotoKey);
+    ensureFotosSistemaCompletoState();
+    const k = entry.fotoKey;
+    state.fotosSistemaCompleto.fotoKeys = (state.fotosSistemaCompleto.fotoKeys || []).filter(x => x !== k);
+    state.fotosSistemaCompleto.fotos = (state.fotosSistemaCompleto.fotos || []).filter(f => !f || f.key !== k);
+    guardarEstadoTorreActual();
+  }
   state.registro.splice(idx, 1);
   saveState();
   renderRegistro();
+  if (document.getElementById('histDiarioPanel')?.style.display !== 'none') renderDiarioBloqueSistema();
   if (document.getElementById('tab-mediciones')?.classList.contains('active') && typeof actualizarResumenReposicionParcialUI === 'function') {
     actualizarResumenReposicionParcialUI();
   }
@@ -17579,6 +17803,7 @@ function renderRegistro() {
     recarga:  { bg:'#eff6ff', border:'#2563eb', color:'#1d4ed8',  icon:'🔄' },
     cosecha:  { bg:'#fef3c7', border:'#d97706', color:'#b45309',  icon:'✂️' },
     foto:       { bg:'#faf5ff', border:'#9333ea', color:'#7e22ce',  icon:'📸' },
+    foto_sistema: { bg:'#ecfdf5', border:'#059669', color:'#047857', icon:'🏗' },
     reposicion: { bg:'#ecfeff', border:'#06b6d4', color:'#0e7490',  icon:'💧' },
   };
 
@@ -17620,6 +17845,18 @@ function renderRegistro() {
         if (e.fechaSiembra) detalle += ' · 🌱 ' + e.fechaSiembra;
         if (e.diasCultivo) detalle += ' · ' + e.diasCultivo + ' días';
         if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+      } else if (e.tipo === 'foto_sistema') {
+        detalle = 'Vista completa de la instalación';
+        if (e.fotoFecha) detalle += ' · 📅 ' + e.fotoFecha;
+        if (e.fotoKey) {
+          detalle +=
+            '<div class="registro-foto-thumb" data-foto-key="' + escRegistroAttr(e.fotoKey) + '" ' +
+            'data-variedad="' + escRegistroAttr('Vista del sistema') + '" ' +
+            'data-fecha="' + escRegistroAttr(e.fotoFecha || e.fecha || '') + '" ' +
+            'style="margin-top:8px;width:100%;max-width:220px;aspect-ratio:4/3;background:#f3f4f6;' +
+            'border-radius:10px;border:1px solid #e5e7eb;display:flex;align-items:center;' +
+            'justify-content:center;font-size:28px;color:#9ca3af">🏗</div>';
+        }
       } else if (e.tipo === 'foto') {
         detalle = (e.variedad || 'Planta');
         if (e.nivel != null && e.cesta != null) detalle += ' · N' + e.nivel + ' C' + e.cesta;
@@ -17651,9 +17888,16 @@ function renderRegistro() {
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
           '<div style="display:flex;align-items:center;gap:6px">' +
             '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' + c.color + '">' +
-              badgeIcon + ' ' + (e.tipo === 'foto' ? 'Foto' : e.tipo === 'reposicion' ? 'Reposición parcial' :
-                e.tipo === 'recarga' ? 'Recarga completa' :
-                (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
+              badgeIcon + ' ' +
+              (e.tipo === 'foto_sistema'
+                ? 'Foto sistema'
+                : e.tipo === 'foto'
+                  ? 'Foto'
+                  : e.tipo === 'reposicion'
+                    ? 'Reposición parcial'
+                    : e.tipo === 'recarga'
+                      ? 'Recarga completa'
+                      : (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
             '</span>' +
             (e.torreNombre && state.torres && state.torres.length > 1 ?
               '<span style="font-size:9px;font-weight:700;color:#15803d;background:#f0fdf4;' +
@@ -20206,6 +20450,54 @@ function riegoNocDemandaMin1Ciclo(tempMinDiaria) {
 }
 
 /**
+ * Torre de goteo al aire libre: el riego nocturno no debe ser rutina (raíces transpiran poco, riesgo de encharcar).
+ * Solo permite considerar noche si hay excepción clara (noche cálida, ola, secado nocturno, plántula muy reciente, sensor seco).
+ */
+function riegoTorreExteriorPermiteNocturno(p) {
+  const tN = Number(p.tempNoc);
+  const tMin = Number(p.tempMin);
+  const tMax = Number(p.tempMax);
+  const rhN = Number(p.rhNoc);
+  const vpdN = Number(p.vpdNoc);
+  const edad = Number(p.edadSem);
+  const sensM = Number(p.sensMult) || 1;
+  const cycles = Number(p.ciclosDia) || 0;
+  const ton = Number(p.totalONDia) || 0;
+  const et0 = p.et0NightMm;
+
+  if (Number.isFinite(tMin) && tMin < 18) return { ok: false, clave: 'fria' };
+  if (Number.isFinite(tN) && tN < 17.5) return { ok: false, clave: 'fria' };
+
+  if (Number.isFinite(rhN) && rhN >= 88 && Number.isFinite(vpdN) && vpdN < 0.16) {
+    return { ok: false, clave: 'humeda' };
+  }
+
+  if (cycles >= 13 || ton >= 52) return { ok: false, clave: 'dia_suficiente' };
+
+  const secaNoc =
+    et0 != null && typeof et0 === 'number' && Number.isFinite(et0) && et0 >= 0.19;
+  const nocheCalida =
+    (Number.isFinite(tMin) && tMin >= 23.5) || (Number.isFinite(tN) && tN >= 24);
+  const olaCalor =
+    Number.isFinite(tMax) &&
+    tMax >= 28 &&
+    ((Number.isFinite(tMin) && tMin >= 23) || (Number.isFinite(tN) && tN >= 23.5));
+  const plantaJoven = Number.isFinite(edad) && edad <= 1;
+  const sustratoSeco = sensM >= 1.008;
+
+  if (nocheCalida) return { ok: true, clave: 'noche_calida' };
+  if (olaCalor) return { ok: true, clave: 'ola' };
+  if (secaNoc) return { ok: true, clave: 'seca' };
+  if (plantaJoven) return { ok: true, clave: 'joven' };
+  if (sustratoSeco) return { ok: true, clave: 'sensor' };
+
+  return { ok: false, clave: 'sin_excepcion' };
+}
+
+/** Pulso nocturno en torre exterior cuando hay excepción: fijo (no escalado por demanda climática nocturna). */
+const RIEGO_NOC_REFRESCO_TORRE_EXT_SEG = 30;
+
+/**
  * Riego al aire libre — cadena de cálculo (orden):
  * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) alineado al **mismo día civil** que daily[0|1];
  *    UV (modelo best_match) y ET₀ FAO horaria sumada a mm/día de ese mismo día (no bloques fijos 24 h desde el inicio de la serie).
@@ -20215,7 +20507,7 @@ function riegoNocDemandaMin1Ciclo(tempMinDiaria) {
  * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
- * 8) Nocturno (solo torre goteo): ventana 21:00–07:00 (~600 min), demanda riegoIndiceDemandaNocturna (VPD/viento/Tmin/lluvia/ET₀ nocturno, sin UV), Kc ≈ 0,36×Kc medio (0,25–0,48), ON acotado 3–5 min, OFF más largo; interior: demanda ≈ 0,52×demanda día (acotada) con VPD de sala. Omitir pulsos: riegoNocUmbralesOmitir(Tmin, prob. lluvia, ΣET₀ noche) — invierno/húmedo más permisivo; verano/seco más estricto.
+ * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Exterior: no rutina — solo si riegoTorreExteriorPermiteNocturno; entonces refresco fijo ~30 s (~04:00), no escalado por demanda nocturna; día/mediodía siguen por climatología. Interior: demanda ≈ 0,52×demanda día; omitir con riegoNocUmbralesOmitir.
  * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 13–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
@@ -20556,11 +20848,38 @@ async function calcularRiego() {
       ? statsNoct.vientoMax
       : viento * 0.52;
     const umbNocSkip = riegoNocUmbralesOmitir(tempMin, probLluvia, et0NightSum);
+    const secaNocEt =
+      et0NightSum != null && typeof et0NightSum === 'number' && et0NightSum >= 0.19;
     let nocSkip = false;
+    let nocSkipClave = '';
     if (!esInterior) {
-      const secaNoc = et0NightSum != null && typeof et0NightSum === 'number' && et0NightSum >= 0.19;
+      const perm = riegoTorreExteriorPermiteNocturno({
+        tempMin,
+        tempMax,
+        tempNoc: tempNocUse,
+        rhNoc: rhNocUse,
+        vpdNoc: vpdNocVal,
+        et0NightMm: et0NightSum,
+        edadSem,
+        sensMult: sensRiego.mult,
+        ciclosDia: ciclos,
+        totalONDia: totalON,
+      });
+      const mildNight =
+        !secaNocEt &&
+        demandaNoc < umbNocSkip.demMax &&
+        vpdNocVal < umbNocSkip.vpdMax &&
+        windSkipProxy < umbNocSkip.windMax;
+      if (!perm.ok) {
+        nocSkip = true;
+        nocSkipClave = perm.clave;
+      } else if (mildNight && perm.clave !== 'joven') {
+        nocSkip = true;
+        nocSkipClave = 'noche_tranquila';
+      }
+    } else {
       if (
-        !secaNoc &&
+        !secaNocEt &&
         demandaNoc < umbNocSkip.demMax &&
         vpdNocVal < umbNocSkip.vpdMax &&
         windSkipProxy < umbNocSkip.windMax
@@ -20575,15 +20894,31 @@ async function calcularRiego() {
       esInterior ? 26 : 36,
       Math.round(cicloNoc0.minOFF * (1.08 + sustrato.retencion * 0.055))
     );
-    const minCicloNoc = minONNoc + minOFFNoc;
+    let minCicloNoc = minONNoc + minOFFNoc;
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
     ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
-    if (!nocSkip && ciclosNoc === 0 && minCicloNoc <= 600 && demandaNoc >= riegoNocDemandaMin1Ciclo(tempMin)) {
+    if (!esInterior && !nocSkip) {
+      minONNoc = RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60;
+      minCicloNoc = minONNoc + minOFFNoc;
+      ciclosNoc = minCicloNoc <= 600 ? 1 : 0;
+    } else if (
+      esInterior &&
+      !nocSkip &&
+      ciclosNoc === 0 &&
+      minCicloNoc <= 600 &&
+      demandaNoc >= riegoNocDemandaMin1Ciclo(tempMin)
+    ) {
       ciclosNoc = 1;
     }
-    const totalONNoc = minONNoc * ciclosNoc;
+    const esNocRefrescoTorreExt = !esInterior && !nocSkip && ciclosNoc > 0;
+    const totalONNoc = esNocRefrescoTorreExt
+      ? (RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60) * ciclosNoc
+      : minONNoc * ciclosNoc;
     const espNoc = ciclosNoc > 0 ? Math.round(600 / ciclosNoc) : 0;
-    const dutyNocPct = ciclosNoc > 0 ? Math.round((100 * minONNoc) / minCicloNoc) : 0;
+    let dutyNocPct = null;
+    if (ciclosNoc > 0 && !esNocRefrescoTorreExt) {
+      dutyNocPct = Math.round((100 * minONNoc) / minCicloNoc);
+    }
 
     // ── Mostrar resultados ────────────────────────────────────────────────
     document.getElementById('resMinON').textContent    = minON;
@@ -20608,19 +20943,55 @@ async function calcularRiego() {
     const elNocE = document.getElementById('resNocEspaciado');
     const elNocD = document.getElementById('resNocDuty');
     const elNocNota = document.getElementById('resNocNota');
-    if (elNocON) elNocON.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(minONNoc);
-    if (elNocOFF) elNocOFF.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(minOFFNoc);
+    if (elNocON) {
+      elNocON.textContent =
+        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(minONNoc);
+    }
+    if (elNocOFF) {
+      elNocOFF.textContent =
+        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? '—' : String(minOFFNoc);
+    }
     if (elNocC) elNocC.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(ciclosNoc);
-    if (elNocT) elNocT.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(totalONNoc);
-    if (elNocE) elNocE.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(espNoc);
-    if (elNocD) elNocD.textContent = nocSkip || ciclosNoc === 0 ? '—' : dutyNocPct + '%';
+    if (elNocT) {
+      elNocT.textContent =
+        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(totalONNoc);
+    }
+    if (elNocE) {
+      elNocE.textContent =
+        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? '~04:00' : String(espNoc);
+    }
+    if (elNocD) {
+      elNocD.textContent =
+        nocSkip || ciclosNoc === 0 || dutyNocPct == null ? '—' : dutyNocPct + '%';
+    }
     if (elNocNota) {
       if (nocSkip) {
         elNocNota.style.display = 'block';
-        elNocNota.innerHTML = 'Noche <strong>húmeda, poco ventosa</strong> y demanda baja según Tª mín., lluvia prevista y secado nocturno: no se sugiere pulso extra de recarga (riesgo de encharcar).';
+        if (!esInterior && nocSkipClave) {
+          const msgNoc = {
+            fria:
+              'Tª nocturna baja (inferior a ~18 °C): mejor no regar de noche en torre (oxigenación radicular). Prioriza riego diurno.',
+            humeda:
+              'Noche muy húmeda y VPD bajo: evita encharcar por la noche (riesgo fúngico); deja el riego para el día.',
+            dia_suficiente:
+              'El modelo ya acumula bastante tiempo de bomba de día; no se suma noche salvo observes esponja muy seca.',
+            sin_excepcion:
+              'En torre al aire libre el riego nocturno <strong>no es rutina</strong>: aquí no se cumplen noche sustancialmente cálida (≈24 °C), ola de calor con noche templada, secado nocturno claro (ET₀), plántula muy reciente (≤1 sem) ni sensor de esponja seco.',
+            noche_tranquila:
+              'Noche tranquila y poca demanda: coherente con torre doméstica — <strong>solo riego de día</strong> salvo observes necesidad real.',
+          };
+          elNocNota.innerHTML = msgNoc[nocSkipClave] || msgNoc.noche_tranquila;
+        } else {
+          elNocNota.innerHTML =
+            'Noche <strong>húmeda, poco ventosa</strong> y demanda baja según Tª mín., lluvia prevista y secado nocturno: no se sugiere pulso extra de recarga (riesgo de encharcar).';
+        }
       } else if (ciclosNoc === 0) {
         elNocNota.style.display = 'block';
         elNocNota.textContent = 'Con los límites de pausa nocturna no cabe ningún ciclo en 10 h; revisa manualmente si el sustrato lo necesita.';
+      } else if (!esInterior) {
+        elNocNota.style.display = 'block';
+        elNocNota.innerHTML =
+          'Con excepción climática: <strong>refresco fijo ~30 s</strong> (p. ej. <strong>04:00</strong>), independiente del índice nocturno — igual que muchos cultivadores en torre. Los programas de <strong>mañana, tarde y mediodía</strong> siguen siendo <strong>solo por climatología y cultivo</strong>. Si el sustrato llega húmedo al anochecer, omítelo.';
       } else {
         elNocNota.style.display = 'none';
         elNocNota.textContent = '';
@@ -20675,11 +21046,13 @@ async function calcularRiego() {
       minONMedio, minOFFMedio, ciclosMedio, totalONMedio,
       dutyCicloPct, dutyMedioPct,
       minONNoc: nocSkip || ciclosNoc === 0 ? null : minONNoc,
-      minOFFNoc: nocSkip || ciclosNoc === 0 ? null : minOFFNoc,
+      minOFFNoc: nocSkip || ciclosNoc === 0 || esNocRefrescoTorreExt ? null : minOFFNoc,
       ciclosNoc: nocSkip || ciclosNoc === 0 ? 0 : ciclosNoc,
       totalONNoc: nocSkip || ciclosNoc === 0 ? 0 : totalONNoc,
-      espaciadoNoc: nocSkip || ciclosNoc === 0 ? null : espNoc,
-      dutyNocPct: nocSkip || ciclosNoc === 0 ? null : dutyNocPct,
+      espaciadoNoc: nocSkip || ciclosNoc === 0 || esNocRefrescoTorreExt ? null : espNoc,
+      espaciadoNocRefrescoHora: esNocRefrescoTorreExt ? '04:00' : null,
+      nocRefrescoSeg: esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG : null,
+      dutyNocPct: nocSkip || ciclosNoc === 0 || dutyNocPct == null ? null : dutyNocPct,
       demandaNoc: Math.round(demandaNoc * 1000) / 1000,
       vpdNoc: Math.round(vpdNocVal * 1000) / 1000,
       nocSkip,
@@ -22361,10 +22734,19 @@ function initTorres() {
       modoActual: modoActual || 'lechuga',
       mediciones: state.mediciones || [],
       registro: state.registro || [],
+      fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
     }];
     state.torreActiva = 0; // índice en el array
     saveState();
   }
+  (state.torres || []).forEach(t => {
+    if (!t.fotosSistemaCompleto || typeof t.fotosSistemaCompleto !== 'object') {
+      t.fotosSistemaCompleto = { fotoKeys: [], fotos: [] };
+    } else {
+      if (!Array.isArray(t.fotosSistemaCompleto.fotoKeys)) t.fotosSistemaCompleto.fotoKeys = [];
+      if (!Array.isArray(t.fotosSistemaCompleto.fotos)) t.fotosSistemaCompleto.fotos = [];
+    }
+  });
 }
 
 function getTorreActiva() {
@@ -22499,6 +22881,12 @@ function guardarEstadoTorreActual() {
   state.torres[idx].mediciones = state.mediciones || [];
   state.torres[idx].registro   = state.registro   || [];
   state.torres[idx].config     = state.configTorre || null;
+  ensureFotosSistemaCompletoState();
+  try {
+    state.torres[idx].fotosSistemaCompleto = JSON.parse(JSON.stringify(state.fotosSistemaCompleto));
+  } catch (e) {
+    state.torres[idx].fotosSistemaCompleto = { fotoKeys: [], fotos: [] };
+  }
   // Guardar configuración de riego específica de esta torre
   state.torres[idx].riego = {
     nPlantas:   parseInt(document.getElementById('riegoNPlantas')?.value) || 15,
@@ -22516,6 +22904,14 @@ function cargarEstadoTorre(idx) {
   state.mediciones  = t.mediciones || [];
   state.registro    = t.registro   || [];
   state.configTorre = t.config     || null;
+  const fsc = t.fotosSistemaCompleto;
+  state.fotosSistemaCompleto =
+    fsc && typeof fsc === 'object'
+      ? {
+          fotoKeys: Array.isArray(fsc.fotoKeys) ? fsc.fotoKeys.slice() : [],
+          fotos: Array.isArray(fsc.fotos) ? fsc.fotos.slice() : [],
+        }
+      : { fotoKeys: [], fotos: [] };
   modoActual = typeof normalizeTorreModoActual === 'function'
     ? normalizeTorreModoActual(t.modoActual)
     : (MODOS_CULTIVO[t.modoActual] ? t.modoActual : 'lechuga');
