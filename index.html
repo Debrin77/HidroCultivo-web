@@ -905,6 +905,10 @@
           Nombre de esta instalación
         </label>
         <p id="torreNombreCardLocalidad" class="torre-nombre-localidad-line" role="status"></p>
+        <button type="button" id="torreBtnIrMedirMunicipio" class="torre-btn-ir-medir-municipio setup-hidden"
+          onclick="irMedirMunicipioClima()">
+          Ir a Medir — municipio (clima y avisos)
+        </button>
         <div class="torre-nombre-row">
           <input type="text" id="torreNombreInstalacionInput" class="form-input torre-nombre-input" maxlength="40"
             autocomplete="off" placeholder="Ej. Torre terraza, NFT balcón, Lechugas cocina…"
@@ -3861,6 +3865,22 @@ function goTab(tab) {
   if (typeof window._hcSyncMainTabTabIndex === 'function') window._hcSyncMainTabTabIndex();
 }
 
+function irMedirMunicipioClima() {
+  goTab('mediciones');
+  setTimeout(() => {
+    const panel = document.getElementById('panelLocalidadMeteo');
+    const inp = document.getElementById('inputLocalidadMeteo');
+    try {
+      panel?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (_) {
+      panel?.scrollIntoView();
+    }
+    try {
+      inp?.focus();
+    } catch (_) {}
+  }, 120);
+}
+
 // ══════════════════════════════════════════════════
 // TORRE — RENDER
 // ══════════════════════════════════════════════════
@@ -6331,6 +6351,8 @@ function updateTorreStats() {
     locCard.textContent = locStr ? '📍 ' + locStr : '📍 Sin municipio — configúralo en Medir';
     locCard.classList.toggle('torre-nombre-localidad-line--vacío', !locStr);
   }
+  const locBtn = document.getElementById('torreBtnIrMedirMunicipio');
+  if (locBtn) locBtn.classList.toggle('setup-hidden', !!locStr);
 
   const nomInpTorre = document.getElementById('torreNombreInstalacionInput');
   if (nomInpTorre && document.activeElement !== nomInpTorre) {
@@ -7095,10 +7117,15 @@ function formatoUbicacionEnRegistro(tipoInstal, nivel1Based, plaza1Based) {
   return lblNivel + ' ' + n + ', ' + lblPlaza + ' ' + p;
 }
 
-/** Tipo de instalación para mostrar una entrada antigua: snapshot si existe, si no la instalación activa. */
+/** Tipo de instalación para mostrar una entrada antigua: snapshot; si no, config de la torre del registro; si no, activa. */
 function tipoInstalParaEntradaRegistro(e) {
   const s = e && e.tipoInstalSnap;
   if (s === 'nft' || s === 'dwc' || s === 'torre') return s;
+  const tid = e && e.torreId;
+  if (tid != null && Array.isArray(state.torres)) {
+    const tr = state.torres.find(t => t.id === tid);
+    if (tr && tr.config) return tipoInstalacionNormalizado(tr.config);
+  }
   return tipoInstalacionNormalizado(state.configTorre || {});
 }
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
@@ -14045,15 +14072,24 @@ function addRegistro(tipo, datos) {
   const d = datos && typeof datos === 'object' ? { ...datos } : {};
   let snap = d.tipoInstalSnap;
   delete d.tipoInstalSnap;
+  let tidReg = d.torreId;
+  delete d.torreId;
   const tipoSnap =
     snap === 'nft' || snap === 'dwc' || snap === 'torre'
       ? snap
       : tipoInstalacionNormalizado(state.configTorre || {});
+  const torreIdReg =
+    tidReg != null && tidReg !== ''
+      ? tidReg
+      : tActiva.id != null
+        ? tActiva.id
+        : state.torreActiva || 0;
   state.registro.unshift({
     tipo, fecha, hora,
     torreNombre: (tActiva.nombre || '').trim() || 'Instalación',
     torreEmoji:  tActiva.emoji  || '🌿',
     ...d,
+    torreId: torreIdReg,
     tipoInstalSnap: tipoSnap,
   });
   if (state.registro.length > 200) state.registro = state.registro.slice(0, 200);
@@ -17462,6 +17498,38 @@ function histTab(tab) {
 
 let filtroTorreActivo = null; // null = todas las instalaciones
 
+/** Mediciones unificadas: una sola instalación o todas, con torreId/torreNombre para filtro e importación. */
+function recolectarMedicionesTodasInstalaciones() {
+  initTorres();
+  if (!state.torres || state.torres.length <= 1) {
+    const ta = getTorreActiva();
+    const tid = ta && ta.id != null ? ta.id : null;
+    return (state.mediciones || []).map(m => ({
+      ...m,
+      torreId: m.torreId != null ? m.torreId : tid,
+      torreNombre: m.torreNombre || (ta && ta.nombre) || '',
+      torreEmoji: m.torreEmoji || (ta && ta.emoji) || '🌿',
+    }));
+  }
+  const todas = [];
+  state.torres.forEach(t => {
+    (t.mediciones || []).forEach(m => {
+      todas.push({
+        ...m,
+        torreId: m.torreId != null ? m.torreId : t.id,
+        torreNombre: m.torreNombre || t.nombre,
+        torreEmoji: m.torreEmoji || t.emoji || '🌿',
+      });
+    });
+  });
+  todas.sort((a, b) => {
+    const da = String(a.fecha || '').split('/').reverse().join('') + String(a.hora || '');
+    const db = String(b.fecha || '').split('/').reverse().join('') + String(b.hora || '');
+    return db.localeCompare(da);
+  });
+  return todas;
+}
+
 function cargarHistorial() {
   document.getElementById('histLoader').style.display = 'none';
   document.getElementById('histSinDatos').classList.add('setup-hidden');
@@ -17470,32 +17538,11 @@ function cargarHistorial() {
     if (el) { el.classList.add('setup-hidden'); el.setAttribute('aria-hidden', 'true'); }
   });
 
-  // Recopilar mediciones de TODAS las torres
-  let todasMediciones = [];
+  guardarEstadoTorreActual();
+  const todasMediciones = recolectarMedicionesTodasInstalaciones();
   if (state.torres && state.torres.length > 1) {
-    // Guardar estado actual primero
-    guardarEstadoTorreActual();
-    state.torres.forEach(t => {
-      (t.mediciones || []).forEach(m => {
-        todasMediciones.push({
-          ...m,
-          torreId:     m.torreId     || t.id,
-          torreNombre: m.torreNombre || t.nombre,
-          torreEmoji:  m.torreEmoji  || t.emoji || '🌿',
-        });
-      });
-    });
-    // Ordenar por fecha+hora más reciente
-    todasMediciones.sort((a, b) => {
-      const da = a.fecha.split('/').reverse().join('') + a.hora;
-      const db = b.fecha.split('/').reverse().join('') + b.hora;
-      return db.localeCompare(da);
-    });
-
-    // Mostrar filtro por torre
     renderFiltroTorres();
   } else {
-    todasMediciones = state.mediciones || [];
     const fw = document.getElementById('filtroTorreWrap');
     if (fw) fw.style.display = 'none';
   }
@@ -17627,10 +17674,11 @@ function formatHora(v) {
   return s.slice(0, 5);
 }
 
-/** Rellena el registro unificado desde mediciones ya guardadas (solo si registro vacío). */
+/** Rellena el registro unificado desde mediciones ya guardadas (solo si registro vacío). Incluye todas las instalaciones si hay varias. */
 function importarMedicionesAlRegistro() {
   initRegistro();
-  const meds = state.mediciones || [];
+  guardarEstadoTorreActual();
+  const meds = recolectarMedicionesTodasInstalaciones();
   if (meds.length === 0) {
     showToast('No hay mediciones guardadas para importar', true);
     return;
@@ -17639,18 +17687,23 @@ function importarMedicionesAlRegistro() {
     showToast('El registro ya tiene datos. Esta acción solo aplica con registro vacío.', true);
     return;
   }
-  if (!confirm('¿Añadir ' + meds.length + ' entradas desde «Mediciones» al registro unificado? No borra el historial de mediciones.')) return;
+  const nInst = state.torres && state.torres.length > 1 ? state.torres.length : 1;
+  const msgExtra = nInst > 1 ? ' (' + nInst + ' instalaciones)' : '';
+  if (!confirm('¿Añadir ' + meds.length + ' entradas desde «Mediciones» al registro unificado' + msgExtra + '? No borra el historial de mediciones.')) return;
 
   const tActiva = getTorreActiva();
 
   for (const m of [...meds].reverse()) {
-    const torreOrigen = m.torreId != null && Array.isArray(state.torres)
-      ? state.torres.find(t => t.id === m.torreId)
-      : null;
-    const tipoInstalSnap = tipoInstalacionNormalizado(torreOrigen?.config || state.configTorre || {});
+    const torreOrigen =
+      m.torreId != null && Array.isArray(state.torres)
+        ? state.torres.find(t => t.id === m.torreId)
+        : null;
+    const tO = torreOrigen || tActiva;
+    const tipoInstalSnap = tipoInstalacionNormalizado(tO.config || state.configTorre || {});
     const base = {
-      torreNombre: (tActiva.nombre || '').trim() || 'Instalación',
-      torreEmoji: tActiva.emoji || '🌿',
+      torreId: m.torreId != null ? m.torreId : tO.id,
+      torreNombre: (m.torreNombre || tO.nombre || '').trim() || 'Instalación',
+      torreEmoji: m.torreEmoji || tO.emoji || '🌿',
       tipoInstalSnap,
     };
     const notas = String(m.notas || '');
@@ -17712,18 +17765,22 @@ async function hydrateRegistroFotoThumbs(container) {
 function renderRegistro() {
   const lista   = document.getElementById('registroLista');
   const entries = (state.registro || []).slice(0, 100);
-  const nMeds   = (state.mediciones || []).length;
+  const nMeds   = recolectarMedicionesTodasInstalaciones().length;
 
   if (entries.length === 0) {
     let extra = '';
     if (nMeds > 0) {
+      const nInst = state.torres && state.torres.length > 1 ? state.torres.length : 0;
+      const sufInst = nInst > 1 ? ' (' + nInst + ' instalaciones)' : '';
       extra =
         '<div class="registro-empty-actions">' +
         '<button type="button" onclick="importarMedicionesAlRegistro()" ' +
         'class="btn btn-primary registro-import-btn">' +
-        '↓ Importar ' + nMeds + ' mediciones al registro</button>' +
+        '↓ Importar ' + nMeds + ' mediciones al registro' + sufInst + '</button>' +
         '<div class="registro-empty-help">' +
-        'Útil si empezaste a medir antes de usar esta lista. Las nuevas acciones se añaden solas.</div></div>';
+        'Útil si empezaste a medir antes de usar esta lista. Las nuevas acciones se añaden solas.' +
+        (nInst > 1 ? ' Con varias instalaciones se incluyen todas las mediciones guardadas en cada una.' : '') +
+        '</div></div>';
     }
     lista.innerHTML =
       '<div class="registro-empty-box">' +
@@ -23010,7 +23067,14 @@ function initTorres() {
     state.torreActiva = 0; // índice en el array
     saveState();
   }
+  let idSeq = Date.now();
+  let idsReparados = false;
   (state.torres || []).forEach(t => {
+    if (t.id == null || t.id === '') {
+      idSeq += 1;
+      t.id = idSeq;
+      idsReparados = true;
+    }
     if (!t.fotosSistemaCompleto || typeof t.fotosSistemaCompleto !== 'object') {
       t.fotosSistemaCompleto = { fotoKeys: [], fotos: [] };
     } else {
@@ -23018,6 +23082,7 @@ function initTorres() {
       if (!Array.isArray(t.fotosSistemaCompleto.fotos)) t.fotosSistemaCompleto.fotos = [];
     }
   });
+  if (idsReparados) saveState();
 }
 
 function getTorreActiva() {

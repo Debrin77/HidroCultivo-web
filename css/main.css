@@ -6347,6 +6347,27 @@ button.config-option {
   color: #94a3b8;
   font-weight: 600;
 }
+.torre-btn-ir-medir-municipio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #15803d;
+  background: #f0fdf4;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: #14532d;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.torre-btn-ir-medir-municipio:active {
+  opacity: 0.92;
+  transform: scale(0.99);
+}
 .torre-nombre-row {
   display: flex;
   gap: 8px;
