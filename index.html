@@ -3175,7 +3175,7 @@ function cultivoEmojiHtml(cultivo, fontRem) {
   if (fontRem === 1.35) return '<span class="cultivo-emoji-mark cultivo-emoji-mark--135" aria-hidden="true">' + em + '</span>';
   if (fontRem === 1.4) return '<span class="cultivo-emoji-mark cultivo-emoji-mark--140" aria-hidden="true">' + em + '</span>';
   if (fontRem === 1.5) return '<span class="cultivo-emoji-mark cultivo-emoji-mark--150" aria-hidden="true">' + em + '</span>';
-  return '<span class="cultivo-emoji-mark" aria-hidden="true" style="font-size:' + fontRem + 'rem">' + em + '</span>';
+  return '<span class="cultivo-emoji-mark" aria-hidden="true" style="--cultivo-emoji-rem:' + fontRem + 'rem">' + em + '</span>';
 }
 
 const GRUPO_EMOJI_REP = {
@@ -4061,7 +4061,7 @@ function renderTorreLista() {
       ariaLabel = ariaLabel.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       h += '<button type="button" class="torre-lista-cesta-btn" data-n="' + n + '" data-c="' + c + '" ' +
         'aria-label="' + ariaLabel + '">';
-      h += '<span class="torre-lista-cesta-disc"' + fkAttr + ' style="border-color:' + col.border + ';background:' + col.bg + '">';
+      h += '<span class="torre-lista-cesta-disc"' + fkAttr + ' style="--tl-disc-bc:' + col.border + ';--tl-disc-bg:' + col.bg + '">';
       h += '<span class="torre-lista-cesta-num" aria-hidden="true">' + (c + 1) + '</span>';
       h += '<span class="torre-lista-cesta-emoji" aria-hidden="true">' + emoji + '</span>';
       if (faseEmoji) {
@@ -4195,7 +4195,6 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     const clipId = `clip_${n}_${b.c}`;
     const isSelected = !!(window.editingCesta && editingCesta.nivel === b.n && editingCesta.cesta === b.c);
     const caraFrontal = b.z >= 0.42;
-    const interact = caraFrontal ? 'all' : 'none';
     const multiKey = b.n + ',' + b.c;
     const isMultiSel = torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
 
@@ -4212,8 +4211,7 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
       ? ` role="button" tabindex="0" aria-label="${ariaCesta}"`
       : ' aria-hidden="true" focusable="false"';
     const cestaInterClass = caraFrontal ? 'hc-cesta--interactive' : 'hc-cesta--static';
-    out += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta ${cestaInterClass}"${a11yAttrs}
-      style="pointer-events:${interact}" opacity="${b.opacity.toFixed(2)}">`;
+    out += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta ${cestaInterClass} ${caraFrontal ? 'hc-cesta-pe-all' : 'hc-cesta-pe-none'}"${a11yAttrs} opacity="${b.opacity.toFixed(2)}">`;
 
     out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${r.toFixed(1)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${(2.4*b.scale).toFixed(1)}"/>`;
 
@@ -4391,7 +4389,7 @@ function generarSVGDwc() {
     } else {
       o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 2.2).toFixed(1)}" fill="none" stroke="#cbd5e1" stroke-width="1.1" opacity="0.9"/>`;
     }
-    o += `<g data-n="${n}" data-c="${c}" class="hc-cesta hc-cesta--interactive dwc-maceta" role="button" tabindex="0" aria-label="${ariaCesta}" style="pointer-events:all">`;
+    o += `<g data-n="${n}" data-c="${c}" class="hc-cesta hc-cesta--interactive dwc-maceta hc-cesta-pe-all" role="button" tabindex="0" aria-label="${ariaCesta}">`;
     o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="${topView ? 2 : 2.2}"/>`;
     if (isMultiSel) {
       o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 5).toFixed(1)}"
@@ -4898,11 +4896,11 @@ function renderTablaVariedades() {
         '<div class="torre-prog-var-inner">' +
         '<div class="torre-prog-var-name">' + escHtmlUi(cultivoNombreLista(cultRow, p.variedad)) + '</div>' +
         (p.pct !== null ? '<div class="torre-prog-bar-track">' +
-          '<div class="torre-prog-bar-fill" style="width:' + barW + '%;background:' + barColor + '"></div>' +
+          '<div class="torre-prog-bar-fill" style="--tp-bar-w:' + barW + '%;--tp-bar-bg:' + barColor + '"></div>' +
           '</div>' : '') +
         '</div></div></div>' +
       '<span class="torre-prog-dias">' + diasText + '</span>' +
-      '<span class="torre-prog-estado" style="color:' + barColor + ';background:' + barColor + '15">' +
+      '<span class="torre-prog-estado" style="--tp-est-c:' + barColor + ';--tp-est-bg:' + barColor + '15">' +
         p.estado + '</span>' +
       '<span class="torre-prog-ec">' + ecText + '</span>' +
       '</div>';
@@ -6068,12 +6066,12 @@ function renderCompatGrid() {
   gruposMap.forEach((g, key) => {
     const unicas = [...new Set(g.plantas)];
     html +=
-      '<div class="compat-grupo-card" style="background:' + g.color + '18;border-color:' + g.color + '55">' +
+      '<div class="compat-grupo-card" style="--cg-bg:' + g.color + '18;--cg-bd:' + g.color + '55;--cg-fg:' + g.color + ';--cg-chip-bg:' + g.color + '22">' +
         '<div class="compat-grupo-head">' +
-          '<span class="compat-grupo-name" style="color:' + g.color + '">' +
+          '<span class="compat-grupo-name">' +
             '<span class="compat-grupo-emoji" aria-hidden="true">' + (GRUPO_EMOJI_REP[key] || '🌱') + '</span>' +
             g.nombre + '</span>' +
-          '<span class="compat-grupo-chip" style="background:' + g.color + '22;color:' + g.color + '">' + unicas.length + ' var.</span>' +
+          '<span class="compat-grupo-chip">' + unicas.length + ' var.</span>' +
         '</div>' +
         '<div class="compat-grupo-variedades">' +
           unicas.map(function(u) { return escHtmlUi(cultivoNombreLista(getCultivoDB(u), u)); }).join(', ') + '</div>' +
@@ -6105,14 +6103,13 @@ function renderCompatGrid() {
         if (!ok) hayIncomp = true;
 
         html +=
-          '<div class="compat-pair-card" style="background:' + (ok?'#f0fdf4':'#fff5f5') + ';border-color:' +
-          (ok?'#86efac':'#fca5a5') + '">' +
+          '<div class="compat-pair-card ' + (ok ? 'compat-pair-card--ok' : 'compat-pair-card--bad') + '">' +
             '<div class="compat-pair-head">' +
               '<span class="compat-pair-icon">' + (ok?'✅':'⚠️') + '</span>' +
-              '<span class="compat-pair-name" style="color:' + (ok?'#15803d':'#b91c1c') + '">' +
+              '<span class="compat-pair-name">' +
                 gA.nombre + ' + ' + gB.nombre + '</span>' +
             '</div>' +
-            '<div class="compat-pair-text" style="color:' + (ok?'#4b5563':'#7f1d1d') + '">' +
+            '<div class="compat-pair-text">' +
               (ok
                 ? '✅ Rango EC compartido: ' + Math.max(ecA[0],ecB[0]) + '–' + Math.min(ecA[1],ecB[1]) + ' µS/cm'
                 : '⚠️ EC incompatible — ' + gA.nombre + ' (' + gA.ec + ') vs ' + gB.nombre + ' (' + gB.ec + ')') +
@@ -12850,15 +12847,15 @@ function calcularRotacion() {
     const numNivel = info.nivel + 1;
 
     htmlNiveles += `
-      <div class="rotacion-nivel-row">
-        <div class="rotacion-nivel-num" style="background:${colorBg};color:${colorText};border:1.5px solid ${colorBorder}">
+      <div class="rotacion-nivel-row" style="--rot-num-bg:${colorBg};--rot-num-fg:${colorText};--rot-num-bd:${colorBorder}">
+        <div class="rotacion-nivel-num">
           ${numNivel}
         </div>
         <div class="rotacion-nivel-info">
           <div class="rotacion-nivel-titulo">${nombreNivel} — ${Math.round(info.diasMedia)} días</div>
           <div class="rotacion-nivel-dias">${info.plantas.length} plantas · ${estado}</div>
         </div>
-        <div class="rotacion-fase-mark" style="background:${colorBg};color:${colorText};border-color:${colorBorder}">${faseMark}</div>
+        <div class="rotacion-fase-mark">${faseMark}</div>
       </div>`;
 
     // Generar alerta si hay acción pendiente
@@ -12896,10 +12893,10 @@ function calcularRotacion() {
       ${htmlConFlechas}
       ${alertas.map(a => `
         <div class="rotacion-alerta ${a.tipo}">
-          <span style="flex:1">${a.texto}</span>
+          <span class="rotacion-alerta-text">${a.texto}</span>
         </div>`).join('')}
       ${diasParaRotacion <= 0 ? `
-      <button class="btn btn-primary" onclick="iniciarRotacion()" style="margin-top:10px;font-size:14px">
+      <button type="button" class="btn btn-primary rotacion-iniciar-btn" onclick="iniciarRotacion()">
         Iniciar rotación de niveles
       </button>` : ''}
     </div>`;
@@ -12970,34 +12967,29 @@ function showCompatInfo() {
 
   // Info del cultivo específico
   if (cultivo) {
-    const ecOk  = '#15803d';
     const dif   = { fácil:'🟢 Fácil', media:'🟡 Media', difícil:'🔴 Avanzado' };
-    html += '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">';
-    html += '<span style="flex-shrink:0;line-height:0;margin-top:2px;font-size:2.35rem" aria-hidden="true">' + cultivoEmoji(cultivo) + '</span>';
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-family:var(--font-display);font-size:13px;font-weight:900;color:#111827;margin-bottom:8px">' +
+    html += '<div class="edit-compat-head">';
+    html += '<span class="edit-compat-emoji" aria-hidden="true">' + cultivoEmoji(cultivo) + '</span>';
+    html += '<div class="edit-compat-main">';
+    html += '<div class="edit-compat-title">' +
       escHtmlUi(cultivoNombreLista(cultivo, variedad)) + '</div>';
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' +
-      '<span style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:2px 8px;' +
-        'font-size:11px;font-weight:700;color:#15803d">⚡ EC ' + cultivo.ecMin + '–' + cultivo.ecMax + ' µS/cm</span>' +
-      '<span style="background:#eff6ff;border:1px solid #93c5fd;border-radius:6px;padding:2px 8px;' +
-        'font-size:11px;font-weight:700;color:#1d4ed8">🧪 pH ' + cultivo.phMin + '–' + cultivo.phMax + '</span>' +
-      '<span style="background:#fefce8;border:1px solid #fde047;border-radius:6px;padding:2px 8px;' +
-        'font-size:11px;font-weight:700;color:#78350f">⏱ ~' + cultivo.dias + ' días</span>' +
-      '<span style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:6px;padding:2px 8px;' +
-        'font-size:11px;color:#374151">' + (dif[cultivo.dificultad]||'') + '</span>' +
+    html += '<div class="edit-compat-chips">' +
+      '<span class="edit-compat-chip edit-compat-chip--ec">⚡ EC ' + cultivo.ecMin + '–' + cultivo.ecMax + ' µS/cm</span>' +
+      '<span class="edit-compat-chip edit-compat-chip--ph">🧪 pH ' + cultivo.phMin + '–' + cultivo.phMax + '</span>' +
+      '<span class="edit-compat-chip edit-compat-chip--days">⏱ ~' + cultivo.dias + ' días</span>' +
+      '<span class="edit-compat-chip edit-compat-chip--diff">' + (dif[cultivo.dificultad]||'') + '</span>' +
     '</div>';
 
     if (cultivo.nota) {
-      html += '<div style="font-size:11px;color:#4b5563;margin-bottom:6px">💡 ' + cultivo.nota + '</div>';
+      html += '<div class="edit-compat-nota">💡 ' + cultivo.nota + '</div>';
     }
 
     // Fases si tiene fructificación
     if (cultivo.fructificacion && cultivo.fases) {
-      html += '<div style="font-size:10px;font-weight:700;color:#f97316;margin-bottom:4px">🌸 Fases de cultivo:</div>';
+      html += '<div class="edit-compat-fases-kicker">🌸 Fases de cultivo:</div>';
       Object.entries(cultivo.fases).forEach(([fase, datos]) => {
         const nombres = {plantula:'Plántula',vegetativo:'Vegetativo',floracion:'Floración',fructificacion:'Fructificación'};
-        html += '<div style="font-size:10px;color:#374151;margin-bottom:2px">' +
+        html += '<div class="edit-compat-fase-line">' +
           '<strong>' + (nombres[fase]||fase) + '</strong>: EC ' + datos.ec[0] + '–' + datos.ec[1] +
           ' · pH ' + datos.ph[0] + '–' + datos.ph[1] + ' · ~' + datos.dias + 'd</div>';
       });
@@ -13021,21 +13013,16 @@ function showCompatInfo() {
       const incomp = [...otrosGrupos].filter(g => !compatibles.includes(g));
       if (incomp.length > 0) {
         const nombresIncomp = incomp.map(g => GRUPOS_CULTIVO[g]?.nombre || g).join(', ');
-        html += '<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:8px;' +
-          'padding:6px 10px;font-size:11px;color:#b91c1c;margin-top:4px">' +
+        html += '<div class="edit-compat-banner edit-compat-banner--bad">' +
           '⚠️ Incompatible con ' + nombresIncomp + ' en esta torre — EC diferente</div>';
       } else {
-        html += '<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;' +
-          'padding:6px 10px;font-size:11px;color:#15803d;margin-top:4px">' +
+        html += '<div class="edit-compat-banner edit-compat-banner--ok">' +
           '✅ Compatible con los cultivos actuales de esta torre</div>';
       }
     }
   }
 
-  infoEl.style.background = cultivo?.fructificacion ? '#fff7ed' : '#f0fdf4';
-  infoEl.style.border      = '1.5px solid ' + (cultivo?.fructificacion ? '#fed7aa' : '#86efac');
-  infoEl.style.borderRadius = '10px';
-  infoEl.style.padding     = '10px 12px';
+  infoEl.className = 'edit-compat-box ' + (cultivo?.fructificacion ? 'edit-compat-box--fruit' : 'edit-compat-box--leaf');
   infoEl.innerHTML = html;
 }
 
@@ -13324,8 +13311,7 @@ async function hydrateDiarioSistemaThumbs(wrap) {
       const img = document.createElement('img');
       img.src = o.data;
       img.alt = 'Instalación ' + (o.fecha || '');
-      img.style.cssText =
-        'width:100%;height:100%;object-fit:cover;display:block;cursor:pointer;border-radius:10px';
+      img.className = 'diario-sistema-thumb-img';
       img.addEventListener('click', () =>
         verFotoCompletaDiario(o.data, 'Vista del sistema', o.fecha || '')
       );
@@ -13343,8 +13329,8 @@ function renderDiarioBloqueSistema() {
   const n = keys.length;
   const filasTimel =
     n === 0
-      ? '<div style="font-size:12px;color:var(--muted);padding:10px 0;line-height:1.5">Aún no hay fotos de conjunto. <strong>Aléjate un poco</strong> para que salga torre, depósito y entorno; conviene repetir desde la <strong>misma esquina</strong> para comparar.</div>'
-      : '<div class="diario-sistema-timeline" style="display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;-webkit-overflow-scrolling:touch">' +
+      ? '<div class="diario-sistema-empty-msg">Aún no hay fotos de conjunto. <strong>Aléjate un poco</strong> para que salga torre, depósito y entorno; conviene repetir desde la <strong>misma esquina</strong> para comparar.</div>'
+      : '<div class="diario-sistema-timeline">' +
         keys
           .map(function(key, i) {
             const safe = String(key)
@@ -13352,23 +13338,23 @@ function renderDiarioBloqueSistema() {
               .replace(/"/g, '&quot;')
               .replace(/</g, '&lt;');
             return (
-              '<div style="flex:0 0 auto;width:112px">' +
+              '<div class="diario-sistema-slot-wrap">' +
               '<div class="diario-sistema-thumb" data-foto-key="' +
               safe +
-              '" style="width:112px;height:84px;background:#f3f4f6;border-radius:12px;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:22px;color:#9ca3af">🏗</div>' +
-              '<button type="button" onclick="borrarFotoSistemaCompletoDes(' +
+              '">🏗</div>' +
+              '<button type="button" class="diario-sistema-remove-btn" onclick="borrarFotoSistemaCompletoDes(' +
               i +
-              ')" style="margin-top:6px;width:100%;font-size:10px;padding:4px 6px;border-radius:8px;border:1px solid #fecaca;background:#fef2f2;color:#b91c1c;cursor:pointer;font-weight:700">Quitar</button></div>'
+              ')">Quitar</button></div>'
             );
           })
           .join('') +
         '</div>';
 
   wrap.innerHTML =
-    '<div style="background:linear-gradient(135deg,#ecfdf5 0%,#f0fdf4 100%);border:1.5px solid #86efac;border-radius:16px;padding:14px 14px 12px">' +
-    '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#047857;margin-bottom:4px">🏗 Vista del sistema completo</div>' +
-    '<div style="font-size:11px;color:#15803d;line-height:1.5;margin-bottom:10px">Registra la <strong>evolución de toda la instalación</strong> (no una sola maceta). Las fotos por cultivo siguen en cada <strong>ficha de planta</strong>. Estas entradas también salen en <strong>Historial → Registro</strong>.</div>' +
-    '<div class="hc-foto-grid" style="margin-bottom:10px">' +
+    '<div class="diario-sistema-panel">' +
+    '<div class="diario-sistema-title">🏗 Vista del sistema completo</div>' +
+    '<div class="diario-sistema-intro">Registra la <strong>evolución de toda la instalación</strong> (no una sola maceta). Las fotos por cultivo siguen en cada <strong>ficha de planta</strong>. Estas entradas también salen en <strong>Historial → Registro</strong>.</div>' +
+    '<div class="hc-foto-grid hc-foto-grid--mb">' +
     '<label class="hc-label-foto hc-label-foto--green" aria-label="Foto del sistema con la cámara">' +
     '<span class="hc-foto-emoji" aria-hidden="true">📷</span><span>Cámara</span>' +
     '<input type="file" accept="image/*" capture="environment" class="hc-sr-file-input" onchange="agregarFotoSistemaCompletoCatch(event)">' +
@@ -13378,7 +13364,7 @@ function renderDiarioBloqueSistema() {
     '<input type="file" accept="image/*" class="hc-sr-file-input" onchange="agregarFotoSistemaCompletoCatch(event)">' +
     '</label></div>' +
     (n > 0
-      ? '<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Línea de tiempo (' +
+      ? '<div class="diario-sistema-kicker">Línea de tiempo (' +
         n +
         ')</div>'
       : '') +
@@ -13441,7 +13427,7 @@ async function renderDiarioSelector() {
   }
 
   if (plantas.length === 0) {
-    sel.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">' +
+    sel.innerHTML = '<div class="diario-selector-empty">' +
       '🌱 No hay plantas registradas aún.<br>Añade plantas a las cestas desde la pestaña <strong>Torre</strong>.</div>';
     if (contenido) contenido.innerHTML = '';
     return;
@@ -13451,31 +13437,24 @@ async function renderDiarioSelector() {
     const tieneFotos = p.numFotos > 0;
     const ultimaTxt = p.ultimaFechaMeta || '—';
     const nomDiarioSel = escHtmlUi(cultivoNombreLista(getCultivoDB(p.variedad), p.variedad));
-    return '<div class="diario-planta-item" data-n="' + p.n + '" data-c="' + p.c + '" ' +
-      'style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid #e5e7eb;' +
-      'border-radius:14px;padding:12px;cursor:pointer;-webkit-tap-highlight-color:transparent;' +
-      'transition:border-color 0.15s">' +
+    return '<div class="diario-planta-item" data-n="' + p.n + '" data-c="' + p.c + '">' +
 
       // Miniatura: placeholder siempre, imagen se inserta con JS (evita truncamiento base64)
-      '<div class="diario-thumb-slot" data-n="' + p.n + '" data-c="' + p.c + '" ' +
-        'style="width:56px;height:56px;background:#f3f4f6;border-radius:10px;flex-shrink:0;' +
-        'display:flex;align-items:center;justify-content:center;font-size:' +
-        (tieneFotos ? '10' : '24') + 'px;color:#9ca3af">' +
+      '<div class="diario-thumb-slot' + (tieneFotos ? ' diario-thumb-slot--photos' : ' diario-thumb-slot--empty') + '" data-n="' + p.n + '" data-c="' + p.c + '">' +
         (tieneFotos ? '📸' : '🌱') + '</div>' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#111827;' +
-          'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + nomDiarioSel + '</div>' +
-        '<div style="font-size:11px;color:#6b7280;margin-top:2px">' +
+      '<div class="diario-item-body">' +
+        '<div class="diario-item-title">' + nomDiarioSel + '</div>' +
+        '<div class="diario-item-meta">' +
           'Nivel ' + (p.n+1) + ' · Cesta ' + (p.c+1) +
-          (p.diasDesde !== null ? ' · <strong style="color:#15803d">Día ' + p.diasDesde + '</strong>' : '') +
+          (p.diasDesde !== null ? ' · <strong class="diario-item-dia">Día ' + p.diasDesde + '</strong>' : '') +
         '</div>' +
-        '<div style="font-size:11px;color:#6b7280;margin-top:2px">' +
+        '<div class="diario-item-meta">' +
           (tieneFotos
             ? '📸 ' + p.numFotos + ' foto' + (p.numFotos>1?'s':'') + ' · última: ' + ultimaTxt
             : '📷 Sin fotos aún — toca para añadir') +
         '</div>' +
       '</div>' +
-      '<div style="font-size:20px;color:#d1d5db">›</div>' +
+      '<div class="diario-item-chevron">›</div>' +
     '</div>';
   }).join('');
 
@@ -13485,12 +13464,6 @@ async function renderDiarioSelector() {
       const n = parseInt(this.getAttribute('data-n'));
       const c = parseInt(this.getAttribute('data-c'));
       renderDiarioPlanta(n, c);
-    });
-    el.addEventListener('mouseenter', function() {
-      this.style.borderColor = '#86efac';
-    });
-    el.addEventListener('mouseleave', function() {
-      this.style.borderColor = '#e5e7eb';
     });
   });
 
@@ -13507,7 +13480,7 @@ async function renderDiarioSelector() {
       if (!src) return;
       const img = document.createElement('img');
       img.src = src;
-      img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0';
+      img.className = 'diario-thumb-img';
       img.alt = cestaData.variedad || '';
       slot.replaceWith(img);
     };
@@ -13544,24 +13517,20 @@ async function renderDiarioPlanta(nivel, cesta) {
   let html = '';
 
   // ── Cabecera ────────────────────────────────────────────────────────────
-  html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">' +
-    '<button onclick="volverDiarioSelector()" aria-label="Volver al selector" ' +
-      'style="width:36px;height:36px;border-radius:50%;border:1.5px solid #e5e7eb;' +
-      'background:#fff;font-size:18px;color:#6b7280;cursor:pointer;flex-shrink:0">‹</button>' +
-    '<div style="flex:1">' +
-      '<div style="font-family:var(--font-display);font-size:16px;font-weight:900;color:#111827">' +
+  html += '<div class="diario-det-head">' +
+    '<button type="button" class="diario-det-back" onclick="volverDiarioSelector()" aria-label="Volver al selector">‹</button>' +
+    '<div class="diario-det-title-wrap">' +
+      '<div class="diario-det-title">' +
         tituloDiario + '</div>' +
-      '<div style="font-size:11px;color:#6b7280">' +
+      '<div class="diario-det-sub">' +
         'Nivel ' + (nivel+1) + ' · Cesta ' + (cesta+1) +
-        (diasDesde !== null ? ' · <strong style="color:#15803d">Día ' + diasDesde + ' de cultivo</strong>' : '') +
+        (diasDesde !== null ? ' · <strong class="diario-item-dia">Día ' + diasDesde + ' de cultivo</strong>' : '') +
       '</div>' +
     '</div>' +
     // Botón añadir foto rápido
-    '<label style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:#f0fdf4;' +
-      'border:1.5px solid #86efac;border-radius:10px;cursor:pointer;font-family:var(--font-display);' +
-      'font-size:12px;font-weight:700;color:#15803d" aria-label="Añadir foto">' +
+    '<label class="diario-det-add-foto" aria-label="Añadir foto">' +
       '📷 <span>Foto</span>' +
-      '<input type="file" accept="image/*" capture="environment" style="display:none" ' +
+      '<input type="file" accept="image/*" capture="environment" class="hc-sr-file-input" ' +
         'onchange="agregarFotoDesdeDiario(event,' + nivel + ',' + cesta + ')">' +
     '</label>' +
   '</div>';
@@ -13570,40 +13539,37 @@ async function renderDiarioPlanta(nivel, cesta) {
   if (cultivo && diasDesde !== null) {
     const progreso = Math.min(100, Math.round((diasDesde / cultivo.dias) * 100));
     const color = progreso >= 100 ? '#16a34a' : progreso >= 70 ? '#f59e0b' : '#3b82f6';
-    html += '<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;' +
-      'padding:10px 14px;margin-bottom:14px">' +
-      '<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:700;' +
-        'color:#374151;margin-bottom:6px">' +
+    html += '<div class="diario-prog-box" style="--diario-prog-c:' + color + ';--diario-prog-pct:' + progreso + '%">' +
+      '<div class="diario-prog-row">' +
         '<span>🌱 Progreso de cultivo</span>' +
-        '<span style="color:' + color + '">' + progreso + '% — día ' + diasDesde + '/' + cultivo.dias + '</span>' +
+        '<span class="diario-prog-pct">' + progreso + '% — día ' + diasDesde + '/' + cultivo.dias + '</span>' +
       '</div>' +
-      '<div style="background:#e5e7eb;border-radius:6px;height:8px;overflow:hidden">' +
-        '<div style="height:100%;background:' + color + ';border-radius:6px;width:' + progreso + '%;' +
-          'transition:width 0.5s"></div>' +
+      '<div class="diario-prog-track">' +
+        '<div class="diario-prog-fill"></div>' +
       '</div>' +
       (progreso >= 100
-        ? '<div style="font-size:11px;color:#15803d;font-weight:700;margin-top:6px">✅ ¡Lista para cosechar!</div>'
-        : '<div style="font-size:11px;color:#6b7280;margin-top:6px">~' + (cultivo.dias - diasDesde) + ' días hasta cosecha estimada</div>'
+        ? '<div class="diario-prog-done">✅ ¡Lista para cosechar!</div>'
+        : '<div class="diario-prog-pending">~' + (cultivo.dias - diasDesde) + ' días hasta cosecha estimada</div>'
       ) +
     '</div>';
   }
 
   // ── Stats rápidos ────────────────────────────────────────────────────────
   if (cultivo) {
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">' +
-      '<div style="background:#f0fdf4;border-radius:10px;padding:8px;text-align:center">' +
-        '<div style="font-size:10px;color:#6b7280;font-weight:600">EC óptima</div>' +
-        '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#15803d">' +
+    html += '<div class="diario-stats-grid">' +
+      '<div class="diario-stat-cell diario-stat-cell--green">' +
+        '<div class="diario-stat-lab">EC óptima</div>' +
+        '<div class="diario-stat-val diario-stat-val--green">' +
           cultivo.ecMin + '–' + cultivo.ecMax + '</div>' +
       '</div>' +
-      '<div style="background:#eff6ff;border-radius:10px;padding:8px;text-align:center">' +
-        '<div style="font-size:10px;color:#6b7280;font-weight:600">pH óptimo</div>' +
-        '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#1d4ed8">' +
+      '<div class="diario-stat-cell diario-stat-cell--blue">' +
+        '<div class="diario-stat-lab">pH óptimo</div>' +
+        '<div class="diario-stat-val diario-stat-val--blue">' +
           cultivo.phMin + '–' + cultivo.phMax + '</div>' +
       '</div>' +
-      '<div style="background:#fefce8;border-radius:10px;padding:8px;text-align:center">' +
-        '<div style="font-size:10px;color:#6b7280;font-weight:600">Fotos</div>' +
-        '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:#92400e">' +
+      '<div class="diario-stat-cell diario-stat-cell--amber">' +
+        '<div class="diario-stat-lab">Fotos</div>' +
+        '<div class="diario-stat-val diario-stat-val--amber">' +
           fotos.length + '</div>' +
       '</div>' +
     '</div>';
@@ -13611,54 +13577,47 @@ async function renderDiarioPlanta(nivel, cesta) {
 
   // ── Línea de tiempo fotográfica ──────────────────────────────────────────
   if (fotos.length === 0) {
-    html += '<div style="text-align:center;padding:32px 16px;background:#f8fafc;' +
-      'border:2px dashed #e5e7eb;border-radius:14px">' +
-      '<div style="font-size:48px;margin-bottom:12px">📷</div>' +
-      '<div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:#374151">' +
+    html += '<div class="diario-fotos-empty">' +
+      '<div class="diario-fotos-empty-icon">📷</div>' +
+      '<div class="diario-fotos-empty-title">' +
         'Sin fotos aún</div>' +
-      '<div style="font-size:12px;color:#6b7280;margin-top:6px;line-height:1.6">' +
+      '<div class="diario-fotos-empty-text">' +
         'Añade la primera foto para empezar el seguimiento visual.<br>' +
         'Ideal hacerlo en el día de trasplante y cada 3-5 días.' +
       '</div>' +
     '</div>';
   } else {
-    html += '<div style="font-family:var(--font-display);font-size:11px;font-weight:700;' +
-      'color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">' +
+    html += '<div class="diario-tl-heading">' +
       '📅 Línea de tiempo</div>';
 
     // Ordenar fotos por fecha
     const fotasOrdenadas = [...fotos].sort((a,b) => new Date(a.isoDate||a.fecha) - new Date(b.isoDate||b.fecha));
 
     fotasOrdenadas.forEach((f, i) => {
-      html += '<div style="display:flex;gap:12px;margin-bottom:16px">' +
+      html += '<div class="diario-tl-row">' +
         // Columna izquierda: línea + punto
-        '<div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:24px">' +
-          '<div style="width:12px;height:12px;border-radius:50%;background:#16a34a;flex-shrink:0;' +
-            'border:2px solid #fff;box-shadow:0 0 0 2px #86efac;margin-top:4px"></div>' +
+        '<div class="diario-tl-rail">' +
+          '<div class="diario-tl-dot"></div>' +
           (i < fotasOrdenadas.length-1
-            ? '<div style="width:2px;flex:1;background:#e5e7eb;margin-top:4px"></div>'
+            ? '<div class="diario-tl-line"></div>'
             : '') +
         '</div>' +
         // Contenido
-        '<div style="flex:1;padding-bottom:8px">' +
+        '<div class="diario-tl-body">' +
           // Fecha y día
-          '<div style="font-size:11px;font-weight:700;color:#374151;margin-bottom:6px">' +
+          '<div class="diario-tl-date">' +
             f.fecha + (f.hora ? ' · ' + f.hora : '') +
             (f.diasCultivo !== null && f.diasCultivo !== undefined
-              ? ' <span style="background:#f0fdf4;color:#15803d;border-radius:6px;' +
-                'padding:1px 6px;font-size:10px">Día ' + f.diasCultivo + '</span>'
+              ? ' <span class="diario-tl-dia-badge">Día ' + f.diasCultivo + '</span>'
               : '') +
           '</div>' +
           // Foto — placeholder, la imagen real se inserta con JS después (clave IDB si existe)
           '<div class="diario-foto-slot" data-foto-idx="' + i + '" ' +
             'data-foto-key="' + (f.key || '') + '" ' +
-            'data-variedad="' + variedad.replace(/"/g,"'") + '" data-fecha="' + f.fecha + '" ' +
-            'style="width:100%;max-height:260px;min-height:120px;background:#f3f4f6;' +
-            'border-radius:12px;border:1.5px solid #e5e7eb;display:flex;align-items:center;' +
-            'justify-content:center;font-size:32px">📸</div>' +
+            'data-variedad="' + variedad.replace(/"/g,"'") + '" data-fecha="' + f.fecha + '">📸</div>' +
           // Notas de la foto si las tiene
           (f.notas
-            ? '<div style="font-size:11px;color:#6b7280;margin-top:6px;font-style:italic">💬 ' + f.notas + '</div>'
+            ? '<div class="diario-tl-notas">💬 ' + f.notas + '</div>'
             : '') +
         '</div>' +
       '</div>';
@@ -13668,24 +13627,19 @@ async function renderDiarioPlanta(nivel, cesta) {
     if (fotos.length >= 2) {
       const primera = fotasOrdenadas[0];
       const ultima  = fotasOrdenadas[fotasOrdenadas.length-1];
-      html += '<div style="margin-top:8px">' +
-        '<div style="font-family:var(--font-display);font-size:11px;font-weight:700;' +
-          'color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">' +
+      html += '<div class="diario-compare-wrap">' +
+        '<div class="diario-compare-title">' +
           '🔍 Comparativa inicio/ahora</div>' +
-        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' +
+        '<div class="diario-compare-grid">' +
           '<div>' +
-            '<div class="compat-foto-slot" ' +
-              'data-alt="Inicio" style="width:100%;aspect-ratio:1;background:#f3f4f6;' +
-              'border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">📸</div>' +
-            '<div style="font-size:10px;text-align:center;color:#6b7280;margin-top:4px">' +
+            '<div class="compat-foto-slot" data-alt="Inicio">📸</div>' +
+            '<div class="diario-compare-caption">' +
               '📅 ' + primera.fecha + (primera.diasCultivo !== null && primera.diasCultivo !== undefined ? ' · Día ' + primera.diasCultivo : '') +
             '</div>' +
           '</div>' +
           '<div>' +
-            '<div class="compat-foto-slot" ' +
-              'data-alt="Ahora" style="width:100%;aspect-ratio:1;background:#f3f4f6;' +
-              'border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px">📸</div>' +
-            '<div style="font-size:10px;text-align:center;color:#6b7280;margin-top:4px">' +
+            '<div class="compat-foto-slot" data-alt="Ahora">📸</div>' +
+            '<div class="diario-compare-caption">' +
               '📅 ' + ultima.fecha + (ultima.diasCultivo !== null && ultima.diasCultivo !== undefined ? ' · Día ' + ultima.diasCultivo : '') +
             '</div>' +
           '</div>' +
@@ -13720,8 +13674,6 @@ async function renderDiarioPlanta(nivel, cesta) {
     img.className = 'diario-foto-img';
     img.setAttribute('data-variedad', (foto && foto.variedad) || variedad);
     img.setAttribute('data-fecha', (foto && foto.fecha) || '');
-    img.style.cssText = 'width:100%;max-height:260px;object-fit:cover;border-radius:12px;' +
-      'border:1.5px solid #e5e7eb;cursor:pointer;display:block';
     img.addEventListener('click', function() {
       verFotoCompletaDiario(this.src, this.getAttribute('data-variedad'), this.getAttribute('data-fecha'));
     });
@@ -13740,14 +13692,14 @@ async function renderDiarioPlanta(nivel, cesta) {
       const img = document.createElement('img');
       img.src = src;
       img.alt = slot.getAttribute('data-alt') || '';
-      img.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px';
+      img.className = 'diario-compat-img';
       slot.replaceWith(img);
     }
   }
 
   // Scroll al principio
   contenido.scrollIntoView({ behavior:'smooth', block:'start' });
-  } catch(e) { console.error('renderDiarioPlanta error:', e); if(contenido) contenido.innerHTML = '<div style="padding:16px;color:#dc2626">Error cargando diario: ' + e.message + '</div>'; }
+  } catch(e) { console.error('renderDiarioPlanta error:', e); if(contenido) contenido.innerHTML = '<div class="diario-error-msg">Error cargando diario: ' + e.message + '</div>'; }
 }
 
 function volverDiarioSelector() {
@@ -13780,15 +13732,11 @@ function verFotoCompletaDiario(dataUrl, variedad, fecha) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'Foto del diario');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:9999;' +
-    'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px';
+  overlay.className = 'diario-lightbox diario-lightbox--solid';
   overlay.innerHTML =
-    '<div style="font-family:var(--font-display);font-size:14px;font-weight:700;color:#fff;' +
-      'margin-bottom:12px;text-align:center">' + labFoto + ' · ' + feFoto + '</div>' +
-    '<img src="' + dataUrl + '" alt="' + altFoto + '" ' +
-      'style="max-width:100%;max-height:75vh;object-fit:contain;border-radius:12px">' +
-    '<button type="button" style="margin-top:16px;padding:12px 32px;background:#fff;border:none;border-radius:14px;' +
-      'font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
+    '<div class="diario-lightbox-title">' + labFoto + ' · ' + feFoto + '</div>' +
+    '<img src="' + dataUrl + '" alt="' + altFoto + '" class="diario-lightbox-img diario-lightbox-img--75">' +
+    '<button type="button" class="diario-lightbox-btn">' +
       'Cerrar</button>';
   const cerrarOv = () => {
     a11yDialogClosed(overlay);
@@ -13819,15 +13767,11 @@ async function verFotoCompleta(idx) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'Foto de la planta');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;' +
-    'display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px';
+  overlay.className = 'diario-lightbox diario-lightbox--plant';
   overlay.innerHTML =
-    '<img src="" alt="Foto planta" ' +
-      'style="max-width:100%;max-height:80vh;border-radius:12px;object-fit:contain">' +
-    '<div style="color:white;font-size:13px;margin-top:12px;font-family:var(--font-mono)"></div>' +
-    '<button type="button" ' +
-      'style="margin-top:16px;padding:10px 28px;background:#fff;border:none;border-radius:20px;' +
-      'font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">Cerrar</button>';
+    '<img src="" alt="Foto planta" class="diario-lightbox-img diario-lightbox-img--80">' +
+    '<div class="diario-lightbox-cap"></div>' +
+    '<button type="button" class="diario-lightbox-btn diario-lightbox-btn--round">Cerrar</button>';
   const img = overlay.querySelector('img');
   const cap = overlay.querySelector('div');
   const cerrar = overlay.querySelector('button');
@@ -14672,7 +14616,7 @@ async function detectarMunicipio() {
           mostrarGeoEstado('info',
             `📍 Ubicación: <strong>${ciudad}</strong><br>` +
             `No está en nuestra base de datos. Introduce la EC manualmente o consulta el ` +
-            `<a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionMunicipiosCenso.do" target="_blank" rel="noopener noreferrer" style="color:#1d4ed8;font-weight:600">SINAC (por municipio)</a>.`
+            `<a href="https://sinac.sanidad.gob.es/CiudadanoWeb/ciudadano/informacionAbastecimientoActionMunicipiosCenso.do" target="_blank" rel="noopener noreferrer" class="medir-link-sinac">SINAC (por municipio)</a>.`
           );
           document.getElementById('inputBuscarMunicipio').value = ciudad;
           resetGeoBtn();
@@ -14737,7 +14681,7 @@ function onBuscarMunicipio(query) {
   const resultados = buscarMunicipio(query);
   if (resultados.length === 0) {
     resEl.style.display = 'block';
-    resEl.innerHTML = '<div style="padding:10px 12px;font-size:13px;color:var(--muted)">No encontrado — prueba otro nombre o introduce EC manualmente</div>';
+    resEl.innerHTML = '<div class="medir-muni-empty">No encontrado — prueba otro nombre o introduce EC manualmente</div>';
     return;
   }
 
@@ -14746,13 +14690,12 @@ function onBuscarMunicipio(query) {
   window._municipioResultados = resultados;
   resEl.innerHTML = resultados.map(([nombre, data], idx) => {
     const color = data.ec < 300 ? '#15803d' : data.ec < 500 ? '#b45309' : data.ec < 700 ? '#d97706' : '#dc2626';
-    return `<button type="button" onclick="seleccionarMunicipioPorIdx(${idx})"
-      style="width:100%;text-align:left;padding:10px 12px;border:none;border-bottom:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center;-webkit-tap-highlight-color:transparent;background:transparent;font:inherit;color:inherit">
+    return `<button type="button" class="medir-muni-result-btn" onclick="seleccionarMunicipioPorIdx(${idx})">
       <span>
-        <span style="display:block;font-size:13px;font-weight:700;color:var(--white)">${nombre}</span>
-        <span style="display:block;font-size:11px;color:var(--muted)">${data.nota}</span>
+        <span class="medir-muni-name">${nombre}</span>
+        <span class="medir-muni-nota">${data.nota}</span>
       </span>
-      <span style="font-size:14px;font-weight:800;color:${color};margin-left:8px">${data.ec} µS</span>
+      <span class="medir-muni-ec" style="--medir-ec:${color}">${data.ec} µS</span>
     </button>`;
   }).join('');
 }
@@ -14773,7 +14716,7 @@ function seleccionarMunicipio(nombre, ec, dureza, nota) {
   const ecColor = ec < 300 ? '#15803d' : ec < 500 ? '#b45309' : '#dc2626';
   const viable = ec < 600;
   document.getElementById('municipioNombre').innerHTML =
-    `${nombre} — <span style="color:${ecColor}">${ec} µS/cm</span> · ${dureza}`;
+    `${nombre} — <span class="medir-ec-inline" style="--medir-ec:${ecColor}">${ec} µS/cm</span> · ${dureza}`;
   document.getElementById('municipioInfo').innerHTML =
     `${nota}<br>${viable
       ? '✅ Usable para hidropónica con CalMag reducido'
@@ -14862,7 +14805,7 @@ function syncMedirAguaResumen() {
   if (!el) return;
   const k = state.configAgua || 'destilada';
   const labels = { destilada: 'Agua destilada', osmosis: 'Agua de ósmosis', grifo: 'Agua del grifo' };
-  el.innerHTML = 'Tipo de agua en el sistema: <strong style="color:var(--gold)">' + (labels[k] || '—') + '</strong>.';
+  el.innerHTML = 'Tipo de agua en el sistema: <strong class="u-text-gold">' + (labels[k] || '—') + '</strong>.';
 }
 
 function toggleMedirOpcionesSustrato() {
@@ -14876,7 +14819,7 @@ function syncMedirSustratoResumen() {
   if (!el) return;
   const k = normalizaSustratoKey(state.configTorre?.sustrato || state.configSustrato || 'esponja');
   const nombre = CONFIG_SUSTRATO[k]?.nombre || '—';
-  el.innerHTML = 'Sustrato configurado: <strong style="color:var(--gold)">' + nombre + '</strong>.';
+  el.innerHTML = 'Sustrato configurado: <strong class="u-text-gold">' + nombre + '</strong>.';
 }
 
 function setSustrato(tipo) {
@@ -15624,7 +15567,7 @@ function evalEC(ec, vol) {
         correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
         correccionHtml += '<div class="correccion-item"><span>' + orden[2] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
       }
-      correccionHtml += '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras corrección</span><span class="correccion-valor">~' + Math.round(ec + mlAB * slopeEc) + ' µS/cm</span></div>';
+      correccionHtml += '<div class="correccion-item correccion-item--dim"><span>EC estimada tras corrección</span><span class="correccion-valor">~' + Math.round(ec + mlAB * slopeEc) + ' µS/cm</span></div>';
       showCorreccion('correccionEC', correccionHtml);
       return;
     }
@@ -15635,7 +15578,7 @@ function evalEC(ec, vol) {
     showCorreccion('correccionEC',
       '<div class="correccion-title">💊 Dilución hacia objetivo ' + ecObjExplicito + ' µS/cm</div>' +
       '<div class="correccion-item"><span>Añadir agua destilada / ósmosis</span><span class="correccion-valor">+' + litrosAgua + ' L</span></div>' +
-      '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras dilución</span><span class="correccion-valor">~' + ecEst + ' µS/cm</span></div>'
+      '<div class="correccion-item correccion-item--dim"><span>EC estimada tras dilución</span><span class="correccion-valor">~' + ecEst + ' µS/cm</span></div>'
     );
     return;
   }
@@ -15672,7 +15615,7 @@ function evalEC(ec, vol) {
       correccionHtml += '<div class="correccion-item"><span>' + orden[1] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
       correccionHtml += '<div class="correccion-item"><span>' + orden[2] + '</span><span class="correccion-valor">+' + mlAB + sufEc + '</span></div>';
     }
-    correccionHtml += '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras corrección</span><span class="correccion-valor">~' + Math.round(ec + mlAB * slopeEc) + ' µS/cm</span></div>';
+    correccionHtml += '<div class="correccion-item correccion-item--dim"><span>EC estimada tras corrección</span><span class="correccion-valor">~' + Math.round(ec + mlAB * slopeEc) + ' µS/cm</span></div>';
     showCorreccion('correccionEC', correccionHtml);
 
   } else {
@@ -15684,7 +15627,7 @@ function evalEC(ec, vol) {
     showCorreccion('correccionEC',
       '<div class="correccion-title">💊 Dilución necesaria</div>' +
       '<div class="correccion-item"><span>Añadir agua destilada</span><span class="correccion-valor">+' + litrosAgua + ' L</span></div>' +
-      '<div class="correccion-item" style="opacity:0.7"><span>EC estimada tras dilución</span><span class="correccion-valor">~' + Math.round(ec * volActual / (volActual + litrosAgua)) + ' µS/cm</span></div>'
+      '<div class="correccion-item correccion-item--dim"><span>EC estimada tras dilución</span><span class="correccion-valor">~' + Math.round(ec * volActual / (volActual + litrosAgua)) + ' µS/cm</span></div>'
     );
   }
 }
@@ -15731,9 +15674,9 @@ function evalPH(ph, vol) {
     setCard('cardPH','warn');
     showCorreccion('correccionPH',
       '<div class="correccion-title">⏳ No intervenir todavía</div>' +
-      '<div style="font-size:12px;line-height:1.6;color:var(--muted)">' +
+      '<div class="correccion-muted--body">' +
         nut.nombre + ' tiene buffers de pH que necesitan tiempo.<br>' +
-        '<strong style="color:var(--white)">Esperar 2-4h con difusor</strong> y volver a medir.<br>' +
+        '<strong class="correccion-strong-light">Esperar 2-4h con difusor</strong> y volver a medir.<br>' +
         'Solo actuar si sale del rango ' + phActMin + '–' + phActMax + '.' +
       '</div>'
     );
@@ -15754,7 +15697,7 @@ function evalPH(ph, vol) {
         '<span class="correccion-valor">+' + mlPlus + ' ml</span></div>' +
       '<div class="correccion-item"><span>pH actual → objetivo</span>' +
         '<span class="correccion-valor">' + ph + ' → ' + phMin + '</span></div>' +
-      '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">' +
+      '<div class="correccion-muted">' +
         '⚠️ Añadir de <strong>2ml en 2ml</strong>, esperar 2 min entre dosis y volver a medir.' +
       '</div>'
     );
@@ -15771,7 +15714,7 @@ function evalPH(ph, vol) {
     setCard('cardPH', nivel === 'bad' ? 'alert' : 'warn');
 
     const notaBuffer = tieneBuffer
-      ? '<div style="font-size:11px;color:#92400e;margin-top:6px;line-height:1.6">' +
+      ? '<div class="correccion-buffer-warn">' +
           '⚠️ Cada corrección con pH- <strong>debilita los buffers</strong> de ' + nut.nombre +
           '. Usa la mínima cantidad posible.' +
         '</div>'
@@ -15783,7 +15726,7 @@ function evalPH(ph, vol) {
         '<span class="correccion-valor">-' + mlMinus + ' ml</span></div>' +
       '<div class="correccion-item"><span>pH actual → objetivo</span>' +
         '<span class="correccion-valor">' + ph + ' → ' + phMax + '</span></div>' +
-      '<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">' +
+      '<div class="correccion-muted">' +
         '⚠️ Añadir de <strong>1ml en 1ml</strong>, esperar 2 min y volver a medir.' +
       '</div>' + notaBuffer
     );
@@ -15811,7 +15754,7 @@ function evalTemp(temp) {
     setCard('cardTemp', temp < 14 ? 'alert' : 'warn');
     showCorreccion('correccionTemp', `
       <div class="correccion-title">🔥 Acción requerida</div>
-      <div style="font-size:12px;line-height:1.5">
+      <div class="correccion-muted--body-temp">
         Verificar que el calentador está encendido y funcionando correctamente.<br>
         Temperatura objetivo: <strong>20°C</strong><br>
         Por debajo de 14°C el crecimiento se detiene casi por completo.
@@ -15824,7 +15767,7 @@ function evalTemp(temp) {
     setCard('cardTemp', temp > 28 ? 'alert' : 'warn');
     showCorreccion('correccionTemp', `
       <div class="correccion-title">❄️ Acción requerida</div>
-      <div style="font-size:12px;line-height:1.5">
+      <div class="correccion-muted--body-temp">
         Bajar termostato del calentador.<br>
         En verano: cubrir el depósito con material aislante o añadir hielo.<br>
         Por encima de 28°C: riesgo de Pythium y reducción de oxígeno disuelto.
@@ -15889,11 +15832,11 @@ function evalVol(vol, ec, ph) {
         }
       }
     } else {
-      correccionHtml += '<div style="font-size:11px;color:var(--muted);margin-top:4px">' +
+      correccionHtml += '<div class="correccion-muted correccion-muted--tight">' +
         'EC correcta — añadir solo agua destilada sin nutrientes.</div>';
     }
 
-    correccionHtml += '<div style="font-size:11px;color:var(--muted);margin-top:6px">' +
+    correccionHtml += '<div class="correccion-muted correccion-muted--loose">' +
       '⚠️ Medir EC y pH tras añadir y ajustar si es necesario.</div>';
 
     showCorreccion('correccionVol', correccionHtml);
@@ -16513,7 +16456,7 @@ function getCLPasos() {
       id:'clUsarCalMag', type:'checkbox', checked: usarCalMagEnRecarga(),
       labelClass: 'cl-calmag-option',
       label:
-        '<strong style="color:var(--white);display:block;margin-bottom:4px">CalMag antes del abono</strong>' +
+        '<strong class="cl-calmag-headline">CalMag antes del abono</strong>' +
         'Recomendado con agua blanda; con grifo suele omitirse. Al activarlo se recalculan CalMag y los ml de abono según el EC objetivo.',
       _clOnchange:'onChecklistRecargaPrefsChanged()',
     });
@@ -16539,8 +16482,8 @@ function getCLPasos() {
       desc: 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.',
       nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Sistema</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.',
       extraHtml:
-        '<button type="button" class="btn btn-ghost" style="margin-top:8px;padding:8px 12px;font-size:12px;font-weight:700;border-radius:10px;border:1.5px solid #86efac;background:#f0fdf4;color:#15803d;cursor:pointer;width:100%" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
-        '<p style="margin:8px 0 0;font-size:11px;line-height:1.45;color:var(--muted)">Ventana de consulta: ciérrala y sigue con el checklist.</p>',
+        '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
+        '<p class="cl-tabla-cultivos-hint">Ventana de consulta: ciérrala y sigue con el checklist.</p>',
       campos: [
         { id: 'clPrimerVolMax', label: 'Capacidad máx. depósito (L)', type: 'number', step: '1', placeholder: '20',
           value: String(volMaxPrimerIni),
@@ -16592,7 +16535,7 @@ function getCLPasos() {
           nota:
             'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
           postCamposHtml:
-            '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" style="margin-top:10px;padding:10px 12px;border-radius:12px;background:#f0f9ff;border:1.5px solid #7dd3fc;font-size:11px;line-height:1.55;font-weight:600;color:#0c4a6e" role="status" aria-live="polite"></div>',
+            '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" role="status" aria-live="polite"></div>',
         },
       ]
     : [];
@@ -16654,8 +16597,8 @@ function getCLPasos() {
         },
       ],
       postCamposHtml:
-        '<div id="clNftLayoutResumen" style="margin-bottom:10px;padding:10px;border-radius:10px;background:#f0fdf4;border:1.5px solid #86efac;font-size:11px;line-height:1.5;font-weight:600;color:#14532d" role="status"></div>' +
-        '<div id="clNftGeomRecalcMsg" style="margin-top:10px;font-size:11px;line-height:1.45;font-weight:600;color:#0f766e" role="status"></div>',
+        '<div id="clNftLayoutResumen" class="cl-nft-layout-resumen" role="status"></div>' +
+        '<div id="clNftGeomRecalcMsg" class="cl-nft-geom-recalc-msg" role="status"></div>',
     }]
     : [];
   const pasosNftExtra = esNft && nftBomb ? [
@@ -16674,9 +16617,9 @@ function getCLPasos() {
           _clOninput:'onNftBombaUsuarioChecklistInput()', _clOnblur:'onNftBombaUsuarioChecklistBlur()' },
       ],
       postCamposHtml:
-        '<div id="clNftN0GeomHint" style="margin-bottom:8px;font-size:10px;line-height:1.45;color:#0f766e;font-weight:600" role="status"></div>' +
-        '<div id="clNftDepositoRecomendadoWrap" style="display:none;margin-top:10px;padding:12px;border-radius:12px;background:#eff6ff;border:1.5px solid #93c5fd" role="region" aria-label="Volumen de depósito recomendado NFT"></div>' +
-        '<div id="clNftBombaUsuarioMsg" style="margin-top:10px;font-size:11px;line-height:1.45;font-weight:600" role="status"></div>' },
+        '<div id="clNftN0GeomHint" class="cl-nft-n0-geom-hint" role="status"></div>' +
+        '<div id="clNftDepositoRecomendadoWrap" class="cl-nft-deposito-rec-wrap" role="region" aria-label="Volumen de depósito recomendado NFT"></div>' +
+        '<div id="clNftBombaUsuarioMsg" class="cl-nft-bomba-usuario-msg" role="status"></div>' },
     { id:'N1', seccion:null, paso:'N1',
       desc:'Inspeccionar los ' + nftCh + ' canales: sin barro orgánico, raíces compactando el fondo ni tapones en codos',
       nota:'NFT: la película de agua debe poder recorrer todo el canal; ~' + nftHx + ' huecos/canal en tu configuración' },
@@ -17460,7 +17403,7 @@ function renderMiniChart(containerId, datos, min, max, color, colorBad) {
     const col = document.createElement('div');
     col.className = 'chart-bar-col';
     col.innerHTML = `
-      <div class="chart-bar-inner" style="height:${pct}%;background:${c}"></div>
+      <div class="chart-bar-inner" style="--ch-h:${pct}%;--ch-bg:${c}"></div>
       <div class="chart-date">${showDate ? fechaLabel : ''}</div>
     `;
     el.appendChild(col);
@@ -17702,10 +17645,10 @@ function renderRegistro() {
         }
       }
       const globalIdx = entries.indexOf(e);
-      return '<div class="registro-entry-card" style="background:' + c.bg + ';border-color:' + c.border + '">' +
+      return '<div class="registro-entry-card" style="--reg-bg:' + c.bg + ';--reg-bd:' + c.border + ';--reg-badge:' + c.color + '">' +
         '<div class="registro-entry-head">' +
           '<div class="registro-entry-left">' +
-            '<span class="registro-entry-badge" style="color:' + c.color + '">' +
+            '<span class="registro-entry-badge">' +
               badgeIcon + ' ' +
               (e.tipo === 'foto_sistema'
                 ? 'Foto sistema'
@@ -18081,14 +18024,12 @@ function renderDiagnostico() {
 
   el.innerHTML = filtrados.map(d => {
     const c = colores[d.urgencia] || colores.info;
-    return `<div style="background:${c.bg};border:1.5px solid ${c.border};border-radius:12px;
-      padding:12px 14px;margin-bottom:8px">
-      <div style="font-family:var(--font-display);font-size:13px;font-weight:800;
-        color:${c.color};margin-bottom:6px">${d.sintoma}</div>
-      <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:4px">
+    return `<div class="diag-card" style="--diag-bg:${c.bg};--diag-bd:${c.border};--diag-fg:${c.color}">
+      <div class="diag-card-title">${d.sintoma}</div>
+      <div class="diag-card-cause">
         📌 ${d.causa}
       </div>
-      <div style="font-size:12px;color:#4b5563;line-height:1.5">
+      <div class="diag-card-sol">
         💊 ${d.solucion}
       </div>
     </div>`;
@@ -18125,12 +18066,12 @@ function buildHtmlTablaEcPh(opts) {
       <td>${meteoEscHtml(r.cultivo)}</td>
       <td>${meteoEscHtml(r.ec)}</td>
       <td>${meteoEscHtml(r.ph)}</td>
-      <td style="font-size:10px">${meteoEscHtml(r.nota || '—')}</td>
+      <td class="consejo-ecph-nota-cell">${meteoEscHtml(r.nota || '—')}</td>
     </tr>
   `).join('');
   return `
     <div ${wrapAttr}>
-      <div class="consejo-titulo" style="margin-bottom:8px">Referencia rápida hidroponía</div>
+      <div class="consejo-titulo consejo-titulo--mb8">Referencia rápida hidroponía</div>
       <div class="consejo-ecph-note">
         Valores medios habituales en bibliografía y tablas de cultivos (EC en <strong>µS/cm</strong> como en esta app; pH de la solución).
         Varía según <strong>marca de abono</strong>, agua base, temperatura y fase (plántula → vegetativo → flor/fruto). Úsalo como guía, no como dogma.
@@ -18415,13 +18356,13 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
         const cmSoft = mlCalMagParaAguaBlanda(volL);
         lines.push(`<span class="consejo-dosis18-k">CalMag</span> ${fmtMlConsejo(cmSoft)} ml → ~${EC_CALMAG_BASE} µS/cm`);
       } else {
-        lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="opacity:.82">omitido (pref. checklist / agua blanda sin CalMag)</span>`);
+        lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span class="consejo-calmag-muted82">omitido (pref. checklist / agua blanda sin CalMag)</span>`);
       }
     } else {
-      lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="opacity:.72">no necesario</span>`);
+      lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span class="consejo-calmag-muted72">no necesario</span>`);
     }
   } else {
-    lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span style="font-size:10px;line-height:1.35;display:inline-block;max-width:100%">${meteoEscHtml(ref.calmagGrifoNota)}</span>`);
+    lines.push(`<span class="consejo-dosis18-k">CalMag</span> <span class="consejo-calmag-nota-grifo">${meteoEscHtml(ref.calmagGrifoNota)}</span>`);
   }
 
   const suf = dosisSufijoNutriente(nut);
@@ -18474,8 +18415,8 @@ function buildHtmlTablaPreparacionFabricante18L() {
 
   return `
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
-      <div class="consejo-titulo" style="margin-bottom:8px">Mezcla dinámica · <strong>${meteoEscHtml(nutActivo.nombre)}</strong> · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span style="font-size:11px;font-weight:600;opacity:.88">(${ecOrigen})</span></div>
-      <div class="consejo-ecph-note" style="margin-bottom:10px">
+      <div class="consejo-titulo consejo-titulo--mb8">Mezcla dinámica · <strong>${meteoEscHtml(nutActivo.nombre)}</strong> · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span class="consejo-ec-meta">(${ecOrigen})</span></div>
+      <div class="consejo-ecph-note consejo-ecph-note--mb">
         Solo el <strong>nutriente activo</strong> de la instalación (cámbialo en la pestaña Sistema o en la configuración). Misma regla que el checklist: litros de mezcla (o capacidad máx. si no indicas margen), EC objetivo y <code>ecPorMl</code>.${capNota} ${leyendaBlanda}
         Columna <strong>grifo</strong>: pendiente hacia la misma EC restando la <strong>EC base</strong> del agua (Mediciones). La ficha bajo el nombre resume la orientación del fabricante.
         <strong>A+B simétricos</strong> y <strong>1 parte</strong>: cálculo EC. <strong>3 botellas</strong> y <strong>A+B distintas</strong>: tabla × volumen. Comprueba con el <strong>medidor</strong>.
@@ -18491,7 +18432,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
         </thead>
         <tbody>${rows}</tbody>
       </table>
-      <div class="consejo-ecph-note" style="margin-top:10px;margin-bottom:0">
+      <div class="consejo-ecph-note consejo-ecph-note--mt0">
         Líneas <strong>3 partes</strong>: totales = tabla × volumen (orden <strong>${meteoEscHtml('Micro → Grow → Bloom')}</strong> o equivalente). <strong>1 parte</strong> líquido: dinámico como en checklist si aplica modelo EC; polvo = gramos tabla.
       </div>
     </div>
@@ -18502,8 +18443,8 @@ function buildHtmlTablaConsejosPersonal() {
   const t = state.consejosTablaPersonal;
   if (!t || t.volL == null || !t.nutrienteId) {
     return `
-      <div class="consejo-dosis18-wrap consejo-dosis18-miTorre" style="margin-top:14px">
-        <div class="consejo-titulo" style="margin-bottom:6px">Tu tabla (volumen a medida)</div>
+      <div class="consejo-dosis18-wrap consejo-dosis18-miTorre consejo-dosis18-wrap--mt">
+        <div class="consejo-titulo consejo-titulo--mb6">Tu tabla (volumen a medida)</div>
         <div class="consejo-ecph-note">
           Al <strong>completar el checklist de recarga</strong> (no es la primera configuración), puedes guardar aquí el nutriente y los litros del depósito.
           Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen.
@@ -18522,9 +18463,9 @@ function buildHtmlTablaConsejosPersonal() {
   } catch (e) { fecha = ''; }
 
   return `
-    <div class="consejo-dosis18-wrap consejo-dosis18-miTorre" id="consejos-tabla-personal" style="margin-top:14px">
-      <div class="consejo-titulo" style="margin-bottom:8px">Mi torre · ${meteoEscHtml(nut.nombre)} · ${fmtMlConsejo(vol)} L</div>
-      <div class="consejo-ecph-note" style="margin-bottom:10px">
+    <div class="consejo-dosis18-wrap consejo-dosis18-miTorre consejo-dosis18-wrap--mt" id="consejos-tabla-personal">
+      <div class="consejo-titulo consejo-titulo--mb8">Mi torre · ${meteoEscHtml(nut.nombre)} · ${fmtMlConsejo(vol)} L</div>
+      <div class="consejo-ecph-note consejo-ecph-note--mb">
         Misma lógica dinámica que la tabla general (EC objetivo recarga, CalMag/blanca, grifo con EC base). Actualizado: ${meteoEscHtml(fecha || '—')}
       </div>
       <table class="consejo-dosis18-table">
@@ -18535,7 +18476,7 @@ function buildHtmlTablaConsejosPersonal() {
           <tr><td>Grifo</td><td class="consejo-dosis18-cell">${cGrifo}</td></tr>
         </tbody>
       </table>
-      <button type="button" class="btn btn-ghost" style="margin-top:10px;font-size:12px" onclick="borrarConsejosTablaPersonal()">Quitar tabla guardada</button>
+      <button type="button" class="btn btn-ghost consejo-quitar-tabla-btn" onclick="borrarConsejosTablaPersonal()">Quitar tabla guardada</button>
     </div>`;
 }
 
@@ -18679,7 +18620,7 @@ function renderConsejos() {
       id="catBtn-${key}"
       onclick="selConsejoCat('${key}')"
       aria-label="Consejos: ${cat.nombre}"
-      style="${key === consejoCatActiva ? `background:${cat.color};border-color:${cat.color};` : ''}">
+      ${key === consejoCatActiva ? `style="--consejo-tab-accent:${cat.color}"` : ''}>
       ${cat.nombre}
     </button>
   `).join('');
@@ -18700,7 +18641,7 @@ function htmlConsejoCard(cat, c) {
   return `
     <div class="consejo-card">
       <div class="consejo-header">
-        <div class="consejo-icon" style="background:${cat.bg}">
+        <div class="consejo-icon" style="--consejo-icon-bg:${cat.bg}">
           ${c.icono}
         </div>
         <div>
@@ -18725,11 +18666,11 @@ function buildConsejosAguaNutrienteDinamico() {
   const volObj = getVolumenMezclaLitros(cfg);
   const ecMin = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
   const pasos = (nut.protocolo || []).map(p =>
-    '<li style="margin:0.35em 0">' + meteoEscHtml(p) + '</li>'
+    '<li class="consejo-proto-li">' + meteoEscHtml(p) + '</li>'
   ).join('');
   const listaProto = pasos
-    ? '<ol style="margin:8px 0 0 1em;padding:0;line-height:1.55;font-size:12px;color:var(--muted)">' + pasos + '</ol>'
-    : '<p style="font-size:12px;color:var(--muted)">Consulta el envase y el checklist de recarga de la app.</p>';
+    ? '<ol class="consejo-proto-ol">' + pasos + '</ol>'
+    : '<p class="consejo-proto-fallback">Consulta el envase y el checklist de recarga de la app.</p>';
 
   let ordenWarn = '';
   if (nut.partes === 2 && nut.orden && nut.orden.length >= 2) {
@@ -18788,7 +18729,7 @@ function buildConsejosAguaNutrienteDinamico() {
     icono:'🧪',
     titulo:'Protocolo de nutrientes — ' + meteoEscHtml(nut.nombre),
     texto: 'Pasos orientativos del fabricante para <strong>' + meteoEscHtml(nut.nombre) + '</strong> (torre activa). Coinciden con el orden del checklist de recarga.' +
-      listaProto + (ordenWarn ? '<p style="margin:10px 0 0;font-size:12px;color:var(--white)">' + ordenWarn + '</p>' : ''),
+      listaProto + (ordenWarn ? '<p class="consejo-orden-warn">' + ordenWarn + '</p>' : ''),
     alerta:{ tipo:'ok', txt:'✅ ' + calmagOk + ' ' + phOk }
   }) + htmlConsejoCard({
     nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)'
@@ -18815,9 +18756,9 @@ function buildConsejosNftHidraulica() {
       titulo: 'Tu instalación NFT — cumplimiento orientativo',
       html:
         (resumenTxt
-          ? '<p style="margin:0 0 10px;line-height:1.45;font-weight:800;color:var(--text)">' + escHtmlUi(resumenTxt) + '</p>'
+          ? '<p class="consejo-p consejo-p--lead">' + escHtmlUi(resumenTxt) + '</p>'
           : '') +
-        '<p style="margin:0 0 10px;line-height:1.55;color:var(--muted)">Lo importante aquí es si el <strong>depósito</strong> y la <strong>bomba</strong> encajan con un criterio práctico (24 h, película fina, pérdidas típicas). Los números detallados van en el desplegable. Contrasta siempre con la <strong>curva Q–H</strong> del fabricante.</p>' +
+        '<p class="consejo-p consejo-p--mb10">Lo importante aquí es si el <strong>depósito</strong> y la <strong>bomba</strong> encajan con un criterio práctico (24 h, película fina, pérdidas típicas). Los números detallados van en el desplegable. Contrasta siempre con la <strong>curva Q–H</strong> del fabricante.</p>' +
         nftDepositoVeredictoBloqueHtml(b, vDepAct) +
         nftWrapDetalleTecnicoSummary(nftBombaDetalleTecnicoHtml(b), 'Bomba, caudal y geometría (detalle)'),
     });
@@ -18826,7 +18767,7 @@ function buildConsejosNftHidraulica() {
       icono: 'ℹ️',
       titulo: 'Configuración NFT',
       html:
-        '<p style="margin:0;line-height:1.6;color:var(--muted)">Elige en <strong>Sistema</strong> instalación <strong>NFT</strong> y completa canal, lámina y longitud en el checklist (N·ref) o en el asistente para ver aquí el criterio orientativo de tu caso.</p>',
+        '<p class="consejo-p consejo-p--flush">Elige en <strong>Sistema</strong> instalación <strong>NFT</strong> y completa canal, lámina y longitud en el checklist (N·ref) o en el asistente para ver aquí el criterio orientativo de tu caso.</p>',
     });
   }
   const formula = htmlConsejoCard(cat, {
@@ -18837,7 +18778,7 @@ function buildConsejosNftHidraulica() {
     alerta: { tipo: 'info', txt: 'ℹ️ Lámina habitual ~2–4 mm (~3 mm); si sube mucho, suele haber exceso de caudal o pendiente insuficiente.' },
   });
   const docWrap =
-    '<div class="consejo-card"><div class="consejo-texto" style="padding-top:0">' +
+    '<div class="consejo-card"><div class="consejo-texto consejo-texto--flush">' +
     nftTuberiaReferenciaDocHtml({ forChecklist: true }) +
     '</div></div>';
   return dyn + formula + docWrap;
@@ -18852,22 +18793,22 @@ function buildConsejosDwcDifusorBloque() {
   let dyn = '';
   if (rec) {
     dyn =
-      '<div style="margin:12px 0 0;padding:10px 12px;background:rgba(8,145,178,0.08);border-radius:10px;border:1px solid rgba(8,145,178,0.25)">' +
-      '<div style="font-size:11px;font-weight:800;color:#0e7490;margin-bottom:6px">Según litros de mezcla y cestas (mismo criterio que checklist y Sistema)</div>' +
+      '<div class="consejo-dwc-rec-box">' +
+      '<div class="consejo-dwc-rec-kicker">Según litros de mezcla y cestas (mismo criterio que checklist y Sistema)</div>' +
       dwcFormatHtmlRecomendacionDifusorCore(rec) +
       '</div>';
   } else {
     dyn =
-      '<p style="margin:12px 0 0;line-height:1.55;color:var(--muted)">Activa una instalación <strong>DWC</strong> y revisa volumen y rejilla en <strong>Sistema</strong> para ver aquí la recomendación de bomba y difusores.</p>';
+      '<p class="consejo-p consejo-p--tight">Activa una instalación <strong>DWC</strong> y revisa volumen y rejilla en <strong>Sistema</strong> para ver aquí la recomendación de bomba y difusores.</p>';
   }
   return htmlInnerConsejoCard(cat, {
     icono: '💨',
     titulo: 'Bomba de aire y difusor según litros',
     html:
-      '<p style="margin:0;line-height:1.55">La solución nutritiva se oxigena con <strong>bomba de aire</strong> + <strong>difusor</strong> en el fondo. En webs y tiendas de hidroponía lo habitual son <strong>piedras porosas planas</strong> o barras (burbujeo repartido en horizontal), <strong>discos</strong>, <strong>bolas</strong> y cilindros microporosos: elige según el fondo de tu cubo y que el aire <strong>no quede solo en un rincón</strong>.</p>' +
-      '<p style="margin:10px 0 0;line-height:1.55">Burbujas <strong>más finas</strong> suelen intercambiar mejor oxígeno con el agua, pero tapan antes el poro; la bomba debe ser capaz de <strong>vencer la profundidad</strong> del líquido (altura de agua / manguera).</p>' +
+      '<p class="consejo-p">La solución nutritiva se oxigena con <strong>bomba de aire</strong> + <strong>difusor</strong> en el fondo. En webs y tiendas de hidroponía lo habitual son <strong>piedras porosas planas</strong> o barras (burbujeo repartido en horizontal), <strong>discos</strong>, <strong>bolas</strong> y cilindros microporosos: elige según el fondo de tu cubo y que el aire <strong>no quede solo en un rincón</strong>.</p>' +
+      '<p class="consejo-p consejo-p--tight">Burbujas <strong>más finas</strong> suelen intercambiar mejor oxígeno con el agua, pero tapan antes el poro; la bomba debe ser capaz de <strong>vencer la profundidad</strong> del líquido (altura de agua / manguera).</p>' +
       dyn +
-      '<p style="margin:10px 0 0;font-size:11px;color:var(--muted);line-height:1.45">Orientativo; temperatura, número de plantas y forma del depósito cambian lo que necesitas. Si huele mal o las raíces se ablandan, sube aeración o limpia/sustituye el difusor.</p>',
+      '<p class="consejo-footnote">Orientativo; temperatura, número de plantas y forma del depósito cambian lo que necesitas. Si huele mal o las raíces se ablandan, sube aeración o limpia/sustituye el difusor.</p>',
     alerta: {
       tipo: 'warn',
       txt: '⚠️ No sustituye el dato del fabricante de la bomba ni un medidor de oxígeno disuelto.',
@@ -18919,12 +18860,12 @@ function buildConsejosDwc() {
   const tabla =
     '<div class="consejo-card">' +
     '<div class="consejo-header">' +
-    '<div class="consejo-icon" style="background:' +
+    '<div class="consejo-icon" style="--consejo-icon-bg:' +
     cat.bg +
     '">📋</div>' +
     '<div><div class="consejo-titulo">Tamaños de cesta (referencia)</div></div>' +
     '</div>' +
-    '<div class="consejo-texto" style="padding-top:4px">' +
+    '<div class="consejo-texto consejo-texto--pt4">' +
     '<div id="mountDwcCestasGuiaConsejos"></div>' +
     '</div>' +
     '</div>';
@@ -18936,7 +18877,7 @@ function htmlInnerConsejoCard(cat, c) {
   return `
     <div class="consejo-card">
       <div class="consejo-header">
-        <div class="consejo-icon" style="background:${cat.bg}">
+        <div class="consejo-icon" style="--consejo-icon-bg:${cat.bg}">
           ${c.icono}
         </div>
         <div>
@@ -19238,19 +19179,16 @@ function renderCalendario() {
       mes === calDiaSeleccionado.getMonth() &&
       año === calDiaSeleccionado.getFullYear();
     const dots  = evs.slice(0,3).map(e =>
-      '<div style="width:5px;height:5px;border-radius:50%;background:' + e.color + '"></div>'
+      '<div class="cal-ev-dot" style="--cal-dot-bg:' + e.color + '"></div>'
     ).join('');
 
-    const baseStyle =
-      'background:' + (esHoy ? '#16a34a' : evs.length > 0 ? 'var(--bg2)' : 'var(--bg3)') + ';' +
-      'border:1.5px solid ' + (esHoy ? '#16a34a' : evs.length > 0 ? '#86efac' : 'var(--border)') + ';' +
-      'border-radius:8px;padding:4px 2px;text-align:center;min-height:42px;' +
-      (esSel ? 'box-shadow:0 0 0 2px #a855f7;' : '') +
-      (evs.length > 0 ? 'cursor:pointer;' : 'cursor:default;');
+    let cellClass = 'cal-cell';
+    if (esHoy) cellClass += ' cal-cell--today';
+    else if (evs.length > 0) cellClass += ' cal-cell--marked';
+    if (esSel) cellClass += ' cal-cell--selected';
     const numInner =
-      '<div style="font-family:var(--font-display);font-size:12px;font-weight:700;' +
-      'color:' + (esHoy ? 'white' : 'var(--white)') + '">' + d + '</div>' +
-      '<div style="display:flex;justify-content:center;gap:2px;margin-top:3px;flex-wrap:wrap">' + dots + '</div>';
+      '<div class="cal-cell-num">' + d + '</div>' +
+      '<div class="cal-cell-dots">' + dots + '</div>';
     const ariaToday = esHoy ? ' aria-current="date"' : '';
 
     if (evs.length > 0) {
@@ -19258,10 +19196,10 @@ function renderCalendario() {
         d + ' de ' + MESES_LARGO[mes] + ' ' + año + '. ' + evs.map(e => e.label).join('. ')
       );
       grid.innerHTML +=
-        '<button type="button" class="cal-day-btn" style="' + baseStyle + '" aria-label="' + ariaLbl + '"' + ariaToday +
+        '<button type="button" class="cal-day-btn ' + cellClass + '" aria-label="' + ariaLbl + '"' + ariaToday +
         ' onclick="mostrarEventosDiaHC(' + d + ',' + mes + ',' + año + ')">' + numInner + '</button>';
     } else {
-      grid.innerHTML += '<div style="' + baseStyle + '"' + ariaToday + '>' + numInner + '</div>';
+      grid.innerHTML += '<div class="' + cellClass + '"' + ariaToday + '>' + numInner + '</div>';
     }
   }
 
@@ -19290,17 +19228,15 @@ function renderCalendario() {
   } else {
     if (calDiaLabelEl) calDiaLabelEl.textContent = '';
     if (proximos.length === 0) {
-      eventosDiaEl.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:8px">No hay eventos próximos este mes</div>';
+      eventosDiaEl.innerHTML = '<div class="cal-list-empty">No hay eventos próximos este mes</div>';
     } else {
       eventosDiaEl.innerHTML = proximos.slice(0, 8).map(e =>
-        '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
-        '<div style="width:36px;height:36px;border-radius:10px;background:' + e.color + '18;' +
-        'border:1.5px solid ' + e.color + '44;display:flex;flex-direction:column;' +
-        'align-items:center;justify-content:center;flex-shrink:0">' +
-        '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + e.color + '">' + e.dia + '</div>' +
-        '<div style="font-size:8px;color:' + e.color + ';font-weight:600">' + mesCorto + '</div>' +
+        '<div class="cal-prox-row">' +
+        '<div class="cal-prox-badge" style="--ev:' + e.color + '">' +
+        '<div class="cal-prox-badge-dia">' + e.dia + '</div>' +
+        '<div class="cal-prox-badge-mes">' + mesCorto + '</div>' +
         '</div>' +
-        '<div style="font-size:13px;color:var(--white);font-weight:600">' + e.label + '</div>' +
+        '<div class="cal-prox-label">' + e.label + '</div>' +
         '</div>'
       ).join('');
     }
@@ -19341,7 +19277,7 @@ function mostrarEventosDia(fecha) {
   const lista = document.getElementById('eventosDia');
 
   if (eventos.length === 0) {
-    lista.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px">Sin eventos especiales este día</div>';
+    lista.innerHTML = '<div class="cal-day-empty">Sin eventos especiales este día</div>';
     return;
   }
 
@@ -19898,7 +19834,7 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
   const el = document.getElementById('meteoAlertas');
   el.innerHTML = alertas.map(a => `
     <div class="meteo-alerta-item ${a.tipo}">
-      <span style="font-size:16px">${a.icon}</span>
+      <span class="meteo-alerta-icon">${a.icon}</span>
       <span>${a.txt}</span>
     </div>
   `).join('');
@@ -20827,12 +20763,12 @@ async function calcularRiego() {
         ' · 🌧️ Prob. lluvia: ' + probLluvia + '% · ' + precipMmN + ' mm';
       const uvTipNft =
         !esInterior && Number.isFinite(Number(uvEfectivo)) && Number(uvEfectivo) >= 7
-          ? '<br><br><span style="opacity:0.95;font-size:13px;line-height:1.5;display:block">💡 <strong>UV elevado:</strong> conviene <strong>toldo</strong>, <strong>malla sombra</strong> (p. ej. 30–50 %) o sombra parcial para moderar estrés y calor en el follaje.</span>'
+          ? '<br><br><span class="riego-clima-tip-uv">💡 <strong>UV elevado:</strong> conviene <strong>toldo</strong>, <strong>malla sombra</strong> (p. ej. 30–50 %) o sombra parcial para moderar estrés y calor en el follaje.</span>'
           : '';
       const bloqueClima =
-        '<span style="font-size:14px;line-height:1.7;display:block">' + lineaClimaN + '</span>' +
+        '<span class="riego-clima-bloque">' + lineaClimaN + '</span>' +
         (esInterior
-          ? '<br><br><span style="opacity:0.92;font-size:13px;line-height:1.5">🏠 Interior — datos de la ubicación guardada (referencia).</span>'
+          ? '<br><br><span class="riego-clima-nota-int">🏠 Interior — datos de la ubicación guardada (referencia).</span>'
           : '') +
         uvTipNft;
       if (esNftRiego && climaNft) {
@@ -21139,21 +21075,21 @@ async function calcularRiego() {
     let notaRedondeo = '';
     if (!esInterior && (demDiaTxt !== demMedTxt || vpdDiaTxt !== vpdMedTxt) && minON === minONMedio && minOFF === minOFFMedio) {
       notaRedondeo =
-        '<br><span style="opacity:0.78;font-size:10px;line-height:1.45">ℹ️ La demanda o el VPD cambian entre «día» y «mediodía», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
+        '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «mediodía», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
     }
     const lineaNocClima = esInterior
       ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice).'
       : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '.';
     document.getElementById('riegoClimaUsado').innerHTML =
-      '<strong style="color:var(--white)">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
+      '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
       lineaNocClima +
-      '<br><span style="opacity:0.88;font-size:11px;line-height:1.5">📆 Día en el modelo: <strong>' + fechaModTxt +
+      '<br><span class="riego-clima-meta-line">📆 Día en el modelo: <strong>' + fechaModTxt +
       '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs 11–15 h + pico radiación) · Demanda rel. ' +
       demDiaTxt + ' / ' + demMedTxt + ' (general / mediodía).</span>' +
-      '<br><span style="opacity:0.78;font-size:10px;line-height:1.45">Si <strong>hoy</strong> y <strong>mañana</strong> dan el mismo programa, suele ser previsión muy parecida en la API + mismos redondeos; comprueba que cambian temperatura/UV arriba y la fecha del modelo.</span>' +
+      '<br><span class="riego-clima-nota-peq">Si <strong>hoy</strong> y <strong>mañana</strong> dan el mismo programa, suele ser previsión muy parecida en la API + mismos redondeos; comprueba que cambian temperatura/UV arriba y la fecha del modelo.</span>' +
       notaRedondeo +
       (esInterior
-        ? '<br><span style="opacity:0.92">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala (programa mediodía = mismo índice que el día).</span>'
+        ? '<br><span class="riego-clima-int-torre">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala (programa mediodía = mismo índice que el día).</span>'
         : '');
 
     // Guardar en state para uso en otros módulos
@@ -21456,7 +21392,7 @@ function actualizarResumenReposicionParcialUI() {
   const suf = multi ? ' · solo <strong>esta torre</strong>' : '';
   if (s7.count === 0 && s30.count === 0) {
     el.innerHTML =
-      '📊 <span style="color:var(--muted)">Cuando registres reposiciones con litros, aquí verás totales de <strong>7 y 30 días</strong>' +
+      '📊 <span class="repos-resumen-muted">Cuando registres reposiciones con litros, aquí verás totales de <strong>7 y 30 días</strong>' +
       suf + ' para comparar ritmos (crecimiento de plantas, calor, etc.).</span>';
     return;
   }
@@ -21465,10 +21401,10 @@ function actualizarResumenReposicionParcialUI() {
     return (Math.abs(r % 1) < 0.05) ? String(Math.round(r)) : String(r);
   };
   el.innerHTML =
-    '📊 <strong style="color:var(--white)">Tu rutina de reposición</strong>' + suf + ': ' +
+    '📊 <strong class="repos-resumen-head">Tu rutina de reposición</strong>' + suf + ': ' +
     'últimos <strong>7 días</strong> → ' + fmt(s7.totalLitros) + ' L en <strong>' + s7.count + '</strong> vez(es) · ' +
     'últimos <strong>30 días</strong> → ' + fmt(s30.totalLitros) + ' L en <strong>' + s30.count + '</strong> · ' +
-    '<span style="color:var(--muted)">Orientativo: si sube el consumo con el tamaño del follaje o el verano, lo verás aquí.</span>';
+    '<span class="repos-resumen-muted">Orientativo: si sube el consumo con el tamaño del follaje o el verano, lo verás aquí.</span>';
 }
 
 /** Litros añadidos en reposición parcial (obligatorio para registrar). */
@@ -22056,9 +21992,9 @@ function buildAvisosMeteoHeuristicas() {
 
 function meteoAlertaRowHtml(a) {
   return '<div class="meteo-alerta-item ' + a.tipo + '">' +
-    '<span style="font-size:16px">' + a.icon + '</span>' +
+    '<span class="meteo-alerta-icon">' + a.icon + '</span>' +
     '<span><strong>' + meteoEscHtml(a.titulo) + '</strong><br>' +
-    '<span style="font-size:11px;opacity:0.9">' + meteoEscHtml(a.txt) + '</span></span>' +
+    '<span class="meteo-alerta-desc">' + meteoEscHtml(a.txt) + '</span></span>' +
     '</div>';
 }
 
@@ -22127,9 +22063,9 @@ async function renderMeteoAvisosPanelCompleto() {
   const parts = [];
 
   if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) {
-    parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📍</span><span style="font-size:11px">' +
+    parts.push('<div class="meteo-alerta-item warn"><span class="meteo-alerta-icon">📍</span><span class="meteo-aviso-inline">' +
     'Sin <strong>municipio/localidad</strong> para cruzar con MeteoAlarm: indícalo en <strong>Mediciones</strong> o activa <strong>GPS</strong> al cargar avisos (se deduce el pueblo por coordenadas). Solo se muestran avisos que <strong>nomen tu municipio</strong>, no los de comarcas o provincias enteras. ' +
-    '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
+    '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
   } else {
     try {
       const xml = await fetchMeteoalarmSpainProxied();
@@ -22137,7 +22073,7 @@ async function renderMeteoAvisosPanelCompleto() {
       const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
       const etiquetaZona = ctx.municipioFiltro.trim();
 
-      parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:4px 0 6px">' +
+      parts.push('<div class="meteo-aviso-kicker">' +
         'MeteoAlarm solo si nombran «' + meteoEscHtml(etiquetaZona) + '»</div>');
 
       if (relevantes.length > 0) {
@@ -22154,26 +22090,26 @@ async function renderMeteoAvisosPanelCompleto() {
         });
         mostrar.forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
       } else if (items.length === 0) {
-        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay entradas activas en el feed nacional ahora, o el servicio no respondió. ' +
-          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
+        parts.push('<div class="meteo-alerta-item ok"><span class="meteo-alerta-icon">✅</span><span>No hay entradas activas en el feed nacional ahora, o el servicio no respondió. ' +
+          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
       } else {
-        parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>No hay avisos activos que <strong>nombren tu municipio</strong> en este momento. ' +
-          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
+        parts.push('<div class="meteo-alerta-item ok"><span class="meteo-alerta-icon">✅</span><span>No hay avisos activos que <strong>nombren tu municipio</strong> en este momento. ' +
+          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
       }
     } catch (e) {
       parts.push('<div class="meteo-alerta-item warn">' +
-        '<span style="font-size:16px">📡</span><span>No se pudieron cargar avisos MeteoAlarm (proxy o red). ' +
-        'Prueba más tarde o consulta <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" style="color:inherit;font-weight:700">AEMET</a>.</span></div>');
+        '<span class="meteo-alerta-icon">📡</span><span>No se pudieron cargar avisos MeteoAlarm (proxy o red). ' +
+        'Prueba más tarde o consulta <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
     }
   }
 
   const heur = buildAvisosMeteoHeuristicas();
-  parts.push('<div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 6px">' +
+  parts.push('<div class="meteo-aviso-kicker meteo-aviso-kicker--spaced">' +
     'Modelo numérico (hoy, Open‑Meteo)</div>');
   if (!meteoData?.daily) {
-    parts.push('<div class="meteo-alerta-item warn"><span style="font-size:16px">📡</span><span>Sin datos suficientes para este bloque.</span></div>');
+    parts.push('<div class="meteo-alerta-item warn"><span class="meteo-alerta-icon">📡</span><span>Sin datos suficientes para este bloque.</span></div>');
   } else if (heur.length === 0) {
-    parts.push('<div class="meteo-alerta-item ok"><span style="font-size:16px">✅</span><span>Sin condiciones destacables según el modelo para hoy.</span></div>');
+    parts.push('<div class="meteo-alerta-item ok"><span class="meteo-alerta-icon">✅</span><span>Sin condiciones destacables según el modelo para hoy.</span></div>');
   } else {
     heur.slice(0, 4).forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
   }
@@ -22354,18 +22290,13 @@ function renderSetupPlantasGrid() {
 
   grid.innerHTML = grupos.map(g => {
     const sel = setupPlantasSeleccionadas.has(g.key);
-    return '<button type="button" class="spc" data-gkey="' + g.key + '" ' +
+    return '<button type="button" class="spc' + (sel ? ' spc--selected' : '') + '" data-gkey="' + g.key + '" ' +
       'aria-pressed="' + (sel ? 'true' : 'false') + '" ' +
-      'aria-label="' + escAriaAttr(g.label + '. ' + g.desc) + '" ' +
-      'style="width:100%;background:' + (sel ? '#f0fdf4' : '#fff') + ';border:2px solid ' +
-      (sel ? '#16a34a' : '#e5e7eb') + ';border-radius:14px;padding:14px 10px;' +
-      'text-align:center;cursor:pointer;transition:all 0.15s;-webkit-tap-highlight-color:transparent;' +
-      'font:inherit;color:inherit;appearance:none;-webkit-appearance:none;margin:0;box-sizing:border-box">' +
+      'aria-label="' + escAriaAttr(g.label + '. ' + g.desc) + '">' +
       grupoEmojiHtml(g.key) +
-      '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' +
-        (sel ? '#15803d' : '#374151') + ';display:block">' + g.label + '</span>' +
-      '<span style="font-size:10px;color:#6b7280;margin-top:3px;display:block">' + g.desc + '</span>' +
-      (sel ? '<span style="font-size:16px;margin-top:4px;display:block" aria-hidden="true">✅</span>' : '') +
+      '<span class="spc-label">' + g.label + '</span>' +
+      '<span class="spc-desc">' + g.desc + '</span>' +
+      (sel ? '<span class="spc-check" aria-hidden="true">✅</span>' : '') +
       '</button>';
   }).join('');
 
@@ -22410,7 +22341,7 @@ function renderSetupPlantasGrid() {
         txt += '• ' + orden[2] + ': <strong>' + d.mlAB + ' ml</strong><br>';
       }
       txt += '• pH objetivo: <strong>' + (nut.pHRango?.[0]||5.5) + '–' + (nut.pHRango?.[1]||6.5) + '</strong>';
-      if (ecObj.advertencia) txt += '<br><span style="color:#f59e0b">⚠️ Cultivos con EC distinta — ajustar por torre</span>';
+      if (ecObj.advertencia) txt += '<br><span class="setup-ec-warn">⚠️ Cultivos con EC distinta — ajustar por torre</span>';
       dosisText.innerHTML = txt;
     }
   } else {
@@ -22538,7 +22469,7 @@ function actualizarResumenSetup() {
         : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong><br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
-    (ecObj.fuente === 'cultivos' ? ' <span style="color:#15803d;font-size:10px">(según cultivos)</span>' : '') + '<br>' +
+    (ecObj.fuente === 'cultivos' ? ' <span class="setup-ec-fuente">(según cultivos)</span>' : '') + '<br>' +
     '💊 Dosis primera recarga: <strong>' + dosisHtml + '</strong><br>' +
     (ubic === 'exterior' ? '☀️' : '🏠') + ' Ubicación: <strong>' + (ubic === 'exterior' ? 'Exterior' : 'Interior') + '</strong>' +
     (ubic === 'interior'
@@ -22671,28 +22602,28 @@ function calcularBombaRecomendada() {
   const el = document.getElementById('resultadoBomba');
   if (!el) return;
   el.innerHTML =
-    '<div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#1d4ed8;margin-bottom:8px">' +
+    '<div class="bomba-res-title">' +
       '⚡ Bomba recomendada para tu torre' +
     '</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">' +
-      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
-        '<div style="font-size:10px;color:#6b7280;font-weight:600">Caudal mínimo</div>' +
-        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + caudalMin + ' L/h</div>' +
+    '<div class="bomba-res-grid">' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Caudal mínimo</div>' +
+        '<div class="bomba-res-cell-val">' + caudalMin + ' L/h</div>' +
       '</div>' +
-      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
-        '<div style="font-size:10px;color:#6b7280;font-weight:600">Caudal recomendado</div>' +
-        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + caudalRec + ' L/h</div>' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Caudal recomendado</div>' +
+        '<div class="bomba-res-cell-val">' + caudalRec + ' L/h</div>' +
       '</div>' +
-      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
-        '<div style="font-size:10px;color:#6b7280;font-weight:600">Head necesario</div>' +
-        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + headMetros + 'm</div>' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Head necesario</div>' +
+        '<div class="bomba-res-cell-val">' + headMetros + 'm</div>' +
       '</div>' +
-      '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center">' +
-        '<div style="font-size:10px;color:#6b7280;font-weight:600">Potencia mínima</div>' +
-        '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#0369a1">' + potenciaRec + 'W</div>' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Potencia mínima</div>' +
+        '<div class="bomba-res-cell-val">' + potenciaRec + 'W</div>' +
       '</div>' +
     '</div>' +
-    '<div style="font-size:11px;color:#374151;background:#fff;border-radius:8px;padding:8px">' +
+    '<div class="bomba-res-foot">' +
       '💡 ' + modeloRec + avisoTuboInt +
     '</div>';
 
@@ -23184,33 +23115,26 @@ function renderListaTorres() {
         ? ((cfgT.numNiveles || 5) + ' filas × ' + (cfgT.numCestas || 5) + ' cestas')
         : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
 
-    return `<div style="display:flex;align-items:center;gap:10px;padding:12px;
-      border-radius:14px;border:2px solid ${isActiva ? '#16a34a' : '#e5e7eb'};
-      background:${isActiva ? '#f0fdf4' : '#fff'};margin-bottom:8px">
-      <button type="button" style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;
-        background:transparent;border:none;padding:0;margin:0;font:inherit;text-align:left;color:inherit;
-        appearance:none;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;min-width:0"
+    return `<div class="torre-list-row${isActiva ? ' torre-list-row--active' : ''}">
+      <button type="button" class="torre-list-main"
         onclick="cambiarTorreActiva(${i})"
         aria-pressed="${isActiva ? 'true' : 'false'}"
         aria-label="Activar ${String((t.nombre || '').trim() || 'instalación').replace(/"/g, '&quot;')}${isActiva ? ', instalación actual' : ''}">
-      <span style="font-size:28px" aria-hidden="true">${t.emoji || '🌿'}</span>
-      <span style="flex:1;min-width:0">
-        <span style="display:block;font-family:var(--font-display);font-size:14px;font-weight:800;
-          color:${isActiva ? '#15803d' : '#111827'}">${(t.nombre || '').trim() || 'Instalación'}</span>
-        <span style="display:block;font-size:11px;color:#6b7280;margin-top:2px">
+      <span class="torre-list-emoji" aria-hidden="true">${t.emoji || '🌿'}</span>
+      <span class="torre-list-body">
+        <span class="torre-list-name">${(t.nombre || '').trim() || 'Instalación'}</span>
+        <span class="torre-list-meta">
           ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : cfgT.tipoInstalacion === 'dwc' ? '🌊 DWC · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
-          ${isActiva ? ' · <strong style="color:#15803d">Activa</strong>' : ''}
+          ${isActiva ? ' · <strong class="torre-list-active-tag">Activa</strong>' : ''}
         </span>
       </span>
       </button>
-      <div style="display:flex;gap:6px;flex-shrink:0">
+      <div class="torre-list-actions">
         <button type="button" onclick="editarNombreTorre(${i})"
-          style="background:none;border:1.5px solid #e5e7eb;border-radius:8px;
-                 padding:6px 8px;font-size:12px;cursor:pointer;color:#374151" aria-label="Editar nombre de la instalación">✏️</button>
+          class="torre-list-btn-icon" aria-label="Editar nombre de la instalación">✏️</button>
         ${state.torres.length > 1 && !isActiva ? `
         <button type="button" onclick="borrarTorre(${i})"
-          style="background:none;border:1.5px solid #fca5a5;border-radius:8px;
-                 padding:6px 8px;font-size:12px;cursor:pointer;color:#dc2626" aria-label="Borrar torre">🗑</button>` : ''}
+          class="torre-list-btn-del" aria-label="Borrar torre">🗑</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -23410,8 +23334,7 @@ function actualizarBadgesNutriente() {
 function cambiarNutriente() {
   // Abrir modal rápido de selección de nutriente
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9000;' +
-    'display:flex;align-items:flex-end;justify-content:center';
+  overlay.className = 'nut-quick-overlay';
   overlay.id = 'nutrienteQuickModal';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
@@ -23419,35 +23342,26 @@ function cambiarNutriente() {
 
   const nutActual = getNutrienteTorre().id;
 
-  overlay.innerHTML = '<div style="background:#fff;border-radius:20px 20px 0 0;' +
-    'width:100%;max-width:430px;padding:20px;max-height:80vh;overflow-y:auto">' +
-    '<div style="width:40px;height:4px;background:#e5e7eb;border-radius:2px;margin:0 auto 16px"></div>' +
-    '<div style="font-family:var(--font-display);font-size:16px;font-weight:800;color:#111827;' +
-      'margin-bottom:14px">🧪 Nutriente de esta torre</div>' +
+  overlay.innerHTML = '<div class="nut-quick-sheet">' +
+    '<div class="nut-quick-handle"></div>' +
+    '<div class="nut-quick-title">🧪 Nutriente de esta torre</div>' +
     NUTRIENTES_DB.filter(n => n.id !== 'otro').map(n => {
       const activo = n.id === nutActual;
-      const bg = activo ? '#f0fdf4' : '#fff';
-      const border = activo ? '#16a34a' : '#e5e7eb';
-      const col = activo ? '#15803d' : '#111827';
-      const check = activo ? '<span style="color:#16a34a;font-size:18px">&#10003;</span>' : '';
+      const check = activo ? '<span class="nut-quick-check">&#10003;</span>' : '';
       return [
-        '<div data-nut-id="' + n.id + '" style="display:flex;align-items:center;gap:10px;padding:12px;',
-        'border-radius:12px;border:2px solid ' + border + ';background:' + bg + ';margin-bottom:8px;cursor:pointer">',
-        '<span style="font-size:22px">' + n.bandera + '</span>',
-        '<div style="flex:1"><div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:' + col + '">' + n.nombre + '</div>',
-        '<div style="font-size:10px;color:#6b7280">' + n.detalle + '</div></div>',
+        '<div data-nut-id="' + n.id + '" class="nut-quick-row' + (activo ? ' nut-quick-row--active' : '') + '">',
+        '<span class="nut-quick-flag">' + n.bandera + '</span>',
+        '<div class="nut-quick-body"><div class="nut-quick-name">' + n.nombre + '</div>',
+        '<div class="nut-quick-detail">' + n.detalle + '</div></div>',
         check + '</div>'
       ].join('');
     }).join('')
     +
-    '<div id="nutOtroBtn" style="display:flex;align-items:center;gap:10px;padding:12px;' +
-      'border-radius:12px;border:2px solid #e5e7eb;margin-bottom:8px;cursor:pointer">' +
-      '<span style="font-size:22px">🔬</span>' +
-      '<div><div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#111827">Otra marca</div>' +
-      '<div style="font-size:10px;color:#6b7280">Configurar manualmente</div></div></div>' +
-    '<button id="nutCancelarBtn" ' +
-      'style="width:100%;padding:12px;border:1.5px solid #e5e7eb;border-radius:12px;' +
-      'background:#f9fafb;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer">' +
+    '<div id="nutOtroBtn" class="nut-quick-otro">' +
+      '<span class="nut-quick-flag">🔬</span>' +
+      '<div class="nut-quick-body"><div class="nut-quick-name">Otra marca</div>' +
+      '<div class="nut-quick-detail">Configurar manualmente</div></div></div>' +
+    '<button id="nutCancelarBtn" type="button" class="nut-quick-cancel">' +
       'Cancelar</button>' +
     '</div>';
 
