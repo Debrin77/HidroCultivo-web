@@ -19673,7 +19673,8 @@ async function cargarMeteo() {
   if (meteoAvisosOficiales) meteoAvisosOficiales.style.display = 'none';
 
   try {
-    await ensureMeteoCoordsAuto();
+    // No bloquear la carga por geolocalización (puede tardar varios segundos en algunos móviles).
+    void ensureMeteoCoordsAuto();
 
     // ECMWF para temp/humedad + modelo default para UV
     const urlMBase = 'https://api.open-meteo.com/v1/forecast?' +
@@ -21554,7 +21555,8 @@ async function fetchMeteoAlert() {
   const textEl    = document.getElementById('meteoAlertText');
 
   try {
-    await ensureMeteoCoordsAuto();
+    // No bloquear la alerta por geolocalización (usar coords actuales y refrescar luego).
+    void ensureMeteoCoordsAuto();
 
     const baseUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,uv_index' +
