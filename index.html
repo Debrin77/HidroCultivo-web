@@ -181,6 +181,12 @@
         </button>
       </div>
 
+      <!-- Municipio / clima de esta instalación (mismo valor que en Medir) -->
+      <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite">
+        <span class="dash-localidad-clima-icon" aria-hidden="true">📍</span>
+        <span id="dashLocalidadClimaText" class="dash-localidad-clima-text">—</span>
+      </div>
+
       <!-- Alerta meteorológica -->
       <div class="meteo-alert ok" id="meteoAlert">
         <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
@@ -377,6 +383,10 @@
         </div>
 
         <div class="config-section" id="panelLocalidadMeteo">
+          <div class="medir-localidad-cab">
+            <span class="medir-localidad-cab-icon" aria-hidden="true">📍</span>
+            <span class="medir-localidad-cab-label">Municipio (clima y avisos)</span>
+          </div>
           <div class="medir-localidad-meteo-row">
             <input type="text" id="inputLocalidadMeteo" placeholder="Escribe el nombre del municipio"
               aria-label="Municipio de esta instalación (avisos meteorológicos y clima)"
@@ -1413,7 +1423,8 @@
             aria-describedby="riegoTorreHint">
           <input type="hidden" id="riegoEdad" value="4" autocomplete="off">
           <p id="riegoTorreHint" class="riego-torre-hint">Indica cultivos y fechas en la pestaña Sistema; el número de plantas se actualiza solo cuando hay huecos con fecha.</p>
-        </div>
+          <p id="riegoLocalidadLine" class="riego-localidad-line" role="status" aria-live="polite"></p>
+      </div>
       </div>
 
       <div id="avisoCestasSinFechaRiego" class="aviso-cestas-sin-fecha setup-hidden" role="status"></div>
@@ -3847,6 +3858,7 @@ function goTab(tab) {
     sincronizarInputsRiego();
     initDiaRiego();
     actualizarVistaRiegoPorTipoInstalacion();
+    try { refreshUbicacionInstalacionUI(); } catch (_) {}
     calcularRiego();
     window._riegoObsoleto = false;
   }
@@ -15256,6 +15268,43 @@ function persistLocalidadMeteo() {
   invalidateMeteoNomiCache();
   guardarEstadoTorreActual();
   saveState();
+  try { refreshUbicacionInstalacionUI(); } catch (_) {}
+}
+
+/** Municipio para clima y avisos (cfg de instalación o activa). */
+function textoLocalidadMeteoCfg(cfg) {
+  const c = cfg || state.configTorre || {};
+  const m = (c.localidadMeteo || '').trim();
+  if (m) return m;
+  const ci = (c.ciudad || '').trim();
+  if (ci) return ci.split(',')[0].trim();
+  return '';
+}
+
+/** Sincroniza líneas de ubicación en Inicio, Riego y estados derivados. */
+function refreshUbicacionInstalacionUI() {
+  const txt = textoLocalidadMeteoCfg();
+  const dash = document.getElementById('dashLocalidadClimaText');
+  const wrap = document.getElementById('dashLocalidadClimaWrap');
+  if (dash) {
+    dash.textContent = txt || 'Sin municipio — indícalo en Medir';
+    dash.classList.toggle('dash-localidad-clima-text--vacío', !txt);
+  }
+  if (wrap) wrap.classList.toggle('dash-localidad-clima-wrap--vacío', !txt);
+
+  const riego = document.getElementById('riegoLocalidadLine');
+  if (riego) {
+    riego.textContent = '';
+    const icon = document.createElement('span');
+    icon.className = 'riego-localidad-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '📍 ';
+    const body = document.createElement('span');
+    body.textContent = txt ? txt : 'Sin municipio — indícalo en Medir';
+    if (!txt) body.classList.add('riego-localidad-line--vacío');
+    riego.appendChild(icon);
+    riego.appendChild(body);
+  }
 }
 
 function etiquetaFuenteMeteo(src) {
@@ -21247,6 +21296,8 @@ function updateDashboard() {
 
   // Meteo
   fetchMeteoAlert();
+
+  try { refreshUbicacionInstalacionUI(); } catch (_) {}
 }
 
 function getTileClass(param, val) {
@@ -23150,6 +23201,7 @@ function cargarEstadoTorre(idx) {
   cargarSensorSustratoUI();
   cargarSensoresHardwareUI();
   cargarLocalidadMeteoUI();
+  try { refreshUbicacionInstalacionUI(); } catch (_) {}
   syncRiegoAvanzadoUI();
   if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
 }
@@ -23447,6 +23499,8 @@ function actualizarBadgesNutriente() {
     medirEC.textContent = 'EC objetivo: ' + ecMin + '-' + ecMax + ' µS/cm · pH ' +
       (nut.pHRango ? nut.pHRango[0] + '-' + nut.pHRango[1] : '5.5-6.5');
   }
+
+  try { refreshUbicacionInstalacionUI(); } catch (_) {}
 
   refreshConsejosSiVisible();
 }

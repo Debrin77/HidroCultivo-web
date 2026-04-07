@@ -2024,6 +2024,35 @@ button.torre-summary:focus-visible,
 .tile-status.bad  { background: #fee2e2; color: #7f1d1d; font-weight:700; }
 .tile-status.empty { background: var(--bg3); color: var(--muted); }
 
+/* Inicio — municipio de la instalación activa (antes del recuadro de condiciones) */
+.dash-localidad-clima-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow-soft);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.35;
+}
+.dash-localidad-clima-wrap--vacío {
+  color: var(--muted);
+  font-weight: 600;
+}
+.dash-localidad-clima-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+.dash-localidad-clima-text--vacío {
+  font-weight: 600;
+}
+
 /* Barra recarga depósito */
 .recarga-card {
   background: var(--bg2);
@@ -2663,6 +2692,24 @@ button.torre-summary:focus-visible,
   color: var(--muted);
   margin: 8px 0 0;
   line-height: 1.45;
+}
+.riego-localidad-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  margin: 10px 0 0;
+  line-height: 1.35;
+}
+.riego-localidad-line--vacío {
+  color: var(--muted);
+  font-weight: 600;
+}
+.riego-localidad-icon {
+  flex-shrink: 0;
 }
 
 /* Riego — día hoy/mañana, opciones avanzadas, paneles NFT/DWC, tarjetas programa */
@@ -5736,6 +5783,25 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   line-height: 1.5;
   margin-bottom: 8px;
 }
+.medir-localidad-cab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: 0.02em;
+}
+.medir-localidad-cab-icon {
+  font-size: 15px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.medir-localidad-cab-label {
+  line-height: 1.25;
+}
+
 .medir-localidad-meteo-row {
   display: flex;
   align-items: stretch;
