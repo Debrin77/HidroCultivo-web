@@ -19617,6 +19617,13 @@ async function meteoFetchBackupMetNo(baseUrl, timeoutMs) {
       uv_index: 0,
     };
   }
+  if (wantCurrent && !wantDaily) {
+    try {
+      const uvBk = await meteoFetchBackupUVFree(lat, lon, timeoutMs);
+      const uNow = Number(uvBk?.now?.uvi);
+      if (Number.isFinite(uNow) && out.current) out.current.uv_index = uNow;
+    } catch (_) { /* sin respaldo UV */ }
+  }
   if (wantDaily) {
     const dTempMax = [];
     const dTempMin = [];
@@ -21653,7 +21660,8 @@ async function fetchMeteoAlert() {
 
     const baseUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,uv_index' +
-      '&hourly=temperature_2m,relative_humidity_2m&forecast_days=1&timezone=auto';
+      '&hourly=temperature_2m,relative_humidity_2m' +
+      '&daily=uv_index_max&forecast_days=1&timezone=auto';
 
     const data = await meteoFetchConFallback(baseUrl, {
       cacheKey: 'alert:current:' + baseUrl,
@@ -21665,8 +21673,28 @@ async function fetchMeteoAlert() {
     const temp = data.current.temperature_2m;
     const hum  = data.current.relative_humidity_2m;
     const viento = data.current.wind_speed_10m ?? data.current.windspeed_10m;
-    const uv   = data.current.uv_index;
-    const uvTxt = (uv != null && Number.isFinite(Number(uv))) ? String(Number(uv)) : '—';
+    const uvAhora = data.current.uv_index;
+    const uvMaxHoyRaw = Array.isArray(data.daily?.uv_index_max) ? data.daily.uv_index_max[0] : null;
+    const uvAhoraN = uvAhora != null && Number.isFinite(Number(uvAhora)) ? Number(uvAhora) : null;
+    const uvMaxN = uvMaxHoyRaw != null && Number.isFinite(Number(uvMaxHoyRaw)) ? Number(uvMaxHoyRaw) : null;
+    const fmtUv = (x) => (Math.round(x * 10) / 10).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+    /** Misma fuente que Meteo: Open‑Meteo (índice UV máx. diario); respaldo met.no + currentuvindex.com vía meteoFetchConFallback. */
+    let uvTxt;
+    if (uvMaxN != null && Number.isFinite(uvMaxN)) {
+      if (uvMaxN > 0) {
+        uvTxt = 'máx. hoy ' + fmtUv(uvMaxN);
+        if (uvAhoraN != null && uvAhoraN > 0.05 && Math.abs(uvAhoraN - uvMaxN) > 0.2) {
+          uvTxt += ' · ahora ' + fmtUv(uvAhoraN);
+        }
+      } else {
+        uvTxt = 'máx. hoy 0 (muy nublado o ya cerró el día solar)';
+      }
+    } else if (uvAhoraN != null && Number.isFinite(uvAhoraN) && uvAhoraN > 0.05) {
+      uvTxt = fmtUv(uvAhoraN);
+    } else {
+      uvTxt = '—';
+    }
+    const uv = uvAhoraN != null ? uvAhoraN : uvMaxN;
 
     // Calcular VPD actual (solo para lógica interna y guardado; no se muestra en título)
     const pvs = 0.6108 * Math.pow(1 + temp / 100, 8.827);
@@ -21702,7 +21730,7 @@ Las plantas están en condiciones ideales de crecimiento.`;
     textEl.textContent = texto;
 
     // Guardar en estado para uso en riego
-    state.meteoActual = { temp, hum, viento, uv, vpd };
+    state.meteoActual = { temp, hum, viento, uv, uvMaxHoy: uvMaxN, vpd };
     saveState();
     clearMeteoAlertRetry();
     _meteoAlertRetryStep = 0;
