@@ -19602,6 +19602,61 @@ function vpdEstado(vpd) {
   return { txt: 'Humedad muy alta', bg: 'rgba(96,165,250,0.12)', color: 'var(--blue)' };
 }
 
+// ── Open‑Meteo: fetch rápido con timeout + fallback + caché corta ───────────
+const _meteoFastCache = new Map();
+const _meteoFastInflight = new Map();
+
+async function meteoFetchJsonTimeout(url, timeoutMs) {
+  if (typeof AbortController === 'undefined') {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+async function meteoFetchConFallback(baseUrl, opts = {}) {
+  const timeoutMs = opts.timeoutMs ?? 4800;
+  const ttlMs = opts.ttlMs ?? 120000;
+  const cacheKey = opts.cacheKey || baseUrl;
+  const now = Date.now();
+  const c = _meteoFastCache.get(cacheKey);
+  if (c && now - c.at < ttlMs) return c.data;
+  if (_meteoFastInflight.has(cacheKey)) return _meteoFastInflight.get(cacheKey);
+
+  const p = (async () => {
+    let lastErr = null;
+    for (const url of [baseUrl + '&models=ecmwf_ifs', baseUrl]) {
+      try {
+        const j = await meteoFetchJsonTimeout(url, timeoutMs);
+        if (j && !j.error) {
+          _meteoFastCache.set(cacheKey, { at: Date.now(), data: j });
+          return j;
+        }
+        const r = j && j.reason;
+        lastErr = new Error(typeof r === 'string' ? r : (r ? JSON.stringify(r) : 'Respuesta meteo inválida'));
+      } catch (e) {
+        lastErr = e;
+      }
+    }
+    throw (lastErr || new Error('Sin datos meteorológicos'));
+  })();
+  _meteoFastInflight.set(cacheKey, p);
+  try {
+    return await p;
+  } finally {
+    _meteoFastInflight.delete(cacheKey);
+  }
+}
+
 async function cargarMeteo() {
   const meteoLoader = document.getElementById('meteoLoader');
   if (!meteoLoader) return; // pestaña no activa — no hacer nada
@@ -19628,29 +19683,11 @@ async function cargarMeteo() {
       'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=uv_index_max&forecast_days=7&timezone=auto';
 
-    let meteoRaw = null;
-    let meteoErr = null;
-    for (const url of [urlMBase + '&models=ecmwf_ifs', urlMBase]) {
-      try {
-        const resM = await fetch(url);
-        if (!resM.ok) {
-          meteoErr = new Error('HTTP ' + resM.status);
-          continue;
-        }
-        const j = await resM.json();
-        if (j && !j.error && j.daily && j.hourly) {
-          meteoRaw = j;
-          break;
-        }
-        meteoErr = new Error(j?.reason ? (typeof j.reason === 'string' ? j.reason : JSON.stringify(j.reason)) : 'Respuesta incompleta');
-      } catch (e) {
-        meteoErr = e;
-      }
-    }
-    if (!meteoRaw) throw (meteoErr || new Error('Sin datos meteorológicos'));
+    const [meteoRaw, meteoUV] = await Promise.all([
+      meteoFetchConFallback(urlMBase, { cacheKey: 'meteo:main:' + urlMBase, timeoutMs: 4200, ttlMs: 2 * 60 * 1000 }),
+      meteoFetchConFallback(urlMUV, { cacheKey: 'meteo:uv:' + urlMUV, timeoutMs: 3800, ttlMs: 8 * 60 * 1000 }),
+    ]);
     meteoData = meteoRaw;
-    const resMUV = await fetch(urlMUV);
-    const meteoUV = await resMUV.json();
     // Compatibilidad Open-Meteo: unificar nombres de viento legacy/nuevo
     if (!Array.isArray(meteoData.daily.windspeed_10m_max) && Array.isArray(meteoData.daily.wind_speed_10m_max)) {
       meteoData.daily.windspeed_10m_max = meteoData.daily.wind_speed_10m_max;
@@ -20578,34 +20615,11 @@ async function calcularRiego() {
       '&hourly=et0_fao_evapotranspiration' +
       `&forecast_days=${diasForecast}&timezone=auto`;
 
-    const [resUV] = await Promise.all([fetch(urlUV)]);
-    let data = null;
-    let errData = null;
-    for (const url of [urlECMWFBase + '&models=ecmwf_ifs', urlECMWFBase]) {
-      try {
-        const resECMWF = await fetch(url);
-        if (!resECMWF.ok) {
-          errData = new Error('Open-Meteo no disponible (HTTP ' + resECMWF.status + ').');
-          continue;
-        }
-        const j = await resECMWF.json();
-        if (j && !j.error && j.daily && j.hourly) {
-          data = j;
-          break;
-        }
-        const r = j && j.reason;
-        errData = new Error(
-          typeof r === 'string'
-            ? r
-            : r && typeof r === 'object'
-              ? JSON.stringify(r)
-              : 'Error en la API meteorológica.'
-        );
-      } catch (e) {
-        errData = e;
-      }
-    }
-    if (!data) throw (errData || new Error('Sin datos meteorológicos'));
+    const [data, dataUV, dEt0] = await Promise.all([
+      meteoFetchConFallback(urlECMWFBase, { cacheKey: 'riego:ecmwf:' + urlECMWFBase, timeoutMs: 4300, ttlMs: 70 * 1000 }),
+      meteoFetchConFallback(urlUV, { cacheKey: 'riego:uv:' + urlUV, timeoutMs: 3600, ttlMs: 8 * 60 * 1000 }).catch(() => ({})),
+      meteoFetchConFallback(urlET0, { cacheKey: 'riego:et0:' + urlET0, timeoutMs: 4200, ttlMs: 70 * 1000 }).catch(() => ({})),
+    ]);
     const daily = data.daily;
     if (
       !daily ||
@@ -20617,13 +20631,6 @@ async function calcularRiego() {
     }
     if (idx < 0 || idx >= daily.time.length) {
       throw new Error('Día de previsión fuera de rango.');
-    }
-
-    let dataUV = {};
-    try {
-      if (resUV.ok) dataUV = await resUV.json();
-    } catch (_) {
-      dataUV = {};
     }
 
     const tempMax  = daily.temperature_2m_max[idx];
@@ -20645,14 +20652,8 @@ async function calcularRiego() {
     const tempHArr = data.hourly?.temperature_2m;
     const windHArr = data.hourly?.wind_speed_10m || data.hourly?.windspeed_10m;
 
-    let etArrHourly = null;
-    let etTimesHourly = null;
-    try {
-      const resET0 = await fetch(urlET0);
-      const dEt0 = await resET0.json();
-      etArrHourly = dEt0.hourly?.et0_fao_evapotranspiration;
-      etTimesHourly = dEt0.hourly?.time;
-    } catch (_) { /* ET₀ opcional (FAO-56 Open-Meteo) */ }
+    let etArrHourly = dEt0?.hourly?.et0_fao_evapotranspiration || null;
+    let etTimesHourly = dEt0?.hourly?.time || null;
 
     let et0Day = null;
     let et0NightSum = null;
@@ -21532,31 +21533,12 @@ async function fetchMeteoAlert() {
       '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,uv_index' +
       '&hourly=temperature_2m,relative_humidity_2m&forecast_days=1&timezone=auto';
 
-    // Primer intento con modelo explícito; si falla, fallback al modelo por defecto de Open-Meteo.
-    let data = null;
-    let ultimoErr = null;
-    for (const url of [baseUrl + '&models=ecmwf_ifs', baseUrl]) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) {
-          ultimoErr = new Error('HTTP ' + res.status);
-          continue;
-        }
-        const json = await res.json();
-        if (json && !json.error && json.current) {
-          data = json;
-          break;
-        }
-        ultimoErr = new Error(
-          json && json.reason
-            ? (typeof json.reason === 'string' ? json.reason : JSON.stringify(json.reason))
-            : 'Respuesta meteorológica incompleta'
-        );
-      } catch (e) {
-        ultimoErr = e;
-      }
-    }
-    if (!data || !data.current) throw (ultimoErr || new Error('Sin datos meteorológicos actuales'));
+    const data = await meteoFetchConFallback(baseUrl, {
+      cacheKey: 'alert:current:' + baseUrl,
+      timeoutMs: 3200,
+      ttlMs: 45 * 1000,
+    });
+    if (!data || !data.current) throw new Error('Sin datos meteorológicos actuales');
 
     const temp = data.current.temperature_2m;
     const hum  = data.current.relative_humidity_2m;
