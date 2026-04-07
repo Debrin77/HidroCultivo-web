@@ -408,6 +408,18 @@
                    font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;-webkit-tap-highlight-color:transparent">
             Copiar municipio del grifo (solo si ya lo elegiste abajo)
           </button>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);line-height:1.5">
+            <div style="font-size:11px;font-weight:700;color:var(--white);margin-bottom:6px">Respaldo oficial España (AEMET OpenData)</div>
+            <input type="password" id="inputAemetApiKey" placeholder="API key AEMET (opcional)"
+              autocomplete="off" onchange="persistAemetApiKey()" onblur="persistAemetApiKey()"
+              style="width:100%;background:var(--bg2);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:14px;padding:10px 12px;outline:none;box-sizing:border-box;margin-bottom:8px">
+            <button type="button" onclick="probarAemetAhora()" id="btnTestAemetApi"
+              style="width:100%;padding:8px 12px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;
+                     font-size:12px;font-weight:700;color:#1d4ed8;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-bottom:8px">
+              Probar AEMET OpenData
+            </button>
+            Fuente activa: <strong id="configMeteoFuenteActiva">Open-Meteo</strong>. Si el servicio falla temporalmente, la app usa respaldo gratuito (met.no + UV free) o caché local.
+          </div>
         </div>
 
         <div class="config-section" id="panelUbicacionLuzMediciones">
@@ -1754,6 +1766,7 @@
     <div class="tab-panel" id="tab-meteo" role="tabpanel" aria-labelledby="btn-meteo" aria-hidden="true">
 
       <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
+      <div style="font-size:11px;color:var(--muted);margin:-6px 0 10px 0">Fuente activa: <strong id="meteoFuenteActiva">Open-Meteo</strong></div>
 
       <!-- Loader -->
       <div id="meteoLoader" class="info-banner">
@@ -15399,6 +15412,78 @@ function persistLocalidadMeteo() {
   saveState();
 }
 
+function etiquetaFuenteMeteo(src) {
+  const s = String(src || 'open-meteo').toLowerCase();
+  if (s === 'metno') return 'met.no + UV free';
+  if (s === 'cache') return 'Caché local';
+  return 'Open-Meteo';
+}
+
+function refreshMeteoFuenteActivaUI() {
+  const txt = etiquetaFuenteMeteo(state && state._meteoFuenteActiva);
+  const a = document.getElementById('meteoFuenteActiva');
+  if (a) a.textContent = txt;
+  const b = document.getElementById('configMeteoFuenteActiva');
+  if (b) b.textContent = txt;
+}
+
+function getAemetApiKey() {
+  const cfg = state && state.configTorre ? state.configTorre : {};
+  const k1 = String(cfg.aemetApiKey || '').trim();
+  if (k1) return k1;
+  try {
+    const k2 = String(localStorage.getItem('hc_aemet_key') || '').trim();
+    if (k2) return k2;
+  } catch (_) {}
+  return '';
+}
+
+function persistAemetApiKey() {
+  if (!state.configTorre) state.configTorre = {};
+  const el = document.getElementById('inputAemetApiKey');
+  const v = String(el?.value || '').trim();
+  state.configTorre.aemetApiKey = v;
+  try {
+    if (v) localStorage.setItem('hc_aemet_key', v);
+    else localStorage.removeItem('hc_aemet_key');
+  } catch (_) {}
+  guardarEstadoTorreActual();
+  saveState();
+}
+
+async function probarAemetAhora() {
+  const key = getAemetApiKey();
+  if (!key) {
+    showToast('Añade la API key de AEMET primero', true);
+    return;
+  }
+  const btn = document.getElementById('btnTestAemetApi');
+  const prev = btn ? btn.textContent : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Probando AEMET...';
+  }
+  try {
+    const coords = getCoordsActivas();
+    const url = 'https://opendata.aemet.es/opendata/api/prediccion/especifica/punto/' +
+      'latlon/' + coords.lat + ',' + coords.lon + '/?api_key=' + encodeURIComponent(key);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const j = await res.json();
+    if (!j || (j.estado !== 200 && j.estado !== '200')) {
+      throw new Error(j?.descripcion || 'Respuesta inválida de AEMET');
+    }
+    showToast('✅ AEMET OK: token válido y servicio accesible');
+  } catch (e) {
+    showToast('❌ Error AEMET: ' + (e?.message || e), true);
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = prev || 'Probar AEMET OpenData';
+    }
+  }
+}
+
 function usarMunicipioGrifoParaMeteo() {
   const n = state.configAguaMunicipio;
   if (!n) {
@@ -15418,6 +15503,9 @@ function cargarLocalidadMeteoUI() {
   el.value = v;
   const btn = document.getElementById('btnMunicipioGrifoAMeteo');
   if (btn) btn.style.display = state.configAgua === 'grifo' && state.configAguaMunicipio ? 'block' : 'none';
+  const keyEl = document.getElementById('inputAemetApiKey');
+  if (keyEl) keyEl.value = getAemetApiKey();
+  refreshMeteoFuenteActivaUI();
 }
 
 function cargarInteriorGrowUI() {
@@ -19626,6 +19714,128 @@ function meteoWriteLsCache(cacheKey, payload) {
   } catch (_) {}
 }
 
+async function meteoFetchBackupUVFree(lat, lon, timeoutMs) {
+  const url = 'https://currentuvindex.com/api/v1/uvi?latitude=' + lat + '&longitude=' + lon;
+  const j = await meteoFetchJsonTimeout(url, Math.max(3000, timeoutMs || 6000));
+  if (!j || j.ok === false) throw new Error(j?.message || 'UV backup no disponible');
+  return j;
+}
+
+function meteoGroupDateMax(list) {
+  const m = new Map();
+  (list || []).forEach((x) => {
+    const t = String(x?.time || '');
+    const d = t.slice(0, 10);
+    const v = Number(x?.uvi);
+    if (!d || !Number.isFinite(v)) return;
+    m.set(d, m.has(d) ? Math.max(m.get(d), v) : v);
+  });
+  return m;
+}
+
+async function meteoFetchBackupMetNo(baseUrl, timeoutMs) {
+  const q = String(baseUrl.split('?')[1] || '');
+  const sp = new URLSearchParams(q);
+  const lat = parseFloat(sp.get('latitude'));
+  const lon = parseFloat(sp.get('longitude'));
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) throw new Error('Lat/lon inválidas backup meteo');
+  const forecastDays = Math.max(1, Math.min(7, parseInt(sp.get('forecast_days') || '3', 10) || 3));
+  const wantCurrent = /(?:^|&)current=/.test(q);
+  const wantDaily = /(?:^|&)daily=/.test(q);
+  const wantHourly = /(?:^|&)hourly=/.test(q);
+  const dailyFields = String(sp.get('daily') || '');
+  const onlyUvDaily = wantDaily && dailyFields.replace(/\s/g, '') === 'uv_index_max' && !wantHourly && !wantCurrent;
+
+  if (onlyUvDaily) {
+    const uv = await meteoFetchBackupUVFree(lat, lon, timeoutMs);
+    const series = [uv.now].concat(Array.isArray(uv.forecast) ? uv.forecast : []);
+    const byDate = meteoGroupDateMax(series);
+    const dates = Array.from(byDate.keys()).sort().slice(0, forecastDays);
+    return {
+      latitude: lat, longitude: lon, timezone: 'UTC', timezone_abbreviation: 'UTC', utc_offset_seconds: 0,
+      daily: { time: dates, uv_index_max: dates.map(d => byDate.get(d) ?? 0) },
+    };
+  }
+
+  const url = 'https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=' + lat + '&lon=' + lon;
+  const j = await meteoFetchJsonTimeout(url, Math.max(4500, timeoutMs || 8000));
+  const ts = j?.properties?.timeseries;
+  if (!Array.isArray(ts) || !ts.length) throw new Error('met.no sin timeseries');
+
+  const hourlyRaw = ts.slice(0, Math.min(ts.length, forecastDays * 24 + 16));
+  const dates = [];
+  for (let i = 0; i < hourlyRaw.length; i++) {
+    const d = String(hourlyRaw[i].time || '').slice(0, 10);
+    if (d && !dates.includes(d)) dates.push(d);
+    if (dates.length >= forecastDays) break;
+  }
+  const useDates = dates.slice(0, forecastDays);
+  const daySet = new Set(useDates);
+  const hourly = hourlyRaw.filter(x => daySet.has(String(x.time || '').slice(0, 10)));
+
+  const out = {
+    latitude: lat, longitude: lon, timezone: 'UTC', timezone_abbreviation: 'UTC', utc_offset_seconds: 0,
+  };
+  if (wantHourly) {
+    out.hourly = {
+      time: hourly.map(x => x.time),
+      temperature_2m: hourly.map(x => Number(x?.data?.instant?.details?.air_temperature ?? NaN)),
+      relative_humidity_2m: hourly.map(x => Number(x?.data?.instant?.details?.relative_humidity ?? NaN)),
+      wind_speed_10m: hourly.map(x => Number(x?.data?.instant?.details?.wind_speed ?? 0) * 3.6),
+      et0_fao_evapotranspiration: hourly.map(() => null),
+    };
+  }
+  if (wantCurrent) {
+    const c0 = ts[0];
+    out.current = {
+      time: String(c0.time || ''),
+      temperature_2m: Number(c0?.data?.instant?.details?.air_temperature ?? NaN),
+      relative_humidity_2m: Number(c0?.data?.instant?.details?.relative_humidity ?? NaN),
+      wind_speed_10m: Number(c0?.data?.instant?.details?.wind_speed ?? 0) * 3.6,
+      uv_index: 0,
+    };
+  }
+  if (wantDaily) {
+    const dTempMax = [];
+    const dTempMin = [];
+    const dWindMax = [];
+    const dProb = [];
+    const dPrec = [];
+    for (const d of useDates) {
+      const dayRows = hourly.filter(x => String(x.time || '').slice(0, 10) === d);
+      const tArr = dayRows.map(x => Number(x?.data?.instant?.details?.air_temperature)).filter(Number.isFinite);
+      const wArr = dayRows.map(x => Number(x?.data?.instant?.details?.wind_speed) * 3.6).filter(Number.isFinite);
+      const pArr = dayRows.map(x => Number(x?.data?.next_1_hours?.details?.precipitation_amount || 0)).filter(Number.isFinite);
+      dTempMax.push(tArr.length ? Math.max(...tArr) : NaN);
+      dTempMin.push(tArr.length ? Math.min(...tArr) : NaN);
+      dWindMax.push(wArr.length ? Math.max(...wArr) : 0);
+      dPrec.push(pArr.reduce((a, b) => a + b, 0));
+      const rainy = pArr.filter(v => v > 0.03).length;
+      dProb.push(pArr.length ? Math.round((rainy / pArr.length) * 100) : 0);
+    }
+    out.daily = {
+      time: useDates,
+      temperature_2m_max: dTempMax,
+      temperature_2m_min: dTempMin,
+      precipitation_probability_max: dProb,
+      precipitation_sum: dPrec,
+      wind_speed_10m_max: dWindMax,
+      uv_index_max: new Array(useDates.length).fill(0),
+    };
+    try {
+      const uv = await meteoFetchBackupUVFree(lat, lon, timeoutMs);
+      const series = [uv.now].concat(Array.isArray(uv.forecast) ? uv.forecast : []);
+      const byDate = meteoGroupDateMax(series);
+      out.daily.uv_index_max = useDates.map(dd => byDate.get(dd) ?? 0);
+      if (out.current) {
+        const uNow = Number(uv?.now?.uvi);
+        if (Number.isFinite(uNow)) out.current.uv_index = uNow;
+      }
+    } catch (_) {}
+  }
+  return out;
+}
+
 async function meteoFetchJsonTimeout(url, timeoutMs) {
   if (typeof AbortController === 'undefined') {
     const r = await fetch(url);
@@ -19665,6 +19875,8 @@ async function meteoFetchConFallback(baseUrl, opts = {}) {
           const pack = { at: Date.now(), data: j };
           _meteoFastCache.set(cacheKey, pack);
           meteoWriteLsCache(cacheKey, pack);
+          state._meteoFuenteActiva = 'open-meteo';
+          refreshMeteoFuenteActivaUI();
           return j;
         }
         const r = j && j.reason;
@@ -19673,7 +19885,24 @@ async function meteoFetchConFallback(baseUrl, opts = {}) {
         lastErr = e;
       }
     }
-    if (c && now - c.at < staleMs) return c.data;
+    try {
+      const b = await meteoFetchBackupMetNo(baseUrl, timeoutMs + 1200);
+      if (b && !b.error) {
+        const pack = { at: Date.now(), data: b };
+        _meteoFastCache.set(cacheKey, pack);
+        meteoWriteLsCache(cacheKey, pack);
+        state._meteoFuenteActiva = 'metno';
+        refreshMeteoFuenteActivaUI();
+        return b;
+      }
+    } catch (e) {
+      lastErr = e;
+    }
+    if (c && now - c.at < staleMs) {
+      state._meteoFuenteActiva = 'cache';
+      refreshMeteoFuenteActivaUI();
+      return c.data;
+    }
     throw (lastErr || new Error('Sin datos meteorológicos'));
   })();
   _meteoFastInflight.set(cacheKey, p);
