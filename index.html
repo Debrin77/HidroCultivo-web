@@ -21284,9 +21284,14 @@ async function calcularRiego() {
     }
     if (elNocE) {
       elNocE.textContent =
-        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04:00' : String(espNoc);
-      elNocE.style.fontSize = esNocRefrescoTorreExt ? '20px' : '';
-      elNocE.style.whiteSpace = 'nowrap';
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04' : String(espNoc);
+      elNocE.style.fontSize = esNocRefrescoTorreExt ? '28px' : '';
+      elNocE.style.whiteSpace = esNocRefrescoTorreExt ? 'normal' : '';
+      elNocE.style.lineHeight = esNocRefrescoTorreExt ? '1.05' : '';
+    }
+    const elNocEspLabel = document.querySelector('#resNocEspaciado')?.nextElementSibling;
+    if (elNocEspLabel) {
+      elNocEspLabel.textContent = esNocRefrescoTorreExt ? 'AM' : 'Espaciado';
     }
     if (elNocD) {
       elNocD.textContent =
