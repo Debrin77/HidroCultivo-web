@@ -4163,7 +4163,7 @@ button.dia-card {
 
 .hist-tabla-header {
   display: grid;
-  grid-template-columns: 78px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 40px;
+  grid-template-columns: 78px repeat(4, minmax(0, 1fr)) 40px;
   gap: 4px 6px;
   align-items: center;
   background: var(--bg3);
@@ -4176,7 +4176,7 @@ button.dia-card {
 }
 .hist-row {
   display: grid;
-  grid-template-columns: 78px repeat(4, minmax(0, 1fr)) minmax(36px, 0.75fr) 40px;
+  grid-template-columns: 78px repeat(4, minmax(0, 1fr)) 40px;
   gap: 4px 6px;
   padding: 10px 10px;
   border-top: 1px solid var(--border);
@@ -4314,20 +4314,11 @@ button.dia-card {
   letter-spacing: 0.8px;
   margin-bottom: 10px;
 }
-/* Dos filas: 3 + 2 tarjetas — celdas más anchas; valores numéricos sin partir (p. ej. 1200) */
+/* Resumen última medición: EC, pH, temp, vol */
 .hist-ultima-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-}
-.hist-ultima-cell:nth-child(1),
-.hist-ultima-cell:nth-child(2),
-.hist-ultima-cell:nth-child(3) {
-  grid-column: span 2;
-}
-.hist-ultima-cell:nth-child(4),
-.hist-ultima-cell:nth-child(5) {
-  grid-column: span 3;
 }
 .hist-ultima-cell {
   background: var(--bg3);
@@ -6059,11 +6050,17 @@ button.config-option {
 .param-card--flush {
   margin-bottom: 0;
 }
-.medir-hum-registro-hint {
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1.45;
+.medir-recarga-divider-top {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.medir-recarga-switch-row--in-card {
+  margin-top: 8px;
+}
+.medir-recarga-switch-footnote--tight {
   margin-top: 6px;
+  margin-bottom: 0;
 }
 .medir-recarga-switch-row {
   display: flex;
