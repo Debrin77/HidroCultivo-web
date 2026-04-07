@@ -156,7 +156,9 @@ body {
   width: clamp(148px, 42vw, 188px);
   aspect-ratio: 1;
 }
+/* Recorte tipo icono iOS: muchos PNG exportan blanco en las esquinas del lienzo */
 .splash-img-wrap--brand .splash-img {
+  border-radius: 22.37%;
   filter:
     drop-shadow(0 0 22px rgba(74, 222, 128, 0.35))
     drop-shadow(0 4px 18px rgba(74, 222, 128, 0.25))
