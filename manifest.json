@@ -1,7 +1,7 @@
 {
   "name": "HidroCultivo — Cultivo hidropónico",
   "short_name": "HidroCultivo",
-  "description": "Gestión de torre hidropónica: EC, pH, riego, clima y cultivos.",
+  "description": "Cultivo hidropónico (torre vertical, NFT o DWC): EC, pH, riego, clima e instalaciones independientes.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

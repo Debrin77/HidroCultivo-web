@@ -14,13 +14,13 @@
 <meta name="apple-mobile-web-app-title" content="HidroCultivo">
 
 <!-- SEO y descripción -->
-<meta name="description" content="HidroCultivo — La app de hidroponía inteligente. Controla EC, pH, temperatura y nutrientes de tu sistema hidropónico.">
-<meta name="keywords" content="HidroCultivo, hidropónico, torre vertical, cultivo, EC, pH, riego, VPD, lechugas">
+<meta name="description" content="HidroCultivo — Hidroponía inteligente: varias instalaciones (torre, NFT, DWC), EC, pH, riego y clima por sistema.">
+<meta name="keywords" content="HidroCultivo, hidropónico, torre vertical, NFT, DWC, cultivo, EC, pH, riego, VPD, lechugas">
 <meta name="author" content="HidroCultivo">
 
 <!-- Open Graph (para compartir en redes) -->
 <meta property="og:title" content="HidroCultivo — Cultivo Hidropónico">
-<meta property="og:description" content="Gestiona tu torre hidropónica con inteligencia meteorológica">
+<meta property="og:description" content="Gestiona tu cultivo hidropónico (torre, NFT o DWC) con inteligencia meteorológica">
 <meta property="og:type" content="website">
 <meta property="og:image" content="icons/icon-512.png">
 
@@ -107,7 +107,7 @@
       <!-- Torre activa — banner prominente -->
       <button type="button" id="dashTorreBanner" class="dash-torre-banner"
         onclick="abrirSelectorTorres()"
-        aria-label="Cambiar torre activa">
+        aria-label="Cambiar instalación activa">
         <div class="dash-torre-banner-main">
           <span id="dashTorreEmoji" class="dash-torre-emoji" aria-hidden="true">🌿</span>
           <div>
@@ -231,13 +231,13 @@
           <span class="quick-btn-icon" aria-hidden="true">📈</span>
           <span>Historial</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-warn" onclick="abrirChecklist(false)" aria-label="Iniciar recarga del depósito">
+        <button type="button" class="quick-btn quick-btn-warn" onclick="abrirChecklist(false)" aria-label="Abrir checklist de recarga de la instalación activa">
           <span class="quick-btn-icon" aria-hidden="true">🔄</span>
           <span>Iniciar recarga</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-info" onclick="abrirSetup()" aria-label="Configurar torre">
+        <button type="button" class="quick-btn quick-btn-info" onclick="abrirSetup()" aria-label="Configurar instalación activa">
           <span class="quick-btn-icon" aria-hidden="true">⚙️</span>
-          <span>Configurar torre</span>
+          <span>Configurar instalación</span>
         </button>
         <button type="button" class="quick-btn quick-btn-info quick-btn-hidden" id="btnActivarNotif"
           onclick="activarNotificacionesDesdeInicio(event)"
@@ -377,7 +377,8 @@
         </div>
 
         <div class="config-section" id="panelLocalidadMeteo">
-          <div class="config-section-title" id="labelLocalidadMeteo">📍 Municipio de la instalación (avisos oficiales)</div>
+          <div class="config-section-title" id="labelLocalidadMeteo">📍 Municipio de <span class="medir-kicker-instalacion">esta instalación</span> (avisos · clima)</div>
+          <p class="medir-help-instalacion-ubic">Lo que guardes aquí aplica <strong>solo a la instalación activa</strong> (selector en Inicio o Sistema). Cada sistema —torre vertical, NFT o DWC— puede tener su municipio y sus cálculos de riego y avisos; varias en el mismo sitio pueden compartir pueblo o usar uno distinto cada una.</p>
           <input type="text" id="inputLocalidadMeteo" placeholder="Escribe el nombre del municipio"
             aria-labelledby="labelLocalidadMeteo" autocomplete="address-level2"
             onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
@@ -392,14 +393,14 @@
         </div>
 
         <div class="config-section" id="panelUbicacionLuzMediciones">
-          <div class="config-section-title" id="labelUbicacionLuzMed">💡 Ubicación de la torre y origen de luz (riego)</div>
+          <div class="config-section-title" id="labelUbicacionLuzMed">💡 Ubicación del sistema y origen de luz (riego)</div>
           <div class="medir-note-block">
-            Si la torre está <strong>dentro de casa, armario o con LED</strong>, elige <strong>Interior</strong>: aquí marcas si la luz es <strong>natural</strong> (ventana), <strong>LED</strong>, <strong>mixta</strong>, etc., y las <strong>horas de fotoperíodo</strong>.
+            Si el sistema está <strong>dentro de casa, armario o con LED</strong>, elige <strong>Interior</strong>: aquí marcas si la luz es <strong>natural</strong> (ventana), <strong>LED</strong>, <strong>mixta</strong>, etc., y las <strong>horas de fotoperíodo</strong>.
             En <strong>Exterior</strong> el programa usa el clima de la ubicación; estos controles no se aplican.
           </div>
           <div class="config-options medir-grid-2-tight" role="radiogroup" aria-labelledby="labelUbicacionLuzMed">
             <button type="button" class="config-option" id="opt-medir-ubic-exterior" role="radio" aria-checked="true"
-              onclick="setUbicacionTorreMediciones('exterior')" aria-label="Torre en exterior">
+              onclick="setUbicacionTorreMediciones('exterior')" aria-label="Sistema en exterior">
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">☀️ Exterior</span>
@@ -407,7 +408,7 @@
               </span>
             </button>
             <button type="button" class="config-option" id="opt-medir-ubic-interior" role="radio" aria-checked="false"
-              onclick="setUbicacionTorreMediciones('interior')" aria-label="Torre en interior">
+              onclick="setUbicacionTorreMediciones('interior')" aria-label="Sistema en interior">
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title">🏠 Interior</span>
@@ -627,7 +628,7 @@
             <div class="medir-help-title">Cómo integrar las lecturas en HidroCultivo</div>
             <p class="medir-help-p"><strong>Forma prevista hoy:</strong> sin cuenta ni API del fabricante. Cuando veas el valor en la pantalla del equipo, en su app móvil o en un registrador, <strong>transcríbelo en Mediciones</strong> (EC, pH, temperatura, volumen). Así quedan en el historial, el inicio y las evaluaciones.</p>
             <p class="medir-help-p"><strong>Humedad del sustrato:</strong> si mides HR de esponja/lana con sonda o medidor 4&nbsp;en&nbsp;1 y quieres afinar el riego, usa el bloque <strong>Ajuste fino de humedad</strong> de arriba (±3&nbsp;%); no hace falta anotarla aparte al guardar la medición.</p>
-            <p class="medir-help-p"><strong>Interior y exterior:</strong> el contexto ya lo marca la ubicación de la torre; los sensores en balcón o en armario se registran igual — la app no distingue el “cable”, solo el valor que pongas.</p>
+            <p class="medir-help-p"><strong>Interior y exterior:</strong> el contexto ya lo marca la ubicación del sistema; los sensores en balcón o en armario se registran igual — la app no distingue el “cable”, solo el valor que pongas.</p>
             <p class="medir-help-p m0"><strong>Telemática automática</strong> (WiFi, nube, Bluetooth) no está integrada en esta versión: añadiría dependencia de terceros y permisos. Si en el futuro hubiera importación o API, se avisaría explícitamente.</p>
           </div>
           </div>
@@ -643,7 +644,7 @@
           <div class="config-section-collapse-body" id="collapseBodyInteriorGrow">
           <div class="medir-note-block">
             Ajustes de <strong>sala</strong> para el VPD (Magnus–Tetens). El <strong>origen de luz y las horas</strong> están arriba, en
-            <strong>«Ubicación de la torre y origen de luz»</strong>.
+            <strong>«Ubicación del sistema y origen de luz»</strong>.
           </div>
           <div class="medir-grid-2-gap-10 medir-mb-10">
             <div>
@@ -704,7 +705,7 @@
       <!-- Torre activa en Medir — selector -->
       <button type="button" id="medirTorreBanner" class="medir-torre-banner"
         onclick="abrirSelectorTorres()"
-        aria-label="Cambiar torre en la que se registra la medición">
+        aria-label="Cambiar instalación en la que se registra la medición">
         <div class="medir-torre-banner-row">
           <span id="medirTorreEmoji" class="medir-torre-banner-emoji" aria-hidden="true">🌿</span>
           <div>
@@ -800,6 +801,7 @@
           <div class="recarga-title">🔄 Próxima recarga <strong>completa</strong></div>
           <div class="recarga-dias" id="recargaDias">—</div>
         </div>
+        <p class="recarga-instalacion-aviso" role="note">Solo para la <strong>instalación activa</strong> (mismo selector que arriba en Mediciones). Si tienes varias, cambia antes de usar el checklist o el interruptor.</p>
         <div class="progress-track">
           <div class="progress-fill-bar" id="recargaBar"></div>
         </div>
@@ -811,7 +813,7 @@
             <p class="recarga-subhint">Vaciar, limpiar y mezcla nueva. El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo.</p>
             <button type="button" class="btn-recarga-confirm primary recarga-btn-full"
               onclick="confirmarReposicionDeposito('con_nutrientes')"
-              aria-label="Abrir checklist de recarga completa">📋 Checklist recarga completa</button>
+              aria-label="Abrir checklist de recarga completa de la instalación activa">📋 Checklist recarga completa</button>
             <p class="recarga-subhint medir-recarga-divider-top">¿Ya vaciaste y renovaste solución pero solo vas a <strong>guardar la medición</strong>? Activa el interruptor para <strong>reiniciar el contador</strong> con la misma fecha (sin pasar por el checklist).</p>
             <div class="medir-recarga-switch-row medir-recarga-switch-row--in-card">
               <span class="medir-recarga-switch-text">Reiniciar contador al guardar medición</span>
@@ -1087,7 +1089,7 @@
         <!-- Modo interacción cestas: justo encima del esquema / lista -->
         <div id="torreInteraccionBar" class="torre-interaccion-bar">
           <div id="torreInteraccionTitulo" class="torre-interaccion-titulo">
-            Cestas en la torre
+            Plazas de cultivo
           </div>
           <div class="torre-interaccion-modos">
             <button type="button" id="torreModoEditar" onclick="setTorreInteraccionModo('editar')"
@@ -1130,7 +1132,7 @@
               ✓ Finalizar asignación
             </button>
             <div id="torreAssignFinalizarHint" class="torre-finalizar-hint">
-              Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (igual que «Actualizar torre»).
+              Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la instalación (igual que «Actualizar instalación»).
             </div>
             <button type="button" onclick="abrirTutorialAsignarCultivo({ force: true })"
               class="torre-tutorial-btn torre-tutorial-btn--green">
@@ -1141,7 +1143,7 @@
 
         <!-- SVG o lista -->
         <div id="torreSVGWrap" class="torre-svg-canvas" role="img"
-          aria-label="Esquema de torre hidropónica. Flechas junto al depósito o deslizar para girar. Las cestas de frente responden al toque.">
+          aria-label="Esquema de la instalación. Torre vertical: girar con flechas o deslizar; NFT y DWC: tocar huecos o macetas.">
           <div class="torre-loading-placeholder">Cargando esquema…</div>
         </div>
         <div id="torreListaVista" class="torre-lista-wrap setup-hidden" aria-label="Lista de cestas por nivel"></div>
@@ -1252,7 +1254,7 @@
         </div>
         <div class="torre-strip-actions">
           <button type="button" class="torre-icon-btn" onclick="cambiarNutriente()"
-            aria-label="Cambiar nutriente de esta torre">
+            aria-label="Cambiar nutriente de la instalación activa">
             Cambiar
           </button>
         </div>
@@ -1282,8 +1284,9 @@
       <!-- Acciones de torre: actualizar + añadir -->
       <div class="hc-grid-2 hc-grid-2--mb0">
 
-        <button type="button" class="hc-btn-tap hc-btn-torre-actualizar" onclick="actualizarTorreActual()">
-          🔄 Actualizar torre
+        <button type="button" class="hc-btn-tap hc-btn-torre-actualizar" id="btnActualizarInstalacionSistema" onclick="actualizarTorreActual()"
+          aria-label="Guardar en la instalación activa los cambios hechos en esta pantalla">
+          🔄 Actualizar instalación
         </button>
 
         <button type="button" class="hc-btn-tap hc-btn-torre-nueva" onclick="abrirSetupNuevaTorre()"
@@ -1365,7 +1368,7 @@
         <div class="card-title">🧪 Rutina diaria</div>
         <p class="cal-rutina-text">
           <strong class="cal-rutina-strong">Sugerencia:</strong> una toma de muestra al día (pH, EC, temperatura del depósito) mantiene consejos y registros alineados con tu agua real.
-          Si registras una <strong class="cal-rutina-strong">fecha nueva</strong> en una cesta (trasplante), el calendario marca <strong class="cal-rutina-strong-ph">5 días seguidos</strong> para reforzar el control diario del <strong class="cal-rutina-strong">pH</strong> por la variación típica en plántulas.
+          Si registras una <strong class="cal-rutina-strong">fecha nueva</strong> al trasplantar (en cualquier ficha de cultivo), el calendario marca <strong class="cal-rutina-strong-ph">5 días seguidos</strong> para reforzar el control diario del <strong class="cal-rutina-strong">pH</strong> por la variación típica en plántulas.
         </p>
       </div>
 
@@ -1378,7 +1381,7 @@
       <div class="section-title" id="riegoSectionTitle">💧 Cálculo de <span class="accent">Riego</span></div>
 
       <p id="riegoPoliticaNocExt" class="riego-politica-noc setup-hidden">
-        🌙 <strong>Torre al aire libre:</strong> por defecto se plantea <strong>riego nocturno de 30&nbsp;s hacia las 04:00</strong> (ventana 21:00–07:00).
+        🌙 <strong>Cultivo en exterior (torre vertical):</strong> por defecto se plantea <strong>riego nocturno de 30&nbsp;s hacia las 04:00</strong> (ventana 21:00–07:00).
         La app lo omite solo si el clima lo desaconseja con claridad (p. ej. noche muy fría o ambiente muy húmedo); en noches muy exigentes sustituye ese pulso por un programa nocturno más largo.
       </p>
 
@@ -1435,7 +1438,7 @@
             <input type="checkbox" id="riegoFaseCultivoAuto" checked
               onchange="persistRiegoAvanzado()"
               aria-describedby="riegoFaseCultivoHint">
-            <span>Automático (fechas de plantas en la torre)</span>
+            <span>Automático (fechas de plantas en esta instalación)</span>
           </label>
           <label for="riegoFaseCultivo" class="visually-hidden">Fase de cultivo para el cálculo de riego</label>
           <select id="riegoFaseCultivo" class="form-input riego-select-md"
@@ -1446,7 +1449,7 @@
             <option value="cierre">Pre-cosecha</option>
           </select>
           <p id="riegoFaseCultivoHint" class="riego-hint-sm">
-            Sin fechas válidas en la torre, la fase automática usa un valor interno de referencia. Cambiar el desplegable desactiva el automático (puedes volver a marcarlo).
+            Sin fechas válidas en la instalación activa, la fase automática usa un valor interno de referencia. Cambiar el desplegable desactiva el automático (puedes volver a marcarlo).
           </p>
 
           <div class="riego-avanzado-split">
@@ -1729,7 +1732,7 @@
           <button type="button" class="hist-tab" role="tab" id="htab-diario" aria-selected="false" aria-controls="histDiarioPanel" tabindex="-1" onclick="histTab('diario')">📸 Diario</button>
         </div>
         <button type="button" class="hist-checklist-btn" onclick="abrirChecklist(false)"
-          aria-label="Abrir checklist de recarga">
+          aria-label="Abrir checklist de recarga de la instalación activa">
           📋 Checklist
         </button>
       </div>
@@ -1741,6 +1744,9 @@
 
       <!-- Gráficas mediciones -->
       <div id="histMediciones" class="hist-tabpanel setup-hidden" role="tabpanel" aria-labelledby="htab-mediciones" aria-hidden="true">
+        <div id="filtroTorreWrap" class="hist-torre-filter-wrap" style="display:none" role="group" aria-label="Filtrar mediciones por instalación">
+          <div id="filtroTorreBtns" class="hist-torre-filter-btns"></div>
+        </div>
         <!-- Resumen legible (sin gráficas) -->
         <div class="hist-ultima-medicion">
           <div class="hist-ultima-medicion-title">Última medición</div>
@@ -1877,7 +1883,7 @@
 <!-- FIN APP -->
 
 <!-- ══ ASISTENTE DE CONFIGURACIÓN ══ -->
-<div class="setup-overlay" id="setupOverlay" role="dialog" aria-modal="true" aria-label="Asistente de configuración de la torre">
+<div class="setup-overlay" id="setupOverlay" role="dialog" aria-modal="true" aria-label="Asistente de configuración de instalación">
 
   <!-- Header con progreso -->
   <div class="setup-header">
@@ -1906,7 +1912,7 @@
       <div class="setup-subtitle">
         Elige el tipo de sistema: <strong>torre vertical</strong>, <strong>NFT</strong> o <strong>DWC</strong> (cultivo en agua profunda oxigenada).
         Cada uno guarda geometría, nutrientes y <strong>checklist de recarga</strong> (NFT: canales y película; DWC: bomba de aire y depósito único).
-        Puedes convivir varias instalaciones y cambiarlas en Inicio.
+        Puedes tener <strong>varias instalaciones mezclando tipos</strong> (por ejemplo 3 NFT en 3 pueblos, o 4 torres en el mismo balcón): cada una es independiente y guarda <strong>su municipio y clima</strong>. Cambia de activa en Inicio o Sistema.
       </div>
 
       <div id="setupTipoInstalacionPanel" class="setup-tipo-panel">
@@ -1945,7 +1951,7 @@
     </div>
 
     <div class="setup-page" id="spage1">
-      <div class="setup-title" id="spage1Title">🌿 Tu torre</div>
+      <div class="setup-title" id="spage1Title">🌱 Tu sistema</div>
       <div class="setup-subtitle" id="spage1Subtitle">Configura las dimensiones de tu sistema hidropónico</div>
 
       <div id="setupTipoInstalacionInline" class="setup-tipo-inline" role="group" aria-label="Tipo de sistema">
@@ -2658,7 +2664,7 @@
 
       <!-- Iluminación si es interior: natural o artificial -->
       <div id="seccionIluminacion" class="setup-hidden">
-        <div class="setup-block-title">💡 ¿Qué luz recibe la torre?</div>
+        <div class="setup-block-title">💡 ¿Qué luz recibe esta instalación?</div>
         <div class="setup-box-warn">
           Indica si la luz es <strong>natural</strong> (ventana, lucernario) o <strong>artificial</strong> (LED, T5, HPS…), o <strong>mixta</strong>.
           Con <strong>solo artificial</strong>, para lechugas conviene alrededor de <strong>16&nbsp;h/día</strong> de fotoperíodo efectivo; con poca luz las plantas se etiolarán.
@@ -2711,7 +2717,8 @@
 
       <!-- Ciudad para meteo (si es exterior) -->
       <div id="seccionCiudadUbicacion" class="setup-mt-12">
-        <div class="setup-block-title setup-mb-8">📍 Ciudad (para meteorología)</div>
+        <div class="setup-block-title setup-mb-8">📍 Ciudad de esta instalación (meteorología)</div>
+        <p class="setup-note-ubic-torre">Cada sistema puede estar en un sitio distinto: aquí defines el clima y coordenadas <strong>solo para la instalación</strong> que estás configurando. Cambia de instalación en Inicio/Sistema y podrás tener otro municipio.</p>
         <input type="text" id="setupCiudad2" placeholder="Ciudad para meteo (nombre en castellano o valencià)"
           aria-label="Ciudad para datos meteorológicos"
           class="setup-input-city"
@@ -2741,26 +2748,26 @@
     </div>
 
     <div class="setup-page" id="spage7">
-      <div class="setup-title">🌿 ¿Más de una torre?</div>
-      <div class="setup-subtitle">HidroCultivo puede gestionar hasta 10 torres independientes, cada una con su propio nutriente, plantas e historial.</div>
+      <div class="setup-title">🌿 ¿Una o varias instalaciones?</div>
+      <div class="setup-subtitle">Hasta <strong>10 sistemas independientes</strong> (torre, NFT o DWC en cualquier combinación). Cada uno tiene su nutriente, plantas, historial y <strong>ubicación / clima</strong> aunque compartan el mismo balcón o estén en localidades distintas.</div>
 
       <div class="setup-grid-2 setup-grid-gap-10 setup-mb-16">
         <button type="button" class="equip-card selected equip-card-pad-14-center" id="torreSolo" onclick="seleccionarNumTorres('una')">
           <div class="setup-sp7-icon" aria-hidden="true">🌿</div>
-          <div class="setup-sp7-title">Una torre</div>
+          <div class="setup-sp7-title">Una instalación</div>
           <div class="setup-sp7-hint">Empezar sencillo.<br>Siempre puedes añadir más.</div>
         </button>
         <button type="button" class="equip-card equip-card-pad-14-center" id="torreVarias" onclick="seleccionarNumTorres('varias')">
           <div class="setup-sp7-icon" aria-hidden="true">🌿🌿</div>
-          <div class="setup-sp7-title">Varias torres</div>
-          <div class="setup-sp7-hint">Cultivos diferentes.<br>EC independiente por torre.</div>
+          <div class="setup-sp7-title">Varias instalaciones</div>
+          <div class="setup-sp7-hint">Mismo tipo o mezclados.<br>Datos y EC por sistema.</div>
         </button>
       </div>
 
       <div id="infoVarTorres" class="setup-hidden setup-box-warn setup-box-warn-relaxed">
         💡 Podrás añadir y configurar cada instalación adicional desde la pestaña <strong>Sistema</strong>
-        usando el botón <strong>➕ Nuevo sistema</strong>. Cada una tendrá su propio
-        nutriente, historial de mediciones y plantas.
+        usando el botón <strong>➕ Nuevo sistema</strong>. Pueden ser <strong>torre, NFT o DWC</strong> mezclados; varias en la misma terraza o una por localidad, cada una con su
+        nutriente, historial de mediciones, plantas y <strong>ubicación / clima</strong> (municipio en el asistente y en Mediciones).
       </div>
 
       <!-- Resumen final -->
@@ -2792,7 +2799,7 @@
 <div class="modal-overlay" id="modalTorres" onclick="cerrarModalTorres(event)" role="dialog" aria-modal="true" aria-labelledby="modalTorresTitle">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="modalTorresTitle">🌿 Mis Torres</div>
+    <div class="modal-title" id="modalTorresTitle">🌿 Mis instalaciones</div>
 
     <div id="listaTorres" class="modal-lista-torres"></div>
 
@@ -2809,7 +2816,7 @@
 
   <div class="checklist-header">
     <div class="checklist-header-row">
-      <div class="checklist-title" id="checklistTitle">🌿 HidroCultivo — Recarga</div>
+      <div class="checklist-title" id="checklistTitle">📋 Checklist — instalación activa</div>
       <button type="button" class="checklist-close" id="checklistCloseBtn" onclick="cerrarChecklist()" aria-label="Cerrar checklist">✕</button>
     </div>
     <div class="checklist-progress-bar">
@@ -2824,8 +2831,9 @@
 
   <div class="checklist-footer">
     <button type="button" class="btn btn-ghost checklist-btn-cancel" onclick="cerrarChecklist()">Cancelar</button>
-    <button type="button" class="btn btn-primary checklist-btn-final" id="clBtnFinalizar" onclick="finalizarChecklist()" disabled>
-      ✅ Completar recarga
+    <button type="button" class="btn btn-primary checklist-btn-final" id="clBtnFinalizar" onclick="finalizarChecklist()" disabled
+      aria-label="Finalizar checklist cuando todos los pasos estén marcados">
+      ✅ Finalizar checklist
     </button>
   </div>
 
@@ -3419,7 +3427,7 @@ async function exportarEstadoHidroCultivo() {
       try {
         if (await cap.isNative()) {
           await cap.exportAndShare(json, fname);
-          showToast('✅ Copia lista — elige dónde guardarla o compartir');
+          showToast('✅ Copia lista (todas las instalaciones) — elige dónde guardarla o compartir');
           return;
         }
       } catch (e) {
@@ -3437,7 +3445,7 @@ async function exportarEstadoHidroCultivo() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('✅ Copia descargada — guárdala en un lugar seguro');
+    showToast('✅ Copia descargada — incluye todas las instalaciones; guárdala en un lugar seguro');
   } catch (e) {
     showToast('Error al exportar: ' + (e && e.message ? e.message : e), true);
   }
@@ -3474,7 +3482,7 @@ async function onImportEstadoFileSelected(ev) {
       return;
     }
     JSON.parse(mainStr);
-    if (!confirm('Se reemplazará todo el estado actual en este navegador por la copia. ¿Continuar?')) return;
+    if (!confirm('Se reemplazará todo el estado actual en este navegador (todas las instalaciones, mediciones y ajustes) por la copia. ¿Continuar?')) return;
     if (!confirm('Segunda confirmación — no se puede deshacer.')) return;
     localStorage.setItem(STORAGE_KEY, mainStr);
     if (parsed.extraKeys && typeof parsed.extraKeys === 'object') {
@@ -4909,12 +4917,17 @@ function actualizarBarraMultiSel() {
   const multiMode = torreInteraccionModo === 'asignar' && !torreAsignarInstantaneo;
   bar.style.display = multiMode ? 'flex' : 'none';
   const esNft = state.configTorre?.tipoInstalacion === 'nft';
+  const esDwc = state.configTorre?.tipoInstalacion === 'dwc';
   cnt.textContent =
     n === 0
-      ? (esNft ? 'Toca huecos en el esquema NFT o en Lista (anillo ámbar)' : 'Toca cestas en la torre para marcarlas (anillo ámbar)')
+      ? (esNft
+        ? 'Toca huecos en el esquema NFT o en Lista (anillo ámbar)'
+        : esDwc
+          ? 'Toca macetas en el esquema DWC o en Lista (anillo ámbar)'
+          : 'Toca cestas en la torre vertical o en Lista (anillo ámbar)')
       : n === 1
-        ? (esNft ? '1 hueco seleccionado' : '1 cesta seleccionada')
-        : (esNft ? n + ' huecos seleccionados' : n + ' cestas seleccionadas');
+        ? (esNft ? '1 hueco seleccionado' : esDwc ? '1 maceta seleccionada' : '1 cesta seleccionada')
+        : (esNft ? n + ' huecos seleccionados' : esDwc ? n + ' macetas seleccionadas' : n + ' cestas seleccionadas');
   if (btnAplicar) {
     btnAplicar.disabled = n === 0;
     btnAplicar.style.opacity = n === 0 ? '0.55' : '1';
@@ -4933,9 +4946,14 @@ function sincronizarTextosPanelInteraccionSistema() {
   const tit = document.getElementById('torreInteraccionTitulo');
   const modRap = document.getElementById('torreAssignModoRapidoTxt');
   const finHint = document.getElementById('torreAssignFinalizarHint');
+  const btnUpd = document.getElementById('btnActualizarInstalacionSistema');
   if (tit) {
     tit.textContent = esNft ? 'Huecos en el sistema NFT'
-      : esDwc ? 'Macetas en el DWC' : 'Cestas en la torre';
+      : esDwc ? 'Macetas en el DWC' : 'Cestas en la torre vertical';
+  }
+  if (btnUpd) {
+    btnUpd.textContent = esNft ? '🔄 Actualizar NFT'
+      : esDwc ? '🔄 Actualizar DWC' : '🔄 Actualizar torre';
   }
   if (modRap) {
     modRap.textContent = esNft
@@ -4946,8 +4964,10 @@ function sincronizarTextosPanelInteraccionSistema() {
   }
   if (finHint) {
     finHint.innerHTML = esNft
-      ? 'Cuando termines, pulsa aquí para volver a <strong>Editar ficha</strong> y guardar el sistema (igual que «Actualizar torre»).'
-      : 'Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la instalación (igual que «Actualizar torre»).';
+      ? 'Cuando termines, pulsa aquí para volver a <strong>Editar ficha</strong> y guardar el NFT (botón <strong>Actualizar NFT</strong> arriba si cambiaste más datos).'
+      : esDwc
+        ? 'Cuando termines, pulsa aquí para volver a <strong>Editar ficha</strong> y guardar el DWC (botón <strong>Actualizar DWC</strong> arriba si cambiaste más datos).'
+        : 'Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (botón <strong>Actualizar torre</strong> arriba si cambiaste más datos).';
   }
 }
 
@@ -5021,23 +5041,36 @@ function abrirTutorialAsignarCultivo(opts) {
     'box-sizing:border-box', '-webkit-tap-highlight-color:transparent'
   ].join(';');
 
-  const esNftTut = state.configTorre?.tipoInstalacion === 'nft';
-  const titTut = esNftTut ? '🪴 Asignar cultivo en NFT' : '🌱 Asignar cultivo en la torre';
+  const tTut = tipoInstalacionNormalizado(state.configTorre);
+  const esNftTut = tTut === 'nft';
+  const esDwcTut = tTut === 'dwc';
+  const titTut = esNftTut ? '🪴 Asignar cultivo en NFT'
+    : esDwcTut ? '🌊 Asignar cultivo en DWC' : '🌱 Asignar cultivo en torre vertical';
   const subTut = esNftTut
     ? 'Rellena muchos huecos (canales) sin abrir la ficha uno a uno.'
-    : 'En unos segundos llenas muchas cestas sin abrir la ficha una por una.';
+    : esDwcTut
+      ? 'Rellena muchas macetas del DWC sin abrir la ficha una por una.'
+      : 'En unos segundos llenas muchas cestas sin abrir la ficha una por una.';
   const paso1Tut = esNftTut
     ? '<strong class="tut-strong-green">Elige cultivo y fecha</strong> en los campos de arriba. Sin cultivo, la app te avisará si tocas un hueco.'
-    : '<strong class="tut-strong-green">Elige cultivo y fecha</strong> en los campos de arriba. Sin cultivo elegido, la app te avisará si tocas la torre.';
+    : esDwcTut
+      ? '<strong class="tut-strong-green">Elige cultivo y fecha</strong> en los campos de arriba. Sin cultivo, la app te avisará si tocas una maceta.'
+      : '<strong class="tut-strong-green">Elige cultivo y fecha</strong> en los campos de arriba. Sin cultivo elegido, la app te avisará si tocas una cesta.';
   const paso2Tut = esNftTut
     ? '<strong class="tut-strong-blue">Todos los huecos del esquema son visibles</strong> (cada canal en su tubo). También puedes usar <strong>Lista</strong>. No hace falta girar la maqueta.'
-    : '<strong class="tut-strong-blue">Solo cuentan las cestas de cara</strong> (las que ves al frente). <strong>Gira</strong> con el dedo o el botón ⟲ para llegar a las de atrás. Así evitas equivocarte de hueco.';
+    : esDwcTut
+      ? '<strong class="tut-strong-blue">Las macetas del DWC</strong> aparecen en el esquema y en <strong>Lista</strong>. No hay que girar maqueta como en torre vertical.'
+      : '<strong class="tut-strong-blue">Solo cuentan las cestas de cara</strong> (las que ves al frente). <strong>Gira</strong> con el dedo o el botón ⟲ para llegar a las de atrás. Así evitas equivocarte de hueco.';
   const paso3Tut = esNftTut
     ? '<strong class="tut-strong-amber">Por defecto:</strong> toca varios <strong>huecos</strong> en el dibujo (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Modo rápido:</strong> cada toque asigna un hueco al instante.'
-    : '<strong class="tut-strong-amber">Por defecto:</strong> toca varias cestas (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Marca «Modo rápido»</strong> si prefieres que <strong>cada toque</strong> asigne de inmediato una sola cesta.';
+    : esDwcTut
+      ? '<strong class="tut-strong-amber">Por defecto:</strong> toca varias <strong>macetas</strong> (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Modo rápido:</strong> cada toque asigna una maceta al instante.'
+      : '<strong class="tut-strong-amber">Por defecto:</strong> toca varias cestas (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Marca «Modo rápido»</strong> si prefieres que <strong>cada toque</strong> asigne de inmediato una sola cesta.';
   const paso4Tut = esNftTut
     ? 'Para <strong>fotos, notas o vaciar</strong> un hueco, vuelve a <strong>Editar ficha</strong> y tócalo en el esquema o en Lista.'
-    : 'Para <strong>fotos, notas o vaciar</strong> una cesta, vuelve a <strong>Editar ficha</strong> y tócala.';
+    : esDwcTut
+      ? 'Para <strong>fotos, notas o vaciar</strong> una maceta, vuelve a <strong>Editar ficha</strong> y tócala en el esquema o en Lista.'
+      : 'Para <strong>fotos, notas o vaciar</strong> una cesta, vuelve a <strong>Editar ficha</strong> y tócala.';
 
   overlay.innerHTML =
     '<div class="tut-sheet">' +
@@ -5082,7 +5115,9 @@ function abrirTutorialAsignarCultivo(opts) {
     showToast(
       esNftTut
         ? '💡 Elige cultivo arriba, marca huecos en el esquema o Lista y pulsa Aplicar a selección'
-        : '💡 Elige cultivo arriba, marca cestas y pulsa Aplicar a selección'
+        : esDwcTut
+          ? '💡 Elige cultivo arriba, marca macetas en el esquema o Lista y pulsa Aplicar a selección'
+          : '💡 Elige cultivo arriba, marca cestas y pulsa Aplicar a selección'
     );
   });
   overlay.querySelector('#tutorialAsignarBtnSoloCerrar').addEventListener('click', (e) => {
@@ -5195,7 +5230,7 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
         '<div class="tut-callout tut-callout--amber">' +
           '<strong class="tut-strong-amber">Huecos del sistema</strong> · <em>Editar ficha</em> = detalle de cada planta. <em>Asignar cultivo</em> = rellenar muchos a la vez (tiene su propio tutorial).</div>' +
         '<div class="tut-callout tut-callout--muted">' +
-          '<strong>Esquema</strong> · En <strong>torre vertical</strong>: maqueta con giro (flechas al depósito o deslizar) y cestas tocables de cara. En <strong>NFT</strong>: dibujo de canales; usa <strong>Lista</strong> para editar huecos. Animaciones (solo torre) en la barra inferior.</div>' +
+          '<strong>Esquema</strong> · <strong>Torre vertical</strong>: maqueta con giro y cestas de cara. <strong>NFT</strong>: canales y huecos. <strong>DWC</strong>: tapa y macetas. En todos puedes usar <strong>Lista</strong>. Animaciones fluidas según tipo en la barra inferior.</div>' +
       '</div>' +
       '<div class="tut-foot">' +
         '<button type="button" id="tutorialTorreTabOk" class="btn btn-primary tut-btn-sheet-primary">' +
@@ -5264,17 +5299,26 @@ function abrirTutorialEditarCultivo(opts) {
     'box-sizing:border-box', '-webkit-tap-highlight-color:transparent'
   ].join(';');
 
-  const esNftEd = state.configTorre?.tipoInstalacion === 'nft';
-  const titEd = esNftEd ? '✏️ Editar ficha de un hueco NFT' : '✏️ Editar ficha de una cesta';
+  const tEd = tipoInstalacionNormalizado(state.configTorre);
+  const esNftEd = tEd === 'nft';
+  const esDwcEd = tEd === 'dwc';
+  const titEd = esNftEd ? '✏️ Editar ficha de un hueco NFT'
+    : esDwcEd ? '✏️ Editar ficha de una maceta DWC' : '✏️ Editar ficha de una cesta';
   const paso1Ed = esNftEd
     ? 'Activa <strong class="tut-strong-blue">Editar ficha</strong> (arriba). Toca un <strong>hueco</strong> en el esquema o en Lista para abrir el panel completo.'
-    : 'Activa <strong class="tut-strong-blue">Editar ficha</strong> (arriba). Así cada toque abre el panel con todos los datos de esa cesta.';
+    : esDwcEd
+      ? 'Activa <strong class="tut-strong-blue">Editar ficha</strong> (arriba). Toca una <strong>maceta</strong> en el esquema DWC o en Lista para abrir el panel completo.'
+      : 'Activa <strong class="tut-strong-blue">Editar ficha</strong> (arriba). Así cada toque abre el panel con todos los datos de esa cesta.';
   const paso3Ed = esNftEd
     ? '<strong class="tut-strong-amber">Fotos y notas</strong> quedan guardadas con el hueco. Mantén pulsado un hueco en el esquema para un resumen rápido.'
-    : '<strong class="tut-strong-amber">Fotos y notas</strong> quedan guardadas con la planta. Mantén pulsado una cesta en la torre para ver un resumen rápido.';
+    : esDwcEd
+      ? '<strong class="tut-strong-amber">Fotos y notas</strong> quedan guardadas con la maceta. Mantén pulsada una maceta para un resumen rápido.'
+      : '<strong class="tut-strong-amber">Fotos y notas</strong> quedan guardadas con la planta. Mantén pulsada una cesta para ver un resumen rápido.';
   const paso4Ed = esNftEd
     ? 'En NFT <strong>todos los huecos</strong> del dibujo responden al toque; no hace falta girar la maqueta.'
-    : 'Solo responden las cestas de <strong>cara</strong>. <strong>Gira</strong> con las flechas al depósito o deslizando. El gesto de giro no pisa el toque en una cesta.';
+    : esDwcEd
+      ? 'En DWC <strong>todas las macetas</strong> del esquema responden al toque; revisa también <strong>Lista</strong> si prefieres lista lineal.'
+      : 'Solo responden las cestas de <strong>cara</strong>. <strong>Gira</strong> con las flechas al depósito o deslizando. El gesto de giro no pisa el toque en una cesta.';
 
   overlay.innerHTML =
     '<div class="tut-sheet">' +
@@ -5385,8 +5429,13 @@ function aplicarCultivoSeleccionMultiple() {
     return;
   }
   if (torreCestasMultiSel.size === 0) {
-    const esNft = state.configTorre?.tipoInstalacion === 'nft';
-    showToast(esNft ? 'Toca huecos en el esquema NFT o en Lista para seleccionarlos (modo varias)' : 'Toca cestas en la torre para seleccionarlas (modo varias)', true);
+    const t = tipoInstalacionNormalizado(state.configTorre);
+    const msgSel = t === 'nft'
+      ? 'Toca huecos en el esquema NFT o en Lista para seleccionarlos (modo varias)'
+      : t === 'dwc'
+        ? 'Toca macetas en el esquema DWC o en Lista para seleccionarlas (modo varias)'
+        : 'Toca cestas en la torre vertical o en Lista para seleccionarlas (modo varias)';
+    showToast(msgSel, true);
     return;
   }
   const nAplicar = torreCestasMultiSel.size;
@@ -5401,9 +5450,9 @@ function aplicarCultivoSeleccionMultiple() {
   calcularRotacion();
   setTimeout(renderCompatGrid, 50);
   actualizarBarraMultiSel();
-  const esNftT = state.configTorre?.tipoInstalacion === 'nft';
-  const uHueco = esNftT ? ' hueco' : ' cesta';
-  const uHuecos = esNftT ? ' huecos' : ' cestas';
+  const tA = tipoInstalacionNormalizado(state.configTorre);
+  const uHueco = tA === 'nft' ? ' hueco' : tA === 'dwc' ? ' maceta' : ' cesta';
+  const uHuecos = tA === 'nft' ? ' huecos' : tA === 'dwc' ? ' macetas' : ' cestas';
   showToast('🌱 ' + cultivoNombreLista(getCultivoDB(v), v) + ' aplicado a ' + nAplicar + (nAplicar === 1 ? uHueco : uHuecos));
 }
 
@@ -5413,7 +5462,7 @@ function limpiarSeleccionCestas() {
   renderTorre();
 }
 
-/** Tras asignar cultivos: salir de modo asignar, volver a editar ficha y sincronizar (equivalente a Editar + Actualizar torre). */
+/** Tras asignar cultivos: salir de modo asignar, volver a editar ficha y sincronizar (equivalente a Editar + botón Actualizar *). */
 function finalizarAsignacionCultivos() {
   if (torreInteraccionModo !== 'asignar') return;
   torreCestasMultiSel.clear();
@@ -5433,7 +5482,9 @@ function finalizarAsignacionCultivos() {
   if (document.getElementById('tab-calendario')?.classList.contains('active')) {
     renderCalendario();
   }
-  showToast('✅ Asignación finalizada · Modo edición de cestas');
+  const tFin = tipoInstalacionNormalizado(state.configTorre);
+  const pieFin = tFin === 'nft' ? 'huecos NFT' : tFin === 'dwc' ? 'macetas DWC' : 'cestas';
+  showToast('✅ Asignación finalizada · modo edición (' + pieFin + ')');
 }
 
 /** Leyendas y botones del bloque esquema: torre vertical ≠ NFT (sin mezclar). */
@@ -6013,7 +6064,7 @@ function renderCompatGrid() {
   let html = '';
 
   // ── Resumen plantas por grupo ────────────────────────────────────────────
-  html += '<div class="compat-grupos-title">Grupos en esta torre (' + enTorre.length + ' plantas)</div>';
+  html += '<div class="compat-grupos-title">Grupos en esta instalación (' + enTorre.length + ' plantas)</div>';
 
   gruposMap.forEach((g, key) => {
     const unicas = [...new Set(g.plantas)];
@@ -7005,6 +7056,32 @@ function tipoInstalacionNormalizado(cfg) {
   if (t === 'nft' || t === 'dwc' || t === 'torre') return t;
   return 'torre';
 }
+
+/** Etiquetas de nivel y plaza según tipo de instalación (índices 1-based en texto). */
+function labelsUbicacionInstalacion(tipoInstal) {
+  const t = tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'torre' ? tipoInstal : 'torre';
+  return {
+    lblPlaza: t === 'nft' ? 'hueco' : t === 'dwc' ? 'maceta' : 'cesta',
+    lblNivel: t === 'nft' ? 'Canal' : 'Nivel',
+  };
+}
+
+/** Texto tipo «Canal 2, hueco 3» desde valores 1-based guardados en registro / diario. */
+function formatoUbicacionEnRegistro(tipoInstal, nivel1Based, plaza1Based) {
+  if (nivel1Based == null || plaza1Based == null || nivel1Based === '' || plaza1Based === '') return '';
+  const n = parseInt(String(nivel1Based), 10);
+  const p = parseInt(String(plaza1Based), 10);
+  if (!Number.isFinite(n) || !Number.isFinite(p)) return '';
+  const { lblPlaza, lblNivel } = labelsUbicacionInstalacion(tipoInstal);
+  return lblNivel + ' ' + n + ', ' + lblPlaza + ' ' + p;
+}
+
+/** Tipo de instalación para mostrar una entrada antigua: snapshot si existe, si no la instalación activa. */
+function tipoInstalParaEntradaRegistro(e) {
+  const s = e && e.tipoInstalSnap;
+  if (s === 'nft' || s === 'dwc' || s === 'torre') return s;
+  return tipoInstalacionNormalizado(state.configTorre || {});
+}
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 /** NFT: Ø interior línea de alimentación/distribución desde bomba (no el canal de cultivo 75–110 mm), mm — 16–40 */
 let setupNftTuboMm = 25;
@@ -7152,6 +7229,17 @@ function abrirSetup() {
     syncDwcFormInputsDesdeConfig(c, DWC_FORM_IDS_SETUP);
   } catch (eDwc) {}
 
+  const latC = parseFloat(c.lat);
+  const lonC = parseFloat(c.lon);
+  setupCoordenadas = {
+    ciudad: (c.ciudad && String(c.ciudad).trim()) || '',
+    lat: Number.isFinite(latC) ? latC : null,
+    lon: Number.isFinite(lonC) ? lonC : null
+  };
+  setupData.ciudad = setupCoordenadas.ciudad || null;
+  setupData.lat = setupCoordenadas.lat;
+  setupData.lon = setupCoordenadas.lon;
+
   const o = document.getElementById('setupOverlay');
   o.classList.add('open');
   renderNutrientesGrid();
@@ -7266,7 +7354,7 @@ function refrescarSetupTipoInstalacionUI() {
   const st = document.getElementById('spage1Subtitle');
   if (t1) {
     t1.textContent = isNft ? '🪴 Tu sistema NFT'
-      : setupTipoInstalacion === 'dwc' ? '🌊 Tu DWC' : '🌿 Tu torre';
+      : setupTipoInstalacion === 'dwc' ? '🌊 Tu DWC' : '🌿 Tu torre vertical';
   }
   if (st) {
     st.textContent = isNft
@@ -11672,7 +11760,7 @@ function renderSetupPage() {
   // Labels de cada paso
   const labels = [
     'Bienvenida',        // 0
-    'Tu torre',          // 1
+    'Geometría',         // 1 (torre, NFT o DWC)
     'Equipamiento',      // 2
     'Agua y sustrato',   // 3
     'Nutrientes',        // 4
@@ -12086,7 +12174,7 @@ function renderDosisSetup() {
   const nut    = d.nut;
   const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
 
-  let html = '<div class="nut-dosis-titulo">📋 Dosis calculadas para tu torre</div>';
+  let html = '<div class="nut-dosis-titulo">📋 Dosis calculadas para esta instalación</div>';
 
   // Contexto del cálculo
   html += '<div class="nut-dosis-ctx">' +
@@ -12169,7 +12257,7 @@ function buscarCiudadSetup(query) {
   }
   el.classList.remove('setup-hidden');
   el.innerHTML = res.map(([nombre, data], idx) => `
-    <button type="button" onclick="selCiudadSetup(${idx})"
+    <button type="button" onclick="selMunicipioSetupIdx(${idx})"
       class="setup-city-option">
       <span>
         <span class="setup-city-option-name">${nombre}</span>
@@ -12179,15 +12267,19 @@ function buscarCiudadSetup(query) {
     </button>`).join('');
 }
 
-function selCiudadSetup(idx) {
+function selMunicipioSetupIdx(idx) {
   if (!window._setupMunicipioResultados) return;
   const [nombre, data] = window._setupMunicipioResultados[idx];
   setupCoordenadas = { lat: null, lon: null, ciudad: nombre, ec: data.ec };
-  document.getElementById('setupCiudad').value = nombre;
-  document.getElementById('setupCiudadResults').classList.add('setup-hidden');
-  document.getElementById('setupCiudadSeleccionada').classList.remove('setup-hidden');
-  document.getElementById('setupCiudadSeleccionada').textContent =
-    '✅ ' + nombre + ' · EC agua: ' + data.ec + ' µS/cm · ' + data.dureza;
+  const cIn = document.getElementById('setupCiudad');
+  if (cIn) cIn.value = nombre;
+  document.getElementById('setupCiudadResults')?.classList.add('setup-hidden');
+  document.getElementById('setupCiudadSeleccionada')?.classList.remove('setup-hidden');
+  const selTxt = document.getElementById('setupCiudadSeleccionada');
+  if (selTxt) {
+    selTxt.textContent =
+      '✅ ' + nombre + ' · EC agua: ' + data.ec + ' µS/cm · ' + data.dureza;
+  }
 }
 
 async function detectarCiudadSetup() {
@@ -12196,19 +12288,27 @@ async function detectarCiudadSetup() {
     const pos = await new Promise((res, rej) =>
       navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000 }));
     const { latitude, longitude } = pos.coords;
-    setupCoordenadas.lat = latitude;
-    setupCoordenadas.lon = longitude;
     const url = 'https://nominatim.openstreetmap.org/reverse?lat=' + latitude +
       '&lon=' + longitude + '&format=json&accept-language=es';
     const data = await (await fetch(url, { headers: { 'User-Agent': 'HidroCultivo/1.0' } })).json();
-    const ciudad = data.address?.city || data.address?.town || data.address?.village || '';
+    const ad = data.address || {};
+    const ciudad = ad.city || ad.town || ad.village || ad.municipality || '';
+    const prov = ad.state || ad.region || '';
+    const country = ad.country || '';
     if (ciudad) {
-      document.getElementById('setupCiudad').value = ciudad;
-      buscarCiudadSetup(ciudad);
-      document.getElementById('setupCiudadSeleccionada').classList.remove('setup-hidden');
-      document.getElementById('setupCiudadSeleccionada').textContent = '📍 ' + ciudad + ' detectada';
+      const nombre = [ciudad, prov, country].filter(Boolean).join(', ');
+      selCiudadSetup(nombre, latitude, longitude);
+      const sel = document.getElementById('ciudadSeleccionadaSetup');
+      if (sel) {
+        sel.classList.remove('setup-hidden');
+        sel.textContent = '📍 ' + nombre + ' (GPS)';
+      }
+    } else {
+      showToast('No se pudo obtener el municipio desde el GPS', true);
     }
-  } catch(e) { showToast('No se pudo detectar la ubicación', true); }
+  } catch (e) {
+    showToast('No se pudo detectar la ubicación', true);
+  }
 }
 
 function guardarSetupYContinuar() {
@@ -12315,7 +12415,32 @@ function guardarSetupYContinuar() {
 
   const prevLocMet = (!setupEsNuevaTorre && state.configTorre && state.configTorre.localidadMeteo)
     ? String(state.configTorre.localidadMeteo).trim() : '';
-  const locWizard = (setupCoordenadas.ciudad || '').split(',')[0].trim();
+  const ciudadWizard = String(setupCoordenadas.ciudad || setupData.ciudad || '').trim();
+  const parseCoord = (a, b) => {
+    const tryN = (v) => {
+      if (v == null || v === '') return NaN;
+      const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.'));
+      return Number.isFinite(n) ? n : NaN;
+    };
+    const na = tryN(a);
+    if (Number.isFinite(na)) return na;
+    return tryN(b);
+  };
+  const latWizard = parseCoord(setupCoordenadas.lat, setupData.lat);
+  const lonWizard = parseCoord(setupCoordenadas.lon, setupData.lon);
+  const locWizard = ciudadWizard.split(',')[0].trim();
+  const ubicEffGuardar = setupData.ubicacion || setupUbicacion || 'exterior';
+  if (usarNuevaEntrada && ubicEffGuardar === 'exterior') {
+    if (!ciudadWizard || !Number.isFinite(latWizard) || !Number.isFinite(lonWizard)) {
+      showToast(
+        'En exterior indica la ciudad del mapa en el paso de luz y ubicación: cada instalación usa el clima de su municipio.',
+        true
+      );
+      setupPagina = 5;
+      renderSetupPage();
+      return;
+    }
+  }
 
   // Guardar configuración en state
   const horasLuzGuardar = Math.max(12, Math.min(20,
@@ -12341,10 +12466,10 @@ function guardarSetupYContinuar() {
     antiRaices:    setupAntiRaices,
     alturaTorre:   setupAlturaTorre,
     bombaCalculada: window.setupBombaCalculada || null,
-    ciudad:       setupCoordenadas.ciudad,
-    lat:          setupCoordenadas.lat  || 39.9864,
-    lon:          setupCoordenadas.lon  || -0.0495,
-    localidadMeteo: setupEsNuevaTorre ? (locWizard || '') : (locWizard || prevLocMet || ''),
+    ciudad:       ciudadWizard || 'Castelló de la Plana',
+    lat:          Number.isFinite(latWizard) ? latWizard : 39.9864,
+    lon:          Number.isFinite(lonWizard) ? lonWizard : -0.0495,
+    localidadMeteo: usarNuevaEntrada ? (locWizard || '') : (locWizard || prevLocMet || ''),
     sensoresHardware: sensHwGuardar,
   };
   if (isNft) {
@@ -12544,7 +12669,7 @@ function preguntarIniciarChecklist() {
     'aria-label',
     cfg.tipoInstalacion === 'nft' ? 'Iniciar checklist NFT'
       : cfg.tipoInstalacion === 'dwc' ? 'Iniciar checklist DWC'
-      : 'Iniciar checklist de torre'
+      : 'Iniciar checklist — torre vertical'
   );
   overlay.className = 'checklist-pregunta-overlay';
 
@@ -12600,7 +12725,7 @@ function preguntarIniciarChecklist() {
           '<div class="tipo-checklist-opt-title">' +
             'Primer uso</div>' +
           '<div class="tipo-checklist-opt-text">' +
-            'Torre nueva o después de montarla por primera vez' +
+            'Sistema nuevo o primer llenado del depósito (sin cultivo previo en esta mezcla)' +
           '</div>' +
         '</div>' +
         // Tras limpieza
@@ -12732,6 +12857,14 @@ function hayPlantulasNuevas() {
 // ROTACIÓN ESCALONADA
 // ══════════════════════════════════════════════════
 
+/** Texto del paso de limpieza tras rotar, según tipo de instalación. */
+function etiquetaLimpiezaTrasRotacion() {
+  const t = tipoInstalacionNormalizado(state.configTorre);
+  if (t === 'nft') return '🧹 Limpiar huecos y restos con agua oxigenada diluida';
+  if (t === 'dwc') return '🧹 Limpiar macetas y zona de cultivo vacías con agua oxigenada diluida';
+  return '🧹 Limpiar cestas vacías con agua oxigenada diluida';
+}
+
 function calcularRotacion() {
   const card = document.getElementById('rotacionCard');
   if (!card) return;
@@ -12836,7 +12969,7 @@ function calcularRotacion() {
   card.innerHTML = `
     <div class="rotacion-card">
       <div class="rotacion-title">
-        Rotación escalonada
+        Rotación escalonada · torre por niveles
       </div>
       ${htmlConFlechas}
       ${alertas.map(a => `
@@ -12858,12 +12991,12 @@ function iniciarRotacion() {
     `🔽 Mover plantas del nivel ${nivelesActivos[1] + 1} → nivel ${nivelesActivos[nivelesActivos.length-1] + 1}`,
     `🔽 Mover plantas del nivel ${nivelesActivos[0] + 1} → nivel ${nivelesActivos[1] + 1}`,
     `🌱 Trasplantar plántulas nuevas en nivel ${nivelesActivos[0] + 1}`,
-    `🧹 Limpiar cestas vacías con agua oxigenada`,
+    etiquetaLimpiezaTrasRotacion(),
   ];
 
   const lista = pasos.map((p, i) => (i+1) + '. ' + p).join('\n');
 
-  if (confirm('ROTACIÓN DE NIVELES\n\n' + lista + '\n\n¿Confirmar rotación?\n\nEsto actualizará las fechas en la Torre.')) {
+  if (confirm('ROTACIÓN DE NIVELES\n\n' + lista + '\n\n¿Confirmar rotación?\n\nEsto actualizará las fechas de plantas en la instalación activa (vista Sistema).')) {
     ejecutarRotacion();
   }
 }
@@ -12893,7 +13026,7 @@ function ejecutarRotacion() {
   renderTorre();
   updateTorreStats();
   calcularRotacion();
-  showToast('✅ Rotación completada — añade plántulas al nivel superior');
+  showToast('✅ Rotación completada en esta instalación — añade plántulas al nivel superior');
 }
 
 // ══════════════════════════════════════════════════
@@ -13275,9 +13408,16 @@ function renderDiarioBloqueSistema() {
   ensureFotosSistemaCompletoState();
   const keys = [...state.fotosSistemaCompleto.fotoKeys].reverse();
   const n = keys.length;
+  const tDiario = tipoInstalacionNormalizado(state.configTorre || {});
+  const msgDiarioVacío =
+    tDiario === 'nft'
+      ? 'Aún no hay fotos de conjunto. <strong>Aléjate un poco</strong> para que salgan canales, depósito y entorno; conviene repetir desde la <strong>misma esquina</strong> para comparar.'
+      : tDiario === 'dwc'
+        ? 'Aún no hay fotos de conjunto. <strong>Aléjate un poco</strong> para que salgan macetas, tapa, depósito y entorno; repetir desde la <strong>misma esquina</strong> ayuda a comparar.'
+        : 'Aún no hay fotos de conjunto. <strong>Aléjate un poco</strong> para que salgan la torre vertical, el depósito y el entorno; conviene repetir desde la <strong>misma esquina</strong> para comparar.';
   const filasTimel =
     n === 0
-      ? '<div class="diario-sistema-empty-msg">Aún no hay fotos de conjunto. <strong>Aléjate un poco</strong> para que salga torre, depósito y entorno; conviene repetir desde la <strong>misma esquina</strong> para comparar.</div>'
+      ? '<div class="diario-sistema-empty-msg">' + msgDiarioVacío + '</div>'
       : '<div class="diario-sistema-timeline">' +
         keys
           .map(function(key, i) {
@@ -13883,11 +14023,19 @@ function addRegistro(tipo, datos) {
   const fecha = dia + '/' + mes + '/' + now.getFullYear();
   const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
   const tActiva = getTorreActiva();
+  const d = datos && typeof datos === 'object' ? { ...datos } : {};
+  let snap = d.tipoInstalSnap;
+  delete d.tipoInstalSnap;
+  const tipoSnap =
+    snap === 'nft' || snap === 'dwc' || snap === 'torre'
+      ? snap
+      : tipoInstalacionNormalizado(state.configTorre || {});
   state.registro.unshift({
     tipo, fecha, hora,
     torreNombre: (tActiva.nombre || '').trim() || 'Instalación',
     torreEmoji:  tActiva.emoji  || '🌿',
-    ...datos
+    ...d,
+    tipoInstalSnap: tipoSnap,
   });
   if (state.registro.length > 200) state.registro = state.registro.slice(0, 200);
   saveState();
@@ -13918,13 +14066,15 @@ function cosecharCesta() {
   // También guardar en state.mediciones para el historial
   if (!state.mediciones) state.mediciones = [];
   const nomCosechaUi = cultivoNombreLista(getCultivoDB(data.variedad), data.variedad);
+  const tCose = tipoInstalacionNormalizado(state.configTorre || {});
+  const ubiCose = formatoUbicacionEnRegistro(tCose, nivel + 1, cesta + 1);
   state.mediciones.unshift({
     fecha: state.registro[0].fecha,
     hora:  state.registro[0].hora,
     tipo:  'cosecha',
     ec: '', ph: '', temp: '', vol: '',
     notas: '✂️ Cosecha: ' + nomCosechaUi +
-           ' · N' + (nivel+1) + ' C' + (cesta+1) +
+           (ubiCose ? ' · ' + ubiCose : '') +
            (diasCultivo ? ' · ' + diasCultivo + ' días' : '') +
            (data.notas ? ' · ' + data.notas : '')
   });
@@ -15908,6 +16058,7 @@ function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
         '<strong>Primer llenado</strong>: depósito nuevo o sin haber cultivado aún — te saltamos apagar bomba, vaciado de solución usada y pasos de cosecha. ' +
         'Sí te guiamos en <strong>limpiar el depósito</strong> antes de la primera mezcla.<br><br>' +
         '<strong>Recarga completa</strong>: ya hubo cultivo y solución en el sistema; el recorrido habitual (parar bomba, vaciar, limpiar, cubrir depósito…).</p>' +
+      '<p class="checklist-dark-text checklist-dark-text--note">El checklist aplica a la <strong>instalación activa</strong> (revisa el nombre en Inicio, Mediciones o pestaña Sistema si tienes varias).</p>' +
       '<p class="checklist-dark-text checklist-dark-text--note">Tras <strong>finalizar</strong> una recarga en el checklist, la app ya no muestra esta pregunta y abrirá directamente la recarga completa.</p>' +
       '<button type="button" id="clRutaPrimer" class="checklist-dark-btn checklist-dark-btn--teal">' +
         '🌱 Primer llenado del depósito</button>' +
@@ -15943,11 +16094,11 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
     const titPrimer =
       tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
       : tCh === 'dwc' ? '🌊 Primer llenado DWC — checklist'
-      : '🌿 Primer llenado — checklist';
+      : '🌿 Primer llenado — torre vertical — checklist';
     const titRecarga =
       tCh === 'nft' ? '🪴 Recarga NFT — checklist'
       : tCh === 'dwc' ? '🌊 Recarga DWC — checklist'
-      : '🌿 HidroCultivo — Recarga';
+      : '🌿 Recarga — torre vertical — checklist';
     if (clRutaChecklist === 'primer_llenado') {
       clTit.textContent = titPrimer;
     } else {
@@ -16275,16 +16426,17 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
 
   overlay.innerHTML =
     '<div class="checklist-dark-sheet">' +
-      '<div id="cldTitulo" class="checklist-dark-title checklist-dark-title--datos">Antes del checklist de recarga</div>' +
+      '<div id="cldTitulo" class="checklist-dark-title checklist-dark-title--datos">Antes del checklist</div>' +
       '<p class="checklist-dark-text checklist-dark-text--datos-intro">' +
-        'Indica cómo es <strong>esta</strong> instalación para que volumen, agua, nutriente y pasos (torre, NFT o DWC) coincidan con tu montaje real. ' +
+        'Estos datos son para la <strong>instalación activa</strong> (la que ves arriba en Inicio o Sistema). Si no es la que quieres, usa <strong>Más tarde</strong>, cambia de instalación y vuelve a abrir el checklist. ' +
+        'Indica tipo, volumen, agua y nutriente para que los pasos del checklist coincidan con tu montaje real. ' +
         'Puedes afinar todo después en <strong>Sistema</strong> o con el asistente completo.</p>' +
 
       '<div class="checklist-dark-kicker">Tipo de sistema</div>' +
       '<div class="checklist-dark-type-grid">' +
         '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="torre"' + (tipoIni === 'torre' ? ' checked' : '') + '>' +
-          '<span class="checklist-dark-type-opt-text">Torre</span></label>' +
+          '<span class="checklist-dark-type-opt-text">Torre vertical</span></label>' +
         '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="nft"' + (tipoIni === 'nft' ? ' checked' : '') + '>' +
           '<span class="checklist-dark-type-opt-text">NFT</span></label>' +
@@ -16463,7 +16615,7 @@ function getCLPasos() {
       ? ('Sensores o medidores en tu NFT (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea tras el retorno; si el circuito es largo, espera unos minutos a que se estabilice.')
       : esDwc
         ? ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.')
-        : ('Sensores o medidores: constan en la torre ' + hwLista.join(', ') + '. Comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
+        : ('Sensores o medidores en tu torre vertical (' + hwLista.join(', ') + '): comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. El <strong>registro</strong> de esta recarga lo cierras en el paso <strong>6.4</strong> y lo verás en <strong>Mediciones</strong>.',
   }] : [];
 
@@ -16736,7 +16888,7 @@ function getCLPasos() {
       ? ('Película de agua visible en todos los canales; retorno limpio al depósito; sin ruidos de cavitación en la bomba')
       : esDwc
         ? 'Burbujeo estable; temperatura de agua razonable; depósito opaco y tapa bien cerrada'
-        : ('Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre') },
+        : ('Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre vertical') },
   { id:'7.2', seccion:null, paso:'7.2',
     desc: esNft
       ? 'Tras 30 min: plantas turgentes y entradas de canal sin marchitez; sin “chorros” que dañen plántulas'
@@ -16776,7 +16928,7 @@ function abrirChecklist(esPrimeraVez = false) {
 
 function cerrarChecklist() {
   if (clEsPrimeraVez) {
-    if (!confirm('⚠️ Si cierras sin completar el checklist los datos del sistema no estarán registrados. ¿Continuar de todas formas?')) return;
+    if (!confirm('⚠️ Si cierras sin completar el checklist, la instalación activa puede quedar sin registrar bien el primer llenado o la recarga. ¿Salir de todas formas?')) return;
   }
   const co = document.getElementById('checklistOverlay');
   co.classList.remove('open');
@@ -17041,8 +17193,15 @@ function updateClProgress() {
   document.getElementById('clProgressFill').style.width = pct + '%';
   document.getElementById('clProgressText').textContent = `${clChecked.size} / ${getCLTotal()} pasos completados`;
   const btn = document.getElementById('clBtnFinalizar');
+  if (!btn) return;
   const completo = clChecked.size >= getCLTotal();
   btn.disabled = !completo;
+  const esPrimer = typeof clRutaChecklist !== 'undefined' && clRutaChecklist === 'primer_llenado';
+  const lblFin = esPrimer ? '✅ Finalizar primer llenado' : '✅ Finalizar recarga completa';
+  btn.textContent = lblFin;
+  btn.setAttribute('aria-label', esPrimer
+    ? 'Confirmar primer llenado: todos los pasos completados'
+    : 'Confirmar recarga completa: todos los pasos completados');
 }
 
 function gCL(id) {
@@ -17242,7 +17401,7 @@ function histTab(tab) {
   if (typeof window._hcSyncHistorialTabTabIndex === 'function') window._hcSyncHistorialTabTabIndex();
 }
 
-let filtroTorreActivo = null; // null = todas las torres
+let filtroTorreActivo = null; // null = todas las instalaciones
 
 function cargarHistorial() {
   document.getElementById('histLoader').style.display = 'none';
@@ -17302,7 +17461,7 @@ function renderFiltroTorres() {
     return;
   }
   wrap.style.display = 'block';
-  const todas = [{ id: null, nombre: 'Todas', emoji: '📊' }, ...state.torres];
+  const todas = [{ id: null, nombre: 'Todas las instalaciones', emoji: '📊' }, ...state.torres];
   btns.innerHTML = todas.map(t =>
     '<button onclick="setFiltroTorre(' + JSON.stringify(t.id) + ')" ' +
     'class="hist-torre-filter-btn' + (filtroTorreActivo === t.id ? ' active' : '') + '">' +
@@ -17424,12 +17583,17 @@ function importarMedicionesAlRegistro() {
   if (!confirm('¿Añadir ' + meds.length + ' entradas desde «Mediciones» al registro unificado? No borra el historial de mediciones.')) return;
 
   const tActiva = getTorreActiva();
-  const base = {
-    torreNombre: (tActiva.nombre || '').trim() || 'Instalación',
-    torreEmoji: tActiva.emoji || '🌿',
-  };
 
   for (const m of [...meds].reverse()) {
+    const torreOrigen = m.torreId != null && Array.isArray(state.torres)
+      ? state.torres.find(t => t.id === m.torreId)
+      : null;
+    const tipoInstalSnap = tipoInstalacionNormalizado(torreOrigen?.config || state.configTorre || {});
+    const base = {
+      torreNombre: (tActiva.nombre || '').trim() || 'Instalación',
+      torreEmoji: tActiva.emoji || '🌿',
+      tipoInstalSnap,
+    };
     const notas = String(m.notas || '');
     const esRecarga = /recarga completa/i.test(notas);
     let entry;
@@ -17551,7 +17715,8 @@ function renderRegistro() {
         if (e.notas) detalle += '<br><span class="registro-note-sub">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'cosecha') {
         detalle = e.variedad || '';
-        if (e.nivel) detalle += ' · N' + e.nivel + ' C' + e.cesta;
+        const ubiC = formatoUbicacionEnRegistro(tipoInstalParaEntradaRegistro(e), e.nivel, e.cesta);
+        if (ubiC) detalle += ' · ' + ubiC;
         if (e.fechaSiembra) detalle += ' · 🌱 ' + e.fechaSiembra;
         if (e.diasCultivo) detalle += ' · ' + e.diasCultivo + ' días';
         if (e.notas) detalle += '<br><span class="registro-note-sub">📝 ' + e.notas + '</span>';
@@ -17567,7 +17732,10 @@ function renderRegistro() {
         }
       } else if (e.tipo === 'foto') {
         detalle = (e.variedad || 'Planta');
-        if (e.nivel != null && e.cesta != null) detalle += ' · N' + e.nivel + ' C' + e.cesta;
+        if (e.nivel != null && e.cesta != null) {
+          const ubiF = formatoUbicacionEnRegistro(tipoInstalParaEntradaRegistro(e), e.nivel, e.cesta);
+          if (ubiF) detalle += ' · ' + ubiF;
+        }
         if (e.diasCultivo != null && e.diasCultivo !== '') detalle += ' · día ' + e.diasCultivo;
         if (e.fotoFecha) detalle += ' · 📅 ' + e.fotoFecha;
         if (e.fotoKey) {
@@ -17778,25 +17946,25 @@ const CONSEJOS_DATA = {
       { icono:'✂️', titulo:'Cuándo y cómo cosechar',
         texto:'Cosecha cuando la lechuga tenga 15-20cm de diámetro o empiece a compactar el centro. <strong>Corta a 2cm de la base</strong> — muchas variedades rebrotan. Cosechar por la mañana temprano cuando están más hidratadas.',
         alerta:{ tipo:'warn', txt:'⚠️ Si aparece un tallo central alargado (espigado) la lechuga está a punto de florecer y se volverá amarga. Cosechar inmediatamente.' } },
-      { icono:'🔃', titulo:'Rotación escalonada',
-        texto:'Con 3 niveles activos, rota cada 12-15 días: cosecha nivel 5 → todo sube un nivel → nuevas plántulas en nivel 1. Así tienes producción continua y el depósito siempre tiene plantas en todas las etapas.',
+      { icono:'🔃', titulo:'Rotación escalonada (torre por niveles)',
+        texto:'Sobre todo en <strong>torre vertical</strong> con varios niveles: rota cada 12-15 días (cosecha abajo → subes plantas → plántulas arriba). Así mantienes producción continua con un solo depósito. En NFT/DWC el ritmo es distinto; usa fechas en fichas y calendario.',
         alerta:{ tipo:'info', txt:'ℹ️ Al rotar, ajusta la EC del depósito al estado del cultivo predominante.' } },
       { icono:'⏱️', titulo:'NFT vs torre: ¿mismos días de cultivo?',
         texto:'En estudios y guías técnicas (p. ej. comparativas NFT / DWC / torre con lechuga) lo que más se documenta son <strong>rendimiento, biomasa y uso de agua</strong>, no un calendario fijo distinto “por sistema”. Los <strong>días hasta cosecha</strong> los marcan sobre todo la <strong>variedad</strong>, la <strong>luz</strong>, <strong>temperatura</strong>, <strong>EC/pH</strong> y la calidad de la plántula. Un NFT con película inestable o una torre con sombra desigual puede alargar el ciclo; no es que NFT o torre tengan por sí solos otro “cronómetro” en webs serias.',
         alerta:{ tipo:'info', txt:'ℹ️ Usa las fechas en la app y la ficha de la variedad; el tipo de montaje cambia la ingeniería del agua, no el genotipo.' } },
       { icono:'📅', titulo:'Fecha de trasplante en la ficha',
-        texto:'Cada cesta debe llevar <strong>variedad + fecha</strong> desde que plantas o trasplantas. Sin fecha, el riego automático, las medias de edad y el calendario no reflejan lo que hay en la torre: puedes regar como si fueran plántulas cuando ya van por la mitad del ciclo (o al revés).',
+        texto:'Cada hueco, maceta o cesta debe llevar <strong>variedad + fecha</strong> desde que plantas o trasplantas. Sin fecha, el riego automático, las medias de edad y el calendario no reflejan lo que hay en la instalación activa: puedes regar como si fueran plántulas cuando ya van por la mitad del ciclo (o al revés).',
         alerta:{ tipo:'ok', txt:'✅ Un momento al trasplantar: abre la ficha, elige cultivo y fecha. Así fotos, registro y cálculo de riego quedan alineados con tus plantas reales.' } },
       { icono:'🧩', titulo:'Cultivos compatibles o no (y por qué)',
-        texto:'En una torre con <strong>un solo depósito</strong> todas las cestas comparten la <strong>misma agua</strong>: misma EC y mismo pH. Por eso solo conviene mezclar grupos con necesidades parecidas. <strong>Lechugas entre sí</strong> y con muchas <strong>asiáticas</strong> de hoja (p. ej. mizuna, komatsuna) suele funcionar si ajustas la EC con cuidado. Las <strong>hojas verdes</strong> más exigentes (espinaca, acelga) suelen pedir <strong>más nutrientes</strong> que una torre solo lechuga. Los <strong>frutos</strong> (tomate, pepino, pimiento…) y varias <strong>hierbas de EC alta</strong> (menta, orégano, cebollino) descompensan a las lechugas: mejor <strong>otro circuito o torre</strong>. Además del agua, piensa en la <strong>luz</strong>: una planta muy grande arriba deja a las inferiores a la sombra.',
-        alerta:{ tipo:'info', txt:'ℹ️ En <strong>Torre → Compatibilidad de cultivos</strong> la app te avisa si mezclas grupos poco recomendables en el mismo depósito.' } },
+        texto:'En un sistema con <strong>un solo depósito</strong> (torre, NFT o DWC) todas las plantas comparten la <strong>misma agua</strong>: misma EC y mismo pH. Por eso solo conviene mezclar grupos con necesidades parecidas. <strong>Lechugas entre sí</strong> y con muchas <strong>asiáticas</strong> de hoja (p. ej. mizuna, komatsuna) suele funcionar si ajustas la EC con cuidado. Las <strong>hojas verdes</strong> más exigentes (espinaca, acelga) suelen pedir <strong>más nutrientes</strong> que un circuito solo lechuga. Los <strong>frutos</strong> (tomate, pepino, pimiento…) y varias <strong>hierbas de EC alta</strong> (menta, orégano, cebollino) descompensan a las lechugas: mejor <strong>otra instalación u otro depósito</strong>. Además del agua, piensa en la <strong>luz</strong>: una planta muy grande puede dejar a las demás a la sombra.',
+        alerta:{ tipo:'info', txt:'ℹ️ En <strong>Sistema → Compatibilidad de cultivos</strong> la app te avisa si mezclas grupos poco recomendables en el mismo depósito.' } },
     ]
   },
   agua: {
     nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)',
     consejos: [
       { icono:'⚡', titulo:'Entender la EC',
-        texto:'La EC mide la concentración de nutrientes. El rango objetivo depende del <strong>cultivo</strong> y de la <strong>marca</strong> que tengas seleccionada en la torre (véase checklist y medición). Si baja mucho hay hambre de nutrientes; si sube demasiado, estrés osmótico.',
+        texto:'La EC mide la concentración de nutrientes. El rango objetivo depende del <strong>cultivo</strong> y de la <strong>marca</strong> que tengas en la <strong>instalación activa</strong> (véase checklist y medición). Si baja mucho hay hambre de nutrientes; si sube demasiado, estrés osmótico.',
         alerta:{ tipo:'info', txt:'ℹ️ La EC sube cuando las plantas transpiran más agua que nutrientes. En verano controla más a menudo.' } },
       { icono:'🟤', titulo:'Agua coloreada en el depósito',
         texto:'Tonos ámbar o rojizos suelen venir de la oxidación del <strong>hierro quelado</strong> u otros compuestos de la solución — es habitual en muchas líneas <strong>A+B</strong>. Suele ser normal tras varios días e indica que conviene plantear <strong>recarga</strong>. Cubrir el depósito opaco a la luz reduce algas.',
@@ -17831,7 +17999,7 @@ const CONSEJOS_DATA = {
         texto:'El viento aumenta la transpiración y el estrés hídrico. El sistema calcula esto automáticamente aumentando el riego. <strong>Protege las plántulas</strong> del nivel superior si el viento es muy fuerte.',
         alerta:{ tipo:'ok', txt:'✅ El viento moderado (10-25 km/h) es beneficioso — aumenta la transpiración y reduce el riesgo de tipburn por mejor circulación de calcio.' } },
       { icono:'🌧️', titulo:'Días de lluvia',
-        texto:'La lluvia no llega a la torre ni al depósito. El sistema de riego sigue siendo necesario igual. Con alta humedad ambiental el programa de riego se ajusta automáticamente reduciendo los ciclos.',
+        texto:'La lluvia suele mojar el follaje pero <strong>no sustituye</strong> la solución del depósito ni el riego del circuito. Sigue haciendo falta tu programa. Con alta humedad ambiental la app puede <strong>reducir ciclos</strong> automáticamente.',
         alerta:{ tipo:'info', txt:'ℹ️ Con probabilidad de lluvia > 50% el VPD baja y el atajo reduce el riego automáticamente. No es necesario ajuste manual.' } },
     ]
   },
@@ -17845,7 +18013,7 @@ const CONSEJOS_DATA = {
         texto:'Deficiencia de calcio en las hojas jóvenes por baja transpiración. <strong>Causas:</strong> humedad muy alta, poco viento, EC muy alta o temperatura agua baja. Aplicar spray foliar de calcio 2 veces por semana.',
         alerta:{ tipo:'ok', txt:'✅ El tipburn es estético — no afecta al sabor ni a la salud de la planta. Pero indica que hay que mejorar la circulación de aire.' } },
       { icono:'🐛', titulo:'Plagas comunes',
-        texto:'<strong>Pulgones:</strong> chorro de agua a presión + jabón potásico diluido. <strong>Mosca blanca:</strong> trampas amarillas adhesivas + neem. <strong>Orugas:</strong> retirar manualmente. La albahaca en la torre repele pulgones de forma natural.',
+        texto:'<strong>Pulgones:</strong> chorro de agua a presión + jabón potásico diluido. <strong>Mosca blanca:</strong> trampas amarillas adhesivas + neem. <strong>Orugas:</strong> retirar manualmente. La <strong>albahaca</strong> como compañera repele pulgones de forma natural.',
         alerta:{ tipo:'warn', txt:'⚠️ Inspecciona el envés de las hojas semanalmente. Los pulgones se multiplican muy rápido en primavera.' } },
       { icono:'🦠', titulo:'Raíces marrones o con mal olor',
         texto:'Señal de Pythium u otra infección fúngica. <strong>Causas principales:</strong> agua > 24°C, falta de oxígeno, EC muy alta. Solución: vaciar y limpiar depósito con agua oxigenada, bajar temperatura agua, aumentar aireación.',
@@ -17862,10 +18030,10 @@ const CONSEJOS_DATA = {
         texto:'La Mizuna es la variedad asiática más recomendada para principiantes en hidropónica. Crece en 35-40 días, tolera tanto el calor como el frío moderado, y produce hojas delicadas de sabor suave-picante. <strong>Muy productiva.</strong>',
         alerta:{ tipo:'info', txt:'ℹ️ La Komatsuna es similar pero con hojas más grandes y sabor más suave. Ambas son perfectas mezcladas con lechugas.' } },
       { icono:'🌿', titulo:'Albahaca — compañera perfecta',
-        texto:'Aunque necesita más calor (mínimo 18°C), la albahaca en la torre tiene una función extra: <strong>repele pulgones y mosca blanca</strong> de forma natural. Ponla en el nivel superior donde recibe más sol. EC compatible con lechugas.',
+        texto:'Aunque necesita más calor (mínimo 18°C), la albahaca bien situada tiene una función extra: <strong>repele pulgones y mosca blanca</strong>. Ponla donde reciba más sol (arriba en torre, borde soleado en NFT/DWC). EC compatible con lechugas.',
         alerta:{ tipo:'warn', txt:'⚠️ La albahaca no tolera temperaturas < 10°C. Solo usarla de mayo a octubre en Castelló.' } },
-      { icono:'❌', titulo:'Qué NO cultivar en esta torre',
-        texto:'<strong>Tomates, pepinos, pimientos:</strong> necesitan EC 1800-2500 y soporte físico — incompatibles. <strong>Fresas:</strong> pueden funcionar pero compiten con lechugas por EC. <strong>Plantas grandes:</strong> bloquean la luz a los niveles inferiores.',
+      { icono:'❌', titulo:'Qué NO mezclar en el mismo depósito',
+        texto:'<strong>Tomates, pepinos, pimientos:</strong> necesitan EC 1800-2500 y soporte físico — mal compañeros de lechuga en un solo tanque. <strong>Fresas:</strong> pueden funcionar pero compiten por EC. <strong>Plantas muy altas:</strong> sombrean al resto (en torre, sobre todo niveles bajos).',
         alerta:{ tipo:'warn', txt:'⚠️ Mezclar frutales con lechugas en el mismo depósito provoca deficiencias en unas u otras inevitablemente.' } },
     ]
   },
@@ -18599,7 +18767,7 @@ function htmlConsejoCard(cat, c) {
   `;
 }
 
-/** Protocolo y reposición en Consejos → Agua y EC: siempre según nutriente activo de la torre. */
+/** Protocolo y reposición en Consejos → Agua y EC: según nutriente de la instalación activa. */
 function buildConsejosAguaNutrienteDinamico() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
@@ -18669,7 +18837,7 @@ function buildConsejosAguaNutrienteDinamico() {
   }, {
     icono:'🧪',
     titulo:'Protocolo de nutrientes — ' + meteoEscHtml(nut.nombre),
-    texto: 'Pasos orientativos del fabricante para <strong>' + meteoEscHtml(nut.nombre) + '</strong> (torre activa). Coinciden con el orden del checklist de recarga.' +
+    texto: 'Pasos orientativos del fabricante para <strong>' + meteoEscHtml(nut.nombre) + '</strong> (instalación activa). Coinciden con el orden del checklist de recarga.' +
       listaProto + (ordenWarn ? '<p class="consejo-orden-warn">' + ordenWarn + '</p>' : ''),
     alerta:{ tipo:'ok', txt:'✅ ' + calmagOk + ' ' + phOk }
   }) + htmlConsejoCard({
@@ -18875,7 +19043,7 @@ let calDiaSeleccionado = null;
 const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DIAS_CAL = ['L','M','X','J','V','S','D'];
-/** Días consecutivos desde la fecha en torre/NFT en que se sugiere medir pH a diario (plántulas nuevas). */
+/** Días consecutivos desde el trasplante en que se sugiere medir pH a diario (plántulas nuevas). */
 const DIAS_MUESTRA_PH_TRASPLANTE = 5;
 
 // Eventos del calendario basados en estado real del sistema
@@ -18886,6 +19054,8 @@ function generarEventos(fecha) {
   const d = new Date(fecha);
   d.setHours(0,0,0,0);
   const diffDias = Math.round((d - hoy) / 86400000);
+  const tCal = tipoInstalacionNormalizado(state.configTorre || {});
+  const fmtUbicPlantaCal = (n, ci) => formatoUbicacionEnRegistro(tCal, n + 1, ci + 1);
 
   // ── Control diario EC y pH ────────────────────────────────────────────
   eventos.push({
@@ -18929,7 +19099,7 @@ function generarEventos(fecha) {
           tipo: 'cosecha',
           icono: '✂️',
           titulo: diasParaCosecha === 0 ? `¡Cosechar ${c.variedad}!` : `Cosecha próxima — ${c.variedad}`,
-          desc: `Nivel ${n+1}, cesta ${ci+1}. ${diasParaCosecha === 0 ? 'Lista para cosechar hoy.' : `En ${diasParaCosecha} días aproximadamente.`}`
+          desc: `${fmtUbicPlantaCal(n, ci)}. ${diasParaCosecha === 0 ? 'Lista para cosechar hoy.' : `En ${diasParaCosecha} días aproximadamente.`}`
         });
       }
 
@@ -18945,10 +19115,7 @@ function generarEventos(fecha) {
             DIAS_MUESTRA_PH_TRASPLANTE +
             ')',
           desc:
-            'Nivel ' +
-            (n + 1) +
-            ', cesta ' +
-            (ci + 1) +
+            fmtUbicPlantaCal(n, ci) +
             ' · ' +
             nomC +
             '. En los primeros días la raíz joven puede variar el pH de la solución: anota al menos una medición al día en Mediciones (pH y EC).'
@@ -18961,7 +19128,7 @@ function generarEventos(fecha) {
           tipo: 'rotacion',
           icono: '🔃',
           titulo: `Rotación pendiente — ${c.variedad}`,
-          desc: `Nivel ${n+1}, cesta ${ci+1}. Planta lista desde hace ${Math.abs(diasParaCosecha)} días. Trasplantar nuevas plántulas.`
+          desc: `${fmtUbicPlantaCal(n, ci)}. Planta lista desde hace ${Math.abs(diasParaCosecha)} días. Trasplantar nuevas plántulas.`
         });
       }
     });
@@ -19707,6 +19874,12 @@ function seleccionarDia(idx) {
 
 function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
   const alertas = [];
+  const tMet = tipoInstalacionNormalizado(state.configTorre || {});
+  const ventVpdTxt = tMet === 'nft'
+    ? 'buena ventilación alrededor del cultivo y del circuito NFT'
+    : tMet === 'dwc'
+      ? 'buena ventilación alrededor del follaje y del depósito'
+      : 'buena ventilación alrededor de la torre vertical y del follaje';
   const m = state.ultimaMedicion;
   const tempAgua = m?.temp ? parseFloat(m.temp) : null;
   const ecActual = m?.ec   ? parseFloat(m.ec)   : null;
@@ -19752,7 +19925,7 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
   else if (vpd > 1.2)
     alertas.push({ tipo:'warn', icon:'🟡', txt:'Transpiración alta — programa mediodía activo. Vigilar signos de lacio.' });
   else if (vpd < 0.4)
-    alertas.push({ tipo:'warn', icon:'💧', txt:'Humedad muy alta — riesgo de hongos foliares. Asegurar buena ventilación en la torre.' });
+    alertas.push({ tipo:'warn', icon:'💧', txt:'Humedad muy alta — riesgo de hongos foliares. Asegura ' + ventVpdTxt + '.' });
   else
     alertas.push({ tipo:'ok', icon:'✅', txt:'Condiciones de VPD óptimas para el cultivo.' });
 
@@ -21339,7 +21512,7 @@ function leerLitrosReposicionParcial() {
 function confirmarReposicionDeposito(modo) {
   if (modo === 'con_nutrientes') {
     abrirChecklist(false);
-    showToast('📋 Checklist: vaciado, limpieza y mezcla completa (reinicia el contador al finalizar)');
+    showToast('📋 Checklist de la instalación activa: vaciado, limpieza y mezcla completa (reinicia el contador al finalizar)');
     return;
   }
   const litros = leerLitrosReposicionParcial();
@@ -21871,6 +22044,12 @@ async function fetchMeteoalarmSpainProxied() {
 
 function buildAvisosMeteoHeuristicas() {
   if (!meteoData?.daily) return [];
+  const tMw = tipoInstalacionNormalizado(state.configTorre || {});
+  const txtVientoExtremo = tMw === 'nft'
+    ? 'Asegura tubos, depósito y soportes del NFT; revisa anclajes.'
+    : tMw === 'dwc'
+      ? 'Asegura tapa, macetas y depósito DWC; revisa que no basculen.'
+      : 'Asegura la torre vertical y el depósito; revisa estabilidad y sujeciones.';
   const d = meteoData.daily;
   const tMax = Math.round(d.temperature_2m_max?.[0] ?? NaN);
   const tMin = Math.round(d.temperature_2m_min?.[0] ?? NaN);
@@ -21881,7 +22060,7 @@ function buildAvisosMeteoHeuristicas() {
   const alertas = [];
 
   if (isFinite(viento)) {
-    if (viento >= 70) alertas.push({ tipo: 'bad', icon: '💨', titulo: 'Viento muy fuerte (' + viento + ' km/h)', txt: 'Asegura la torre, revisa estabilidad y sujeciones.' });
+    if (viento >= 70) alertas.push({ tipo: 'bad', icon: '💨', titulo: 'Viento muy fuerte (' + viento + ' km/h)', txt: txtVientoExtremo });
     else if (viento >= 40) alertas.push({ tipo: 'warn', icon: '💨', titulo: 'Viento fuerte (' + viento + ' km/h)', txt: 'Aumenta transpiración y estrés. Vigila riego y anclajes.' });
   }
   if (isFinite(prob)) {
@@ -22617,6 +22796,11 @@ function syncWizardLuzUI() {
   const hv = document.getElementById('horasLuzVal');
   if (sl) sl.value = h;
   if (hv) hv.textContent = h + 'h';
+  const ci2 = document.getElementById('setupCiudad2');
+  if (ci2) {
+    const ref = String(setupCoordenadas.ciudad || setupData.ciudad || '').trim();
+    ci2.value = ref ? ref.split(',')[0].trim() : '';
+  }
 }
 
 function seleccionarLuz(tipo) {
@@ -22668,6 +22852,9 @@ function selCiudadSetup(nombre, lat, lon) {
   setupData.ciudad = nombre;
   setupData.lat = lat;
   setupData.lon = lon;
+  setupCoordenadas.ciudad = nombre;
+  setupCoordenadas.lat = lat;
+  setupCoordenadas.lon = lon;
   const res = document.getElementById('ciudadResultadosSetup');
   const sel = document.getElementById('ciudadSeleccionadaSetup');
   if (res) res.classList.add('setup-hidden');
@@ -22715,6 +22902,13 @@ function aplicarSetupDataATorre() {
 
 const MAX_TORRES = 10;
 
+function emojiMigracionPorTipoInstalacion(cfg) {
+  if (!cfg || !cfg.tipoInstalacion) return '🌿';
+  if (cfg.tipoInstalacion === 'nft') return '🪴';
+  if (cfg.tipoInstalacion === 'dwc') return '🌊';
+  return '🌿';
+}
+
 // Inicializar sistema de torres si no existe
 function initTorres() {
   if (!state.torres) {
@@ -22722,7 +22916,7 @@ function initTorres() {
     state.torres = [{
       id: 1,
       nombre: 'Mi instalación',
-      emoji: '🌿',
+      emoji: emojiMigracionPorTipoInstalacion(state.configTorre),
       config: state.configTorre || null,
       torre: state.torre || [],
       modoActual: modoActual || 'lechuga',
@@ -23042,7 +23236,7 @@ function renderListaTorres() {
           class="torre-list-btn-icon" aria-label="Editar nombre de la instalación">✏️</button>
         ${state.torres.length > 1 && !isActiva ? `
         <button type="button" onclick="borrarTorre(${i})"
-          class="torre-list-btn-del" aria-label="Borrar torre">🗑</button>` : ''}
+          class="torre-list-btn-del" aria-label="Borrar esta instalación">🗑</button>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -23065,6 +23259,19 @@ function abrirSetupNuevaTorre() {
   setupPlantasSeleccionadas = new Set();
   setupNumTorres = 'una'; // no relevante para nueva torre
   setupData.sensoresHardware = { ec: false, ph: false, humedad: false };
+
+  setupCoordenadas = { lat: null, lon: null, ciudad: '' };
+  setupData.ciudad = null;
+  setupData.lat = null;
+  setupData.lon = null;
+  const c2n = document.getElementById('setupCiudad2');
+  if (c2n) c2n.value = '';
+  document.getElementById('ciudadResultadosSetup')?.classList.add('setup-hidden');
+  const csel = document.getElementById('ciudadSeleccionadaSetup');
+  if (csel) {
+    csel.classList.add('setup-hidden');
+    csel.textContent = '';
+  }
 
   const so = document.getElementById('setupOverlay');
   so.classList.add('open');
@@ -23141,7 +23348,7 @@ function borrarTorre(idx) {
   renderListaTorres();
   renderTorre();
   actualizarHeaderTorre();
-  showToast('🗑 Torre eliminada');
+  showToast('🗑 Instalación eliminada');
 }
 
 // ══════════════════════════════════════════════════

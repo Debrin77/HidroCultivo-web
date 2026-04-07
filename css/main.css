@@ -153,7 +153,7 @@ body {
 
 /* Icono de marca (PNG; con transparencia: halo + brillo para leer sobre negro) */
 .splash-img-wrap--brand {
-  width: clamp(148px, 42vw, 188px);
+  width: clamp(172px, 52vw, 236px);
   aspect-ratio: 1;
 }
 /* Recorte tipo icono iOS: muchos PNG exportan blanco en las esquinas del lienzo */
@@ -180,7 +180,7 @@ body {
 .splash-img-wrap::before {
   content: '';
   position: absolute;
-  inset: -18px;
+  inset: -22px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(74, 222, 128, 0.22) 0%, rgba(74, 222, 128, 0.06) 45%, transparent 72%);
   animation: haloGlow 1.2s ease-in-out 0.2s infinite alternate;
@@ -2050,6 +2050,16 @@ button.torre-summary:focus-visible,
   font-size: 20px;
   font-weight: 800;
   color: var(--green);
+}
+.recarga-instalacion-aviso {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  background: var(--bg3);
+  border-radius: 8px;
+  border: 1px solid var(--border);
 }
 .progress-track {
   height: 8px;
@@ -4417,6 +4427,15 @@ button.dia-card {
 .hist-val.warn { color: var(--gold); }
 .hist-val.bad  { color: var(--red); }
 .hist-tabla-col-actions { padding: 0; }
+.hist-torre-filter-wrap {
+  margin-bottom: 12px;
+}
+.hist-torre-filter-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
 .hist-torre-filter-btn {
   padding: 5px 10px;
   border-radius: 20px;
@@ -8348,6 +8367,24 @@ button.toggle-switch {
   font-weight: 700;
   color: #374151;
   margin-bottom: 10px;
+}
+.setup-note-ubic-torre {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  margin: 0 0 10px;
+}
+.medir-help-instalacion-ubic {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #64748b;
+  margin: 0 0 10px;
+}
+.medir-kicker-instalacion {
+  font-weight: 800;
+  color: #0f172a;
 }
 .setup-grid-3 {
   display: grid;
