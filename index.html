@@ -89,10 +89,7 @@
   <div class="header">
     <div class="header-logo">HIDRO<span>Cultivo</span></div>
     <div class="header-status">
-      <button id="installPWABtn" onclick="instalarPWA()"
-        style="display:none;align-items:center;gap:5px;background:#f0fdf4;border:1px solid #16a34a;
-               border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;color:#15803d;
-               cursor:pointer;-webkit-tap-highlight-color:transparent;font-family:var(--font-display)"
+      <button id="installPWABtn" class="install-pwa-btn" onclick="instalarPWA()"
         aria-label="Instalar HidroCultivo">
         📲 Instalar
       </button>
@@ -111,23 +108,20 @@
       <button type="button" id="dashTorreBanner" class="dash-torre-banner"
         onclick="abrirSelectorTorres()"
         aria-label="Cambiar torre activa">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span id="dashTorreEmoji" style="font-size:24px" aria-hidden="true">🌿</span>
+        <div class="dash-torre-banner-main">
+          <span id="dashTorreEmoji" class="dash-torre-emoji" aria-hidden="true">🌿</span>
           <div>
-            <div id="dashTorreNombre"
-              style="font-family:var(--font-display);font-size:14px;font-weight:900;color:#15803d">
+            <div id="dashTorreNombre" class="dash-torre-nombre">
               Instalación</div>
-            <div id="dashTorreInfo"
-              style="font-size:10px;color:#4b5563;margin-top:1px">—</div>
+            <div id="dashTorreInfo" class="dash-torre-info">—</div>
           </div>
         </div>
-        <span style="font-size:11px;font-weight:700;color:#15803d;
-                    background:#dcfce7;border-radius:8px;padding:3px 8px">
+        <span class="dash-torre-cambiar">
           Cambiar ›
         </span>
       </button>
 
-      <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" style="display:none" role="status" aria-live="polite"></div>
+      <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" role="status" aria-live="polite"></div>
 
       <!-- Saludo -->
       <div class="dash-greeting" id="dashGreeting">Buenos días 🌿</div>
@@ -140,25 +134,20 @@
       <!-- Info sistema activo: div role=button (no puede ser button con el botón Cambiar dentro) -->
       <div id="dashSistemaInfo" class="dash-sistema-info" role="button" tabindex="0"
         aria-label="Ir a mediciones: nutriente, sistema y ubicación"
-        style="display:flex;align-items:center;justify-content:space-between;
-        background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;
-        padding:10px 14px;margin-bottom:10px;cursor:pointer;-webkit-tap-highlight-color:transparent"
         onclick="goTab('mediciones')"
         onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px" aria-hidden="true">🧪</span>
+        <div class="dash-sistema-main">
+          <span class="dash-sistema-icon" aria-hidden="true">🧪</span>
           <div>
-            <div id="dashNutrienteNombre" style="font-family:var(--font-display);font-size:12px;
-              font-weight:800;color:#111827">—</div>
-            <div id="dashNutrienteDetalle" style="font-size:10px;color:#6b7280;margin-top:1px">—</div>
+            <div id="dashNutrienteNombre" class="dash-nutriente-nombre">—</div>
+            <div id="dashNutrienteDetalle" class="dash-nutriente-detalle">—</div>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div id="dashUbicacionBadge" style="font-size:11px;color:#6b7280"></div>
+        <div class="dash-sistema-actions">
+          <div id="dashUbicacionBadge" class="dash-ubicacion-badge"></div>
           <button type="button" onclick="event.stopPropagation();cambiarNutriente()"
             aria-label="Cambiar nutriente"
-            style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;
-                   padding:4px 8px;font-size:11px;font-weight:700;color:#15803d;cursor:pointer">
+            class="dash-btn-cambiar-nutriente">
             Cambiar
           </button>
         </div>
@@ -206,19 +195,19 @@
         <div class="card-title">🌿 Sistema de cultivo</div>
         <div class="torre-summary-row">
           <div class="torre-mini-stat">
-            <div class="torre-mini-val" id="dashPlantas" style="color:var(--green)">0</div>
+            <div class="torre-mini-val torre-mini-val-green" id="dashPlantas">0</div>
             <div class="torre-mini-label">Plantas</div>
           </div>
           <div class="torre-mini-stat">
-            <div class="torre-mini-val" id="dashDias" style="color:var(--gold)">—</div>
+            <div class="torre-mini-val torre-mini-val-gold" id="dashDias">—</div>
             <div class="torre-mini-label">Días media</div>
           </div>
           <div class="torre-mini-stat">
-            <div class="torre-mini-val" id="dashCosecha" style="color:var(--red)">0</div>
+            <div class="torre-mini-val torre-mini-val-red" id="dashCosecha">0</div>
             <div class="torre-mini-label">Cosechar</div>
           </div>
           <div class="torre-mini-stat">
-            <div class="torre-mini-val" id="dashProxCosecha" style="color:var(--blue)">—</div>
+            <div class="torre-mini-val torre-mini-val-blue" id="dashProxCosecha">—</div>
             <div class="torre-mini-label">Días cosecha</div>
           </div>
         </div>
@@ -242,25 +231,25 @@
           <span class="quick-btn-icon" aria-hidden="true">📈</span>
           <span>Historial</span>
         </button>
-        <button type="button" class="quick-btn" onclick="abrirChecklist(false)" aria-label="Iniciar recarga del depósito" style="border-color:rgba(251,191,36,0.3)">
+        <button type="button" class="quick-btn quick-btn-warn" onclick="abrirChecklist(false)" aria-label="Iniciar recarga del depósito">
           <span class="quick-btn-icon" aria-hidden="true">🔄</span>
           <span>Iniciar recarga</span>
         </button>
-        <button type="button" class="quick-btn" onclick="abrirSetup()" aria-label="Configurar torre" style="border-color:rgba(37,99,235,0.3)">
+        <button type="button" class="quick-btn quick-btn-info" onclick="abrirSetup()" aria-label="Configurar torre">
           <span class="quick-btn-icon" aria-hidden="true">⚙️</span>
           <span>Configurar torre</span>
         </button>
-        <button type="button" class="quick-btn" id="btnActivarNotif"
+        <button type="button" class="quick-btn quick-btn-info quick-btn-hidden" id="btnActivarNotif"
           onclick="activarNotificacionesDesdeInicio(event)"
           aria-label="Activar notificaciones y alertas"
           title="Avisos del sistema: recarga, mediciones, cosecha y MeteoAlarm solo si el aviso nombra tu municipio (si ya diste permiso)."
-          style="border-color:rgba(59,130,246,0.3);display:none">
+          >
           <span class="quick-btn-icon" aria-hidden="true">🔔</span>
           <span>Activar alertas</span>
         </button>
-        <button type="button" class="quick-btn" onclick="resetApp()" aria-label="Borrar todos los datos del sistema" style="border-color:rgba(248,113,113,0.3)">
+        <button type="button" class="quick-btn quick-btn-danger" onclick="resetApp()" aria-label="Borrar todos los datos del sistema">
           <span class="quick-btn-icon" aria-hidden="true">🗑️</span>
-          <span style="color:var(--red)">Reset sistema</span>
+          <span class="quick-btn-danger-text">Reset sistema</span>
         </button>
       </div>
 
@@ -2348,69 +2337,69 @@
                   <button type="button" class="equip-card" id="nftCanalDiam110" onclick="seleccionarNftCanalDiam(110)" style="padding:6px;text-align:center;font-size:11px;font-weight:800">110</button>
                 </div>
               </div>
-              <div id="nftCanalRectWrap" style="display:none">
-                <label for="nftCanalAnchoMm" style="font-size:9px;font-weight:700;color:#64748b">Ancho útil fondo (mm)</label>
+              <div id="nftCanalRectWrap" class="setup-hidden">
+                <label for="nftCanalAnchoMm" class="setup-label-tiny">Ancho útil fondo (mm)</label>
                 <input type="number" id="nftCanalAnchoMm" min="40" max="220" value="100" inputmode="numeric"
-                  style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px"
+                  class="setup-input-compact"
                   oninput="updateNftSetupPreview()">
               </div>
-              <div class="torre-control-row" style="margin-top:10px">
+              <div class="torre-control-row setup-mt-10">
                 <div class="torre-control-label">
                   Lámina de agua
-                  <span class="torre-control-val" id="valNftLamina">3<span style="font-size:12px;font-weight:600"> mm</span></span>
+                  <span class="torre-control-val" id="valNftLamina">3<span class="setup-unit-inline"> mm</span></span>
                 </div>
                 <input type="range" class="torre-slider" id="sliderNftLamina" min="2" max="5" value="3" step="0.5" oninput="onSliderNftLaminaInput()">
               </div>
-              <div style="margin-top:8px">
-                <label for="nftLongCanalM" style="font-size:9px;font-weight:700;color:#64748b">Longitud cada canal (m) — opcional</label>
+              <div class="setup-mt-8">
+                <label for="nftLongCanalM" class="setup-label-tiny">Longitud cada canal (m) — opcional</label>
                 <input type="number" id="nftLongCanalM" min="0.5" max="15" step="0.1" placeholder="Auto por huecos"
-                  style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #cbd5e1;font-size:14px"
+                  class="setup-input-compact"
                   inputmode="decimal" oninput="updateNftSetupPreview()" onblur="updateNftSetupPreview()">
               </div>
             </div>
-            <div style="margin-top:12px;padding-top:10px;border-top:1.5px solid #e5e7eb">
-              <div style="font-size:10px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">
+            <div class="setup-section-topline">
+              <div class="setup-kicker">
                 Ø tubería de riego — tramo que limita (derivación o rama desde bomba)
               </div>
-              <p style="font-size:9px;color:#475569;line-height:1.45;margin:0 0 8px">
+              <p class="setup-note-compact">
                 Tubería de <strong>riego estándar</strong> (p. ej. polietileno): <strong>Ø16 mm</strong> (muy común en derivaciones a cada canal), <strong>Ø20 mm</strong> si quieres más holgura; <strong>Ø25 mm</strong> muy habitual desde la bomba, <strong>Ø32 mm</strong> en tramos largos o medianos. El <strong>retorno</strong> al depósito suele ir en <strong>Ø40–50 mm</strong> (no es lo mismo que el canal de cultivo). Más detalle en la guía plegable.
               </p>
-              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
-                <button type="button" class="equip-card" id="nftTubo16" onclick="seleccionarTuboNft(16)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">16</button>
-                <button type="button" class="equip-card" id="nftTubo20" onclick="seleccionarTuboNft(20)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">20</button>
-                <button type="button" class="equip-card" id="nftTubo25" onclick="seleccionarTuboNft(25)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">25</button>
-                <button type="button" class="equip-card" id="nftTubo32" onclick="seleccionarTuboNft(32)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">32</button>
-                <button type="button" class="equip-card" id="nftTubo40" onclick="seleccionarTuboNft(40)" style="padding:6px 4px;text-align:center;font-size:11px;font-weight:800">40</button>
+              <div class="setup-grid-5-tight">
+                <button type="button" class="equip-card equip-card-chip-mm" id="nftTubo16" onclick="seleccionarTuboNft(16)">16</button>
+                <button type="button" class="equip-card equip-card-chip-mm" id="nftTubo20" onclick="seleccionarTuboNft(20)">20</button>
+                <button type="button" class="equip-card equip-card-chip-mm" id="nftTubo25" onclick="seleccionarTuboNft(25)">25</button>
+                <button type="button" class="equip-card equip-card-chip-mm" id="nftTubo32" onclick="seleccionarTuboNft(32)">32</button>
+                <button type="button" class="equip-card equip-card-chip-mm" id="nftTubo40" onclick="seleccionarTuboNft(40)">40</button>
               </div>
-              <div style="font-size:9px;color:#64748b;margin-top:6px;line-height:1.4">
+              <div class="setup-note-soft">
                 mm · Elige el <strong>Ø del tramo más estrecho</strong> que dimensiona la bomba (suele ser la rama <strong>25–32 mm</strong> desde bomba, o <strong>16–20 mm</strong> si el cuello de botella son las derivaciones). El <strong>retorno Ø40–50 mm</strong> no sustituye al canal ancho; sirve para el desagüe por gravedad.
               </div>
-              <details id="nftTuberiaDocDetails" style="margin-top:10px;border-radius:12px;border:1px solid #cbd5e1;background:#fff;overflow:hidden">
-                <summary style="cursor:pointer;padding:10px 12px;font-size:11px;font-weight:800;color:#1e40af;list-style-position:outside">
+              <details id="nftTuberiaDocDetails" class="setup-details-doc">
+                <summary class="setup-details-summary">
                   📐 Guía: canal de cultivo, alimentación y retorno
                 </summary>
-                <div id="nftTuberiaDocSetupMount" style="padding:0 12px 12px;border-top:1px solid #e2e8f0"></div>
+                <div id="nftTuberiaDocSetupMount" class="setup-details-content"></div>
               </details>
             </div>
-            <div id="nftBombaUsuarioWrap" style="margin-top:10px;padding:10px;background:#fffbeb;border-radius:10px;border:1.5px solid #fde68a">
-              <div style="font-size:10px;font-weight:800;color:#92400e;margin-bottom:6px">¿Ya tienes bomba? Comprueba si es válida para esta NFT</div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end">
+            <div id="nftBombaUsuarioWrap" class="setup-box-amber">
+              <div class="setup-box-amber-title">¿Ya tienes bomba? Comprueba si es válida para esta NFT</div>
+              <div class="setup-grid-2 setup-grid-gap-8 setup-align-end">
                 <div>
-                  <label for="nftBombaUsuarioLh" style="display:block;font-size:9px;color:#78350f;font-weight:700">Caudal nominal (L/h)</label>
+                  <label for="nftBombaUsuarioLh" class="setup-label-amber">Caudal nominal (L/h)</label>
                   <input type="number" id="nftBombaUsuarioLh" min="0" step="10" placeholder="ej. 600"
-                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #fcd34d;font-size:14px"
+                    class="setup-input-amber"
                     inputmode="decimal" oninput="onNftBombaUsuarioSetupInput()" onblur="onNftBombaUsuarioSetupBlur()">
                 </div>
                 <div>
-                  <label for="nftBombaUsuarioW" style="display:block;font-size:9px;color:#78350f;font-weight:700">Potencia (W, opcional)</label>
+                  <label for="nftBombaUsuarioW" class="setup-label-amber">Potencia (W, opcional)</label>
                   <input type="number" id="nftBombaUsuarioW" min="0" step="1" placeholder="ej. 15"
-                    style="width:100%;margin-top:4px;padding:8px;border-radius:8px;border:1.5px solid #fcd34d;font-size:14px"
+                    class="setup-input-amber"
                     inputmode="decimal" oninput="onNftBombaUsuarioSetupInput()" onblur="onNftBombaUsuarioSetupBlur()">
                 </div>
               </div>
-              <div id="nftBombaUsuarioValidacion" style="margin-top:8px;font-size:10px;line-height:1.45;font-weight:600" role="status"></div>
+              <div id="nftBombaUsuarioValidacion" class="setup-validation-text" role="status"></div>
             </div>
-            <div id="resultadoBombaNft" style="margin-top:10px;display:none"></div>
+            <div id="resultadoBombaNft" class="setup-hidden setup-mt-10"></div>
           </div>
         </div>
         <p style="font-size:10px;color:#6b7280;margin:10px 0 0;line-height:1.45">
@@ -2447,99 +2436,93 @@
       </div>
 
       <!-- Tubo y bomba — solo para torres DIY/personalizadas -->
-      <div id="seccionTuboBomba" style="display:none">
+      <div id="seccionTuboBomba" class="setup-hidden">
 
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-          color:#374151;margin-bottom:8px;margin-top:4px">
+        <div class="setup-block-title setup-mb-8 setup-mt-4">
           🔧 Tubo central y bomba
         </div>
 
         <!-- Diámetro del tubo -->
-        <div style="margin-bottom:12px">
-          <div style="font-size:11px;font-weight:700;color:#6b7280;
-            text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+        <div class="setup-mb-12">
+          <div class="setup-kicker setup-kicker-md setup-mb-8">
             Diámetro interior del tubo central
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px">
-            <button type="button" class="equip-card" id="tubo50"  onclick="seleccionarTubo(50)"  style="padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:800;color:#374151">50mm</div>
-              <div style="font-size:9px;color:#6b7280">Torres compactas</div>
+          <div class="setup-grid-3x6 setup-mb-6">
+            <button type="button" class="equip-card equip-card-pad-8-center" id="tubo50"  onclick="seleccionarTubo(50)">
+              <div class="setup-chip-title">50mm</div>
+              <div class="setup-chip-desc">Torres compactas</div>
             </button>
-            <button type="button" class="equip-card" id="tubo75"  onclick="seleccionarTubo(75)"  style="padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:800;color:#374151">75mm</div>
-              <div style="font-size:9px;color:#6b7280">Torres domésticas</div>
+            <button type="button" class="equip-card equip-card-pad-8-center" id="tubo75"  onclick="seleccionarTubo(75)">
+              <div class="setup-chip-title">75mm</div>
+              <div class="setup-chip-desc">Torres domésticas</div>
             </button>
-            <button type="button" class="equip-card" id="tubo110" onclick="seleccionarTubo(110)" style="padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:800;color:#374151">110mm</div>
-              <div style="font-size:9px;color:#6b7280">PVC estándar</div>
+            <button type="button" class="equip-card equip-card-pad-8-center" id="tubo110" onclick="seleccionarTubo(110)">
+              <div class="setup-chip-title">110mm</div>
+              <div class="setup-chip-desc">PVC estándar</div>
             </button>
-            <button type="button" class="equip-card" id="tubo125" onclick="seleccionarTubo(125)" style="padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:800;color:#374151">125mm</div>
-              <div style="font-size:9px;color:#f97316;font-weight:700">⚠️ Riesgo raíces</div>
+            <button type="button" class="equip-card equip-card-pad-8-center" id="tubo125" onclick="seleccionarTubo(125)">
+              <div class="setup-chip-title">125mm</div>
+              <div class="setup-chip-desc-warn">⚠️ Riesgo raíces</div>
             </button>
-            <button type="button" class="equip-card" id="tubo160" onclick="seleccionarTubo(160)" style="padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:800;color:#374151">160mm</div>
-              <div style="font-size:9px;color:#dc2626;font-weight:700">⚠️ Tubo interior</div>
+            <button type="button" class="equip-card equip-card-pad-8-center" id="tubo160" onclick="seleccionarTubo(160)">
+              <div class="setup-chip-title">160mm</div>
+              <div class="setup-chip-desc-danger">⚠️ Tubo interior</div>
             </button>
-            <button type="button" class="equip-card" id="tubo200" onclick="seleccionarTubo(200)" style="padding:8px;text-align:center">
-              <div style="font-size:15px;font-weight:800;color:#374151">200mm</div>
-              <div style="font-size:9px;color:#dc2626;font-weight:700">⚠️ Profesional</div>
+            <button type="button" class="equip-card equip-card-pad-8-center" id="tubo200" onclick="seleccionarTubo(200)">
+              <div class="setup-chip-title">200mm</div>
+              <div class="setup-chip-desc-danger">⚠️ Profesional</div>
             </button>
           </div>
           <!-- Aviso anti-raíces dinámico -->
-          <div id="avisoAntiRaices" style="display:none;border-radius:10px;
-            padding:10px 12px;font-size:11px;line-height:1.6;margin-bottom:8px"></div>
+          <div id="avisoAntiRaices" class="setup-hidden setup-aviso-antiraices"></div>
         </div>
 
         <!-- Sistema anti-raíces (aparece si ≥125mm) -->
-        <div id="seccionAntiRaices" style="display:none;margin-bottom:12px">
-          <div style="font-size:11px;font-weight:700;color:#6b7280;
-            text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+        <div id="seccionAntiRaices" class="setup-hidden setup-mb-12">
+          <div class="setup-kicker setup-kicker-md setup-mb-8">
             🌿 Sistema anti-obstrucción de raíces
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <button type="button" class="equip-card" id="antiTuboInt" onclick="seleccionarAntiRaices('tubo_interior')" style="padding:10px">
-              <div style="font-size:18px;margin-bottom:4px">🔩</div>
-              <div style="font-size:11px;font-weight:700;color:#374151">Tubo interior perforado</div>
-              <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Tubo fino dentro del central con tela filtrante. Solución más eficaz.</div>
+          <div class="setup-grid-2 setup-grid-gap-8">
+            <button type="button" class="equip-card equip-card-pad-10" id="antiTuboInt" onclick="seleccionarAntiRaices('tubo_interior')">
+              <div class="setup-anti-icon">🔩</div>
+              <div class="setup-anti-title">Tubo interior perforado</div>
+              <div class="setup-anti-desc">Tubo fino dentro del central con tela filtrante. Solución más eficaz.</div>
             </button>
-            <button type="button" class="equip-card" id="antiSeparadores" onclick="seleccionarAntiRaices('separadores')" style="padding:10px">
-              <div style="font-size:18px;margin-bottom:4px">🔲</div>
-              <div style="font-size:11px;font-weight:700;color:#374151">Separadores de nivel</div>
-              <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Bandejas perforadas entre niveles que retienen las raíces.</div>
+            <button type="button" class="equip-card equip-card-pad-10" id="antiSeparadores" onclick="seleccionarAntiRaices('separadores')">
+              <div class="setup-anti-icon">🔲</div>
+              <div class="setup-anti-title">Separadores de nivel</div>
+              <div class="setup-anti-desc">Bandejas perforadas entre niveles que retienen las raíces.</div>
             </button>
-            <button type="button" class="equip-card" id="antiCanal" onclick="seleccionarAntiRaices('canal_lateral')" style="padding:10px">
-              <div style="font-size:18px;margin-bottom:4px">↕️</div>
-              <div style="font-size:11px;font-weight:700;color:#374151">Tubo lateral de bajada</div>
-              <div style="font-size:9px;color:#6b7280;margin-top:2px;line-height:1.4">Subida y bajada separadas. Las raíces no interfieren.</div>
+            <button type="button" class="equip-card equip-card-pad-10" id="antiCanal" onclick="seleccionarAntiRaices('canal_lateral')">
+              <div class="setup-anti-icon">↕️</div>
+              <div class="setup-anti-title">Tubo lateral de bajada</div>
+              <div class="setup-anti-desc">Subida y bajada separadas. Las raíces no interfieren.</div>
             </button>
-            <button type="button" class="equip-card" id="antiNinguno" onclick="seleccionarAntiRaices('ninguno')" style="padding:10px">
-              <div style="font-size:18px;margin-bottom:4px">❌</div>
-              <div style="font-size:11px;font-weight:700;color:#dc2626">Sin protección</div>
-              <div style="font-size:9px;color:#dc2626;margin-top:2px;line-height:1.4">No recomendado con ≥125mm.</div>
+            <button type="button" class="equip-card equip-card-pad-10" id="antiNinguno" onclick="seleccionarAntiRaices('ninguno')">
+              <div class="setup-anti-icon">❌</div>
+              <div class="setup-anti-title-danger">Sin protección</div>
+              <div class="setup-anti-desc-danger">No recomendado con ≥125mm.</div>
             </button>
           </div>
         </div>
 
         <!-- Altura de la torre -->
-        <div style="margin-bottom:10px">
-          <div style="font-size:11px;font-weight:700;color:#6b7280;
-            text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+        <div class="setup-mb-10">
+          <div class="setup-kicker setup-kicker-md setup-mb-6">
             📏 Altura total de la torre
-            <span id="valAltura" style="color:#15803d;font-size:13px;font-weight:800"> 1.2m</span>
+            <span id="valAltura" class="setup-val-altura"> 1.2m</span>
           </div>
           <input type="range" class="torre-slider" id="sliderAltura"
             min="0.5" max="3.0" value="1.2" step="0.1"
             oninput="calcularBombaRecomendada()"
             aria-label="Altura total de la torre en metros">
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:2px">
+          <div class="setup-range-legend">
             <span>0.5m</span><span>1.5m</span><span>3.0m</span>
           </div>
         </div>
 
         <!-- Resultado cálculo bomba -->
-        <div id="resultadoBomba" style="background:#eff6ff;border:1.5px solid #93c5fd;
-          border-radius:12px;padding:12px 14px;font-size:12px;color:#1e40af;line-height:1.8">
+        <div id="resultadoBomba" class="setup-box-info">
           Selecciona diámetro y altura para calcular la bomba recomendada
         </div>
 
@@ -2547,62 +2530,59 @@
 
       <!-- Tamaño de cestas (oculto en DWC: se deduce del diámetro cesta en mm en el bloque DWC) -->
       <div id="setupBloqueTamanoCestas">
-      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-        color:#374151;margin-bottom:8px;margin-top:4px">
+      <div class="setup-block-title setup-mb-8 setup-mt-4">
         🧺 Tamaño de cestas
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
-        <button type="button" class="equip-card" id="cesta38" onclick="seleccionarCesta('38')" style="padding:10px 6px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">⚪</div>
-          <div style="font-size:12px;font-weight:800;color:#374151">3.8 cm</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">Mini · Microgreens<br>Germinación</div>
+      <div class="setup-grid-3 setup-mb-14">
+        <button type="button" class="equip-card equip-card-pad-10-6-center" id="cesta38" onclick="seleccionarCesta('38')">
+          <div class="setup-cesta-icon">⚪</div>
+          <div class="setup-cesta-title">3.8 cm</div>
+          <div class="setup-cesta-desc">Mini · Microgreens<br>Germinación</div>
         </button>
-        <button type="button" class="equip-card" id="cesta40" onclick="seleccionarCesta('40')" style="padding:10px 6px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">🌿</div>
-          <div style="font-size:12px;font-weight:800;color:#374151">4.0 cm</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">Muy habitual en torres verticales<br>Lechugas y hojas</div>
+        <button type="button" class="equip-card equip-card-pad-10-6-center" id="cesta40" onclick="seleccionarCesta('40')">
+          <div class="setup-cesta-icon">🌿</div>
+          <div class="setup-cesta-title">4.0 cm</div>
+          <div class="setup-cesta-desc">Muy habitual en torres verticales<br>Lechugas y hojas</div>
         </button>
-        <button type="button" class="equip-card selected" id="cesta50" onclick="seleccionarCesta('50')" style="padding:10px 6px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">🟢</div>
-          <div style="font-size:12px;font-weight:800;color:#374151">5.0 cm</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">Estándar · Mayor<br>estabilidad</div>
+        <button type="button" class="equip-card selected equip-card-pad-10-6-center" id="cesta50" onclick="seleccionarCesta('50')">
+          <div class="setup-cesta-icon">🟢</div>
+          <div class="setup-cesta-title">5.0 cm</div>
+          <div class="setup-cesta-desc">Estándar · Mayor<br>estabilidad</div>
         </button>
-        <button type="button" class="equip-card" id="cesta75" onclick="seleccionarCesta('75')" style="padding:10px 6px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">🔵</div>
-          <div style="font-size:12px;font-weight:800;color:#374151">7.5 cm</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">Grande · Tomates<br>Frutos y hierbas</div>
+        <button type="button" class="equip-card equip-card-pad-10-6-center" id="cesta75" onclick="seleccionarCesta('75')">
+          <div class="setup-cesta-icon">🔵</div>
+          <div class="setup-cesta-title">7.5 cm</div>
+          <div class="setup-cesta-desc">Grande · Tomates<br>Frutos y hierbas</div>
         </button>
-        <button type="button" class="equip-card" id="cesta100" onclick="seleccionarCesta('100')" style="padding:10px 6px;text-align:center">
-          <div style="font-size:22px;margin-bottom:4px">⭕</div>
-          <div style="font-size:12px;font-weight:800;color:#374151">10 cm</div>
-          <div style="font-size:9px;color:#6b7280;margin-top:2px">XL · Plantas grandes<br>Máxima producción</div>
+        <button type="button" class="equip-card equip-card-pad-10-6-center" id="cesta100" onclick="seleccionarCesta('100')">
+          <div class="setup-cesta-icon">⭕</div>
+          <div class="setup-cesta-title">10 cm</div>
+          <div class="setup-cesta-desc">XL · Plantas grandes<br>Máxima producción</div>
         </button>
         <div class="equip-card" id="cestaPersonalizada" role="group"
           aria-label="Cesta personalizada: elige diámetro en centímetros"
-          style="padding:10px 6px;text-align:center;grid-column:span 2">
+          class="equip-card-pad-10-6-center setup-grid-span-2">
           <button type="button" class="equip-card-block-btn" onclick="seleccionarCesta('custom')"
             aria-label="Seleccionar modo cesta personalizada">
-            <div style="font-size:22px;margin-bottom:4px" aria-hidden="true">✏️</div>
-            <div style="font-size:12px;font-weight:800;color:#374151">Personalizada</div>
+            <div class="setup-cesta-icon" aria-hidden="true">✏️</div>
+            <div class="setup-cesta-title">Personalizada</div>
           </button>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:6px;justify-content:center">
+          <div class="setup-cesta-custom-row">
             <input type="number" id="cestaCmCustom" placeholder="ej: 6.3" step="0.1" min="1" max="20"
               aria-label="Diámetro personalizado de cesta en centímetros"
-              style="width:70px;border:1.5px solid #e5e7eb;border-radius:8px;padding:4px 8px;
-                     font-size:13px;font-weight:700;text-align:center;outline:none"
+              class="setup-cesta-custom-input"
               oninput="seleccionarCesta('custom')"
               onclick="event.stopPropagation()" onkeydown="event.stopPropagation()">
-            <span style="font-size:11px;color:#6b7280">cm</span>
+            <span class="setup-cesta-custom-unit">cm</span>
           </div>
         </div>
       </div>
       <!-- Info planta según cesta -->
-      <div id="cestaInfo" style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;
-        padding:8px 12px;font-size:11px;color:#15803d;margin-bottom:12px;display:none"></div>
+      <div id="cestaInfo" class="setup-cesta-info setup-hidden"></div>
       </div>
 
       <!-- Ubicación interior/exterior -->
-      <div style="margin-bottom:8px;font-family:var(--font-display);font-size:14px;font-weight:700;color:#374151">
+      <div class="setup-section-title-main">
         ¿Dónde está tu torre?
       </div>
       <div class="equip-grid">
@@ -2684,20 +2664,19 @@
       <div class="setup-subtitle">¿Qué tipo de agua usas y cómo fijas las plantas?</div>
 
       <!-- Tipo de agua -->
-      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-        color:#374151;margin-bottom:10px">💧 Tipo de agua</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
-        <button type="button" class="equip-card" id="aguaDestilada" onclick="seleccionarAgua('destilada')" style="padding:12px 8px">
+      <div class="setup-block-title">💧 Tipo de agua</div>
+      <div class="setup-grid-3">
+        <button type="button" class="equip-card equip-card-pad-12-8" id="aguaDestilada" onclick="seleccionarAgua('destilada')">
           <div style="font-size:20px;margin-bottom:4px">🫧</div>
           <div style="font-size:11px;font-weight:700;color:#374151">Destilada</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">EC 0 · Necesita CalMag</div>
         </button>
-        <button type="button" class="equip-card" id="aguaOsmosis" onclick="seleccionarAgua('osmosis')" style="padding:12px 8px">
+        <button type="button" class="equip-card equip-card-pad-12-8" id="aguaOsmosis" onclick="seleccionarAgua('osmosis')">
           <div style="font-size:20px;margin-bottom:4px">💎</div>
           <div style="font-size:11px;font-weight:700;color:#374151">Ósmosis</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">EC 10-50 · Necesita CalMag</div>
         </button>
-        <button type="button" class="equip-card" id="aguaGrifo" onclick="seleccionarAgua('grifo')" style="padding:12px 8px">
+        <button type="button" class="equip-card equip-card-pad-12-8" id="aguaGrifo" onclick="seleccionarAgua('grifo')">
           <div style="font-size:20px;margin-bottom:4px">🚿</div>
           <div style="font-size:11px;font-weight:700;color:#374151">Grifo</div>
           <div style="font-size:9px;color:#6b7280;margin-top:2px">EC variable · Revisar dureza</div>
@@ -2705,59 +2684,58 @@
       </div>
 
       <!-- Tipo de sustrato/fijación -->
-      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-        color:#374151;margin-bottom:10px">🌱 Fijación de plantas en cestas</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <button type="button" class="equip-card" data-setup-sustrato="lana" id="sustratoLana" onclick="seleccionarSustrato('lana')" style="padding:12px">
+      <div class="setup-block-title">🌱 Fijación de plantas en cestas</div>
+      <div class="setup-grid-2 setup-grid-gap-8 setup-mb-12">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="lana" id="sustratoLana" onclick="seleccionarSustrato('lana')">
           <div style="font-size:24px;margin-bottom:6px">🧶</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Lana de roca</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Mejor estabilización · Recomendada para plántulas · Neutro pH · Reutilizable
           </div>
         </button>
-        <button type="button" class="equip-card" data-setup-sustrato="esponja" id="sustratoEsponja" onclick="seleccionarSustrato('esponja')" style="padding:12px">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="esponja" id="sustratoEsponja" onclick="seleccionarSustrato('esponja')">
           <div style="font-size:24px;margin-bottom:6px">🟫</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Esponja hidropónica</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Económica · Fácil usar · Absorbe bien · Descartable
           </div>
         </button>
-        <button type="button" class="equip-card" data-setup-sustrato="arcilla" id="sustratoArca" onclick="seleccionarSustrato('arcilla')" style="padding:12px">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="arcilla" id="sustratoArca" onclick="seleccionarSustrato('arcilla')">
           <div style="font-size:24px;margin-bottom:6px">🟠</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Arcilla expandida</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Muy duradera · Lavable · Buena drenaje · Solo para esquejes
           </div>
         </button>
-        <button type="button" class="equip-card" data-setup-sustrato="mixto" id="sustrotoMixto" onclick="seleccionarSustrato('mixto')" style="padding:12px">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="mixto" id="sustrotoMixto" onclick="seleccionarSustrato('mixto')">
           <div style="font-size:24px;margin-bottom:6px">🔀</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Mixto</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Esponja base + arcilla encima · Mayor estabilidad
           </div>
         </button>
-        <button type="button" class="equip-card" data-setup-sustrato="perlita" id="sustratoPerlita" onclick="seleccionarSustrato('perlita')" style="padding:12px">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="perlita" id="sustratoPerlita" onclick="seleccionarSustrato('perlita')">
           <div style="font-size:24px;margin-bottom:6px">⚪</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Perlita</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Gran volumen de aire · Seca rápido · Mezclas coco+perlita muy habituales
           </div>
         </button>
-        <button type="button" class="equip-card" data-setup-sustrato="coco" id="sustratoCoco" onclick="seleccionarSustrato('coco')" style="padding:12px">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="coco" id="sustratoCoco" onclick="seleccionarSustrato('coco')">
           <div style="font-size:24px;margin-bottom:6px">🥥</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Fibra de coco</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Muy usada en hidro · Buena retención y aire según lavado
           </div>
         </button>
-        <button type="button" class="equip-card" data-setup-sustrato="vermiculita" id="sustratoVermiculita" onclick="seleccionarSustrato('vermiculita')" style="padding:12px">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="vermiculita" id="sustratoVermiculita" onclick="seleccionarSustrato('vermiculita')">
           <div style="font-size:24px;margin-bottom:6px">✨</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Vermiculita</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
             Retiene mucha agua · A menudo mezclada con perlita
           </div>
         </button>
-        <button type="button" class="equip-card" data-setup-sustrato="turba_enraiz" id="sustratoTurbaEnraiz" onclick="seleccionarSustrato('turba_enraiz')" style="padding:12px">
+        <button type="button" class="equip-card equip-card-pad-12" data-setup-sustrato="turba_enraiz" id="sustratoTurbaEnraiz" onclick="seleccionarSustrato('turba_enraiz')">
           <div style="font-size:24px;margin-bottom:6px">🌱</div>
           <div style="font-size:12px;font-weight:700;color:#374151">Turba biodegradable</div>
           <div style="font-size:10px;color:#6b7280;margin-top:3px;line-height:1.4">
@@ -2789,17 +2767,16 @@
       <div class="setup-subtitle">Esto afecta al cálculo de riego, alertas de temperatura y necesidades de luz.</div>
 
       <!-- Interior / Exterior -->
-      <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-        color:#374151;margin-bottom:10px">📍 ¿Dónde estará tu torre?</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <button type="button" class="equip-card" id="locExterior" onclick="seleccionarUbicacion('exterior')" style="padding:14px">
+      <div class="setup-block-title">📍 ¿Dónde estará tu torre?</div>
+      <div class="setup-grid-2 setup-grid-gap-10 setup-mb-16">
+        <button type="button" class="equip-card equip-card-pad-14" id="locExterior" onclick="seleccionarUbicacion('exterior')">
           <div style="font-size:28px;margin-bottom:6px">☀️</div>
           <div style="font-size:13px;font-weight:800;color:#374151">Exterior</div>
           <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.5">
             Terraza, balcón, jardín · Luz solar natural · Más VPD en verano · Alerta Pythium por temperatura
           </div>
         </button>
-        <button type="button" class="equip-card" id="locInterior" onclick="seleccionarUbicacion('interior')" style="padding:14px">
+        <button type="button" class="equip-card equip-card-pad-14" id="locInterior" onclick="seleccionarUbicacion('interior')">
           <div style="font-size:28px;margin-bottom:6px">🏠</div>
           <div style="font-size:13px;font-weight:800;color:#374151">Interior</div>
           <div style="font-size:11px;color:#6b7280;margin-top:4px;line-height:1.5">
@@ -2809,75 +2786,67 @@
       </div>
 
       <!-- Iluminación si es interior: natural o artificial -->
-      <div id="seccionIluminacion" style="display:none">
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-          color:#374151;margin-bottom:10px">💡 ¿Qué luz recibe la torre?</div>
-        <div style="background:#fffbeb;border:1.5px solid #fcd34d;border-radius:12px;
-          padding:12px;margin-bottom:10px;font-size:12px;color:#92400e;line-height:1.55">
+      <div id="seccionIluminacion" class="setup-hidden">
+        <div class="setup-block-title">💡 ¿Qué luz recibe la torre?</div>
+        <div class="setup-box-warn">
           Indica si la luz es <strong>natural</strong> (ventana, lucernario) o <strong>artificial</strong> (LED, T5, HPS…), o <strong>mixta</strong>.
           Con <strong>solo artificial</strong>, para lechugas conviene alrededor de <strong>16&nbsp;h/día</strong> de fotoperíodo efectivo; con poca luz las plantas se etiolarán.
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <button type="button" class="equip-card" id="luzNatural" onclick="seleccionarLuz('natural')" style="padding:12px">
+        <div class="setup-grid-2 setup-grid-gap-8">
+          <button type="button" class="equip-card equip-card-pad-12" id="luzNatural" onclick="seleccionarLuz('natural')">
             <div style="font-size:22px;margin-bottom:4px">🪟</div>
             <div style="font-size:12px;font-weight:700;color:#374151">Luz natural</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Ventana · Lucernario · Invernadero acristalado</div>
           </button>
-          <button type="button" class="equip-card selected" id="luzLED" onclick="seleccionarLuz('led')" style="padding:12px">
+          <button type="button" class="equip-card selected equip-card-pad-12" id="luzLED" onclick="seleccionarLuz('led')">
             <div style="font-size:22px;margin-bottom:4px">💡</div>
             <div style="font-size:12px;font-weight:700;color:#374151">LED full spectrum</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Recomendado · Bajo consumo · Poco calor</div>
           </button>
-          <button type="button" class="equip-card" id="luzMixto" onclick="seleccionarLuz('mixto')" style="padding:12px">
+          <button type="button" class="equip-card equip-card-pad-12" id="luzMixto" onclick="seleccionarLuz('mixto')">
             <div style="font-size:22px;margin-bottom:4px">🪟💡</div>
             <div style="font-size:12px;font-weight:700;color:#374151">Mixto</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Ventana + refuerzo LED (u otra)</div>
           </button>
-          <button type="button" class="equip-card" id="luzFluorescent" onclick="seleccionarLuz('fluorescente')" style="padding:12px">
+          <button type="button" class="equip-card equip-card-pad-12" id="luzFluorescent" onclick="seleccionarLuz('fluorescente')">
             <div style="font-size:22px;margin-bottom:4px">🔦</div>
             <div style="font-size:12px;font-weight:700;color:#374151">Fluorescente T5</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Económico · Válido para lechugas</div>
           </button>
-          <button type="button" class="equip-card" id="luzHPS" onclick="seleccionarLuz('hps')" style="padding:12px">
+          <button type="button" class="equip-card equip-card-pad-12" id="luzHPS" onclick="seleccionarLuz('hps')">
             <div style="font-size:22px;margin-bottom:4px">🔆</div>
             <div style="font-size:12px;font-weight:700;color:#374151">HPS / HM</div>
             <div style="font-size:10px;color:#6b7280;margin-top:2px">Alto rendimiento · Calor · Coste alto</div>
           </button>
-          <button type="button" class="equip-card" id="luzSinLuz" onclick="seleccionarLuz('sin_luz')" style="padding:12px">
+          <button type="button" class="equip-card equip-card-pad-12" id="luzSinLuz" onclick="seleccionarLuz('sin_luz')">
             <div style="font-size:22px;margin-bottom:4px">🚫</div>
             <div style="font-size:12px;font-weight:700;color:#374151">Sin luz adecuada</div>
             <div style="font-size:10px;color:#dc2626;margin-top:2px;font-weight:700">⚠️ No recomendado</div>
           </button>
         </div>
         <!-- Horas de luz -->
-        <div style="margin-top:12px">
-          <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:6px">
-            ⏱ Horas de luz al día: <span id="horasLuzVal" style="color:#15803d">16h</span>
+        <div class="setup-mt-12">
+          <div class="setup-horas-title">
+            ⏱ Horas de luz al día: <span id="horasLuzVal" class="setup-horas-val">16h</span>
           </div>
           <input type="range" id="sliderHorasLuz" min="12" max="20" value="16"
             oninput="setupData.horasLuz=parseInt(this.value,10)||16;document.getElementById('horasLuzVal').textContent=this.value+'h'"
-            style="width:100%;accent-color:#16a34a">
-          <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af">
+            class="setup-range-green">
+          <div class="setup-range-legend">
             <span>12h (mínimo)</span><span>16h (óptimo)</span><span>20h (máximo)</span>
           </div>
         </div>
       </div>
 
       <!-- Ciudad para meteo (si es exterior) -->
-      <div id="seccionCiudadUbicacion" style="margin-top:12px">
-        <div style="font-family:var(--font-display);font-size:13px;font-weight:700;
-          color:#374151;margin-bottom:8px">📍 Ciudad (para meteorología)</div>
+      <div id="seccionCiudadUbicacion" class="setup-mt-12">
+        <div class="setup-block-title setup-mb-8">📍 Ciudad (para meteorología)</div>
         <input type="text" id="setupCiudad2" placeholder="Ciudad para meteo (nombre en castellano o valencià)"
           aria-label="Ciudad para datos meteorológicos"
-          style="width:100%;background:#fff;border:2px solid #e5e7eb;border-radius:12px;
-                 color:#111827;font-size:15px;padding:12px 14px;outline:none;
-                 box-sizing:border-box"
+          class="setup-input-city"
           oninput="onBuscarCiudadSetup(this.value)">
-        <div id="ciudadResultadosSetup" style="display:none;background:#fff;
-          border:1.5px solid #e5e7eb;border-radius:10px;margin-top:4px;overflow:hidden"></div>
-        <div id="ciudadSeleccionadaSetup" style="display:none;margin-top:8px;
-          padding:10px 12px;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px;
-          font-size:13px;color:#15803d;font-weight:700"></div>
+        <div id="ciudadResultadosSetup" class="setup-hidden setup-city-results"></div>
+        <div id="ciudadSeleccionadaSetup" class="setup-hidden setup-city-selected"></div>
       </div>
     </div>
 
@@ -2907,13 +2876,13 @@
       <div class="setup-title">🌿 ¿Más de una torre?</div>
       <div class="setup-subtitle">HidroCultivo puede gestionar hasta 10 torres independientes, cada una con su propio nutriente, plantas e historial.</div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <button type="button" class="equip-card selected" id="torreSolo" onclick="seleccionarNumTorres('una')" style="padding:14px;text-align:center">
+      <div class="setup-grid-2 setup-grid-gap-10 setup-mb-16">
+        <button type="button" class="equip-card selected equip-card-pad-14-center" id="torreSolo" onclick="seleccionarNumTorres('una')">
           <div style="font-size:32px;margin-bottom:8px">🌿</div>
           <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#374151">Una torre</div>
           <div style="font-size:10px;color:#6b7280;margin-top:4px">Empezar sencillo.<br>Siempre puedes añadir más.</div>
         </button>
-        <button type="button" class="equip-card" id="torreVarias" onclick="seleccionarNumTorres('varias')" style="padding:14px;text-align:center">
+        <button type="button" class="equip-card equip-card-pad-14-center" id="torreVarias" onclick="seleccionarNumTorres('varias')">
           <div style="font-size:32px;margin-bottom:8px">🌿🌿</div>
           <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:#374151">Varias torres</div>
           <div style="font-size:10px;color:#6b7280;margin-top:4px">Cultivos diferentes.<br>EC independiente por torre.</div>
