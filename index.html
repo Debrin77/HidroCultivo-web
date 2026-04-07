@@ -19920,7 +19920,9 @@ function setDiaRiego(dia) {
     btnManana.setAttribute('aria-pressed', 'true');
   }
 
-  calcularRiego();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) {
+    calcularRiego();
+  }
 }
 
 /** Sincroniza botones Hoy/Mañana con `diaRiego` sin disparar el cálculo (goTab llama a calcularRiego después). */
