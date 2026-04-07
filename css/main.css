@@ -2078,9 +2078,10 @@ button.torre-summary:focus-visible,
   border-top: 1px solid var(--border);
 }
 .recarga-confirm-label {
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: 14px;
   font-weight: 700;
-  color: var(--muted);
+  color: #334155;
   margin-bottom: 8px;
   letter-spacing: 0.02em;
 }
@@ -2091,14 +2092,14 @@ button.torre-summary:focus-visible,
 }
 .btn-recarga-confirm {
   flex: 1 1 120px;
-  min-height: 44px;
-  padding: 9px 12px;
+  min-height: 46px;
+  padding: 10px 12px;
   border-radius: 10px;
   border: 1.5px solid var(--border);
   background: var(--bg3);
   color: var(--white);
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -2131,18 +2132,24 @@ button.torre-summary:focus-visible,
   border-top: 1px solid var(--border);
 }
 .recarga-subtitle {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 800;
   color: var(--white);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 .recarga-subhint {
-  font-size: 13px;
-  color: #475569;
-  color: color-mix(in srgb, var(--white) 55%, var(--muted));
-  line-height: 1.55;
-  margin: 0 0 10px;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.65;
+  margin: 0 0 12px;
+}
+.recarga-subhint strong {
+  font-weight: 800;
+  color: #0f172a;
 }
 
 /* Resumen torre */
@@ -6052,12 +6059,15 @@ button.config-option {
 }
 .recarga-parcial-stats {
   margin-top: 12px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--bg3);
   border-radius: 10px;
   border: 1px solid var(--border);
-  font-size: 13px;
-  line-height: 1.55;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.6;
 }
 .recarga-btn-full-mt {
   width: 100%;
@@ -6085,16 +6095,23 @@ button.config-option {
   gap: 10px;
 }
 .medir-recarga-switch-text {
-  font-size: 14px;
-  color: #475569;
-  color: color-mix(in srgb, var(--white) 58%, var(--muted));
-  line-height: 1.45;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.5;
 }
 .medir-recarga-switch-footnote {
-  font-size: 12px;
-  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
   margin: 10px 0 0;
-  line-height: 1.5;
+  line-height: 1.55;
+}
+.medir-recarga-switch-footnote strong {
+  font-weight: 800;
+  color: #0f172a;
 }
 .medir-notas-textarea {
   height: 70px;
