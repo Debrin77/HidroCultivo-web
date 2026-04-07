@@ -1644,6 +1644,7 @@
 
         <div id="riegoTorreResultBlock">
         <div id="riegoCiclosTorreWrap">
+        <div style="background:linear-gradient(180deg,#f8fafc 0%,#f1f5f9 100%);border:1.5px solid #cbd5e1;border-radius:14px;padding:10px 10px 8px;margin-bottom:10px">
         <div class="card-title">📋 Programa general — 07:00 a 21:00h</div>
 
         <div class="riego-programa">
@@ -1676,7 +1677,10 @@
           </div>
         </div>
 
+        </div>
+
         <!-- Programa mediodía -->
+        <div style="background:linear-gradient(180deg,#fffbeb 0%,#fef3c7 100%);border:1.5px solid #fcd34d;border-radius:14px;padding:10px 10px 8px;margin-bottom:10px">
         <div class="mediodia-header">☀️ Programa mediodía — 11:00 a 15:00h</div>
 
         <div class="riego-programa">
@@ -1705,7 +1709,10 @@
           </div>
         </div>
 
-        <div class="mediodia-header" style="margin-top:14px;opacity:0.95">🌙 Programa nocturno — 21:00 a 07:00h</div>
+        </div>
+
+        <div style="background:linear-gradient(180deg,#f8fafc 0%,#eef2ff 100%);border:1.5px solid #c7d2fe;border-radius:14px;padding:10px 10px 8px;margin-bottom:4px">
+        <div class="mediodia-header" style="margin-top:0;opacity:0.95">🌙 Programa nocturno — 21:00 a 07:00h</div>
         <p id="resNocNota" style="margin:6px 0 12px;font-size:12px;line-height:1.55;color:var(--muted);display:none"></p>
         <div class="riego-programa">
           <div class="riego-bloque">
@@ -1734,6 +1741,7 @@
             <div class="riego-stat-val" id="resNocDuty">—</div>
             <div class="riego-stat-label">% ON / ciclo</div>
           </div>
+        </div>
         </div>
         </div><!-- /riegoCiclosTorreWrap -->
 
@@ -21292,6 +21300,7 @@ async function calcularRiego() {
     const elNocEspLabel = document.querySelector('#resNocEspaciado')?.nextElementSibling;
     if (elNocEspLabel) {
       elNocEspLabel.textContent = esNocRefrescoTorreExt ? 'AM' : 'Espaciado';
+      elNocEspLabel.style.fontWeight = esNocRefrescoTorreExt ? '900' : '';
     }
     if (elNocD) {
       elNocD.textContent =
