@@ -377,24 +377,19 @@
         </div>
 
         <div class="config-section" id="panelLocalidadMeteo">
-          <div class="config-section-title" id="labelLocalidadMeteo">📍 Municipio de <span class="medir-kicker-instalacion">esta instalación</span> (avisos · clima)</div>
-          <p class="medir-help-instalacion-ubic">Lo que guardes aquí aplica <strong>solo a la instalación activa</strong> (selector en Inicio o Sistema). Cada sistema —torre vertical, NFT o DWC— puede tener su municipio y sus cálculos de riego y avisos; varias en el mismo sitio pueden compartir pueblo o usar uno distinto cada una.</p>
           <input type="text" id="inputLocalidadMeteo" placeholder="Escribe el nombre del municipio"
-            aria-labelledby="labelLocalidadMeteo" autocomplete="address-level2"
+            aria-label="Municipio de esta instalación (avisos meteorológicos y clima)"
+            autocomplete="address-level2"
             onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
-            class="medir-input-localidad-meteo">
-          <button type="button" onclick="usarMunicipioGrifoParaMeteo()" id="btnMunicipioGrifoAMeteo"
-            class="medir-btn-copiar-municipio">
-            Rellenar con el municipio del grifo (si ya lo elegiste arriba)
-          </button>
+            class="medir-input-localidad-meteo medir-input-localidad-meteo--solo">
           <div class="medir-footer-note setup-hidden">
             Fuente activa: <strong id="configMeteoFuenteActiva">Open-Meteo</strong>. La app usa respaldo automático gratuito (met.no + UV free) y caché local si hay incidencias.
           </div>
         </div>
 
-        <div class="config-section" id="panelUbicacionLuzMediciones">
+        <div class="config-section medir-panel-ubic-luz" id="panelUbicacionLuzMediciones">
           <div class="config-section-title" id="labelUbicacionLuzMed">💡 Ubicación del sistema y origen de luz (riego)</div>
-          <div class="medir-note-block">
+          <div class="medir-note-block medir-note-block--ubic-luz">
             Si el sistema está <strong>dentro de casa, armario o con LED</strong>, elige <strong>Interior</strong>: aquí marcas si la luz es <strong>natural</strong> (ventana), <strong>LED</strong>, <strong>mixta</strong>, etc., y las <strong>horas de fotoperíodo</strong>.
             En <strong>Exterior</strong> el programa usa el clima de la ubicación; estos controles no se aplican.
           </div>
@@ -15270,25 +15265,11 @@ function refreshMeteoFuenteActivaUI() {
   if (b) b.textContent = txt;
 }
 
-function usarMunicipioGrifoParaMeteo() {
-  const n = state.configAguaMunicipio;
-  if (!n) {
-    showToast('No hay municipio del grifo guardado. Elige «Agua del grifo» y tu pueblo, o escribe el municipio a mano.', true);
-    return;
-  }
-  const el = document.getElementById('inputLocalidadMeteo');
-  if (el) el.value = String(n).split(',')[0].trim();
-  persistLocalidadMeteo();
-  showToast('Municipio para avisos rellenado desde el grifo', false);
-}
-
 function cargarLocalidadMeteoUI() {
   const el = document.getElementById('inputLocalidadMeteo');
   if (!el) return;
   const v = (state.configTorre && state.configTorre.localidadMeteo) ? String(state.configTorre.localidadMeteo) : '';
   el.value = v;
-  const btn = document.getElementById('btnMunicipioGrifoAMeteo');
-  if (btn) btn.style.display = state.configAgua === 'grifo' && state.configAguaMunicipio ? 'block' : 'none';
   refreshMeteoFuenteActivaUI();
 }
 

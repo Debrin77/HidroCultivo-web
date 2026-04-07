@@ -5748,6 +5748,19 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   box-sizing: border-box;
   margin-bottom: 8px;
 }
+.medir-input-localidad-meteo--solo {
+  margin-bottom: 0;
+}
+/* Mediciones — bloque exterior/interior: título y ayuda más legibles */
+.medir-panel-ubic-luz .config-section-title {
+  font-size: clamp(17px, 4.3vw, 19px);
+  margin-bottom: 14px;
+  line-height: 1.25;
+}
+.medir-note-block--ubic-luz {
+  font-size: 13px;
+  line-height: 1.55;
+}
 .medir-btn-copiar-municipio {
   width: 100%;
   padding: 8px 12px;
