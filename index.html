@@ -1706,16 +1706,15 @@
         </div>
 
         <div class="mediodia-header" style="margin-top:14px;opacity:0.95">🌙 Programa nocturno — 21:00 a 07:00h</div>
-        <p style="margin:0 0 8px;font-size:11px;line-height:1.5;color:var(--muted);opacity:0.92">Al aire libre, el riego nocturno <strong>no es rutina</strong>: solo si se cumple una <strong>excepción</strong> climática, se sugiere un <strong>refresco corto</strong> (p. ej. <strong>~30 s hacia las 04:00</strong>), como muchos cultivadores hacen sin tocar el resto del programa. Los ciclos <strong>07:00–21:00</strong> y <strong>mediodía</strong> siguen basados solo en <strong>climatología y cultivo</strong>.</p>
         <p id="resNocNota" style="margin:6px 0 12px;font-size:12px;line-height:1.55;color:var(--muted);display:none"></p>
         <div class="riego-programa">
           <div class="riego-bloque">
             <div class="riego-bloque-val" id="resNocON">—</div>
-            <div class="riego-bloque-label">min ON</div>
+            <div class="riego-bloque-label" id="resNocLabelA">min ON</div>
           </div>
           <div class="riego-bloque">
             <div class="riego-bloque-val off" id="resNocOFF">—</div>
-            <div class="riego-bloque-label">min OFF</div>
+            <div class="riego-bloque-label" id="resNocLabelB">min OFF</div>
           </div>
         </div>
         <div class="riego-stats-row">
@@ -1757,8 +1756,7 @@
     <div class="tab-panel" id="tab-meteo" role="tabpanel" aria-labelledby="btn-meteo" aria-hidden="true">
 
       <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
-      <div style="font-size:11px;color:var(--muted);margin:-6px 0 10px 0">Fuente activa: <strong id="meteoFuenteActiva">Open-Meteo</strong></div>
-      <div style="font-size:11px;color:var(--muted);margin:-4px 0 10px 0">Sin claves manuales: ubicación del móvil/torre + fuentes gratuitas automáticas.</div>
+      <div style="font-size:11px;color:var(--muted);margin:-4px 0 10px 0">📍 Ubicación actual: <strong id="meteoUbicacionActual">—</strong></div>
 
       <!-- Loader -->
       <div id="meteoLoader" class="info-banner">
@@ -19846,6 +19844,16 @@ async function meteoFetchConFallback(baseUrl, opts = {}) {
 async function cargarMeteo() {
   const meteoLoader = document.getElementById('meteoLoader');
   if (!meteoLoader) return; // pestaña no activa — no hacer nada
+  const meteoUbicEl = document.getElementById('meteoUbicacionActual');
+  const labelUbic = (() => {
+    const cfg = state.configTorre || {};
+    const m = (cfg.localidadMeteo || '').trim();
+    if (m) return m;
+    const c = (cfg.ciudad || '').trim();
+    if (c) return c.split(',')[0].trim();
+    return 'No definida';
+  })();
+  if (meteoUbicEl) meteoUbicEl.textContent = labelUbic;
   meteoLoader.style.display = 'flex';
   const meteoDias = document.getElementById('meteoDias');
   const meteoDetalle = document.getElementById('meteoDetalle');
@@ -21198,7 +21206,7 @@ async function calcularRiego() {
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
     ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
     let usarNocCalculadoExt = false;
-    if (!esInterior && !nocSkip) {
+    if (!esInterior) {
       // Exterior: por defecto refresco fijo 30s; si la noche exige más por clima, usar programa calculado.
       usarNocCalculadoExt =
         secaNocEt ||
@@ -21208,13 +21216,11 @@ async function calcularRiego() {
       if (!usarNocCalculadoExt) {
         minONNoc = RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60;
         minCicloNoc = minONNoc + minOFFNoc;
-        ciclosNoc = minCicloNoc <= 600 ? 1 : 0;
-      } else if (
-        ciclosNoc === 0 &&
-        minCicloNoc <= 600 &&
-        demandaNoc >= riegoNocDemandaMin1Ciclo(tempMin)
-      ) {
         ciclosNoc = 1;
+        nocSkip = false;
+      } else {
+        if (ciclosNoc === 0 && minCicloNoc <= 600) ciclosNoc = 1;
+        nocSkip = false;
       }
     } else if (
       esInterior &&
@@ -21258,26 +21264,31 @@ async function calcularRiego() {
     const elNocE = document.getElementById('resNocEspaciado');
     const elNocD = document.getElementById('resNocDuty');
     const elNocNota = document.getElementById('resNocNota');
+    const elNocLabelA = document.getElementById('resNocLabelA');
+    const elNocLabelB = document.getElementById('resNocLabelB');
+    const nocSinResultado = esInterior ? (nocSkip || ciclosNoc === 0) : (ciclosNoc === 0);
+    if (elNocLabelA) elNocLabelA.textContent = esNocRefrescoTorreExt ? 'Refresco' : 'min ON';
+    if (elNocLabelB) elNocLabelB.textContent = esNocRefrescoTorreExt ? 'Hora' : 'min OFF';
     if (elNocON) {
       elNocON.textContent =
-        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(minONNoc);
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(minONNoc);
     }
     if (elNocOFF) {
       elNocOFF.textContent =
-        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? '—' : String(minOFFNoc);
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04:00' : String(minOFFNoc);
     }
-    if (elNocC) elNocC.textContent = nocSkip || ciclosNoc === 0 ? '—' : String(ciclosNoc);
+    if (elNocC) elNocC.textContent = nocSinResultado ? '—' : String(ciclosNoc);
     if (elNocT) {
       elNocT.textContent =
-        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(totalONNoc);
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(totalONNoc);
     }
     if (elNocE) {
       elNocE.textContent =
-        nocSkip || ciclosNoc === 0 ? '—' : esNocRefrescoTorreExt ? '~04:00' : String(espNoc);
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '~04:00' : String(espNoc);
     }
     if (elNocD) {
       elNocD.textContent =
-        nocSkip || ciclosNoc === 0 || dutyNocPct == null ? '—' : dutyNocPct + '%';
+        nocSinResultado || dutyNocPct == null ? '—' : dutyNocPct + '%';
     }
     if (elNocNota) {
       // Mantener lógica interna, pero ocultar razones técnicas al usuario final.
