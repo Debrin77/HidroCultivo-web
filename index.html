@@ -19605,6 +19605,26 @@ function vpdEstado(vpd) {
 // ── Open‑Meteo: fetch rápido con timeout + fallback + caché corta ───────────
 const _meteoFastCache = new Map();
 const _meteoFastInflight = new Map();
+const METEO_LS_CACHE_PREFIX = 'hc_meteo_cache_v1:';
+
+function meteoReadLsCache(cacheKey) {
+  try {
+    const raw = localStorage.getItem(METEO_LS_CACHE_PREFIX + cacheKey);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== 'object') return null;
+    if (!Number.isFinite(obj.at) || !('data' in obj)) return null;
+    return obj;
+  } catch (_) {
+    return null;
+  }
+}
+
+function meteoWriteLsCache(cacheKey, payload) {
+  try {
+    localStorage.setItem(METEO_LS_CACHE_PREFIX + cacheKey, JSON.stringify(payload));
+  } catch (_) {}
+}
 
 async function meteoFetchJsonTimeout(url, timeoutMs) {
   if (typeof AbortController === 'undefined') {
@@ -19624,22 +19644,27 @@ async function meteoFetchJsonTimeout(url, timeoutMs) {
 }
 
 async function meteoFetchConFallback(baseUrl, opts = {}) {
-  const timeoutMs = opts.timeoutMs ?? 4800;
+  const timeoutMs = opts.timeoutMs ?? 8000;
   const ttlMs = opts.ttlMs ?? 120000;
   const staleMs = opts.staleMs ?? (24 * 60 * 60 * 1000);
   const cacheKey = opts.cacheKey || baseUrl;
   const now = Date.now();
-  const c = _meteoFastCache.get(cacheKey);
+  const cMem = _meteoFastCache.get(cacheKey);
+  const cLs = meteoReadLsCache(cacheKey);
+  const c = cMem || cLs;
   if (c && now - c.at < ttlMs) return c.data;
   if (_meteoFastInflight.has(cacheKey)) return _meteoFastInflight.get(cacheKey);
 
   const p = (async () => {
     let lastErr = null;
-    for (const url of [baseUrl + '&models=ecmwf_ifs', baseUrl]) {
+    // Primero intento rápido sin fijar modelo; si falla, pruebo modelo explícito.
+    for (const url of [baseUrl, baseUrl + '&models=ecmwf_ifs']) {
       try {
         const j = await meteoFetchJsonTimeout(url, timeoutMs);
         if (j && !j.error) {
-          _meteoFastCache.set(cacheKey, { at: Date.now(), data: j });
+          const pack = { at: Date.now(), data: j };
+          _meteoFastCache.set(cacheKey, pack);
+          meteoWriteLsCache(cacheKey, pack);
           return j;
         }
         const r = j && j.reason;
@@ -19717,6 +19742,8 @@ async function cargarMeteo() {
     } else {
       meteoData.daily.uv_index_max = new Array(7).fill(0);
     }
+    state._meteoForecastCache = meteoData;
+    saveState();
 
     renderMeteoDias();
     seleccionarDia(0);
@@ -19730,8 +19757,22 @@ async function cargarMeteo() {
     await renderMeteoAvisosPanelCompleto();
 
   } catch(e) {
+    const cached = state._meteoForecastCache;
+    if (cached && cached.daily && cached.hourly) {
+      meteoData = cached;
+      try {
+        renderMeteoDias();
+        seleccionarDia(0);
+        document.getElementById('meteoLoader').style.display = 'none';
+        document.getElementById('meteoDias').style.display = 'flex';
+        document.getElementById('meteoDetalle').style.display = 'block';
+        if (document.getElementById('meteoAvisosOficiales')) document.getElementById('meteoAvisosOficiales').style.display = 'flex';
+        document.getElementById('meteoAlertas').style.display = 'flex';
+        return;
+      } catch (_) {}
+    }
     document.getElementById('meteoLoader').innerHTML =
-      '<span>❌</span><span>Error al cargar datos. Verificar conexión.</span>';
+      '<span>❌</span><span>Error al cargar datos. Revisa conexión o espera unos segundos.</span>';
   }
 }
 
