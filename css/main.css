@@ -5729,6 +5729,13 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   line-height: 1.5;
   margin-bottom: 10px;
 }
+.medir-note-block--humedad-fino {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #475569;
+  color: color-mix(in srgb, var(--white) 78%, var(--muted));
+  margin-bottom: 12px;
+}
 .medir-check-row {
   display: flex;
   align-items: center;

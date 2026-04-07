@@ -568,11 +568,9 @@
             <span class="config-section-collapse-title" id="labelSensorSustrato">📡 Ajuste fino de humedad (opcional)</span>
           </button>
           <div class="config-section-collapse-body" id="collapseBodyHumedadFino">
-          <div class="medir-note-block">
-            El riego normal ya usa el <strong>tipo de sustrato</strong> (ciclos de fábrica / referencia) y el clima.
-            Aquí solo un <strong>toque ±3 %</strong> si anotas % con un <strong>medidor de sustrato 4 en 1</strong> (o similar) o a ojo; no hace falta laboratorio.
-            <strong>Entre riegos</strong>, en esponja suele leerse zona «normal» / intermedia en el medidor: es <strong>habitual y no implica fallo</strong> del programa; sirve solo si quieres afinar este ajuste.
-            Objetivo por defecto ≈ valores medios orientativos según sustrato (lana, esponja…).
+          <div class="medir-note-block medir-note-block--humedad-fino">
+            Corrección opcional de <strong>±3&nbsp;%</strong> sobre el riego que ya calcula la app (sustrato + clima), usando tu <strong>% de humedad</strong> en el sustrato (medidor, sonda u ojo).
+            Entre riegos, lecturas <strong>medias</strong> suelen ser normales. El <strong>objetivo</strong> por defecto va ligado al sustrato elegido arriba.
           </div>
           <label class="medir-check-row medir-mb-12 fs-13">
             <input type="checkbox" id="sensorSustratoActivo" onchange="persistSensorSustrato()"
