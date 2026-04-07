@@ -21285,7 +21285,8 @@ async function calcularRiego() {
     if (elNocE) {
       elNocE.textContent =
         nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04:00' : String(espNoc);
-      elNocE.style.fontSize = esNocRefrescoTorreExt ? '30px' : '';
+      elNocE.style.fontSize = esNocRefrescoTorreExt ? '20px' : '';
+      elNocE.style.whiteSpace = 'nowrap';
     }
     if (elNocD) {
       elNocD.textContent =
