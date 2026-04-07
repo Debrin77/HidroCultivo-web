@@ -16998,17 +16998,16 @@ function abrirOverlayTablaCultivosChecklist() {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', 'clTablaCultivosTit');
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10085;display:flex;align-items:center;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));';
+  overlay.className = 'checklist-dark-overlay checklist-dark-overlay--tabla';
   overlay.innerHTML =
-    '<div style="background:var(--bg2,#1e293b);border:1.5px solid var(--border,#334155);border-radius:16px;width:100%;max-width:520px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;color:var(--white,#f8fafc)">' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border,#334155);flex-shrink:0">' +
-        '<div id="clTablaCultivosTit" style="font-family:var(--font-display);font-size:16px;font-weight:800">EC y pH por cultivo</div>' +
-        '<button type="button" id="clTablaCultivosCerrar" style="flex-shrink:0;width:40px;height:40px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:18px;font-weight:800;cursor:pointer" aria-label="Cerrar">✕</button>' +
+    '<div class="checklist-dark-sheet checklist-dark-sheet--tabla">' +
+      '<div class="checklist-tabla-head">' +
+        '<div id="clTablaCultivosTit" class="checklist-tabla-title">EC y pH por cultivo</div>' +
+        '<button type="button" id="clTablaCultivosCerrar" class="checklist-tabla-close" aria-label="Cerrar">✕</button>' +
       '</div>' +
-      '<div id="clTablaCultivosBody" style="padding:14px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch;font-size:12px;line-height:1.45"></div>' +
-      '<div style="padding:12px 16px calc(12px + env(safe-area-inset-bottom,0));border-top:1px solid var(--border,#334155);flex-shrink:0">' +
-        '<button type="button" id="clTablaCultivosVolver" style="width:100%;padding:12px;background:#0d9488;color:#fff;border:none;border-radius:12px;font-family:var(--font-display);font-size:14px;font-weight:800;cursor:pointer">Volver al checklist</button>' +
+      '<div id="clTablaCultivosBody" class="checklist-tabla-body"></div>' +
+      '<div class="checklist-tabla-footer">' +
+        '<button type="button" id="clTablaCultivosVolver" class="checklist-tabla-back">Volver al checklist</button>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -17054,17 +17053,14 @@ function renderChecklist() {
       }
       if (c.type === 'checkbox') {
         const lblExtra = c.labelClass ? ' ' + c.labelClass : '';
-        const chkStyle = c.labelClass
-          ? ''
-          : 'margin-top:3px;flex-shrink:0;width:18px;height:18px;accent-color:#15803d';
-        const lblInline = c.labelClass
-          ? ''
-          : ' style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-top:8px"';
-        return `<label class="cl-field${lblExtra}"${lblInline}>
-          <input type="checkbox" id="${c.id}"${chkStyle ? ' style="' + chkStyle + '"' : ''}
+        const chkClass = c.labelClass ? '' : ' class="cl-checkbox-inline-input"';
+        const lblClass = c.labelClass ? '' : ' cl-field--inline-check';
+        const spanClass = c.labelClass ? '' : ' class="cl-inline-check-text"';
+        return `<label class="cl-field${lblExtra}${lblClass}">
+          <input type="checkbox" id="${c.id}"${chkClass}
             ${c.checked ? 'checked' : ''}
             ${c._clOnchange ? ' onchange="' + c._clOnchange + '"' : ''}>
-          <span${c.labelClass ? '' : ' style="font-size:12px;line-height:1.45;color:var(--muted)"'}>${c.label || ''}</span>
+          <span${spanClass}>${c.label || ''}</span>
         </label>`;
       }
       const valAttr = (c.value != null && c.value !== '')
@@ -17421,10 +17417,7 @@ function renderFiltroTorres() {
   const todas = [{ id: null, nombre: 'Todas', emoji: '📊' }, ...state.torres];
   btns.innerHTML = todas.map(t =>
     '<button onclick="setFiltroTorre(' + JSON.stringify(t.id) + ')" ' +
-    'style="padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;' +
-    'border:1.5px solid ' + (filtroTorreActivo === t.id ? '#16a34a' : '#e5e7eb') + ';' +
-    'background:' + (filtroTorreActivo === t.id ? '#f0fdf4' : '#fff') + ';' +
-    'color:' + (filtroTorreActivo === t.id ? '#15803d' : '#374151') + '">' +
+    'class="hist-torre-filter-btn' + (filtroTorreActivo === t.id ? ' active' : '') + '">' +
     (t.emoji||'🌿') + ' ' + t.nombre + '</button>'
   ).join('');
 }
@@ -17443,7 +17436,7 @@ function renderMiniChart(containerId, datos, min, max, color, colorBad) {
 
   const ultimos = datos.slice(-14);
   if (ultimos.length === 0) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;width:100%;padding:10px">Sin datos</div>';
+    el.innerHTML = '<div class="chart-empty-msg">Sin datos</div>';
     return;
   }
 
@@ -17467,8 +17460,8 @@ function renderMiniChart(containerId, datos, min, max, color, colorBad) {
     const col = document.createElement('div');
     col.className = 'chart-bar-col';
     col.innerHTML = `
-      <div class="chart-bar-inner" style="height:${pct}%;background:${c};border-radius:3px 3px 0 0"></div>
-      <div class="chart-date" style="font-size:9px;color:var(--muted)">${showDate ? fechaLabel : ''}</div>
+      <div class="chart-bar-inner" style="height:${pct}%;background:${c}"></div>
+      <div class="chart-date">${showDate ? fechaLabel : ''}</div>
     `;
     el.appendChild(col);
   });
@@ -17598,9 +17591,7 @@ async function hydrateRegistroFotoThumbs(container) {
       const img = document.createElement('img');
       img.src = o.data;
       img.alt = 'Foto: ' + variedad;
-      img.style.cssText =
-        'width:100%;max-width:220px;max-height:180px;object-fit:cover;border-radius:10px;' +
-        'border:1px solid #e5e7eb;cursor:pointer;display:block;margin-top:8px';
+      img.className = 'registro-foto-img';
       img.addEventListener('click', () => verFotoCompletaDiario(o.data, variedad, fecha));
       slot.replaceWith(img);
     } catch (_) { /* clave ausente en IDB */ }
@@ -17616,16 +17607,15 @@ function renderRegistro() {
     let extra = '';
     if (nMeds > 0) {
       extra =
-        '<div style="margin-top:14px">' +
+        '<div class="registro-empty-actions">' +
         '<button type="button" onclick="importarMedicionesAlRegistro()" ' +
-        'class="btn btn-primary" style="width:100%;padding:12px;border-radius:12px;font-family:var(--font-display);' +
-        'font-size:13px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent">' +
+        'class="btn btn-primary registro-import-btn">' +
         '↓ Importar ' + nMeds + ' mediciones al registro</button>' +
-        '<div style="font-size:10px;color:var(--muted);margin-top:8px;line-height:1.4">' +
+        '<div class="registro-empty-help">' +
         'Útil si empezaste a medir antes de usar esta lista. Las nuevas acciones se añaden solas.</div></div>';
     }
     lista.innerHTML =
-      '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px">' +
+      '<div class="registro-empty-box">' +
       '📋 El registro agrupa mediciones, <strong>recargas completas</strong>, <strong>reposiciones parciales</strong> (litros añadidos, agua o agua+nutrientes sin vaciar), cosechas y fotos de plantas en una línea de tiempo.' +
       extra + '</div>';
     return;
@@ -17661,7 +17651,7 @@ function renderRegistro() {
           e.vol  ? '🪣 ' + e.vol + 'L'   : '',
           (e.humSustrato != null && String(e.humSustrato).trim() !== '') ? '💧 sustr. ' + e.humSustrato + '%' : '',
         ].filter(Boolean).join(' · ');
-        if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+        if (e.notas) detalle += '<br><span class="registro-note-sub">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'recarga') {
         detalle = [
           e.ecFinal  ? '⚡ EC final: ' + e.ecFinal + ' µS' : '',
@@ -17671,13 +17661,13 @@ function renderRegistro() {
           (e.phMasMl != null && String(e.phMasMl).trim() !== '') ? '⬆️ pH+: ' + e.phMasMl + ' ml' : '',
           (e.phMenosMl != null && String(e.phMenosMl).trim() !== '') ? '⬇️ pH−: ' + e.phMenosMl + ' ml' : '',
         ].filter(Boolean).join(' · ');
-        if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+        if (e.notas) detalle += '<br><span class="registro-note-sub">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'cosecha') {
         detalle = e.variedad || '';
         if (e.nivel) detalle += ' · N' + e.nivel + ' C' + e.cesta;
         if (e.fechaSiembra) detalle += ' · 🌱 ' + e.fechaSiembra;
         if (e.diasCultivo) detalle += ' · ' + e.diasCultivo + ' días';
-        if (e.notas) detalle += '<br><span style="color:var(--muted);font-size:10px">📝 ' + e.notas + '</span>';
+        if (e.notas) detalle += '<br><span class="registro-note-sub">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'foto_sistema') {
         detalle = 'Vista completa de la instalación';
         if (e.fotoFecha) detalle += ' · 📅 ' + e.fotoFecha;
@@ -17686,9 +17676,7 @@ function renderRegistro() {
             '<div class="registro-foto-thumb" data-foto-key="' + escRegistroAttr(e.fotoKey) + '" ' +
             'data-variedad="' + escRegistroAttr('Vista del sistema') + '" ' +
             'data-fecha="' + escRegistroAttr(e.fotoFecha || e.fecha || '') + '" ' +
-            'style="margin-top:8px;width:100%;max-width:220px;aspect-ratio:4/3;background:#f3f4f6;' +
-            'border-radius:10px;border:1px solid #e5e7eb;display:flex;align-items:center;' +
-            'justify-content:center;font-size:28px;color:#9ca3af">🏗</div>';
+            'class="registro-foto-thumb registro-foto-thumb--placeholder">🏗</div>';
         }
       } else if (e.tipo === 'foto') {
         detalle = (e.variedad || 'Planta');
@@ -17700,9 +17688,7 @@ function renderRegistro() {
             '<div class="registro-foto-thumb" data-foto-key="' + escRegistroAttr(e.fotoKey) + '" ' +
             'data-variedad="' + escRegistroAttr(e.variedad || 'Planta') + '" ' +
             'data-fecha="' + escRegistroAttr(e.fotoFecha || e.fecha || '') + '" ' +
-            'style="margin-top:8px;width:100%;max-width:220px;aspect-ratio:4/3;background:#f3f4f6;' +
-            'border-radius:10px;border:1px solid #e5e7eb;display:flex;align-items:center;' +
-            'justify-content:center;font-size:28px;color:#9ca3af">📸</div>';
+            'class="registro-foto-thumb registro-foto-thumb--placeholder">📸</div>';
         }
       } else if (e.tipo === 'reposicion') {
         const Lnum = typeof e.litros === 'number' ? e.litros : parseFloat(e.litros);
@@ -17716,11 +17702,10 @@ function renderRegistro() {
         }
       }
       const globalIdx = entries.indexOf(e);
-      return '<div style="background:' + c.bg + ';border:1px solid ' + c.border + ';border-radius:10px;' +
-        'padding:10px 12px;margin-bottom:6px">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">' +
-          '<div style="display:flex;align-items:center;gap:6px">' +
-            '<span style="font-family:var(--font-display);font-size:12px;font-weight:800;color:' + c.color + '">' +
+      return '<div class="registro-entry-card" style="background:' + c.bg + ';border-color:' + c.border + '">' +
+        '<div class="registro-entry-head">' +
+          '<div class="registro-entry-left">' +
+            '<span class="registro-entry-badge" style="color:' + c.color + '">' +
               badgeIcon + ' ' +
               (e.tipo === 'foto_sistema'
                 ? 'Foto sistema'
@@ -17733,26 +17718,22 @@ function renderRegistro() {
                       : (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
             '</span>' +
             (e.torreNombre && state.torres && state.torres.length > 1 ?
-              '<span style="font-size:9px;font-weight:700;color:#15803d;background:#f0fdf4;' +
-              'border:1px solid #86efac;border-radius:6px;padding:1px 5px">' +
+              '<span class="registro-entry-torre-chip">' +
               (e.torreEmoji||'🌿') + ' ' + e.torreNombre + '</span>' : '') +
           '</div>' +
-          '<div style="display:flex;align-items:center;gap:8px">' +
-            '<span style="font-size:11px;color:var(--muted)">' + (e.hora||'') + '</span>' +
+          '<div class="registro-entry-right">' +
+            '<span class="registro-entry-time">' + (e.hora||'') + '</span>' +
             '<button onclick="borrarEntradaRegistro(' + globalIdx + ')" ' +
-              'style="background:none;border:none;font-size:14px;cursor:pointer;color:#dc2626;' +
-              'padding:2px 4px;-webkit-tap-highlight-color:transparent;min-width:28px;min-height:28px"' +
+              'class="registro-entry-delete"' +
               ' title="Borrar entrada">🗑</button>' +
           '</div>' +
         '</div>' +
-        '<div style="font-size:12px;color:#374151;line-height:1.6">' + detalle + '</div>' +
+        '<div class="registro-entry-detail">' + detalle + '</div>' +
         '</div>';
     }).join('');
 
-    return '<div style="margin-bottom:14px">' +
-      '<div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:var(--muted);' +
-        'text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;padding-bottom:4px;' +
-        'border-bottom:1px solid var(--border)">' + fecha + '</div>' +
+    return '<div class="registro-dia-wrap">' +
+      '<div class="registro-dia-title">' + fecha + '</div>' +
       cols + '</div>';
   }).join('');
   void hydrateRegistroFotoThumbs(lista);
@@ -17782,26 +17763,22 @@ function renderHistMediciones() {
 
   // Tabla
   const tabla = document.getElementById('histTabla');
-  tabla.innerHTML = mediciones.map((m, i) => `
-    <div class="hist-row" style="${i===0 ? 'background:rgba(52,211,153,0.05)' : ''}">
+    tabla.innerHTML = mediciones.map((m, i) => `
+    <div class="hist-row${i===0 ? ' hist-row--latest' : ''}">
       <span class="hist-fecha"><span class="hist-fecha-dia">${m.fecha}</span><br>
-        <span class="hist-fecha-hora" style="font-size:12px;color:var(--muted)">${m.hora}</span>
-        ${m.torreNombre && state.torres && state.torres.length > 1 ? `<span style="display:inline-block;margin-top:2px;font-size:9px;
-          font-weight:700;color:#15803d;background:#f0fdf4;border:1px solid #86efac;
-          border-radius:6px;padding:1px 5px">${m.torreEmoji||'🌿'} ${m.torreNombre}</span>` : ''}
+        <span class="hist-fecha-hora">${m.hora}</span>
+        ${m.torreNombre && state.torres && state.torres.length > 1 ? `<span class="hist-torre-chip">${m.torreEmoji||'🌿'} ${m.torreNombre}</span>` : ''}
       </span>
       <span class="hist-val ${getClaseVal('ec',   m.ec)}">${m.ec   || '—'}</span>
       <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
       <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
       <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
       <span class="hist-val">${(m.humSustrato != null && String(m.humSustrato).trim() !== '') ? m.humSustrato : '—'}</span>
-      <span style="display:flex;align-items:center;justify-content:flex-end">
+      <span class="hist-action-cell">
         <button onclick="borrarMedicion(${i})"
-          style="background:none;border:none;font-size:15px;cursor:pointer;
-                 color:#dc2626;padding:8px;-webkit-tap-highlight-color:transparent;
-                 min-width:44px;min-height:44px" aria-label="Borrar esta medición">🗑</button>
+          class="hist-btn-delete" aria-label="Borrar esta medición">🗑</button>
       </span>
-      ${m.notas ? `<span class="hist-val" style="grid-column:1/-1;font-size:10px;color:var(--muted);padding-top:0">📝 ${m.notas}</span>` : ''}
+      ${m.notas ? `<span class="hist-val hist-note-line">📝 ${m.notas}</span>` : ''}
     </div>
   `).join('');
 }
@@ -17814,7 +17791,7 @@ function renderHistRecargas() {
 
   if (recargas.length === 0 && (!histRecargasDatos || histRecargasDatos.length === 0)) {
     if (localSection) localSection.innerHTML =
-      '<div style="padding:16px;text-align:center;color:var(--muted);font-size:13px">' +
+      '<div class="hist-recargas-empty">' +
       '🔄 Sin recargas registradas aún.<br>Completa el checklist de recarga para ver el historial.</div>';
     return;
   }
@@ -17822,47 +17799,46 @@ function renderHistRecargas() {
   // Recargas locales — tarjetas detalladas
   if (localSection && recargas.length > 0) {
     localSection.innerHTML = recargas.slice(0, 10).map((r, i) => `
-      <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:14px;
-                  padding:14px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05)">
+      <div class="hist-recarga-card">
         <!-- Cabecera -->
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="hist-recarga-head">
           <div>
-            <div style="font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--white)">
+            <div class="hist-recarga-title">
               🔄 Recarga #${recargas.length - i}
             </div>
-            <div style="font-size:12px;color:var(--muted)">${r.fecha} · ${r.hora}</div>
-            ${r.nutrienteNombre ? '<div style="font-size:10px;color:#86efac;margin-top:3px">🧪 ' + r.nutrienteNombre + '</div>' : ''}
+            <div class="hist-recarga-date">${r.fecha} · ${r.hora}</div>
+            ${r.nutrienteNombre ? '<div class="hist-recarga-nutriente">🧪 ' + r.nutrienteNombre + '</div>' : ''}
           </div>
-          ${r.ecFinal ? '<div style="font-family:var(--font-display);font-size:22px;font-weight:900;color:var(--green)">' + r.ecFinal + '<span style="font-size:11px;font-weight:600"> µS</span></div>' : ''}
+          ${r.ecFinal ? '<div class="hist-recarga-ec">' + r.ecFinal + '<span class="hist-recarga-ec-unit"> µS</span></div>' : ''}
         </div>
 
         <!-- Grid parámetros -->
-        <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:10px">
-          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">CalMag</div>
-            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--green)">${r.calmagMl || '—'}<span style="font-size:9px">ml</span></div>
+        <div class="hist-recarga-grid">
+          <div class="hist-recarga-cell">
+            <div class="hist-recarga-cell-lab">CalMag</div>
+            <div class="hist-recarga-cell-val hist-recarga-cell-val--green">${r.calmagMl || '—'}<span class="hist-recarga-cell-unit">ml</span></div>
           </div>
-          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">Abono</div>
-            <div style="font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--blue);line-height:1.25">${[r.vegaAMl, r.vegaBMl, r.vegaCMl].filter(x => x != null && String(x).trim() !== '').join(' + ') || '—'}<span style="font-size:9px">ml</span></div>
+          <div class="hist-recarga-cell">
+            <div class="hist-recarga-cell-lab">Abono</div>
+            <div class="hist-recarga-cell-val hist-recarga-cell-val--blue hist-recarga-cell-val--abono">${[r.vegaAMl, r.vegaBMl, r.vegaCMl].filter(x => x != null && String(x).trim() !== '').join(' + ') || '—'}<span class="hist-recarga-cell-unit">ml</span></div>
           </div>
-          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">pH+</div>
-            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--gold)">${r.phMasMl || '—'}<span style="font-size:9px">ml</span></div>
+          <div class="hist-recarga-cell">
+            <div class="hist-recarga-cell-lab">pH+</div>
+            <div class="hist-recarga-cell-val hist-recarga-cell-val--gold">${r.phMasMl || '—'}<span class="hist-recarga-cell-unit">ml</span></div>
           </div>
-          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">pH−</div>
-            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:#7dd3fc">${r.phMenosMl || '—'}<span style="font-size:9px">ml</span></div>
+          <div class="hist-recarga-cell">
+            <div class="hist-recarga-cell-lab">pH−</div>
+            <div class="hist-recarga-cell-val hist-recarga-cell-val--sky">${r.phMenosMl || '—'}<span class="hist-recarga-cell-unit">ml</span></div>
           </div>
-          <div style="background:var(--bg3);border-radius:10px;padding:7px 4px;text-align:center;min-width:0">
-            <div style="font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:600">pH final</div>
-            <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:var(--blue)">${r.phFinal || '—'}</div>
+          <div class="hist-recarga-cell">
+            <div class="hist-recarga-cell-lab">pH final</div>
+            <div class="hist-recarga-cell-val hist-recarga-cell-val--blue">${r.phFinal || '—'}</div>
           </div>
         </div>
 
         <!-- Observaciones si las hay -->
         ${r.colorAgua || r.estadoPlantas ? `
-        <div style="background:var(--bg3);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--muted)">
+        <div class="hist-recarga-obs">
           ${r.colorAgua ? '🎨 Agua: ' + r.colorAgua + ' · ' : ''}
           ${r.estadoPlantas ? '🌿 Plantas: ' + r.estadoPlantas : ''}
         </div>` : ''}
@@ -17882,12 +17858,12 @@ function renderHistRecargas() {
         const ph     = limpiarVal(r[2]);
         const calmag = limpiarVal(r[4]);
         const phmas  = limpiarVal(r[7]);
-        return '<div class="hist-row" style="grid-template-columns:70px 1fr 1fr 1fr 1fr">' +
+        return '<div class="hist-row hist-row--recargas-sheets">' +
           '<span class="hist-fecha">' + fecha + '</span>' +
           '<span class="hist-val ' + getClaseVal('ec', ec) + '">' + (ec !== null ? ec : '—') + '</span>' +
           '<span class="hist-val ' + getClaseVal('ph', ph) + '">' + (ph !== null ? ph : '—') + '</span>' +
-          '<span class="hist-val" style="color:var(--green);font-weight:700">' + (calmag !== null ? calmag+'ml' : '—') + '</span>' +
-          '<span class="hist-val" style="color:var(--muted)">' + (phmas !== null ? phmas+'ml' : '0ml') + '</span>' +
+          '<span class="hist-val hist-val--green">' + (calmag !== null ? calmag+'ml' : '—') + '</span>' +
+          '<span class="hist-val hist-val--muted">' + (phmas !== null ? phmas+'ml' : '0ml') + '</span>' +
           '</div>';
       }).join('');
     }

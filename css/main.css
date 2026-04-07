@@ -3177,8 +3177,15 @@ button.dia-card {
   min-height: 2px;
   transition: height 0.4s ease;
 }
+.chart-empty-msg {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  width: 100%;
+  padding: 10px;
+}
 .chart-date {
-  font-size: 8px;
+  font-size: 9px;
   color: var(--muted);
   margin-top: 3px;
   white-space: nowrap;
@@ -3241,6 +3248,8 @@ button.dia-card {
   min-width: 0;
 }
 .hist-row:first-child { border-top: none; }
+.hist-row--latest { background: rgba(52, 211, 153, 0.05); }
+.hist-row--recargas-sheets { grid-template-columns: 70px 1fr 1fr 1fr 1fr; }
 .hist-row > span {
   min-width: 0;
 }
@@ -3258,7 +3267,100 @@ button.dia-card {
 .hist-fecha-dia {
   white-space: nowrap;
 }
+.hist-fecha-hora { font-size: 12px; color: var(--muted); }
+.hist-torre-chip {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  padding: 1px 5px;
+}
 .hist-val { font-family: var(--font-display); font-weight: 700; }
+.hist-val--green { color: var(--green); }
+.hist-val--muted { color: var(--muted); }
+.hist-action-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.hist-btn-delete {
+  background: none;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  color: #dc2626;
+  padding: 8px;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 44px;
+  min-height: 44px;
+}
+.hist-note-line {
+  grid-column: 1 / -1;
+  font-size: 10px;
+  color: var(--muted);
+  padding-top: 0;
+}
+.hist-recargas-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 13px; }
+.hist-recarga-card {
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+.hist-recarga-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.hist-recarga-title { font-family: var(--font-display); font-size: 14px; font-weight: 800; color: var(--white); }
+.hist-recarga-date { font-size: 12px; color: var(--muted); }
+.hist-recarga-nutriente { font-size: 10px; color: #86efac; margin-top: 3px; }
+.hist-recarga-ec { font-family: var(--font-display); font-size: 22px; font-weight: 900; color: var(--green); }
+.hist-recarga-ec-unit { font-size: 11px; font-weight: 600; }
+.hist-recarga-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  margin-bottom: 10px;
+}
+.hist-recarga-cell {
+  background: var(--bg3);
+  border-radius: 10px;
+  padding: 7px 4px;
+  text-align: center;
+  min-width: 0;
+}
+.hist-recarga-cell-lab {
+  font-size: 8px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.hist-recarga-cell-val {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+.hist-recarga-cell-val--abono { font-size: 13px; line-height: 1.25; }
+.hist-recarga-cell-val--green { color: var(--green); }
+.hist-recarga-cell-val--blue { color: var(--blue); }
+.hist-recarga-cell-val--gold { color: var(--gold); }
+.hist-recarga-cell-val--sky { color: #7dd3fc; }
+.hist-recarga-cell-unit { font-size: 9px; }
+.hist-recarga-obs {
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
 .hist-ultima-medicion {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -3324,6 +3426,21 @@ button.dia-card {
 .hist-val.warn { color: var(--gold); }
 .hist-val.bad  { color: var(--red); }
 .hist-tabla-col-actions { padding: 0; }
+.hist-torre-filter-btn {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+}
+.hist-torre-filter-btn.active {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+}
 
 /* ══ CHECKLIST INTEGRADO ══ */
 .checklist-overlay {
@@ -3521,6 +3638,21 @@ button.checklist-close {
 .cl-field input:focus, .cl-field select:focus { border-color: var(--green); }
 .cl-field input.wide { width: 150px; }
 .cl-field .unit { font-size: 11px; color: var(--muted); }
+.cl-field--inline-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.cl-checkbox-inline-input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #15803d;
+}
+.cl-inline-check-text { font-size: 12px; line-height: 1.45; color: var(--muted); }
 
 /* CalMag en paso 4 — activado muy visible (:has para estado checked) */
 label.cl-field.cl-calmag-option {
@@ -3746,6 +3878,10 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
 }
 .checklist-dark-overlay--ruta { z-index: 10030; }
 .checklist-dark-overlay--datos { z-index: 10020; }
+.checklist-dark-overlay--tabla {
+  z-index: 10085;
+  align-items: center;
+}
 .checklist-dark-sheet {
   background: var(--bg2, #1e293b);
   border: 1.5px solid var(--border, #334155);
@@ -3844,6 +3980,153 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   border: none;
   font-size: 12px;
 }
+.checklist-dark-sheet--tabla {
+  border-radius: 16px;
+  max-width: 520px;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.checklist-tabla-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border, #334155);
+  flex-shrink: 0;
+}
+.checklist-tabla-title { font-family: var(--font-display); font-size: 16px; font-weight: 800; }
+.checklist-tabla-close {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  color: var(--white);
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.checklist-tabla-body {
+  padding: 14px 16px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.checklist-tabla-footer {
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0));
+  border-top: 1px solid var(--border, #334155);
+  flex-shrink: 0;
+}
+.checklist-tabla-back {
+  width: 100%;
+  padding: 12px;
+  background: #0d9488;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.registro-foto-img {
+  width: 100%;
+  max-width: 220px;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  display: block;
+  margin-top: 8px;
+}
+.registro-foto-thumb--placeholder {
+  margin-top: 8px;
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 4 / 3;
+  background: #f3f4f6;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #9ca3af;
+}
+.registro-empty-box { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
+.registro-empty-actions { margin-top: 14px; }
+.registro-import-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.registro-empty-help { font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.4; }
+.registro-note-sub { color: var(--muted); font-size: 10px; }
+.registro-dia-wrap { margin-bottom: 14px; }
+.registro-dia-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.registro-entry-card {
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+}
+.registro-entry-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.registro-entry-left { display: flex; align-items: center; gap: 6px; }
+.registro-entry-badge {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 800;
+}
+.registro-entry-torre-chip {
+  font-size: 9px;
+  font-weight: 700;
+  color: #15803d;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+.registro-entry-right { display: flex; align-items: center; gap: 8px; }
+.registro-entry-time { font-size: 11px; color: var(--muted); }
+.registro-entry-delete {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  color: #dc2626;
+  padding: 2px 4px;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 28px;
+  min-height: 28px;
+}
+.registro-entry-detail { font-size: 12px; color: #374151; line-height: 1.6; }
 
 /* Tutoriales — sheet inferior (JS innerHTML) */
 .tut-strong-green { color: #15803d; }
