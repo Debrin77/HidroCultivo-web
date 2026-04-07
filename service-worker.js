@@ -2,7 +2,7 @@
  * HidroCultivo — Service Worker ligero (PWA).
  * Precache: shell offline básico. APIs (Open-Meteo, etc.) siguen yendo a red.
  */
-const CACHE_NAME = 'hidrocultivo-shell-v3';
+const CACHE_NAME = 'hidrocultivo-shell-v4';
 const PRECACHE_URLS = [
   './index.html',
   './manifest.json',
@@ -45,6 +45,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  const url = req.url || '';
+  // Evita errores de FetchEvent con esquemas no gestionables (chrome-extension:, data:, etc.)
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return;
+  // No interceptar llamadas a APIs externas (AEMET/Open-Meteo/met.no/etc.).
+  // Así evitamos errores de respondWith y dejamos que el navegador gestione CORS/errores de red.
+  const u = new URL(url);
+  if (u.origin !== self.location.origin) return;
 
   // Documento: red primero; si falla (offline), sirve el shell cacheado
   if (req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html')) {
@@ -55,5 +62,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Resto: red (sin estrategia agresiva — evita romper APIs y fuentes)
-  event.respondWith(fetch(req).catch(() => caches.match(req)));
+  event.respondWith(
+    fetch(req).catch(() => caches.match(req).then((r) => r || Response.error()))
+  );
 });
