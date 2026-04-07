@@ -600,6 +600,11 @@ body::before { display: none; }
   line-height: 1.5;
   margin: 0 0 12px;
 }
+.hc-help-backup-brief {
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
 .hc-code-tiny { font-size: 10px; }
 .hc-btn-tap {
   cursor: pointer;
@@ -672,13 +677,13 @@ body::before { display: none; }
 }
 .torre-vista-btn {
   flex-shrink: 0;
-  padding: 7px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
   border: 1px solid rgba(15, 23, 42, 0.1);
   background: #f8fafc;
   color: #64748b;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -749,15 +754,15 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 }
 .torre-esquema-intro {
   text-align: center;
-  font-size: 11px;
-  line-height: 1.55;
-  color: #64748b;
-  padding: 0 10px 12px;
-  max-width: 40rem;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #475569;
+  padding: 0 12px 14px;
+  max-width: 42rem;
   margin: 0 auto;
 }
 .torre-esquema-intro strong {
-  color: #334155;
+  color: #1e293b;
   font-weight: 800;
 }
 .torre-diagram-toolbar {
@@ -767,19 +772,19 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
-  padding: 9px 12px;
+  padding: 11px 14px;
   background: #fff;
   border: 1px solid rgba(15, 23, 42, 0.07);
   border-radius: 14px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 .torre-diagram-legend {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #94a3b8;
-  line-height: 1.45;
+  color: #64748b;
+  line-height: 1.5;
   flex: 1;
   min-width: min(100%, 12rem);
 }
@@ -788,10 +793,10 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 .torre-diagram-legend .k-ces { color: #475569; font-weight: 800; letter-spacing: 0.03em; text-transform: none; }
 .torre-diagram-legend .k-hint {
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
-  font-size: 9px;
-  opacity: 0.9;
+  font-size: 11px;
+  opacity: 0.95;
 }
 .torre-diagram-tools {
   display: flex;
@@ -803,9 +808,9 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
-  color: #64748b;
+  color: #475569;
   cursor: pointer;
   user-select: none;
   margin: 0;
@@ -862,7 +867,7 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   display: none !important;
 }
 .torre-sistema-resumen-wrap .torre-sistema-resumen-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: #475569;
   text-transform: uppercase;
@@ -873,9 +878,9 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 .torre-sistema-resumen-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
   color: #334155;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .torre-sistema-resumen-table tbody tr {
   border-top: 1px solid #e2e8f0;
@@ -948,11 +953,11 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 .torre-swipe-hint {
   text-align: center;
   margin: 11px 0 2px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.11em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94a3b8;
+  color: #64748b;
 }
 .torre-svg-diagram .hc-torre-rot-flecha { cursor: pointer; outline: none; }
 .torre-svg-diagram .hc-torre-rot-flecha:focus-visible circle {
@@ -1303,13 +1308,13 @@ select#editVariedad option {
 .deposito-info { flex: 1; }
 .deposito-title {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   color: #1e40af;
   letter-spacing: 0.02em;
 }
 .deposito-stats {
-  font-size: 11px;
+  font-size: 13px;
   color: #475569;
   margin-top: 4px;
   font-weight: 500;
@@ -6129,7 +6134,7 @@ button.config-option {
   margin-bottom: 10px;
 }
 .torre-field-label-sm {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: #64748b;
   text-transform: uppercase;
@@ -6164,13 +6169,13 @@ button.config-option {
   -webkit-tap-highlight-color: transparent;
 }
 .torre-hint-micro {
-  font-size: 9px;
-  color: #94a3b8;
+  font-size: 11px;
+  color: #64748b;
   margin-top: 6px;
-  line-height: 1.35;
+  line-height: 1.45;
 }
 .torre-nft-kicker {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: #0f766e;
   text-transform: uppercase;
@@ -6178,17 +6183,17 @@ button.config-option {
   margin-bottom: 8px;
 }
 .torre-nft-p {
-  font-size: 10px;
-  color: #64748b;
-  line-height: 1.45;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
   margin: 0 0 8px;
 }
 .torre-nft-ol {
-  font-size: 9px;
+  font-size: 12px;
   color: #475569;
-  line-height: 1.45;
+  line-height: 1.55;
   margin: 0 0 10px;
-  padding-left: 16px;
+  padding-left: 18px;
   font-weight: 600;
 }
 .torre-nft-ol li {
@@ -6198,9 +6203,9 @@ button.config-option {
   margin-bottom: 0;
 }
 .torre-nft-p-soft {
-  font-size: 9px;
-  color: #94a3b8;
-  line-height: 1.4;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
   margin: 0 0 10px;
 }
 .torre-nft-btn-dashed {
@@ -6226,11 +6231,11 @@ button.config-option {
 .torre-nft-chip-btn {
   padding: 8px 4px;
   text-align: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
 }
 .torre-nft-label-xs {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: #64748b;
 }
@@ -6274,7 +6279,7 @@ button.config-option {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   color: #0f766e;
   cursor: pointer;
@@ -6293,21 +6298,21 @@ button.config-option {
   margin-top: 4px;
 }
 .torre-nft-p-note {
-  font-size: 9px;
-  color: #64748b;
+  font-size: 11px;
+  color: #475569;
   margin-top: 8px;
-  line-height: 1.45;
+  line-height: 1.5;
   margin-bottom: 0;
 }
 .torre-nft-label-sep {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   color: #64748b;
   margin-top: 8px;
   display: block;
 }
 .torre-nft-cara-kicker {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   color: #0f766e;
   text-transform: uppercase;
@@ -6326,7 +6331,7 @@ button.config-option {
   border-top: 1px dashed #cbd5e1;
 }
 .torre-nft-bomba-kicker {
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
   color: #92400e;
   text-transform: uppercase;
@@ -6371,7 +6376,7 @@ button.config-option {
   margin-bottom: 8px;
 }
 .torre-dwc-lbl-mono {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 800;
   color: #475569;
   letter-spacing: 0.04em;
@@ -6400,8 +6405,8 @@ button.config-option {
 }
 .torre-dwc-tapa-hint {
   margin: 0 0 10px;
-  font-size: 11px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.5;
   font-weight: 600;
 }
 .torre-dwc-ox-hint {
@@ -6411,7 +6416,7 @@ button.config-option {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: #0f172a;
   cursor: pointer;
@@ -6454,11 +6459,11 @@ button.config-option {
   margin-bottom: 8px;
 }
 .torre-interaccion-titulo {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: #64748b;
   margin-bottom: 8px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .torre-interaccion-modos {
@@ -6474,9 +6479,9 @@ button.config-option {
 }
 .torre-editar-extra { margin-bottom: 10px; }
 .torre-ayuda-txt {
-  font-size: 10px;
-  color: #6b7280;
-  line-height: 1.45;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.55;
 }
 .torre-tutorial-btn {
   margin-top: 8px;
@@ -6570,11 +6575,11 @@ button.config-option {
 .torre-nft-diagram-hint {
   text-align: center;
   margin: 8px 12px 2px;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
-  color: #64748b;
-  line-height: 1.45;
-  letter-spacing: 0.02em;
+  color: #475569;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
 }
 .torre-deposito-stack {
   flex-direction: column;
@@ -6587,13 +6592,53 @@ button.config-option {
   width: 100%;
 }
 .torre-deposito-info { flex: 1; }
+.torre-vol-ref-hint {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 10px 0 0;
+}
+.torre-vol-detalles {
+  margin-top: 10px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+.torre-vol-detalles-summary {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 800;
+  color: #334155;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+}
+.torre-vol-detalles-summary::-webkit-details-marker {
+  display: none;
+}
+.torre-vol-detalles-summary:focus {
+  outline: none;
+}
+.torre-vol-detalles-summary:focus-visible {
+  outline: 2px solid #15803d;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+.torre-vol-detalles[open] .torre-vol-detalles-summary {
+  border-bottom: 1px solid #e5e7eb;
+}
 .torre-vol-wrap {
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1.5px solid #e5e7eb;
 }
+.torre-vol-wrap--inner {
+  margin-top: 0;
+  padding-top: 12px;
+  border-top: none;
+}
 .torre-vol-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   color: #6b7280;
   text-transform: uppercase;
@@ -6626,10 +6671,10 @@ button.config-option {
   color: #64748b;
 }
 .torre-vol-hint {
-  font-size: 10px;
-  color: #6b7280;
-  margin-top: 6px;
-  line-height: 1.45;
+  font-size: 12px;
+  color: #4b5563;
+  margin-top: 8px;
+  line-height: 1.55;
 }
 .torre-leyenda-mt { margin-top: 12px; }
 .leyenda-dot-blue { background: var(--blue); }

@@ -1161,35 +1161,39 @@
             <div class="deposito-info torre-deposito-info">
               <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
               <div class="deposito-stats" id="depositoStats">EC: — µS/cm · pH: — · Temp: —°C · Vol: —L</div>
-              <div id="torreVolDepWrap" class="torre-vol-wrap">
-                <label class="form-label torre-vol-label" for="torreVolDepositoL">
-                  Capacidad máxima del depósito (L)
-                </label>
-                <div class="torre-vol-row">
-                  <input type="number" id="torreVolDepositoL" class="form-input" min="5" max="100" step="1"
-                    inputmode="numeric" autocomplete="off"
-                    aria-describedby="torreVolDepHint"
-                    onchange="guardarVolDepositoDesdeTorre()"
-                    class="torre-vol-input">
-                  <span class="torre-vol-unit-main">L máx.</span>
+              <p class="torre-vol-ref-hint">Capacidad y litros de mezcla están en el <strong>resumen del sistema</strong> (arriba), mismo origen que el checklist.</p>
+              <details id="torreVolDepDetalles" class="torre-vol-detalles">
+                <summary class="torre-vol-detalles-summary">Cambiar capacidad o litros de mezcla</summary>
+                <div id="torreVolDepWrap" class="torre-vol-wrap torre-vol-wrap--inner">
+                  <label class="form-label torre-vol-label" for="torreVolDepositoL">
+                    Capacidad máxima del depósito (L)
+                  </label>
+                  <div class="torre-vol-row">
+                    <input type="number" id="torreVolDepositoL" class="form-input" min="5" max="100" step="1"
+                      inputmode="numeric" autocomplete="off"
+                      aria-describedby="torreVolDepHint"
+                      onchange="guardarVolDepositoDesdeTorre()"
+                      class="torre-vol-input">
+                    <span class="torre-vol-unit-main">L máx.</span>
+                  </div>
+                  <label class="form-label torre-vol-label torre-vol-label-mt" for="torreVolMezclaL">
+                    Litros con los que mezclas (opcional)
+                  </label>
+                  <div class="torre-vol-row">
+                    <input type="number" id="torreVolMezclaL" class="form-input" min="1" max="100" step="0.5"
+                      inputmode="decimal" autocomplete="off"
+                      placeholder="igual al máximo"
+                      aria-describedby="torreVolDepHint"
+                      onchange="guardarVolDepositoDesdeTorre()"
+                      class="torre-vol-input">
+                    <span class="torre-vol-unit-sub">L mezcla</span>
+                  </div>
+                  <div id="torreVolDepHint" class="torre-vol-hint">
+                    Las <strong>dosis</strong> (checklist, Consejos) usan los <strong>litros de mezcla</strong> si los indicas; si lo dejas vacío, se usa el máximo.
+                    Deja margen (p. ej. 19 L de 20) para correcciones de pH o EC. El volumen en <strong>Mediciones</strong> es la lectura del día.
+                  </div>
                 </div>
-                <label class="form-label torre-vol-label torre-vol-label-mt" for="torreVolMezclaL">
-                  Litros con los que mezclas (opcional)
-                </label>
-                <div class="torre-vol-row">
-                  <input type="number" id="torreVolMezclaL" class="form-input" min="1" max="100" step="0.5"
-                    inputmode="decimal" autocomplete="off"
-                    placeholder="igual al máximo"
-                    aria-describedby="torreVolDepHint"
-                    onchange="guardarVolDepositoDesdeTorre()"
-                    class="torre-vol-input">
-                  <span class="torre-vol-unit-sub">L mezcla</span>
-                </div>
-                <div id="torreVolDepHint" class="torre-vol-hint">
-                  Las <strong>dosis</strong> (checklist, Consejos) usan los <strong>litros de mezcla</strong> si los indicas; si lo dejas vacío, se usa el máximo.
-                  Deja margen (p. ej. 19 L de 20) para correcciones de pH o EC. El volumen en <strong>Mediciones</strong> es la lectura del día.
-                </div>
-              </div>
+              </details>
             </div>
           </div>
         </div>
@@ -1293,16 +1297,8 @@
 
       <div class="hc-card-slate">
         <div class="hc-kicker">Copia de seguridad local</div>
-        <p class="hc-help-muted">
-          Tus datos viven en <strong>este dispositivo</strong> (en la “caja” del navegador o de la app instalada). <strong>Exportar estado</strong> baja un archivo <code class="hc-code-tiny">.json</code> solo a tu móvil u ordenador: no se sube a ningún servidor.
-          Conviene hacer una copia de vez en cuando y guardarla en Archivos, la nube o el PC.
-        </p>
-        <p class="hc-help-muted hc-help-mt-8">
-          Al <strong>importar</strong> se sustituye todo lo guardado aquí por la copia (la página se recarga). Las <strong>fotos del diario</strong> pueden no viajar en ese archivo: en otro aparato quizá haya que volver a enlazarlas.
-        </p>
-        <p class="hc-help-muted hc-help-mt-8 hc-help-xs">
-          <strong>App en el móvil:</strong> en Android, el botón <strong>📲 Instalar</strong> del encabezado (si aparece) o el menú del navegador. En <strong>iPhone</strong>, Safari → <strong>Compartir</strong> → <strong>Añadir a la pantalla de inicio</strong> (Apple no muestra el mismo aviso que en Android).
-          <strong>App Capacitor</strong> (compilada desde el repo): al exportar se abre la hoja del sistema para guardar o compartir el <code class="hc-code-tiny">.json</code> (AirDrop, archivos, etc.).
+        <p class="hc-help-muted hc-help-backup-brief">
+          <strong>Exportar</strong> guarda un archivo en tu dispositivo; <strong>importar</strong> recupera una copia hecha con esta app y vuelve a cargar la página.
         </p>
         <div class="hc-grid-2">
           <button type="button" class="hc-btn-tap hc-btn-backup-export" onclick="exportarEstadoHidroCultivo()">
@@ -1318,9 +1314,6 @@
               class="hc-backup-import-input">
           </label>
         </div>
-        <p class="hc-help-muted hc-help-xs hc-help-mt-10">
-          <strong>Importar en iPhone / iPad:</strong> pulsa el botón y elige <strong>Examinar</strong> o <strong>Archivos</strong>. Si no ves el <code class="hc-code-tiny">.json</code>, ubícalo antes en la app <strong>Archivos</strong> (Descargas, iCloud…). Solo sirven copias generadas con <strong>Exportar estado</strong> desde esta app.
-        </p>
       </div>
 
     </div>
@@ -6274,20 +6267,13 @@ function updateTorreStats() {
   // Info depósito
   const depEl = document.getElementById('depositoTitulo');
   if (depEl) {
-    const volTxt =
-      volMez < volMax - 0.05
-        ? 'máx ' + volMax + ' L · mezcla ' + volMez + ' L'
-        : volMax + ' L';
+    const pref = rawNombre ? rawNombre + ' · ' : '';
     if (esNftCfg) {
-      depEl.textContent = 'Depósito para mezclas · ' + volTxt;
+      depEl.textContent = pref + 'Depósito (mezclas y lecturas)';
     } else if (esDwcCfg) {
-      const geom =
-        (cfg.numNiveles || '—') + ' filas × ' + (cfg.numCestas || '—') + ' cestas';
-      depEl.textContent = torreNombre + ' — DWC — ' + geom + ' — ' + volTxt;
+      depEl.textContent = pref + 'Depósito DWC (lecturas)';
     } else {
-      const geom =
-        (cfg.numNiveles || '—') + 'N × ' + (cfg.numCestas || '—') + 'C';
-      depEl.textContent = torreNombre + ' — ' + geom + ' — ' + volTxt;
+      depEl.textContent = pref + 'Depósito (lecturas)';
     }
   }
 
@@ -6358,6 +6344,9 @@ function guardarVolDepositoDesdeTorre() {
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
+  try {
+    renderTorreSistemaResumenTabla(state.configTorre);
+  } catch (eRes) {}
   actualizarBadgesNutriente();
   updateDashboard();
   updateTorreStats();
