@@ -1624,7 +1624,7 @@
               No aplica un programa de ciclos ni temporizador como en torre vertical; aquí solo tienes <strong>referencia del clima</strong>.
             </p>
             <div class="card-title" style="margin:0 0 8px;font-size:13px">🌤️ Datos climáticos</div>
-            <div id="riegoClimaUsadoNft" style="font-size:14px;color:var(--white);line-height:1.85;font-weight:500">            </div>
+            <div id="riegoClimaUsadoNft" style="display:none;font-size:14px;color:var(--white);line-height:1.85;font-weight:500">            </div>
           </div>
         </div>
 
@@ -1638,7 +1638,7 @@
               Vigila <strong>temperatura del agua</strong> y el estado del difusor. Aquí solo tienes <strong>referencia del clima</strong> para el follaje (toldo, estrés térmico).
             </p>
             <div class="card-title" style="margin:0 0 8px;font-size:13px">🌤️ Datos climáticos</div>
-            <div id="riegoClimaUsadoDwc" style="font-size:14px;color:var(--white);line-height:1.85;font-weight:500"></div>
+            <div id="riegoClimaUsadoDwc" style="display:none;font-size:14px;color:var(--white);line-height:1.85;font-weight:500"></div>
           </div>
         </div>
 
@@ -1739,8 +1739,8 @@
         </div><!-- /riegoCiclosTorreWrap -->
 
         <!-- Datos clima usados -->
-        <div class="card-title" style="margin-top:10px">🌤️ Datos climáticos usados</div>
-        <div id="riegoClimaUsado" style="font-size:11px;color:var(--muted);line-height:1.9"></div>
+        <div class="card-title" style="display:none;margin-top:10px">🌤️ Datos climáticos usados</div>
+        <div id="riegoClimaUsado" style="display:none;font-size:11px;color:var(--muted);line-height:1.9"></div>
         </div><!-- /riegoTorreResultBlock -->
 
       </div>
@@ -15099,12 +15099,9 @@ function setSustrato(tipo) {
 /** Abre el bloque colapsable de riego si hay ajustes no por defecto (fase manual o mezcla activa). */
 function actualizarRiegoAvanzadoDetailsOpen() {
   const det = document.getElementById('riegoAvanzadoDetails');
-  if (!det || !state.configTorre) return;
-  ensureSustratoMezclaDefaults();
-  const m = state.configTorre.sustratoMezcla;
-  const mezclaActiva = !!(m && m.activa);
-  const faseManual = state.configTorre.faseCultivoRiegoAuto === false;
-  if (faseManual || mezclaActiva) det.open = true;
+  if (!det) return;
+  // UX final: este bloque avanzado empieza siempre cerrado.
+  det.open = false;
 }
 
 function syncRiegoAvanzadoUI() {
@@ -21153,6 +21150,7 @@ async function calcularRiego() {
       et0NightSum != null && typeof et0NightSum === 'number' && et0NightSum >= 0.19;
     let nocSkip = false;
     let nocSkipClave = '';
+    let nocPermClave = '';
     if (!esInterior) {
       const perm = riegoTorreExteriorPermiteNocturno({
         tempMin,
@@ -21166,6 +21164,7 @@ async function calcularRiego() {
         ciclosDia: ciclos,
         totalONDia: totalON,
       });
+      nocPermClave = perm.clave || '';
       const mildNight =
         !secaNocEt &&
         demandaNoc < umbNocSkip.demMax &&
@@ -21198,10 +21197,25 @@ async function calcularRiego() {
     let minCicloNoc = minONNoc + minOFFNoc;
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
     ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
+    let usarNocCalculadoExt = false;
     if (!esInterior && !nocSkip) {
-      minONNoc = RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60;
-      minCicloNoc = minONNoc + minOFFNoc;
-      ciclosNoc = minCicloNoc <= 600 ? 1 : 0;
+      // Exterior: por defecto refresco fijo 30s; si la noche exige más por clima, usar programa calculado.
+      usarNocCalculadoExt =
+        secaNocEt ||
+        demandaNoc >= 0.72 ||
+        nocPermClave === 'noche_calida' ||
+        nocPermClave === 'ola';
+      if (!usarNocCalculadoExt) {
+        minONNoc = RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60;
+        minCicloNoc = minONNoc + minOFFNoc;
+        ciclosNoc = minCicloNoc <= 600 ? 1 : 0;
+      } else if (
+        ciclosNoc === 0 &&
+        minCicloNoc <= 600 &&
+        demandaNoc >= riegoNocDemandaMin1Ciclo(tempMin)
+      ) {
+        ciclosNoc = 1;
+      }
     } else if (
       esInterior &&
       !nocSkip &&
@@ -21211,7 +21225,7 @@ async function calcularRiego() {
     ) {
       ciclosNoc = 1;
     }
-    const esNocRefrescoTorreExt = !esInterior && !nocSkip && ciclosNoc > 0;
+    const esNocRefrescoTorreExt = !esInterior && !nocSkip && ciclosNoc > 0 && !usarNocCalculadoExt;
     const totalONNoc = esNocRefrescoTorreExt
       ? (RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60) * ciclosNoc
       : minONNoc * ciclosNoc;
@@ -21266,37 +21280,9 @@ async function calcularRiego() {
         nocSkip || ciclosNoc === 0 || dutyNocPct == null ? '—' : dutyNocPct + '%';
     }
     if (elNocNota) {
-      if (nocSkip) {
-        elNocNota.style.display = 'block';
-        if (!esInterior && nocSkipClave) {
-          const msgNoc = {
-            fria:
-              'Tª nocturna baja (inferior a ~18 °C): mejor no regar de noche en torre (oxigenación radicular). Prioriza riego diurno.',
-            humeda:
-              'Noche muy húmeda y VPD bajo: evita encharcar por la noche (riesgo fúngico); deja el riego para el día.',
-            dia_suficiente:
-              'El modelo ya acumula bastante tiempo de bomba de día; no se suma noche salvo observes esponja muy seca.',
-            sin_excepcion:
-              'En torre al aire libre el riego nocturno <strong>no es rutina</strong>: aquí no se cumplen noche sustancialmente cálida (≈24 °C), ola de calor con noche templada, secado nocturno claro (ET₀), plántula muy reciente (≤1 sem) ni sensor de esponja seco.',
-            noche_tranquila:
-              'Noche tranquila y poca demanda: coherente con torre doméstica — <strong>solo riego de día</strong> salvo observes necesidad real.',
-          };
-          elNocNota.innerHTML = msgNoc[nocSkipClave] || msgNoc.noche_tranquila;
-        } else {
-          elNocNota.innerHTML =
-            'Noche <strong>húmeda, poco ventosa</strong> y demanda baja según Tª mín., lluvia prevista y secado nocturno: no se sugiere pulso extra de recarga (riesgo de encharcar).';
-        }
-      } else if (ciclosNoc === 0) {
-        elNocNota.style.display = 'block';
-        elNocNota.textContent = 'Con los límites de pausa nocturna no cabe ningún ciclo en 10 h; revisa manualmente si el sustrato lo necesita.';
-      } else if (!esInterior) {
-        elNocNota.style.display = 'block';
-        elNocNota.innerHTML =
-          'Con excepción climática: <strong>refresco fijo ~30 s</strong> (p. ej. <strong>04:00</strong>), independiente del índice nocturno — igual que muchos cultivadores en torre. Los programas de <strong>mañana, tarde y mediodía</strong> siguen siendo <strong>solo por climatología y cultivo</strong>. Si el sustrato llega húmedo al anochecer, omítelo.';
-      } else {
-        elNocNota.style.display = 'none';
-        elNocNota.textContent = '';
-      }
+      // Mantener lógica interna, pero ocultar razones técnicas al usuario final.
+      elNocNota.style.display = 'none';
+      elNocNota.textContent = '';
     }
 
     document.getElementById('riegoClimaUsado').style.fontSize = '13px';
