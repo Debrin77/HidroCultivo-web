@@ -1767,6 +1767,17 @@
 
       <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
       <div style="font-size:11px;color:var(--muted);margin:-6px 0 10px 0">Fuente activa: <strong id="meteoFuenteActiva">Open-Meteo</strong></div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:10px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:700;color:var(--white);margin-bottom:6px">Respaldo oficial España (AEMET OpenData)</div>
+        <input type="password" id="inputAemetApiKeyMeteo" placeholder="API key AEMET (opcional)"
+          autocomplete="off" onchange="persistAemetApiKey()" onblur="persistAemetApiKey()"
+          style="width:100%;background:var(--bg3);border:1.5px solid var(--border);border-radius:8px;color:var(--white);font-size:14px;padding:10px 12px;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <button type="button" onclick="probarAemetAhora()" id="btnTestAemetApiMeteo"
+          style="width:100%;padding:8px 12px;background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;
+                 font-size:12px;font-weight:700;color:#1d4ed8;cursor:pointer;-webkit-tap-highlight-color:transparent">
+          Probar AEMET OpenData
+        </button>
+      </div>
 
       <!-- Loader -->
       <div id="meteoLoader" class="info-banner">
@@ -15440,13 +15451,18 @@ function getAemetApiKey() {
 
 function persistAemetApiKey() {
   if (!state.configTorre) state.configTorre = {};
-  const el = document.getElementById('inputAemetApiKey');
-  const v = String(el?.value || '').trim();
+  const elCfg = document.getElementById('inputAemetApiKey');
+  const elMet = document.getElementById('inputAemetApiKeyMeteo');
+  const vCfg = String(elCfg?.value || '').trim();
+  const vMet = String(elMet?.value || '').trim();
+  const v = vCfg || vMet;
   state.configTorre.aemetApiKey = v;
   try {
     if (v) localStorage.setItem('hc_aemet_key', v);
     else localStorage.removeItem('hc_aemet_key');
   } catch (_) {}
+  if (elCfg && elCfg.value !== v) elCfg.value = v;
+  if (elMet && elMet.value !== v) elMet.value = v;
   guardarEstadoTorreActual();
   saveState();
 }
@@ -15457,12 +15473,15 @@ async function probarAemetAhora() {
     showToast('Añade la API key de AEMET primero', true);
     return;
   }
-  const btn = document.getElementById('btnTestAemetApi');
-  const prev = btn ? btn.textContent : '';
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = 'Probando AEMET...';
-  }
+  const btn1 = document.getElementById('btnTestAemetApi');
+  const btn2 = document.getElementById('btnTestAemetApiMeteo');
+  const prev1 = btn1 ? btn1.textContent : '';
+  const prev2 = btn2 ? btn2.textContent : '';
+  [btn1, btn2].forEach((b) => {
+    if (!b) return;
+    b.disabled = true;
+    b.textContent = 'Probando AEMET...';
+  });
   try {
     const coords = getCoordsActivas();
     const url = 'https://opendata.aemet.es/opendata/api/prediccion/especifica/punto/' +
@@ -15477,10 +15496,8 @@ async function probarAemetAhora() {
   } catch (e) {
     showToast('❌ Error AEMET: ' + (e?.message || e), true);
   } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = prev || 'Probar AEMET OpenData';
-    }
+    if (btn1) { btn1.disabled = false; btn1.textContent = prev1 || 'Probar AEMET OpenData'; }
+    if (btn2) { btn2.disabled = false; btn2.textContent = prev2 || 'Probar AEMET OpenData'; }
   }
 }
 
@@ -15503,8 +15520,11 @@ function cargarLocalidadMeteoUI() {
   el.value = v;
   const btn = document.getElementById('btnMunicipioGrifoAMeteo');
   if (btn) btn.style.display = state.configAgua === 'grifo' && state.configAguaMunicipio ? 'block' : 'none';
-  const keyEl = document.getElementById('inputAemetApiKey');
-  if (keyEl) keyEl.value = getAemetApiKey();
+  const key = getAemetApiKey();
+  const keyEl1 = document.getElementById('inputAemetApiKey');
+  const keyEl2 = document.getElementById('inputAemetApiKeyMeteo');
+  if (keyEl1) keyEl1.value = key;
+  if (keyEl2) keyEl2.value = key;
   refreshMeteoFuenteActivaUI();
 }
 
