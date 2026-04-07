@@ -2026,7 +2026,7 @@ button.torre-summary:focus-visible,
 }
 .recarga-title {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--white);
 }
@@ -2051,7 +2051,8 @@ button.torre-summary:focus-visible,
   background: var(--green);
 }
 .recarga-nota {
-  font-size: 11px;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--muted);
 }
 .recarga-urgente-banner {
@@ -2077,7 +2078,7 @@ button.torre-summary:focus-visible,
   border-top: 1px solid var(--border);
 }
 .recarga-confirm-label {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--muted);
   margin-bottom: 8px;
@@ -2090,14 +2091,14 @@ button.torre-summary:focus-visible,
 }
 .btn-recarga-confirm {
   flex: 1 1 120px;
-  min-height: 40px;
-  padding: 8px 10px;
+  min-height: 44px;
+  padding: 9px 12px;
   border-radius: 10px;
   border: 1.5px solid var(--border);
   background: var(--bg3);
   color: var(--white);
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -2119,7 +2120,8 @@ button.torre-summary:focus-visible,
 .recarga-snooze-hint {
   display: none;
   margin-top: 8px;
-  font-size: 10px;
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--muted);
 }
 .recarga-subblock { margin-top: 2px; }
@@ -2129,16 +2131,17 @@ button.torre-summary:focus-visible,
   border-top: 1px solid var(--border);
 }
 .recarga-subtitle {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
   color: var(--white);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   font-family: var(--font-display);
 }
 .recarga-subhint {
-  font-size: 10px;
-  color: var(--muted);
-  line-height: 1.45;
+  font-size: 13px;
+  color: #475569;
+  color: color-mix(in srgb, var(--white) 55%, var(--muted));
+  line-height: 1.55;
   margin: 0 0 10px;
 }
 
@@ -6053,6 +6056,7 @@ button.config-option {
   background: var(--bg3);
   border-radius: 10px;
   border: 1px solid var(--border);
+  font-size: 13px;
   line-height: 1.55;
 }
 .recarga-btn-full-mt {
@@ -6081,15 +6085,16 @@ button.config-option {
   gap: 10px;
 }
 .medir-recarga-switch-text {
-  font-size: 13px;
-  color: var(--muted);
-  line-height: 1.4;
+  font-size: 14px;
+  color: #475569;
+  color: color-mix(in srgb, var(--white) 58%, var(--muted));
+  line-height: 1.45;
 }
 .medir-recarga-switch-footnote {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin: 10px 0 0;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .medir-notas-textarea {
   height: 70px;
