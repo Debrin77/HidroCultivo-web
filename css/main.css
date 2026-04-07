@@ -695,6 +695,8 @@ body::before { display: none; }
 #torreSVGWrap svg g.hc-cesta {
   transition: filter 0.12s ease;
 }
+.hc-cesta--interactive { cursor: pointer; }
+.hc-cesta--static { cursor: default; }
 #torreSVGWrap svg g.hc-cesta.hc-cesta-tapflash {
   filter: brightness(0.92);
 }
@@ -3731,6 +3733,116 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+.checklist-dark-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
+}
+.checklist-dark-overlay--ruta { z-index: 10030; }
+.checklist-dark-overlay--datos { z-index: 10020; }
+.checklist-dark-sheet {
+  background: var(--bg2, #1e293b);
+  border: 1.5px solid var(--border, #334155);
+  border-radius: 20px 20px 12px 12px;
+  width: 100%;
+  max-width: 430px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 18px;
+  color: var(--white, #f8fafc);
+}
+.checklist-dark-title {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 900;
+}
+.checklist-dark-title--ruta { margin-bottom: 8px; }
+.checklist-dark-title--datos { margin-bottom: 6px; }
+.checklist-dark-text { color: var(--muted, #94a3b8); line-height: 1.5; }
+.checklist-dark-text--main { font-size: 12px; margin: 0 0 16px; line-height: 1.55; }
+.checklist-dark-text--note { font-size: 10px; margin: 0 0 14px; line-height: 1.45; opacity: 0.95; }
+.checklist-dark-text--datos-intro { font-size: 12px; margin: 0 0 14px; }
+.checklist-dark-text--mix-hint { font-size: 10px; margin: -8px 0 12px; line-height: 1.45; }
+.checklist-dark-kicker { font-size: 11px; font-weight: 800; color: #86efac; margin-bottom: 6px; }
+.checklist-dark-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.checklist-dark-type-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+}
+.checklist-dark-type-opt-text { font-size: 13px; font-weight: 700; }
+.checklist-dark-field-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #86efac;
+  margin-bottom: 4px;
+}
+.checklist-dark-field-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  color: var(--white);
+}
+.checklist-dark-field-input--mb8 { margin-bottom: 8px; font-size: 16px; }
+.checklist-dark-field-input--mb12 { margin-bottom: 12px; font-size: 16px; }
+.checklist-dark-select { font-size: 14px; }
+.checklist-dark-select--mb12 { margin-bottom: 12px; }
+.checklist-dark-select--mb16 { margin-bottom: 16px; }
+.checklist-dark-btn { width: 100%; border-radius: 14px; cursor: pointer; }
+.checklist-dark-btn--teal {
+  padding: 14px;
+  margin-bottom: 10px;
+  background: #0d9488;
+  color: #fff;
+  border: none;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+.checklist-dark-btn--green {
+  padding: 14px;
+  margin-bottom: 8px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+}
+.checklist-dark-btn--ghost {
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--bg3);
+  color: var(--white);
+  border: 1.5px solid var(--border);
+  font-size: 14px;
+  font-weight: 700;
+}
+.checklist-dark-btn--compact { padding: 12px; margin-bottom: 8px; font-size: 13px; }
+.checklist-dark-btn--link {
+  padding: 10px;
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  font-size: 12px;
 }
 
 /* Tutoriales — sheet inferior (JS innerHTML) */

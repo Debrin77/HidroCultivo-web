@@ -4211,8 +4211,9 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     const a11yAttrs = caraFrontal
       ? ` role="button" tabindex="0" aria-label="${ariaCesta}"`
       : ' aria-hidden="true" focusable="false"';
-    out += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta"${a11yAttrs}
-      style="cursor:${caraFrontal ? 'pointer' : 'default'};pointer-events:${interact}" opacity="${b.opacity.toFixed(2)}">`;
+    const cestaInterClass = caraFrontal ? 'hc-cesta--interactive' : 'hc-cesta--static';
+    out += `<g data-n="${b.n}" data-c="${b.c}" data-z="${b.z.toFixed(3)}" class="hc-cesta ${cestaInterClass}"${a11yAttrs}
+      style="pointer-events:${interact}" opacity="${b.opacity.toFixed(2)}">`;
 
     out += `<circle cx="${b.cx2.toFixed(1)}" cy="${b.cy2.toFixed(1)}" r="${r.toFixed(1)}" fill="${b.fill}" stroke="${b.stroke}" stroke-width="${(2.4*b.scale).toFixed(1)}"/>`;
 
@@ -4390,7 +4391,7 @@ function generarSVGDwc() {
     } else {
       o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 2.2).toFixed(1)}" fill="none" stroke="#cbd5e1" stroke-width="1.1" opacity="0.9"/>`;
     }
-    o += `<g data-n="${n}" data-c="${c}" class="hc-cesta dwc-maceta" role="button" tabindex="0" aria-label="${ariaCesta}" style="cursor:pointer;pointer-events:all">`;
+    o += `<g data-n="${n}" data-c="${c}" class="hc-cesta hc-cesta--interactive dwc-maceta" role="button" tabindex="0" aria-label="${ariaCesta}" style="pointer-events:all">`;
     o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="${topView ? 2 : 2.2}"/>`;
     if (isMultiSel) {
       o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 5).toFixed(1)}"
@@ -16010,22 +16011,21 @@ function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', 'clRutaTitulo');
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10030;display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));';
+  overlay.className = 'checklist-dark-overlay checklist-dark-overlay--ruta';
 
   overlay.innerHTML =
-    '<div style="background:var(--bg2,#1e293b);border:1.5px solid var(--border,#334155);border-radius:20px 20px 12px 12px;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:18px;color:var(--white,#f8fafc)">' +
-      '<div id="clRutaTitulo" style="font-family:var(--font-display);font-size:17px;font-weight:900;margin-bottom:8px">¿Qué tipo de checklist necesitas?</div>' +
-      '<p style="font-size:12px;color:var(--muted,#94a3b8);line-height:1.55;margin:0 0 16px">' +
+    '<div class="checklist-dark-sheet">' +
+      '<div id="clRutaTitulo" class="checklist-dark-title checklist-dark-title--ruta">¿Qué tipo de checklist necesitas?</div>' +
+      '<p class="checklist-dark-text checklist-dark-text--main">' +
         '<strong>Primer llenado</strong>: depósito nuevo o sin haber cultivado aún — te saltamos apagar bomba, vaciado de solución usada y pasos de cosecha. ' +
         'Sí te guiamos en <strong>limpiar el depósito</strong> antes de la primera mezcla.<br><br>' +
         '<strong>Recarga completa</strong>: ya hubo cultivo y solución en el sistema; el recorrido habitual (parar bomba, vaciar, limpiar, cubrir depósito…).</p>' +
-      '<p style="font-size:10px;color:var(--muted,#94a3b8);line-height:1.45;margin:0 0 14px;opacity:.95">Tras <strong>finalizar</strong> una recarga en el checklist, la app ya no muestra esta pregunta y abrirá directamente la recarga completa.</p>' +
-      '<button type="button" id="clRutaPrimer" style="width:100%;padding:14px;background:#0d9488;color:#fff;border:none;border-radius:14px;font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px">' +
+      '<p class="checklist-dark-text checklist-dark-text--note">Tras <strong>finalizar</strong> una recarga en el checklist, la app ya no muestra esta pregunta y abrirá directamente la recarga completa.</p>' +
+      '<button type="button" id="clRutaPrimer" class="checklist-dark-btn checklist-dark-btn--teal">' +
         '🌱 Primer llenado del depósito</button>' +
-      '<button type="button" id="clRutaCompleta" style="width:100%;padding:14px;background:var(--bg3);color:var(--white);border:1.5px solid var(--border);border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:10px">' +
+      '<button type="button" id="clRutaCompleta" class="checklist-dark-btn checklist-dark-btn--ghost">' +
         '🔄 Recarga completa (habitual)</button>' +
-      '<button type="button" id="clRutaCancelar" style="width:100%;padding:10px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer">' +
+      '<button type="button" id="clRutaCancelar" class="checklist-dark-btn checklist-dark-btn--link">' +
         'Cancelar</button>' +
     '</div>';
 
@@ -16383,54 +16383,53 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', 'cldTitulo');
-  overlay.style.cssText =
-    'position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:10020;display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0));';
+  overlay.className = 'checklist-dark-overlay checklist-dark-overlay--datos';
 
   overlay.innerHTML =
-    '<div style="background:var(--bg2,#1e293b);border:1.5px solid var(--border,#334155);border-radius:20px 20px 12px 12px;width:100%;max-width:430px;max-height:90vh;overflow-y:auto;padding:18px;color:var(--white,#f8fafc)">' +
-      '<div id="cldTitulo" style="font-family:var(--font-display);font-size:17px;font-weight:900;margin-bottom:6px">Antes del checklist de recarga</div>' +
-      '<p style="font-size:12px;color:var(--muted,#94a3b8);line-height:1.5;margin:0 0 14px">' +
+    '<div class="checklist-dark-sheet">' +
+      '<div id="cldTitulo" class="checklist-dark-title checklist-dark-title--datos">Antes del checklist de recarga</div>' +
+      '<p class="checklist-dark-text checklist-dark-text--datos-intro">' +
         'Indica cómo es <strong>esta</strong> instalación para que volumen, agua, nutriente y pasos (torre, NFT o DWC) coincidan con tu montaje real. ' +
         'Puedes afinar todo después en <strong>Sistema</strong> o con el asistente completo.</p>' +
 
-      '<div style="font-size:11px;font-weight:800;color:#86efac;margin-bottom:6px">Tipo de sistema</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">' +
-        '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
+      '<div class="checklist-dark-kicker">Tipo de sistema</div>' +
+      '<div class="checklist-dark-type-grid">' +
+        '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="torre"' + (tipoIni === 'torre' ? ' checked' : '') + '>' +
-          '<span style="font-size:13px;font-weight:700">Torre</span></label>' +
-        '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
+          '<span class="checklist-dark-type-opt-text">Torre</span></label>' +
+        '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="nft"' + (tipoIni === 'nft' ? ' checked' : '') + '>' +
-          '<span style="font-size:13px;font-weight:700">NFT</span></label>' +
-        '<label style="display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer">' +
+          '<span class="checklist-dark-type-opt-text">NFT</span></label>' +
+        '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="dwc"' + (tipoIni === 'dwc' ? ' checked' : '') + '>' +
-          '<span style="font-size:13px;font-weight:700">DWC</span></label>' +
+          '<span class="checklist-dark-type-opt-text">DWC</span></label>' +
       '</div>' +
 
-      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Capacidad máxima del depósito (L)</label>' +
+      '<label class="checklist-dark-field-label">Capacidad máxima del depósito (L)</label>' +
       '<input id="cldVolDeposito" type="number" inputmode="numeric" min="1" max="600" step="1" value="' + volIni + '"' +
-        ' style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:16px;margin-bottom:8px">' +
-      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Litros de mezcla (opcional)</label>' +
+        ' class="checklist-dark-field-input checklist-dark-field-input--mb8">' +
+      '<label class="checklist-dark-field-label">Litros de mezcla (opcional)</label>' +
       '<input id="cldVolMezcla" type="number" inputmode="decimal" min="0.5" max="600" step="0.1" placeholder="Vacío = hasta el máximo" value="' + mezIni.replace(/"/g, '') + '"' +
-        ' style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:16px;margin-bottom:12px">' +
-      '<p style="font-size:10px;color:var(--muted,#94a3b8);line-height:1.45;margin:-8px 0 12px">Si no llenas hasta el tope (p. ej. 19 L en un depósito de 20 L), indícalo aquí: las dosis del checklist usarán esos litros.</p>' +
+        ' class="checklist-dark-field-input checklist-dark-field-input--mb12">' +
+      '<p class="checklist-dark-text checklist-dark-text--mix-hint">Si no llenas hasta el tope (p. ej. 19 L en un depósito de 20 L), indícalo aquí: las dosis del checklist usarán esos litros.</p>' +
 
-      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Agua para la mezcla</label>' +
-      '<select id="cldAgua" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:14px;margin-bottom:12px">' +
+      '<label class="checklist-dark-field-label">Agua para la mezcla</label>' +
+      '<select id="cldAgua" class="checklist-dark-field-input checklist-dark-select checklist-dark-select--mb12">' +
         '<option value="destilada"' + (aguaIni === 'destilada' ? ' selected' : '') + '>Destilada</option>' +
         '<option value="osmosis"' + (aguaIni === 'osmosis' ? ' selected' : '') + '>Ósmosis</option>' +
         '<option value="grifo"' + (aguaIni === 'grifo' ? ' selected' : '') + '>Grifo</option>' +
       '</select>' +
 
-      '<label style="display:block;font-size:11px;font-weight:800;color:#86efac;margin-bottom:4px">Nutriente / marca</label>' +
-      '<select id="cldNutriente" style="width:100%;padding:10px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg3);color:var(--white);font-size:14px;margin-bottom:16px">' +
+      '<label class="checklist-dark-field-label">Nutriente / marca</label>' +
+      '<select id="cldNutriente" class="checklist-dark-field-input checklist-dark-select checklist-dark-select--mb16">' +
         optsNut +
       '</select>' +
 
-      '<button type="button" id="cldBtnContinuar" style="width:100%;padding:14px;background:#16a34a;color:#fff;border:none;border-radius:14px;font-family:var(--font-display);font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px">' +
+      '<button type="button" id="cldBtnContinuar" class="checklist-dark-btn checklist-dark-btn--green">' +
         'Continuar al checklist</button>' +
-      '<button type="button" id="cldBtnAsistente" style="width:100%;padding:12px;background:var(--bg3);color:var(--white);border:1.5px solid var(--border);border-radius:14px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:8px">' +
+      '<button type="button" id="cldBtnAsistente" class="checklist-dark-btn checklist-dark-btn--ghost checklist-dark-btn--compact">' +
         'Asistente completo (recomendado)</button>' +
-      '<button type="button" id="cldBtnDespues" style="width:100%;padding:10px;background:transparent;color:var(--muted);border:none;font-size:12px;cursor:pointer">' +
+      '<button type="button" id="cldBtnDespues" class="checklist-dark-btn checklist-dark-btn--link">' +
         'Más tarde</button>' +
     '</div>';
 
