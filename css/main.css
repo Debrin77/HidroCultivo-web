@@ -2712,23 +2712,7 @@ button.torre-summary:focus-visible,
   flex-shrink: 0;
 }
 
-/* Riego — día hoy/mañana, opciones avanzadas, paneles NFT/DWC, tarjetas programa */
-.riego-politica-noc {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.55;
-  color: #334155;
-  margin: 0 0 12px;
-  padding: 12px 14px;
-  background: var(--bg3);
-  border-radius: 12px;
-  border: 1px solid var(--border);
-}
-.riego-politica-noc strong {
-  font-weight: 800;
-  color: #0f172a;
-}
+/* Riego — día/mañana, opciones avanzadas, paneles NFT/DWC, tarjetas programa */
 .riego-dia-group {
   display: flex;
   gap: 8px;
@@ -6351,6 +6335,17 @@ button.config-option {
   letter-spacing: 0.08em;
   margin-bottom: 6px;
   display: block;
+}
+.torre-nombre-localidad-line {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: -2px 0 8px;
+  line-height: 1.35;
+}
+.torre-nombre-localidad-line--vacío {
+  color: #94a3b8;
+  font-weight: 600;
 }
 .torre-nombre-row {
   display: flex;

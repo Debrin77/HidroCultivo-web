@@ -904,6 +904,7 @@
         <label class="form-label torre-field-label-sm" for="torreNombreInstalacionInput">
           Nombre de esta instalación
         </label>
+        <p id="torreNombreCardLocalidad" class="torre-nombre-localidad-line" role="status"></p>
         <div class="torre-nombre-row">
           <input type="text" id="torreNombreInstalacionInput" class="form-input torre-nombre-input" maxlength="40"
             autocomplete="off" placeholder="Ej. Torre terraza, NFT balcón, Lechugas cocina…"
@@ -1392,11 +1393,6 @@
     <div class="tab-panel" id="tab-riego" role="tabpanel" aria-labelledby="btn-riego" aria-hidden="true">
 
       <div class="section-title" id="riegoSectionTitle">💧 Cálculo de <span class="accent">Riego</span></div>
-
-      <p id="riegoPoliticaNocExt" class="riego-politica-noc setup-hidden">
-        🌙 <strong>Cultivo en exterior (torre vertical):</strong> por defecto se plantea <strong>riego nocturno de 30&nbsp;s hacia las 04:00</strong> (ventana 21:00–07:00).
-        La app lo omite solo si el clima lo desaconseja con claridad (p. ej. noche muy fría o ambiente muy húmedo); en noches muy exigentes sustituye ese pulso por un programa nocturno más largo.
-      </p>
 
       <!-- Selector Hoy / Mañana -->
       <div id="riegoDiaSelectorGroup" class="riego-dia-group" role="group" aria-label="Día para el cálculo de riego">
@@ -6323,9 +6319,17 @@ function updateTorreStats() {
 
   // Título torre
   renderTablaVariedades();
+  const locStr = textoLocalidadMeteoCfg(cfg);
   const ttEl = document.getElementById('torreTabTitle');
   if (ttEl) {
-    ttEl.textContent = torreNombre + (esNftCfg ? ' · NFT' : esDwcCfg ? ' · DWC' : '');
+    const tipoSuf = esNftCfg ? ' · NFT' : esDwcCfg ? ' · DWC' : '';
+    const locSuf = locStr ? ' · ' + locStr : '';
+    ttEl.textContent = torreNombre + tipoSuf + locSuf;
+  }
+  const locCard = document.getElementById('torreNombreCardLocalidad');
+  if (locCard) {
+    locCard.textContent = locStr ? '📍 ' + locStr : '📍 Sin municipio — configúralo en Medir';
+    locCard.classList.toggle('torre-nombre-localidad-line--vacío', !locStr);
   }
 
   const nomInpTorre = document.getElementById('torreNombreInstalacionInput');
@@ -15269,6 +15273,7 @@ function persistLocalidadMeteo() {
   guardarEstadoTorreActual();
   saveState();
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
+  try { updateTorreStats(); } catch (_) {}
 }
 
 /** Municipio para clima y avisos (cfg de instalación o activa). */
@@ -20134,12 +20139,6 @@ function actualizarVistaRiegoPorTipoInstalacion() {
       'aria-label',
       esModoClima ? 'Mostrar previsión meteorológica de mañana' : 'Calcular riego para mañana con previsión meteorológica'
     );
-  }
-  const polExt = document.getElementById('riegoPoliticaNocExt');
-  if (polExt) {
-    const showExt =
-      !esModoClima && (state.configTorre || {}).ubicacion !== 'interior';
-    polExt.classList.toggle('setup-hidden', !showExt);
   }
 }
 let esRecarga = false;
