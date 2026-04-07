@@ -16,6 +16,9 @@
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "overrides": {
+    "tar": "^7.5.13"
+  },
   "devDependencies": {
     "@capacitor/android": "^6.2.0",
     "@capacitor/cli": "^6.2.0",
@@ -23,6 +26,6 @@
     "@capacitor/filesystem": "^6.0.2",
     "@capacitor/ios": "^6.2.0",
     "@capacitor/share": "^6.0.2",
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.25.12"
   }
 }
