@@ -5736,6 +5736,36 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   line-height: 1.5;
   margin-bottom: 8px;
 }
+.medir-localidad-meteo-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.medir-localidad-meteo-row .medir-input-localidad-meteo {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.medir-btn-municipio-grifo {
+  flex-shrink: 0;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg3);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.medir-btn-municipio-grifo:active {
+  opacity: 0.92;
+  transform: scale(0.98);
+}
 .medir-input-localidad-meteo {
   width: 100%;
   background: var(--bg2);
@@ -5747,9 +5777,6 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   outline: none;
   box-sizing: border-box;
   margin-bottom: 8px;
-}
-.medir-input-localidad-meteo--solo {
-  margin-bottom: 0;
 }
 /* Mediciones — bloque exterior/interior: título y ayuda más legibles */
 .medir-panel-ubic-luz .config-section-title {

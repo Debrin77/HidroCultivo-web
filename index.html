@@ -377,11 +377,19 @@
         </div>
 
         <div class="config-section" id="panelLocalidadMeteo">
-          <input type="text" id="inputLocalidadMeteo" placeholder="Escribe el nombre del municipio"
-            aria-label="Municipio de esta instalación (avisos meteorológicos y clima)"
-            autocomplete="address-level2"
-            onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
-            class="medir-input-localidad-meteo medir-input-localidad-meteo--solo">
+          <div class="medir-localidad-meteo-row">
+            <input type="text" id="inputLocalidadMeteo" placeholder="Escribe el nombre del municipio"
+              aria-label="Municipio de esta instalación (avisos meteorológicos y clima)"
+              autocomplete="address-level2"
+              onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
+              class="medir-input-localidad-meteo">
+            <button type="button" id="btnMunicipioGrifoAMeteo" onclick="usarMunicipioGrifoParaMeteo()"
+              class="medir-btn-municipio-grifo setup-hidden"
+              title="Rellenar con el municipio ya elegido para agua del grifo"
+              aria-label="Rellenar el municipio de avisos con el mismo que usaste para agua del grifo">
+              💧
+            </button>
+          </div>
           <div class="medir-footer-note setup-hidden">
             Fuente activa: <strong id="configMeteoFuenteActiva">Open-Meteo</strong>. La app usa respaldo automático gratuito (met.no + UV free) y caché local si hay incidencias.
           </div>
@@ -15265,11 +15273,27 @@ function refreshMeteoFuenteActivaUI() {
   if (b) b.textContent = txt;
 }
 
+function usarMunicipioGrifoParaMeteo() {
+  const n = state.configAguaMunicipio;
+  if (!n) {
+    showToast('No hay municipio del grifo guardado. Elige «Agua del grifo» y tu pueblo arriba, o escribe el municipio a mano.', true);
+    return;
+  }
+  const el = document.getElementById('inputLocalidadMeteo');
+  if (el) el.value = String(n).split(',')[0].trim();
+  persistLocalidadMeteo();
+  showToast('Municipio para avisos rellenado desde el grifo', false);
+}
+
 function cargarLocalidadMeteoUI() {
   const el = document.getElementById('inputLocalidadMeteo');
   if (!el) return;
   const v = (state.configTorre && state.configTorre.localidadMeteo) ? String(state.configTorre.localidadMeteo) : '';
   el.value = v;
+  const btn = document.getElementById('btnMunicipioGrifoAMeteo');
+  if (btn) {
+    btn.classList.toggle('setup-hidden', !(state.configAgua === 'grifo' && state.configAguaMunicipio));
+  }
   refreshMeteoFuenteActivaUI();
 }
 
