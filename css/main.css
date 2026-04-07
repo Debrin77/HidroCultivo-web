@@ -151,6 +151,18 @@ body {
   animation: splashImgIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
 }
 
+/* Icono de marca (PNG cuadrado con cantos redondeados en el propio archivo) */
+.splash-img-wrap--brand {
+  width: clamp(136px, 40vw, 180px);
+  aspect-ratio: 1;
+}
+.splash-img-wrap--brand::before {
+  display: none;
+}
+.splash-img-wrap--brand .splash-img {
+  filter: drop-shadow(0 10px 32px rgba(0, 0, 0, 0.5));
+}
+
 @keyframes splashImgIn {
   from { opacity: 0; transform: scale(0.7); }
   to   { opacity: 1; transform: scale(1); }

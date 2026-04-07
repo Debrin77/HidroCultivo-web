@@ -1,5 +1,8 @@
 Iconos generados desde el arte maestro:
   ..\.cursor\projects\c-Users-carua-Downloads\assets\cultiva-icon-master.png
 
+Splash de arranque (misma marca que icono app):
+  splash-brand-icon.png  ← export cuadrado hoja + gota sobre verde oscuro
+
 Para regenerar tras cambiar el diseño (desde HidroCultivo-web con sharp instalado):
   node scripts\resize-icons.js   (crear script si lo necesitas)
