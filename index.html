@@ -14303,6 +14303,61 @@ function borrarEntradaRegistro(idx) {
   showToast('🗑 Entrada borrada');
 }
 
+function borrarRecargaLocal(idx) {
+  if (!confirm('¿Borrar esta recarga?')) return;
+  if (!Array.isArray(state.recargasLocal) || idx < 0 || idx >= state.recargasLocal.length) return;
+
+  const borrada = state.recargasLocal[idx];
+  state.recargasLocal.splice(idx, 1);
+
+  // Si se borra la última recarga de la instalación activa, recalcular marcador.
+  try {
+    const tAct = getTorreActiva();
+    const tIdAct = tAct && tAct.id != null ? tAct.id : (state.torreActiva || 0);
+    const bId = borrada && (borrada.torreId != null ? borrada.torreId : null);
+    const mismaTorre = bId == null || String(bId) === String(tIdAct);
+    if (mismaTorre) {
+      const fechaIsoBorrada = (borrada && typeof borrada.fecha === 'string' && borrada.fecha.includes('/'))
+        ? borrada.fecha.split('/').reverse().join('-')
+        : null;
+      if (fechaIsoBorrada && state.ultimaRecarga === fechaIsoBorrada) {
+        const restantes = (state.recargasLocal || []).filter(r => {
+          const rid = r && (r.torreId != null ? r.torreId : null);
+          return rid == null || String(rid) === String(tIdAct);
+        });
+        if (!restantes.length) {
+          state.ultimaRecarga = null;
+        } else {
+          const toTs = (r) => {
+            if (!r || typeof r.fecha !== 'string') return 0;
+            const p = r.fecha.split('/');
+            if (p.length !== 3) return 0;
+            const d = parseInt(p[0], 10);
+            const m = parseInt(p[1], 10) - 1;
+            const y = parseInt(p[2], 10);
+            if (!y || m < 0 || m > 11 || d < 1 || d > 31) return 0;
+            const hm = String(r.hora || '').split(':');
+            const hh = Math.max(0, Math.min(23, parseInt(hm[0], 10) || 0));
+            const mm = Math.max(0, Math.min(59, parseInt(hm[1], 10) || 0));
+            return new Date(y, m, d, hh, mm, 0, 0).getTime();
+          };
+          const recReciente = restantes.slice().sort((a, b) => toTs(b) - toTs(a))[0];
+          const p = String(recReciente.fecha || '').split('/');
+          state.ultimaRecarga = p.length === 3 ? [p[2], p[1], p[0]].join('-') : state.ultimaRecarga;
+        }
+      }
+    }
+  } catch (_) {}
+
+  saveState();
+  renderHistRecargas();
+  if (typeof renderRegistro === 'function' && histTabActiva === 'registro') renderRegistro();
+  if (document.getElementById('tab-mediciones')?.classList.contains('active')) {
+    try { updateRecargaBar(); } catch (_) {}
+  }
+  showToast('🗑 Recarga borrada');
+}
+
 // ══════════════════════════════════════════════════
 // REGISTRO COMPLETO — mediciones, cosechas, recargas
 // ══════════════════════════════════════════════════
@@ -18223,7 +18278,10 @@ function renderHistMediciones() {
 function renderHistRecargas() {
   // Mostrar recargas locales (siempre disponibles)
   const localSection = document.getElementById('recargasLocalSection');
-  const recargas = (state.recargasLocal || []).filter(coincideFiltroTorre);
+  const recargasConIdx = (state.recargasLocal || [])
+    .map((r, idx) => ({ r, idx }))
+    .filter(x => coincideFiltroTorre(x.r));
+  const recargas = recargasConIdx.map(x => x.r);
 
   if (recargas.length === 0 && (!histRecargasDatos || histRecargasDatos.length === 0)) {
     if (localSection) localSection.innerHTML =
@@ -18234,7 +18292,9 @@ function renderHistRecargas() {
 
   // Recargas locales — tarjetas detalladas
   if (localSection && recargas.length > 0) {
-    localSection.innerHTML = recargas.slice(0, 10).map((r, i) => {
+    localSection.innerHTML = recargasConIdx.slice(0, 10).map((it, i) => {
+      const r = it.r;
+      const globalIdx = it.idx;
       const sis = infoSistemaEntrada(r);
       return `
       <div class="hist-recarga-card">
@@ -18248,7 +18308,11 @@ function renderHistRecargas() {
             <div class="hist-recarga-nutriente">${sis.emoji || '🌿'} ${sis.nombre}</div>
             ${r.nutrienteNombre ? '<div class="hist-recarga-nutriente">🧪 ' + r.nutrienteNombre + '</div>' : ''}
           </div>
-          ${r.ecFinal ? '<div class="hist-recarga-ec">' + r.ecFinal + '<span class="hist-recarga-ec-unit"> µS</span></div>' : ''}
+          <div class="hist-action-cell">
+            ${r.ecFinal ? '<div class="hist-recarga-ec">' + r.ecFinal + '<span class="hist-recarga-ec-unit"> µS</span></div>' : ''}
+            <button onclick="borrarRecargaLocal(${globalIdx})"
+              class="hist-btn-delete" aria-label="Borrar esta recarga">🗑</button>
+          </div>
         </div>
 
         <!-- Grid parámetros -->
