@@ -20669,6 +20669,77 @@ function riegoIndiceDemanda(params) {
 }
 
 /**
+ * Ajuste climático dependiente de sustrato (solo exterior):
+ * - Alta HR/lluvia + sustrato muy retenedor => reducir algo la demanda.
+ * - Ambiente seco/cálido + sustrato poco retenedor => subir ligeramente.
+ * Mantiene un efecto moderado para no romper la estabilidad del programa.
+ */
+function riegoAjusteClimaPorSustrato(params) {
+  const ret = Math.max(0.2, Math.min(0.85, Number(params.retencion) || 0.5));
+  const rh = Math.max(20, Math.min(100, Number(params.humMediaPct) || 55));
+  const prob = Math.max(0, Math.min(100, Number(params.probLluviaPct) || 0));
+  const uv = Math.max(0, Math.min(12, Number(params.uvIdx) || 0));
+  const vpd = Math.max(0.05, Math.min(2.3, Number(params.vpdKpa) || 0.6));
+  const et0 = Number.isFinite(Number(params.et0DayMm)) ? Number(params.et0DayMm) : null;
+
+  // Exceso hídrico ambiental (más fuerte en sustratos con alta retención).
+  const humExceso = Math.max(0, rh - 72) / 28; // 0..1
+  const lluviaExceso = Math.max(0, prob - 50) / 50; // 0..1
+  const penalHumedad = (0.045 + ret * 0.095) * humExceso; // ~0..0.125
+  const penalLluvia = (0.02 + ret * 0.07) * lluviaExceso; // ~0..0.08
+
+  // Estrés seco/radiativo (más fuerte en sustratos de baja retención).
+  const seco = Math.max(0, vpd - 1.0) / 1.2; // 0..1
+  const radiativo = Math.max(0, uv - 5) / 5; // 0..1.4
+  const et0Seco = et0 != null ? Math.max(0, et0 - 4.2) / 3.0 : 0; // 0..1 aprox
+  const bajaRet = Math.max(0, 0.62 - ret) / 0.42; // 0..1
+  const extraSeco = (0.02 + bajaRet * 0.055) * Math.min(1.15, seco + radiativo * 0.45 + et0Seco * 0.55);
+
+  const mult = 1 - penalHumedad - penalLluvia + extraSeco;
+  return Math.max(0.88, Math.min(1.1, mult));
+}
+
+/**
+ * Margen de seguridad dinámico (micro-buffer):
+ * - Compensa cambios rápidos de meteo entre día/noche con un pequeño extra de demanda.
+ * - Más protector en sustratos de baja retención; casi neutro en alta retención.
+ * - Se limita para evitar sobre-riego por ruido en previsión.
+ */
+function riegoMargenSeguridadDinamico(params) {
+  const ret = Math.max(0.2, Math.min(0.85, Number(params.retencion) || 0.5));
+  const vpd = Math.max(0.05, Math.min(2.5, Number(params.vpdKpa) || 0.6));
+  const viento = Math.max(0, Math.min(55, Number(params.vientoKmh) || 0));
+  const uv = Math.max(0, Math.min(12, Number(params.uvIdx) || 0));
+  const et0 = Number.isFinite(Number(params.et0DayMm)) ? Number(params.et0DayMm) : 0;
+  const prob = Math.max(0, Math.min(100, Number(params.probLluviaPct) || 0));
+  const faseMult = Math.max(0.8, Math.min(1.1, Number(params.faseMult) || 1));
+  const tramo = params.tramo === 'noche' ? 'noche' : 'dia';
+
+  // Riesgo de deshidratación por combinación VPD + radiación + viento + ET0.
+  const riesgoSeco =
+    Math.max(0, (vpd - 1.0) / 1.2) * 0.45 +
+    Math.max(0, (uv - 5) / 5) * 0.25 +
+    Math.max(0, (viento - 14) / 22) * 0.2 +
+    Math.max(0, (et0 - 4.4) / 3.4) * 0.1;
+
+  // Si hay señal fuerte de lluvia, se reduce parcialmente ese extra.
+  const frenoLluvia = Math.max(0, (prob - 70) / 30) * 0.6;
+  const riesgoNeto = Math.max(0, riesgoSeco * (1 - frenoLluvia));
+
+  // Baja retención => más colchón; alta retención => colchón mínimo.
+  const factorRetBaja = Math.max(0, 0.64 - ret) / 0.44; // 0..1 aprox
+  const base = tramo === 'noche' ? 0.004 : 0.006;
+  const amplitud = tramo === 'noche' ? 0.015 : 0.03;
+  const extra = base + (0.35 + 0.65 * factorRetBaja) * Math.min(1.05, riesgoNeto) * amplitud;
+
+  // En fases muy iniciales no conviene meter demasiado colchón.
+  const faseFactor = tramo === 'noche' ? Math.min(1, Math.max(0.88, faseMult)) : Math.min(1.02, Math.max(0.9, faseMult));
+  const mult = 1 + extra * faseFactor;
+
+  return Math.max(tramo === 'noche' ? 1.0 : 1.002, Math.min(tramo === 'noche' ? 1.018 : 1.038, mult));
+}
+
+/**
  * Toldo / malla de sombra: menos radiación en el dosel → UV y ET₀ efectivos menores y algo menos de calor
  * en la zona de planta (VPD). Factores orientativos (mallas típicas ~50–70 % atenuación).
  */
@@ -21213,6 +21284,24 @@ async function calcularRiego() {
         probLluvia,
         et0DayMm: et0Riego
       });
+      demandaDia *= riegoAjusteClimaPorSustrato({
+        retencion: sustrato.retencion,
+        humMediaPct: humMedia,
+        probLluviaPct: probLluvia,
+        uvIdx: uvEfectivo,
+        vpdKpa: vpd,
+        et0DayMm: et0Riego
+      });
+      demandaDia *= riegoMargenSeguridadDinamico({
+        tramo: 'dia',
+        retencion: sustrato.retencion,
+        vpdKpa: vpd,
+        vientoKmh: viento,
+        uvIdx: uvEfectivo,
+        et0DayMm: et0Riego,
+        probLluviaPct: probLluvia,
+        faseMult: multFase
+      });
     }
     const multFase = riegoFaseCultivoMult(edadSem);
     if (esInterior) {
@@ -21326,6 +21415,24 @@ async function calcularRiego() {
         probLluvia,
         et0DayMm: et0Riego
       });
+      demandaMed *= riegoAjusteClimaPorSustrato({
+        retencion: sustrato.retencion,
+        humMediaPct: humMedia,
+        probLluviaPct: probLluvia,
+        uvIdx: uvEfectivo,
+        vpdKpa: vpdMediodia,
+        et0DayMm: et0Riego
+      });
+      demandaMed *= riegoMargenSeguridadDinamico({
+        tramo: 'dia',
+        retencion: sustrato.retencion,
+        vpdKpa: vpdMediodia,
+        vientoKmh: viento,
+        uvIdx: uvEfectivo,
+        et0DayMm: et0Riego,
+        probLluviaPct: probLluvia,
+        faseMult: multFase
+      });
       demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * multFase));
     }
     if (sensRiego.mult !== 1) {
@@ -21376,6 +21483,16 @@ async function calcularRiego() {
         toldo: toldoAct
       });
       demandaNoc = demandaNocRaw * multFase;
+      demandaNoc *= riegoMargenSeguridadDinamico({
+        tramo: 'noche',
+        retencion: sustrato.retencion,
+        vpdKpa: vpdNocVal,
+        vientoKmh: vientoNocKmh,
+        uvIdx: 0,
+        et0DayMm: et0NightSum != null ? et0NightSum * 11 : 0,
+        probLluviaPct: probLluvia,
+        faseMult: multFase
+      });
       demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
       if (sensRiego.mult !== 1) {
         demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc * sensRiego.mult));
