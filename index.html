@@ -246,6 +246,12 @@
           <span class="quick-btn-icon" aria-hidden="true">⚙️</span>
           <span>Configurar instalación</span>
         </button>
+        <button type="button" class="quick-btn quick-btn-info" id="btnSeguridadAccesoInicio"
+          onclick="toggleSeguridadAccesoInicio()" aria-expanded="false"
+          aria-controls="panelSeguridadAccesoInicio" aria-label="Abrir opciones de seguridad de acceso">
+          <span class="quick-btn-icon" aria-hidden="true">🔐</span>
+          <span>Seguridad de acceso</span>
+        </button>
         <button type="button" class="quick-btn quick-btn-info quick-btn-hidden" id="btnActivarNotif"
           onclick="activarNotificacionesDesdeInicio(event)"
           aria-label="Activar notificaciones y alertas"
@@ -257,6 +263,25 @@
         <button type="button" class="quick-btn quick-btn-danger" onclick="resetApp()" aria-label="Borrar todos los datos del sistema">
           <span class="quick-btn-icon" aria-hidden="true">🗑️</span>
           <span class="quick-btn-danger-text">Reset sistema</span>
+        </button>
+      </div>
+
+      <div id="panelSeguridadAccesoInicio" class="dash-seguridad-panel setup-hidden" role="region"
+        aria-labelledby="btnSeguridadAccesoInicio" aria-hidden="true">
+        <div class="dash-seguridad-panel-title">🔐 Seguridad de acceso</div>
+        <div class="setup-box-warn dash-seguridad-panel-hint">
+          Define cada cuánto quieres volver a autenticarte al abrir la app.
+        </div>
+        <label class="form-label setup-mt-8" for="authRememberSelect">Pedir autenticación</label>
+        <select id="authRememberSelect" class="form-input" onchange="onAuthRememberChange(this.value)">
+          <option value="0">Siempre (cada apertura)</option>
+          <option value="15">Recordar 15 minutos</option>
+          <option value="60">Recordar 1 hora</option>
+          <option value="480">Recordar 8 horas</option>
+        </select>
+        <div class="config-help-text">Se intenta biometría primero; si no está disponible, se usa PIN.</div>
+        <button type="button" class="btn btn-secondary setup-mt-8" onclick="forzarReautenticacion()">
+          Cerrar sesión ahora
         </button>
       </div>
 
@@ -495,24 +520,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="config-section" id="panelSeguridadAcceso">
-          <div class="config-section-title">🔐 Seguridad de acceso</div>
-          <div class="setup-box-warn">
-            Define cada cuánto quieres volver a autenticarte al abrir la app.
-          </div>
-          <label class="form-label setup-mt-8" for="authRememberSelect">Pedir autenticación</label>
-          <select id="authRememberSelect" class="form-input" onchange="onAuthRememberChange(this.value)">
-            <option value="0">Siempre (cada apertura)</option>
-            <option value="15">Recordar 15 minutos</option>
-            <option value="60">Recordar 1 hora</option>
-            <option value="480">Recordar 8 horas</option>
-          </select>
-          <div class="config-help-text">Se intenta biometría primero; si no está disponible, se usa PIN.</div>
-          <button type="button" class="btn btn-secondary setup-mt-8" onclick="forzarReautenticacion()">
-            Cerrar sesión ahora
-          </button>
         </div>
 
         <div class="config-section">
@@ -3660,6 +3667,16 @@ function forzarReautenticacion() {
   } catch (_) {}
   showToast('Sesión cerrada. Vuelve a autenticarte.');
   setTimeout(() => location.reload(), 250);
+}
+
+function toggleSeguridadAccesoInicio() {
+  const p = document.getElementById('panelSeguridadAccesoInicio');
+  const b = document.getElementById('btnSeguridadAccesoInicio');
+  if (!p || !b) return;
+  p.classList.toggle('setup-hidden');
+  const isOpen = !p.classList.contains('setup-hidden');
+  b.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  p.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 }
 
 function hasValidAuthSession() {

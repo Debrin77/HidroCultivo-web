@@ -2315,6 +2315,27 @@ button.torre-summary:focus-visible,
 .quick-btn-danger-text { color: var(--red); }
 .quick-btn-icon { font-size: 20px; }
 
+/* Panel Seguridad de acceso (Inicio, debajo de acciones rápidas) */
+.dash-seguridad-panel {
+  margin-top: 4px;
+  margin-bottom: 12px;
+  padding: 14px 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  box-shadow: var(--card-shadow-soft);
+}
+.dash-seguridad-panel-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.dash-seguridad-panel-hint {
+  margin-bottom: 0;
+}
+
 /* Quick wins visuales: loaders más limpios y legibles */
 #meteoLoader,
 #riegoLoader,
