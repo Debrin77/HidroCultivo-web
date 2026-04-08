@@ -2479,7 +2479,7 @@
 
       <!-- Ubicación interior/exterior -->
       <div class="setup-section-title-main">
-        ¿Dónde está tu torre?
+        ¿Dónde está tu sistema?
       </div>
       <div class="equip-grid">
         <button type="button" class="equip-card selected" id="eqExterior" onclick="toggleUbic('exterior')">
@@ -2658,7 +2658,7 @@
       <div class="setup-subtitle">Esto afecta al cálculo de riego, alertas de temperatura y necesidades de luz.</div>
 
       <!-- Interior / Exterior -->
-      <div class="setup-block-title">📍 ¿Dónde estará tu torre?</div>
+      <div class="setup-block-title">📍 ¿Dónde estará tu sistema?</div>
       <div class="setup-grid-2 setup-grid-gap-10 setup-mb-16">
         <button type="button" class="equip-card equip-card-pad-14" id="locExterior" onclick="seleccionarUbicacion('exterior')">
           <div class="setup-loc-icon">☀️</div>
@@ -16793,6 +16793,8 @@ function getCLPasos() {
         '<div id="clNftGeomRecalcMsg" class="cl-nft-geom-recalc-msg" role="status"></div>',
     }]
     : [];
+  const primerLlenado = clRutaChecklist === 'primer_llenado';
+
   const pasosNftExtra = esNft && nftBomb ? [
     { id:'N0', seccion:null, paso:'N0',
       desc:'Bomba de circulación <strong>24 h</strong> continua. La app aplica criterios orientativos alineados con práctica NFT habitual (película fina, pérdidas típicas de línea y altura de bombeo si la indicaste). <strong>No</strong> sustituye la <strong>curva Q–H</strong> del fabricante. Anota el caudal (y opcionalmente la potencia) de la <strong>placa</strong> de tu bomba: verás si <strong>cumple</strong> o no el criterio orientativo.',
@@ -16812,15 +16814,15 @@ function getCLPasos() {
         '<div id="clNftN0GeomHint" class="cl-nft-n0-geom-hint" role="status"></div>' +
         '<div id="clNftDepositoRecomendadoWrap" class="cl-nft-deposito-rec-wrap" role="region" aria-label="Volumen de depósito recomendado NFT"></div>' +
         '<div id="clNftBombaUsuarioMsg" class="cl-nft-bomba-usuario-msg" role="status"></div>' },
-    { id:'N1', seccion:null, paso:'N1',
+    ...(!primerLlenado ? [{
+      id:'N1', seccion:null, paso:'N1',
       desc:'Inspeccionar los ' + nftCh + ' canales: sin barro orgánico, raíces compactando el fondo ni tapones en codos',
-      nota:'NFT: la película de agua debe poder recorrer todo el canal; ~' + nftHx + ' huecos/canal en tu configuración' },
+      nota:'NFT: la película de agua debe poder recorrer todo el canal; ~' + nftHx + ' huecos/canal en tu configuración'
+    }] : []),
     { id:'N2', seccion:null, paso:'N2',
       desc:'Revisar retornos y bajantes al depósito: flujo continuo, sin burbujas atrapadas en subidas largas',
       nota:'Aire en el circuito suele dejar los primeros huecos sin película' },
   ] : [];
-
-  const primerLlenado = clRutaChecklist === 'primer_llenado';
 
   const pasosCabeceraRecargaCompleta = [
   { id:'P1', seccion:'🌙 Preparación', paso:'P1',
