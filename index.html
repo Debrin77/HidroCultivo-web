@@ -21255,6 +21255,7 @@ async function calcularRiego() {
 
     const sustrato = riegoSustratoPerfil();
 
+    const multFase = riegoFaseCultivoMult(edadSem);
     let demandaDia;
     let vpdInterior = null;
     if (esInterior) {
@@ -21303,7 +21304,6 @@ async function calcularRiego() {
         faseMult: multFase
       });
     }
-    const multFase = riegoFaseCultivoMult(edadSem);
     if (esInterior) {
       demandaDia = Math.max(0.52, Math.min(1.22, demandaDia * multFase));
     } else {
