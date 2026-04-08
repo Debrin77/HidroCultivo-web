@@ -23817,12 +23817,21 @@ window.addEventListener('appinstalled', () => {
   showToast('✅ HidroCultivo instalada correctamente');
 });
 
+const hideSplash = () => {
+  const splash = document.getElementById('splashScreen');
+  if (splash) splash.style.display = 'none';
+};
+
+// Failsafe para WebView: evita splash infinito si window.onload no llega.
+setTimeout(hideSplash, 6000);
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(hideSplash, 1800);
+});
+
 window.onload = () => {
-  // Ocultar splash tras la animación (1.0s + 0.4s fadeout = 1.4s total)
-  setTimeout(() => {
-    const splash = document.getElementById('splashScreen');
-    if (splash) splash.style.display = 'none';
-  }, 3300);
+  // Mantener un pequeño delay visual cuando la carga va normal.
+  setTimeout(hideSplash, 3300);
 
   // ── Registrar listeners del PIN (evitar onclick inline) ──────────────────
   document.querySelectorAll('.pin-key[data-digit]').forEach(key => {
