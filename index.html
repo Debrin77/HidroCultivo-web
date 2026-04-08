@@ -59,6 +59,7 @@
 <div class="pin-screen" id="pinScreen" role="dialog" aria-modal="true" aria-labelledby="pinTitulo" tabindex="0">
   <div class="pin-logo" id="pinTitulo">HIDRO<span>Cultivo</span></div>
   <div class="pin-sub">Hidroponía fácil e inteligente</div>
+  <div class="pin-sub" id="pinAuthStatus" aria-live="polite"></div>
   <div class="pin-dots">
     <div class="pin-dot" id="d0"></div>
     <div class="pin-dot" id="d1"></div>
@@ -494,6 +495,24 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="config-section" id="panelSeguridadAcceso">
+          <div class="config-section-title">🔐 Seguridad de acceso</div>
+          <div class="setup-box-warn">
+            Define cada cuánto quieres volver a autenticarte al abrir la app.
+          </div>
+          <label class="form-label setup-mt-8" for="authRememberSelect">Pedir autenticación</label>
+          <select id="authRememberSelect" class="form-input" onchange="onAuthRememberChange(this.value)">
+            <option value="0">Siempre (cada apertura)</option>
+            <option value="15">Recordar 15 minutos</option>
+            <option value="60">Recordar 1 hora</option>
+            <option value="480">Recordar 8 horas</option>
+          </select>
+          <div class="config-help-text">Se intenta biometría primero; si no está disponible, se usa PIN.</div>
+          <button type="button" class="btn btn-secondary setup-mt-8" onclick="forzarReautenticacion()">
+            Cerrar sesión ahora
+          </button>
         </div>
 
         <div class="config-section">
@@ -3101,6 +3120,8 @@ async function hcPostSheets(payload) {
 }
 
 const PIN = '2506';
+const AUTH_REMEMBER_MIN_KEY = 'hc_auth_remember_min';
+const AUTH_TS_KEY = 'hc_auth';
 const STORAGE_KEY = 'cultiva_v1';
 /** Tutorial contextual “Asignar cultivo” (1 = usuario pidió no volver a mostrar) */
 const TUTORIAL_ASIGNAR_LS = 'cultiva_tutorial_asignar_v1';
@@ -3518,6 +3539,102 @@ async function onImportEstadoFileSelected(ev) {
 // PIN
 // ══════════════════════════════════════════════════
 let pinEntry = '';
+let appBootstrapped = false;
+
+function getAuthRememberMinutes() {
+  try {
+    const raw = localStorage.getItem(AUTH_REMEMBER_MIN_KEY);
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0) return 0;
+    return n;
+  } catch (_) {
+    return 0;
+  }
+}
+
+function onAuthRememberChange(v) {
+  const n = Math.max(0, Number(v) || 0);
+  try {
+    localStorage.setItem(AUTH_REMEMBER_MIN_KEY, String(n));
+    if (n === 0) localStorage.removeItem(AUTH_TS_KEY);
+  } catch (_) {}
+  showToast(n === 0 ? 'Autenticación: siempre al abrir' : `Autenticación: recordar ${n} min`);
+}
+
+function forzarReautenticacion() {
+  try {
+    localStorage.removeItem(AUTH_TS_KEY);
+  } catch (_) {}
+  showToast('Sesión cerrada. Vuelve a autenticarte.');
+  setTimeout(() => location.reload(), 250);
+}
+
+function hasValidAuthSession() {
+  try {
+    const rememberMin = getAuthRememberMinutes();
+    if (rememberMin <= 0) return false;
+    const authTs = Number(localStorage.getItem(AUTH_TS_KEY) || 0);
+    if (!Number.isFinite(authTs) || authTs <= 0) return false;
+    const maxAge = rememberMin * 60 * 1000;
+    return (Date.now() - authTs) < maxAge;
+  } catch (_) {
+    return false;
+  }
+}
+
+function unlockAndInitApp() {
+  if (appBootstrapped) return;
+  const pinEl = document.getElementById('pinScreen');
+  const appEl = document.getElementById('app');
+  a11yDetachFocusTrap(pinEl);
+  if (appEl) appEl.inert = false;
+  if (pinEl) pinEl.style.display = 'none';
+  try {
+    if (getAuthRememberMinutes() > 0) localStorage.setItem(AUTH_TS_KEY, String(Date.now()));
+    else localStorage.removeItem(AUTH_TS_KEY);
+  } catch (_) {}
+  appBootstrapped = true;
+  initApp();
+}
+
+function lockAppWithPin() {
+  const appEl = document.getElementById('app');
+  const pinEl = document.getElementById('pinScreen');
+  const statusEl = document.getElementById('pinAuthStatus');
+  if (appEl) appEl.inert = true;
+  if (statusEl) statusEl.textContent = '';
+  if (pinEl) {
+    pinEl.style.display = '';
+    a11yAttachFocusTrap(pinEl);
+    requestAnimationFrame(() => {
+      try { pinEl.focus(); } catch (_) {}
+    });
+  }
+}
+
+async function tryBiometricUnlock() {
+  try {
+    const cap = window.Capacitor;
+    const statusEl = document.getElementById('pinAuthStatus');
+    if (!cap || !cap.isNativePlatform || !cap.isNativePlatform()) return false;
+    const biom = cap.Plugins && cap.Plugins.NativeBiometric;
+    if (!biom) return false;
+
+    const availability = await biom.isAvailable();
+    if (!availability || !availability.isAvailable) return false;
+    if (statusEl) statusEl.textContent = 'Intentando desbloqueo biométrico…';
+
+    await biom.verifyIdentity({
+      reason: 'Desbloquear HidroCultivo',
+      title: 'Identificación biométrica',
+      subtitle: 'Usa la biometría de tu dispositivo',
+      description: 'Si cancelas, podrás entrar con PIN',
+    });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
 
 function pinPress(d) {
   if (pinEntry.length >= 4) return;
@@ -3541,16 +3658,9 @@ function updatePinDots() {
 
 function checkPin() {
   if (pinEntry === PIN) {
-    const pinEl = document.getElementById('pinScreen');
-    const appEl = document.getElementById('app');
-    a11yDetachFocusTrap(pinEl);
-    if (appEl) appEl.inert = false;
-    pinEl.style.display = 'none';
-    try {
-      // Guardar auth con timestamp de 8 horas
-      localStorage.setItem('hc_auth', Date.now().toString());
-    } catch(e) {}
-    initApp();
+    pinEntry = '';
+    updatePinDots();
+    unlockAndInitApp();
   } else {
     for (let i = 0; i < 4; i++) document.getElementById('d' + i).className = 'pin-dot err';
     document.getElementById('pinErr').textContent = 'PIN incorrecto';
@@ -15506,6 +15616,8 @@ function actualizarRangoEC() {
 function initConfigUI() {
   const agua = state.configAgua || 'destilada';
   const sustrato = state.configTorre?.sustrato || state.configSustrato || 'esponja';
+  const authRememberSel = document.getElementById('authRememberSelect');
+  if (authRememberSel) authRememberSel.value = String(getAuthRememberMinutes());
 
   ['destilada','osmosis','grifo'].forEach(t => {
     const el = document.getElementById('opt-' + t);
@@ -23848,26 +23960,23 @@ window.onload = () => {
     if (e.key === 'Backspace') pinDel();
   });
 
-  // ── Comprobar auth guardada ───────────────────────────────────────────────
-  try {
-    const authTs = localStorage.getItem('hc_auth');
-    const OCHO_HORAS = 8 * 60 * 60 * 1000;
-    if (authTs && (Date.now() - parseInt(authTs)) < OCHO_HORAS) {
-      document.getElementById('pinScreen').style.display = 'none';
-      initApp();
-      return;
-    }
-  } catch(e) {}
-  // Sin auth válida — mostrar PIN (ya visible por defecto): atrapar foco y bloquear tab hacia la app.
-  const appEl = document.getElementById('app');
-  const pinEl = document.getElementById('pinScreen');
-  if (appEl) appEl.inert = true;
-  if (pinEl) {
-    a11yAttachFocusTrap(pinEl);
-    requestAnimationFrame(() => {
-      try { pinEl.focus(); } catch (_) {}
-    });
+  // Arranque protegido: sesión configurable (si expira, biometría -> PIN).
+  if (hasValidAuthSession()) {
+    unlockAndInitApp();
+    return;
   }
+  lockAppWithPin();
+  setTimeout(async () => {
+    const statusEl = document.getElementById('pinAuthStatus');
+    const ok = await tryBiometricUnlock();
+    if (ok) {
+      unlockAndInitApp();
+    } else {
+      const pinErr = document.getElementById('pinErr');
+      if (pinErr) pinErr.textContent = '';
+      if (statusEl) statusEl.textContent = 'Biometría no disponible. Introduce tu PIN.';
+    }
+  }, 150);
 };
 
 // ══════════════════════════════════════════════════
