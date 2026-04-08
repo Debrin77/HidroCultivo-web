@@ -1352,6 +1352,11 @@
               class="hc-backup-import-input">
           </label>
         </div>
+        <div class="setup-mt-8">
+          <button type="button" class="hc-btn-tap hc-btn-backup-import" onclick="restaurarPuntoAutomaticoLocal()">
+            ♻️ Restaurar último punto automático
+          </button>
+        </div>
       </div>
 
     </div>
@@ -1770,6 +1775,10 @@
         </button>
       </div>
 
+      <div id="filtroTorreWrapGlobal" class="hist-torre-filter-wrap" style="display:none" role="group" aria-label="Filtrar historial por instalación">
+        <div id="filtroTorreBtnsGlobal" class="hist-torre-filter-btns"></div>
+      </div>
+
       <!-- Loader -->
       <div id="histLoader" class="info-banner">
         <span>⏳</span><span>Cargando historial...</span>
@@ -1777,9 +1786,6 @@
 
       <!-- Gráficas mediciones -->
       <div id="histMediciones" class="hist-tabpanel setup-hidden" role="tabpanel" aria-labelledby="htab-mediciones" aria-hidden="true">
-        <div id="filtroTorreWrap" class="hist-torre-filter-wrap" style="display:none" role="group" aria-label="Filtrar mediciones por instalación">
-          <div id="filtroTorreBtns" class="hist-torre-filter-btns"></div>
-        </div>
         <!-- Resumen legible (sin gráficas) -->
         <div class="hist-ultima-medicion">
           <div class="hist-ultima-medicion-title">Última medición</div>
@@ -3123,6 +3129,10 @@ const PIN = '2506';
 const AUTH_REMEMBER_MIN_KEY = 'hc_auth_remember_min';
 const AUTH_TS_KEY = 'hc_auth';
 const STORAGE_KEY = 'cultiva_v1';
+const APP_BUILD_VERSION = '2026-04-08-auth-biom-v1';
+const APP_BUILD_VERSION_KEY = 'hc_app_build_version';
+const AUTO_RESTORE_POINT_KEY = 'hc_auto_restore_point_v1';
+const AUTO_RESTORE_POINT_TRANSITION_KEY = 'hc_auto_restore_transition_v1';
 /** Tutorial contextual “Asignar cultivo” (1 = usuario pidió no volver a mostrar) */
 const TUTORIAL_ASIGNAR_LS = 'cultiva_tutorial_asignar_v1';
 const TUTORIAL_EDITAR_LS = 'cultiva_tutorial_editar_v1';
@@ -3424,11 +3434,62 @@ function compactarStateFotos() {
 /** Claves opcionales de localStorage que acompañan al estado principal */
 const LOCALSTORAGE_EXTRA_BACKUP_KEYS = [
   'hc_auth',
+  AUTH_REMEMBER_MIN_KEY,
   TUTORIAL_ASIGNAR_LS,
   TUTORIAL_EDITAR_LS,
   TUTORIAL_TORRE_TAB_LS,
   TORRE_SWIPE_HINT_LS,
 ];
+
+function crearPuntoRestauracionLocal(opts = {}) {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw || raw.length < 2) return false;
+    JSON.parse(raw);
+    const extraKeys = {};
+    LOCALSTORAGE_EXTRA_BACKUP_KEYS.forEach((k) => {
+      try {
+        const v = localStorage.getItem(k);
+        if (v != null && v !== '') extraKeys[k] = v;
+      } catch (_) {}
+    });
+    const snapshot = {
+      hidrocultivoAutoRestore: true,
+      capturedAt: new Date().toISOString(),
+      reason: opts.reason || 'version-change',
+      fromVersion: opts.fromVersion || null,
+      toVersion: opts.toVersion || APP_BUILD_VERSION,
+      main: raw,
+      extraKeys,
+    };
+    localStorage.setItem(AUTO_RESTORE_POINT_KEY, JSON.stringify(snapshot));
+    if (opts.fromVersion || opts.toVersion) {
+      localStorage.setItem(
+        AUTO_RESTORE_POINT_TRANSITION_KEY,
+        String((opts.fromVersion || 'none') + '->' + (opts.toVersion || APP_BUILD_VERSION))
+      );
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function gestionarCambioVersionEnArranque() {
+  try {
+    const prev = localStorage.getItem(APP_BUILD_VERSION_KEY) || '';
+    if (prev === APP_BUILD_VERSION) return;
+
+    const transition = String((prev || 'none') + '->' + APP_BUILD_VERSION);
+    const yaGuardada = localStorage.getItem(AUTO_RESTORE_POINT_TRANSITION_KEY) === transition;
+    if (!yaGuardada) {
+      crearPuntoRestauracionLocal({ reason: 'before-version-upgrade', fromVersion: prev || null, toVersion: APP_BUILD_VERSION });
+    }
+
+    localStorage.setItem(APP_BUILD_VERSION_KEY, APP_BUILD_VERSION);
+    showToast('ℹ️ Nueva versión detectada. Recomendado: Exportar copia de seguridad ahora.');
+  } catch (_) {}
+}
 
 async function exportarEstadoHidroCultivo() {
   try {
@@ -3532,6 +3593,38 @@ async function onImportEstadoFileSelected(ev) {
     setTimeout(() => { location.reload(); }, 500);
   } catch (e) {
     showToast('Error al importar: ' + (e && e.message ? e.message : e), true);
+  }
+}
+
+function restaurarPuntoAutomaticoLocal() {
+  try {
+    const raw = localStorage.getItem(AUTO_RESTORE_POINT_KEY);
+    if (!raw) {
+      showToast('No hay punto automático disponible en este dispositivo', true);
+      return;
+    }
+    const snap = JSON.parse(raw);
+    if (!snap || !snap.main || typeof snap.main !== 'string') {
+      showToast('Punto automático inválido', true);
+      return;
+    }
+    JSON.parse(snap.main);
+    const fecha = snap.capturedAt ? new Date(snap.capturedAt).toLocaleString() : 'fecha desconocida';
+    if (!confirm('Se restaurará el último punto automático local (' + fecha + '). ¿Continuar?')) return;
+    if (!confirm('Segunda confirmación — reemplazará el estado actual.')) return;
+    localStorage.setItem(STORAGE_KEY, snap.main);
+    if (snap.extraKeys && typeof snap.extraKeys === 'object') {
+      Object.keys(snap.extraKeys).forEach((k) => {
+        try {
+          const v = snap.extraKeys[k];
+          if (v != null && String(v) !== '') localStorage.setItem(k, String(v));
+        } catch (_) {}
+      });
+    }
+    showToast('✅ Punto automático restaurado — recargando…');
+    setTimeout(() => location.reload(), 500);
+  } catch (e) {
+    showToast('No se pudo restaurar el punto automático: ' + (e && e.message ? e.message : e), true);
   }
 }
 
@@ -7237,6 +7330,29 @@ function tipoInstalParaEntradaRegistro(e) {
     if (tr && tr.config) return tipoInstalacionNormalizado(tr.config);
   }
   return tipoInstalacionNormalizado(state.configTorre || {});
+}
+
+/** Nombre/emoji del sistema para entradas históricas (registro/mediciones/recargas). */
+function infoSistemaEntrada(e) {
+  const fallback = { nombre: 'Instalación', emoji: '🌿' };
+  if (!e || typeof e !== 'object') return fallback;
+  const nombreDirecto = String(e.torreNombre || '').trim();
+  const emojiDirecto = e.torreEmoji || '🌿';
+  if (nombreDirecto) return { nombre: nombreDirecto, emoji: emojiDirecto };
+  const tid = e.torreId;
+  if (tid != null && Array.isArray(state.torres)) {
+    const tr = state.torres.find(t => t.id === tid);
+    if (tr) return {
+      nombre: (String(tr.nombre || '').trim() || 'Instalación'),
+      emoji: tr.emoji || '🌿',
+    };
+  }
+  const ta = getTorreActiva ? getTorreActiva() : null;
+  if (ta) return {
+    nombre: (String(ta.nombre || '').trim() || 'Instalación'),
+    emoji: ta.emoji || '🌿',
+  };
+  return fallback;
 }
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 /** NFT: Ø interior línea de alimentación/distribución desde bomba (no el canal de cultivo 75–110 mm), mm — 16–40 */
@@ -13562,6 +13678,7 @@ function renderDiarioBloqueSistema() {
   const wrap = document.getElementById('diarioSistemaCompletoWrap');
   if (!wrap) return;
   ensureFotosSistemaCompletoState();
+  const sisAct = infoSistemaEntrada(getTorreActiva() || {});
   const keys = [...state.fotosSistemaCompleto.fotoKeys].reverse();
   const n = keys.length;
   const tDiario = tipoInstalacionNormalizado(state.configTorre || {});
@@ -13597,6 +13714,7 @@ function renderDiarioBloqueSistema() {
   wrap.innerHTML =
     '<div class="diario-sistema-panel">' +
     '<div class="diario-sistema-title">🏗 Vista del sistema completo</div>' +
+    '<div class="hist-recarga-nutriente">' + (sisAct.emoji || '🌿') + ' ' + sisAct.nombre + '</div>' +
     '<div class="diario-sistema-intro">Registra la <strong>evolución de toda la instalación</strong> (no una sola maceta). Las fotos por cultivo siguen en cada <strong>ficha de planta</strong>. Estas entradas también salen en <strong>Historial → Registro</strong>.</div>' +
     '<div class="hc-foto-grid hc-foto-grid--mb">' +
     '<label class="hc-label-foto hc-label-foto--green" aria-label="Foto del sistema con la cámara">' +
@@ -13645,8 +13763,22 @@ async function renderDiarioSelector() {
   const sel = document.getElementById('diarioPlantaSelector');
   const contenido = document.getElementById('diarioContenido');
   if (!sel) return;
+  if (filtroTorreActivo != null && Array.isArray(state.torres) && state.torres.length > 1) {
+    const idxObjetivo = state.torres.findIndex(t => String(t.id) === String(filtroTorreActivo));
+    if (idxObjetivo >= 0 && idxObjetivo !== (state.torreActiva || 0)) {
+      const tObj = state.torres[idxObjetivo];
+      sel.innerHTML =
+        '<div class="diario-selector-empty">' +
+        '📌 El filtro de Historial está en <strong>' + escHtmlUi((tObj.emoji || '🌿') + ' ' + ((tObj.nombre || '').trim() || 'Instalación')) + '</strong>.<br>' +
+        '<button type="button" class="btn btn-primary setup-mt-8" onclick="cambiarAlSistemaFiltradoDiario(' + idxObjetivo + ')">Cambiar al sistema filtrado</button>' +
+        '</div>';
+      if (contenido) contenido.innerHTML = '';
+      return;
+    }
+  }
 
   const cfg = state.configTorre || {};
+  const sisAct = infoSistemaEntrada(getTorreActiva() || {});
   const numNiveles = cfg.numNiveles || NUM_NIVELES;
   const numCestas  = cfg.numCestas  || NUM_CESTAS;
   const plantas = [];
@@ -13688,6 +13820,7 @@ async function renderDiarioSelector() {
         (tieneFotos ? '📸' : '🌱') + '</div>' +
       '<div class="diario-item-body">' +
         '<div class="diario-item-title">' + nomDiarioSel + '</div>' +
+        '<div class="diario-item-meta">' + (sisAct.emoji || '🌿') + ' ' + sisAct.nombre + '</div>' +
         '<div class="diario-item-meta">' +
           'Nivel ' + (p.n+1) + ' · Cesta ' + (p.c+1) +
           (p.diasDesde !== null ? ' · <strong class="diario-item-dia">Día ' + p.diasDesde + '</strong>' : '') +
@@ -13736,6 +13869,13 @@ async function renderDiarioSelector() {
       leerFotoIDB(ultimaKey).then(o => { if (o && o.data) ponerImg(o.data); }).catch(() => {});
     }
   });
+}
+
+function cambiarAlSistemaFiltradoDiario(idxObjetivo) {
+  cambiarTorreActiva(idxObjetivo);
+  setTimeout(() => {
+    if (histTabActiva === 'diario') renderDiarioSelector();
+  }, 120);
 }
 
 async function renderDiarioPlanta(nivel, cesta) {
@@ -17459,6 +17599,9 @@ async function finalizarChecklist() {
   const phMasTot = pMas46 + phPlusExtra;
   const recargaData = {
     fecha, hora,
+    torreId: getTorreActiva().id != null ? getTorreActiva().id : (state.torreActiva || 0),
+    torreNombre: (getTorreActiva().nombre || '').trim() || 'Instalación',
+    torreEmoji: getTorreActiva().emoji || '🌿',
     nutrienteId: nutR.id,
     nutrienteNombre: nutR.nombre,
     // Parámetros agua
@@ -17612,6 +17755,13 @@ function histTab(tab) {
 
 let filtroTorreActivo = null; // null = todas las instalaciones
 
+function coincideFiltroTorre(entry) {
+  if (filtroTorreActivo == null) return true;
+  const tid = entry && entry.torreId;
+  if (tid == null) return false;
+  return String(tid) === String(filtroTorreActivo);
+}
+
 /** Mediciones unificadas: una sola instalación o todas, con torreId/torreNombre para filtro e importación. */
 function recolectarMedicionesTodasInstalaciones() {
   initTorres();
@@ -17657,7 +17807,7 @@ function cargarHistorial() {
   if (state.torres && state.torres.length > 1) {
     renderFiltroTorres();
   } else {
-    const fw = document.getElementById('filtroTorreWrap');
+    const fw = document.getElementById('filtroTorreWrapGlobal');
     if (fw) fw.style.display = 'none';
   }
 
@@ -17674,8 +17824,8 @@ function cargarHistorial() {
 }
 
 function renderFiltroTorres() {
-  const wrap = document.getElementById('filtroTorreWrap');
-  const btns = document.getElementById('filtroTorreBtns');
+  const wrap = document.getElementById('filtroTorreWrapGlobal');
+  const btns = document.getElementById('filtroTorreBtnsGlobal');
   if (!wrap || !btns || !state.torres || state.torres.length <= 1) {
     if (wrap) wrap.style.display = 'none';
     return;
@@ -17693,6 +17843,9 @@ function setFiltroTorre(id) {
   filtroTorreActivo = id;
   renderFiltroTorres();
   renderHistMediciones();
+  renderHistRecargas();
+  renderRegistro();
+  if (histTabActiva === 'diario') renderDiarioSelector();
 }
 
 
@@ -17878,7 +18031,7 @@ async function hydrateRegistroFotoThumbs(container) {
 
 function renderRegistro() {
   const lista   = document.getElementById('registroLista');
-  const entries = (state.registro || []).slice(0, 100);
+  const entries = (state.registro || []).filter(coincideFiltroTorre).slice(0, 100);
   const nMeds   = recolectarMedicionesTodasInstalaciones().length;
 
   if (entries.length === 0) {
@@ -17924,6 +18077,7 @@ function renderRegistro() {
     const cols = evs.map(e => {
       const c = colores[e.tipo] || { bg:'#f8fafc', border:'#94a3b8', color:'#475569', icon:'📌' };
       const badgeIcon = (e.tipo === 'reposicion' && e.icono) ? e.icono : c.icon;
+      const sis = infoSistemaEntrada(e);
       let detalle = '';
       if (e.tipo === 'medicion') {
         detalle = [
@@ -18002,9 +18156,9 @@ function renderRegistro() {
                       ? 'Recarga completa'
                       : (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
             '</span>' +
-            (e.torreNombre && state.torres && state.torres.length > 1 ?
+            (sis && sis.nombre ?
               '<span class="registro-entry-torre-chip">' +
-              (e.torreEmoji||'🌿') + ' ' + e.torreNombre + '</span>' : '') +
+              (sis.emoji||'🌿') + ' ' + sis.nombre + '</span>' : '') +
           '</div>' +
           '<div class="registro-entry-right">' +
             '<span class="registro-entry-time">' + (e.hora||'') + '</span>' +
@@ -18029,7 +18183,7 @@ function renderHistMediciones() {
   // Aplicar filtro por torre si está activo
   let mediciones = histDatos || state.mediciones || [];
   if (filtroTorreActivo !== null) {
-    mediciones = mediciones.filter(m => m.torreId === filtroTorreActivo);
+    mediciones = mediciones.filter(coincideFiltroTorre);
   }
   mediciones = mediciones.slice(0, 20);
   if (mediciones.length === 0) {
@@ -18050,7 +18204,7 @@ function renderHistMediciones() {
     <div class="hist-row${i===0 ? ' hist-row--latest' : ''}">
       <span class="hist-fecha"><span class="hist-fecha-dia">${m.fecha}</span><br>
         <span class="hist-fecha-hora">${m.hora}</span>
-        ${m.torreNombre && state.torres && state.torres.length > 1 ? `<span class="hist-torre-chip">${m.torreEmoji||'🌿'} ${m.torreNombre}</span>` : ''}
+        ${(() => { const sis = infoSistemaEntrada(m); return `<span class="hist-torre-chip">${sis.emoji||'🌿'} ${sis.nombre}</span>`; })()}
       </span>
       <span class="hist-val ${getClaseVal('ec',   m.ec)}">${m.ec   || '—'}</span>
       <span class="hist-val ${getClaseVal('ph',   m.ph)}">${m.ph   || '—'}</span>
@@ -18069,7 +18223,7 @@ function renderHistMediciones() {
 function renderHistRecargas() {
   // Mostrar recargas locales (siempre disponibles)
   const localSection = document.getElementById('recargasLocalSection');
-  const recargas = state.recargasLocal || [];
+  const recargas = (state.recargasLocal || []).filter(coincideFiltroTorre);
 
   if (recargas.length === 0 && (!histRecargasDatos || histRecargasDatos.length === 0)) {
     if (localSection) localSection.innerHTML =
@@ -18080,7 +18234,9 @@ function renderHistRecargas() {
 
   // Recargas locales — tarjetas detalladas
   if (localSection && recargas.length > 0) {
-    localSection.innerHTML = recargas.slice(0, 10).map((r, i) => `
+    localSection.innerHTML = recargas.slice(0, 10).map((r, i) => {
+      const sis = infoSistemaEntrada(r);
+      return `
       <div class="hist-recarga-card">
         <!-- Cabecera -->
         <div class="hist-recarga-head">
@@ -18089,6 +18245,7 @@ function renderHistRecargas() {
               🔄 Recarga #${recargas.length - i}
             </div>
             <div class="hist-recarga-date">${r.fecha} · ${r.hora}</div>
+            <div class="hist-recarga-nutriente">${sis.emoji || '🌿'} ${sis.nombre}</div>
             ${r.nutrienteNombre ? '<div class="hist-recarga-nutriente">🧪 ' + r.nutrienteNombre + '</div>' : ''}
           </div>
           ${r.ecFinal ? '<div class="hist-recarga-ec">' + r.ecFinal + '<span class="hist-recarga-ec-unit"> µS</span></div>' : ''}
@@ -18125,11 +18282,12 @@ function renderHistRecargas() {
           ${r.estadoPlantas ? '🌿 Plantas: ' + r.estadoPlantas : ''}
         </div>` : ''}
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
 
-  // Recargas de Sheets si disponibles
-  if (histRecargasDatos && histRecargasDatos.length > 0) {
+  // Recargas de Sheets si disponibles (solo vista global; no trae torreId fiable para filtrar)
+  if (histRecargasDatos && histRecargasDatos.length > 0 && filtroTorreActivo == null) {
     const sheetsSection = document.getElementById('sheetsRecargasSection');
     if (sheetsSection) {
       sheetsSection.classList.remove('setup-hidden');
@@ -22503,6 +22661,9 @@ async function guardarMedicion() {
     const _nr = getNutrienteTorre();
     state.recargasLocal.unshift({
       fecha, hora, ecFinal: ec, phFinal: ph, tempFinal: temp, volFinal: vol,
+      torreId: getTorreActiva().id != null ? getTorreActiva().id : (state.torreActiva || 0),
+      torreNombre: (getTorreActiva().nombre || '').trim() || 'Instalación',
+      torreEmoji: getTorreActiva().emoji || '🌿',
       calmagMl: '',
       vegaAMl: String(calcularMlParteNutriente(0)),
       vegaBMl: _nr.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
@@ -23944,6 +24105,8 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 window.onload = () => {
+  gestionarCambioVersionEnArranque();
+
   // Mantener un pequeño delay visual cuando la carga va normal.
   setTimeout(hideSplash, 3300);
 
