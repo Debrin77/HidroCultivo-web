@@ -7,8 +7,8 @@
     "test": "node --test tests/",
     "www:sync": "node scripts/sync-www.cjs",
     "cap:bundle": "node scripts/bundle-capacitor.cjs",
-    "cap:prep": "npm run www:sync && npm run cap:bundle",
-    "cap:sync": "npm run cap:prep && npx cap sync",
+    "cap:prep": "node scripts/sync-www.cjs && node scripts/bundle-capacitor.cjs",
+    "cap:sync": "node scripts/sync-www.cjs && node scripts/bundle-capacitor.cjs && npx cap sync",
     "cap:open:android": "npx cap open android",
     "cap:open:ios": "npx cap open ios"
   },
@@ -17,7 +17,10 @@
   "license": "ISC",
   "type": "commonjs",
   "overrides": {
-    "tar": "^7.5.13"
+    "tar": "^7.5.13",
+    "@capacitor/cli": {
+      "tar": "6.2.1"
+    }
   },
   "devDependencies": {
     "@capacitor/android": "^6.2.0",
