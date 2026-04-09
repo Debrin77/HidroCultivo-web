@@ -216,23 +216,23 @@ body {
 
 .splash-sub {
   font-family: 'Syne', sans-serif;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: #ecfdf5;
+  font-size: 14px;
+  font-weight: 900;
+  color: #f0fdf4;
   text-align: center;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  margin-top: 10px;
+  margin-top: 12px;
   line-height: 1.35;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 14px;
+  padding: 10px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(74, 222, 128, 0.3);
-  background: linear-gradient(180deg, rgba(15,23,42,0.42), rgba(15,23,42,0.26));
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.08);
-  text-shadow: 0 1px 0 rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(74, 222, 128, 0.42);
+  background: linear-gradient(180deg, rgba(2,6,23,0.58), rgba(15,23,42,0.42));
+  box-shadow: 0 10px 22px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.12);
+  text-shadow: 0 2px 0 rgba(2, 6, 23, 0.6);
   animation: splashTitleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.5s both;
 }
 
@@ -310,6 +310,26 @@ body::before { display: none; }
   background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(236,253,245,0.95));
   border: 1px solid rgba(34, 197, 94, 0.24);
   box-shadow: 0 3px 10px rgba(15,23,42,0.08);
+}
+.pin-sub--tagline {
+  font-size: 12.5px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  color: #064e3b;
+  border: 1px solid rgba(16, 185, 129, 0.34);
+  box-shadow: 0 5px 14px rgba(15,23,42,0.12);
+}
+.pin-sub--status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-height: 16px;
 }
 .pin-dots { display: flex; gap: 14px; margin: 8px 0; }
 .pin-dot {
