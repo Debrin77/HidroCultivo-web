@@ -2074,7 +2074,25 @@ button.aviso-cestas-ir:active {
   line-height: 1.5;
   color: var(--muted);
 }
-.tab-context-hint-inner strong { color: #e2e8f0; }
+/* Antes #e2e8f0 (gris muy claro): ilegible sobre fondos claros. Unificar énfasis en bloques muted. */
+.tab-context-hint-inner strong,
+.medir-help-box strong,
+.medir-toggle-label strong,
+.riego-horario-recomendado strong,
+.riego-hint-sm strong,
+.riego-mezcla-foot strong,
+.correccion-muted strong,
+.correccion-muted--body strong,
+.meteo-ubic-caption strong,
+.meteo-alert-text strong,
+.config-help-text strong,
+.hc-help-muted strong,
+.repos-resumen-muted strong,
+.nft-detalle-foot-muted strong,
+.torre-nft-p-note strong {
+  color: #0f172a;
+  font-weight: 800;
+}
 .tab-context-hint-close {
   display: block;
   width: 100%;
@@ -2663,6 +2681,10 @@ button.torre-summary:focus-visible,
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 10px;
+}
+/* 5 botones en 2 columnas: el último ocupa fila completa para no quedar un hueco suelto */
+.quick-actions--core .quick-btn:nth-child(5) {
+  grid-column: 1 / -1;
 }
 .quick-actions-wrap .quick-actions {
   margin-bottom: 0;
