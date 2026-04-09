@@ -17532,12 +17532,20 @@ function getCLPasos() {
       { id:'clMinSinBomba', label: esDwc ? 'Min sin aireador:' : 'Min sin bomba:', type:'number', placeholder:'40' }
     ] },
   { id:'5.2', seccion:null, paso:'5.2',
-    desc: esDwc ? 'Revisar difusores y caudal de aire (piedras porosas, obstrucciones, fugas en manguera)' : 'Encender difusor de aire' },
+    desc: esDwc
+      ? 'Revisar difusores y caudal de aire (piedras porosas, obstrucciones, fugas en manguera)'
+      : esNft
+        ? 'Revisar circuito y racores: película continua y sin fugas en alimentación o retornos'
+        : 'Si el depósito lleva piedra o difusor de aire, encenderlo; si solo riegas por bomba, confirma circulación estable por la torre' },
   { id:'5.3', seccion:null, paso:'5.3',
     desc:'Encender calentador — objetivo 20°C',
     campos:[{ id:'clTempAguaInicial', label:'Temp inicial:', unit:'°C', type:'number', step:'0.1', placeholder:'17' }] },
   { id:'5.4', seccion:null, paso:'5.4',
-    desc:'Esperar 20 minutos con difusor en marcha antes de medir',
+    desc: esDwc
+      ? 'Esperar 20 minutos con el aireador en marcha antes de medir'
+      : esNft
+        ? 'Esperar unos minutos con la bomba en marcha hasta homogeneizar la mezcla en depósito y canales antes de medir'
+        : 'Esperar ~20 min con bomba (y difusor de aire en depósito si lo usas) en marcha antes de medir',
     nota: nut.pHBuffer
       ? '20 min homogeneizan la mezcla. Con buffer de pH, las correcciones finas mejor tras unas horas y en <strong>Mediciones</strong> (paso 6 y días siguientes).'
       : 'Con difusor 20 min bastan para una lectura orientativa; afinar EC/pH después en Mediciones si hace falta.' },
@@ -17570,7 +17578,9 @@ function getCLPasos() {
         : 'Observar las plantas 30 minutos después — sin signos de estrés',
     campos:[{
       id:'clEstadoPlantas', label:'Estado:', type:'select',
-      opciones:['Turgentes — correcto','Ligeramente lacias','Muy lacias — revisar bomba']
+      opciones: esDwc
+        ? ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar aireador / oxígeno']
+        : ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar bomba / circulación']
     }] },
   { id:'7.3', seccion:null, paso:'7.3',
     desc: esNft
