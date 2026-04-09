@@ -57,7 +57,7 @@
 </div>
 
 <!-- ══ PIN SCREEN ══ -->
-<div class="pin-screen" id="pinScreen" role="dialog" aria-modal="true" aria-labelledby="pinTitulo" tabindex="0">
+<div class="pin-screen" id="pinScreen" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="pinTitulo" tabindex="0">
   <div class="pin-brand" aria-hidden="true">
     <img class="pin-brand-img" alt="" src="icons/splash-brand.svg?v=2026-04-09-brand-c1" width="96" height="96" decoding="async"
       onerror="this.src='icons/splash-brand-icon.png?v=2026-04-09-brand-c1';">
@@ -24413,6 +24413,10 @@ window.onload = () => {
   (async () => {
     await waitSplashMinimumVisible();
     hideSplash();
+
+    // Si el usuario autenticó antes de terminar el splash (p. ej. versión anterior con PIN visible encima),
+    // no volver a lockAppWithPin: con «recordar 0 min» hasValidAuthSession es false y congelaría la app ya iniciada.
+    if (appBootstrapped) return;
 
     // Arranque protegido: sesión configurable (si expira, biometría -> PIN).
     if (hasValidAuthSession()) {
