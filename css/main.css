@@ -2682,10 +2682,6 @@ button.torre-summary:focus-visible,
   gap: 8px;
   margin-bottom: 10px;
 }
-/* 5 botones en 2 columnas: el último ocupa fila completa para no quedar un hueco suelto */
-.quick-actions--core .quick-btn:nth-child(5) {
-  grid-column: 1 / -1;
-}
 .quick-actions-wrap .quick-actions {
   margin-bottom: 0;
 }
