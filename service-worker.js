@@ -2,11 +2,13 @@
  * HidroCultivo — Service Worker ligero (PWA).
  * Precache: shell offline básico. APIs (Open-Meteo, etc.) siguen yendo a red.
  */
-const CACHE_NAME = 'hidrocultivo-shell-v4';
+const CACHE_NAME = 'hidrocultivo-shell-v5';
 const PRECACHE_URLS = [
   './index.html',
   './manifest.json',
   './css/main.css',
+  './icons/splash-brand.svg',
+  './icons/splash-brand-icon.png',
   './js/cultivos-db.js',
   './js/state-torre-logic.js',
   './js/ui-tabs.js',

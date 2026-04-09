@@ -42,13 +42,14 @@
 <!-- ══ SPLASH SCREEN ══ -->
 <div class="splash" id="splashScreen">
   <div class="splash-img-wrap splash-img-wrap--brand" aria-hidden="true">
-    <img class="splash-img" alt="" src="icons/splash-brand-icon.png" width="512" height="512" decoding="async" fetchpriority="high">
+    <img class="splash-img" alt="" src="icons/splash-brand.svg?v=2026-04-09-brand-c1" width="512" height="512" decoding="async" fetchpriority="high"
+      onerror="this.src='icons/splash-brand-icon.png?v=2026-04-09-brand-c1';">
   </div>
   <div class="splash-title-wrap">
     <div class="splash-title">
       <span class="t-hydro">HIDRO</span><span class="t-caru">Cultivo</span>
     </div>
-    <div class="splash-sub splash-sub--tagline">Control inteligente de hidroponía</div>
+    <div class="splash-sub splash-sub--tagline">Tu cultivo, siempre bajo control</div>
   </div>
   <div class="splash-loader">
     <div class="splash-loader-bar"></div>
@@ -58,10 +59,11 @@
 <!-- ══ PIN SCREEN ══ -->
 <div class="pin-screen" id="pinScreen" role="dialog" aria-modal="true" aria-labelledby="pinTitulo" tabindex="0">
   <div class="pin-brand" aria-hidden="true">
-    <img class="pin-brand-img" alt="" src="icons/splash-brand-icon.png" width="96" height="96" decoding="async">
+    <img class="pin-brand-img" alt="" src="icons/splash-brand.svg?v=2026-04-09-brand-c1" width="96" height="96" decoding="async"
+      onerror="this.src='icons/splash-brand-icon.png?v=2026-04-09-brand-c1';">
   </div>
   <div class="pin-logo" id="pinTitulo">HIDRO<span>Cultivo</span></div>
-  <div class="pin-sub pin-sub--tagline">Control inteligente de hidroponía</div>
+  <div class="pin-sub pin-sub--tagline">Tu cultivo, siempre bajo control</div>
   <div class="pin-sub pin-sub--status" id="pinAuthStatus" aria-live="polite"></div>
   <div class="pin-dots">
     <div class="pin-dot" id="d0"></div>
@@ -3139,7 +3141,7 @@ const PIN = '2506';
 const AUTH_REMEMBER_MIN_KEY = 'hc_auth_remember_min';
 const AUTH_TS_KEY = 'hc_auth';
 const STORAGE_KEY = 'cultiva_v1';
-const APP_BUILD_VERSION = '2026-04-08-auth-biom-v1';
+const APP_BUILD_VERSION = '2026-04-09-brand-auth-v2';
 const APP_BUILD_VERSION_KEY = 'hc_app_build_version';
 const AUTO_RESTORE_POINT_KEY = 'hc_auto_restore_point_v1';
 const AUTO_RESTORE_POINT_TRANSITION_KEY = 'hc_auto_restore_transition_v1';
@@ -24252,7 +24254,7 @@ function mostrarBtnNotificaciones() {
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js')
+    navigator.serviceWorker.register('service-worker.js?v=2026-04-09-brand-auth-v2')
       .then(reg => console.log('[HidroCultivo] SW registrado:', reg.scope))
       .catch(err => console.warn('[HidroCultivo] SW error:', err));
   });
