@@ -71,7 +71,7 @@
     <div class="pin-dot" id="d2"></div>
     <div class="pin-dot" id="d3"></div>
   </div>
-  <div class="pin-err" id="pinErr" role="alert" aria-live="assertive"></div>
+    <div class="pin-err" id="pinErr" role="alert" aria-live="assertive"></div>
   <div class="pin-pad" id="pinPad">
     <div class="pin-key" data-digit="1">1</div>
     <div class="pin-key" data-digit="2">2</div>
@@ -86,6 +86,7 @@
     <div class="pin-key" data-digit="0">0</div>
     <div class="pin-key del" id="pinDelBtn">⌫</div>
   </div>
+  <p class="pin-footer-hint" id="pinFooterHint">Protege tus datos en este dispositivo. Puedes acortar el PIN en <strong>Inicio → Más opciones → Seguridad de acceso</strong> (recordar sesión o biometría).</p>
 </div>
 
 <!-- ══ APP ══ -->
@@ -128,6 +129,31 @@
       </button>
 
       <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" role="status" aria-live="polite"></div>
+
+      <!-- Guía primer día (progresiva; se oculta al completar pasos o al descartar) -->
+      <section id="guiaPrimerosPasos" class="hc-guia-primeros setup-hidden" aria-labelledby="guiaPrimerosTitulo">
+        <div class="hc-guia-head">
+          <h2 id="guiaPrimerosTitulo" class="hc-guia-title">Tu primer día</h2>
+          <button type="button" class="hc-guia-dismiss" onclick="dismissGuiaPrimerosPasos()"
+            aria-label="Ocultar esta guía">✕</button>
+        </div>
+        <p class="hc-guia-lead">Sigue este orden para que los datos tengan sentido: primero el <strong>tipo de instalación</strong>, luego una <strong>medición</strong> real, y por último el <strong>riego</strong> como referencia.</p>
+        <ol class="hc-guia-steps">
+          <li id="guiaPaso1" class="hc-guia-step" data-step="1">
+            <span class="hc-guia-step-label">Configura la instalación activa</span>
+            <button type="button" class="btn btn-primary hc-guia-step-btn" id="guiaBtnPaso1" onclick="abrirSetup()">Abrir asistente</button>
+          </li>
+          <li id="guiaPaso2" class="hc-guia-step" data-step="2">
+            <span class="hc-guia-step-label">Registra tu primera medición</span>
+            <button type="button" class="btn btn-secondary hc-guia-step-btn" id="guiaBtnPaso2" onclick="goTab('mediciones')">Ir a Medir</button>
+          </li>
+          <li id="guiaPaso3" class="hc-guia-step" data-step="3">
+            <span class="hc-guia-step-label">Revisa el riego sugerido (referencia)</span>
+            <button type="button" class="btn btn-secondary hc-guia-step-btn" id="guiaBtnPaso3" onclick="goTab('riego')">Ir a Riego</button>
+          </li>
+        </ol>
+        <p class="hc-guia-nota" id="guiaPrimerosNota">Clima y riego calculado son <strong>orientativos</strong> (modelo meteorológico y supuestos de la instalación); las <strong>mediciones</strong> que registres son las que validan el estado real del agua.</p>
+      </section>
 
       <!-- Saludo -->
       <div class="dash-greeting" id="dashGreeting">Buenos días 🌿</div>
@@ -225,8 +251,9 @@
         </div>
       </button>
 
-      <!-- Acciones rápidas -->
-      <div class="quick-actions">
+      <!-- Acciones rápidas: núcleo siempre visible; resto en «Más» hasta tener config + medición -->
+      <div class="quick-actions-wrap" id="quickActionsWrap">
+        <div class="quick-actions quick-actions--core">
         <button type="button" class="quick-btn" onclick="goTab('mediciones')" aria-label="Nueva medición">
           <span class="quick-btn-icon" aria-hidden="true">📊</span>
           <span>Nueva medición</span>
@@ -243,13 +270,17 @@
           <span class="quick-btn-icon" aria-hidden="true">📈</span>
           <span>Historial</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-warn" onclick="abrirChecklist(false)" aria-label="Abrir checklist de recarga de la instalación activa">
-          <span class="quick-btn-icon" aria-hidden="true">🔄</span>
-          <span>Iniciar recarga</span>
-        </button>
         <button type="button" class="quick-btn quick-btn-info" onclick="abrirSetup()" aria-label="Configurar instalación activa">
           <span class="quick-btn-icon" aria-hidden="true">⚙️</span>
           <span>Configurar instalación</span>
+        </button>
+        </div>
+        <details class="quick-actions-more" id="quickActionsMore">
+          <summary class="quick-actions-more-summary" id="quickActionsMoreSummary">Más opciones (recarga, seguridad…)</summary>
+          <div class="quick-actions quick-actions--extra">
+        <button type="button" class="quick-btn quick-btn-warn" onclick="abrirChecklist(false)" aria-label="Abrir checklist de recarga de la instalación activa">
+          <span class="quick-btn-icon" aria-hidden="true">🔄</span>
+          <span>Iniciar recarga</span>
         </button>
         <button type="button" class="quick-btn quick-btn-info" id="btnSeguridadAccesoInicio"
           onclick="toggleSeguridadAccesoInicio()" aria-expanded="false"
@@ -269,6 +300,8 @@
           <span class="quick-btn-icon" aria-hidden="true">🗑️</span>
           <span class="quick-btn-danger-text">Reset sistema</span>
         </button>
+          </div>
+        </details>
       </div>
 
       <div id="panelSeguridadAccesoInicio" class="dash-seguridad-panel setup-hidden" role="region"
@@ -298,6 +331,13 @@
 
       <div class="section-title">
         📊 <span class="accent">Mediciones</span> diarias
+      </div>
+
+      <div id="tabContextHintMediciones" class="tab-context-hint setup-hidden" role="note">
+        <div class="tab-context-hint-inner">
+          <strong>Medir</strong> es donde registras datos <strong>reales</strong> (EC, pH, temperatura del agua, volumen). Son la referencia más fiable frente a previsiones o sugerencias de riego.
+          <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('mediciones')" aria-label="Entendido, ocultar aviso">Entendido</button>
+        </div>
       </div>
 
       <!-- Configuración agua y sustrato -->
@@ -930,6 +970,13 @@
         </button>
       </div>
 
+      <div id="tabContextHintSistema" class="tab-context-hint setup-hidden" role="note">
+        <div class="tab-context-hint-inner">
+          <strong>Sistema</strong> define <strong>qué cultivas y dónde</strong> (cestas, variedades, fechas). Sin fechas válidas, los cálculos de riego usan valores por defecto: revísalo para que coincidan con tu realidad.
+          <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('sistema')" aria-label="Entendido, ocultar aviso">Entendido</button>
+        </div>
+      </div>
+
       <!-- Nombre personalizado (torre / futuro NFT) -->
       <div id="torreNombreCard" class="torre-card-elevated">
         <label class="form-label torre-field-label-sm" for="torreNombreInstalacionInput">
@@ -1434,6 +1481,13 @@
 
       <div class="section-title" id="riegoSectionTitle">💧 Cálculo de <span class="accent">Riego</span></div>
 
+      <div id="tabContextHintRiego" class="tab-context-hint setup-hidden" role="note">
+        <div class="tab-context-hint-inner">
+          El <strong>riego sugerido</strong> combina tu instalación con <strong>clima previsto</strong> (modelo). Es una guía; comprueba siempre con tus <strong>mediciones</strong> y el aspecto de las plantas.
+          <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('riego')" aria-label="Entendido, ocultar aviso">Entendido</button>
+        </div>
+      </div>
+
       <!-- Selector Hoy / Mañana -->
       <div id="riegoDiaSelectorGroup" class="riego-dia-group" role="group" aria-label="Día para el cálculo de riego">
         <button type="button" id="btnRiegoHoy" onclick="setDiaRiego('hoy')"
@@ -1689,7 +1743,7 @@
           🔄 Calcular riego ahora
         </button>
         <p class="riego-horario-recomendado" id="riegoHorarioRecomendado" role="status" aria-live="polite">
-          Tras calcular, aquí verás el horario sugerido del bloque de mayor intensidad solar (4 h) para programar el riego.
+          Tras calcular, aquí verás el horario sugerido del bloque de mayor intensidad solar (4 h). «Calcular riego ahora» pide datos meteorológicos <strong>actualizados</strong> a la API; al entrar en esta pestaña puede usarse caché breve (~1 min) para ir más rápido.
         </p>
       </div>
 
@@ -1882,7 +1936,7 @@
   <!-- FIN CONTENT -->
 
   <!-- TAB BAR -->
-  <nav class="tab-bar" role="tablist" aria-label="Secciones principales"
+  <nav class="tab-bar" role="tablist" aria-label="Secciones principales: Inicio y día a día · cultivo · agua y clima · registro"
     title="Desliza lateralmente si no ves todas las pestañas">
     <button class="tab-btn active" type="button" role="tab" id="btn-inicio" onclick="goTab('inicio')" aria-label="Ir a Inicio" aria-selected="true" aria-controls="tab-inicio">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1890,7 +1944,7 @@
       </svg>
       <span class="tab-label">Inicio</span>
     </button>
-    <button class="tab-btn" type="button" role="tab" id="btn-mediciones" onclick="goTab('mediciones')" aria-label="Ir a Mediciones" aria-selected="false" aria-controls="tab-mediciones">
+    <button class="tab-btn tab-bar-group-start" type="button" role="tab" id="btn-mediciones" onclick="goTab('mediciones')" aria-label="Ir a Mediciones" aria-selected="false" aria-controls="tab-mediciones">
       <div class="tab-badge setup-hidden" id="alertBadge"></div>
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -1909,7 +1963,7 @@
       </svg>
       <span class="tab-label">Calendario</span>
     </button>
-    <button class="tab-btn" type="button" role="tab" id="btn-riego" onclick="goTab('riego')" aria-label="Ir a Riego" aria-selected="false" aria-controls="tab-riego">
+    <button class="tab-btn tab-bar-group-start" type="button" role="tab" id="btn-riego" onclick="goTab('riego')" aria-label="Ir a Riego" aria-selected="false" aria-controls="tab-riego">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 2C6 2 2 8 2 13a10 10 0 0020 0c0-5-4-11-10-11z"/>
       </svg>
@@ -1921,7 +1975,7 @@
       </svg>
       <span class="tab-label">Meteo</span>
     </button>
-    <button class="tab-btn" type="button" role="tab" id="btn-historial" onclick="goTab('historial')" aria-label="Ir a Historial" aria-selected="false" aria-controls="tab-historial">
+    <button class="tab-btn tab-bar-group-start" type="button" role="tab" id="btn-historial" onclick="goTab('historial')" aria-label="Ir a Historial" aria-selected="false" aria-controls="tab-historial">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
@@ -1937,6 +1991,24 @@
 
 </div>
 <!-- FIN APP -->
+
+<!-- ══ BIENVENIDA (primera vez) ══ -->
+<div class="welcome-overlay setup-hidden" id="welcomeOverlay" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" aria-hidden="true">
+  <div class="welcome-card">
+    <div class="welcome-brand" aria-hidden="true">
+      <span class="t-hydro">HIDRO</span><span class="t-caru">Cultivo</span>
+    </div>
+    <h2 id="welcomeTitle" class="welcome-title">Bienvenido</h2>
+    <p class="welcome-lead">Esta app te ayuda a <strong>organizar tu cultivo hidropónico</strong>: instalaciones, mediciones de agua (EC, pH…), riego orientativo, clima y registro.</p>
+    <ul class="welcome-list">
+      <li><strong>Mediciones</strong>: lo que tú registras con el medidor son <strong>datos reales</strong> de tu depósito.</li>
+      <li><strong>Clima y riego</strong>: se basan en <strong>modelos y previsiones</strong> (p. ej. Open‑Meteo). Son <strong>aproximados</strong> y pueden cambiar; el tiempo real puede diferir.</li>
+      <li><strong>Riego sugerido</strong>: una guía según sustrato, plantas y meteorología; <strong>no sustituye</strong> a observar plantas y tus lecturas.</li>
+    </ul>
+    <p class="welcome-foot">Si algo no cuadra, prioriza tus mediciones y el criterio en el invernadero o balcón.</p>
+    <button type="button" class="btn btn-primary welcome-btn" onclick="cerrarBienvenidaPrimeraVez()">Entendido, empezar</button>
+  </div>
+</div>
 
 <!-- ══ ASISTENTE DE CONFIGURACIÓN ══ -->
 <div class="setup-overlay" id="setupOverlay" role="dialog" aria-modal="true" aria-label="Asistente de configuración de instalación">
@@ -3800,6 +3872,145 @@ function checkPin() {
 }
 
 // ══════════════════════════════════════════════════
+// ONBOARDING — guía primer día + hints de contexto (PRP / revelación progresiva)
+// ══════════════════════════════════════════════════
+const HC_GUIDE_DISMISS_KEY = 'hc_guia_primer_dia_dismiss';
+const HC_ONBOARD_RIEGO_VISIT_KEY = 'hc_onboarding_visit_riego';
+const HC_HINT_CTX = { mediciones: 'hc_hint_ctx_med', sistema: 'hc_hint_ctx_sis', riego: 'hc_hint_ctx_riego' };
+const HC_BIENVENIDA_KEY = 'hc_bienvenida_v2026_1';
+
+function lanzarSetupOChecklistSiCorresponde() {
+  const hayConfig = !!state.configTorre;
+  const hayPlantas = getNivelesActivos().some(n =>
+    state.torre[n] && state.torre[n].some(c => c.variedad)
+  );
+  const esPrimeraVez = !hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
+  if (esPrimeraVez) {
+    setTimeout(() => abrirSetup(), 450);
+  } else if (hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas) {
+    setTimeout(() => abrirChecklist(true), 450);
+  }
+}
+
+function mostrarBienvenidaOContinuarArranque() {
+  let visto = false;
+  try { visto = localStorage.getItem(HC_BIENVENIDA_KEY) === '1'; } catch (_) {}
+  if (visto) {
+    lanzarSetupOChecklistSiCorresponde();
+    return;
+  }
+  const ov = document.getElementById('welcomeOverlay');
+  if (ov) {
+    ov.classList.remove('setup-hidden');
+    ov.setAttribute('aria-hidden', 'false');
+    return;
+  }
+  lanzarSetupOChecklistSiCorresponde();
+}
+
+function cerrarBienvenidaPrimeraVez() {
+  try { localStorage.setItem(HC_BIENVENIDA_KEY, '1'); } catch (_) {}
+  const ov = document.getElementById('welcomeOverlay');
+  if (ov) {
+    ov.classList.add('setup-hidden');
+    ov.setAttribute('aria-hidden', 'true');
+  }
+  lanzarSetupOChecklistSiCorresponde();
+}
+
+function dismissGuiaPrimerosPasos() {
+  try { localStorage.setItem(HC_GUIDE_DISMISS_KEY, '1'); } catch (_) {}
+  const el = document.getElementById('guiaPrimerosPasos');
+  if (el) el.classList.add('setup-hidden');
+}
+
+function marcarVisitaRiegoOnboarding() {
+  try { localStorage.setItem(HC_ONBOARD_RIEGO_VISIT_KEY, '1'); } catch (_) {}
+  actualizarGuiaPrimerosPasos();
+}
+
+function actualizarGuiaPrimerosPasos() {
+  const root = document.getElementById('guiaPrimerosPasos');
+  if (!root) return;
+  let dismissed = false;
+  try { dismissed = localStorage.getItem(HC_GUIDE_DISMISS_KEY) === '1'; } catch (_) {}
+  if (dismissed) {
+    root.classList.add('setup-hidden');
+    return;
+  }
+  const hayCfg = !!(state && state.configTorre);
+  const hayMed = !!(state && state.ultimaMedicion);
+  let visitRiego = false;
+  try { visitRiego = localStorage.getItem(HC_ONBOARD_RIEGO_VISIT_KEY) === '1'; } catch (_) {}
+  if (hayCfg && hayMed && visitRiego) {
+    root.classList.add('setup-hidden');
+    return;
+  }
+  root.classList.remove('setup-hidden');
+
+  const p1 = document.getElementById('guiaPaso1');
+  const p2 = document.getElementById('guiaPaso2');
+  const p3 = document.getElementById('guiaPaso3');
+  if (p1) p1.classList.toggle('hc-guia-step--done', hayCfg);
+  if (p2) p2.classList.toggle('hc-guia-step--done', hayMed);
+  if (p3) p3.classList.toggle('hc-guia-step--done', visitRiego);
+
+  const b1 = document.getElementById('guiaBtnPaso1');
+  if (b1) {
+    b1.disabled = hayCfg;
+    b1.textContent = hayCfg ? 'Listo' : 'Abrir asistente';
+    b1.classList.toggle('btn-primary', !hayCfg);
+    b1.classList.toggle('btn-secondary', hayCfg);
+  }
+  const b2 = document.getElementById('guiaBtnPaso2');
+  if (b2) {
+    b2.disabled = hayMed;
+    b2.textContent = hayMed ? 'Listo' : 'Ir a Medir';
+  }
+  const b3 = document.getElementById('guiaBtnPaso3');
+  if (b3) {
+    b3.disabled = visitRiego;
+    b3.textContent = visitRiego ? 'Listo' : 'Ir a Riego';
+  }
+}
+
+function dismissTabContextHint(which) {
+  const k = HC_HINT_CTX[which];
+  if (k) {
+    try { localStorage.setItem(k, '1'); } catch (_) {}
+  }
+  const id = which === 'mediciones' ? 'tabContextHintMediciones' : which === 'sistema' ? 'tabContextHintSistema' : which === 'riego' ? 'tabContextHintRiego' : null;
+  const el = id ? document.getElementById(id) : null;
+  if (el) el.classList.add('setup-hidden');
+}
+
+function actualizarTabContextHints(tab) {
+  const map = {
+    mediciones: 'tabContextHintMediciones',
+    sistema: 'tabContextHintSistema',
+    riego: 'tabContextHintRiego',
+  };
+  const id = map[tab];
+  if (!id) return;
+  const el = document.getElementById(id);
+  if (!el) return;
+  const key = HC_HINT_CTX[tab];
+  let seen = false;
+  try { seen = key && localStorage.getItem(key) === '1'; } catch (_) {}
+  if (seen) el.classList.add('setup-hidden');
+  else el.classList.remove('setup-hidden');
+}
+
+function actualizarQuickActionsNoviceMode() {
+  const wrap = document.getElementById('quickActionsWrap');
+  const more = document.getElementById('quickActionsMore');
+  if (!wrap || !more) return;
+  const exp = !!(state && state.configTorre && state.ultimaMedicion);
+  wrap.classList.toggle('quick-actions-wrap--experienced', exp);
+  more.open = exp;
+}
+
+// ══════════════════════════════════════════════════
 // INIT APP
 // ══════════════════════════════════════════════════
 function resetApp() {
@@ -3814,6 +4025,12 @@ function resetApp() {
     localStorage.removeItem(TUTORIAL_EDITAR_LS);
     localStorage.removeItem(TUTORIAL_TORRE_TAB_LS);
     localStorage.removeItem(TORRE_SWIPE_HINT_LS);
+    localStorage.removeItem(HC_GUIDE_DISMISS_KEY);
+    localStorage.removeItem(HC_ONBOARD_RIEGO_VISIT_KEY);
+    localStorage.removeItem(HC_BIENVENIDA_KEY);
+    try {
+      Object.values(HC_HINT_CTX).forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
+    } catch (_) {}
   } catch(e) {}
 
   // Reiniciar estado
@@ -3863,19 +4080,8 @@ function initApp() {
   // Badges DESPUÉS de cargar config y torre
   setTimeout(actualizarBadgesNutriente, 100);
 
-  // Detectar primera vez — si no tiene configuración de torre ni datos
-  const hayConfig = !!state.configTorre;
-  const hayPlantas = getNivelesActivos().some(n =>
-    state.torre[n] && state.torre[n].some(c => c.variedad)
-  );
-  const esPrimeraVez = !hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
-
-  if (esPrimeraVez) {
-    setTimeout(() => abrirSetup(), 600);
-  } else if (hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas) {
-    // Tiene config pero no datos — abrir checklist
-    setTimeout(() => abrirChecklist(true), 600);
-  }
+  // Primera vez: bienvenida (una sola) y luego asistente o checklist si aplica
+  setTimeout(() => mostrarBienvenidaOContinuarArranque(), 520);
   // Migrar fotos antiguas de localStorage a IndexedDB (solo la primera vez)
   abrirFotoDB().then(() => migrarFotosAIDB()).catch(e => console.warn('Migración IDB:', e));
 
@@ -4082,6 +4288,10 @@ function goTab(tab) {
     if (b) b.setAttribute('aria-selected', t === tab ? 'true' : 'false');
   });
   currentTab = tab;
+  try {
+    actualizarTabContextHints(tab);
+    if (tab === 'riego') marcarVisitaRiegoOnboarding();
+  } catch (_) {}
   if (tab === 'mediciones') { cargarUltimaMedicion(); initConfigUI(); }
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') { cargarMeteo(); window._meteoObsoleto = false; }
@@ -20124,12 +20334,14 @@ async function meteoFetchConFallback(baseUrl, opts = {}) {
   const staleMs = opts.staleMs ?? (24 * 60 * 60 * 1000);
   const cacheKey = opts.cacheKey || baseUrl;
   const forceRefresh = !!opts.forceRefresh;
+  /** Si false, ante error de red no se devuelve copia antigua (p. ej. recalcular riego a mano). */
+  const allowStaleFallback = opts.allowStaleFallback !== false;
   const now = Date.now();
   const cMem = _meteoFastCache.get(cacheKey);
   const cLs = meteoReadLsCache(cacheKey);
   const c = cMem || cLs;
   if (!forceRefresh && c && now - c.at < ttlMs) return c.data;
-  if (_meteoFastInflight.has(cacheKey)) return _meteoFastInflight.get(cacheKey);
+  if (!forceRefresh && _meteoFastInflight.has(cacheKey)) return _meteoFastInflight.get(cacheKey);
 
   const p = (async () => {
     let lastErr = null;
@@ -20164,7 +20376,7 @@ async function meteoFetchConFallback(baseUrl, opts = {}) {
     } catch (e) {
       lastErr = e;
     }
-    if (c && now - c.at < staleMs) {
+    if (allowStaleFallback && c && now - c.at < staleMs) {
       state._meteoFuenteActiva = 'cache';
       refreshMeteoFuenteActivaUI();
       return c.data;
@@ -21213,7 +21425,8 @@ const RIEGO_NOC_REFRESCO_TORRE_EXT_SEG = 30;
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
 async function calcularRiego(opts = {}) {
-  const forceRefresh = !!opts.forceRefresh;
+  /** Recalcular a mano o forzar refresco: siempre nueva petición a la API y sin devolver meteo obsoleto si falla la red. */
+  const refetchMeteo = !!opts.forceRefresh || !!opts.manual;
   const riegoNPl = document.getElementById('riegoNPlantas');
   if (!riegoNPl) return; // pestaña no activa
 
@@ -21283,11 +21496,15 @@ async function calcularRiego(opts = {}) {
       '&hourly=et0_fao_evapotranspiration' +
       `&forecast_days=${diasForecast}&timezone=auto`;
 
+    const roMeteo = (extra) => Object.assign({}, extra, {
+      forceRefresh: refetchMeteo,
+      allowStaleFallback: !refetchMeteo,
+    });
     const [data, dataUV, dEt0] = await Promise.all([
-      meteoFetchConFallback(urlECMWFBase, { cacheKey: 'riego:ecmwf:' + urlECMWFBase, timeoutMs: 4300, ttlMs: 70 * 1000, forceRefresh })
-        .catch(() => meteoFetchConFallback(urlECMWFCoreBase, { cacheKey: 'riego:core:' + urlECMWFCoreBase, timeoutMs: 4300, ttlMs: 70 * 1000, forceRefresh })),
-      meteoFetchConFallback(urlUV, { cacheKey: 'riego:uv:' + urlUV, timeoutMs: 3600, ttlMs: 8 * 60 * 1000, forceRefresh }).catch(() => ({})),
-      meteoFetchConFallback(urlET0, { cacheKey: 'riego:et0:' + urlET0, timeoutMs: 4200, ttlMs: 70 * 1000, forceRefresh }).catch(() => ({})),
+      meteoFetchConFallback(urlECMWFBase, roMeteo({ cacheKey: 'riego:ecmwf:' + urlECMWFBase, timeoutMs: 4300, ttlMs: 70 * 1000 }))
+        .catch(() => meteoFetchConFallback(urlECMWFCoreBase, roMeteo({ cacheKey: 'riego:core:' + urlECMWFCoreBase, timeoutMs: 4300, ttlMs: 70 * 1000 }))),
+      meteoFetchConFallback(urlUV, roMeteo({ cacheKey: 'riego:uv:' + urlUV, timeoutMs: 3600, ttlMs: 8 * 60 * 1000 })).catch(() => ({})),
+      meteoFetchConFallback(urlET0, roMeteo({ cacheKey: 'riego:et0:' + urlET0, timeoutMs: 4200, ttlMs: 70 * 1000 })).catch(() => ({})),
     ]);
     const daily = data.daily;
     if (
@@ -21520,9 +21737,12 @@ async function calcularRiego(opts = {}) {
       };
       saveState();
       if (elHorarioHint) {
-        elHorarioHint.textContent = esNftRiego
+        const pieMeteo = refetchMeteo
+          ? '\n\n🌐 Previsión meteorológica pedida a la API en esta consulta (' + new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) + ').'
+          : '\n\n🌐 Meteo: puede usarse caché reciente (~1 min). Pulsa «Calcular riego ahora» para traer datos nuevos del modelo.';
+        elHorarioHint.textContent = (esNftRiego
           ? '🪴 NFT: riego continuo — no hay bloque de intensidad solar por pulsos; el clima sirve de referencia para vigilar estrés.'
-          : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.';
+          : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.') + pieMeteo;
       }
       document.getElementById('riegoLoader').classList.add('setup-hidden');
       document.getElementById('riegoResultado').classList.remove('setup-hidden');
@@ -21756,7 +21976,10 @@ async function calcularRiego(opts = {}) {
         if (esInterior) {
           hint += ' En instalación interior es referencia del clima de tu ubicación; cuádralo con tu fotoperiodo real.';
         }
-        elHorarioHint.textContent = hint;
+        const pieMeteo = refetchMeteo
+          ? '\n\n🌐 Previsión meteorológica pedida a la API en esta consulta (' + new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) + ').'
+          : '\n\n🌐 Meteo: puede usarse caché reciente (~1 min). Pulsa «Calcular riego ahora» para traer datos nuevos del modelo.';
+        elHorarioHint.textContent = hint + pieMeteo;
       }
     }
     const elMedDuty = document.getElementById('resMedioDutyCiclo');
@@ -21928,6 +22151,11 @@ function updateDashboard() {
   fetchMeteoAlert();
 
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
+
+  try {
+    actualizarGuiaPrimerosPasos();
+    actualizarQuickActionsNoviceMode();
+  } catch (_) {}
 }
 
 function getTileClass(param, val) {
