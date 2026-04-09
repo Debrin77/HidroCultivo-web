@@ -265,6 +265,22 @@ body::before { display: none; }
   gap: 20px;
   padding: env(safe-area-inset-top, 47px) 20px env(safe-area-inset-bottom, 34px);
 }
+.pin-brand {
+  width: 92px;
+  height: 92px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.75);
+  border: 1px solid rgba(16, 185, 129, 0.18);
+  box-shadow: 0 10px 24px rgba(15,23,42,0.12);
+}
+.pin-brand-img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 12px rgba(15,23,42,0.16));
+}
 .pin-logo {
   font-family: var(--font-display);
   font-size: 32px;

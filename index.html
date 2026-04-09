@@ -57,6 +57,9 @@
 
 <!-- ══ PIN SCREEN ══ -->
 <div class="pin-screen" id="pinScreen" role="dialog" aria-modal="true" aria-labelledby="pinTitulo" tabindex="0">
+  <div class="pin-brand" aria-hidden="true">
+    <img class="pin-brand-img" alt="" src="icons/splash-brand-icon.png" width="96" height="96" decoding="async">
+  </div>
   <div class="pin-logo" id="pinTitulo">HIDRO<span>Cultivo</span></div>
   <div class="pin-sub">Hidroponía fácil e inteligente</div>
   <div class="pin-sub" id="pinAuthStatus" aria-live="polite"></div>
@@ -24304,23 +24307,25 @@ window.addEventListener('appinstalled', () => {
   showToast('✅ HidroCultivo instalada correctamente');
 });
 
+const SPLASH_MIN_VISIBLE_MS = 1600;
+const splashShownAtMs = Date.now();
+
 const hideSplash = () => {
   const splash = document.getElementById('splashScreen');
   if (splash) splash.style.display = 'none';
 };
 
+async function waitSplashMinimumVisible() {
+  const elapsed = Date.now() - splashShownAtMs;
+  if (elapsed >= SPLASH_MIN_VISIBLE_MS) return;
+  await new Promise(resolve => setTimeout(resolve, SPLASH_MIN_VISIBLE_MS - elapsed));
+}
+
 // Failsafe para WebView: evita splash infinito si window.onload no llega.
 setTimeout(hideSplash, 6000);
 
-window.addEventListener('DOMContentLoaded', () => {
-  setTimeout(hideSplash, 1800);
-});
-
 window.onload = () => {
   gestionarCambioVersionEnArranque();
-
-  // Mantener un pequeño delay visual cuando la carga va normal.
-  setTimeout(hideSplash, 3300);
 
   // ── Registrar listeners del PIN (evitar onclick inline) ──────────────────
   document.querySelectorAll('.pin-key[data-digit]').forEach(key => {
@@ -24335,23 +24340,29 @@ window.onload = () => {
     if (e.key === 'Backspace') pinDel();
   });
 
-  // Arranque protegido: sesión configurable (si expira, biometría -> PIN).
-  if (hasValidAuthSession()) {
-    unlockAndInitApp();
-    return;
-  }
-  lockAppWithPin();
-  setTimeout(async () => {
-    const statusEl = document.getElementById('pinAuthStatus');
-    const ok = await tryBiometricUnlock();
-    if (ok) {
+  // Secuencia recomendada: splash de marca breve -> desbloqueo (biometría/PIN).
+  (async () => {
+    await waitSplashMinimumVisible();
+    hideSplash();
+
+    // Arranque protegido: sesión configurable (si expira, biometría -> PIN).
+    if (hasValidAuthSession()) {
       unlockAndInitApp();
-    } else {
-      const pinErr = document.getElementById('pinErr');
-      if (pinErr) pinErr.textContent = '';
-      if (statusEl) statusEl.textContent = 'Biometría no disponible. Introduce tu PIN.';
+      return;
     }
-  }, 150);
+    lockAppWithPin();
+    setTimeout(async () => {
+      const statusEl = document.getElementById('pinAuthStatus');
+      const ok = await tryBiometricUnlock();
+      if (ok) {
+        unlockAndInitApp();
+      } else {
+        const pinErr = document.getElementById('pinErr');
+        if (pinErr) pinErr.textContent = '';
+        if (statusEl) statusEl.textContent = 'Biometría no disponible. Introduce tu PIN.';
+      }
+    }, 150);
+  })();
 };
 
 // ══════════════════════════════════════════════════
