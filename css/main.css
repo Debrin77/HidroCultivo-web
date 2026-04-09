@@ -2079,17 +2079,19 @@ button.aviso-cestas-ir:active {
 }
 
 /* ══ Bienvenida primera vez ══ */
+/* Por encima de checklist-dark (~10085), setup (10200) y modales internos, para no mezclar textos */
 .welcome-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 12000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: env(safe-area-inset-top, 20px) 16px env(safe-area-inset-bottom, 24px);
-  background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: auto;
 }
 .welcome-card {
   width: 100%;
@@ -2143,6 +2145,12 @@ button.aviso-cestas-ir:active {
 .welcome-btn {
   width: 100%;
   justify-content: center;
+}
+
+/* Evita que el contenido de #app se lea bajo el velo de bienvenida */
+body.hc-welcome-open #app {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* ══ DASHBOARD INICIO ══ */
@@ -7914,7 +7922,7 @@ button.toggle-switch {
   position: fixed;
   inset: 0;
   background: linear-gradient(165deg, #f8fafc 0%, #f0fdf4 45%, #ecfdf5 100%);
-  z-index: 900;
+  z-index: 10200;
   display: none;
   flex-direction: column;
   overflow: hidden;

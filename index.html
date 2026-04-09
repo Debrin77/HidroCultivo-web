@@ -3903,6 +3903,7 @@ function mostrarBienvenidaOContinuarArranque() {
   if (ov) {
     ov.classList.remove('setup-hidden');
     ov.setAttribute('aria-hidden', 'false');
+    try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
     return;
   }
   lanzarSetupOChecklistSiCorresponde();
@@ -3915,6 +3916,7 @@ function cerrarBienvenidaPrimeraVez() {
     ov.classList.add('setup-hidden');
     ov.setAttribute('aria-hidden', 'true');
   }
+  try { document.body.classList.remove('hc-welcome-open'); } catch (_) {}
   lanzarSetupOChecklistSiCorresponde();
 }
 
