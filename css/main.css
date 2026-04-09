@@ -205,9 +205,9 @@ body {
 
 .splash-title {
   font-family: 'Syne', sans-serif;
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 900;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.018em;
   line-height: 1.05;
   text-align: center;
   width: 100%;
@@ -217,13 +217,13 @@ body {
   align-items: baseline;
   justify-content: center;
   gap: 2px;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.22), 0 10px 22px rgba(15,23,42,0.16);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.72), 0 8px 16px rgba(15,23,42,0.12);
   position: relative;
 }
 .splash-title .t-hydro {
   color: #15803d;
   font-weight: 900;
-  letter-spacing: 0.07em;
+  letter-spacing: -0.01em;
   text-transform: uppercase;
 }
 .splash-title .t-caru  {
