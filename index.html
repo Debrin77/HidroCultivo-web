@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-09-wordmark-fix1">
 </head>
 <body>
 
@@ -3141,7 +3141,7 @@ const PIN = '2506';
 const AUTH_REMEMBER_MIN_KEY = 'hc_auth_remember_min';
 const AUTH_TS_KEY = 'hc_auth';
 const STORAGE_KEY = 'cultiva_v1';
-const APP_BUILD_VERSION = '2026-04-09-brand-auth-v2';
+const APP_BUILD_VERSION = '2026-04-09-wordmark-fix1';
 const APP_BUILD_VERSION_KEY = 'hc_app_build_version';
 const AUTO_RESTORE_POINT_KEY = 'hc_auto_restore_point_v1';
 const AUTO_RESTORE_POINT_TRANSITION_KEY = 'hc_auto_restore_transition_v1';
@@ -24254,7 +24254,7 @@ function mostrarBtnNotificaciones() {
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js?v=2026-04-09-brand-auth-v2')
+    navigator.serviceWorker.register('service-worker.js?v=2026-04-09-wordmark-fix1')
       .then(reg => console.log('[HidroCultivo] SW registrado:', reg.scope))
       .catch(err => console.warn('[HidroCultivo] SW error:', err));
   });
