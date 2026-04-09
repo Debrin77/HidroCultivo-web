@@ -3706,15 +3706,26 @@ function unlockAndInitApp() {
   if (appBootstrapped) return;
   const pinEl = document.getElementById('pinScreen');
   const appEl = document.getElementById('app');
-  a11yDetachFocusTrap(pinEl);
-  if (appEl) appEl.inert = false;
-  if (pinEl) pinEl.style.display = 'none';
   try {
+    a11yDetachFocusTrap(pinEl);
+    if (appEl) appEl.inert = false;
+    if (pinEl) pinEl.style.display = 'none';
     if (getAuthRememberMinutes() > 0) localStorage.setItem(AUTH_TS_KEY, String(Date.now()));
     else localStorage.removeItem(AUTH_TS_KEY);
-  } catch (_) {}
-  appBootstrapped = true;
-  initApp();
+    initApp();
+    appBootstrapped = true;
+  } catch (e) {
+    console.error('Error inicializando app tras PIN:', e);
+    appBootstrapped = false;
+    if (appEl) appEl.inert = true;
+    if (pinEl) {
+      pinEl.style.display = '';
+      a11yAttachFocusTrap(pinEl);
+    }
+    const pinErr = document.getElementById('pinErr');
+    if (pinErr) pinErr.textContent = 'No se pudo abrir la app. Reintenta.';
+    showToast('Error al iniciar tras PIN. Reintentando…', true);
+  }
 }
 
 function lockAppWithPin() {
@@ -24425,8 +24436,10 @@ window.onload = () => {
     }
     lockAppWithPin();
     setTimeout(async () => {
+      if (appBootstrapped) return;
       const statusEl = document.getElementById('pinAuthStatus');
       const ok = await tryBiometricUnlock();
+      if (appBootstrapped) return;
       if (ok) {
         unlockAndInitApp();
       } else {
