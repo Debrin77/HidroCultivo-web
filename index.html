@@ -1612,7 +1612,7 @@
 
         <!-- Programa mediodía -->
         <div class="riego-prog-card riego-prog-card--amber">
-        <div class="mediodia-header">☀️ Programa mediodía — 11:00 a 15:00h</div>
+        <div class="mediodia-header" id="mediodiaHeader">☀️ Programa mediodía — 11:00 a 15:00h</div>
 
         <div class="riego-programa">
           <div class="riego-bloque">
@@ -1683,10 +1683,15 @@
 
       </div>
 
-      <!-- Botón recalcular -->
-      <button type="button" class="btn btn-primary" onclick="calcularRiego({ forceRefresh: true, manual: true })" id="btnCalcRiego">
-        🔄 Calcular riego ahora
-      </button>
+      <!-- Botón recalcular + horario mediodía para programación -->
+      <div class="riego-recalc-wrap">
+        <button type="button" class="btn btn-primary" onclick="calcularRiego({ forceRefresh: true, manual: true })" id="btnCalcRiego">
+          🔄 Calcular riego ahora
+        </button>
+        <p class="riego-horario-recomendado" id="riegoHorarioRecomendado" role="status" aria-live="polite">
+          Tras calcular, aquí verás el horario sugerido del bloque de mediodía (4 h) para programar el riego.
+        </p>
+      </div>
 
     </div>
     <!-- FIN TAB RIEGO -->
@@ -3141,7 +3146,7 @@ const PIN = '2506';
 const AUTH_REMEMBER_MIN_KEY = 'hc_auth_remember_min';
 const AUTH_TS_KEY = 'hc_auth';
 const STORAGE_KEY = 'cultiva_v1';
-const APP_BUILD_VERSION = '2026-04-09-wordmark-fix1';
+const APP_BUILD_VERSION = '2026-04-09-riego-horario-hint';
 const APP_BUILD_VERSION_KEY = 'hc_app_build_version';
 const AUTO_RESTORE_POINT_KEY = 'hc_auto_restore_point_v1';
 const AUTO_RESTORE_POINT_TRANSITION_KEY = 'hc_auto_restore_transition_v1';
@@ -20999,13 +21004,39 @@ function riegoMediaDeIndices(arr, indices) {
   return n > 0 ? s / n : NaN;
 }
 
-/** Índices horarios 11:00–15:59 del día (franja «mediodía» alineada al ISO local de Open-Meteo con timezone=auto). */
-function riegoIndicesMediodiaPorIso(dayIndices, timesIso) {
-  if (!dayIndices || !timesIso) return [];
-  return dayIndices.filter(i => {
-    const h = parseInt(String(timesIso[i]).slice(11, 13), 10);
-    return h >= 11 && h <= 15;
-  });
+/**
+ * Ventana de mediodía dinámica (4 h) basada en el tramo horario de mayor estrés esperado.
+ * Candidatas: 10–14 como hora de inicio (tramos 10–14 ... 14–18).
+ */
+function riegoVentanaMediodiaDinamica(dayIndices, timesIso, tempArr, rhArr, uvIdx, et0DayMm) {
+  const fallback = { indices: [], hIni: 11, hFin: 15, horasPrograma: 4 };
+  if (!dayIndices || !timesIso || !Array.isArray(dayIndices) || dayIndices.length === 0) return fallback;
+  if (!Array.isArray(tempArr) || !Array.isArray(rhArr)) return fallback;
+
+  let mejor = null;
+  const uvF = Math.max(0, Math.min(0.24, ((Number(uvIdx) || 0) - 3) * 0.028));
+  const et0F = et0DayMm != null && Number.isFinite(Number(et0DayMm))
+    ? Math.max(0, Math.min(0.18, (Number(et0DayMm) - 3.6) * 0.045))
+    : 0;
+
+  for (let hIni = 10; hIni <= 14; hIni++) {
+    const hFin = hIni + 3; // ventana de 4 horas exactas
+    const idx = dayIndices.filter(i => {
+      const h = parseInt(String(timesIso[i]).slice(11, 13), 10);
+      return Number.isFinite(h) && h >= hIni && h <= hFin;
+    });
+    if (idx.length < 3) continue;
+    const tM = riegoMediaDeIndices(tempArr, idx);
+    const hM = riegoMediaDeIndices(rhArr, idx);
+    if (!Number.isFinite(tM) || !Number.isFinite(hM)) continue;
+    const vpdM = riegoVPDkPa(tM, hM);
+    const termT = Math.max(0, (tM - 24) * 0.025);
+    const score = vpdM * 0.72 + termT + uvF + et0F;
+    if (!mejor || score > mejor.score) mejor = { indices: idx, hIni, hFin, score };
+  }
+
+  if (!mejor) return fallback;
+  return { indices: mejor.indices, hIni: mejor.hIni, hFin: mejor.hFin, horasPrograma: 4 };
 }
 
 /** Ventana nocturna alineada al programa diurno 07:00–21:00: 21:00–07:00 (misma fecha civil del modelo). */
@@ -21188,11 +21219,15 @@ async function calcularRiego(opts = {}) {
   const riegoClimaNftEl = document.getElementById('riegoClimaUsadoNft');
   const riegoClimaDwcEl = document.getElementById('riegoClimaUsadoDwc');
   const btnCalc = document.getElementById('btnCalcRiego');
+  const elHorarioHint = document.getElementById('riegoHorarioRecomendado');
   let btnCalcPrevTxt = '';
   if (btnCalc) {
     btnCalcPrevTxt = btnCalc.textContent || '🔄 Calcular riego ahora';
     btnCalc.disabled = true;
     btnCalc.textContent = '⏳ Calculando riego...';
+  }
+  if (elHorarioHint) {
+    elHorarioHint.textContent = '⏳ Calculando ventana de mediodía según el clima del día elegido…';
   }
   if (riegoLoaderEl) riegoLoaderEl.classList.remove('setup-hidden');
   if (riegoResultEl) riegoResultEl.classList.add('setup-hidden');
@@ -21291,11 +21326,16 @@ async function calcularRiego(opts = {}) {
     let humMedia;
     let temp1315;
     let hum1315;
+    let medHIni = 11;
+    let medHFin = 15;
 
     if (dayHourIdx && dayHourIdx.length && Array.isArray(rhArr) && Array.isArray(tempHArr)) {
       const hm = riegoMediaDeIndices(rhArr, dayHourIdx);
       humMedia = Number.isFinite(hm) ? Math.round(hm) : 55;
-      const midI = riegoIndicesMediodiaPorIso(dayHourIdx, times);
+      const winMed = riegoVentanaMediodiaDinamica(dayHourIdx, times, tempHArr, rhArr, uvMax, null);
+      const midI = winMed.indices;
+      medHIni = winMed.hIni;
+      medHFin = winMed.hFin;
       if (midI.length) {
         const tM = riegoMediaDeIndices(tempHArr, midI);
         const hM = riegoMediaDeIndices(rhArr, midI);
@@ -21468,6 +21508,11 @@ async function calcularRiego(opts = {}) {
         sustratoPerfilNombre: sustrato.nombre,
       };
       saveState();
+      if (elHorarioHint) {
+        elHorarioHint.textContent = esNftRiego
+          ? '🪴 NFT: riego continuo — no hay bloque de mediodía por pulsos; el clima sirve de referencia para vigilar estrés.'
+          : '💧 DWC: oxigenación continua — no hay bloque de mediodía por pulsos como en torre; el clima resume tu ubicación.';
+      }
       document.getElementById('riegoLoader').classList.add('setup-hidden');
       document.getElementById('riegoResultado').classList.remove('setup-hidden');
       return;
@@ -21539,7 +21584,8 @@ async function calcularRiego(opts = {}) {
     );
     const minONMedio = cicloMed.minON;
     const minOFFMedio = esInterior ? Math.max(10, cicloMed.minOFF) : cicloMed.minOFF;
-    const ciclosMedio  = Math.floor(240 / (minONMedio + minOFFMedio));
+    const durMedMin = ((typeof medHIni === 'number' && typeof medHFin === 'number') ? (medHFin - medHIni + 1) : 4) * 60;
+    const ciclosMedio  = Math.floor(durMedMin / (minONMedio + minOFFMedio));
     const totalONMedio = minONMedio * ciclosMedio;
     const dutyMedioPct = Math.round((100 * minONMedio) / (minONMedio + minOFFMedio));
 
@@ -21685,6 +21731,23 @@ async function calcularRiego(opts = {}) {
     document.getElementById('resMedioOFF').textContent   = minOFFMedio;
     document.getElementById('resMedioCiclos').textContent = ciclosMedio;
     document.getElementById('resMedioTotal').textContent  = totalONMedio;
+    const medHead = document.getElementById('mediodiaHeader');
+    const hhMed = function (n) { return String(n).padStart(2, '0') + ':00'; };
+    if (typeof medHIni === 'number' && typeof medHFin === 'number') {
+      if (medHead) {
+        medHead.textContent = '☀️ Programa mediodía — ' + hhMed(medHIni) + ' a ' + hhMed(medHFin) + 'h';
+      }
+      if (elHorarioHint) {
+        const diaTxt = diaRiego === 'manana' ? 'mañana (previsión)' : 'hoy';
+        let hint =
+          '🕐 Horario recomendado para programar el bloque de mediodía: de ' + hhMed(medHIni) + ' a ' + hhMed(medHFin) +
+          ' (4 h), según pico de estrés del día en el modelo (' + diaTxt + ').';
+        if (esInterior) {
+          hint += ' En instalación interior es referencia del clima de tu ubicación; cuádralo con tu fotoperiodo real.';
+        }
+        elHorarioHint.textContent = hint;
+      }
+    }
     const elMedDuty = document.getElementById('resMedioDutyCiclo');
     if (elMedDuty) elMedDuty.textContent = dutyMedioPct + '%';
 
@@ -21744,7 +21807,7 @@ async function calcularRiego(opts = {}) {
       ' · ☀️ Índice UV: ' + uvClimaStr +
       ' · 🌧️ Prob. lluvia: ' + probLluvia + '% · ' + precipMm + ' mm';
     const lineaTramo1315 = !esInterior
-      ? '<br>🕐 Mediodía modelo (11–15 h): ' + temp1315 + ' °C · ' + hum1315 + '% HR'
+      ? '<br>🕐 Mediodía modelo (' + String(medHIni).padStart(2, '0') + '–' + String(medHFin).padStart(2, '0') + ' h): ' + temp1315 + ' °C · ' + hum1315 + '% HR'
       : '';
     const vpdDiaTxt = Math.round(vpd * 1000) / 1000;
     const vpdMedTxt = Math.round(vpdMediodia * 1000) / 1000;
@@ -21769,7 +21832,7 @@ async function calcularRiego(opts = {}) {
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
       lineaNocClima +
       '<br><span class="riego-clima-meta-line">📆 Día en el modelo: <strong>' + fechaModTxt +
-      '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs 11–15 h + pico radiación) · Demanda rel. ' +
+      '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs ventana mediodía dinámica + pico radiación) · Demanda rel. ' +
       demDiaTxt + ' / ' + demMedTxt + ' (general / mediodía).</span>' +
       '<br><span class="riego-clima-nota-peq">Si <strong>hoy</strong> y <strong>mañana</strong> dan el mismo programa, suele ser previsión muy parecida en la API + mismos redondeos; comprueba que cambian temperatura/UV arriba y la fecha del modelo.</span>' +
       notaRedondeo +
@@ -21809,6 +21872,10 @@ async function calcularRiego(opts = {}) {
 
   } catch(e) {
     document.getElementById('riegoLoader').classList.add('setup-hidden');
+    const elH = document.getElementById('riegoHorarioRecomendado');
+    if (elH) {
+      elH.textContent = 'No se pudo calcular el horario de mediodía. Revisa conexión y ubicación, y pulsa de nuevo «Calcular riego ahora».';
+    }
     showToast('❌ Error al obtener datos meteorológicos', true);
   } finally {
     if (btnCalc) {

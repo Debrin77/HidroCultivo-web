@@ -2891,6 +2891,24 @@ button.torre-summary:focus-visible,
 .riego-dia-info--manana {
   color: #6d28d9;
 }
+.riego-recalc-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 8px;
+}
+.riego-horario-recomendado {
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--muted);
+  text-align: center;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+}
 .riego-section-title-sub {
   font-size: 0.72em;
   font-weight: 700;
