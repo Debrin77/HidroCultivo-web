@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-09-wordmark-fix1">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-10-guia-tab-gate1">
 </head>
 <body>
 
@@ -3879,6 +3879,19 @@ const HC_ONBOARD_RIEGO_VISIT_KEY = 'hc_onboarding_visit_riego';
 const HC_HINT_CTX = { mediciones: 'hc_hint_ctx_med', sistema: 'hc_hint_ctx_sis', riego: 'hc_hint_ctx_riego' };
 const HC_BIENVENIDA_KEY = 'hc_bienvenida_v2026_1';
 
+function syncGuiaPrimerosPasosPorPestana() {
+  const root = document.getElementById('guiaPrimerosPasos');
+  if (!root) return;
+  const onInicio = currentTab === 'inicio';
+  if (!onInicio) {
+    root.setAttribute('hidden', '');
+    root.setAttribute('aria-hidden', 'true');
+  } else {
+    root.removeAttribute('hidden');
+    root.setAttribute('aria-hidden', root.classList.contains('setup-hidden') ? 'true' : 'false');
+  }
+}
+
 function lanzarSetupOChecklistSiCorresponde() {
   const hayConfig = !!state.configTorre;
   const hayPlantas = getNivelesActivos().some(n =>
@@ -3924,6 +3937,7 @@ function dismissGuiaPrimerosPasos() {
   try { localStorage.setItem(HC_GUIDE_DISMISS_KEY, '1'); } catch (_) {}
   const el = document.getElementById('guiaPrimerosPasos');
   if (el) el.classList.add('setup-hidden');
+  try { syncGuiaPrimerosPasosPorPestana(); } catch (_) {}
 }
 
 function marcarVisitaRiegoOnboarding() {
@@ -3934,45 +3948,49 @@ function marcarVisitaRiegoOnboarding() {
 function actualizarGuiaPrimerosPasos() {
   const root = document.getElementById('guiaPrimerosPasos');
   if (!root) return;
-  let dismissed = false;
-  try { dismissed = localStorage.getItem(HC_GUIDE_DISMISS_KEY) === '1'; } catch (_) {}
-  if (dismissed) {
-    root.classList.add('setup-hidden');
-    return;
-  }
-  const hayCfg = !!(state && state.configTorre);
-  const hayMed = !!(state && state.ultimaMedicion);
-  let visitRiego = false;
-  try { visitRiego = localStorage.getItem(HC_ONBOARD_RIEGO_VISIT_KEY) === '1'; } catch (_) {}
-  if (hayCfg && hayMed && visitRiego) {
-    root.classList.add('setup-hidden');
-    return;
-  }
-  root.classList.remove('setup-hidden');
+  try {
+    let dismissed = false;
+    try { dismissed = localStorage.getItem(HC_GUIDE_DISMISS_KEY) === '1'; } catch (_) {}
+    if (dismissed) {
+      root.classList.add('setup-hidden');
+      return;
+    }
+    const hayCfg = !!(state && state.configTorre);
+    const hayMed = !!(state && state.ultimaMedicion);
+    let visitRiego = false;
+    try { visitRiego = localStorage.getItem(HC_ONBOARD_RIEGO_VISIT_KEY) === '1'; } catch (_) {}
+    if (hayCfg && hayMed && visitRiego) {
+      root.classList.add('setup-hidden');
+      return;
+    }
+    root.classList.remove('setup-hidden');
 
-  const p1 = document.getElementById('guiaPaso1');
-  const p2 = document.getElementById('guiaPaso2');
-  const p3 = document.getElementById('guiaPaso3');
-  if (p1) p1.classList.toggle('hc-guia-step--done', hayCfg);
-  if (p2) p2.classList.toggle('hc-guia-step--done', hayMed);
-  if (p3) p3.classList.toggle('hc-guia-step--done', visitRiego);
+    const p1 = document.getElementById('guiaPaso1');
+    const p2 = document.getElementById('guiaPaso2');
+    const p3 = document.getElementById('guiaPaso3');
+    if (p1) p1.classList.toggle('hc-guia-step--done', hayCfg);
+    if (p2) p2.classList.toggle('hc-guia-step--done', hayMed);
+    if (p3) p3.classList.toggle('hc-guia-step--done', visitRiego);
 
-  const b1 = document.getElementById('guiaBtnPaso1');
-  if (b1) {
-    b1.disabled = hayCfg;
-    b1.textContent = hayCfg ? 'Listo' : 'Abrir asistente';
-    b1.classList.toggle('btn-primary', !hayCfg);
-    b1.classList.toggle('btn-secondary', hayCfg);
-  }
-  const b2 = document.getElementById('guiaBtnPaso2');
-  if (b2) {
-    b2.disabled = hayMed;
-    b2.textContent = hayMed ? 'Listo' : 'Ir a Medir';
-  }
-  const b3 = document.getElementById('guiaBtnPaso3');
-  if (b3) {
-    b3.disabled = visitRiego;
-    b3.textContent = visitRiego ? 'Listo' : 'Ir a Riego';
+    const b1 = document.getElementById('guiaBtnPaso1');
+    if (b1) {
+      b1.disabled = hayCfg;
+      b1.textContent = hayCfg ? 'Listo' : 'Abrir asistente';
+      b1.classList.toggle('btn-primary', !hayCfg);
+      b1.classList.toggle('btn-secondary', hayCfg);
+    }
+    const b2 = document.getElementById('guiaBtnPaso2');
+    if (b2) {
+      b2.disabled = hayMed;
+      b2.textContent = hayMed ? 'Listo' : 'Ir a Medir';
+    }
+    const b3 = document.getElementById('guiaBtnPaso3');
+    if (b3) {
+      b3.disabled = visitRiego;
+      b3.textContent = visitRiego ? 'Listo' : 'Ir a Riego';
+    }
+  } finally {
+    try { syncGuiaPrimerosPasosPorPestana(); } catch (_) {}
   }
 }
 
@@ -4316,6 +4334,7 @@ function goTab(tab) {
     window._riegoObsoleto = false;
   }
   if (typeof window._hcSyncMainTabTabIndex === 'function') window._hcSyncMainTabTabIndex();
+  try { syncGuiaPrimerosPasosPorPestana(); } catch (_) {}
 }
 
 function irMedirMunicipioClima() {

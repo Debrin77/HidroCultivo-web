@@ -1954,6 +1954,18 @@ button.aviso-cestas-ir:active {
 .tab-panel.active > *:nth-child(5) { animation-delay: 0.18s; }
 .tab-panel.active > *:nth-child(6) { animation-delay: 0.21s; }
 
+/* Guía primer día: sin fadeUp (transform/opacity) para evitar capas superpuestas con el resto del panel */
+.tab-panel.active > .hc-guia-primeros {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+.tab-panel:not(.active) .hc-guia-primeros {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* Cards con hover en ordenador */
 @media (hover: hover) {
   .param-tile:hover   { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
