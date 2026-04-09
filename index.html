@@ -1610,9 +1610,9 @@
 
         </div>
 
-        <!-- Programa mediodía -->
+        <!-- Programa de mayor intensidad solar -->
         <div class="riego-prog-card riego-prog-card--amber">
-        <div class="mediodia-header" id="mediodiaHeader">☀️ Programa mediodía — 11:00 a 15:00h</div>
+        <div class="mediodia-header" id="mediodiaHeader">☀️ Riego de mayor intensidad solar — 11:00 a 15:00h</div>
 
         <div class="riego-programa">
           <div class="riego-bloque">
@@ -1683,13 +1683,13 @@
 
       </div>
 
-      <!-- Botón recalcular + horario mediodía para programación -->
+      <!-- Botón recalcular + horario de mayor intensidad solar para programación -->
       <div class="riego-recalc-wrap">
         <button type="button" class="btn btn-primary" onclick="calcularRiego({ forceRefresh: true, manual: true })" id="btnCalcRiego">
           🔄 Calcular riego ahora
         </button>
         <p class="riego-horario-recomendado" id="riegoHorarioRecomendado" role="status" aria-live="polite">
-          Tras calcular, aquí verás el horario sugerido del bloque de mediodía (4 h) para programar el riego.
+          Tras calcular, aquí verás el horario sugerido del bloque de mayor intensidad solar (4 h) para programar el riego.
         </p>
       </div>
 
@@ -20408,9 +20408,9 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
 
   // ── 🌊 VPD ────────────────────────────────────────────────────────────────
   if (vpd > 1.6)
-    alertas.push({ tipo:'bad', icon:'🔴', txt:'Estrés hídrico severo — riego de mediodía crítico. Revisar lechugas a las 13:00h.' });
+    alertas.push({ tipo:'bad', icon:'🔴', txt:'Estrés hídrico severo — riego de mayor intensidad solar crítico. Revisar lechugas a las 13:00h.' });
   else if (vpd > 1.2)
-    alertas.push({ tipo:'warn', icon:'🟡', txt:'Transpiración alta — programa mediodía activo. Vigilar signos de lacio.' });
+    alertas.push({ tipo:'warn', icon:'🟡', txt:'Transpiración alta — programa de mayor intensidad solar activo. Vigilar signos de lacio.' });
   else if (vpd < 0.4)
     alertas.push({ tipo:'warn', icon:'💧', txt:'Humedad muy alta — riesgo de hongos foliares. Asegura ' + ventVpdTxt + '.' });
   else
@@ -21227,7 +21227,7 @@ async function calcularRiego(opts = {}) {
     btnCalc.textContent = '⏳ Calculando riego...';
   }
   if (elHorarioHint) {
-    elHorarioHint.textContent = '⏳ Calculando ventana de mediodía según el clima del día elegido…';
+    elHorarioHint.textContent = '⏳ Calculando franja de mayor intensidad solar según el clima del día elegido…';
   }
   if (riegoLoaderEl) riegoLoaderEl.classList.remove('setup-hidden');
   if (riegoResultEl) riegoResultEl.classList.add('setup-hidden');
@@ -21510,8 +21510,8 @@ async function calcularRiego(opts = {}) {
       saveState();
       if (elHorarioHint) {
         elHorarioHint.textContent = esNftRiego
-          ? '🪴 NFT: riego continuo — no hay bloque de mediodía por pulsos; el clima sirve de referencia para vigilar estrés.'
-          : '💧 DWC: oxigenación continua — no hay bloque de mediodía por pulsos como en torre; el clima resume tu ubicación.';
+          ? '🪴 NFT: riego continuo — no hay bloque de intensidad solar por pulsos; el clima sirve de referencia para vigilar estrés.'
+          : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.';
       }
       document.getElementById('riegoLoader').classList.add('setup-hidden');
       document.getElementById('riegoResultado').classList.remove('setup-hidden');
@@ -21735,12 +21735,12 @@ async function calcularRiego(opts = {}) {
     const hhMed = function (n) { return String(n).padStart(2, '0') + ':00'; };
     if (typeof medHIni === 'number' && typeof medHFin === 'number') {
       if (medHead) {
-        medHead.textContent = '☀️ Programa mediodía — ' + hhMed(medHIni) + ' a ' + hhMed(medHFin) + 'h';
+        medHead.textContent = '☀️ Riego de mayor intensidad solar — ' + hhMed(medHIni) + ' a ' + hhMed(medHFin) + 'h';
       }
       if (elHorarioHint) {
         const diaTxt = diaRiego === 'manana' ? 'mañana (previsión)' : 'hoy';
         let hint =
-          '🕐 Horario recomendado para programar el bloque de mediodía: de ' + hhMed(medHIni) + ' a ' + hhMed(medHFin) +
+          '🕐 Horario recomendado para programar el bloque de mayor intensidad solar: de ' + hhMed(medHIni) + ' a ' + hhMed(medHFin) +
           ' (4 h), según pico de estrés del día en el modelo (' + diaTxt + ').';
         if (esInterior) {
           hint += ' En instalación interior es referencia del clima de tu ubicación; cuádralo con tu fotoperiodo real.';
@@ -21823,7 +21823,7 @@ async function calcularRiego(opts = {}) {
     let notaRedondeo = '';
     if (!esInterior && (demDiaTxt !== demMedTxt || vpdDiaTxt !== vpdMedTxt) && minON === minONMedio && minOFF === minOFFMedio) {
       notaRedondeo =
-        '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «mediodía», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
+        '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «franja de mayor intensidad solar», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
     }
     const lineaNocClima = esInterior
       ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice).'
@@ -21832,12 +21832,12 @@ async function calcularRiego(opts = {}) {
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
       lineaNocClima +
       '<br><span class="riego-clima-meta-line">📆 Día en el modelo: <strong>' + fechaModTxt +
-      '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs ventana mediodía dinámica + pico radiación) · Demanda rel. ' +
-      demDiaTxt + ' / ' + demMedTxt + ' (general / mediodía).</span>' +
+      '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs ventana dinámica de mayor intensidad solar + pico radiación) · Demanda rel. ' +
+      demDiaTxt + ' / ' + demMedTxt + ' (general / intensidad solar).</span>' +
       '<br><span class="riego-clima-nota-peq">Si <strong>hoy</strong> y <strong>mañana</strong> dan el mismo programa, suele ser previsión muy parecida en la API + mismos redondeos; comprueba que cambian temperatura/UV arriba y la fecha del modelo.</span>' +
       notaRedondeo +
       (esInterior
-        ? '<br><span class="riego-clima-int-torre">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala (programa mediodía = mismo índice que el día).</span>'
+        ? '<br><span class="riego-clima-int-torre">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala (bloque de intensidad solar = mismo índice que el día).</span>'
         : '');
 
     // Guardar en state para uso en otros módulos
@@ -21874,7 +21874,7 @@ async function calcularRiego(opts = {}) {
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     const elH = document.getElementById('riegoHorarioRecomendado');
     if (elH) {
-      elH.textContent = 'No se pudo calcular el horario de mediodía. Revisa conexión y ubicación, y pulsa de nuevo «Calcular riego ahora».';
+      elH.textContent = 'No se pudo calcular el horario de mayor intensidad solar. Revisa conexión y ubicación, y pulsa de nuevo «Calcular riego ahora».';
     }
     showToast('❌ Error al obtener datos meteorológicos', true);
   } finally {
@@ -22318,12 +22318,12 @@ async function fetchMeteoAlert() {
       tipo = 'bad'; icono = '🔴';
       titulo = 'Ambiente muy seco para las hojas';
       texto = `Temp ${temp}°C · Humedad ${hum}% · UV ${uvTxt} · Viento ${viento} km/h
-Riego de mediodía activo. Revisar que las plantas no están lacias.`;
+Riego de mayor intensidad solar activo. Revisar que las plantas no están lacias.`;
     } else if (vpd > 1.2) {
       tipo = 'warn'; icono = '🟡';
       titulo = 'Transpiración alta — vigilar riego';
       texto = `Temp ${temp}°C · Humedad ${hum}% · UV ${uvTxt} · Viento ${viento} km/h
-Condiciones de estrés moderado. Verificar riego de mediodía.`;
+Condiciones de estrés moderado. Verificar riego de mayor intensidad solar.`;
     } else if (vpd < 0.4) {
       tipo = 'warn'; icono = '💧';
       titulo = 'Humedad ambiental muy alta';
