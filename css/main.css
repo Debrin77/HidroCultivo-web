@@ -153,7 +153,7 @@ body {
 
 /* Icono de marca (PNG; con transparencia: halo + brillo para leer sobre negro) */
 .splash-img-wrap--brand {
-  width: clamp(172px, 52vw, 236px);
+  width: clamp(192px, 58vw, 266px);
   aspect-ratio: 1;
 }
 /* Recorte tipo icono iOS: muchos PNG exportan blanco en las esquinas del lienzo */
@@ -305,8 +305,8 @@ body::before { display: none; }
   padding: env(safe-area-inset-top, 47px) 20px env(safe-area-inset-bottom, 34px);
 }
 .pin-brand {
-  width: 92px;
-  height: 92px;
+  width: 108px;
+  height: 108px;
   border-radius: 24px;
   display: grid;
   place-items: center;
@@ -315,8 +315,8 @@ body::before { display: none; }
   box-shadow: 0 10px 24px rgba(15,23,42,0.12);
 }
 .pin-brand-img {
-  width: 84px;
-  height: 84px;
+  width: 98px;
+  height: 98px;
   object-fit: contain;
   filter: drop-shadow(0 6px 12px rgba(15,23,42,0.16));
 }
@@ -349,18 +349,6 @@ body::before { display: none; }
   border: 1px solid rgba(56, 189, 248, 0.42);
   background: linear-gradient(180deg, rgba(239,246,255,0.92), rgba(236,253,245,0.9));
   box-shadow: 0 6px 16px rgba(15,23,42,0.12), 0 0 14px rgba(34,211,238,0.18);
-}
-.pin-sub--subline {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.045em;
-  text-transform: none;
-  color: #0369a1;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-  margin-top: -10px;
 }
 .pin-sub--status {
   font-size: 11px;
