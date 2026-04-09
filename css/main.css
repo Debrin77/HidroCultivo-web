@@ -246,10 +246,10 @@ body {
 }
 
 .splash-sub {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-display);
   font-size: 13.5px;
   font-weight: 900;
-  color: #14532d;
+  color: #fbbf24;
   text-align: center;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -260,10 +260,10 @@ body {
   justify-content: center;
   padding: 10px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(22, 163, 74, 0.26);
-  background: linear-gradient(180deg, rgba(255,251,235,0.96), rgba(236,253,245,0.96));
-  box-shadow: 0 8px 16px rgba(15,23,42,0.1), inset 0 1px 0 rgba(255,255,255,0.65);
-  text-shadow: none;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  background: linear-gradient(180deg, rgba(51, 36, 16, 0.74), rgba(30, 41, 59, 0.62));
+  box-shadow: 0 10px 20px rgba(15,23,42,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
+  text-shadow: 0 1px 0 rgba(17,24,39,0.6);
   animation: splashTitleIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.5s both;
 }
 .splash-sub--tagline {
@@ -385,10 +385,11 @@ body::before { display: none; }
   font-size: 12.5px;
   font-weight: 900;
   letter-spacing: 0.06em;
-  color: #3f2f14;
-  border: 1px solid rgba(217, 119, 6, 0.28);
-  background: linear-gradient(180deg, rgba(255,251,235,0.98), rgba(254,252,232,0.95));
-  box-shadow: 0 6px 14px rgba(15,23,42,0.1);
+  font-family: var(--font-display);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.34);
+  background: linear-gradient(180deg, rgba(255,251,235,0.98), rgba(254,243,199,0.95));
+  box-shadow: 0 6px 14px rgba(15,23,42,0.1), inset 0 1px 0 rgba(255,255,255,0.55);
 }
 .pin-sub--status {
   font-size: 11px;
