@@ -1679,7 +1679,7 @@
       </div>
 
       <!-- Botón recalcular -->
-      <button type="button" class="btn btn-primary" onclick="calcularRiego()" id="btnCalcRiego">
+      <button type="button" class="btn btn-primary" onclick="calcularRiego({ forceRefresh: true, manual: true })" id="btnCalcRiego">
         🔄 Calcular riego ahora
       </button>
 
@@ -20102,11 +20102,12 @@ async function meteoFetchConFallback(baseUrl, opts = {}) {
   const ttlMs = opts.ttlMs ?? 120000;
   const staleMs = opts.staleMs ?? (24 * 60 * 60 * 1000);
   const cacheKey = opts.cacheKey || baseUrl;
+  const forceRefresh = !!opts.forceRefresh;
   const now = Date.now();
   const cMem = _meteoFastCache.get(cacheKey);
   const cLs = meteoReadLsCache(cacheKey);
   const c = cMem || cLs;
-  if (c && now - c.at < ttlMs) return c.data;
+  if (!forceRefresh && c && now - c.at < ttlMs) return c.data;
   if (_meteoFastInflight.has(cacheKey)) return _meteoFastInflight.get(cacheKey);
 
   const p = (async () => {
@@ -20469,7 +20470,7 @@ function setDiaRiego(dia) {
   }
 
   if (document.getElementById('tab-riego')?.classList.contains('active')) {
-    calcularRiego();
+    calcularRiego({ forceRefresh: true });
   }
 }
 
@@ -21164,7 +21165,8 @@ const RIEGO_NOC_REFRESCO_TORRE_EXT_SEG = 30;
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
-async function calcularRiego() {
+async function calcularRiego(opts = {}) {
+  const forceRefresh = !!opts.forceRefresh;
   const riegoNPl = document.getElementById('riegoNPlantas');
   if (!riegoNPl) return; // pestaña no activa
 
@@ -21180,6 +21182,13 @@ async function calcularRiego() {
   const riegoResultEl = document.getElementById('riegoResultado');
   const riegoClimaNftEl = document.getElementById('riegoClimaUsadoNft');
   const riegoClimaDwcEl = document.getElementById('riegoClimaUsadoDwc');
+  const btnCalc = document.getElementById('btnCalcRiego');
+  let btnCalcPrevTxt = '';
+  if (btnCalc) {
+    btnCalcPrevTxt = btnCalc.textContent || '🔄 Calcular riego ahora';
+    btnCalc.disabled = true;
+    btnCalc.textContent = '⏳ Calculando riego...';
+  }
   if (riegoLoaderEl) riegoLoaderEl.classList.remove('setup-hidden');
   if (riegoResultEl) riegoResultEl.classList.add('setup-hidden');
   if (riegoClimaNftEl) {
@@ -21224,10 +21233,10 @@ async function calcularRiego() {
       `&forecast_days=${diasForecast}&timezone=auto`;
 
     const [data, dataUV, dEt0] = await Promise.all([
-      meteoFetchConFallback(urlECMWFBase, { cacheKey: 'riego:ecmwf:' + urlECMWFBase, timeoutMs: 4300, ttlMs: 70 * 1000 })
-        .catch(() => meteoFetchConFallback(urlECMWFCoreBase, { cacheKey: 'riego:core:' + urlECMWFCoreBase, timeoutMs: 4300, ttlMs: 70 * 1000 })),
-      meteoFetchConFallback(urlUV, { cacheKey: 'riego:uv:' + urlUV, timeoutMs: 3600, ttlMs: 8 * 60 * 1000 }).catch(() => ({})),
-      meteoFetchConFallback(urlET0, { cacheKey: 'riego:et0:' + urlET0, timeoutMs: 4200, ttlMs: 70 * 1000 }).catch(() => ({})),
+      meteoFetchConFallback(urlECMWFBase, { cacheKey: 'riego:ecmwf:' + urlECMWFBase, timeoutMs: 4300, ttlMs: 70 * 1000, forceRefresh })
+        .catch(() => meteoFetchConFallback(urlECMWFCoreBase, { cacheKey: 'riego:core:' + urlECMWFCoreBase, timeoutMs: 4300, ttlMs: 70 * 1000, forceRefresh })),
+      meteoFetchConFallback(urlUV, { cacheKey: 'riego:uv:' + urlUV, timeoutMs: 3600, ttlMs: 8 * 60 * 1000, forceRefresh }).catch(() => ({})),
+      meteoFetchConFallback(urlET0, { cacheKey: 'riego:et0:' + urlET0, timeoutMs: 4200, ttlMs: 70 * 1000, forceRefresh }).catch(() => ({})),
     ]);
     const daily = data.daily;
     if (
@@ -21796,6 +21805,11 @@ async function calcularRiego() {
   } catch(e) {
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     showToast('❌ Error al obtener datos meteorológicos', true);
+  } finally {
+    if (btnCalc) {
+      btnCalc.disabled = false;
+      btnCalc.textContent = btnCalcPrevTxt;
+    }
   }
 }
 
