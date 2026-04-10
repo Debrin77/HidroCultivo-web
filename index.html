@@ -1197,6 +1197,10 @@
           <p id="sysDwcVolumenLitrosHint" class="torre-dwc-vol-hint setup-hidden" role="status"></p>
           <p id="sysDwcTapaCestasHint" class="torre-dwc-tapa-hint setup-hidden" role="status"></p>
           <p id="sysDwcMaxCestasHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
+          <button type="button" class="torre-dwc-apply-grid-btn setup-hidden" id="btnDwcAplicarRejillaMax"
+            onclick="aplicarDwcRejillaMaximaDesdeFormularioSistema()">
+            Aplicar rejilla máxima (tapa)
+          </button>
           <p id="sysDwcOxigenacionHint" class="torre-dwc-ox-hint setup-hidden" role="status"></p>
           <label class="torre-dwc-check-row torre-dwc-check-row--mb6">
             <input type="checkbox" id="sysDwcCupulas" class="torre-dwc-check">
@@ -2232,6 +2236,10 @@
           </div>
         </div>
         <p id="setupDwcTapaCestasHint" class="setup-hidden setup-dwc-tapa-hint" role="status"></p>
+        <button type="button" class="setup-dwc-apply-grid-btn setup-hidden" id="btnDwcAplicarRejillaMaxSetup"
+          onclick="aplicarDwcRejillaMaximaDesdeSetup()">
+          Aplicar rejilla máxima a los deslizadores
+        </button>
         <label class="setup-dwc-check-label setup-dwc-check-label-gap">
           <input type="checkbox" id="setupDwcCupulas" class="setup-dwc-check-input"
             onchange="try{actualizarResumenSetup()}catch(e){}">
@@ -8854,6 +8862,12 @@ function getDwcLitrosOxigenacionParaSistemaUI(cfg) {
 
 /** Hueco por defecto entre aros de cestas en la tapa (mm) si no indicas otro. */
 const DWC_TAPA_HUECO_DEFAULT_MM = 4;
+/** Tope de filas/columnas en esquema DWC (pestaña Torre / SVG). */
+const DWC_REJILLA_MAX_FILAS = 12;
+const DWC_REJILLA_MAX_COLS = 12;
+/** Límites de los deslizadores del asistente (Cantidades en el diagrama). */
+const DWC_SETUP_SLIDER_MAX_FILAS = 10;
+const DWC_SETUP_SLIDER_MAX_COLS = 8;
 
 function dwcGridSpanMm(count, rimDiameterMm, gutterMm) {
   const g = Number(gutterMm);
@@ -8978,26 +8992,176 @@ function dwcPersistSnapshotMaxCestasEnCfg(cfg) {
   };
 }
 
+/** Redimensiona la matriz DWC (filas × columnas de macetas) conservando datos donde haya hueco. */
+function redimensionarMatrizTorreDwcPreservando(cfg, nFilas, nCols) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
+  const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, parseInt(String(nFilas), 10) || 1));
+  const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, parseInt(String(nCols), 10) || 1));
+  const empty = () => ({ variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] });
+  const copy = o => {
+    if (!o || typeof o !== 'object') return empty();
+    return {
+      variedad: o.variedad || '',
+      fecha: o.fecha || '',
+      notas: o.notas || '',
+      fotos: Array.isArray(o.fotos) ? o.fotos.slice() : [],
+      fotoKeys: Array.isArray(o.fotoKeys) ? o.fotoKeys.slice() : [],
+    };
+  };
+  const prev = state.torre || [];
+  const nue = [];
+  for (let i = 0; i < nf; i++) {
+    const row = [];
+    const pi = prev[i];
+    for (let j = 0; j < nc; j++) {
+      row.push(pi && pi[j] ? copy(pi[j]) : empty());
+    }
+    nue.push(row);
+  }
+  state.torre = nue;
+  cfg.numNiveles = nf;
+  cfg.numCestas = nc;
+}
+
+/** Pestaña Sistema DWC: aplica filas×columnas teóricas máximas según L, A, Ø y separación (respetando tope 12×12 del esquema). */
+function aplicarDwcRejillaMaximaDesdeFormularioSistema() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  initTorres();
+  const cfg = state.configTorre;
+  try {
+    dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
+  } catch (e) {}
+  const o = dwcMaxCestasDesdeConfigTorre(cfg);
+  const btn = document.getElementById('btnDwcAplicarRejillaMax');
+  if (!o || o.max < 1) {
+    showToast('Indica largo, ancho y diámetro de cesta válidos para calcular la rejilla.', true);
+    if (btn) btn.disabled = true;
+    return;
+  }
+  const rawF = o.filas;
+  const rawC = o.cols;
+  const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, rawF));
+  const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, rawC));
+  redimensionarMatrizTorreDwcPreservando(cfg, nf, nc);
+  try {
+    dwcSincronizarTamanoCestaDesdeRim(cfg);
+  } catch (e2) {}
+  try {
+    dwcPersistSnapshotMaxCestasEnCfg(cfg);
+  } catch (e3) {}
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  renderTorre();
+  updateTorreStats();
+  try {
+    refreshDwcSistemaMedidasUI();
+  } catch (e4) {}
+  let msg = 'Rejilla aplicada: ' + nf + '×' + nc + ' macetas (' + nf * nc + ' huecos).';
+  if (rawF > DWC_REJILLA_MAX_FILAS || rawC > DWC_REJILLA_MAX_COLS) {
+    msg +=
+      ' Teórico hasta ' +
+      rawF +
+      '×' +
+      rawC +
+      '; el esquema admite como máximo ' +
+      DWC_REJILLA_MAX_FILAS +
+      '×' +
+      DWC_REJILLA_MAX_COLS +
+      '.';
+  }
+  showToast(msg);
+}
+
+/** Asistente: ajusta deslizadores al máximo que cabe (tope 10×8 en esta pantalla). */
+function aplicarDwcRejillaMaximaDesdeSetup() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  const rim = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
+  const L = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
+  const W = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
+  const mh = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
+  const marcoE = mh.marco != null ? mh.marco : 0;
+  const huecoE = mh.hueco != null ? mh.hueco : DWC_TAPA_HUECO_DEFAULT_MM;
+  if (rim == null || L == null || W == null) {
+    showToast('Completa largo, ancho y diámetro de cesta.', true);
+    return;
+  }
+  const o = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
+  if (!o || o.max < 1) {
+    showToast('No se puede calcular la rejilla con esos datos.', true);
+    return;
+  }
+  const rawF = o.filas;
+  const rawC = o.cols;
+  const nf = Math.max(1, Math.min(DWC_SETUP_SLIDER_MAX_FILAS, rawF));
+  const nc = Math.max(1, Math.min(DWC_SETUP_SLIDER_MAX_COLS, rawC));
+  const sn = document.getElementById('sliderNiveles');
+  const sc = document.getElementById('sliderCestas');
+  if (sn) sn.value = String(nf);
+  if (sc) sc.value = String(nc);
+  try {
+    updateTorreBuilder();
+  } catch (e) {}
+  try {
+    refreshDwcTapHintSetup();
+  } catch (e2) {}
+  try {
+    actualizarResumenSetup();
+  } catch (e3) {}
+  let msg = 'Deslizadores: ' + nf + ' filas × ' + nc + ' columnas.';
+  if (rawF > DWC_SETUP_SLIDER_MAX_FILAS || rawC > DWC_SETUP_SLIDER_MAX_COLS) {
+    msg +=
+      ' Teórico en tapa hasta ' +
+      rawF +
+      '×' +
+      rawC +
+      '; aquí el tope es ' +
+      DWC_SETUP_SLIDER_MAX_FILAS +
+      '×' +
+      DWC_SETUP_SLIDER_MAX_COLS +
+      ' (en Sistema puedes llegar a ' +
+      DWC_REJILLA_MAX_FILAS +
+      '×' +
+      DWC_REJILLA_MAX_COLS +
+      ').';
+  }
+  showToast(msg);
+}
+
 function refreshDwcMaxCestasHintSistema() {
   const el = document.getElementById('sysDwcMaxCestasHint');
+  const btn = document.getElementById('btnDwcAplicarRejillaMax');
   const cfg = state.configTorre;
   if (!el || !cfg || cfg.tipoInstalacion !== 'dwc') {
     if (el) {
       el.classList.add('setup-hidden');
       el.textContent = '';
     }
+    if (btn) {
+      btn.classList.add('setup-hidden');
+      btn.disabled = true;
+    }
     return;
   }
-  const o = dwcMaxCestasDesdeConfigTorre(cfg);
+  const cfgCalc = Object.assign({}, cfg);
+  try {
+    dwcMergeCamposFormularioEnCfg(cfgCalc, DWC_FORM_IDS_SISTEMA);
+  } catch (eM) {}
+  const o = dwcMaxCestasDesdeConfigTorre(cfgCalc);
   if (!o || o.max < 1) {
     el.classList.add('setup-hidden');
     el.textContent = '';
+    if (btn) {
+      btn.classList.add('setup-hidden');
+      btn.disabled = true;
+    }
     return;
   }
   const modoKey =
     typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
   const modoLbl = (MODOS_CULTIVO[modoKey] && MODOS_CULTIVO[modoKey].nombre) || 'tu cultivo';
-  const rimShow = cfg.dwcNetPotRimMm;
+  const rimShow =
+    cfgCalc.dwcNetPotRimMm != null ? cfgCalc.dwcNetPotRimMm : cfg.dwcNetPotRimMm;
   const extra =
     modoKey === 'intensivo' || modoKey === 'mixto'
       ? ' En cultivos de porte amplio suele convenir menos cestas que el máximo teórico.'
@@ -9020,6 +9184,10 @@ function refreshDwcMaxCestasHintSistema() {
     extra +
     (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
   el.classList.remove('setup-hidden');
+  if (btn) {
+    btn.classList.remove('setup-hidden');
+    btn.disabled = false;
+  }
 }
 
 function refreshDwcTapHintSetup() {
@@ -9028,6 +9196,11 @@ function refreshDwcTapHintSetup() {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') {
     el.classList.add('setup-hidden');
     el.textContent = '';
+    const bx = document.getElementById('btnDwcAplicarRejillaMaxSetup');
+    if (bx) {
+      bx.classList.add('setup-hidden');
+      bx.disabled = true;
+    }
     return;
   }
   const filas = parseInt(document.getElementById('sliderNiveles')?.value || '0', 10);
@@ -9042,6 +9215,11 @@ function refreshDwcTapHintSetup() {
   if (ev.estado === 'incompleto') {
     el.classList.add('setup-hidden');
     el.textContent = '';
+    const b0 = document.getElementById('btnDwcAplicarRejillaMaxSetup');
+    if (b0) {
+      b0.classList.add('setup-hidden');
+      b0.disabled = true;
+    }
     return;
   }
   el.classList.remove('setup-hidden');
@@ -9064,12 +9242,29 @@ function refreshDwcTapHintSetup() {
       ' mm/lado, ' +
       ev.hueco +
       ' mm entre cestas). Orientativo.';
-    return;
+  } else {
+    el.style.background = '#fffbeb';
+    el.style.border = '1.5px solid #fde68a';
+    el.style.color = '#92400e';
+    el.textContent = '⚠️ ' + ev.msg;
   }
-  el.style.background = '#fffbeb';
-  el.style.border = '1.5px solid #fde68a';
-  el.style.color = '#92400e';
-  el.textContent = '⚠️ ' + ev.msg;
+
+  const btnS = document.getElementById('btnDwcAplicarRejillaMaxSetup');
+  if (btnS) {
+    if (rim != null && L != null && W != null) {
+      const om = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
+      if (om && om.max >= 1) {
+        btnS.classList.remove('setup-hidden');
+        btnS.disabled = false;
+      } else {
+        btnS.classList.add('setup-hidden');
+        btnS.disabled = true;
+      }
+    } else {
+      btnS.classList.add('setup-hidden');
+      btnS.disabled = true;
+    }
+  }
 }
 
 /** Actualiza volumen estimado (L), oxigenación/difusor (L/min) y aviso de rejilla en la pestaña Sistema DWC. */
