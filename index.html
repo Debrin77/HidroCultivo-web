@@ -4818,9 +4818,12 @@ function generarSVGDwc() {
   const N = Math.max(1, Math.min(12, cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES));
   const C = Math.max(1, Math.min(12, cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS));
   const ta = torreSvgAnimacionesActivas();
-  const volConfig = getVolumenDepositoMaxLitros(cfg);
-  const volActual = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : volConfig * 0.82;
-  const volPct = Math.min(1, Math.max(0, volActual / Math.max(1, volConfig)));
+  const volMax = getVolumenDepositoMaxLitros(cfg);
+  const volTrabajo = getVolumenMezclaLitros(cfg);
+  /** Litros mostrados: siempre el volumen de mezcla / trabajo (≤ máx.), no la última medición ni un % fijo del máx. */
+  const volEtiqueta = Math.round(volTrabajo * 10) / 10;
+  /** Nivel del agua en el dibujo: fracción útil mezcla / capacidad física del depósito. */
+  const volPct = Math.min(1, Math.max(0, volTrabajo / Math.max(1, volMax)));
   const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
   const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
 
@@ -5073,9 +5076,14 @@ function generarSVGDwc() {
     }
   }
 
-  const volCol = volPct < 0.45 ? '#e11d48' : volPct < 0.68 ? '#d97706' : '#0284c7';
-  s += `<text x="${W / 2}" y="${tankStartY + tankH + 22}" font-family="Syne,sans-serif" font-size="14" font-weight="800" fill="${volCol}" text-anchor="middle">${volActual} L</text>`;
-  s += `<text x="${W / 2}" y="${tankStartY + tankH + 36}" font-family="Inconsolata,monospace" font-size="8" fill="#64748b" text-anchor="middle">Volumen orientativo · depósito DWC</text>`;
+  /* Color por litros de mezcla (no por % del máx.): depósito grande + poca mezcla es válido. */
+  const volCol = volEtiqueta < 6 ? '#e11d48' : volEtiqueta < 12 ? '#d97706' : '#0284c7';
+  s += `<text x="${W / 2}" y="${tankStartY + tankH + 22}" font-family="Syne,sans-serif" font-size="14" font-weight="800" fill="${volCol}" text-anchor="middle">${volEtiqueta} L</text>`;
+  const pieVol =
+    volTrabajo < volMax - 0.05
+      ? `Mezcla objetivo · máx. depósito ${Math.round(volMax * 10) / 10} L`
+      : 'Volumen de trabajo · depósito DWC';
+  s += `<text x="${W / 2}" y="${tankStartY + tankH + 36}" font-family="Inconsolata,monospace" font-size="8" fill="#64748b" text-anchor="middle">${pieVol}</text>`;
 
   const pieTxt =
     torreInteraccionModo === 'asignar'
