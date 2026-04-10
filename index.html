@@ -276,14 +276,14 @@
           <span class="quick-btn-icon" aria-hidden="true">⚙️</span>
           <span>Editar instalación</span>
         </button>
-        </div>
-        <details class="quick-actions-more" id="quickActionsMore">
-          <summary class="quick-actions-more-summary" id="quickActionsMoreSummary">Más opciones (recarga, seguridad…)</summary>
-          <div class="quick-actions quick-actions--extra">
         <button type="button" class="quick-btn quick-btn-warn" onclick="abrirChecklist(false)" aria-label="Abrir checklist de recarga de la instalación activa">
           <span class="quick-btn-icon" aria-hidden="true">🔄</span>
           <span>Iniciar recarga</span>
         </button>
+        </div>
+        <details class="quick-actions-more" id="quickActionsMore">
+          <summary class="quick-actions-more-summary" id="quickActionsMoreSummary">Más opciones (seguridad, alertas…)</summary>
+          <div class="quick-actions quick-actions--extra">
         <button type="button" class="quick-btn quick-btn-info" id="btnSeguridadAccesoInicio"
           onclick="toggleSeguridadAccesoInicio()" aria-expanded="false"
           aria-controls="panelSeguridadAccesoInicio" aria-label="Abrir opciones de seguridad de acceso">
@@ -1196,6 +1196,7 @@
           </div>
           <p id="sysDwcVolumenLitrosHint" class="torre-dwc-vol-hint setup-hidden" role="status"></p>
           <p id="sysDwcTapaCestasHint" class="torre-dwc-tapa-hint setup-hidden" role="status"></p>
+          <p id="sysDwcMaxCestasHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
           <p id="sysDwcOxigenacionHint" class="torre-dwc-ox-hint setup-hidden" role="status"></p>
           <label class="torre-dwc-check-row torre-dwc-check-row--mb6">
             <input type="checkbox" id="sysDwcCupulas" class="torre-dwc-check">
@@ -1551,6 +1552,7 @@
           <span class="toggle-knob" aria-hidden="true"></span>
         </button>
       </div>
+      <div id="riegoToldoReco" class="riego-toldo-reco setup-hidden" role="status" aria-live="polite"></div>
 
       <details class="riego-avanzado-details" id="riegoAvanzadoDetails">
         <summary>
@@ -1781,8 +1783,9 @@
         <div id="meteoMeteoclimaticInner" class="meteo-meteoclimatic-inner"></div>
       </div>
 
-      <!-- Avisos oficiales y alertas de cultivo (visibles sin pasar por toda la previsión) -->
+      <!-- Avisos AEMET/MeteoAlarm solo si hay alerta que nombra tu municipio -->
       <div id="meteoAvisosOficiales" class="meteo-alertas setup-hidden"></div>
+      <div id="meteoPrevisionDia" class="meteo-alertas meteo-prevision-dia setup-hidden"></div>
       <div id="meteoAlertas" class="meteo-alertas setup-hidden"></div>
 
       <!-- Loader -->
@@ -8909,6 +8912,108 @@ function dwcEvaluarCapestEnTapa(filas, cols, rimMm, largoCm, anchoCm, marcoPorLa
   };
 }
 
+/** Máximo teórico de cestas en tapa (rejilla) con el Ø aro y separación indicados. */
+function dwcMaxCestasTeoricasEnTapa(rimMm, largoCm, anchoCm, marcoPorLadoMm, gutterMm) {
+  const marco = Number.isFinite(Number(marcoPorLadoMm)) && Number(marcoPorLadoMm) >= 0 ? Number(marcoPorLadoMm) : 0;
+  const hueco =
+    Number.isFinite(Number(gutterMm)) && Number(gutterMm) >= 0 ? Number(gutterMm) : DWC_TAPA_HUECO_DEFAULT_MM;
+  const D = Number(rimMm);
+  const Lcm = Number(largoCm);
+  const Wcm = Number(anchoCm);
+  if (!Number.isFinite(D) || D <= 0 || !Number.isFinite(Lcm) || !Number.isFinite(Wcm)) return null;
+  const Lmm = Lcm * 10 - 2 * marco;
+  const Wmm = Wcm * 10 - 2 * marco;
+  if (Lmm <= 0 || Wmm <= 0) return null;
+  const maxAlong = len => Math.floor((len + hueco) / (D + hueco));
+  const cols = maxAlong(Lmm);
+  const filas = maxAlong(Wmm);
+  if (cols < 1 || filas < 1) return { max: 0, cols, filas, Lmm, Wmm, marco, hueco };
+  return { max: cols * filas, cols, filas, Lmm, Wmm, marco, hueco };
+}
+
+function dwcMaxCestasDesdeConfigTorre(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
+  const L = cfg.dwcDepositoLargoCm;
+  const W = cfg.dwcDepositoAnchoCm;
+  const rim = cfg.dwcNetPotRimMm;
+  if (!Number.isFinite(Number(L)) || !Number.isFinite(Number(W)) || !Number.isFinite(Number(rim))) return null;
+  const marco =
+    cfg.dwcTapaMarcoPorLadoMm != null && Number.isFinite(Number(cfg.dwcTapaMarcoPorLadoMm)) && Number(cfg.dwcTapaMarcoPorLadoMm) >= 0
+      ? Number(cfg.dwcTapaMarcoPorLadoMm)
+      : 0;
+  const hueco =
+    cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0
+      ? Number(cfg.dwcTapaHuecoMm)
+      : DWC_TAPA_HUECO_DEFAULT_MM;
+  return dwcMaxCestasTeoricasEnTapa(rim, L, W, marco, hueco);
+}
+
+/** Guarda en la config el máximo teórico y metadatos (checklist, guardar sistema, etc.). */
+function dwcPersistSnapshotMaxCestasEnCfg(cfg) {
+  const o = dwcMaxCestasDesdeConfigTorre(cfg);
+  if (!o || o.max < 1) {
+    delete cfg.dwcCestasMaxRecomendadas;
+    delete cfg.dwcCestasMaxRecomendadasMeta;
+    return;
+  }
+  const modoKey =
+    typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
+  cfg.dwcCestasMaxRecomendadas = o.max;
+  cfg.dwcCestasMaxRecomendadasMeta = {
+    filas: o.filas,
+    cols: o.cols,
+    rimMm: cfg.dwcNetPotRimMm,
+    huecoMm: o.hueco,
+    marcoMm: o.marco,
+    modoCultivo: modoKey,
+    ts: new Date().toISOString().slice(0, 10),
+  };
+}
+
+function refreshDwcMaxCestasHintSistema() {
+  const el = document.getElementById('sysDwcMaxCestasHint');
+  const cfg = state.configTorre;
+  if (!el || !cfg || cfg.tipoInstalacion !== 'dwc') {
+    if (el) {
+      el.classList.add('setup-hidden');
+      el.textContent = '';
+    }
+    return;
+  }
+  const o = dwcMaxCestasDesdeConfigTorre(cfg);
+  if (!o || o.max < 1) {
+    el.classList.add('setup-hidden');
+    el.textContent = '';
+    return;
+  }
+  const modoKey =
+    typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
+  const modoLbl = (MODOS_CULTIVO[modoKey] && MODOS_CULTIVO[modoKey].nombre) || 'tu cultivo';
+  const rimShow = cfg.dwcNetPotRimMm;
+  const extra =
+    modoKey === 'intensivo' || modoKey === 'mixto'
+      ? ' En cultivos de porte amplio suele convenir menos cestas que el máximo teórico.'
+      : ' Si el follaje ensancha mucho respecto al aro, deja margen y menos cestas.';
+  const metaTs = cfg.dwcCestasMaxRecomendadasMeta && cfg.dwcCestasMaxRecomendadasMeta.ts;
+  el.textContent =
+    '📐 Máx. orientativo en tapa: ~' +
+    o.max +
+    ' cestas (rejilla ~' +
+    o.cols +
+    '×' +
+    o.filas +
+    '; Ø ' +
+    rimShow +
+    ' mm; ' +
+    o.hueco +
+    ' mm entre cestas). Modo «' +
+    modoLbl +
+    '»:' +
+    extra +
+    (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
+  el.classList.remove('setup-hidden');
+}
+
 function refreshDwcTapHintSetup() {
   const el = document.getElementById('setupDwcTapaCestasHint');
   if (!el) return;
@@ -8976,6 +9081,9 @@ function refreshDwcSistemaMedidasUI() {
     try {
       refreshDwcTapHintSistema();
     } catch (e) {}
+    try {
+      refreshDwcMaxCestasHintSistema();
+    } catch (eM) {}
     return;
   }
   if (volEl) {
@@ -8992,6 +9100,9 @@ function refreshDwcSistemaMedidasUI() {
   try {
     refreshDwcTapHintSistema();
   } catch (e2) {}
+  try {
+    refreshDwcMaxCestasHintSistema();
+  } catch (e3) {}
 
   if (oxEl) {
     const par = dwcRecomendacionDifusorParaSistemaUI(cfg);
@@ -9194,6 +9305,9 @@ function aplicarSistemaDwcDesdeFormulario() {
   const cfg = state.configTorre;
   dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
   dwcSincronizarTamanoCestaDesdeRim(cfg);
+  try {
+    dwcPersistSnapshotMaxCestasEnCfg(cfg);
+  } catch (e0) {}
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
@@ -14616,29 +14730,71 @@ function closeModal(e) {
 // BORRAR ENTRADAS DEL HISTORIAL
 // ══════════════════════════════════════════════════
 
-function borrarMedicion(idx) {
-  if (!confirm('¿Borrar esta medición?')) return;
-  if (!state.mediciones) return;
-  state.mediciones.splice(idx, 1);
-  // Borrar también del registro unificado si coincide
-  if (state.registro) {
-    const med = state.mediciones; // ya spliceado
-    // Buscar en registro por posición aproximada y tipo
-    state.registro = state.registro.filter((r, i) => {
-      if (r.tipo !== 'medicion') return true;
-      // Contar cuántas mediciones hay antes de este índice en registro
-      return true; // conservamos todas — borrado es solo en state.mediciones
-    });
+function borrarMedicion(fecha, hora, torreId) {
+  if (!confirm('¿Borrar esta entrada del historial?')) return;
+  initTorres();
+  let slot = state.torres.findIndex(t => t && String(t.id) === String(torreId));
+  if (slot < 0) slot = state.torreActiva || 0;
+  const t = state.torres[slot];
+  if (!t || !Array.isArray(t.mediciones)) {
+    showToast('No se encontró la instalación', true);
+    return;
+  }
+  const i = t.mediciones.findIndex(m => m && m.fecha === fecha && m.hora === hora);
+  if (i < 0) {
+    showToast('No se encontró el dato', true);
+    return;
+  }
+  const row = t.mediciones[i];
+  const tipoReg = (function inferTipoRegBorradoMedicion(r) {
+    if (!r) return 'medicion';
+    if (r.tipo === 'cosecha') return 'cosecha';
+    if (r.tipo === 'reposicion') return 'reposicion';
+    if (r.tipo === 'recarga') return 'recarga';
+    if (String(r.notas || '').indexOf('Recarga completa') >= 0) return 'recarga';
+    return 'medicion';
+  })(row);
+
+  borrarEntradaRegistroDesdeHistorial(slot, fecha, hora, tipoReg, true, true, true);
+
+  t.mediciones.splice(i, 1);
+  const um0 = t.mediciones.find(m => m && (m.tipo === 'medicion' || !m.tipo || m.tipo === ''));
+  let ult = null;
+  if (um0) {
+    ult = {
+      fecha: um0.fecha,
+      hora: um0.hora,
+      ec: um0.ec,
+      ph: um0.ph,
+      temp: um0.temp,
+      vol: um0.vol,
+      humSustrato: um0.humSustrato,
+    };
+  }
+  t.ultimaMedicion = ult;
+  if ((state.torreActiva || 0) === slot) {
+    state.mediciones = t.mediciones;
+    state.ultimaMedicion = ult ? { ...ult } : null;
   }
   saveState();
   renderHistMediciones();
-  showToast('🗑 Medición borrada');
+  if (document.getElementById('tab-inicio')?.classList.contains('active')) updateDashboard();
+  showToast('🗑 Entrada borrada');
 }
 
-function borrarEntradaRegistro(idx) {
-  if (!confirm('¿Borrar esta entrada del registro?')) return;
-  if (!state.registro) return;
-  const entry = state.registro[idx];
+/** Borrado desde lista agregada del historial (multi-torre). */
+function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipConfirm, suppressToast, silentOnMissing) {
+  if (!skipConfirm && !confirm('¿Borrar esta entrada del registro?')) return false;
+  initTorres();
+  guardarEstadoTorreActual();
+  const t = state.torres[slotIdx];
+  if (!t || !Array.isArray(t.registro)) return false;
+  const i = t.registro.findIndex(r => r && r.tipo === tipo && r.fecha === fecha && r.hora === hora);
+  if (i < 0) {
+    if (!silentOnMissing) showToast('No se encontró la entrada', true);
+    return false;
+  }
+  const entry = t.registro[i];
   if (entry && entry.tipo === 'foto_sistema' && entry.fotoKey) {
     void borrarFotoIDB(entry.fotoKey);
     ensureFotosSistemaCompletoState();
@@ -14647,7 +14803,8 @@ function borrarEntradaRegistro(idx) {
     state.fotosSistemaCompleto.fotos = (state.fotosSistemaCompleto.fotos || []).filter(f => !f || f.key !== k);
     guardarEstadoTorreActual();
   }
-  state.registro.splice(idx, 1);
+  t.registro.splice(i, 1);
+  if ((state.torreActiva || 0) === slotIdx) state.registro = t.registro;
   saveState();
   renderRegistro();
   const diarioPanel = document.getElementById('histDiarioPanel');
@@ -14655,7 +14812,24 @@ function borrarEntradaRegistro(idx) {
   if (document.getElementById('tab-mediciones')?.classList.contains('active') && typeof actualizarResumenReposicionParcialUI === 'function') {
     actualizarResumenReposicionParcialUI();
   }
-  showToast('🗑 Entrada borrada');
+  if (!suppressToast) showToast('🗑 Entrada borrada');
+  return true;
+}
+
+function borrarEntradaRegistro(idx) {
+  if (!confirm('¿Borrar esta entrada del registro?')) return;
+  if (!state.registro) return;
+  const entry = state.registro[idx];
+  if (!entry) return;
+  borrarEntradaRegistroDesdeHistorial(
+    state.torreActiva || 0,
+    entry.fecha,
+    entry.hora,
+    entry.tipo,
+    true,
+    false,
+    false
+  );
 }
 
 function borrarRecargaLocal(idx) {
@@ -17171,6 +17345,9 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
       numNiveles: NUM_NIVELES,
       numCestas: NUM_CESTAS,
     });
+    try {
+      dwcPersistSnapshotMaxCestasEnCfg(state.configTorre);
+    } catch (eDw) {}
     state.torre = [];
     for (let n = 0; n < NUM_NIVELES; n++) {
       state.torre.push([]);
@@ -18237,8 +18414,59 @@ let filtroTorreActivo = null; // null = todas las instalaciones
 function coincideFiltroTorre(entry) {
   if (filtroTorreActivo == null) return true;
   const tid = entry && entry.torreId;
-  if (tid == null) return false;
-  return String(tid) === String(filtroTorreActivo);
+  if (tid != null) return String(tid) === String(filtroTorreActivo);
+  const t = state.torres && state.torres.find(x => x && String(x.id) === String(filtroTorreActivo));
+  if (!t) return false;
+  const nomEnt = String(entry.torreNombre || '').trim();
+  const nomTor = String(t.nombre || '').trim();
+  if (nomEnt && nomTor && nomEnt === nomTor) return true;
+  return false;
+}
+
+/** Registro unificado (todas las torres) para Historial → Registro con filtro por instalación. */
+function recolectarRegistroTodasInstalaciones() {
+  initTorres();
+  if (!state.torres || state.torres.length <= 1) {
+    const ta = getTorreActiva();
+    const tid = ta && ta.id != null ? ta.id : (state.torreActiva || 0);
+    const slotIdx = state.torreActiva || 0;
+    return (state.registro || []).map(e => ({
+      ...e,
+      torreId: e.torreId != null ? e.torreId : tid,
+      _slotIdx: slotIdx,
+    }));
+  }
+  const todas = [];
+  state.torres.forEach((tor, slotIdx) => {
+    (tor.registro || []).forEach(e => {
+      todas.push({
+        ...e,
+        torreId: e.torreId != null ? e.torreId : tor.id,
+        torreNombre: e.torreNombre || tor.nombre,
+        torreEmoji: e.torreEmoji || tor.emoji,
+        _slotIdx: slotIdx,
+      });
+    });
+  });
+  todas.sort((a, b) => {
+    const da = parseRegistroFechaHoraMs(a.fecha, a.hora);
+    const db = parseRegistroFechaHoraMs(b.fecha, b.hora);
+    return db - da;
+  });
+  return todas;
+}
+
+function parseRegistroFechaHoraMs(fecha, hora) {
+  const p = String(fecha || '').split('/');
+  if (p.length !== 3) return 0;
+  const d = parseInt(p[0], 10);
+  const m = parseInt(p[1], 10) - 1;
+  const y = parseInt(p[2], 10);
+  const t = String(hora || '00:00').split(':');
+  const h = parseInt(t[0], 10) || 0;
+  const mi = parseInt(t[1], 10) || 0;
+  if (!y || m < 0 || m > 11) return 0;
+  return new Date(y, m, d, h, mi).getTime();
 }
 
 /** Mediciones unificadas: una sola instalación o todas, con torreId/torreNombre para filtro e importación. */
@@ -18510,7 +18738,7 @@ async function hydrateRegistroFotoThumbs(container) {
 
 function renderRegistro() {
   const lista   = document.getElementById('registroLista');
-  const entries = (state.registro || []).filter(coincideFiltroTorre).slice(0, 100);
+  const entries = recolectarRegistroTodasInstalaciones().filter(coincideFiltroTorre).slice(0, 100);
   const nMeds   = recolectarMedicionesTodasInstalaciones().length;
 
   if (entries.length === 0) {
@@ -18619,7 +18847,7 @@ function renderRegistro() {
           detalle = (Ltxt || '') + (e.notas || 'Reposición registrada');
         }
       }
-      const globalIdx = entries.indexOf(e);
+      const slotIdx = typeof e._slotIdx === 'number' ? e._slotIdx : (state.torreActiva || 0);
       return '<div class="registro-entry-card" style="--reg-bg:' + c.bg + ';--reg-bd:' + c.border + ';--reg-badge:' + c.color + '">' +
         '<div class="registro-entry-head">' +
           '<div class="registro-entry-left">' +
@@ -18641,7 +18869,7 @@ function renderRegistro() {
           '</div>' +
           '<div class="registro-entry-right">' +
             '<span class="registro-entry-time">' + (e.hora||'') + '</span>' +
-            '<button onclick="borrarEntradaRegistro(' + globalIdx + ')" ' +
+            '<button onclick="borrarEntradaRegistroDesdeHistorial(' + slotIdx + ',\'' + escRegistroAttr(e.fecha) + '\',\'' + escRegistroAttr(e.hora) + '\',\'' + escRegistroAttr(e.tipo) + '\')\" ' +
               'class="registro-entry-delete"' +
               ' title="Borrar entrada">🗑</button>' +
           '</div>' +
@@ -18690,7 +18918,7 @@ function renderHistMediciones() {
       <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
       <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
       <span class="hist-action-cell">
-        <button onclick="borrarMedicion(${i})"
+        <button onclick="borrarMedicion(${JSON.stringify(m.fecha)}, ${JSON.stringify(m.hora)}, ${m.torreId == null ? 'null' : JSON.stringify(m.torreId)})"
           class="hist-btn-delete" aria-label="Borrar esta medición">🗑</button>
       </span>
       ${m.notas ? `<span class="hist-val hist-note-line">📝 ${m.notas}</span>` : ''}
@@ -20955,8 +21183,6 @@ async function cargarMeteo() {
     document.getElementById('meteoLoader').style.display = 'none';
     document.getElementById('meteoDias').classList.remove('setup-hidden');
     document.getElementById('meteoDetalle').classList.remove('setup-hidden');
-    const avOf = document.getElementById('meteoAvisosOficiales');
-    if (avOf) avOf.classList.remove('setup-hidden');
     document.getElementById('meteoAlertas').classList.remove('setup-hidden');
 
     await renderMeteoAvisosPanelCompleto();
@@ -20982,9 +21208,8 @@ async function cargarMeteo() {
         document.getElementById('meteoLoader').style.display = 'none';
         document.getElementById('meteoDias').classList.remove('setup-hidden');
         document.getElementById('meteoDetalle').classList.remove('setup-hidden');
-        const avOf2 = document.getElementById('meteoAvisosOficiales');
-        if (avOf2) avOf2.classList.remove('setup-hidden');
         document.getElementById('meteoAlertas').classList.remove('setup-hidden');
+        void renderMeteoAvisosPanelCompleto();
         return;
       } catch (_) {}
     }
@@ -21305,6 +21530,78 @@ function toggleToldo() {
   state.torres[tIdx].riego.toldo = toldoDesplegado;
   saveState();
   calcularRiego();
+}
+
+function ocultarRiegoToldoRecoUI() {
+  const el = document.getElementById('riegoToldoReco');
+  if (!el) return;
+  el.classList.add('setup-hidden');
+  el.innerHTML = '';
+}
+
+/**
+ * Recomendación explícita de toldo/sombra según T máx y UV del día calculado;
+ * permite activar el toldo en el modelo sin buscar el interruptor.
+ */
+function actualizarRiegoToldoRecoUI(esInterior, tempMax, uvIdxRaw) {
+  const el = document.getElementById('riegoToldoReco');
+  if (!el) return;
+  if (esInterior) {
+    ocultarRiegoToldoRecoUI();
+    return;
+  }
+  const tMax = Number(tempMax);
+  const uv = Number(uvIdxRaw);
+  let fuerte = false;
+  let suave = false;
+  if (Number.isFinite(uv)) {
+    if (uv >= 8) fuerte = true;
+    else if (uv >= 6) suave = true;
+  }
+  if (Number.isFinite(tMax)) {
+    if (tMax >= 34) fuerte = true;
+    else if (tMax >= 30) suave = true;
+    else if (tMax >= 28 && Number.isFinite(uv) && uv >= 5) suave = true;
+  }
+  if (!fuerte && !suave) {
+    ocultarRiegoToldoRecoUI();
+    return;
+  }
+  const recomHtml = fuerte
+    ? 'Hoy conviene <strong>toldo o malla de sombra</strong> (p. ej. 30–50&nbsp;%) para moderar calor y radiación en el follaje.'
+    : 'Conviene <strong>sombra parcial o malla ligera</strong> en las horas centrales.';
+  if (toldoDesplegado) {
+    el.innerHTML =
+      '<div class="riego-toldo-reco__inner"><p class="riego-toldo-reco__p">✓ Toldo/sombra <strong>activo</strong> en el cálculo; encaja con las condiciones previstas de hoy.</p></div>';
+    el.classList.remove('setup-hidden');
+    return;
+  }
+  el.innerHTML =
+    '<div class="riego-toldo-reco__inner">' +
+    '<p class="riego-toldo-reco__p">📌 <strong>Recomendación:</strong> ' +
+    recomHtml +
+    '</p>' +
+    '<p class="riego-toldo-reco__sub">Basado en temperatura máxima e índice UV de la previsión del día elegido.</p>' +
+    '<button type="button" class="btn btn-secondary riego-toldo-reco__btn" onclick="activarToldoRecomendado()">Activar toldo/sombra en el cálculo</button>' +
+    '</div>';
+  el.classList.remove('setup-hidden');
+}
+
+function activarToldoRecomendado() {
+  if (!toldoDesplegado) {
+    toldoDesplegado = true;
+    const sw = document.getElementById('toldoSwitch');
+    if (sw) {
+      sw.className = 'toggle-switch on';
+      sw.setAttribute('aria-checked', 'true');
+    }
+    const tIdx = state.torreActiva || 0;
+    if (!state.torres[tIdx]) state.torres[tIdx] = {};
+    if (!state.torres[tIdx].riego) state.torres[tIdx].riego = {};
+    state.torres[tIdx].riego.toldo = true;
+    saveState();
+  }
+  calcularRiego({ manual: true });
 }
 
 // Calcular edad automática desde las plantas más jóvenes de la Torre
@@ -21986,6 +22283,7 @@ async function calcularRiego(opts = {}) {
     btnCalc.disabled = true;
     btnCalc.textContent = '⏳ Calculando riego...';
   }
+  ocultarRiegoToldoRecoUI();
   if (elHorarioHint) {
     elHorarioHint.textContent = '⏳ Calculando franja de mayor intensidad solar según el clima del día elegido…';
   }
@@ -22314,6 +22612,9 @@ async function calcularRiego(opts = {}) {
           ? '🪴 NFT: riego continuo — no hay bloque de intensidad solar por pulsos; el clima sirve de referencia para vigilar estrés.'
           : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.') + pieMeteo;
       }
+      try {
+        actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
+      } catch (_) {}
       document.getElementById('riegoLoader').classList.add('setup-hidden');
       document.getElementById('riegoResultado').classList.remove('setup-hidden');
       return;
@@ -22708,10 +23009,15 @@ async function calcularRiego(opts = {}) {
     };
     saveState();
 
+    try {
+      actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
+    } catch (_) {}
+
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     document.getElementById('riegoResultado').classList.remove('setup-hidden');
 
   } catch(e) {
+    ocultarRiegoToldoRecoUI();
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     const elH = document.getElementById('riegoHorarioRecomendado');
     if (elH) {
@@ -23696,10 +24002,11 @@ function maybeNotificarMeteoalarmRelevantes(relevantes) {
   );
 }
 
-async function renderMeteoAvisosPanelCompleto() {
+async function renderMeteoPanelOficialMeteoalarmSiAplica() {
   const wrap = document.getElementById('meteoAvisosOficiales');
   if (!wrap) return;
-  wrap.classList.remove('setup-hidden');
+  wrap.classList.add('setup-hidden');
+  wrap.innerHTML = '';
 
   await refreshMeteoNominatimContext();
   let ctx = getMeteoUbicacionTorreContexto();
@@ -23710,61 +24017,68 @@ async function renderMeteoAvisosPanelCompleto() {
     ctx = getMeteoUbicacionTorreContexto();
   }
 
-  const parts = [];
+  if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) return;
 
-  if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) {
-    parts.push('<div class="meteo-alerta-item warn"><span class="meteo-alerta-icon">📍</span><span class="meteo-aviso-inline">' +
-    'Sin <strong>municipio/localidad</strong> para cruzar con MeteoAlarm: indícalo en <strong>Mediciones</strong> o activa <strong>GPS</strong> al cargar avisos (se deduce el pueblo por coordenadas). Solo se muestran avisos que <strong>nomen tu municipio</strong>, no los de comarcas o provincias enteras. ' +
-    '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
-  } else {
-    try {
-      const xml = await fetchMeteoalarmSpainProxied();
-      const items = parseMeteoalarmAtomEntries(xml);
-      const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
-      const etiquetaZona = ctx.municipioFiltro.trim();
+  try {
+    const xml = await fetchMeteoalarmSpainProxied();
+    const items = parseMeteoalarmAtomEntries(xml);
+    const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
+    if (relevantes.length === 0) return;
 
-      parts.push('<div class="meteo-aviso-kicker">' +
-        'MeteoAlarm solo si nombran «' + meteoEscHtml(etiquetaZona) + '»</div>');
-
-      if (relevantes.length > 0) {
-        maybeNotificarMeteoalarmRelevantes(relevantes);
-        const fuertes = relevantes.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
-        const amarillas = relevantes.filter(it => it.tipo === 'warn');
-        let mostrar = ordenarMeteoalarmPorRelevancia(fuertes).slice(0, 8);
-        const ya = new Set(mostrar.map(x => x.titulo));
-        amarillas.forEach(y => {
-          if (!ya.has(y.titulo) && mostrar.length < 10) {
-            mostrar.push(y);
-            ya.add(y.titulo);
-          }
-        });
-        mostrar.forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
-      } else if (items.length === 0) {
-        parts.push('<div class="meteo-alerta-item ok"><span class="meteo-alerta-icon">✅</span><span>No hay entradas activas en el feed nacional ahora, o el servicio no respondió. ' +
-          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
-      } else {
-        parts.push('<div class="meteo-alerta-item ok"><span class="meteo-alerta-icon">✅</span><span>No hay avisos activos que <strong>nombren tu municipio</strong> en este momento. ' +
-          '<a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
+    maybeNotificarMeteoalarmRelevantes(relevantes);
+    const fuertes = relevantes.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
+    const amarillas = relevantes.filter(it => it.tipo === 'warn');
+    let mostrar = ordenarMeteoalarmPorRelevancia(fuertes).slice(0, 8);
+    const ya = new Set(mostrar.map(x => x.titulo));
+    amarillas.forEach(y => {
+      if (!ya.has(y.titulo) && mostrar.length < 10) {
+        mostrar.push(y);
+        ya.add(y.titulo);
       }
-    } catch (e) {
-      parts.push('<div class="meteo-alerta-item warn">' +
-        '<span class="meteo-alerta-icon">📡</span><span>No se pudieron cargar avisos MeteoAlarm (proxy o red). ' +
-        'Prueba más tarde o consulta <a href="https://www.aemet.es/es/eltiempo/prediccion/avisos" target="_blank" rel="noopener noreferrer" class="aemet-link">AEMET</a>.</span></div>');
-    }
+    });
+    const parts = [];
+    mostrar.forEach(a => {
+      parts.push(meteoAlertaRowHtml(a));
+    });
+    wrap.innerHTML = parts.join('');
+    wrap.classList.remove('setup-hidden');
+  } catch (_) {
+    /* Sin panel: evitamos ruido si el feed falla; AEMET sigue enlazable desde la web. */
   }
+}
 
-  const heur = buildAvisosMeteoHeuristicas();
-  parts.push('<div class="meteo-aviso-kicker meteo-aviso-kicker--spaced">' +
-    'Modelo numérico (hoy, Open‑Meteo)</div>');
+function renderMeteoPrevisionCultivoDia() {
+  const wrap = document.getElementById('meteoPrevisionDia');
+  if (!wrap) return;
+  const parts = [];
+  parts.push(
+    '<div class="meteo-aviso-kicker meteo-aviso-kicker--spaced">Consejos para el cultivo (previsión de hoy)</div>'
+  );
   if (!meteoData?.daily) {
-    parts.push('<div class="meteo-alerta-item warn"><span class="meteo-alerta-icon">📡</span><span>Sin datos suficientes para este bloque.</span></div>');
-  } else if (heur.length === 0) {
-    parts.push('<div class="meteo-alerta-item ok"><span class="meteo-alerta-icon">✅</span><span>Sin condiciones destacables según el modelo para hoy.</span></div>');
-  } else {
-    heur.slice(0, 4).forEach(a => { parts.push(meteoAlertaRowHtml(a)); });
+    parts.push(
+      '<div class="meteo-alerta-item warn"><span class="meteo-alerta-icon">📡</span><span>Sin datos suficientes para este bloque todavía.</span></div>'
+    );
+    wrap.innerHTML = parts.join('');
+    wrap.classList.remove('setup-hidden');
+    return;
   }
-
+  const heur = buildAvisosMeteoHeuristicas();
+  if (heur.length === 0) {
+    parts.push(
+      '<div class="meteo-alerta-item ok"><span class="meteo-alerta-icon">✅</span><span>Sin condiciones destacables para hoy según temperatura, viento, lluvia y UV.</span></div>'
+    );
+  } else {
+    heur.slice(0, 6).forEach(a => {
+      parts.push(meteoAlertaRowHtml(a));
+    });
+  }
   wrap.innerHTML = parts.join('');
+  wrap.classList.remove('setup-hidden');
+}
+
+async function renderMeteoAvisosPanelCompleto() {
+  await renderMeteoPanelOficialMeteoalarmSiAplica();
+  renderMeteoPrevisionCultivoDia();
 }
 
 async function guardarMedicion() {
@@ -23891,7 +24205,12 @@ function showToast(msg, error=false) {
     t.setAttribute('role', 'status');
     t.setAttribute('aria-live', 'polite');
     t.setAttribute('aria-atomic', 'true');
-    t.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--green);color:var(--bg);font-family:var(--font-display);font-weight:700;font-size:13px;padding:10px 20px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:9000;white-space:nowrap;';
+    t.style.cssText =
+      'position:fixed;top:max(70px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%) translateY(-10px);' +
+      'background:var(--green);color:var(--bg);font-family:var(--font-display);font-weight:700;font-size:13px;' +
+      'line-height:1.35;padding:12px 16px;border-radius:16px;opacity:0;transition:all 0.3s;pointer-events:none;' +
+      'z-index:9000;max-width:min(100vw - 24px, 420px);width:max-content;box-sizing:border-box;text-align:center;' +
+      'white-space:normal;word-break:break-word;hyphens:auto;';
     document.body.appendChild(t);
   }
   t.textContent = msg;
@@ -24517,10 +24836,20 @@ function getTorreActiva() {
 
 // Actualizar todos los datos de la torre activa
 function actualizarTorreActual() {
-  if (state.configTorre) state.configTorre.checklistInstalacionConfirmada = true;
+  if (state.configTorre) {
+    state.configTorre.checklistInstalacionConfirmada = true;
+    if (state.configTorre.tipoInstalacion === 'dwc') {
+      try {
+        dwcPersistSnapshotMaxCestasEnCfg(state.configTorre);
+      } catch (eD) {}
+    }
+  }
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
+  try {
+    if (state.configTorre && state.configTorre.tipoInstalacion === 'dwc') refreshDwcSistemaMedidasUI();
+  } catch (eDwUi) {}
   renderTorre();
   updateTorreStats();
   updateDashboard();
@@ -24639,6 +24968,11 @@ function guardarEstadoTorreActual() {
   state.torres[idx].modoActual = modoActual;
   state.torres[idx].mediciones = state.mediciones || [];
   state.torres[idx].registro   = state.registro   || [];
+  state.torres[idx].ultimaMedicion = state.ultimaMedicion
+    ? { ...state.ultimaMedicion }
+    : null;
+  state.torres[idx].ultimaRecarga = state.ultimaRecarga ?? null;
+  state.torres[idx].recargaSnoozeHasta = state.recargaSnoozeHasta ?? null;
   state.torres[idx].config     = state.configTorre || null;
   ensureFotosSistemaCompletoState();
   try {
@@ -24663,6 +24997,25 @@ function cargarEstadoTorre(idx) {
   state.mediciones  = t.mediciones || [];
   state.registro    = t.registro   || [];
   state.configTorre = t.config     || null;
+  const umSlot = t.ultimaMedicion;
+  if (umSlot && typeof umSlot === 'object') {
+    state.ultimaMedicion = { ...umSlot };
+  } else {
+    const med0 = (t.mediciones || []).find(m => m && (m.tipo === 'medicion' || !m.tipo));
+    state.ultimaMedicion = med0
+      ? {
+          fecha: med0.fecha,
+          hora: med0.hora,
+          ec: med0.ec,
+          ph: med0.ph,
+          temp: med0.temp,
+          vol: med0.vol,
+          humSustrato: med0.humSustrato,
+        }
+      : null;
+  }
+  state.ultimaRecarga = t.ultimaRecarga != null ? t.ultimaRecarga : null;
+  state.recargaSnoozeHasta = t.recargaSnoozeHasta != null ? t.recargaSnoozeHasta : null;
   const fsc = t.fotosSistemaCompleto;
   state.fotosSistemaCompleto =
     fsc && typeof fsc === 'object'
