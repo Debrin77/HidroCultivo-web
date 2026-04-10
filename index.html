@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-10-quick-actions-grid1">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-10-medir-calentador-consigna">
 </head>
 <body>
 
@@ -716,6 +716,28 @@
             <p class="medir-help-p"><strong>Humedad del sustrato:</strong> si mides HR de esponja/lana con sonda o medidor 4&nbsp;en&nbsp;1 y quieres afinar el riego, usa el bloque <strong>Ajuste fino de humedad</strong> de arriba (±3&nbsp;%); no hace falta anotarla aparte al guardar la medición.</p>
             <p class="medir-help-p"><strong>Interior y exterior:</strong> el contexto ya lo marca la ubicación del sistema; los sensores en balcón o en armario se registran igual — la app no distingue el “cable”, solo el valor que pongas.</p>
             <p class="medir-help-p m0"><strong>Telemática automática</strong> (WiFi, nube, Bluetooth) no está integrada en esta versión: añadiría dependencia de terceros y permisos. Si en el futuro hubiera importación o API, se avisaría explícitamente.</p>
+          </div>
+          </div>
+        </div>
+
+        <div class="config-section config-section-collapsible" id="panelMedirCalentadorConsigna" style="display:none">
+          <button type="button" class="config-section-collapse-head" id="btnCollapseCalentadorRiego"
+            aria-expanded="true" aria-controls="collapseBodyCalentadorRiego"
+            onclick="toggleMedirCollapse('calentadorRiego')">
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+            <span class="config-section-collapse-title">🌡️ Calentador del depósito (riego nocturno)</span>
+          </button>
+          <div class="config-section-collapse-body" id="collapseBodyCalentadorRiego">
+          <div class="medir-note-block">
+            Misma <strong>consigna</strong> que en el asistente (Equipamiento): la app la usa si marcas <strong>calentador</strong> en el equipo y no hay otra fuente preferente en el cálculo. También puedes editarla aquí.
+          </div>
+          <div class="medir-grid-2-gap-10">
+            <div>
+              <label for="medirCalentadorConsignaC" class="medir-field-label">Consigna termostato (°C)</label>
+              <input type="number" id="medirCalentadorConsignaC" inputmode="decimal" min="10" max="35" step="0.5"
+                placeholder="20" onchange="persistMedirCalentadorConsigna()" onblur="persistMedirCalentadorConsigna()"
+                class="medir-input-md">
+            </div>
           </div>
           </div>
         </div>
@@ -2646,6 +2668,19 @@
           <div class="equip-titulo">Toldo / malla</div>
           <div class="equip-desc">Protección solar en verano</div>
         </button>
+      </div>
+      <div class="setup-sensores-box setup-hidden" id="setupCalentadorConsignaWrap">
+        <div class="setup-sensores-title">🌡️ Consigna del calentador (depósito)</div>
+        <div class="setup-sensores-desc">
+          Temperatura objetivo del termostato en el nutriente (típ. 18–24 °C). El riego nocturno se corrige un poco respecto a ~18 °C; si no hay medición reciente de temp. de agua, se usa esta consigna o la noche modelo / sala.
+        </div>
+        <div class="medir-grid-2-gap-10" style="margin-top:8px;">
+          <label class="setup-sensores-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+            <span>Consigna (°C)</span>
+            <input type="number" id="setupCalentadorConsignaC" inputmode="decimal" min="10" max="35" step="0.5"
+              class="medir-input-md" value="20" style="max-width:7rem;">
+          </label>
+        </div>
       </div>
       <div class="setup-sensores-box">
         <div class="setup-sensores-title">
@@ -7696,6 +7731,7 @@ function abrirSetup() {
     humedad: !!sh.humedad,
   };
   const c = state.configTorre || {};
+  syncSetupEquipamientoDesdeConfig(c);
   setupTipoInstalacion = tipoInstalacionNormalizado(c);
   const snc = document.getElementById('sliderNftCanales');
   const snh = document.getElementById('sliderNftHuecos');
@@ -12284,7 +12320,10 @@ function renderSetupPage() {
 
   // Acciones específicas por página (refrescar en p.1 incluye sync del gráfico Torre/NFT)
   if (setupPagina === 0 || setupPagina === 1) refrescarSetupTipoInstalacionUI();
-  if (setupPagina === 2) cargarSetupSensoresHwUI();
+  if (setupPagina === 2) {
+    cargarSetupSensoresHwUI();
+    refreshSetupCalentadorConsignaVis();
+  }
   if (setupPagina === 3) setTimeout(() => seleccionarSustrato(setupData.sustrato), 0);
   if (setupPagina === 4) { renderNutrientesGrid(); setTimeout(renderDosisSetup, 100); }
   if (setupPagina === 5) setTimeout(syncWizardLuzUI, 0);
@@ -12503,6 +12542,43 @@ function toggleEquip(id) {
     setupEquipamiento.add(id);
     card.className = 'equip-card selected';
   }
+  refreshSetupCalentadorConsignaVis();
+}
+
+function refreshSetupCalentadorConsignaVis() {
+  const wrap = document.getElementById('setupCalentadorConsignaWrap');
+  if (!wrap) return;
+  wrap.classList.toggle('setup-hidden', !setupEquipamiento.has('calentador'));
+}
+
+const SETUP_EQUIP_IDS = ['difusor', 'calentador', 'bomba', 'timer', 'medidorEC', 'toldo'];
+
+function refreshSetupEquipamientoCardsDesdeSet() {
+  for (let j = 0; j < SETUP_EQUIP_IDS.length; j++) {
+    const eid = SETUP_EQUIP_IDS[j];
+    const card = document.getElementById('eq' + eid.charAt(0).toUpperCase() + eid.slice(1));
+    if (card) card.className = 'equip-card' + (setupEquipamiento.has(eid) ? ' selected' : '');
+  }
+}
+
+function syncSetupEquipamientoDesdeConfig(cfg) {
+  const c = cfg || {};
+  setupEquipamiento = new Set();
+  const eqSaved = Array.isArray(c.equipamiento) ? c.equipamiento : [];
+  for (let i = 0; i < SETUP_EQUIP_IDS.length; i++) {
+    if (eqSaved.includes(SETUP_EQUIP_IDS[i])) setupEquipamiento.add(SETUP_EQUIP_IDS[i]);
+  }
+  if (setupEquipamiento.size === 0) {
+    setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
+  }
+  refreshSetupEquipamientoCardsDesdeSet();
+  const ccInp = document.getElementById('setupCalentadorConsignaC');
+  if (ccInp) {
+    const v = Number(c.calentadorConsignaC);
+    ccInp.value =
+      Number.isFinite(v) && v >= 10 && v <= 35 ? String(Math.round(v * 10) / 10) : '20';
+  }
+  refreshSetupCalentadorConsignaVis();
 }
 
 function ensureSetupSensoresHardware() {
@@ -13015,6 +13091,12 @@ function guardarSetupYContinuar() {
     localidadMeteo: usarNuevaEntrada ? (locWizard || '') : (locWizard || prevLocMet || ''),
     sensoresHardware: sensHwGuardar,
   };
+  const ccSetup = parseFloat(String(document.getElementById('setupCalentadorConsignaC')?.value || '').replace(',', '.'));
+  if (setupEquipamiento.has('calentador') && Number.isFinite(ccSetup) && ccSetup >= 10 && ccSetup <= 35) {
+    state.configTorre.calentadorConsignaC = Math.round(ccSetup * 10) / 10;
+  } else {
+    delete state.configTorre.calentadorConsignaC;
+  }
   if (isNft) {
     state.configTorre.nftNumCanales = niveles;
     state.configTorre.nftHuecosPorCanal = cestas;
@@ -13381,6 +13463,7 @@ function aplicarConfigTorre() {
     window.EC_POR_ML_AB_ACTIVO = ecSubePorMlCorreccion(nut, vAct);
   }
   actualizarVisibilidadPanelInteriorGrow();
+  try { actualizarVisibilidadPanelCalentadorConsigna(); } catch (_) {}
   try { sincronizarTextosPanelInteraccionSistema(); } catch (_) {}
 }
 
@@ -15725,6 +15808,49 @@ function actualizarVisibilidadPanelInteriorGrow() {
   applyMedirCollapseUI();
 }
 
+function cargarCalentadorConsignaMedicionesUI() {
+  if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  const el = document.getElementById('medirCalentadorConsignaC');
+  if (!el) return;
+  const v = Number(cfg.calentadorConsignaC);
+  el.value =
+    Number.isFinite(v) && v >= 10 && v <= 35 ? String(Math.round(v * 10) / 10) : '';
+}
+
+function persistMedirCalentadorConsigna() {
+  if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  const el = document.getElementById('medirCalentadorConsignaC');
+  if (!el) return;
+  if (!Array.isArray(cfg.equipamiento) || !cfg.equipamiento.includes('calentador')) {
+    delete cfg.calentadorConsignaC;
+    guardarEstadoTorreActual();
+    saveState();
+    return;
+  }
+  const raw = el.value;
+  const v = parseFloat(String(raw || '').replace(',', '.'));
+  if (Number.isFinite(v) && v >= 10 && v <= 35) {
+    cfg.calentadorConsignaC = Math.round(v * 10) / 10;
+  } else {
+    delete cfg.calentadorConsignaC;
+  }
+  guardarEstadoTorreActual();
+  saveState();
+  if (document.getElementById('tab-riego')?.classList.contains('active') && typeof calcularRiego === 'function') calcularRiego();
+}
+
+function actualizarVisibilidadPanelCalentadorConsigna() {
+  const p = document.getElementById('panelMedirCalentadorConsigna');
+  if (!p) return;
+  const cfg = state.configTorre || {};
+  const show = Array.isArray(cfg.equipamiento) && cfg.equipamiento.includes('calentador');
+  p.style.display = show ? 'block' : 'none';
+  cargarCalentadorConsignaMedicionesUI();
+  applyMedirCollapseUI();
+}
+
 function ensureUIMedirCollapse() {
   if (!state.configTorre) state.configTorre = {};
   let u = state.configTorre.uiMedirCollapse;
@@ -15745,6 +15871,9 @@ function resolveMedirExpanded(key, humActivo, hwAny) {
   }
   if (key === 'interiorGrow') {
     return ui.interiorGrow !== undefined ? !!ui.interiorGrow : true;
+  }
+  if (key === 'calentadorRiego') {
+    return ui.calentadorRiego !== undefined ? !!ui.calentadorRiego : true;
   }
   return true;
 }
@@ -15774,6 +15903,18 @@ function applyMedirCollapseUI() {
     const btn = document.getElementById('btnCollapseInteriorGrow');
     if (body && btn) {
       const exp = resolveMedirExpanded('interiorGrow', humAct, hwAny);
+      body.hidden = !exp;
+      btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
+      btn.classList.toggle('is-collapsed', !exp);
+    }
+  }
+
+  const calPanel = document.getElementById('panelMedirCalentadorConsigna');
+  if (calPanel && calPanel.style.display !== 'none') {
+    const body = document.getElementById('collapseBodyCalentadorRiego');
+    const btn = document.getElementById('btnCollapseCalentadorRiego');
+    if (body && btn) {
+      const exp = resolveMedirExpanded('calentadorRiego', humAct, hwAny);
       body.hidden = !exp;
       btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
       btn.classList.toggle('is-collapsed', !exp);
@@ -16104,6 +16245,7 @@ function initConfigUI() {
   cargarLocalidadMeteoUI();
   cargarUbicacionMedicionesUI();
   actualizarVisibilidadPanelInteriorGrow();
+  actualizarVisibilidadPanelCalentadorConsigna();
   cargarInteriorGrowUI();
   applyMedirCollapseUI();
 
@@ -21333,6 +21475,44 @@ function riegoIndiceDemandaNocturna(params) {
   return Math.max(0.4, Math.min(1.22, d));
 }
 
+/** Riego nocturno: corrección acotada por Tª del agua (~18 °C de referencia, ~0,7 %/°C). */
+const RIEGO_NOC_TEMP_AGUA_REF_C = 18;
+const RIEGO_NOC_TEMP_AGUA_PCT_POR_GRADO = 0.007;
+const RIEGO_NOC_TEMP_AGUA_F_MIN = 0.94;
+const RIEGO_NOC_TEMP_AGUA_F_MAX = 1.06;
+const RIEGO_NOC_DIFUSOR_DEMANDA_FACTOR = 0.965;
+
+function riegoEquipListIncluye(equipamiento, id) {
+  return Array.isArray(equipamiento) && equipamiento.includes(id);
+}
+
+/**
+ * Tª agua efectiva para el factor nocturno: consigna calentador (si hay), última medición, o proxy aire/noche.
+ */
+function riegoTempAguaNocheEfectiva(cfg, ultimaMedicion, tempAireNocProxyC) {
+  const c = cfg || {};
+  if (riegoEquipListIncluye(c.equipamiento, 'calentador')) {
+    const cons = Number(c.calentadorConsignaC);
+    if (Number.isFinite(cons) && cons >= 10 && cons <= 35) return cons;
+  }
+  const tM = Number(ultimaMedicion && ultimaMedicion.temp);
+  if (Number.isFinite(tM) && tM >= 4 && tM <= 40) return tM;
+  const p = Number(tempAireNocProxyC);
+  if (Number.isFinite(p)) return p;
+  return RIEGO_NOC_TEMP_AGUA_REF_C;
+}
+
+function riegoFactorDemandaNocPorTempAgua(tempAguaC) {
+  const t = Number(tempAguaC);
+  if (!Number.isFinite(t)) return 1;
+  const delta = (t - RIEGO_NOC_TEMP_AGUA_REF_C) * RIEGO_NOC_TEMP_AGUA_PCT_POR_GRADO;
+  return Math.max(RIEGO_NOC_TEMP_AGUA_F_MIN, Math.min(RIEGO_NOC_TEMP_AGUA_F_MAX, 1 + delta));
+}
+
+function riegoFactorDemandaNocPorDifusor(equipamiento) {
+  return riegoEquipListIncluye(equipamiento, 'difusor') ? RIEGO_NOC_DIFUSOR_DEMANDA_FACTOR : 1;
+}
+
 function riegoStatsNocturnosFromHourly(dayIndices, timesIso, tempArr, rhArr, windArr) {
   const nightIdx = riegoIndicesNocturnosPorIso(dayIndices, timesIso);
   if (!nightIdx.length || !Array.isArray(tempArr) || !Array.isArray(rhArr)) return null;
@@ -21903,6 +22083,17 @@ async function calcularRiego(opts = {}) {
         demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc * sensRiego.mult));
       }
     }
+    const cfgRiegoNoc = state.configTorre || {};
+    const interiorTNoc = parseFloat(cfgRiegoNoc.interiorTempC);
+    const tempAireNocProxy =
+      esInterior && Number.isFinite(interiorTNoc) ? interiorTNoc : tempNocUse;
+    const tempAguaNocUse = riegoTempAguaNocheEfectiva(cfgRiegoNoc, state.ultimaMedicion, tempAireNocProxy);
+    const fNocTempAgua = riegoFactorDemandaNocPorTempAgua(tempAguaNocUse);
+    const fNocDifusor = riegoFactorDemandaNocPorDifusor(cfgRiegoNoc.equipamiento);
+    demandaNoc *= fNocTempAgua * fNocDifusor;
+    demandaNoc = esInterior
+      ? Math.max(0.38, Math.min(1.02, demandaNoc))
+      : Math.max(0.38, Math.min(1.12, demandaNoc));
     const windSkipProxy = statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
       ? statsNoct.vientoMax
       : viento * 0.52;
@@ -22081,6 +22272,9 @@ async function calcularRiego(opts = {}) {
     const demDiaTxt = Math.round(demandaDia * 100) / 100;
     const demMedTxt = Math.round(demandaMed * 100) / 100;
     const demNocTxt = Math.round(demandaNoc * 100) / 100;
+    const facNocAguaDifTxt =
+      'T agua modelo ~' + Math.round(tempAguaNocUse * 10) / 10 + ' °C · ajuste noct. ×' +
+      Math.round(fNocTempAgua * fNocDifusor * 1000) / 1000;
     const vpdNocTxt = Math.round(vpdNocVal * 1000) / 1000;
     const et0NocTxt = et0NightSum != null && Number.isFinite(et0NightSum) ? String(et0NightSum) : '—';
     const windNocTxt = Math.round(vientoNocKmh * 10) / 10;
@@ -22093,8 +22287,8 @@ async function calcularRiego(opts = {}) {
         '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «franja de mayor intensidad solar», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
     }
     const lineaNocClima = esInterior
-      ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice).'
-      : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '.';
+      ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice). · ' + facNocAguaDifTxt
+      : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt;
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
       lineaNocClima +
@@ -24234,6 +24428,10 @@ function abrirSetupNuevaTorre() {
   setupTipoInstalacion = '';
   setupTipoTorre = 'custom';
   setupEquipamiento = new Set(['difusor','calentador','bomba','timer','medidorEC']);
+  refreshSetupEquipamientoCardsDesdeSet();
+  const ccNew = document.getElementById('setupCalentadorConsignaC');
+  if (ccNew) ccNew.value = '20';
+  refreshSetupCalentadorConsignaVis();
   setupNutriente = 'canna_aqua';
   setupUbicacion = 'exterior';
   setupPlantasSeleccionadas = new Set();
