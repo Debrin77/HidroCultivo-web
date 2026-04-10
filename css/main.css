@@ -3656,6 +3656,47 @@ button.torre-summary:focus-visible,
   line-height: 1.5;
 }
 .riego-clima-int-torre { opacity: 0.92; }
+.riego-clima-meteoclimatic {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  opacity: 0.95;
+}
+.riego-clima-mc-pub { font-size: 10px; opacity: 0.85; }
+.riego-clima-mc-ajuste {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0.95;
+}
+.riego-clima-mc-ajuste-sub { font-size: 10px; opacity: 0.82; }
+.meteo-meteoclimatic-box {
+  margin: 10px 0 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.meteo-mc-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+.meteo-mc-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--white);
+}
+.meteo-mc-small { font-size: 12px; opacity: 0.8; }
+.meteo-mc-note {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  opacity: 0.75;
+}
 .u-text-white { color: var(--white); }
 
 /* Mediciones — resumen reposición parcial */

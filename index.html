@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-10-medir-calentador-consigna">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-10-mc-riego-ajuste">
 </head>
 <body>
 
@@ -1779,6 +1779,10 @@
 
       <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
       <div class="meteo-ubic-caption">📍 Ubicación actual: <strong id="meteoUbicacionActual">—</strong></div>
+
+      <div id="meteoMeteoclimaticBox" class="meteo-meteoclimatic-box setup-hidden" role="region" aria-label="Datos de estación cercana Meteoclimatic">
+        <div id="meteoMeteoclimaticInner" class="meteo-meteoclimatic-inner"></div>
+      </div>
 
       <!-- Loader -->
       <div id="meteoLoader" class="info-banner">
@@ -4367,7 +4371,8 @@ function goTab(tab) {
     initDiaRiego();
     actualizarVistaRiegoPorTipoInstalacion();
     try { refreshUbicacionInstalacionUI(); } catch (_) {}
-    calcularRiego();
+    /* Siempre pedir datos nuevos al abrir la pestaña: el nocturno depende de la serie horaria; sin forceRefresh se reutilizaba caché ~1 min y podía parecer “valor fijo”. */
+    calcularRiego({ forceRefresh: true });
     window._riegoObsoleto = false;
   }
   if (typeof window._hcSyncMainTabTabIndex === 'function') window._hcSyncMainTabTabIndex();
@@ -20566,6 +20571,315 @@ async function meteoFetchConFallback(baseUrl, opts = {}) {
   }
 }
 
+// ── Meteoclimatic: estación aficionada más cercana (RSS regional; CORS vía allorigins si hace falta) ──
+const METEOCLIMATIC_ZONAS = [
+  { code: 'ESPV', minLat: 37.55, maxLat: 40.98, minLon: -1.05, maxLon: 0.52, cLat: 39.25, cLon: -0.55 },
+  { code: 'ESCAT', minLat: 40.35, maxLat: 42.95, minLon: 0.12, maxLon: 3.55, cLat: 41.65, cLon: 1.52 },
+  { code: 'ESAND', minLat: 35.05, maxLat: 38.85, minLon: -7.55, maxLon: -1.05, cLat: 37.2, cLon: -4.25 },
+  { code: 'ESCYL', minLat: 40.05, maxLat: 43.25, minLon: -6.85, maxLon: -1.42, cLat: 41.75, cLon: -4.25 },
+  { code: 'ESMUR', minLat: 37.32, maxLat: 38.72, minLon: -2.55, maxLon: -0.62, cLat: 37.95, cLon: -1.55 },
+  { code: 'ESMAD', minLat: 39.85, maxLat: 41.25, minLon: -4.15, maxLon: -2.85, cLat: 40.42, cLon: -3.7 },
+  { code: 'ESGAL', minLat: 41.75, maxLat: 43.95, minLon: -9.35, maxLon: -6.42, cLat: 42.65, cLon: -7.85 },
+  { code: 'ESEXT', minLat: 37.85, maxLat: 40.25, minLon: -7.55, maxLon: -4.55, cLat: 39.05, cLon: -6.35 },
+  { code: 'ESIBA', minLat: 38.55, maxLat: 40.25, minLon: 1.05, maxLon: 4.45, cLat: 39.6, cLon: 2.9 },
+  { code: 'ESARA', minLat: 39.75, maxLat: 43.05, minLon: -1.85, maxLon: 0.55, cLat: 41.35, cLon: -0.8 },
+];
+
+function meteoclimaticHaversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toR = x => (x * Math.PI) / 180;
+  const dLat = toR(lat2 - lat1);
+  const dLon = toR(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toR(lat1)) * Math.cos(toR(lat2)) * Math.sin(dLon / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.min(1, Math.sqrt(a))) * 10) / 10;
+}
+
+function meteoclimaticFeedCodesPriorizados(lat, lon) {
+  const inside = [];
+  for (let i = 0; i < METEOCLIMATIC_ZONAS.length; i++) {
+    const z = METEOCLIMATIC_ZONAS[i];
+    if (lat >= z.minLat && lat <= z.maxLat && lon >= z.minLon && lon <= z.maxLon) inside.push(z.code);
+  }
+  if (inside.length) return inside;
+  const scored = METEOCLIMATIC_ZONAS.map(z => ({
+    code: z.code,
+    d: (lat - z.cLat) * (lat - z.cLat) + (lon - z.cLon) * (lon - z.cLon),
+  })).sort((a, b) => a.d - b.d);
+  const out = [];
+  if (scored[0]) out.push(scored[0].code);
+  if (scored[1] && scored[1].code !== scored[0].code) out.push(scored[1].code);
+  return out;
+}
+
+function meteoclimaticMcParseFloat(s) {
+  if (s == null || s === '') return null;
+  const v = parseFloat(String(s).replace(',', '.'));
+  if (!Number.isFinite(v)) return null;
+  if (v === -99) return null;
+  return v;
+}
+
+const METEOCLIMATIC_BLOCK_RE = /\[\[<(\w+);\((-?[0-9,]+);(-?[0-9,]+);(-?[0-9,]+);(\w*)\);\((-?[0-9,]*);(-?[0-9,]*);(-?[0-9,]*)\);\((-?[0-9,]*);(-?[0-9,]*);(-?[0-9,]*)\);\((-?[0-9,]*);(-?[0-9,]*);(-?[0-9,]*)\);\((-?[0-9,]*)\);/;
+
+function meteoclimaticParseBlockFromDescription(desc) {
+  const m = METEOCLIMATIC_BLOCK_RE.exec(desc || '');
+  if (!m) return null;
+  return {
+    stationCode: m[1],
+    temp: meteoclimaticMcParseFloat(m[2]),
+    tempMax: meteoclimaticMcParseFloat(m[3]),
+    tempMin: meteoclimaticMcParseFloat(m[4]),
+    condition: m[5] || '',
+    rh: meteoclimaticMcParseFloat(m[6]),
+    pressure: meteoclimaticMcParseFloat(m[9]),
+    wind: meteoclimaticMcParseFloat(m[12]),
+    windMax: meteoclimaticMcParseFloat(m[13]),
+    windBearing: meteoclimaticMcParseFloat(m[14]),
+    rain24h: meteoclimaticMcParseFloat(m[15]),
+  };
+}
+
+function meteoclimaticPointFromItemXml(xmlSlice) {
+  let lat = NaN;
+  let lon = NaN;
+  const p1 = /<georss:point>\s*([\d.-]+)\s+([\d.-]+)\s*<\/georss:point>/i.exec(xmlSlice);
+  if (p1) {
+    lat = parseFloat(p1[1]);
+    lon = parseFloat(p1[2]);
+  } else {
+    const plat = /<geo:lat>\s*([\d.-]+)\s*<\/geo:lat>/i.exec(xmlSlice);
+    const plon = /<geo:long>\s*([\d.-]+)\s*<\/geo:long>/i.exec(xmlSlice);
+    if (plat && plon) {
+      lat = parseFloat(plat[1]);
+      lon = parseFloat(plon[1]);
+    }
+  }
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  return { lat, lon };
+}
+
+async function meteoclimaticFetchRssText(feedCode, timeoutMs) {
+  const url = 'https://www.meteoclimatic.net/feed/rss/' + encodeURIComponent(feedCode);
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    let txt = null;
+    try {
+      const r = await fetch(url, { signal: ctrl.signal, mode: 'cors' });
+      if (r.ok) txt = await r.text();
+    } catch (_) { /* CORS en navegador */ }
+    if (txt == null) {
+      const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
+      const r2 = await fetch(proxy, { signal: ctrl.signal });
+      if (!r2.ok) throw new Error('Meteoclimatic proxy');
+      const j = await r2.json();
+      if (typeof j.contents !== 'string') throw new Error('Meteoclimatic body');
+      txt = j.contents;
+    }
+    return txt;
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
+function meteoclimaticNearestFromRssXml(rssText, lat0, lon0) {
+  const reItem = /<item\b[^>]*>([\s\S]*?)<\/item>/gi;
+  let best = null;
+  let m;
+  while ((m = reItem.exec(rssText)) !== null) {
+    const chunk = m[1];
+    const titleM = /<title>([\s\S]*?)<\/title>/i.exec(chunk);
+    const linkM = /<link>([\s\S]*?)<\/link>/i.exec(chunk);
+    const descM = /<description>([\s\S]*?)<\/description>/i.exec(chunk);
+    const pubM = /<pubDate>([\s\S]*?)<\/pubDate>/i.exec(chunk);
+    if (!descM) continue;
+    const desc = descM[1].replace(/<!\[CDATA\[|\]\]>/g, '');
+    const obs = meteoclimaticParseBlockFromDescription(desc);
+    if (!obs) continue;
+    const pt = meteoclimaticPointFromItemXml(chunk);
+    if (!pt) continue;
+    const dist = meteoclimaticHaversineKm(lat0, lon0, pt.lat, pt.lon);
+    const title = titleM ? titleM[1].replace(/<[^>]+>/g, '').trim() : '';
+    const link = linkM ? linkM[1].trim() : '';
+    const pubDate = pubM ? pubM[1].trim() : '';
+    const cand = { title, link, pubDate, distKm: dist, lat: pt.lat, lon: pt.lon, feedObs: obs };
+    if (!best || dist < best.distKm) best = cand;
+  }
+  return best;
+}
+
+async function meteoclimaticObservacionCercana(lat, lon, opts) {
+  const timeoutMs = opts && opts.timeoutMs != null ? opts.timeoutMs : 6000;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  const perFetch = Math.max(1200, Math.min(5000, timeoutMs - 300));
+  const codes = meteoclimaticFeedCodesPriorizados(lat, lon);
+  if (!codes.length) return null;
+  for (let i = 0; i < codes.length; i++) {
+    try {
+      const xml = await meteoclimaticFetchRssText(codes[i], perFetch);
+      const best = meteoclimaticNearestFromRssXml(xml, lat, lon);
+      if (best) {
+        const o = best.feedObs;
+        return {
+          zonaRss: codes[i],
+          title: best.title,
+          link: best.link,
+          pubDate: best.pubDate,
+          distKm: best.distKm,
+          stationLat: best.lat,
+          stationLon: best.lon,
+          stationCode: o.stationCode,
+          temp: o.temp,
+          tempMax: o.tempMax,
+          tempMin: o.tempMin,
+          condition: o.condition,
+          rh: o.rh,
+          pressure: o.pressure,
+          wind: o.wind,
+          windMax: o.windMax,
+          windBearing: o.windBearing,
+          rain24h: o.rain24h,
+        };
+      }
+    } catch (_) { /* siguiente zona */ }
+  }
+  return null;
+}
+
+function meteoclimaticFormatLineaHtml(mc) {
+  if (!mc || mc.temp == null) return '';
+  const t = Math.round(mc.temp * 10) / 10;
+  const rh = mc.rh != null ? Math.round(mc.rh) + '%' : '—';
+  const w = mc.wind != null ? Math.round(mc.wind * 10) / 10 + ' km/h' : '—';
+  const rain = mc.rain24h != null ? Math.round(mc.rain24h * 10) / 10 + ' mm' : '—';
+  const dist = mc.distKm != null ? ' · ~' + Math.round(mc.distKm * 10) / 10 + ' km' : '';
+  const nom = escHtmlUi(mc.title || 'Estación');
+  return (
+    '<br><span class="riego-clima-meteoclimatic">📡 <strong>Meteoclimatic</strong> (observación reciente, red de estaciones)' + dist +
+    ': <strong>' + nom + '</strong> · T <strong>' + t + '</strong> °C · HR ' + rh + ' · viento ' + w + ' · precip. 24 h ' + rain +
+    ' · <span class="riego-clima-mc-pub">' + escHtmlUi(mc.pubDate || '') + '</span>. Complemento observacional; el modelo sigue siendo la base del cálculo.</span>'
+  );
+}
+
+/** Riego torre exterior: discrepancia fuerte + lectura reciente → factor VPD acotado (no sustituye Open‑Meteo). */
+const MC_RIEGO_EDAD_MAX_MS = 45 * 60 * 1000;
+const MC_RIEGO_DIF_T_C = 3.5;
+const MC_RIEGO_DIF_RH_PP = 18;
+const MC_RIEGO_FAC_DIA_MIN = 0.94;
+const MC_RIEGO_FAC_DIA_MAX = 1.06;
+const MC_RIEGO_FAC_NOC_MIN = 0.92;
+const MC_RIEGO_FAC_NOC_MAX = 1.08;
+
+function meteoclimaticMcEdadMs(pubDateStr) {
+  const t = Date.parse(pubDateStr || '');
+  return Number.isFinite(t) ? t : NaN;
+}
+
+function meteoclimaticMcLecturaReciente(mc, maxMs) {
+  if (!mc || !mc.pubDate) return false;
+  const ms = meteoclimaticMcEdadMs(mc.pubDate);
+  if (!Number.isFinite(ms)) return false;
+  return Date.now() - ms <= (maxMs != null ? maxMs : MC_RIEGO_EDAD_MAX_MS);
+}
+
+function meteoclimaticRiegoModeloHoraEnDia(timesIso, dayHourIdx, tempHArr, rhArr, tempFallback, rhFallback) {
+  if (!dayHourIdx || !dayHourIdx.length || !Array.isArray(tempHArr) || !Array.isArray(rhArr)) {
+    return { t: tempFallback, rh: rhFallback };
+  }
+  const hNow = new Date().getHours();
+  let bestIx = dayHourIdx[0];
+  let bestDiff = 999;
+  for (let i = 0; i < dayHourIdx.length; i++) {
+    const ix = dayHourIdx[i];
+    const iso = timesIso && timesIso[ix];
+    if (!iso) continue;
+    const h = parseInt(String(iso).slice(11, 13), 10);
+    if (!Number.isFinite(h)) continue;
+    const d = Math.abs(h - hNow);
+    const dWrap = Math.min(d, 24 - d);
+    if (dWrap < bestDiff) {
+      bestDiff = dWrap;
+      bestIx = ix;
+    }
+  }
+  const t = tempHArr[bestIx];
+  const rh = rhArr[bestIx];
+  const tOk = typeof t === 'number' && Number.isFinite(t);
+  const rhOk = typeof rh === 'number' && Number.isFinite(rh);
+  return {
+    t: tOk ? t : tempFallback,
+    rh: rhOk ? Math.round(rh) : rhFallback,
+  };
+}
+
+function meteoclimaticHoraLocalVentanaNocturnaRiego() {
+  const h = new Date().getHours();
+  return h >= 20 || h <= 7;
+}
+
+/**
+ * factor = VPD(MC) / VPD(modelo) con recorte; solo si ΔT/ΔHR y lectura reciente.
+ * dPlanta: delta toldo sobre temperatura aire (misma corrección en ambos VPD para comparar).
+ */
+function meteoclimaticFactorVpdDesdeMc(mc, tMod, rhMod, dPlanta, fMin, fMax) {
+  if (!meteoclimaticMcLecturaReciente(mc, MC_RIEGO_EDAD_MAX_MS)) return null;
+  if (mc.temp == null || mc.rh == null) return null;
+  if (!Number.isFinite(tMod) || !Number.isFinite(rhMod)) return null;
+  const dT = Math.abs(mc.temp - tMod);
+  const dRh = Math.abs(mc.rh - rhMod);
+  if (dT < MC_RIEGO_DIF_T_C && dRh < MC_RIEGO_DIF_RH_PP) return null;
+  const vpdRef = riegoVPDkPa(tMod + (dPlanta || 0), rhMod);
+  const vpdMc = riegoVPDkPa(mc.temp + (dPlanta || 0), mc.rh);
+  let f = vpdMc / Math.max(0.08, vpdRef);
+  f = Math.max(fMin, Math.min(fMax, f));
+  if (Math.abs(f - 1) < 0.004) return null;
+  return { factor: f, dT, dRh, vpdRef, vpdMc };
+}
+
+function meteoclimaticFactorNocDesdeMc(mc, tNocMod, rhNocMod, dTempPlanta, dNocFrac) {
+  if (!meteoclimaticHoraLocalVentanaNocturnaRiego()) return null;
+  if (!meteoclimaticMcLecturaReciente(mc, MC_RIEGO_EDAD_MAX_MS)) return null;
+  if (mc.temp == null || mc.rh == null) return null;
+  if (!Number.isFinite(tNocMod) || !Number.isFinite(rhNocMod)) return null;
+  const dT = Math.abs(mc.temp - tNocMod);
+  const dRh = Math.abs(mc.rh - rhNocMod);
+  if (dT < MC_RIEGO_DIF_T_C && dRh < MC_RIEGO_DIF_RH_PP) return null;
+  const dN = Number.isFinite(dNocFrac) ? dNocFrac : 0.38;
+  const adj = Number.isFinite(dTempPlanta) ? dTempPlanta : 0;
+  const vpdRef = riegoVPDkPa(tNocMod + adj * dN, rhNocMod);
+  const vpdMc = riegoVPDkPa(mc.temp + adj * dN, mc.rh);
+  let f = vpdMc / Math.max(0.05, vpdRef);
+  f = Math.max(MC_RIEGO_FAC_NOC_MIN, Math.min(MC_RIEGO_FAC_NOC_MAX, f));
+  if (Math.abs(f - 1) < 0.004) return null;
+  return { factor: f, dT, dRh };
+}
+
+function renderMeteoclimaticPanelMeteo(mc) {
+  const box = document.getElementById('meteoMeteoclimaticBox');
+  const inner = document.getElementById('meteoMeteoclimaticInner');
+  if (!box || !inner) return;
+  if (!mc || mc.temp == null) {
+    box.classList.add('setup-hidden');
+    inner.innerHTML = '';
+    return;
+  }
+  box.classList.remove('setup-hidden');
+  const href = mc.link ? escHtmlUi(mc.link) : '';
+  const linkHtml = href
+    ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer">Ver ficha en meteoclimatic.net</a>'
+    : '';
+  inner.innerHTML =
+    '<div class="meteo-mc-title">📡 Estación cercana (Meteoclimatic)</div>' +
+    '<div class="meteo-mc-body"><strong>' + escHtmlUi(mc.title || '') + '</strong> · ~' + Math.round(mc.distKm * 10) / 10 + ' km' +
+    '<br>T actual: <strong>' + (Math.round(mc.temp * 10) / 10) + '</strong> °C · HR: ' + (mc.rh != null ? Math.round(mc.rh) + '%' : '—') +
+    ' · Viento: ' + (mc.wind != null ? Math.round(mc.wind * 10) / 10 + ' km/h' : '—') +
+    ' · Lluvia 24 h: ' + (mc.rain24h != null ? Math.round(mc.rain24h * 10) / 10 + ' mm' : '—') +
+    '<br><span class="meteo-mc-small">' + escHtmlUi(mc.pubDate || '') + '</span>' + (linkHtml ? ' · ' + linkHtml : '') +
+    '<br><span class="meteo-mc-note">Red de estaciones aficionadas en la península y archipiélagos (gratis). Si no ves datos, la red puede estar saturada o el navegador bloquea el acceso: prueba más tarde.</span></div>';
+}
+
 async function cargarMeteo() {
   const meteoLoader = document.getElementById('meteoLoader');
   if (!meteoLoader) return; // pestaña no activa — no hacer nada
@@ -20584,10 +20898,12 @@ async function cargarMeteo() {
   const meteoDetalle = document.getElementById('meteoDetalle');
   const meteoAlertas = document.getElementById('meteoAlertas');
   const meteoAvisosOficiales = document.getElementById('meteoAvisosOficiales');
+  const mcBoxLoad = document.getElementById('meteoMeteoclimaticBox');
   if (meteoDias) meteoDias.classList.add('setup-hidden');
   if (meteoDetalle) meteoDetalle.classList.add('setup-hidden');
   if (meteoAlertas) meteoAlertas.classList.add('setup-hidden');
   if (meteoAvisosOficiales) meteoAvisosOficiales.classList.add('setup-hidden');
+  if (mcBoxLoad) mcBoxLoad.classList.add('setup-hidden');
 
   try {
     // No bloquear la carga por geolocalización (puede tardar varios segundos en algunos móviles).
@@ -20648,6 +20964,17 @@ async function cargarMeteo() {
     document.getElementById('meteoAlertas').classList.remove('setup-hidden');
 
     await renderMeteoAvisosPanelCompleto();
+
+    const mcCached = state._ultimoMeteoclimaticCercano;
+    if (mcCached && mcCached.temp != null) renderMeteoclimaticPanelMeteo(mcCached);
+    void meteoclimaticObservacionCercana(getCoordsActivas().lat, getCoordsActivas().lon, { timeoutMs: 7200 })
+      .then((mc) => {
+        try {
+          state._ultimoMeteoclimaticCercano = mc;
+        } catch (_) {}
+        renderMeteoclimaticPanelMeteo(mc);
+      })
+      .catch(() => renderMeteoclimaticPanelMeteo(null));
 
   } catch(e) {
     const cached = state._meteoForecastCache;
@@ -21713,12 +22040,23 @@ async function calcularRiego(opts = {}) {
       forceRefresh: refetchMeteo,
       allowStaleFallback: !refetchMeteo,
     });
+    const coordsMc = getCoordsActivas();
+    const mcPromise = meteoclimaticObservacionCercana(coordsMc.lat, coordsMc.lon, {
+      timeoutMs: refetchMeteo ? 7000 : 5600,
+    }).catch(() => null);
     const [data, dataUV, dEt0] = await Promise.all([
       meteoFetchConFallback(urlECMWFBase, roMeteo({ cacheKey: 'riego:ecmwf:' + urlECMWFBase, timeoutMs: 4300, ttlMs: 70 * 1000 }))
         .catch(() => meteoFetchConFallback(urlECMWFCoreBase, roMeteo({ cacheKey: 'riego:core:' + urlECMWFCoreBase, timeoutMs: 4300, ttlMs: 70 * 1000 }))),
       meteoFetchConFallback(urlUV, roMeteo({ cacheKey: 'riego:uv:' + urlUV, timeoutMs: 3600, ttlMs: 8 * 60 * 1000 })).catch(() => ({})),
       meteoFetchConFallback(urlET0, roMeteo({ cacheKey: 'riego:et0:' + urlET0, timeoutMs: 4200, ttlMs: 70 * 1000 })).catch(() => ({})),
     ]);
+    const mcNear = await mcPromise;
+    let mcRiegoLineaAjuste = '';
+    let factorMcDiaRiego = 1;
+    let factorMcNocRiego = 1;
+    try {
+      state._ultimoMeteoclimaticCercano = mcNear;
+    } catch (_) {}
     const daily = data.daily;
     if (
       !daily ||
@@ -21890,6 +22228,27 @@ async function calcularRiego(opts = {}) {
       demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * sensRiego.mult));
     }
 
+    if (!esInterior && tipoRiego === 'torre' && mcNear) {
+      const refH = meteoclimaticRiegoModeloHoraEnDia(times, dayHourIdx, tempHArr, rhArr, temp1315, hum1315);
+      const anaD = meteoclimaticFactorVpdDesdeMc(
+        mcNear,
+        refH.t,
+        refH.rh,
+        dTempPlanta,
+        MC_RIEGO_FAC_DIA_MIN,
+        MC_RIEGO_FAC_DIA_MAX
+      );
+      if (anaD) {
+        factorMcDiaRiego = anaD.factor;
+        demandaDia *= factorMcDiaRiego;
+        demandaDia = Math.max(0.48, Math.min(1.58, demandaDia));
+        mcRiegoLineaAjuste +=
+          '<br><span class="riego-clima-mc-ajuste">⚖️ <strong>Ajuste conservador Meteoclimatic (día):</strong> discrepancia fuerte (≥' +
+          MC_RIEGO_DIF_T_C + ' °C y/o ≥' + MC_RIEGO_DIF_RH_PP + ' pp HR) vs hora del modelo en el día elegido · lectura &lt;45 min · demanda ×' +
+          (Math.round(factorMcDiaRiego * 1000) / 1000) + ' <span class="riego-clima-mc-ajuste-sub">(tope ' + MC_RIEGO_FAC_DIA_MIN + '–' + MC_RIEGO_FAC_DIA_MAX + ' sobre VPD)</span>.</span>';
+      }
+    }
+
     const esNftRiego = tipoRiego === 'nft';
     const esDwcRiego = tipoRiego === 'dwc';
     if (esNftRiego || esDwcRiego) {
@@ -21915,12 +22274,14 @@ async function calcularRiego(opts = {}) {
         !esInterior && Number.isFinite(Number(uvEfectivo)) && Number(uvEfectivo) >= 7
           ? '<br><br><span class="riego-clima-tip-uv">💡 <strong>UV elevado:</strong> conviene <strong>toldo</strong>, <strong>malla sombra</strong> (p. ej. 30–50 %) o sombra parcial para moderar estrés y calor en el follaje.</span>'
           : '';
+      const lineaMcNft = meteoclimaticFormatLineaHtml(mcNear);
       const bloqueClima =
         '<span class="riego-clima-bloque">' + lineaClimaN + '</span>' +
         (esInterior
           ? '<br><br><span class="riego-clima-nota-int">🏠 Interior — datos de la ubicación guardada (referencia).</span>'
           : '') +
-        uvTipNft;
+        uvTipNft +
+        (lineaMcNft || '');
       if (esNftRiego && climaNft) {
         climaNft.innerHTML = bloqueClima;
         climaNft.classList.remove('setup-hidden');
@@ -22023,6 +22384,11 @@ async function calcularRiego(opts = {}) {
       demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * sensRiego.mult));
     }
 
+    if (!esInterior && tipoRiego === 'torre' && factorMcDiaRiego !== 1) {
+      demandaMed *= factorMcDiaRiego;
+      demandaMed = Math.max(0.48, Math.min(1.58, demandaMed));
+    }
+
     const cicloMed = riegoMinutosDesdeDemanda(
       demandaMed, nPlantas, kcMedio, sustrato, esInterior
     );
@@ -22094,6 +22460,19 @@ async function calcularRiego(opts = {}) {
     demandaNoc = esInterior
       ? Math.max(0.38, Math.min(1.02, demandaNoc))
       : Math.max(0.38, Math.min(1.12, demandaNoc));
+
+    if (!esInterior && tipoRiego === 'torre' && mcNear) {
+      const anaN = meteoclimaticFactorNocDesdeMc(mcNear, tempNocUse, rhNocUse, dTempPlanta, 0.38);
+      if (anaN) {
+        factorMcNocRiego = anaN.factor;
+        demandaNoc *= factorMcNocRiego;
+        demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
+        mcRiegoLineaAjuste +=
+          '<br><span class="riego-clima-mc-ajuste">⚖️ <strong>Ajuste conservador Meteoclimatic (noche):</strong> solo en horario local 20:00–07:59 · misma regla ΔT/ΔHR y lectura reciente vs noche modelo · demanda nocturna ×' +
+          (Math.round(factorMcNocRiego * 1000) / 1000) + ' <span class="riego-clima-mc-ajuste-sub">(tope ' + MC_RIEGO_FAC_NOC_MIN + '–' + MC_RIEGO_FAC_NOC_MAX + ')</span>.</span>';
+      }
+    }
+
     const windSkipProxy = statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
       ? statsNoct.vientoMax
       : viento * 0.52;
@@ -22289,9 +22668,11 @@ async function calcularRiego(opts = {}) {
     const lineaNocClima = esInterior
       ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice). · ' + facNocAguaDifTxt
       : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt;
+    const lineaMcRiego = meteoclimaticFormatLineaHtml(mcNear) + (mcRiegoLineaAjuste || '');
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
       lineaNocClima +
+      lineaMcRiego +
       '<br><span class="riego-clima-meta-line">📆 Día en el modelo: <strong>' + fechaModTxt +
       '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs ventana dinámica de mayor intensidad solar + pico radiación) · Demanda rel. ' +
       demDiaTxt + ' / ' + demMedTxt + ' (general / intensidad solar).</span>' +
@@ -22325,7 +22706,10 @@ async function calcularRiego(opts = {}) {
       multFaseCultivo: Math.round(multFase * 100) / 100,
       sustratoPerfilNombre: sustrato.nombre,
       vpd, vpdMediodia: Math.round(vpdMediodia*100)/100,
-      fecha: new Date().toLocaleDateString('es-ES') };
+      fecha: new Date().toLocaleDateString('es-ES'),
+      mcRiegoFactorDia: factorMcDiaRiego !== 1 ? Math.round(factorMcDiaRiego * 1000) / 1000 : null,
+      mcRiegoFactorNoc: factorMcNocRiego !== 1 ? Math.round(factorMcNocRiego * 1000) / 1000 : null,
+    };
     saveState();
 
     document.getElementById('riegoLoader').classList.add('setup-hidden');
@@ -24187,7 +24571,7 @@ function cambiarTorreActiva(idx) {
   if (document.getElementById('tab-riego')?.classList.contains('active')) {
     sincronizarInputsRiego();
     actualizarVistaRiegoPorTipoInstalacion();
-    calcularRiego();
+    calcularRiego({ forceRefresh: true });
   }
   if (document.getElementById('tab-meteo')?.classList.contains('active')) cargarMeteo();
   if (document.getElementById('tab-calendario')?.classList.contains('active')) renderCalendario();
