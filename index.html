@@ -111,7 +111,13 @@
     <!-- TAB 1: INICIO ══════════════════════════════════ -->
     <div class="tab-panel active" id="tab-inicio" role="tabpanel" aria-labelledby="btn-inicio" aria-hidden="false">
 
-      <!-- Torre activa — banner prominente -->
+      <!-- 1. Saludo y fecha -->
+      <div class="dash-greeting" id="dashGreeting">Buenos días 🌿</div>
+      <div class="dash-subtitle dash-subtitle--fecha">
+        <span id="dashFecha">—</span>
+      </div>
+
+      <!-- 2. Instalación / sistema activo -->
       <button type="button" id="dashTorreBanner" class="dash-torre-banner"
         onclick="abrirSelectorTorres()"
         aria-label="Cambiar instalación activa">
@@ -155,15 +161,21 @@
         <p class="hc-guia-nota" id="guiaPrimerosNota">Clima y riego calculado son <strong>orientativos</strong> (modelo meteorológico y supuestos de la instalación); las <strong>mediciones</strong> que registres son las que validan el estado real del agua.</p>
       </section>
 
-      <!-- Saludo -->
-      <div class="dash-greeting" id="dashGreeting">Buenos días 🌿</div>
-      <div class="dash-subtitle">
-        <span id="dashFecha">—</span>
-        <span>·</span>
-        <span id="dashUltimaMedicion">Sin mediciones aún</span>
+      <!-- 3. Alerta meteorológica / ambiente (prominente tras el contexto de instalación) -->
+      <div class="meteo-alert ok" id="meteoAlert">
+        <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
+        <div class="meteo-alert-body">
+          <div class="meteo-alert-title" id="meteoAlertTitle">Cargando datos meteorológicos...</div>
+          <div class="meteo-alert-text" id="meteoAlertText">Obteniendo condiciones actuales</div>
+        </div>
       </div>
 
-      <!-- Info sistema activo: div role=button (no puede ser button con el botón Cambiar dentro) -->
+      <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite">
+        <span class="dash-localidad-clima-icon" aria-hidden="true">📍</span>
+        <span id="dashLocalidadClimaText" class="dash-localidad-clima-text">—</span>
+      </div>
+
+      <!-- 4. Nutriente seleccionado -->
       <div id="dashSistemaInfo" class="dash-sistema-info" role="button" tabindex="0"
         aria-label="Ir a mediciones: nutriente, sistema y ubicación"
         onclick="goTab('mediciones')"
@@ -185,73 +197,61 @@
         </div>
       </div>
 
-      <!-- Tarjetas parámetros 2x2 -->
-      <div class="params-grid">
-        <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC">
-          <div class="tile-icon" aria-hidden="true">⚡</div>
-          <div class="tile-value empty" id="tileECVal">—</div>
-          <div class="tile-label">EC µS/cm</div>
-          <div class="tile-status empty" id="tileECStatus">Sin datos</div>
-        </button>
-        <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH">
-          <div class="tile-icon" aria-hidden="true">🧪</div>
-          <div class="tile-value empty" id="tilePHVal">—</div>
-          <div class="tile-label">pH</div>
-          <div class="tile-status empty" id="tilePHStatus">Sin datos</div>
-        </button>
-        <button type="button" class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a mediciones: temperatura del agua">
-          <div class="tile-icon" aria-hidden="true">🌡️</div>
-          <div class="tile-value empty" id="tileTempVal">—</div>
-          <div class="tile-label">Temp agua °C</div>
-          <div class="tile-status empty" id="tileTempStatus">Sin datos</div>
-        </button>
-        <button type="button" class="param-tile empty" id="tileVol" onclick="goTab('mediciones')" aria-label="Ir a mediciones: volumen del depósito">
-          <div class="tile-icon" aria-hidden="true">🪣</div>
-          <div class="tile-value empty" id="tileVolVal">—</div>
-          <div class="tile-label">Volumen L</div>
-          <div class="tile-status empty" id="tileVolStatus">Sin datos</div>
-        </button>
-      </div>
-
-      <!-- Municipio / clima de esta instalación (mismo valor que en Medir) -->
-      <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite">
-        <span class="dash-localidad-clima-icon" aria-hidden="true">📍</span>
-        <span id="dashLocalidadClimaText" class="dash-localidad-clima-text">—</span>
-      </div>
-
-      <!-- Alerta meteorológica -->
-      <div class="meteo-alert ok" id="meteoAlert">
-        <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
-        <div class="meteo-alert-body">
-          <div class="meteo-alert-title" id="meteoAlertTitle">Cargando datos meteorológicos...</div>
-          <div class="meteo-alert-text" id="meteoAlertText">Obteniendo condiciones actuales</div>
+      <!-- 5. Última medición (resumen) + sistema de cultivo -->
+      <section class="dash-medicion-y-cultivo" aria-label="Última medición y cultivo">
+        <div class="dash-subtitle dash-subtitle--ultima-medicion">
+          <span id="dashUltimaMedicion">Sin mediciones aún</span>
         </div>
-      </div>
-
-      <!-- Resumen torre -->
-      <button type="button" class="torre-summary" onclick="goTab('sistema')" aria-label="Ir a la vista Sistema de cultivo">
-        <div class="card-title">🌿 Sistema de cultivo</div>
-        <div class="torre-summary-row">
-          <div class="torre-mini-stat">
-            <div class="torre-mini-val torre-mini-val-green" id="dashPlantas">0</div>
-            <div class="torre-mini-label">Plantas</div>
-          </div>
-          <div class="torre-mini-stat">
-            <div class="torre-mini-val torre-mini-val-gold" id="dashDias">—</div>
-            <div class="torre-mini-label">Días media</div>
-          </div>
-          <div class="torre-mini-stat">
-            <div class="torre-mini-val torre-mini-val-red" id="dashCosecha">0</div>
-            <div class="torre-mini-label">Cosechar</div>
-          </div>
-          <div class="torre-mini-stat">
-            <div class="torre-mini-val torre-mini-val-blue" id="dashProxCosecha">—</div>
-            <div class="torre-mini-label">Días cosecha</div>
-          </div>
+        <div class="params-grid">
+          <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC">
+            <div class="tile-icon" aria-hidden="true">⚡</div>
+            <div class="tile-value empty" id="tileECVal">—</div>
+            <div class="tile-label">EC µS/cm</div>
+            <div class="tile-status empty" id="tileECStatus">Sin datos</div>
+          </button>
+          <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH">
+            <div class="tile-icon" aria-hidden="true">🧪</div>
+            <div class="tile-value empty" id="tilePHVal">—</div>
+            <div class="tile-label">pH</div>
+            <div class="tile-status empty" id="tilePHStatus">Sin datos</div>
+          </button>
+          <button type="button" class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a mediciones: temperatura del agua">
+            <div class="tile-icon" aria-hidden="true">🌡️</div>
+            <div class="tile-value empty" id="tileTempVal">—</div>
+            <div class="tile-label">Temp agua °C</div>
+            <div class="tile-status empty" id="tileTempStatus">Sin datos</div>
+          </button>
+          <button type="button" class="param-tile empty" id="tileVol" onclick="goTab('mediciones')" aria-label="Ir a mediciones: volumen del depósito">
+            <div class="tile-icon" aria-hidden="true">🪣</div>
+            <div class="tile-value empty" id="tileVolVal">—</div>
+            <div class="tile-label">Volumen L</div>
+            <div class="tile-status empty" id="tileVolStatus">Sin datos</div>
+          </button>
         </div>
-      </button>
+        <button type="button" class="torre-summary" onclick="goTab('sistema')" aria-label="Ir a la vista Sistema de cultivo">
+          <div class="card-title">🌿 Sistema de cultivo</div>
+          <div class="torre-summary-row">
+            <div class="torre-mini-stat">
+              <div class="torre-mini-val torre-mini-val-green" id="dashPlantas">0</div>
+              <div class="torre-mini-label">Plantas</div>
+            </div>
+            <div class="torre-mini-stat">
+              <div class="torre-mini-val torre-mini-val-gold" id="dashDias">—</div>
+              <div class="torre-mini-label">Días media</div>
+            </div>
+            <div class="torre-mini-stat">
+              <div class="torre-mini-val torre-mini-val-red" id="dashCosecha">0</div>
+              <div class="torre-mini-label">Cosechar</div>
+            </div>
+            <div class="torre-mini-stat">
+              <div class="torre-mini-val torre-mini-val-blue" id="dashProxCosecha">—</div>
+              <div class="torre-mini-label">Días cosecha</div>
+            </div>
+          </div>
+        </button>
+      </section>
 
-      <!-- Acciones rápidas: núcleo siempre visible; resto en «Más» hasta tener config + medición -->
+      <!-- 6. Acciones rápidas: núcleo siempre visible; resto en «Más» hasta tener config + medición -->
       <div class="quick-actions-wrap" id="quickActionsWrap">
         <div class="quick-actions quick-actions--core">
         <button type="button" class="quick-btn" onclick="goTab('mediciones')" aria-label="Nueva medición">
@@ -340,6 +340,43 @@
           <strong>Medir</strong> es donde registras datos <strong>reales</strong> (EC, pH, temperatura del agua, volumen). Son la referencia más fiable frente a previsiones o sugerencias de riego.
           <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('mediciones')" aria-label="Entendido, ocultar aviso">Entendido</button>
         </div>
+      </div>
+
+      <!-- Instalación, nutriente y última medición primero (contexto antes de la configuración extensa) -->
+      <button type="button" id="medirTorreBanner" class="medir-torre-banner"
+        onclick="abrirSelectorTorres()"
+        aria-label="Cambiar instalación en la que se registra la medición">
+        <div class="medir-torre-banner-row">
+          <span id="medirTorreEmoji" class="medir-torre-banner-emoji" aria-hidden="true">🌿</span>
+          <div>
+            <div class="medir-torre-banner-kicker">Registrando en</div>
+            <div id="medirTorreNombre" class="medir-torre-banner-nombre">
+              Instalación</div>
+          </div>
+        </div>
+        <span class="medir-torre-banner-action">Cambiar ›</span>
+      </button>
+
+      <div class="medir-nutriente-strip">
+        <div class="medir-nutriente-main">
+          <span class="medir-nutriente-icon" aria-hidden="true">🧪</span>
+          <div>
+            <div id="medirNutrienteNombre" class="medir-nutriente-title">
+              Cargando...
+            </div>
+            <div id="medirNutrienteEC" class="medir-nutriente-sub">—</div>
+          </div>
+        </div>
+        <button type="button" onclick="cambiarNutriente()"
+          aria-label="Cambiar nutriente activo"
+          class="medir-nutriente-cambiar">
+          Cambiar
+        </button>
+      </div>
+
+      <div class="card ultima-medicion-card" id="ultimaMedicionCard">
+        <div class="card-title">⏱ Última medición</div>
+        <div id="ultimaMedicionInfo" class="ultima-medicion-info"></div>
       </div>
 
       <!-- Configuración agua y sustrato -->
@@ -804,45 +841,6 @@
 
       </div>
 
-      <!-- Última medición -->
-      <div class="card ultima-medicion-card" id="ultimaMedicionCard">
-        <div class="card-title">⏱ Última medición</div>
-        <div id="ultimaMedicionInfo" class="ultima-medicion-info"></div>
-      </div>
-
-      <!-- Torre activa en Medir — selector -->
-      <button type="button" id="medirTorreBanner" class="medir-torre-banner"
-        onclick="abrirSelectorTorres()"
-        aria-label="Cambiar instalación en la que se registra la medición">
-        <div class="medir-torre-banner-row">
-          <span id="medirTorreEmoji" class="medir-torre-banner-emoji" aria-hidden="true">🌿</span>
-          <div>
-            <div class="medir-torre-banner-kicker">Registrando en</div>
-            <div id="medirTorreNombre" class="medir-torre-banner-nombre">
-              Instalación</div>
-          </div>
-        </div>
-        <span class="medir-torre-banner-action">Cambiar ›</span>
-      </button>
-
-      <!-- Nutriente activo — selector visible en Medir -->
-      <div class="medir-nutriente-strip">
-        <div class="medir-nutriente-main">
-          <span class="medir-nutriente-icon" aria-hidden="true">🧪</span>
-          <div>
-            <div id="medirNutrienteNombre" class="medir-nutriente-title">
-              Cargando...
-            </div>
-            <div id="medirNutrienteEC" class="medir-nutriente-sub">—</div>
-          </div>
-        </div>
-        <button type="button" onclick="cambiarNutriente()"
-          aria-label="Cambiar nutriente activo"
-          class="medir-nutriente-cambiar">
-          Cambiar
-        </button>
-      </div>
-
       <!-- EC -->
       <div class="param-card" id="cardEC">
         <div class="param-header">
@@ -1026,6 +1024,44 @@
           Aparece en Inicio, Mediciones e historial. Puedes cambiarlo cuando quieras.
         </div>
       </div>
+
+      <!-- Métricas, avisos y nutriente antes del montaje y del esquema (lectura de arriba abajo) -->
+      <section class="torre-tab-resumen-superior" aria-label="Resumen de esta instalación">
+        <div class="stats-row">
+          <div class="stat-box">
+            <div class="stat-value" id="statPlantas">0</div>
+            <div class="stat-label">Plantas</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value stat-value-gold" id="statDiasMedia">—</div>
+            <div class="stat-label">Días media</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-value stat-value-red" id="statCosechas">0</div>
+            <div class="stat-label">Cosechar</div>
+          </div>
+        </div>
+        <div id="avisoCestasSinFechaTorre" class="aviso-cestas-sin-fecha setup-hidden" role="status"></div>
+        <div id="compatAlert" class="info-banner setup-hidden compat-alert-banner">
+          <span class="compat-alert-mark" aria-hidden="true">!</span>
+          <span id="compatAlertText"></span>
+        </div>
+        <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip" role="region" aria-label="Nutriente de esta instalación">
+          <div class="torre-strip-main">
+            <span class="torre-strip-flag" id="torreBadgeBandera" aria-hidden="true">🧪</span>
+            <div class="torre-strip-meta">
+              <div id="torreBadgeStripNombre" class="torre-strip-nombre">—</div>
+              <div id="torreBadgeEC" class="torre-strip-ec">EC · pH —</div>
+            </div>
+          </div>
+          <div class="torre-strip-actions">
+            <button type="button" class="torre-icon-btn" onclick="cambiarNutriente()"
+              aria-label="Cambiar nutriente de la instalación activa">
+              Cambiar
+            </button>
+          </div>
+        </div>
+      </section>
 
       <!-- Montaje NFT (Sistema): mismo criterio que el asistente, sin abrir el wizard -->
       <div id="sistemaNftMontajeCard" class="torre-card-elevated setup-hidden">
@@ -1327,24 +1363,6 @@
         </div>
       </div>
 
-      <!-- Stats y cultivo / nutriente: debajo del gráfico para no interrumpir la configuración visual NFT -->
-      <div class="stats-row">
-        <div class="stat-box">
-          <div class="stat-value" id="statPlantas">0</div>
-          <div class="stat-label">Plantas</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value stat-value-gold" id="statDiasMedia">—</div>
-          <div class="stat-label">Días media</div>
-        </div>
-        <div class="stat-box">
-          <div class="stat-value stat-value-red" id="statCosechas">0</div>
-          <div class="stat-label">Cosechar</div>
-        </div>
-      </div>
-
-      <div id="avisoCestasSinFechaTorre" class="aviso-cestas-sin-fecha setup-hidden" role="status"></div>
-
       <div id="rotacionCard" class="setup-hidden"></div>
 
       <div class="modo-selector" id="modoSelector">
@@ -1357,27 +1375,6 @@
       <div class="info-banner" id="modoInfo">
         <span class="torre-info-banner-icon" aria-hidden="true"></span>
         <span id="modoInfoText">Niveles 1, 3 y 5 activos. Óptimo para EC 1300-1400 µS/cm</span>
-      </div>
-
-      <div id="compatAlert" class="info-banner setup-hidden compat-alert-banner">
-        <span class="compat-alert-mark" aria-hidden="true">!</span>
-        <span id="compatAlertText"></span>
-      </div>
-
-      <div id="torreSVGNutrienteBadge" class="torre-nutriente-strip" role="region" aria-label="Nutriente de esta instalación">
-        <div class="torre-strip-main">
-          <span class="torre-strip-flag" id="torreBadgeBandera" aria-hidden="true">🧪</span>
-          <div class="torre-strip-meta">
-            <div id="torreBadgeStripNombre" class="torre-strip-nombre">—</div>
-            <div id="torreBadgeEC" class="torre-strip-ec">EC · pH —</div>
-          </div>
-        </div>
-        <div class="torre-strip-actions">
-          <button type="button" class="torre-icon-btn" onclick="cambiarNutriente()"
-            aria-label="Cambiar nutriente de la instalación activa">
-            Cambiar
-          </button>
-        </div>
       </div>
 
       <!-- Tabla resumen de variedades -->
@@ -1471,6 +1468,15 @@
       <!-- Grid calendario -->
       <div id="calGrid" class="cal-grid"></div>
 
+      <!-- Próximos eventos / detalle día (antes de la leyenda: lectura prioritaria) -->
+      <div class="card" id="calEventosCard">
+        <div class="card-title">📋 Próximos eventos</div>
+        <div id="calDiaLabel" class="cal-dia-label"></div>
+        <div id="eventosDia" class="cal-eventos-dia">
+          <div class="cal-eventos-loading">Cargando eventos...</div>
+        </div>
+      </div>
+
       <!-- Leyenda -->
       <div class="cal-legend-row">
         <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-medicion"></div>Medición</div>
@@ -1478,15 +1484,6 @@
         <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-limpieza"></div>Limpieza</div>
         <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-cosecha"></div>Cosecha</div>
         <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-ph"></div>pH plántula nueva (5 días)</div>
-      </div>
-
-      <!-- Próximos eventos / detalle día (clic en celda con puntos) -->
-      <div class="card" id="calEventosCard">
-        <div class="card-title">📋 Próximos eventos</div>
-        <div id="calDiaLabel" class="cal-dia-label"></div>
-        <div id="eventosDia" class="cal-eventos-dia">
-          <div class="cal-eventos-loading">Cargando eventos...</div>
-        </div>
       </div>
 
       <div class="card cal-rutina-card">
@@ -1511,6 +1508,8 @@
           <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('riego')" aria-label="Entendido, ocultar aviso">Entendido</button>
         </div>
       </div>
+
+      <div id="avisoCestasSinFechaRiego" class="aviso-cestas-sin-fecha setup-hidden" role="status"></div>
 
       <!-- Selector Hoy / Mañana -->
       <div id="riegoDiaSelectorGroup" class="riego-dia-group" role="group" aria-label="Día para el cálculo de riego">
@@ -1540,8 +1539,6 @@
           <p id="riegoLocalidadLine" class="riego-localidad-line" role="status" aria-live="polite"></p>
       </div>
       </div>
-
-      <div id="avisoCestasSinFechaRiego" class="aviso-cestas-sin-fecha setup-hidden" role="status"></div>
 
       <!-- Toldo toggle -->
       <div class="toldo-toggle" id="toldoToggle">
@@ -1784,6 +1781,10 @@
         <div id="meteoMeteoclimaticInner" class="meteo-meteoclimatic-inner"></div>
       </div>
 
+      <!-- Avisos oficiales y alertas de cultivo (visibles sin pasar por toda la previsión) -->
+      <div id="meteoAvisosOficiales" class="meteo-alertas setup-hidden"></div>
+      <div id="meteoAlertas" class="meteo-alertas setup-hidden"></div>
+
       <!-- Loader -->
       <div id="meteoLoader" class="info-banner">
         <span>⏳</span><span>Cargando previsión 7 días...</span>
@@ -1832,12 +1833,6 @@
 
       </div>
 
-      <!-- Avisos MeteoAlarm (agrega AEMET + otros) + indicadores heurísticos Open-Meteo -->
-      <div id="meteoAvisosOficiales" class="meteo-alertas setup-hidden"></div>
-
-      <!-- Alertas para cultivo -->
-      <div id="meteoAlertas" class="meteo-alertas setup-hidden"></div>
-
     </div>
     <!-- FIN TAB METEO -->
 
@@ -1845,6 +1840,7 @@
     <div class="tab-panel" id="tab-consejos" role="tabpanel" aria-labelledby="btn-consejos" aria-hidden="true">
 
       <div class="section-title">💡 <span class="accent">Consejos</span></div>
+      <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando.</p>
 
       <!-- Categorías -->
       <div class="consejos-cats" id="consejosCats"></div>
@@ -1860,6 +1856,10 @@
 
       <div class="section-title">📈 <span class="accent">Historial</span></div>
 
+      <div id="filtroTorreWrapGlobal" class="hist-torre-filter-wrap" style="display:none" role="group" aria-label="Filtrar historial por instalación">
+        <div id="filtroTorreBtnsGlobal" class="hist-torre-filter-btns"></div>
+      </div>
+
       <!-- Sub-tabs + checklist (dos filas: evita solapamiento en móvil) -->
       <div class="hist-toolbar">
         <div class="hist-tabs" role="tablist" aria-label="Apartados del historial">
@@ -1872,10 +1872,6 @@
           aria-label="Abrir checklist de recarga de la instalación activa">
           📋 Checklist
         </button>
-      </div>
-
-      <div id="filtroTorreWrapGlobal" class="hist-torre-filter-wrap" style="display:none" role="group" aria-label="Filtrar historial por instalación">
-        <div id="filtroTorreBtnsGlobal" class="hist-torre-filter-btns"></div>
       </div>
 
       <!-- Loader -->
@@ -22744,10 +22740,14 @@ function updateDashboard() {
     now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
   // Última medición
+  const elUltima = document.getElementById('dashUltimaMedicion');
   if (state.ultimaMedicion) {
     const m = state.ultimaMedicion;
-    document.getElementById('dashUltimaMedicion').textContent = `Última medición: ${m.fecha} ${m.hora}`;
+    elUltima.textContent = `Última medición: ${m.fecha} ${m.hora}`;
     updateTiles(m);
+  } else {
+    elUltima.textContent = 'Sin mediciones aún';
+    updateTiles(null);
   }
 
   // Torre stats
@@ -22779,6 +22779,20 @@ function getTileClass(param, val) {
 }
 
 function updateTiles(m) {
+  if (!m) {
+    ['EC', 'PH', 'Temp', 'Vol'].forEach(id => {
+      const tile = document.getElementById('tile' + id);
+      const valEl = document.getElementById('tile' + id + 'Val');
+      const statusEl = document.getElementById('tile' + id + 'Status');
+      if (!tile || !valEl || !statusEl) return;
+      tile.className = 'param-tile empty';
+      valEl.className = 'tile-value empty';
+      valEl.textContent = '—';
+      statusEl.className = 'tile-status empty';
+      statusEl.textContent = 'Sin datos';
+    });
+    return;
+  }
   const params = [
     { id: 'EC',   val: parseFloat(m.ec),   unit: '',    label: m.ec ? m.ec + ' µS/cm' : '—', key: 'ec' },
     { id: 'PH',   val: parseFloat(m.ph),   unit: '',    label: m.ph || '—', key: 'ph' },

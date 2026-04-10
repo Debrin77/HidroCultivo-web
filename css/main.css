@@ -2200,6 +2200,18 @@ body.hc-welcome-open #app {
   align-items: center;
   gap: 6px;
 }
+.dash-subtitle--fecha {
+  margin-bottom: 12px;
+}
+.dash-medicion-y-cultivo {
+  margin-top: 4px;
+}
+.dash-subtitle--ultima-medicion {
+  margin-bottom: 8px;
+  margin-top: 0;
+  font-weight: 600;
+  color: var(--muted);
+}
 
 /* Inicio: controles nativos accesibles por teclado */
 .dash-torre-banner {
@@ -6813,6 +6825,23 @@ button.config-option {
   cursor: pointer;
   font-family: var(--font-display);
   -webkit-tap-highlight-color: transparent;
+}
+
+/* Pestaña Sistema: métricas, avisos y nutriente antes del esquema */
+.torre-tab-resumen-superior {
+  margin-bottom: 12px;
+}
+.torre-tab-resumen-superior .stats-row {
+  margin-bottom: 8px;
+}
+.torre-tab-resumen-superior .aviso-cestas-sin-fecha {
+  margin-bottom: 8px;
+}
+.torre-tab-resumen-superior .info-banner {
+  margin-bottom: 8px;
+}
+.torre-tab-resumen-superior .torre-nutriente-strip {
+  margin-bottom: 0;
 }
 
 /* Torre tab — nombre instalación, NFT sistema, DWC */
