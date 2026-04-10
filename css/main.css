@@ -2690,9 +2690,15 @@ button.torre-summary:focus-visible,
 }
 .quick-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 10px;
+  align-items: stretch;
+  justify-items: stretch;
+}
+/* Inicio: 5 CTAs → dos filas parejas + fila ancha al final (paralelas y misma altura por fila) */
+.quick-actions--core .quick-btn:nth-child(5) {
+  grid-column: 1 / -1;
 }
 .quick-actions-wrap .quick-actions {
   margin-bottom: 0;
@@ -2709,7 +2715,9 @@ button.torre-summary:focus-visible,
   border-radius: 12px;
   padding: 12px;
   display: flex;
+  flex-direction: row;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   cursor: pointer;
   transition: all 0.15s;
@@ -2720,7 +2728,14 @@ button.torre-summary:focus-visible,
   letter-spacing: 0.01em;
   color: var(--white);
   min-height: var(--touch-min);
+  min-width: 0;
   box-shadow: var(--card-shadow-soft);
+  text-align: left;
+}
+.quick-btn > span:not(.quick-btn-icon) {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
 }
 .quick-btn:active {
   background: var(--bg3);
@@ -2732,7 +2747,11 @@ button.torre-summary:focus-visible,
 .quick-btn-danger { border-color: rgba(248,113,113,0.3); }
 .quick-btn-hidden { display: none; }
 .quick-btn-danger-text { color: var(--red); }
-.quick-btn-icon { font-size: 20px; }
+.quick-btn-icon {
+  flex-shrink: 0;
+  font-size: 20px;
+  line-height: 1;
+}
 
 /* Panel Seguridad de acceso (Inicio, debajo de acciones rápidas) */
 .dash-seguridad-panel {
