@@ -2687,7 +2687,7 @@
       <div class="setup-sensores-box setup-hidden" id="setupCalentadorConsignaWrap">
         <div class="setup-sensores-title">🌡️ Consigna del calentador (depósito)</div>
         <div class="setup-sensores-desc">
-          Temperatura objetivo del termostato en el nutriente (típ. 18–24 °C). El riego nocturno se corrige un poco respecto a ~18 °C; si no hay medición reciente de temp. de agua, se usa esta consigna o la noche modelo / sala.
+          Temperatura objetivo del termostato en el nutriente (típ. 18–24 °C). El riego nocturno se corrige un poco respecto a ~19 °C de referencia (nutriente termostatizado); si no hay medición reciente de temp. de agua, se usa esta consigna o la noche modelo / sala.
         </div>
         <div class="medir-grid-2-gap-10" style="margin-top:8px;">
           <label class="setup-sensores-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
@@ -22255,8 +22255,14 @@ function riegoNocFactorOxigenacionRadicular(retencion) {
   return Math.max(0.82, Math.min(0.95, 0.92 - (r - 0.28) * 0.065));
 }
 
-/** Riego nocturno: corrección acotada por Tª del agua (~18 °C de referencia, ~0,7 %/°C). */
-const RIEGO_NOC_TEMP_AGUA_REF_C = 18;
+/**
+ * Referencia Tª agua nocturna (neutral en factor): depósito con termostato que no baja de ~19 °C.
+ * Coherente con consigna típica de calentador en nutriente.
+ */
+const RIEGO_NOC_TEMP_AGUA_REF_C = 19;
+/** Viento nocturno (km/h): &lt; bajo = aire casi quieto; &lt; medio = brisa; desde medio = ventoso (misma rejilla que «medio» de la tabla, OFF un poco más corto). */
+const RIEGO_NOC_VIENTO_BAJO_MAX_KMH = 10;
+const RIEGO_NOC_VIENTO_MEDIO_MAX_KMH = 18;
 const RIEGO_NOC_TEMP_AGUA_PCT_POR_GRADO = 0.007;
 const RIEGO_NOC_TEMP_AGUA_F_MIN = 0.94;
 const RIEGO_NOC_TEMP_AGUA_F_MAX = 1.06;
@@ -22280,6 +22286,113 @@ function riegoTempAguaNocheEfectiva(cfg, ultimaMedicion, tempAireNocProxyC) {
   const p = Number(tempAireNocProxyC);
   if (Number.isFinite(p)) return p;
   return RIEGO_NOC_TEMP_AGUA_REF_C;
+}
+
+/**
+ * Corredor nocturno (ON/OFF min) alineado con tabla torre+lechuga; viento en km/h reales del tramo 21–07.
+ * No se muestra en UI. Viento ≥ MEDIO_MAX usa el mismo corredor que «medio» con OFF ligeramente acotado.
+ */
+function riegoNocCorredorTablaTorre(tNocC, rhPct, vientoKmh) {
+  const t = Number(tNocC);
+  const rh = Number(rhPct);
+  const v = Math.max(0, Number(vientoKmh) || 0);
+  const bajo = v < RIEGO_NOC_VIENTO_BAJO_MAX_KMH;
+  const medio = v < RIEGO_NOC_VIENTO_MEDIO_MAX_KMH;
+  const facOffVentoso = !medio ? 0.92 : 1;
+
+  const pick = (onMin, onMax, offMin, offMax) => ({
+    onMin,
+    onMax,
+    offMin: Math.round(offMin * facOffVentoso),
+    offMax: Math.round(offMax * facOffVentoso),
+  });
+
+  if (!Number.isFinite(t) || !Number.isFinite(rh)) {
+    return { onMin: 3, onMax: 5, offMin: 90, offMax: 240 };
+  }
+
+  if (t <= 16) {
+    if (bajo) {
+      if (rh >= 80) return pick(3, 3, 300, 360);
+      if (rh >= 70) return pick(3, 3, 240, 300);
+      if (rh >= 60) return pick(3, 5, 180, 240);
+      if (rh >= 50) return pick(3, 5, 150, 180);
+      return pick(3, 5, 120, 150);
+    }
+    if (medio) {
+      if (rh >= 60) return pick(3, 5, 150, 180);
+      return pick(3, 5, 120, 120);
+    }
+    if (rh >= 60) return pick(3, 5, 150, 180);
+    return pick(3, 5, 120, 120);
+  }
+
+  if (t <= 20) {
+    if (bajo) {
+      if (rh >= 80) return pick(3, 3, 240, 300);
+      if (rh >= 70) return pick(3, 5, 180, 240);
+      if (rh >= 60) return pick(3, 5, 150, 180);
+      if (rh >= 50) return pick(3, 5, 120, 150);
+      return pick(3, 5, 90, 120);
+    }
+    if (medio) {
+      if (rh >= 60) return pick(3, 5, 120, 150);
+      return pick(3, 5, 90, 120);
+    }
+    if (rh >= 60) return pick(3, 5, 120, 150);
+    return pick(3, 5, 90, 120);
+  }
+
+  if (t <= 24) {
+    if (bajo) {
+      if (rh >= 80) return pick(3, 5, 180, 240);
+      if (rh >= 70) return pick(3, 5, 150, 180);
+      if (rh >= 60) return pick(3, 5, 120, 150);
+      if (rh >= 50) return pick(3, 5, 90, 120);
+      return pick(3, 5, 60, 90);
+    }
+    if (medio) {
+      if (rh >= 60) return pick(3, 5, 90, 120);
+      return pick(3, 5, 60, 90);
+    }
+    if (rh >= 60) return pick(3, 5, 90, 120);
+    return pick(3, 5, 60, 90);
+  }
+
+  if (bajo) {
+    if (rh >= 80) return pick(3, 5, 150, 180);
+    if (rh >= 70) return pick(3, 5, 120, 150);
+    if (rh >= 60) return pick(3, 5, 90, 120);
+    if (rh >= 50) return pick(3, 5, 60, 90);
+    return pick(3, 5, 45, 60);
+  }
+  if (medio) {
+    if (rh >= 60) return pick(3, 5, 60, 90);
+    return pick(3, 5, 45, 60);
+  }
+  if (rh >= 60) return pick(3, 5, 60, 90);
+  return pick(3, 5, 45, 60);
+}
+
+function riegoNocAjusteCorredorEsponja(env, sustratoKey) {
+  const k = sustratoKey || 'esponja';
+  if (k !== 'esponja' && k !== 'turba_enraiz') return env;
+  const f = 1.12;
+  return {
+    onMin: Math.min(4, env.onMin),
+    onMax: Math.min(4, env.onMax),
+    offMin: Math.round(env.offMin * f),
+    offMax: Math.round(env.offMax * f),
+  };
+}
+
+function riegoNocClampModeloACorredor(minON, minOFF, env) {
+  const on = Math.min(env.onMax, Math.max(env.onMin, minON));
+  const off = Math.min(env.offMax, Math.max(env.offMin, minOFF));
+  return {
+    minON: Math.max(3, Math.min(5, Math.round(on))),
+    minOFF: Math.max(45, Math.round(off)),
+  };
 }
 
 function riegoFactorDemandaNocPorTempAgua(tempAguaC) {
@@ -22974,6 +23087,13 @@ async function calcularRiego(opts = {}) {
       esInterior ? 28 : 42,
       Math.round(cicloNoc0.minOFF * (1.1 + sustrato.retencion * 0.07))
     );
+    try {
+      let envN = riegoNocCorredorTablaTorre(tempNocUse, rhNocUse, vientoNocKmh);
+      envN = riegoNocAjusteCorredorEsponja(envN, riegoSustratoKey());
+      const clN = riegoNocClampModeloACorredor(minONNoc, minOFFNoc, envN);
+      minONNoc = clN.minON;
+      minOFFNoc = clN.minOFF;
+    } catch (eCorN) {}
     let minCicloNoc = minONNoc + minOFFNoc;
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
     ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
