@@ -211,27 +211,46 @@
         </div>
         <div class="params-grid">
           <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC">
-            <div class="tile-icon" aria-hidden="true">⚡</div>
+            <div class="tile-head">
+              <span class="tile-icon" aria-hidden="true">⚡</span>
+              <div class="tile-metric" aria-hidden="true">
+                <span class="tile-metric-name">EC</span>
+                <span class="tile-metric-unit">µS/cm</span>
+              </div>
+            </div>
             <div class="tile-value empty" id="tileECVal">—</div>
-            <div class="tile-label">EC µS/cm</div>
             <div class="tile-status empty" id="tileECStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH">
-            <div class="tile-icon" aria-hidden="true">🧪</div>
+            <div class="tile-head">
+              <span class="tile-icon" aria-hidden="true">🧪</span>
+              <div class="tile-metric tile-metric--solo" aria-hidden="true">
+                <span class="tile-metric-name">pH</span>
+              </div>
+            </div>
             <div class="tile-value empty" id="tilePHVal">—</div>
-            <div class="tile-label">pH</div>
             <div class="tile-status empty" id="tilePHStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a mediciones: temperatura del agua">
-            <div class="tile-icon" aria-hidden="true">🌡️</div>
+            <div class="tile-head">
+              <span class="tile-icon" aria-hidden="true">🌡️</span>
+              <div class="tile-metric" aria-hidden="true">
+                <span class="tile-metric-name">Agua</span>
+                <span class="tile-metric-unit">°C</span>
+              </div>
+            </div>
             <div class="tile-value empty" id="tileTempVal">—</div>
-            <div class="tile-label">Temp agua °C</div>
             <div class="tile-status empty" id="tileTempStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tileVol" onclick="goTab('mediciones')" aria-label="Ir a mediciones: volumen del depósito">
-            <div class="tile-icon" aria-hidden="true">🪣</div>
+            <div class="tile-head">
+              <span class="tile-icon" aria-hidden="true">🪣</span>
+              <div class="tile-metric" aria-hidden="true">
+                <span class="tile-metric-name">Volumen</span>
+                <span class="tile-metric-unit">L</span>
+              </div>
+            </div>
             <div class="tile-value empty" id="tileVolVal">—</div>
-            <div class="tile-label">Volumen L</div>
             <div class="tile-status empty" id="tileVolStatus">Sin datos</div>
           </button>
         </div>
@@ -23411,6 +23430,23 @@ function getTileClass(param, val) {
   return 'bad';
 }
 
+/** Valor numérico solo en la zona grande; nombre y unidad van junto al icono. */
+function formatMedicionTileValor(key, val) {
+  if (val == null || (typeof val === 'number' && !Number.isFinite(val))) return '—';
+  const n = typeof val === 'number' ? val : parseFloat(val);
+  if (!Number.isFinite(n)) return '—';
+  switch (key) {
+    case 'ec':
+      return String(Math.round(n));
+    case 'ph':
+    case 'temp':
+    case 'vol':
+      return (Math.round(n * 10) / 10).toFixed(1);
+    default:
+      return String(n);
+  }
+}
+
 function updateTiles(m) {
   if (!m) {
     ['EC', 'PH', 'Temp', 'Vol'].forEach(id => {
@@ -23427,10 +23463,10 @@ function updateTiles(m) {
     return;
   }
   const params = [
-    { id: 'EC',   val: parseFloat(m.ec),   unit: '',    label: m.ec ? m.ec + ' µS/cm' : '—', key: 'ec' },
-    { id: 'PH',   val: parseFloat(m.ph),   unit: '',    label: m.ph || '—', key: 'ph' },
-    { id: 'Temp', val: parseFloat(m.temp), unit: '°C',  label: m.temp ? m.temp + '°C' : '—', key: 'temp' },
-    { id: 'Vol',  val: parseFloat(m.vol),  unit: 'L',   label: m.vol ? m.vol + 'L' : '—', key: 'vol' },
+    { id: 'EC',   val: parseFloat(m.ec),   key: 'ec' },
+    { id: 'PH',   val: parseFloat(m.ph),   key: 'ph' },
+    { id: 'Temp', val: parseFloat(m.temp), key: 'temp' },
+    { id: 'Vol',  val: parseFloat(m.vol),  key: 'vol' },
   ];
 
   const statusLabels = {
@@ -23448,7 +23484,7 @@ function updateTiles(m) {
 
     tile.className = `param-tile ${tipo}`;
     valEl.className = `tile-value ${tipo}`;
-    valEl.textContent = p.label;
+    valEl.textContent = formatMedicionTileValor(p.key, p.val);
     statusEl.className = `tile-status ${tipo}`;
     statusEl.textContent = statusLabels[p.key]?.[tipo] || (tipo === 'empty' ? 'Sin datos' : '');
   });
