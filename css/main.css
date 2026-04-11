@@ -30,9 +30,11 @@
   --header-h:   calc(52px + env(safe-area-inset-top, 0px));
   --screen-w:   390px;
   --touch-min:  44px;
-  --card-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.05);
-  --card-shadow-press: 0 1px 2px rgba(15, 23, 42, 0.03);
+  --card-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 28px rgba(15, 23, 42, 0.06);
+  --card-shadow-press: 0 1px 2px rgba(15, 23, 42, 0.04);
   --focus-ring: 0 0 0 2px rgba(29, 78, 216, 0.26);
+  --surface-edge: rgba(15, 23, 42, 0.07);
+  --surface-inset: rgba(255, 255, 255, 0.72);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -109,17 +111,18 @@ html {
 body {
   height: 100%;
   height: -webkit-fill-available;
-  background: var(--bg);
+  background: linear-gradient(168deg, #eef2f6 0%, var(--bg) 38%, #e9eef4 100%);
   color: var(--white);
   font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 400;
-  line-height: 1.45;
+  line-height: 1.5;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
   -webkit-touch-callout: none;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 /* ══ SPLASH SCREEN ══ */
@@ -458,16 +461,24 @@ body::before { display: none; }
   z-index: 1;
   max-width: 390px;
   margin: 0 auto;
+  background: var(--bg);
+}
+@media (min-width: 420px) {
+  .app {
+    border-left: 1px solid var(--surface-edge);
+    border-right: 1px solid var(--surface-edge);
+    box-shadow: 0 18px 48px rgba(15, 23, 42, 0.1);
+  }
 }
 
 /* ══ HEADER ══ */
 .header {
   height: var(--header-h);
-  background: color-mix(in srgb, var(--bg2) 92%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset, 0 4px 20px rgba(15, 23, 42, 0.04);
+  background: color-mix(in srgb, var(--bg2) 94%, transparent);
+  backdrop-filter: blur(14px) saturate(1.15);
+  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, #94a3b8);
+  box-shadow: 0 1px 0 var(--surface-inset) inset, 0 6px 22px rgba(15, 23, 42, 0.045);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -477,32 +488,36 @@ body::before { display: none; }
 }
 .header-logo {
   font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 900;
+  font-size: 21px;
+  font-weight: 800;
   color: var(--logo-hydro);
-  letter-spacing: -1px;
+  letter-spacing: -0.04em;
 }
 .header-logo span { color: var(--logo-cultivo); }
 .install-pwa-btn {
   display: none;
   align-items: center;
   gap: 5px;
-  background: #f0fdf4;
-  border: 1px solid #16a34a;
-  border-radius: 20px;
-  padding: 4px 10px;
+  background: linear-gradient(180deg, #f0fdf4, #ecfdf5);
+  border: 1px solid color-mix(in srgb, #16a34a 55%, #cbd5e1);
+  border-radius: 10px;
+  padding: 5px 11px;
   font-size: 11px;
   font-weight: 700;
-  color: #15803d;
+  color: #14532d;
+  letter-spacing: 0.02em;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset;
 }
 .header-status {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 .status-dot {
@@ -528,18 +543,18 @@ body::before { display: none; }
   /* Momentum scrolling on iOS */
   scroll-behavior: smooth;
 }
-.tab-panel { display: none; padding: 14px 12px 16px; }
+.tab-panel { display: none; padding: 14px 14px 18px; }
 .tab-panel.active { display: block; }
 
 /* ══ TAB BAR ══ */
 .tab-bar {
   min-height: var(--tab-h);
   height: auto;
-  background: color-mix(in srgb, var(--bg2) 94%, transparent);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid var(--border);
-  box-shadow: 0 -1px 0 rgba(255,255,255,0.65) inset, 0 -4px 24px rgba(15, 23, 42, 0.05);
+  background: color-mix(in srgb, var(--bg2) 96%, transparent);
+  backdrop-filter: blur(12px) saturate(1.1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.1);
+  border-top: 1px solid color-mix(in srgb, var(--border) 80%, #94a3b8);
+  box-shadow: 0 -1px 0 var(--surface-inset) inset, 0 -8px 28px rgba(15, 23, 42, 0.055);
   display: flex;
   flex-wrap: nowrap;
   align-items: stretch;
@@ -572,12 +587,12 @@ body::before { display: none; }
   cursor: pointer;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: #64748b;
   transition: color 0.2s, transform 0.15s;
   font-family: var(--font-sans);
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-transform: none;
   padding: 2px 3px 5px;
   position: relative;
@@ -697,19 +712,19 @@ body::before { display: none; }
 
 /* ══ CARDS ══ */
 .card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, var(--bg2) 100%);
+  border: 1px solid color-mix(in srgb, var(--border) 90%, #cbd5e1);
+  border-radius: 14px;
   padding: 16px;
   margin-bottom: 12px;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+  box-shadow: var(--card-shadow-soft), 0 1px 0 var(--surface-inset) inset;
 }
 .card-title {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10.5px;
   font-weight: 800;
-  color: var(--white);
-  letter-spacing: 0.08em;
+  color: #334155;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   margin-bottom: 12px;
   display: flex;
@@ -726,10 +741,10 @@ body::before { display: none; }
 /* ══ SECTION TITLE ══ */
 .section-title {
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
-  color: var(--white);
-  letter-spacing: -0.3px;
+  color: #0f172a;
+  letter-spacing: -0.02em;
   margin-bottom: 14px;
   display: flex;
   align-items: center;
@@ -2198,15 +2213,17 @@ body.hc-welcome-open #app {
 /* ══ DASHBOARD INICIO ══ */
 .dash-greeting {
   font-family: var(--font-display);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 800;
-  color: var(--white);
-  letter-spacing: -0.5px;
+  color: #0f172a;
+  letter-spacing: -0.03em;
   margin-bottom: 4px;
+  line-height: 1.2;
 }
 .dash-subtitle {
   font-size: 12px;
-  color: var(--muted);
+  font-weight: 500;
+  color: #64748b;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
