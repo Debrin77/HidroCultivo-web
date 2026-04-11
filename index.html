@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-10-ui-ux-v2">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-10-medir-recarga-open">
 </head>
 <body>
 
@@ -205,31 +205,32 @@
         <div class="dash-subtitle dash-subtitle--ultima-medicion">
           <span id="dashUltimaMedicion">Sin mediciones aún</span>
         </div>
+        <p class="dash-medicion-valores setup-hidden" id="dashMedicionValores" aria-live="polite"></p>
         <div class="params-grid">
           <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC"
             title="" data-tile-hint="">
             <div class="tile-icon" aria-hidden="true">⚡</div>
-            <div class="tile-value empty" id="tileECVal">—</div>
             <div class="tile-label">EC µS/cm <span class="tile-hint-mark" id="tileECHint" aria-hidden="true" title="">ⓘ</span></div>
+            <div class="tile-value empty" id="tileECVal">—</div>
             <div class="tile-status empty" id="tileECStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH"
             title="" data-tile-hint="">
             <div class="tile-icon" aria-hidden="true">🧪</div>
-            <div class="tile-value empty" id="tilePHVal">—</div>
             <div class="tile-label">pH <span class="tile-hint-mark" id="tilePHHint" aria-hidden="true" title="">ⓘ</span></div>
+            <div class="tile-value empty" id="tilePHVal">—</div>
             <div class="tile-status empty" id="tilePHStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a mediciones: temperatura del agua">
             <div class="tile-icon" aria-hidden="true">🌡️</div>
-            <div class="tile-value empty" id="tileTempVal">—</div>
             <div class="tile-label">Temp agua °C</div>
+            <div class="tile-value empty" id="tileTempVal">—</div>
             <div class="tile-status empty" id="tileTempStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tileVol" onclick="goTab('mediciones')" aria-label="Ir a mediciones: volumen del depósito">
             <div class="tile-icon" aria-hidden="true">🪣</div>
-            <div class="tile-value empty" id="tileVolVal">—</div>
             <div class="tile-label">Volumen L</div>
+            <div class="tile-value empty" id="tileVolVal">—</div>
             <div class="tile-status empty" id="tileVolStatus">Sin datos</div>
           </button>
         </div>
@@ -382,6 +383,16 @@
       <div class="card ultima-medicion-card" id="ultimaMedicionCard">
         <div class="card-title">⏱ Última medición</div>
         <div id="ultimaMedicionInfo" class="ultima-medicion-info"></div>
+      </div>
+
+      <div class="card medir-meds-recent-card" id="medirMedsRecentCard">
+        <div class="medir-meds-recent-head">
+          <span class="medir-meds-recent-title">Mediciones recientes</span>
+          <button type="button" class="medir-meds-recent-link"
+            onclick="goTab('historial'); histTab('mediciones');">Ver historial</button>
+        </div>
+        <p id="medirMedsRecentScope" class="medir-meds-recent-scope setup-hidden" role="note"></p>
+        <div id="medirMedsRecentList" class="medir-meds-recent-list" role="list"></div>
       </div>
 
       <!-- Configuración agua y sustrato -->
@@ -919,13 +930,14 @@
         <div class="recarga-nota" id="recargaNota">Cuenta solo recargas con vaciado + limpieza + mezcla nueva (checklist o interruptor de recarga completa).</div>
         <div id="recargaUrgenteBanner" class="recarga-urgente-banner" role="status" aria-live="polite"></div>
         <div id="recargaConfirmPanel" class="recarga-confirm-panel">
-          <div class="recarga-subblock">
-            <div class="recarga-subtitle">🔧 Recarga total del depósito</div>
-            <p class="recarga-subhint">Vaciar, limpiar y mezcla nueva. El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo.</p>
+          <details class="medir-recarga-details" open>
+            <summary class="medir-recarga-details-summary">🔧 Recarga total del depósito</summary>
+            <div class="recarga-subblock medir-recarga-details-body">
+            <p class="recarga-subhint">Vaciar, limpiar y mezcla nueva. El checklist te guía paso a paso. Al terminar, el contador (~15 días) se reinicia solo.</p>
             <button type="button" class="btn-recarga-confirm primary recarga-btn-full"
               onclick="confirmarReposicionDeposito('con_nutrientes')"
               aria-label="Abrir checklist de recarga completa de la instalación activa">📋 Checklist recarga completa</button>
-            <p class="recarga-subhint medir-recarga-divider-top">¿Ya vaciaste y renovaste solución pero solo vas a <strong>guardar la medición</strong>? Activa el interruptor para <strong>reiniciar el contador</strong> con la misma fecha (sin pasar por el checklist).</p>
+            <p class="recarga-subhint medir-recarga-divider-top">¿Ya vaciaste y renovaste solución pero solo vas a guardar la medición? Activa el interruptor para reiniciar el contador con la misma fecha (sin pasar por el checklist).</p>
             <div class="medir-recarga-switch-row medir-recarga-switch-row--in-card">
               <span class="medir-recarga-switch-text">Reiniciar contador al guardar medición</span>
               <button type="button" class="toggle-switch" id="recargaSwitch" onclick="toggleRecarga()"
@@ -934,12 +946,14 @@
                 <span class="toggle-knob" aria-hidden="true"></span>
               </button>
             </div>
-            <p class="medir-recarga-switch-footnote medir-recarga-switch-footnote--tight"><strong>No</strong> lo actives si solo hiciste <strong>reposición parcial</strong>; usa el bloque de abajo.</p>
-          </div>
-          <div class="recarga-subblock recarga-subblock-partials">
-            <div class="recarga-subtitle">💠 Reposición parcial</div>
-            <p class="recarga-subhint">Sirve para que el depósito <strong>no baje de un nivel mínimo</strong>: las plantas beben agua, hay evaporación, y la <strong>bomba</strong> y el <strong>calefactor</strong> deben seguir <strong>sumergidos</strong> — si quedan al aire se pueden estropear.</p>
-            <p class="recarga-subhint recarga-subhint--mt6">Rellenas <strong>sin vaciar</strong> el depósito. <strong>No reinicia</strong> el contador de recarga completa.</p>
+            <p class="medir-recarga-switch-footnote medir-recarga-switch-footnote--tight">No lo actives si solo hiciste reposición parcial; usa el apartado siguiente.</p>
+            </div>
+          </details>
+          <details class="medir-recarga-details">
+            <summary class="medir-recarga-details-summary">💠 Reposición parcial</summary>
+            <div class="recarga-subblock recarga-subblock-partials medir-recarga-details-body">
+            <p class="recarga-subhint">Para que el depósito no baje de un nivel mínimo: las plantas consumen agua, hay evaporación, y bomba y calefactor deben seguir sumergidos.</p>
+            <p class="recarga-subhint recarga-subhint--mt6">Rellenas sin vaciar el depósito. No reinicia el contador de recarga completa.</p>
             <label for="inputReposicionParcialLitros" class="recarga-confirm-label recarga-label-spaced">
               Litros añadidos (aprox.)
             </label>
@@ -955,7 +969,8 @@
             </div>
             <div id="resumenReposicionParcialStats" class="recarga-subhint recarga-parcial-stats"
               role="status" aria-live="polite"></div>
-          </div>
+            </div>
+          </details>
           <button type="button" class="btn-recarga-confirm ghost recarga-btn-full-mt"
             onclick="posponerRecordatorioRecarga()"
             aria-label="Posponer recordatorio de recarga completa">⏰ Recordar mañana</button>
@@ -1642,19 +1657,6 @@
       <!-- Resultado programa general -->
       <div class="riego-resultado setup-hidden" id="riegoResultado">
 
-        <div id="riegoStickyBar" class="riego-sticky-bar setup-hidden" aria-label="Resumen del programa de riego">
-          <div class="riego-sticky-inner">
-            <div class="riego-sticky-chip"><span class="riego-sticky-k">General</span><span id="riegoStickyGen" class="riego-sticky-v">—</span></div>
-            <div class="riego-sticky-chip riego-sticky-chip--amber"><span class="riego-sticky-k">Mediodía</span><span id="riegoStickyMed" class="riego-sticky-v">—</span></div>
-            <div class="riego-sticky-chip riego-sticky-chip--indigo"><span class="riego-sticky-k">Noche</span><span id="riegoStickyNoc" class="riego-sticky-v">—</span></div>
-          </div>
-        </div>
-
-        <details class="riego-por-que-details setup-hidden" id="riegoPorQueDetails">
-          <summary class="riego-por-que-summary">Por qué estos valores (resumen)</summary>
-          <ul class="riego-por-que-list" id="riegoPorQueList"></ul>
-        </details>
-
         <div id="riegoNftPanel" class="riego-panel-nft setup-hidden">
           <div class="riego-panel-inner">
             <div class="riego-panel-kicker riego-panel-kicker--nft">
@@ -1786,9 +1788,7 @@
         </div>
         </div><!-- /riegoCiclosTorreWrap -->
 
-        <!-- Datos clima usados -->
-        <div class="card-title setup-hidden riego-clima-titulo-oculto">🌤️ Datos climáticos usados</div>
-        <div id="riegoClimaUsado" class="riego-clima-usado-torre setup-hidden"></div>
+        <div id="riegoClimaUsado" class="riego-clima-usado-torre setup-hidden" aria-hidden="true"></div>
         </div><!-- /riegoTorreResultBlock -->
 
       </div>
@@ -1798,9 +1798,8 @@
         <button type="button" class="btn btn-primary" onclick="calcularRiego({ forceRefresh: true, manual: true })" id="btnCalcRiego">
           🔄 Calcular riego ahora
         </button>
-        <p class="riego-calc-meta setup-hidden" id="riegoCalcMeta" role="status" aria-live="polite"></p>
         <p class="riego-horario-recomendado" id="riegoHorarioRecomendado" role="status" aria-live="polite">
-          Tras calcular, aquí verás el horario sugerido del bloque de mayor intensidad solar (4 h). «Calcular riego ahora» pide datos meteorológicos <strong>actualizados</strong> a la API; al entrar en esta pestaña puede usarse caché breve (~1 min) para ir más rápido.
+          Tras calcular verás aquí la franja sugerida de mayor intensidad solar. «Calcular riego ahora» pide datos nuevos a la API.
         </p>
       </div>
 
@@ -16648,6 +16647,7 @@ function initConfigUI() {
   if (document.getElementById('tab-mediciones')?.classList.contains('active') && typeof actualizarResumenReposicionParcialUI === 'function') {
     actualizarResumenReposicionParcialUI();
   }
+  try { renderMedirMedicionesRecientes(); } catch (_) {}
 }
 
 // ══════════════════════════════════════════════════
@@ -17129,13 +17129,13 @@ function cargarUltimaMedicion() {
   }
   const m = state.ultimaMedicion;
   if (card) card.classList.add('ultima-medicion-card--visible');
-  info.innerHTML = `
-    <span class="ultima-medicion-meta">📅 ${m.fecha} a las ${m.hora}</span><br>
-    ⚡ EC: <strong>${m.ec} µS/cm</strong> &nbsp;
-    🧪 pH: <strong>${m.ph}</strong> &nbsp;
-    🌡️ <strong>${m.temp}°C</strong> &nbsp;
-    🪣 <strong>${m.vol}L</strong>
-  `;
+  const ecT = (m.ec != null && String(m.ec).trim() !== '') ? String(m.ec).trim() + ' µS/cm' : '—';
+  const phT = (m.ph != null && String(m.ph).trim() !== '') ? String(m.ph).trim() : '—';
+  const teT = (m.temp != null && String(m.temp).trim() !== '') ? String(m.temp).trim() + ' °C' : '—';
+  const voT = (m.vol != null && String(m.vol).trim() !== '') ? String(m.vol).trim() + ' L' : '—';
+  info.innerHTML =
+    '<span class="ultima-medicion-meta">📅 ' + m.fecha + ' · ' + m.hora + '</span><br>' +
+    '<span class="ultima-medicion-linea-valores">EC ' + ecT + ' · pH ' + phT + ' · Temp. ' + teT + ' · Vol. ' + voT + '</span>';
 }
 
 // ══════════════════════════════════════════════════
@@ -22817,57 +22817,10 @@ function riegoTorreExteriorOmiteNocturnoPorClima(p) {
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
  * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Índice solo con T/HR/viento/ET₀ del tramo nocturno (Open-Meteo) + fase/sustrato/sensor/agua; interior: T/HR de sala (ajuste nocturno ligero), sin mezclar demanda diurna. Omitir con riegoTorreExteriorOmiteNocturnoPorClima o umbrales interior.
- * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
+ * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en `state.ultimoRiego` y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
-function ocultarRiegoStickyExtras() {
-  ['riegoStickyBar', 'riegoPorQueDetails', 'riegoCalcMeta'].forEach(function (id) {
-    const x = document.getElementById(id);
-    if (x) x.classList.add('setup-hidden');
-  });
-}
-
-function applyRiegoTorreStickyExtras(p) {
-  const sticky = document.getElementById('riegoStickyBar');
-  const g = document.getElementById('riegoStickyGen');
-  const md = document.getElementById('riegoStickyMed');
-  const nc = document.getElementById('riegoStickyNoc');
-  const det = document.getElementById('riegoPorQueDetails');
-  const ul = document.getElementById('riegoPorQueList');
-  const meta = document.getElementById('riegoCalcMeta');
-  if (g) g.textContent = p.minON + '/' + p.minOFF + ' · ' + p.ciclos + ' cicl.';
-  if (md) md.textContent = p.minONMedio + '/' + p.minOFFMedio + ' · ' + p.ciclosMedio + ' cicl.';
-  if (nc) {
-    nc.textContent = p.nocSinResultado ? '—' : (p.minONNoc + '/' + p.minOFFNoc + ' · ' + p.ciclosNoc + ' cicl.');
-  }
-  if (sticky) sticky.classList.remove('setup-hidden');
-  if (ul && det) {
-    const hh = function (n) { return String(n).padStart(2, '0') + ':00'; };
-    const vent = (typeof p.medHIni === 'number' && typeof p.medHFin === 'number')
-      ? hh(p.medHIni) + '–' + hh(p.medHFin)
-      : '11:00–15:00';
-    const diaNom = p.diaRiego === 'manana' ? 'mañana (previsión)' : 'hoy';
-    ul.innerHTML =
-      '<li><strong>General (07:00–21:00):</strong> ' + p.minON + ' min ON / ' + p.minOFF + ' min OFF, ' + p.ciclos +
-      ' ciclos/día, ~' + p.totalON + ' min bomba, espacio ~' + p.espaciado + ' min, duty ~' + p.dutyCicloPct + '%.</li>' +
-      '<li><strong>Mediodía</strong> (' + vent + ', ' + diaNom + '): ' + p.minONMedio + '/' + p.minOFFMedio + ' min, ' + p.ciclosMedio +
-      ' ciclos en ventana, duty ~' + p.dutyMedioPct + '%.</li>' +
-      (p.nocSinResultado
-        ? '<li><strong>Nocturno:</strong> sin pulsos en este cálculo (umbral interior u omitido por clima).</li>'
-        : '<li><strong>Nocturno (21:00–07:00):</strong> ' + p.minONNoc + '/' + p.minOFFNoc + ' min, ' + p.ciclosNoc + ' ciclos, espaciado ~' + p.espNoc + ' min' +
-          (p.dutyNocPct != null ? ', duty ~' + p.dutyNocPct + '%' : '') + '.</li>');
-    det.classList.remove('setup-hidden');
-  }
-  if (meta) {
-    const pie = p.refetchMeteo
-      ? 'Datos meteorológicos pedidos a la API en esta consulta.'
-      : 'Puede usarse caché reciente (~1 min); pulsa de nuevo para forzar.';
-    meta.textContent = 'Calculado ' + new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + pie;
-    meta.classList.remove('setup-hidden');
-  }
-}
-
 async function calcularRiego(opts = {}) {
   /** Recalcular a mano o forzar refresco: siempre nueva petición a la API y sin devolver meteo obsoleto si falla la red. */
   const refetchMeteo = !!opts.forceRefresh || !!opts.manual;
@@ -23226,7 +23179,6 @@ async function calcularRiego(opts = {}) {
       try {
         actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
       } catch (_) {}
-      ocultarRiegoStickyExtras();
       document.getElementById('riegoLoader').classList.add('setup-hidden');
       document.getElementById('riegoResultado').classList.remove('setup-hidden');
       return;
@@ -23534,54 +23486,14 @@ async function calcularRiego(opts = {}) {
       elNocNota.textContent = '';
     }
 
-    const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
-    const precipMm = Math.round((Number(daily.precipitation_sum?.[idx]) || 0) * 10) / 10;
-    const uvClimaStr = esInterior ? '—' : (uvAlineado == null ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
-    const lineaClima =
-      '🌡️ Temperatura: ' + Math.round(tempMin) + '–' + Math.round(tempMax) + ' °C' +
-      ' · 💧 Humedad media: ' + humMedia + '%' +
-      ' · ☀️ Índice UV: ' + uvClimaStr +
-      ' · 🌧️ Prob. lluvia: ' + probLluvia + '% · ' + precipMm + ' mm';
-    const lineaTramo1315 = !esInterior
-      ? '<br>🕐 Mediodía modelo (' + String(medHIni).padStart(2, '0') + '–' + String(medHFin).padStart(2, '0') + ' h): ' + temp1315 + ' °C · ' + hum1315 + '% HR'
-      : '';
-    const vpdDiaTxt = Math.round(vpd * 1000) / 1000;
-    const vpdMedTxt = Math.round(vpdMediodia * 1000) / 1000;
-    const demDiaTxt = Math.round(demandaDia * 100) / 100;
-    const demMedTxt = Math.round(demandaMed * 100) / 100;
-    const demNocTxt = Math.round(demandaNoc * 100) / 100;
-    const facNocAguaDifTxt =
-      'T agua modelo ~' + Math.round(tempAguaNocUse * 10) / 10 + ' °C · ajuste noct. ×' +
-      Math.round(fNocTempAgua * fNocDifusor * 1000) / 1000;
-    const vpdNocTxt = Math.round(vpdNocVal * 1000) / 1000;
-    const et0NocTxt = et0NightSum != null && Number.isFinite(et0NightSum) ? String(et0NightSum) : '—';
-    const windNocTxt = Math.round(vientoNocKmh * 10) / 10;
-    const tempNocTxt = Math.round(tempNocUse * 10) / 10;
-    const rhNocTxt = Math.round(rhNocUse);
-    const fechaModTxt = escHtmlUi(dailyDateStr || '—');
-    let notaRedondeo = '';
-    if (!esInterior && (demDiaTxt !== demMedTxt || vpdDiaTxt !== vpdMedTxt) && minON === minONMedio && minOFF === minOFFMedio) {
-      notaRedondeo =
-        '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «franja de mayor intensidad solar», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
-    }
-    const pieNocOx =
-      '<br><span class="riego-clima-nota-peq">🌙 <strong>Nocturno:</strong> índice y pulsos solo con T/HR (y viento/ET₀ en exterior) del tramo nocturno o de sala ajustada + cultivo; margen para <strong>oxigenación radicular</strong>.</span>';
-    const lineaNocClima = esInterior
-      ? '<br>🌙 Nocturno (interior, T/HR noche modelo sala): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' · ' + facNocAguaDifTxt + pieNocOx
-      : '<br>🌙 Nocturno (serie local 21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt + pieNocOx;
-    const lineaMcRiego = meteoclimaticFormatLineaHtml(mcNear) + (mcRiegoLineaAjuste || '');
-    document.getElementById('riegoClimaUsado').innerHTML =
-      '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
-      lineaNocClima +
-      lineaMcRiego +
-      '<br><span class="riego-clima-meta-line">📆 Día en el modelo: <strong>' + fechaModTxt +
-      '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs ventana dinámica de mayor intensidad solar + pico radiación) · Demanda rel. ' +
-      demDiaTxt + ' / ' + demMedTxt + ' (general / intensidad solar).</span>' +
-      '<br><span class="riego-clima-nota-peq">Si <strong>hoy</strong> y <strong>mañana</strong> dan el mismo programa, suele ser previsión muy parecida en la API + mismos redondeos; comprueba que cambian temperatura/UV arriba y la fecha del modelo.</span>' +
-      notaRedondeo +
-      (esInterior
-        ? '<br><span class="riego-clima-int-torre">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala (bloque de intensidad solar = mismo índice que el día).</span>'
-        : '');
+    try {
+      const rcu = document.getElementById('riegoClimaUsado');
+      if (rcu) {
+        rcu.innerHTML = '';
+        rcu.classList.add('setup-hidden');
+        rcu.setAttribute('aria-hidden', 'true');
+      }
+    } catch (_) {}
 
     // Guardar en state para uso en otros módulos
     state.ultimoRiego = { minON, minOFF, ciclos, totalON, espaciado,
@@ -23617,19 +23529,11 @@ async function calcularRiego(opts = {}) {
       actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
     } catch (_) {}
 
-    applyRiegoTorreStickyExtras({
-      minON, minOFF, ciclos, totalON, espaciado, dutyCicloPct,
-      minONMedio, minOFFMedio, ciclosMedio, totalONMedio, dutyMedioPct,
-      nocSinResultado, minONNoc, minOFFNoc, ciclosNoc, totalONNoc, espNoc, dutyNocPct,
-      diaRiego, medHIni, medHFin, refetchMeteo,
-    });
-
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     document.getElementById('riegoResultado').classList.remove('setup-hidden');
 
   } catch(e) {
     ocultarRiegoToldoRecoUI();
-    ocultarRiegoStickyExtras();
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     const elH = document.getElementById('riegoHorarioRecomendado');
     if (elH) {
@@ -23661,7 +23565,7 @@ function updateDashboard() {
   const elUltima = document.getElementById('dashUltimaMedicion');
   if (state.ultimaMedicion) {
     const m = state.ultimaMedicion;
-    elUltima.textContent = `Última medición: ${m.fecha} ${m.hora}`;
+    elUltima.textContent = 'Última medición · ' + m.fecha + ' · ' + m.hora;
     updateTiles(m);
   } else {
     elUltima.textContent = 'Sin mediciones aún';
@@ -23698,6 +23602,69 @@ function getTileClass(param, val) {
   return 'bad';
 }
 
+function updateDashMedicionValoresLine(m) {
+  const el = document.getElementById('dashMedicionValores');
+  if (!el) return;
+  if (!m) {
+    el.textContent = '';
+    el.classList.add('setup-hidden');
+    return;
+  }
+  const ec = (m.ec != null && String(m.ec).trim() !== '') ? 'EC ' + String(m.ec).trim() + ' µS/cm' : 'EC —';
+  const ph = (m.ph != null && String(m.ph).trim() !== '') ? 'pH ' + String(m.ph).trim() : 'pH —';
+  const temp = (m.temp != null && String(m.temp).trim() !== '') ? 'Temp. ' + String(m.temp).trim() + ' °C' : 'Temp. —';
+  const vol = (m.vol != null && String(m.vol).trim() !== '') ? 'Vol. ' + String(m.vol).trim() + ' L' : 'Vol. —';
+  el.textContent = ec + ' · ' + ph + ' · ' + temp + ' · ' + vol;
+  el.classList.remove('setup-hidden');
+}
+
+function renderMedirMedicionesRecientes() {
+  const box = document.getElementById('medirMedsRecentList');
+  const card = document.getElementById('medirMedsRecentCard');
+  const scope = document.getElementById('medirMedsRecentScope');
+  if (!box || !card) return;
+  if (scope) {
+    try {
+      initTorres();
+      if (state.torres && state.torres.length > 1) {
+        const t = getTorreActiva();
+        const nom = ((t && t.nombre) || '').trim() || 'Instalación activa';
+        const em = t && t.emoji ? t.emoji + ' ' : '';
+        scope.textContent = 'Lista de la instalación activa: ' + em + nom;
+        scope.classList.remove('setup-hidden');
+      } else {
+        scope.textContent = '';
+        scope.classList.add('setup-hidden');
+      }
+    } catch (_) {
+      if (scope) {
+        scope.textContent = '';
+        scope.classList.add('setup-hidden');
+      }
+    }
+  }
+  const list = (state.mediciones || []).filter(function (x) {
+    return x && (!x.tipo || x.tipo === 'medicion');
+  }).slice(0, 6);
+  if (!list.length) {
+    box.innerHTML = '<p class="medir-meds-recent-empty">Sin mediciones guardadas aún en esta instalación.</p>';
+    card.classList.add('medir-meds-recent-card--empty');
+    return;
+  }
+  card.classList.remove('medir-meds-recent-card--empty');
+  box.innerHTML = list.map(function (m) {
+    const ec = m.ec != null && String(m.ec).trim() !== '' ? escHtmlUi(String(m.ec).trim()) + ' µS/cm' : '—';
+    const ph = m.ph != null && String(m.ph).trim() !== '' ? escHtmlUi(String(m.ph).trim()) : '—';
+    const te = m.temp != null && String(m.temp).trim() !== '' ? escHtmlUi(String(m.temp).trim()) + ' °C' : '—';
+    const vo = m.vol != null && String(m.vol).trim() !== '' ? escHtmlUi(String(m.vol).trim()) + ' L' : '—';
+    const fh = escHtmlUi(String(m.fecha || '') + ' ' + String(m.hora || '')).trim() || '—';
+    return '<div class="medir-meds-recent-row" role="listitem">' +
+      '<span class="medir-meds-recent-d">' + fh + '</span>' +
+      '<span class="medir-meds-recent-v">EC ' + ec + ' · pH ' + ph + ' · ' + te + ' · ' + vo + '</span>' +
+      '</div>';
+  }).join('');
+}
+
 function updateTiles(m) {
   if (!m) {
     ['EC', 'PH', 'Temp', 'Vol'].forEach(id => {
@@ -23712,6 +23679,7 @@ function updateTiles(m) {
       statusEl.textContent = 'Sin datos';
     });
     updateDashInicioTileHints();
+    updateDashMedicionValoresLine(null);
     return;
   }
   const params = [
@@ -23741,6 +23709,7 @@ function updateTiles(m) {
     statusEl.textContent = statusLabels[p.key]?.[tipo] || (tipo === 'empty' ? 'Sin datos' : '');
   });
   updateDashInicioTileHints();
+  updateDashMedicionValoresLine(m);
 }
 
 function updateDashInicioTileHints() {
@@ -24828,6 +24797,7 @@ async function guardarMedicion() {
   updateDashboard();
   updateRecargaBar();
   try { updateHistTabBadges(); } catch (_) {}
+  try { renderMedirMedicionesRecientes(); } catch (_) {}
   requestAnimationFrame(function () {
     const card = document.getElementById('ultimaMedicionCard');
     if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });

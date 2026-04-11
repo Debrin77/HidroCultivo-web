@@ -2393,7 +2393,15 @@ button.torre-summary:focus-visible,
 .param-tile.bad   { border-color: rgba(248,113,113,0.5); background: rgba(248,113,113,0.05); }
 .param-tile.empty { opacity: 0.5; }
 
-.tile-icon { font-size: 18px; margin-bottom: 6px; }
+.tile-icon { font-size: 18px; margin-bottom: 4px; }
+.tile-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
 .tile-value {
   font-family: var(--font-display);
   font-size: 26px;
@@ -2406,12 +2414,6 @@ button.torre-summary:focus-visible,
 .tile-value.warn  { color: #b45309; }
 .tile-value.bad   { color: #b91c1c; }
 .tile-value.empty { color: #9ca3af; }
-.tile-label {
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-}
 .tile-status {
   font-size: 10px;
   margin-top: 5px;
@@ -6797,6 +6799,14 @@ button.config-option {
 .ultima-medicion-meta {
   color: var(--muted);
 }
+.ultima-medicion-linea-valores {
+  display: block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--white);
+  line-height: 1.45;
+}
 .recarga-card--mt-4 {
   margin-top: 4px;
 }
@@ -10343,93 +10353,150 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
   line-height: 1.4;
 }
 
-.riego-sticky-bar {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  margin: -8px -8px 12px;
-  padding: 10px 10px;
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(248, 250, 252, 0.88));
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  border-radius: 12px 12px 0 0;
-}
-.riego-sticky-inner {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
-.riego-sticky-chip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  border: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--muted);
-}
-.riego-sticky-k {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  font-size: 10px;
-}
-.riego-sticky-v {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 12px;
-  color: var(--white);
-}
-.riego-sticky-chip--amber {
-  background: #fffbeb;
-  border-color: rgba(217, 119, 6, 0.25);
-}
-.riego-sticky-chip--amber .riego-sticky-v {
-  color: #b45309;
-}
-.riego-sticky-chip--indigo {
-  background: #eef2ff;
-  border-color: rgba(79, 70, 229, 0.2);
-}
-.riego-sticky-chip--indigo .riego-sticky-v {
-  color: #4338ca;
-}
-
-.riego-por-que-details {
-  margin: 8px 0 12px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: var(--bg2);
-  padding: 0 12px;
-}
-.riego-por-que-summary {
-  cursor: pointer;
-  font-weight: 700;
+.dash-medicion-valores {
+  margin: 0 0 10px;
   font-size: 13px;
-  padding: 10px 0;
-  list-style: none;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #334155;
 }
-.riego-por-que-summary::-webkit-details-marker {
+.dash-medicion-valores.setup-hidden {
   display: none;
 }
-.riego-por-que-list {
-  margin: 0 0 12px;
-  padding-left: 18px;
+
+#tab-mediciones .param-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: #64748b;
+  letter-spacing: 0.01em;
+}
+#tab-mediciones .card-title {
+  font-weight: 600;
+  font-size: 15px;
+  letter-spacing: -0.02em;
+}
+#tab-mediciones .config-section-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #475569;
+  letter-spacing: -0.01em;
+}
+#tab-mediciones .config-section-collapse-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: #475569;
+}
+#tab-mediciones .recarga-title strong {
+  font-weight: 600;
+}
+
+.medir-recarga-details {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: var(--bg2);
+  overflow: hidden;
+}
+.medir-recarga-details-summary {
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--white);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.medir-recarga-details-summary::-webkit-details-marker {
+  display: none;
+}
+.medir-recarga-details-summary::after {
+  content: '▾';
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.medir-recarga-details[open] > .medir-recarga-details-summary::after {
+  content: '▴';
+}
+.medir-recarga-details-body {
+  padding: 0 14px 14px;
+  border-top: 1px solid var(--border);
+}
+.medir-recarga-details .recarga-subblock-partials {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.medir-meds-recent-card {
+  margin-bottom: 12px;
+}
+.medir-meds-recent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.medir-meds-recent-scope {
+  margin: -4px 0 10px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+.medir-meds-recent-scope.setup-hidden {
+  display: none;
+}
+.medir-meds-recent-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--white);
+}
+.medir-meds-recent-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.medir-meds-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.medir-meds-recent-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.medir-meds-recent-d {
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 11px;
+}
+.medir-meds-recent-v {
+  color: var(--white);
+  font-variant-numeric: tabular-nums;
+}
+.medir-meds-recent-empty {
+  margin: 0;
   font-size: 12px;
   color: var(--muted);
   line-height: 1.45;
-}
-.riego-por-que-list li + li {
-  margin-top: 6px;
-}
-.riego-calc-meta {
-  font-size: 11px;
-  color: var(--muted);
-  margin: 8px 0 0;
-  line-height: 1.35;
 }
 
 .hist-tab-badge {
