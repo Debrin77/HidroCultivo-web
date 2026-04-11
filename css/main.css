@@ -2215,6 +2215,14 @@ body.hc-welcome-open #app {
 .dash-subtitle--fecha {
   margin-bottom: 12px;
 }
+/** Encabezado contextual antes del recuadro de instalación activa (Inicio). */
+.dash-instalacion-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 8px 0;
+  letter-spacing: 0.02em;
+}
 .dash-medicion-y-cultivo {
   margin-top: 4px;
 }
