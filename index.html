@@ -693,76 +693,79 @@
           </div>
         </div>
 
-        <div class="config-section config-section-collapsible" id="panelSensorHumedadSustrato">
-          <button type="button" class="config-section-collapse-head" id="btnCollapseHumedadFino"
-            aria-expanded="true" aria-controls="collapseBodyHumedadFino"
-            onclick="toggleMedirCollapse('humedadFino')">
+        <div class="config-section config-section-collapsible" id="panelSensoresAjusteFino">
+          <button type="button" class="config-section-collapse-head" id="btnCollapseSensoresAjusteFino"
+            aria-expanded="true" aria-controls="collapseBodySensoresAjusteFino"
+            onclick="toggleMedirCollapse('sensoresAjusteFino')">
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
-            <span class="config-section-collapse-title" id="labelSensorSustrato">📡 Ajuste fino de humedad (opcional)</span>
+            <span class="config-section-collapse-title-wrap">
+              <span class="config-section-collapse-title" id="labelSensoresAjusteFinoMain">📡 Sensores y ajuste fino (opcional)</span>
+              <span class="config-section-collapse-subtitle">Afinar el riego con humedad de sustrato; inventario de sondas para tu montaje.</span>
+            </span>
           </button>
-          <div class="config-section-collapse-body" id="collapseBodyHumedadFino">
-          <div class="medir-note-block medir-note-block--humedad-fino">
-            Corrección opcional de <strong>±3&nbsp;%</strong> sobre el riego que ya calcula la app (sustrato + clima), usando tu <strong>% de humedad</strong> en el sustrato (medidor, sonda u ojo).
-            Entre riegos, lecturas <strong>medias</strong> suelen ser normales. El <strong>objetivo</strong> por defecto va ligado al sustrato elegido arriba.
-          </div>
-          <label class="medir-check-row medir-mb-12 fs-13">
-            <input type="checkbox" id="sensorSustratoActivo" onchange="persistSensorSustrato()"
-              aria-describedby="labelSensorSustrato">
-            <span>Aplicar este ajuste fino al cálculo de riego</span>
-          </label>
-          <div class="medir-grid-2-gap-10">
-            <div>
-              <label for="sensorSustratoLectura" class="medir-field-label">Tu lectura (%)</label>
-              <input type="number" id="sensorSustratoLectura" inputmode="decimal" min="0" max="100" step="0.5"
-                placeholder="opcional" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
-                class="medir-input-md">
-            </div>
-            <div>
-              <label for="sensorSustratoObj" class="medir-field-label">Referencia objetivo (%)</label>
-              <input type="number" id="sensorSustratoObj" inputmode="numeric" min="30" max="80" step="1"
-                value="58" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
-                class="medir-input-md">
-            </div>
-          </div>
-          </div>
-        </div>
+          <div class="config-section-collapse-body" id="collapseBodySensoresAjusteFino">
 
-        <div class="config-section config-section-collapsible" id="panelSensoresHardware">
-          <button type="button" class="config-section-collapse-head" id="btnCollapseSensoresHw"
-            aria-expanded="true" aria-controls="collapseBodySensoresHw"
-            onclick="toggleMedirCollapse('sensoresHw')">
-            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
-            <span class="config-section-collapse-title" id="labelSensoresHw">📟 Sondas y medidores (opcional)</span>
-          </button>
-          <div class="config-section-collapse-body" id="collapseBodySensoresHw">
-          <div class="medir-note-block">
-            Indica si además de medir “a mano” usas algún <strong>sensor o medidor continuo</strong> (interior o exterior).
-            La app <strong>no se conecta por telemática</strong> a esos equipos por defecto: sirve para documentar tu montaje y mostrarte cómo volcar lecturas aquí.
-          </div>
-          <div class="medir-check-list">
-            <label class="medir-check-row">
-              <input type="checkbox" id="sensorHwEC" onchange="persistSensoresHardware()"
-                aria-describedby="labelSensoresHw">
-              <span>Sonda o medidor de <strong>EC / conductividad</strong> en el depósito o solución</span>
+          <div class="medir-subsection" id="subsectionHumedadFino">
+            <h3 class="medir-subsection-title" id="labelSensorSustrato">Ajuste fino de humedad</h3>
+            <p class="medir-subsection-lead">Corrige el riego sugerido (±3&nbsp;%) según tu % de humedad en sustrato.</p>
+            <div class="medir-note-block medir-note-block--humedad-fino">
+              Corrección opcional de <strong>±3&nbsp;%</strong> sobre el riego que ya calcula la app (sustrato + clima), usando tu <strong>% de humedad</strong> en el sustrato (medidor, sonda u ojo).
+              Entre riegos, lecturas <strong>medias</strong> suelen ser normales. El <strong>objetivo</strong> por defecto va ligado al sustrato elegido arriba.
+            </div>
+            <label class="medir-check-row medir-mb-12 fs-13">
+              <input type="checkbox" id="sensorSustratoActivo" onchange="persistSensorSustrato()"
+                aria-describedby="labelSensorSustrato">
+              <span>Aplicar este ajuste fino al cálculo de riego</span>
             </label>
-            <label class="medir-check-row">
-              <input type="checkbox" id="sensorHwPH" onchange="persistSensoresHardware()"
-                aria-describedby="labelSensoresHw">
-              <span>Sonda o medidor de <strong>pH</strong> (sumergido o de gota)</span>
-            </label>
-            <label class="medir-check-row">
-              <input type="checkbox" id="sensorHwHum" onchange="persistSensoresHardware()"
-                aria-describedby="labelSensoresHw">
-              <span>Sensor de <strong>humedad</strong> (sustrato, aire de la sala o ambos)</span>
-            </label>
+            <div class="medir-grid-2-gap-10">
+              <div>
+                <label for="sensorSustratoLectura" class="medir-field-label">Tu lectura (%)</label>
+                <input type="number" id="sensorSustratoLectura" inputmode="decimal" min="0" max="100" step="0.5"
+                  placeholder="opcional" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
+                  class="medir-input-md">
+              </div>
+              <div>
+                <label for="sensorSustratoObj" class="medir-field-label">Referencia objetivo (%)</label>
+                <input type="number" id="sensorSustratoObj" inputmode="numeric" min="30" max="80" step="1"
+                  value="58" onchange="persistSensorSustrato()" onblur="persistSensorSustrato()"
+                  class="medir-input-md">
+              </div>
+            </div>
           </div>
-          <div id="panelSensoresIntegracionAyuda" class="setup-hidden medir-help-box">
-            <div class="medir-help-title">Cómo integrar las lecturas en HidroCultivo</div>
-            <p class="medir-help-p"><strong>Forma prevista hoy:</strong> sin cuenta ni API del fabricante. Cuando veas el valor en la pantalla del equipo, en su app móvil o en un registrador, <strong>transcríbelo en Mediciones</strong> (EC, pH, temperatura, volumen). Así quedan en el historial, el inicio y las evaluaciones.</p>
-            <p class="medir-help-p"><strong>Humedad del sustrato:</strong> si mides HR de esponja/lana con sonda o medidor 4&nbsp;en&nbsp;1 y quieres afinar el riego, usa el bloque <strong>Ajuste fino de humedad</strong> de arriba (±3&nbsp;%); no hace falta anotarla aparte al guardar la medición.</p>
-            <p class="medir-help-p"><strong>Interior y exterior:</strong> el contexto ya lo marca la ubicación del sistema; los sensores en balcón o en armario se registran igual — la app no distingue el “cable”, solo el valor que pongas.</p>
-            <p class="medir-help-p m0"><strong>Telemática automática</strong> (WiFi, nube, Bluetooth) no está integrada en esta versión: añadiría dependencia de terceros y permisos. Si en el futuro hubiera importación o API, se avisaría explícitamente.</p>
+
+          <div class="medir-subsection medir-subsection--border" id="subsectionSensoresHw">
+            <h3 class="medir-subsection-title" id="labelSensoresHw">Sondas y medidores</h3>
+            <p class="medir-subsection-lead">Qué equipo tienes en continuo además del medidor manual (sin conexión API en esta versión).</p>
+            <div class="medir-note-block">
+              Indica si además de medir “a mano” usas algún <strong>sensor o medidor continuo</strong> (interior o exterior).
+              La app <strong>no se conecta por telemática</strong> a esos equipos por defecto: sirve para documentar tu montaje y mostrarte cómo volcar lecturas aquí.
+            </div>
+            <div class="medir-check-list">
+              <label class="medir-check-row">
+                <input type="checkbox" id="sensorHwEC" onchange="persistSensoresHardware()"
+                  aria-describedby="labelSensoresHw">
+                <span>Sonda o medidor de <strong>EC / conductividad</strong> en el depósito o solución</span>
+              </label>
+              <label class="medir-check-row">
+                <input type="checkbox" id="sensorHwPH" onchange="persistSensoresHardware()"
+                  aria-describedby="labelSensoresHw">
+                <span>Sonda o medidor de <strong>pH</strong> (sumergido o de gota)</span>
+              </label>
+              <label class="medir-check-row">
+                <input type="checkbox" id="sensorHwHum" onchange="persistSensoresHardware()"
+                  aria-describedby="labelSensoresHw">
+                <span>Sensor de <strong>humedad</strong> (sustrato, aire de la sala o ambos)</span>
+              </label>
+            </div>
+            <div id="panelSensoresIntegracionAyuda" class="setup-hidden medir-help-box">
+              <div class="medir-help-title">Cómo integrar las lecturas en HidroCultivo</div>
+              <p class="medir-help-p"><strong>Forma prevista hoy:</strong> sin cuenta ni API del fabricante. Cuando veas el valor en la pantalla del equipo, en su app móvil o en un registrador, <strong>transcríbelo en Mediciones</strong> (EC, pH, temperatura, volumen). Así quedan en el historial, el inicio y las evaluaciones.</p>
+              <p class="medir-help-p"><strong>Humedad del sustrato:</strong> si mides HR de esponja/lana con sonda o medidor 4&nbsp;en&nbsp;1 y quieres afinar el riego, usa el apartado <strong>Ajuste fino de humedad</strong> de este panel (±3&nbsp;%); no hace falta anotarla aparte al guardar la medición.</p>
+              <p class="medir-help-p"><strong>Interior y exterior:</strong> el contexto ya lo marca la ubicación del sistema; los sensores en balcón o en armario se registran igual — la app no distingue el “cable”, solo el valor que pongas.</p>
+              <p class="medir-help-p m0"><strong>Telemática automática</strong> (WiFi, nube, Bluetooth) no está integrada en esta versión: añadiría dependencia de terceros y permisos. Si en el futuro hubiera importación o API, se avisaría explícitamente.</p>
+            </div>
           </div>
+
           </div>
         </div>
 
@@ -923,42 +926,62 @@
         <div class="recarga-nota" id="recargaNota">Cuenta solo recargas con vaciado + limpieza + mezcla nueva (checklist o interruptor de recarga completa).</div>
         <div id="recargaUrgenteBanner" class="recarga-urgente-banner" role="status" aria-live="polite"></div>
         <div id="recargaConfirmPanel" class="recarga-confirm-panel">
-          <div class="recarga-subblock">
-            <div class="recarga-subtitle">🔧 Recarga total del depósito</div>
-            <p class="recarga-subhint">Vaciar, limpiar y mezcla nueva. El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo.</p>
-            <button type="button" class="btn-recarga-confirm primary recarga-btn-full"
-              onclick="confirmarReposicionDeposito('con_nutrientes')"
-              aria-label="Abrir checklist de recarga completa de la instalación activa">📋 Checklist recarga completa</button>
-            <p class="recarga-subhint medir-recarga-divider-top">¿Ya vaciaste y renovaste solución pero solo vas a <strong>guardar la medición</strong>? Activa el interruptor para <strong>reiniciar el contador</strong> con la misma fecha (sin pasar por el checklist).</p>
-            <div class="medir-recarga-switch-row medir-recarga-switch-row--in-card">
-              <span class="medir-recarga-switch-text">Reiniciar contador al guardar medición</span>
-              <button type="button" class="toggle-switch" id="recargaSwitch" onclick="toggleRecarga()"
-                role="switch" aria-checked="false"
-                aria-label="Marcar recarga completa del depósito al guardar la medición">
-                <span class="toggle-knob" aria-hidden="true"></span>
-              </button>
+          <div class="config-section-collapsible recarga-collapse-wrap">
+            <button type="button" class="config-section-collapse-head recarga-collapse-head is-collapsed" id="btnCollapseRecargaTotal"
+              aria-expanded="false" aria-controls="collapseBodyRecargaTotal"
+              onclick="toggleMedirCollapse('recargaTotal')">
+              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+              <span class="config-section-collapse-title-wrap">
+                <span class="config-section-collapse-title">🔧 Recarga total del depósito</span>
+                <span class="config-section-collapse-subtitle">Vaciar, limpiar y mezcla nueva; checklist o reinicio del contador al guardar.</span>
+              </span>
+            </button>
+            <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaTotal" hidden>
+              <p class="recarga-subhint">El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo.</p>
+              <button type="button" class="btn-recarga-confirm primary recarga-btn-full"
+                onclick="confirmarReposicionDeposito('con_nutrientes')"
+                aria-label="Abrir checklist de recarga completa de la instalación activa">📋 Checklist recarga completa</button>
+              <p class="recarga-subhint medir-recarga-divider-top">¿Ya vaciaste y renovaste solución pero solo vas a <strong>guardar la medición</strong>? Activa el interruptor para <strong>reiniciar el contador</strong> con la misma fecha (sin pasar por el checklist).</p>
+              <div class="medir-recarga-switch-row medir-recarga-switch-row--in-card">
+                <span class="medir-recarga-switch-text">Reiniciar contador al guardar medición</span>
+                <button type="button" class="toggle-switch" id="recargaSwitch" onclick="toggleRecarga()"
+                  role="switch" aria-checked="false"
+                  aria-label="Marcar recarga completa del depósito al guardar la medición">
+                  <span class="toggle-knob" aria-hidden="true"></span>
+                </button>
+              </div>
+              <p class="medir-recarga-switch-footnote medir-recarga-switch-footnote--tight"><strong>No</strong> lo actives si solo hiciste <strong>reposición parcial</strong>; usa el desplegable de abajo.</p>
             </div>
-            <p class="medir-recarga-switch-footnote medir-recarga-switch-footnote--tight"><strong>No</strong> lo actives si solo hiciste <strong>reposición parcial</strong>; usa el bloque de abajo.</p>
           </div>
-          <div class="recarga-subblock recarga-subblock-partials">
-            <div class="recarga-subtitle">💠 Reposición parcial</div>
-            <p class="recarga-subhint">Sirve para que el depósito <strong>no baje de un nivel mínimo</strong>: las plantas beben agua, hay evaporación, y la <strong>bomba</strong> y el <strong>calefactor</strong> deben seguir <strong>sumergidos</strong> — si quedan al aire se pueden estropear.</p>
-            <p class="recarga-subhint recarga-subhint--mt6">Rellenas <strong>sin vaciar</strong> el depósito. <strong>No reinicia</strong> el contador de recarga completa.</p>
-            <label for="inputReposicionParcialLitros" class="recarga-confirm-label recarga-label-spaced">
-              Litros añadidos (aprox.)
-            </label>
-            <input type="number" id="inputReposicionParcialLitros" class="form-input recarga-input-parcial-litros"
-              inputmode="decimal" step="0.1" min="0.1" max="2000" placeholder="p. ej. 2"
-              aria-label="Litros de agua o solución añadidos en reposición parcial">
-            <div class="recarga-confirm-label recarga-label--mb8">¿Qué has echado al depósito?</div>
-            <div class="recarga-confirm-actions">
-              <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('solo_agua')"
-                aria-label="Registrar reposición parcial solo con agua">💧 Solo agua</button>
-              <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('parcial_nutrientes')"
-                aria-label="Registrar reposición parcial con agua y nutrientes">🧪 Agua + nutrientes</button>
+          <div class="config-section-collapsible recarga-collapse-wrap">
+            <button type="button" class="config-section-collapse-head recarga-collapse-head is-collapsed" id="btnCollapseRecargaParcial"
+              aria-expanded="false" aria-controls="collapseBodyRecargaParcial"
+              onclick="toggleMedirCollapse('recargaParcial')">
+              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+              <span class="config-section-collapse-title-wrap">
+                <span class="config-section-collapse-title">💠 Reposición parcial</span>
+                <span class="config-section-collapse-subtitle">Rellenar sin vaciar; no reinicia el contador de recarga completa.</span>
+              </span>
+            </button>
+            <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaParcial" hidden>
+              <p class="recarga-subhint">Sirve para que el depósito <strong>no baje de un nivel mínimo</strong>: las plantas beben agua, hay evaporación, y la <strong>bomba</strong> y el <strong>calefactor</strong> deben seguir <strong>sumergidos</strong> — si quedan al aire se pueden estropear.</p>
+              <p class="recarga-subhint recarga-subhint--mt6">Rellenas <strong>sin vaciar</strong> el depósito. <strong>No reinicia</strong> el contador de recarga completa.</p>
+              <label for="inputReposicionParcialLitros" class="recarga-confirm-label recarga-label-spaced">
+                Litros añadidos (aprox.)
+              </label>
+              <input type="number" id="inputReposicionParcialLitros" class="form-input recarga-input-parcial-litros"
+                inputmode="decimal" step="0.1" min="0.1" max="2000" placeholder="p. ej. 2"
+                aria-label="Litros de agua o solución añadidos en reposición parcial">
+              <div class="recarga-confirm-label recarga-label--mb8">¿Qué has echado al depósito?</div>
+              <div class="recarga-confirm-actions">
+                <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('solo_agua')"
+                  aria-label="Registrar reposición parcial solo con agua">💧 Solo agua</button>
+                <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('parcial_nutrientes')"
+                  aria-label="Registrar reposición parcial con agua y nutrientes">🧪 Agua + nutrientes</button>
+              </div>
+              <div id="resumenReposicionParcialStats" class="recarga-subhint recarga-parcial-stats"
+                role="status" aria-live="polite"></div>
             </div>
-            <div id="resumenReposicionParcialStats" class="recarga-subhint recarga-parcial-stats"
-              role="status" aria-live="polite"></div>
           </div>
           <button type="button" class="btn-recarga-confirm ghost recarga-btn-full-mt"
             onclick="posponerRecordatorioRecarga()"
@@ -16250,11 +16273,22 @@ function ensureUIMedirCollapse() {
 
 function resolveMedirExpanded(key, humActivo, hwAny) {
   const ui = ensureUIMedirCollapse();
-  if (key === 'humedadFino') {
-    return ui.humedadFino !== undefined ? !!ui.humedadFino : !!humActivo;
+  if (key === 'sensoresAjusteFino') {
+    if (ui.sensoresAjusteFino !== undefined) return !!ui.sensoresAjusteFino;
+    const legH = ui.humedadFino;
+    const legW = ui.sensoresHw;
+    if (legH !== undefined || legW !== undefined) {
+      const hOpen = legH !== undefined ? !!legH : !!humActivo;
+      const wOpen = legW !== undefined ? !!legW : !!hwAny;
+      return hOpen || wOpen;
+    }
+    return !!humActivo || !!hwAny;
   }
-  if (key === 'sensoresHw') {
-    return ui.sensoresHw !== undefined ? !!ui.sensoresHw : !!hwAny;
+  if (key === 'recargaTotal') {
+    return ui.recargaTotal !== undefined ? !!ui.recargaTotal : false;
+  }
+  if (key === 'recargaParcial') {
+    return ui.recargaParcial !== undefined ? !!ui.recargaParcial : false;
   }
   if (key === 'interiorGrow') {
     return ui.interiorGrow !== undefined ? !!ui.interiorGrow : true;
@@ -16271,8 +16305,9 @@ function applyMedirCollapseUI() {
   const hwAny = !!(sh.ec || sh.ph || sh.humedad);
 
   const rows = [
-    { body: 'collapseBodyHumedadFino', btn: 'btnCollapseHumedadFino', key: 'humedadFino' },
-    { body: 'collapseBodySensoresHw', btn: 'btnCollapseSensoresHw', key: 'sensoresHw' }
+    { body: 'collapseBodySensoresAjusteFino', btn: 'btnCollapseSensoresAjusteFino', key: 'sensoresAjusteFino' },
+    { body: 'collapseBodyRecargaTotal', btn: 'btnCollapseRecargaTotal', key: 'recargaTotal' },
+    { body: 'collapseBodyRecargaParcial', btn: 'btnCollapseRecargaParcial', key: 'recargaParcial' }
   ];
   for (let i = 0; i < rows.length; i++) {
     const body = document.getElementById(rows[i].body);
@@ -16349,8 +16384,10 @@ function persistSensorSustrato() {
   if (sh.objetivoPct == null || isNaN(sh.objetivoPct)) sh.objetivoPct = def;
   delete state.configTorre.sensorHumedadEsponja;
   const ui = ensureUIMedirCollapse();
-  if (!prevActivo && sh.activo) ui.humedadFino = true;
-  if (prevActivo && !sh.activo) ui.humedadFino = false;
+  const shw = ensureSensoresHardware();
+  const hwAny = !!(shw.ec || shw.ph || shw.humedad);
+  if (!prevActivo && sh.activo) ui.sensoresAjusteFino = true;
+  if (prevActivo && !sh.activo && !hwAny) ui.sensoresAjusteFino = false;
   guardarEstadoTorreActual();
   saveState();
   applyMedirCollapseUI();
@@ -16397,8 +16434,9 @@ function persistSensoresHardware() {
   s.humedad = !!document.getElementById('sensorHwHum')?.checked;
   const nowAny = !!(s.ec || s.ph || s.humedad);
   const ui = ensureUIMedirCollapse();
-  if (!prevAny && nowAny) ui.sensoresHw = true;
-  if (prevAny && !nowAny) ui.sensoresHw = false;
+  const humAct = !!ensureSensorHumedadSustrato().activo;
+  if (!prevAny && nowAny) ui.sensoresAjusteFino = true;
+  if (prevAny && !nowAny && !humAct) ui.sensoresAjusteFino = false;
   guardarEstadoTorreActual();
   saveState();
   actualizarVisibilidadAyudaSensores();

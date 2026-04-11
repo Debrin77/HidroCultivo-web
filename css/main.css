@@ -2566,6 +2566,20 @@ button.torre-summary:focus-visible,
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
+.recarga-collapse-wrap {
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg3);
+  overflow: hidden;
+}
+.recarga-collapse-head {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+.recarga-collapse-body .recarga-subhint:first-of-type {
+  margin-top: 0;
+}
 .recarga-confirm-label {
   font-family: var(--font-sans);
   font-size: 14px;
@@ -2613,12 +2627,6 @@ button.torre-summary:focus-visible,
   font-size: 12px;
   line-height: 1.45;
   color: var(--muted);
-}
-.recarga-subblock { margin-top: 2px; }
-.recarga-subblock-partials {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
 }
 .recarga-subtitle {
   font-size: 16px;
@@ -6621,6 +6629,20 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   border-radius: 14px;
   box-sizing: border-box;
 }
+.config-section-collapse-title-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+.config-section-collapse-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1.4;
+}
 .config-section-collapse-head:hover {
   background: rgba(255,255,255,0.05);
 }
@@ -6642,7 +6664,6 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   transform: rotate(-90deg);
 }
 .config-section-collapse-title {
-  flex: 1;
   line-height: 1.35;
 }
 .config-section-collapse-body {
@@ -6653,6 +6674,29 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
 }
 .config-section-collapse-body[hidden] {
   display: none !important;
+}
+.medir-subsection {
+  margin: 0;
+}
+.medir-subsection--border {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.medir-subsection-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--white);
+  margin: 0 0 4px 0;
+  line-height: 1.25;
+}
+.medir-subsection-lead {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin: 0 0 10px 0;
+  line-height: 1.45;
 }
 .config-options {
   display: flex;
