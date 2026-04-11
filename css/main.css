@@ -6457,15 +6457,17 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   box-sizing: border-box;
   margin-bottom: 8px;
 }
-/* Mediciones — bloque exterior/interior: título y ayuda más legibles */
+/* Mediciones — bloque exterior/interior: título alineado al resto de secciones; cuerpo legible */
 .medir-panel-ubic-luz .config-section-title {
-  font-size: clamp(17px, 4.3vw, 19px);
-  margin-bottom: 14px;
-  line-height: 1.25;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.35;
 }
 .medir-note-block--ubic-luz {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
+  color: color-mix(in srgb, var(--white) 86%, var(--muted));
 }
 .medir-btn-copiar-municipio {
   width: 100%;
@@ -6736,7 +6738,7 @@ button.config-option {
   border: 2px solid #e5e7eb;
   border-radius: 14px;
   padding: 8px 12px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   font: inherit;
@@ -6772,51 +6774,6 @@ button.config-option {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 3px 8px;
-}
-.medir-nutriente-strip {
-  background: #f0fdf4;
-  border: 1.5px solid #86efac;
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-bottom: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-.medir-nutriente-main {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.medir-nutriente-icon {
-  font-size: 22px;
-  flex-shrink: 0;
-}
-.medir-nutriente-title {
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 800;
-  color: #15803d;
-}
-.medir-nutriente-sub {
-  font-size: 10px;
-  color: #4b5563;
-  margin-top: 2px;
-}
-.medir-nutriente-cambiar {
-  flex-shrink: 0;
-  background: #fff;
-  border: 1.5px solid #86efac;
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  color: #15803d;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
 }
 .ultima-medicion-card {
   display: none;

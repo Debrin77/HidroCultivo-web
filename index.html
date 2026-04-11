@@ -368,7 +368,7 @@
         </div>
       </div>
 
-      <!-- Instalación, nutriente y última medición primero (contexto antes de la configuración extensa) -->
+      <!-- Instalación y última medición primero (nutriente ya en Inicio; municipio/clima más abajo) -->
       <button type="button" id="medirTorreBanner" class="medir-torre-banner"
         onclick="abrirSelectorTorres()"
         aria-label="Cambiar instalación en la que se registra la medición">
@@ -382,23 +382,6 @@
         </div>
         <span class="medir-torre-banner-action">Cambiar ›</span>
       </button>
-
-      <div class="medir-nutriente-strip">
-        <div class="medir-nutriente-main">
-          <span class="medir-nutriente-icon" aria-hidden="true">🧪</span>
-          <div>
-            <div id="medirNutrienteNombre" class="medir-nutriente-title">
-              Cargando...
-            </div>
-            <div id="medirNutrienteEC" class="medir-nutriente-sub">—</div>
-          </div>
-        </div>
-        <button type="button" onclick="cambiarNutriente()"
-          aria-label="Cambiar nutriente activo"
-          class="medir-nutriente-cambiar">
-          Cambiar
-        </button>
-      </div>
 
       <div class="card ultima-medicion-card" id="ultimaMedicionCard">
         <div class="card-title">⏱ Última medición</div>
@@ -25722,17 +25705,6 @@ function actualizarBadgesNutriente() {
     const ecMaxT = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
     torreEC.textContent = 'EC ' + ecMinT + '–' + ecMaxT + ' µS/cm · pH ' +
       (nut.pHRango ? nut.pHRango[0] + '–' + nut.pHRango[1] : '5.5–6.5');
-  }
-
-  // Pestaña Medir
-  const medirNombre = document.getElementById('medirNutrienteNombre');
-  const medirEC     = document.getElementById('medirNutrienteEC');
-  if (medirNombre) medirNombre.textContent = nut.nombre;
-  if (medirEC) {
-    const ecMin = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
-    const ecMax = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
-    medirEC.textContent = 'EC objetivo: ' + ecMin + '-' + ecMax + ' µS/cm · pH ' +
-      (nut.pHRango ? nut.pHRango[0] + '-' + nut.pHRango[1] : '5.5-6.5');
   }
 
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
