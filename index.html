@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-10-medir-recarga-open">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-10-mc-riego-ajuste">
 </head>
 <body>
 
@@ -97,8 +97,8 @@
     <div class="header-logo">HIDRO<span>Cultivo</span></div>
     <div class="header-status">
       <button id="installPWABtn" class="install-pwa-btn" onclick="instalarPWA()"
-        aria-label="Instalar HidroCultivo como aplicación">
-        Instalar
+        aria-label="Instalar HidroCultivo">
+        📲 Instalar
       </button>
       <div class="status-dot"></div>
       <span id="headerTime">--:--</span>
@@ -162,14 +162,11 @@
       </section>
 
       <!-- 3. Alerta meteorológica / ambiente (prominente tras el contexto de instalación) -->
-      <div class="meteo-alert ok meteo-alert--clickable" id="meteoAlert" role="button" tabindex="0"
-        onclick="goTab('meteo')" onkeydown="a11yKeyActivate(event, function(){ goTab('meteo'); })"
-        aria-label="Ver meteorología detallada. Resumen de condiciones actuales">
+      <div class="meteo-alert ok" id="meteoAlert">
         <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
         <div class="meteo-alert-body">
           <div class="meteo-alert-title" id="meteoAlertTitle">Cargando datos meteorológicos...</div>
           <div class="meteo-alert-text" id="meteoAlertText">Obteniendo condiciones actuales</div>
-          <div class="meteo-alert-fresh setup-hidden" id="dashMeteoFresh" aria-hidden="true"></div>
         </div>
       </div>
 
@@ -205,32 +202,29 @@
         <div class="dash-subtitle dash-subtitle--ultima-medicion">
           <span id="dashUltimaMedicion">Sin mediciones aún</span>
         </div>
-        <p class="dash-medicion-valores setup-hidden" id="dashMedicionValores" aria-live="polite"></p>
         <div class="params-grid">
-          <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC"
-            title="" data-tile-hint="">
+          <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC">
             <div class="tile-icon" aria-hidden="true">⚡</div>
-            <div class="tile-label">EC µS/cm <span class="tile-hint-mark" id="tileECHint" aria-hidden="true" title="">ⓘ</span></div>
             <div class="tile-value empty" id="tileECVal">—</div>
+            <div class="tile-label">EC µS/cm</div>
             <div class="tile-status empty" id="tileECStatus">Sin datos</div>
           </button>
-          <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH"
-            title="" data-tile-hint="">
+          <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH">
             <div class="tile-icon" aria-hidden="true">🧪</div>
-            <div class="tile-label">pH <span class="tile-hint-mark" id="tilePHHint" aria-hidden="true" title="">ⓘ</span></div>
             <div class="tile-value empty" id="tilePHVal">—</div>
+            <div class="tile-label">pH</div>
             <div class="tile-status empty" id="tilePHStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a mediciones: temperatura del agua">
             <div class="tile-icon" aria-hidden="true">🌡️</div>
-            <div class="tile-label">Temp agua °C</div>
             <div class="tile-value empty" id="tileTempVal">—</div>
+            <div class="tile-label">Temp agua °C</div>
             <div class="tile-status empty" id="tileTempStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tileVol" onclick="goTab('mediciones')" aria-label="Ir a mediciones: volumen del depósito">
             <div class="tile-icon" aria-hidden="true">🪣</div>
-            <div class="tile-label">Volumen L</div>
             <div class="tile-value empty" id="tileVolVal">—</div>
+            <div class="tile-label">Volumen L</div>
             <div class="tile-status empty" id="tileVolStatus">Sin datos</div>
           </button>
         </div>
@@ -383,16 +377,6 @@
       <div class="card ultima-medicion-card" id="ultimaMedicionCard">
         <div class="card-title">⏱ Última medición</div>
         <div id="ultimaMedicionInfo" class="ultima-medicion-info"></div>
-      </div>
-
-      <div class="card medir-meds-recent-card" id="medirMedsRecentCard">
-        <div class="medir-meds-recent-head">
-          <span class="medir-meds-recent-title">Mediciones recientes</span>
-          <button type="button" class="medir-meds-recent-link"
-            onclick="goTab('historial'); histTab('mediciones');">Ver historial</button>
-        </div>
-        <p id="medirMedsRecentScope" class="medir-meds-recent-scope setup-hidden" role="note"></p>
-        <div id="medirMedsRecentList" class="medir-meds-recent-list" role="list"></div>
       </div>
 
       <!-- Configuración agua y sustrato -->
@@ -930,14 +914,13 @@
         <div class="recarga-nota" id="recargaNota">Cuenta solo recargas con vaciado + limpieza + mezcla nueva (checklist o interruptor de recarga completa).</div>
         <div id="recargaUrgenteBanner" class="recarga-urgente-banner" role="status" aria-live="polite"></div>
         <div id="recargaConfirmPanel" class="recarga-confirm-panel">
-          <details class="medir-recarga-details" open>
-            <summary class="medir-recarga-details-summary">🔧 Recarga total del depósito</summary>
-            <div class="recarga-subblock medir-recarga-details-body">
-            <p class="recarga-subhint">Vaciar, limpiar y mezcla nueva. El checklist te guía paso a paso. Al terminar, el contador (~15 días) se reinicia solo.</p>
+          <div class="recarga-subblock">
+            <div class="recarga-subtitle">🔧 Recarga total del depósito</div>
+            <p class="recarga-subhint">Vaciar, limpiar y mezcla nueva. El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo.</p>
             <button type="button" class="btn-recarga-confirm primary recarga-btn-full"
               onclick="confirmarReposicionDeposito('con_nutrientes')"
               aria-label="Abrir checklist de recarga completa de la instalación activa">📋 Checklist recarga completa</button>
-            <p class="recarga-subhint medir-recarga-divider-top">¿Ya vaciaste y renovaste solución pero solo vas a guardar la medición? Activa el interruptor para reiniciar el contador con la misma fecha (sin pasar por el checklist).</p>
+            <p class="recarga-subhint medir-recarga-divider-top">¿Ya vaciaste y renovaste solución pero solo vas a <strong>guardar la medición</strong>? Activa el interruptor para <strong>reiniciar el contador</strong> con la misma fecha (sin pasar por el checklist).</p>
             <div class="medir-recarga-switch-row medir-recarga-switch-row--in-card">
               <span class="medir-recarga-switch-text">Reiniciar contador al guardar medición</span>
               <button type="button" class="toggle-switch" id="recargaSwitch" onclick="toggleRecarga()"
@@ -946,14 +929,12 @@
                 <span class="toggle-knob" aria-hidden="true"></span>
               </button>
             </div>
-            <p class="medir-recarga-switch-footnote medir-recarga-switch-footnote--tight">No lo actives si solo hiciste reposición parcial; usa el apartado siguiente.</p>
-            </div>
-          </details>
-          <details class="medir-recarga-details">
-            <summary class="medir-recarga-details-summary">💠 Reposición parcial</summary>
-            <div class="recarga-subblock recarga-subblock-partials medir-recarga-details-body">
-            <p class="recarga-subhint">Para que el depósito no baje de un nivel mínimo: las plantas consumen agua, hay evaporación, y bomba y calefactor deben seguir sumergidos.</p>
-            <p class="recarga-subhint recarga-subhint--mt6">Rellenas sin vaciar el depósito. No reinicia el contador de recarga completa.</p>
+            <p class="medir-recarga-switch-footnote medir-recarga-switch-footnote--tight"><strong>No</strong> lo actives si solo hiciste <strong>reposición parcial</strong>; usa el bloque de abajo.</p>
+          </div>
+          <div class="recarga-subblock recarga-subblock-partials">
+            <div class="recarga-subtitle">💠 Reposición parcial</div>
+            <p class="recarga-subhint">Sirve para que el depósito <strong>no baje de un nivel mínimo</strong>: las plantas beben agua, hay evaporación, y la <strong>bomba</strong> y el <strong>calefactor</strong> deben seguir <strong>sumergidos</strong> — si quedan al aire se pueden estropear.</p>
+            <p class="recarga-subhint recarga-subhint--mt6">Rellenas <strong>sin vaciar</strong> el depósito. <strong>No reinicia</strong> el contador de recarga completa.</p>
             <label for="inputReposicionParcialLitros" class="recarga-confirm-label recarga-label-spaced">
               Litros añadidos (aprox.)
             </label>
@@ -969,8 +950,7 @@
             </div>
             <div id="resumenReposicionParcialStats" class="recarga-subhint recarga-parcial-stats"
               role="status" aria-live="polite"></div>
-            </div>
-          </details>
+          </div>
           <button type="button" class="btn-recarga-confirm ghost recarga-btn-full-mt"
             onclick="posponerRecordatorioRecarga()"
             aria-label="Posponer recordatorio de recarga completa">⏰ Recordar mañana</button>
@@ -1001,8 +981,7 @@
       <div class="section-title torre-section-heading torre-tab-toolbar">
         <div class="torre-tab-toolbar-main">
           <span><span class="section-title-accent" aria-hidden="true"></span><span class="accent" id="torreTabTitle">—</span></span>
-          <label for="sistemaInstalacionSelect" class="visually-hidden" id="sistemaInstalacionSelectLabel">Instalación a editar en esta pestaña</label>
-          <span id="sistemaInstalacionUnica" class="torre-instalacion-unica setup-hidden" aria-hidden="true"></span>
+          <label for="sistemaInstalacionSelect" class="visually-hidden">Instalación a editar en esta pestaña</label>
           <select id="sistemaInstalacionSelect" class="form-input torre-tab-instalacion-select"
             aria-label="Elegir instalación"
             onchange="onSistemaInstalacionSelectChange(this)"></select>
@@ -1218,18 +1197,10 @@
           <p id="sysDwcVolumenLitrosHint" class="torre-dwc-vol-hint setup-hidden" role="status"></p>
           <p id="sysDwcTapaCestasHint" class="torre-dwc-tapa-hint setup-hidden" role="status"></p>
           <p id="sysDwcMaxCestasHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
-          <div class="torre-dwc-grid-2 torre-dwc-rejilla-elegir">
-            <div>
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcFilasRejilla">Filas en tapa</label>
-              <input type="number" id="sysDwcFilasRejilla" class="torre-dwc-input" min="1" max="12" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Filas de macetas DWC"
-                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
-            </div>
-            <div>
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcColsRejilla">Columnas</label>
-              <input type="number" id="sysDwcColsRejilla" class="torre-dwc-input" min="1" max="12" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Columnas de macetas DWC"
-                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
-            </div>
-          </div>
+          <button type="button" class="torre-dwc-apply-grid-btn setup-hidden" id="btnDwcAplicarRejillaMax"
+            onclick="aplicarDwcRejillaMaximaDesdeFormularioSistema()">
+            Aplicar rejilla máxima (tapa)
+          </button>
           <p id="sysDwcOxigenacionHint" class="torre-dwc-ox-hint setup-hidden" role="status"></p>
           <label class="torre-dwc-check-row torre-dwc-check-row--mb6">
             <input type="checkbox" id="sysDwcCupulas" class="torre-dwc-check">
@@ -1502,8 +1473,6 @@
       <!-- Grid calendario -->
       <div id="calGrid" class="cal-grid"></div>
 
-      <div id="calDiaPreview" class="cal-dia-preview setup-hidden" role="status" aria-live="polite"></div>
-
       <!-- Próximos eventos / detalle día (antes de la leyenda: lectura prioritaria) -->
       <div class="card" id="calEventosCard">
         <div class="card-title">📋 Próximos eventos</div>
@@ -1513,13 +1482,13 @@
         </div>
       </div>
 
-      <!-- Leyenda (filtro opcional: pulsa de nuevo para quitar) -->
-      <div class="cal-legend-row" role="group" aria-label="Filtrar días por tipo de evento">
-        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="medicion" onclick="toggleCalLegendFilter('medicion')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-medicion"></div>Medición</button>
-        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="recarga" onclick="toggleCalLegendFilter('recarga')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-recarga"></div>Recarga</button>
-        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="limpieza" onclick="toggleCalLegendFilter('limpieza')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-limpieza"></div>Limpieza</button>
-        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="cosecha" onclick="toggleCalLegendFilter('cosecha')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-cosecha"></div>Cosecha</button>
-        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="plantula-ph" onclick="toggleCalLegendFilter('plantula-ph')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-ph"></div>pH plántula (5 días)</button>
+      <!-- Leyenda -->
+      <div class="cal-legend-row">
+        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-medicion"></div>Medición</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-recarga"></div>Recarga</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-limpieza"></div>Limpieza</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-cosecha"></div>Cosecha</div>
+        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-ph"></div>pH plántula nueva (5 días)</div>
       </div>
 
       <div class="card cal-rutina-card">
@@ -1788,7 +1757,9 @@
         </div>
         </div><!-- /riegoCiclosTorreWrap -->
 
-        <div id="riegoClimaUsado" class="riego-clima-usado-torre setup-hidden" aria-hidden="true"></div>
+        <!-- Datos clima usados -->
+        <div class="card-title setup-hidden riego-clima-titulo-oculto">🌤️ Datos climáticos usados</div>
+        <div id="riegoClimaUsado" class="riego-clima-usado-torre setup-hidden"></div>
         </div><!-- /riegoTorreResultBlock -->
 
       </div>
@@ -1799,7 +1770,7 @@
           🔄 Calcular riego ahora
         </button>
         <p class="riego-horario-recomendado" id="riegoHorarioRecomendado" role="status" aria-live="polite">
-          Tras calcular verás aquí la franja sugerida de mayor intensidad solar. «Calcular riego ahora» pide datos nuevos a la API.
+          Tras calcular, aquí verás el horario sugerido del bloque de mayor intensidad solar (4 h). «Calcular riego ahora» pide datos meteorológicos <strong>actualizados</strong> a la API; al entrar en esta pestaña puede usarse caché breve (~1 min) para ir más rápido.
         </p>
       </div>
 
@@ -1827,10 +1798,7 @@
       </div>
 
       <!-- Cards 7 días scroll horizontal -->
-      <div class="meteo-dias-outer setup-hidden" id="meteoDiasOuter">
-        <div class="meteo-dias setup-hidden" id="meteoDias"></div>
-        <div class="meteo-dias-dots setup-hidden" id="meteoDiasDots" aria-hidden="true"></div>
-      </div>
+      <div class="meteo-dias setup-hidden" id="meteoDias"></div>
 
       <!-- Detalle día seleccionado -->
       <div class="meteo-detalle setup-hidden" id="meteoDetalle">
@@ -1870,14 +1838,6 @@
           </div>
         </div>
 
-        <div class="meteo-riego-cta-wrap">
-          <button type="button" class="btn btn-secondary meteo-btn-usar-riego setup-hidden" id="meteoBtnUsarRiego"
-            onclick="meteoUsarDiaEnRiego()">
-            Usar este día en Riego
-          </button>
-          <p class="meteo-riego-cta-hint setup-hidden" id="meteoRiegoCtaHint">Solo «Hoy» y «Mañana» enlazan con el cálculo (modelo 48 h).</p>
-        </div>
-
       </div>
 
     </div>
@@ -1888,8 +1848,6 @@
 
       <div class="section-title">💡 <span class="accent">Consejos</span></div>
       <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando.</p>
-
-      <div id="consejoParaTiWrap" class="consejo-para-ti-wrap setup-hidden" role="region" aria-label="Según tu situación actual"></div>
 
       <!-- Categorías -->
       <div class="consejos-cats" id="consejosCats"></div>
@@ -1912,10 +1870,10 @@
       <!-- Sub-tabs + checklist (dos filas: evita solapamiento en móvil) -->
       <div class="hist-toolbar">
         <div class="hist-tabs" role="tablist" aria-label="Apartados del historial">
-          <button type="button" class="hist-tab active" role="tab" id="htab-mediciones" aria-selected="true" aria-controls="histMediciones" tabindex="0" onclick="histTab('mediciones')"><span class="hist-tab-lab">📊 Mediciones</span><span class="hist-tab-badge" id="histBadgeMed" aria-hidden="true"></span></button>
-          <button type="button" class="hist-tab" role="tab" id="htab-recargas" aria-selected="false" aria-controls="histRecargas" tabindex="-1" onclick="histTab('recargas')"><span class="hist-tab-lab">🔄 Recargas</span><span class="hist-tab-badge" id="histBadgeRec" aria-hidden="true"></span></button>
-          <button type="button" class="hist-tab" role="tab" id="htab-registro" aria-selected="false" aria-controls="histRegistroPanel" tabindex="-1" onclick="histTab('registro')"><span class="hist-tab-lab">📋 Registro</span><span class="hist-tab-badge" id="histBadgeReg" aria-hidden="true"></span></button>
-          <button type="button" class="hist-tab" role="tab" id="htab-diario" aria-selected="false" aria-controls="histDiarioPanel" tabindex="-1" onclick="histTab('diario')"><span class="hist-tab-lab">📸 Diario</span><span class="hist-tab-badge" id="histBadgeDia" aria-hidden="true"></span></button>
+          <button type="button" class="hist-tab active" role="tab" id="htab-mediciones" aria-selected="true" aria-controls="histMediciones" tabindex="0" onclick="histTab('mediciones')">📊 Mediciones</button>
+          <button type="button" class="hist-tab" role="tab" id="htab-recargas" aria-selected="false" aria-controls="histRecargas" tabindex="-1" onclick="histTab('recargas')">🔄 Recargas</button>
+          <button type="button" class="hist-tab" role="tab" id="htab-registro" aria-selected="false" aria-controls="histRegistroPanel" tabindex="-1" onclick="histTab('registro')">📋 Registro</button>
+          <button type="button" class="hist-tab" role="tab" id="htab-diario" aria-selected="false" aria-controls="histDiarioPanel" tabindex="-1" onclick="histTab('diario')">📸 Diario</button>
         </div>
         <button type="button" class="hist-checklist-btn" onclick="abrirChecklist(false)"
           aria-label="Abrir checklist de recarga de la instalación activa">
@@ -1985,10 +1943,6 @@
         <div class="coming-soon-icon">📊</div>
         <h3>Sin datos aún</h3>
         <p>Registra mediciones diarias para<br>ver la evolución de los parámetros</p>
-        <div class="hist-empty-actions">
-          <button type="button" class="btn btn-primary" onclick="goTab('mediciones')">Ir a Mediciones</button>
-          <button type="button" class="btn btn-secondary" onclick="goTab('sistema')">Revisar Sistema</button>
-        </div>
       </div>
 
       <!-- Panel registro -->
@@ -2282,6 +2236,10 @@
           </div>
         </div>
         <p id="setupDwcTapaCestasHint" class="setup-hidden setup-dwc-tapa-hint" role="status"></p>
+        <button type="button" class="setup-dwc-apply-grid-btn setup-hidden" id="btnDwcAplicarRejillaMaxSetup"
+          onclick="aplicarDwcRejillaMaximaDesdeSetup()">
+          Aplicar rejilla máxima a los deslizadores
+        </button>
         <label class="setup-dwc-check-label setup-dwc-check-label-gap">
           <input type="checkbox" id="setupDwcCupulas" class="setup-dwc-check-input"
             onchange="try{actualizarResumenSetup()}catch(e){}">
@@ -2725,7 +2683,7 @@
       <div class="setup-sensores-box setup-hidden" id="setupCalentadorConsignaWrap">
         <div class="setup-sensores-title">🌡️ Consigna del calentador (depósito)</div>
         <div class="setup-sensores-desc">
-          Temperatura objetivo del termostato en el nutriente (típ. 18–24 °C). El riego nocturno se corrige un poco respecto a ~19 °C de referencia (nutriente termostatizado); si no hay medición reciente de temp. de agua, se usa esta consigna o la noche modelo / sala.
+          Temperatura objetivo del termostato en el nutriente (típ. 18–24 °C). El riego nocturno se corrige un poco respecto a ~18 °C; si no hay medición reciente de temp. de agua, se usa esta consigna o la noche modelo / sala.
         </div>
         <div class="medir-grid-2-gap-10" style="margin-top:8px;">
           <label class="setup-sensores-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
@@ -8453,9 +8411,6 @@ function sincronizarSistemaNftMontajeUI() {
       dwcInfo.style.display = 'block';
       syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
       try {
-        syncDwcRejillaFilasColsInputsDesdeConfig(cfg);
-      } catch (eRej) {}
-      try {
         refreshDwcSistemaMedidasUI();
       } catch (eDwcHint) {}
     } else {
@@ -8910,6 +8865,10 @@ const DWC_TAPA_HUECO_DEFAULT_MM = 4;
 /** Tope de filas/columnas en esquema DWC (pestaña Torre / SVG). */
 const DWC_REJILLA_MAX_FILAS = 12;
 const DWC_REJILLA_MAX_COLS = 12;
+/** Límites de los deslizadores del asistente (Cantidades en el diagrama). */
+const DWC_SETUP_SLIDER_MAX_FILAS = 10;
+const DWC_SETUP_SLIDER_MAX_COLS = 8;
+
 function dwcGridSpanMm(count, rimDiameterMm, gutterMm) {
   const g = Number(gutterMm);
   const gutter = Number.isFinite(g) && g >= 0 ? g : DWC_TAPA_HUECO_DEFAULT_MM;
@@ -9064,37 +9023,123 @@ function redimensionarMatrizTorreDwcPreservando(cfg, nFilas, nCols) {
   cfg.numCestas = nc;
 }
 
-function dwcLeerFilasColsRejillaDesdeInputsSistema() {
-  const ef = document.getElementById('sysDwcFilasRejilla');
-  const ec = document.getElementById('sysDwcColsRejilla');
-  let nf = parseInt(String(ef && ef.value != null && String(ef.value).trim() !== '' ? ef.value : '').trim(), 10);
-  let nc = parseInt(String(ec && ec.value != null && String(ec.value).trim() !== '' ? ec.value : '').trim(), 10);
-  const cfg = state.configTorre || {};
-  if (!Number.isFinite(nf) || nf < 1) nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
-  if (!Number.isFinite(nc) || nc < 1) nc = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
-  return {
-    filas: Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, nf)),
-    cols: Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, nc)),
-  };
+/** Pestaña Sistema DWC: aplica filas×columnas teóricas máximas según L, A, Ø y separación (respetando tope 12×12 del esquema). */
+function aplicarDwcRejillaMaximaDesdeFormularioSistema() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  initTorres();
+  const cfg = state.configTorre;
+  try {
+    dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
+  } catch (e) {}
+  const o = dwcMaxCestasDesdeConfigTorre(cfg);
+  const btn = document.getElementById('btnDwcAplicarRejillaMax');
+  if (!o || o.max < 1) {
+    showToast('Indica largo, ancho y diámetro de cesta válidos para calcular la rejilla.', true);
+    if (btn) btn.disabled = true;
+    return;
+  }
+  const rawF = o.filas;
+  const rawC = o.cols;
+  const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, rawF));
+  const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, rawC));
+  redimensionarMatrizTorreDwcPreservando(cfg, nf, nc);
+  try {
+    dwcSincronizarTamanoCestaDesdeRim(cfg);
+  } catch (e2) {}
+  try {
+    dwcPersistSnapshotMaxCestasEnCfg(cfg);
+  } catch (e3) {}
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  renderTorre();
+  updateTorreStats();
+  try {
+    refreshDwcSistemaMedidasUI();
+  } catch (e4) {}
+  let msg = 'Rejilla aplicada: ' + nf + '×' + nc + ' macetas (' + nf * nc + ' huecos).';
+  if (rawF > DWC_REJILLA_MAX_FILAS || rawC > DWC_REJILLA_MAX_COLS) {
+    msg +=
+      ' Teórico hasta ' +
+      rawF +
+      '×' +
+      rawC +
+      '; el esquema admite como máximo ' +
+      DWC_REJILLA_MAX_FILAS +
+      '×' +
+      DWC_REJILLA_MAX_COLS +
+      '.';
+  }
+  showToast(msg);
 }
 
-function syncDwcRejillaFilasColsInputsDesdeConfig(c) {
-  c = c || {};
-  const filEl = document.getElementById('sysDwcFilasRejilla');
-  const colEl = document.getElementById('sysDwcColsRejilla');
-  const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, parseInt(String(c.numNiveles || 1), 10) || 1));
-  const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, parseInt(String(c.numCestas || 1), 10) || 1));
-  if (filEl) filEl.value = String(nf);
-  if (colEl) colEl.value = String(nc);
+/** Asistente: ajusta deslizadores al máximo que cabe (tope 10×8 en esta pantalla). */
+function aplicarDwcRejillaMaximaDesdeSetup() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  const rim = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
+  const L = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
+  const W = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
+  const mh = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
+  const marcoE = mh.marco != null ? mh.marco : 0;
+  const huecoE = mh.hueco != null ? mh.hueco : DWC_TAPA_HUECO_DEFAULT_MM;
+  if (rim == null || L == null || W == null) {
+    showToast('Completa largo, ancho y diámetro de cesta.', true);
+    return;
+  }
+  const o = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
+  if (!o || o.max < 1) {
+    showToast('No se puede calcular la rejilla con esos datos.', true);
+    return;
+  }
+  const rawF = o.filas;
+  const rawC = o.cols;
+  const nf = Math.max(1, Math.min(DWC_SETUP_SLIDER_MAX_FILAS, rawF));
+  const nc = Math.max(1, Math.min(DWC_SETUP_SLIDER_MAX_COLS, rawC));
+  const sn = document.getElementById('sliderNiveles');
+  const sc = document.getElementById('sliderCestas');
+  if (sn) sn.value = String(nf);
+  if (sc) sc.value = String(nc);
+  try {
+    updateTorreBuilder();
+  } catch (e) {}
+  try {
+    refreshDwcTapHintSetup();
+  } catch (e2) {}
+  try {
+    actualizarResumenSetup();
+  } catch (e3) {}
+  let msg = 'Deslizadores: ' + nf + ' filas × ' + nc + ' columnas.';
+  if (rawF > DWC_SETUP_SLIDER_MAX_FILAS || rawC > DWC_SETUP_SLIDER_MAX_COLS) {
+    msg +=
+      ' Teórico en tapa hasta ' +
+      rawF +
+      '×' +
+      rawC +
+      '; aquí el tope es ' +
+      DWC_SETUP_SLIDER_MAX_FILAS +
+      '×' +
+      DWC_SETUP_SLIDER_MAX_COLS +
+      ' (en Sistema puedes llegar a ' +
+      DWC_REJILLA_MAX_FILAS +
+      '×' +
+      DWC_REJILLA_MAX_COLS +
+      ').';
+  }
+  showToast(msg);
 }
 
 function refreshDwcMaxCestasHintSistema() {
   const el = document.getElementById('sysDwcMaxCestasHint');
+  const btn = document.getElementById('btnDwcAplicarRejillaMax');
   const cfg = state.configTorre;
   if (!el || !cfg || cfg.tipoInstalacion !== 'dwc') {
     if (el) {
       el.classList.add('setup-hidden');
       el.textContent = '';
+    }
+    if (btn) {
+      btn.classList.add('setup-hidden');
+      btn.disabled = true;
     }
     return;
   }
@@ -9106,6 +9151,10 @@ function refreshDwcMaxCestasHintSistema() {
   if (!o || o.max < 1) {
     el.classList.add('setup-hidden');
     el.textContent = '';
+    if (btn) {
+      btn.classList.add('setup-hidden');
+      btn.disabled = true;
+    }
     return;
   }
   const modoKey =
@@ -9115,27 +9164,30 @@ function refreshDwcMaxCestasHintSistema() {
     cfgCalc.dwcNetPotRimMm != null ? cfgCalc.dwcNetPotRimMm : cfg.dwcNetPotRimMm;
   const extra =
     modoKey === 'intensivo' || modoKey === 'mixto'
-      ? ' «' + modoLbl + '»: suele ir bien con menos huecos que el tope.'
-      : ' «' + modoLbl + '»: menos huecos si el follaje lo pide.';
-  let txt =
-    '📐 Tope orientativo en tapa: ' +
-    o.cols +
-    ' columnas × ' +
-    o.filas +
-    ' filas (~' +
+      ? ' En cultivos de porte amplio suele convenir menos cestas que el máximo teórico.'
+      : ' Si el follaje ensancha mucho respecto al aro, deja margen y menos cestas.';
+  const metaTs = cfg.dwcCestasMaxRecomendadasMeta && cfg.dwcCestasMaxRecomendadasMeta.ts;
+  el.textContent =
+    '📐 Máx. orientativo en tapa: ~' +
     o.max +
-    ' macetas; Ø ' +
+    ' cestas (rejilla ~' +
+    o.cols +
+    '×' +
+    o.filas +
+    '; Ø ' +
     rimShow +
-    ' mm; ~' +
+    ' mm; ' +
     o.hueco +
-    ' mm hueco).' +
+    ' mm entre cestas). Modo «' +
+    modoLbl +
+    '»:' +
     extra +
-    ' Elige abajo y guarda.';
-  if (o.cols > DWC_REJILLA_MAX_COLS || o.filas > DWC_REJILLA_MAX_FILAS) {
-    txt += ' Dibujo de la app: máx. ' + DWC_REJILLA_MAX_COLS + '×' + DWC_REJILLA_MAX_FILAS + '.';
-  }
-  el.textContent = txt;
+    (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
   el.classList.remove('setup-hidden');
+  if (btn) {
+    btn.classList.remove('setup-hidden');
+    btn.disabled = false;
+  }
 }
 
 function refreshDwcTapHintSetup() {
@@ -9144,6 +9196,11 @@ function refreshDwcTapHintSetup() {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') {
     el.classList.add('setup-hidden');
     el.textContent = '';
+    const bx = document.getElementById('btnDwcAplicarRejillaMaxSetup');
+    if (bx) {
+      bx.classList.add('setup-hidden');
+      bx.disabled = true;
+    }
     return;
   }
   const filas = parseInt(document.getElementById('sliderNiveles')?.value || '0', 10);
@@ -9158,6 +9215,11 @@ function refreshDwcTapHintSetup() {
   if (ev.estado === 'incompleto') {
     el.classList.add('setup-hidden');
     el.textContent = '';
+    const b0 = document.getElementById('btnDwcAplicarRejillaMaxSetup');
+    if (b0) {
+      b0.classList.add('setup-hidden');
+      b0.disabled = true;
+    }
     return;
   }
   el.classList.remove('setup-hidden');
@@ -9166,12 +9228,11 @@ function refreshDwcTapHintSetup() {
   el.style.fontSize = '10px';
   el.style.lineHeight = '1.45';
   el.style.fontWeight = '600';
-  let body;
   if (ev.estado === 'ok') {
     el.style.background = '#ecfdf5';
     el.style.border = '1.5px solid #86efac';
     el.style.color = '#14532d';
-    body =
+    el.textContent =
       '✓ La rejilla cabe en el área útil de la tapa (~' +
       Math.round(ev.Lmm) +
       '×' +
@@ -9185,16 +9246,25 @@ function refreshDwcTapHintSetup() {
     el.style.background = '#fffbeb';
     el.style.border = '1.5px solid #fde68a';
     el.style.color = '#92400e';
-    body = '⚠️ ' + ev.msg;
+    el.textContent = '⚠️ ' + ev.msg;
   }
-  if (rim != null && L != null && W != null) {
-    const om = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
-    if (om && om.max >= 1) {
-      body +=
-        ' Máximo teórico en tapa: ' + om.cols + ' columnas × ' + om.filas + ' filas (' + om.max + ' macetas). Ajusta los deslizadores al número que quieras (≤ ese máximo).';
+
+  const btnS = document.getElementById('btnDwcAplicarRejillaMaxSetup');
+  if (btnS) {
+    if (rim != null && L != null && W != null) {
+      const om = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
+      if (om && om.max >= 1) {
+        btnS.classList.remove('setup-hidden');
+        btnS.disabled = false;
+      } else {
+        btnS.classList.add('setup-hidden');
+        btnS.disabled = true;
+      }
+    } else {
+      btnS.classList.add('setup-hidden');
+      btnS.disabled = true;
     }
   }
-  el.textContent = body;
 }
 
 /** Actualiza volumen estimado (L), oxigenación/difusor (L/min) y aviso de rejilla en la pestaña Sistema DWC. */
@@ -9275,9 +9345,8 @@ function refreshDwcTapHintSistema() {
     el.textContent = '';
     return;
   }
-  const gRej = dwcLeerFilasColsRejillaDesdeInputsSistema();
-  const filas = gRej.filas;
-  const cols = gRej.cols;
+  const filas = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
+  const cols = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
   const rim = _dwcParseOptMm('sysDwcPotRimMm', 25, 120);
   const L = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
   const W = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
@@ -9438,33 +9507,6 @@ function aplicarSistemaDwcDesdeFormulario() {
   initTorres();
   const cfg = state.configTorre;
   dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
-  const { filas: nf, cols: nc } = dwcLeerFilasColsRejillaDesdeInputsSistema();
-  const rimN = cfg.dwcNetPotRimMm != null ? Number(cfg.dwcNetPotRimMm) : NaN;
-  const Lcm = cfg.dwcDepositoLargoCm != null ? Number(cfg.dwcDepositoLargoCm) : NaN;
-  const Wcm = cfg.dwcDepositoAnchoCm != null ? Number(cfg.dwcDepositoAnchoCm) : NaN;
-  let marcoMm = 0;
-  if (cfg.dwcTapaMarcoPorLadoMm != null && Number.isFinite(Number(cfg.dwcTapaMarcoPorLadoMm)) && Number(cfg.dwcTapaMarcoPorLadoMm) >= 0) {
-    marcoMm = Number(cfg.dwcTapaMarcoPorLadoMm);
-  }
-  let huecoMm = DWC_TAPA_HUECO_DEFAULT_MM;
-  if (cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0) {
-    huecoMm = Number(cfg.dwcTapaHuecoMm);
-  }
-  if (Number.isFinite(rimN) && rimN > 0 && Number.isFinite(Lcm) && Lcm > 0 && Number.isFinite(Wcm) && Wcm > 0) {
-    const ev = dwcEvaluarCapestEnTapa(nf, nc, rimN, Lcm, Wcm, marcoMm, huecoMm);
-    if (ev.estado === 'no') {
-      showToast(
-        'Esa rejilla no cabe en la tapa con largo, ancho, Ø y marco indicados (' +
-          nc +
-          ' columnas × ' +
-          nf +
-          ' filas). Reduce columnas o filas, o revisa medidas y hueco entre cestas.',
-        true
-      );
-      return;
-    }
-  }
-  redimensionarMatrizTorreDwcPreservando(cfg, nf, nc);
   dwcSincronizarTamanoCestaDesdeRim(cfg);
   try {
     dwcPersistSnapshotMaxCestasEnCfg(cfg);
@@ -9473,38 +9515,12 @@ function aplicarSistemaDwcDesdeFormulario() {
   saveState();
   aplicarConfigTorre();
   try {
-    renderTorre();
-  } catch (eR) {}
-  try {
-    updateTorreStats();
-  } catch (eSt) {}
-  try {
     renderTorreSistemaResumenTabla(cfg);
   } catch (e) {}
   try {
     refreshDwcSistemaMedidasUI();
   } catch (eH) {}
-  let msgGuardado = 'Datos DWC guardados';
-  try {
-    const oHint = dwcMaxCestasDesdeConfigTorre(cfg);
-    if (
-      oHint &&
-      oHint.max >= 1 &&
-      (oHint.cols > DWC_REJILLA_MAX_COLS || oHint.filas > DWC_REJILLA_MAX_FILAS)
-    ) {
-      msgGuardado +=
-        ' · En tapa cabrían hasta ~' +
-        oHint.cols +
-        '×' +
-        oHint.filas +
-        ' cestas; el dibujo de la app se limita a ' +
-        DWC_REJILLA_MAX_COLS +
-        '×' +
-        DWC_REJILLA_MAX_FILAS +
-        '.';
-    }
-  } catch (eNote) {}
-  showToast(msgGuardado);
+  showToast('Datos DWC guardados');
 }
 
 /**
@@ -16647,7 +16663,6 @@ function initConfigUI() {
   if (document.getElementById('tab-mediciones')?.classList.contains('active') && typeof actualizarResumenReposicionParcialUI === 'function') {
     actualizarResumenReposicionParcialUI();
   }
-  try { renderMedirMedicionesRecientes(); } catch (_) {}
 }
 
 // ══════════════════════════════════════════════════
@@ -17129,13 +17144,13 @@ function cargarUltimaMedicion() {
   }
   const m = state.ultimaMedicion;
   if (card) card.classList.add('ultima-medicion-card--visible');
-  const ecT = (m.ec != null && String(m.ec).trim() !== '') ? String(m.ec).trim() + ' µS/cm' : '—';
-  const phT = (m.ph != null && String(m.ph).trim() !== '') ? String(m.ph).trim() : '—';
-  const teT = (m.temp != null && String(m.temp).trim() !== '') ? String(m.temp).trim() + ' °C' : '—';
-  const voT = (m.vol != null && String(m.vol).trim() !== '') ? String(m.vol).trim() + ' L' : '—';
-  info.innerHTML =
-    '<span class="ultima-medicion-meta">📅 ' + m.fecha + ' · ' + m.hora + '</span><br>' +
-    '<span class="ultima-medicion-linea-valores">EC ' + ecT + ' · pH ' + phT + ' · Temp. ' + teT + ' · Vol. ' + voT + '</span>';
+  info.innerHTML = `
+    <span class="ultima-medicion-meta">📅 ${m.fecha} a las ${m.hora}</span><br>
+    ⚡ EC: <strong>${m.ec} µS/cm</strong> &nbsp;
+    🧪 pH: <strong>${m.ph}</strong> &nbsp;
+    🌡️ <strong>${m.temp}°C</strong> &nbsp;
+    🪣 <strong>${m.vol}L</strong>
+  `;
 }
 
 // ══════════════════════════════════════════════════
@@ -18689,53 +18704,6 @@ function recolectarMedicionesTodasInstalaciones() {
   return todas;
 }
 
-function contarFotosDiarioTodas() {
-  let n = 0;
-  try {
-    initTorres();
-    if (state.torres && state.torres.length) {
-      state.torres.forEach(t => {
-        (t.torre || []).forEach(row => {
-          (row || []).forEach(c => {
-            if (c && Array.isArray(c.fotoKeys)) n += c.fotoKeys.length;
-          });
-        });
-      });
-    }
-    const fs = state.fotosSistemaCompleto && Array.isArray(state.fotosSistemaCompleto.fotoKeys)
-      ? state.fotosSistemaCompleto.fotoKeys.length
-      : 0;
-    n += fs;
-  } catch (_) {}
-  return n;
-}
-
-function updateHistTabBadges() {
-  try {
-    const nMed = recolectarMedicionesTodasInstalaciones().length;
-    const nRec = (state.recargasLocal || []).length;
-    const nReg = recolectarRegistroTodasInstalaciones().length;
-    const nDia = contarFotosDiarioTodas();
-    const setBadge = function (id, n) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      if (n > 0) {
-        el.textContent = n > 99 ? '99+' : String(n);
-        el.classList.remove('setup-hidden');
-        el.setAttribute('aria-hidden', 'false');
-      } else {
-        el.textContent = '';
-        el.classList.add('setup-hidden');
-        el.setAttribute('aria-hidden', 'true');
-      }
-    };
-    setBadge('histBadgeMed', nMed);
-    setBadge('histBadgeRec', nRec);
-    setBadge('histBadgeReg', nReg);
-    setBadge('histBadgeDia', nDia);
-  } catch (_) {}
-}
-
 function cargarHistorial() {
   document.getElementById('histLoader').style.display = 'none';
   document.getElementById('histSinDatos').classList.add('setup-hidden');
@@ -18752,8 +18720,6 @@ function cargarHistorial() {
     const fw = document.getElementById('filtroTorreWrapGlobal');
     if (fw) fw.style.display = 'none';
   }
-
-  updateHistTabBadges();
 
   if (todasMediciones.length === 0) {
     document.getElementById('histSinDatos').classList.remove('setup-hidden');
@@ -18997,7 +18963,6 @@ function renderRegistro() {
       '<div class="registro-empty-box">' +
       '📋 El registro agrupa mediciones, <strong>recargas completas</strong>, <strong>reposiciones parciales</strong> (litros añadidos, agua o agua+nutrientes sin vaciar), cosechas y fotos de plantas en una línea de tiempo.' +
       extra + '</div>';
-    updateHistTabBadges();
     return;
   }
 
@@ -19121,7 +19086,6 @@ function renderRegistro() {
       cols + '</div>';
   }).join('');
   void hydrateRegistroFotoThumbs(lista);
-  updateHistTabBadges();
 }
 
 
@@ -19134,7 +19098,6 @@ function renderHistMediciones() {
   mediciones = mediciones.slice(0, 20);
   if (mediciones.length === 0) {
     document.getElementById('histSinDatos').classList.remove('setup-hidden');
-    updateHistTabBadges();
     return;
   }
 
@@ -19164,7 +19127,6 @@ function renderHistMediciones() {
       ${m.notas ? `<span class="hist-val hist-note-line">📝 ${m.notas}</span>` : ''}
     </div>
   `).join('');
-  updateHistTabBadges();
 }
 
 
@@ -19268,7 +19230,6 @@ function renderHistRecargas() {
     const sheetsSection = document.getElementById('sheetsRecargasSection');
     if (sheetsSection) sheetsSection.classList.add('setup-hidden');
   }
-  updateHistTabBadges();
 }
 
 
@@ -19491,13 +19452,7 @@ function renderDiagnostico() {
   }).join('');
 }
 
-let consejoCatActiva = (function () {
-  try {
-    const c = localStorage.getItem('hc_consejo_cat');
-    if (c && CONSEJOS_DATA[c]) return c;
-  } catch (_) {}
-  return 'cultivo';
-})();
+let consejoCatActiva = 'cultivo';
 
 /** µS/cm y pH orientativos (bibliografía / manuales de hidroponía) — ajustar por nutriente, agua y fase */
 const REF_CULTIVOS_EC_PH = [
@@ -20063,52 +20018,9 @@ function refreshConsejosSiVisible() {
   if (p && p.classList.contains('active')) renderConsejos();
 }
 
-function buildConsejoParaTiHTML() {
-  const tips = [];
-  const m = state.ultimaMedicion;
-  try {
-    const nut = getNutrienteTorre();
-    const eo = getECOptimaTorre();
-    if (m && m.ec && eo) {
-      const ec = parseFloat(String(m.ec).replace(',', '.'));
-      if (Number.isFinite(ec)) {
-        if (ec < eo.min) tips.push('Tu última EC (' + ec + ') está por debajo del rango orientativo del cultivo (' + eo.min + '–' + eo.max + ' µS/cm). Revisa dilución o recarga.');
-        else if (ec > eo.max) tips.push('EC alta respecto al rango orientativo — vigila síntomas de estrés osmótico y diluye si procede.');
-      }
-    }
-    if (m && m.ph && nut && nut.pHRango) {
-      const ph = parseFloat(String(m.ph).replace(',', '.'));
-      const lo = nut.pHRango[0];
-      const hi = nut.pHRango[1];
-      if (Number.isFinite(ph) && (ph < lo || ph > hi)) {
-        tips.push('pH fuera del rango recomendado para ' + (nut.nombre || 'tu nutriente') + ' (' + lo + '–' + hi + '): corrige con pH+ o pH− tras medir bien.');
-      }
-    }
-    if (state.ultimaRecarga) {
-      const diff = Date.now() - new Date(state.ultimaRecarga).getTime();
-      const d = Math.floor(diff / 86400000);
-      if (d >= 12) tips.push('Llevas ' + d + ' días desde la última recarga completa anotada: conviene planificar vaciado y mezcla nueva según tu checklist.');
-    }
-  } catch (_) {}
-  if (tips.length === 0) {
-    tips.push('Registra mediciones con regularidad: son la referencia real frente al clima modelo y al riego sugerido.');
-  }
-  return (
-    '<div class="consejo-para-ti-card">' +
-    '<div class="consejo-para-ti-kicker">Para ti ahora</div>' +
-    '<p class="consejo-para-ti-text">' + tips.slice(0, 2).map(t => escHtmlUi(t)).join(' ') + '</p>' +
-    '</div>'
-  );
-}
-
 function renderConsejos() {
   const cats = document.getElementById('consejosCats');
   const lista = document.getElementById('consejosLista');
-  const paraTi = document.getElementById('consejoParaTiWrap');
-  if (paraTi) {
-    paraTi.innerHTML = buildConsejoParaTiHTML();
-    paraTi.classList.remove('setup-hidden');
-  }
   cats.setAttribute('role', 'tablist');
   cats.setAttribute('aria-label', 'Categorías de consejos');
 
@@ -20137,9 +20049,6 @@ function renderConsejos() {
 
 function selConsejoCat(key) {
   consejoCatActiva = key;
-  try {
-    localStorage.setItem('hc_consejo_cat', key);
-  } catch (_) {}
   renderConsejos();
   document.getElementById('consejosLista').scrollTop = 0;
 }
@@ -20437,8 +20346,6 @@ function renderConsejosLista() {
 let calFecha = new Date();
 /** null = lista «próximos eventos»; Date = detalle de ese día en la tarjeta. */
 let calDiaSeleccionado = null;
-/** Filtro leyenda calendario: resalta días con este tipo de evento */
-let calLegendTipo = null;
 
 const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -20694,8 +20601,6 @@ function renderCalendario() {
     if (esHoy) cellClass += ' cal-cell--today';
     else if (evs.length > 0) cellClass += ' cal-cell--marked';
     if (esSel) cellClass += ' cal-cell--selected';
-    const matchLegend = !calLegendTipo || evs.some(e => e.tipo === calLegendTipo);
-    if (calLegendTipo && evs.length > 0 && !matchLegend) cellClass += ' cal-cell--dimmed';
     const numInner =
       '<div class="cal-cell-num">' + d + '</div>' +
       '<div class="cal-cell-dots">' + dots + '</div>';
@@ -20736,8 +20641,6 @@ function renderCalendario() {
   if (selEnMes) {
     mostrarEventosDia(sel);
   } else {
-    const prevEl = document.getElementById('calDiaPreview');
-    if (prevEl) prevEl.classList.add('setup-hidden');
     if (calDiaLabelEl) calDiaLabelEl.textContent = '';
     if (proximos.length === 0) {
       eventosDiaEl.innerHTML = '<div class="cal-list-empty">No hay eventos próximos este mes</div>';
@@ -20754,21 +20657,7 @@ function renderCalendario() {
     }
   }
 
-  try {
-    document.querySelectorAll('.cal-legend-filter-btn').forEach(b => {
-      const k = b.getAttribute('data-cal-filter');
-      const on = k === calLegendTipo;
-      b.classList.toggle('cal-legend-filter-btn--active', on);
-      b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-  } catch (_) {}
-
   } catch(e) { console.error("renderCalendario error:", e); }
-}
-
-function toggleCalLegendFilter(tipo) {
-  calLegendTipo = calLegendTipo === tipo ? null : tipo;
-  renderCalendario();
 }
 
 function mostrarEventosDiaHC(d, mes, año) {
@@ -20801,13 +20690,6 @@ function mostrarEventosDia(fecha) {
 
   const eventos = generarEventos(fecha);
   const lista = document.getElementById('eventosDia');
-  const prevEl = document.getElementById('calDiaPreview');
-  if (prevEl) {
-    prevEl.classList.remove('setup-hidden');
-    prevEl.textContent = eventos.length
-      ? eventos.length + ' evento' + (eventos.length === 1 ? '' : 's') + ' este día'
-      : 'Sin eventos programados este día';
-  }
 
   if (eventos.length === 0) {
     lista.innerHTML = '<div class="cal-day-empty">Sin eventos especiales este día</div>';
@@ -21401,17 +21283,6 @@ function meteoclimaticFactorNocDesdeMc(mc, tNocMod, rhNocMod, dTempPlanta, dNocF
   return { factor: f, dT, dRh };
 }
 
-function mcPubDateToEdadRelativa(pubDate) {
-  if (!pubDate || typeof pubDate !== 'string') return '';
-  const d = Date.parse(pubDate);
-  if (!Number.isFinite(d)) return '';
-  const sec = Math.round((Date.now() - d) / 1000);
-  if (sec < 120) return ' · lectura hace unos segundos';
-  if (sec < 3600) return ' · lectura hace ~' + Math.max(1, Math.floor(sec / 60)) + ' min';
-  if (sec < 86400) return ' · lectura hace ~' + Math.floor(sec / 3600) + ' h';
-  return ' · lectura hace ' + Math.floor(sec / 86400) + ' días';
-}
-
 function renderMeteoclimaticPanelMeteo(mc) {
   const box = document.getElementById('meteoMeteoclimaticBox');
   const inner = document.getElementById('meteoMeteoclimaticInner');
@@ -21426,14 +21297,13 @@ function renderMeteoclimaticPanelMeteo(mc) {
   const linkHtml = href
     ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer">Ver ficha en meteoclimatic.net</a>'
     : '';
-  const edad = mcPubDateToEdadRelativa(mc.pubDate);
   inner.innerHTML =
     '<div class="meteo-mc-title">📡 Estación cercana (Meteoclimatic)</div>' +
     '<div class="meteo-mc-body"><strong>' + escHtmlUi(mc.title || '') + '</strong> · ~' + Math.round(mc.distKm * 10) / 10 + ' km' +
     '<br>T actual: <strong>' + (Math.round(mc.temp * 10) / 10) + '</strong> °C · HR: ' + (mc.rh != null ? Math.round(mc.rh) + '%' : '—') +
     ' · Viento: ' + (mc.wind != null ? Math.round(mc.wind * 10) / 10 + ' km/h' : '—') +
     ' · Lluvia 24 h: ' + (mc.rain24h != null ? Math.round(mc.rain24h * 10) / 10 + ' mm' : '—') +
-    '<br><span class="meteo-mc-small">' + escHtmlUi(mc.pubDate || '') + edad + '</span>' + (linkHtml ? ' · ' + linkHtml : '') +
+    '<br><span class="meteo-mc-small">' + escHtmlUi(mc.pubDate || '') + '</span>' + (linkHtml ? ' · ' + linkHtml : '') +
     '<br><span class="meteo-mc-note">Red de estaciones aficionadas en la península y archipiélagos (gratis). Si no ves datos, la red puede estar saturada o el navegador bloquea el acceso: prueba más tarde.</span></div>';
 }
 
@@ -21457,13 +21327,6 @@ async function cargarMeteo() {
   const meteoAvisosOficiales = document.getElementById('meteoAvisosOficiales');
   const mcBoxLoad = document.getElementById('meteoMeteoclimaticBox');
   if (meteoDias) meteoDias.classList.add('setup-hidden');
-  const meteoOuterLoad = document.getElementById('meteoDiasOuter');
-  const meteoDotsLoad = document.getElementById('meteoDiasDots');
-  if (meteoOuterLoad) meteoOuterLoad.classList.add('setup-hidden');
-  if (meteoDotsLoad) {
-    meteoDotsLoad.classList.add('setup-hidden');
-    meteoDotsLoad.setAttribute('aria-hidden', 'true');
-  }
   if (meteoDetalle) meteoDetalle.classList.add('setup-hidden');
   if (meteoAlertas) meteoAlertas.classList.add('setup-hidden');
   if (meteoAvisosOficiales) meteoAvisosOficiales.classList.add('setup-hidden');
@@ -21518,20 +21381,9 @@ async function cargarMeteo() {
     saveState();
 
     renderMeteoDias();
-    initMeteoDiasStrip();
     seleccionarDia(0);
 
     document.getElementById('meteoLoader').style.display = 'none';
-    const meteoOuter = document.getElementById('meteoDiasOuter');
-    const meteoDotsEl = document.getElementById('meteoDiasDots');
-    if (meteoOuter) {
-      meteoOuter.classList.remove('setup-hidden');
-      meteoOuter.style.display = '';
-    }
-    if (meteoDotsEl) {
-      meteoDotsEl.classList.remove('setup-hidden');
-      meteoDotsEl.setAttribute('aria-hidden', 'false');
-    }
     document.getElementById('meteoDias').classList.remove('setup-hidden');
     document.getElementById('meteoDetalle').classList.remove('setup-hidden');
     document.getElementById('meteoAlertas').classList.remove('setup-hidden');
@@ -21555,19 +21407,8 @@ async function cargarMeteo() {
       meteoData = cached;
       try {
         renderMeteoDias();
-        initMeteoDiasStrip();
         seleccionarDia(0);
         document.getElementById('meteoLoader').style.display = 'none';
-        const mo = document.getElementById('meteoDiasOuter');
-        const md = document.getElementById('meteoDiasDots');
-        if (mo) {
-          mo.classList.remove('setup-hidden');
-          mo.style.display = '';
-        }
-        if (md) {
-          md.classList.remove('setup-hidden');
-          md.setAttribute('aria-hidden', 'false');
-        }
         document.getElementById('meteoDias').classList.remove('setup-hidden');
         document.getElementById('meteoDetalle').classList.remove('setup-hidden');
         document.getElementById('meteoAlertas').classList.remove('setup-hidden');
@@ -21613,76 +21454,6 @@ function renderMeteoDias() {
     card.onclick = () => seleccionarDia(i);
     dias.appendChild(card);
   });
-}
-
-function initMeteoDiasStrip() {
-  const strip = document.getElementById('meteoDias');
-  const outer = document.getElementById('meteoDiasOuter');
-  const dots = document.getElementById('meteoDiasDots');
-  if (!strip || !outer || !dots) return;
-  outer.classList.remove('setup-hidden');
-  outer.style.display = '';
-  dots.classList.remove('setup-hidden');
-  dots.setAttribute('aria-hidden', 'false');
-  const n = strip.children.length;
-  dots.innerHTML = '';
-  for (let i = 0; i < n; i++) {
-    const dot = document.createElement('button');
-    dot.type = 'button';
-    dot.className = 'meteo-dias-dot';
-    dot.setAttribute('aria-label', 'Día ' + (i + 1));
-    dot.onclick = () => seleccionarDia(i);
-    dots.appendChild(dot);
-  }
-  if (!strip._meteoScrollBound) {
-    strip._meteoScrollBound = true;
-    strip.addEventListener('scroll', function () {
-      const dts = document.querySelectorAll('#meteoDiasDots .meteo-dias-dot');
-      if (!dts.length) return;
-      let best = 0;
-      let bestD = Infinity;
-      const rectStrip = strip.getBoundingClientRect();
-      const mid = rectStrip.left + rectStrip.width / 2;
-      for (let j = 0; j < strip.children.length; j++) {
-        const r = strip.children[j].getBoundingClientRect();
-        const c = r.left + r.width / 2;
-        const dist = Math.abs(c - mid);
-        if (dist < bestD) { bestD = dist; best = j; }
-      }
-      dts.forEach((d, j) => d.classList.toggle('meteo-dias-dot--active', j === best));
-    }, { passive: true });
-  }
-}
-
-function syncMeteoRiegoCta(idx) {
-  const btn = document.getElementById('meteoBtnUsarRiego');
-  const hint = document.getElementById('meteoRiegoCtaHint');
-  if (!btn || !hint) return;
-  const d = meteoData && meteoData.daily && meteoData.daily.time && meteoData.daily.time[idx]
-    ? new Date(meteoData.daily.time[idx])
-    : null;
-  const nombre = d
-    ? (idx === 0 ? 'Hoy' : idx === 1 ? 'Mañana' : DIAS_SEMANA[d.getDay()] + ' ' + d.getDate())
-    : 'este día';
-  hint.textContent = 'Usará temperatura media de ' + nombre + ' como temperatura exterior en Riego.';
-  btn.classList.remove('setup-hidden');
-  hint.classList.remove('setup-hidden');
-}
-
-function meteoUsarDiaEnRiego() {
-  if (!meteoData || !meteoData.daily || diaSeleccionado < 0) return;
-  const idx = diaSeleccionado;
-  const tMax = Math.round(meteoData.daily.temperature_2m_max[idx]);
-  const tMin = Math.round(meteoData.daily.temperature_2m_min[idx]);
-  const tMedia = (tMax + tMin) / 2;
-  const el = document.getElementById('tempExt');
-  if (el) el.value = String(Math.round(tMedia * 10) / 10);
-  goTab('riego');
-  const riegoCard = document.getElementById('tempExt') && document.getElementById('tempExt').closest('.card');
-  if (riegoCard) requestAnimationFrame(function () {
-    riegoCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-  showToast('Temperatura aplicada: ' + Math.round(tMedia * 10) / 10 + ' °C. Revisa superficie y cultivo.');
 }
 
 function seleccionarDia(idx) {
@@ -21735,18 +21506,6 @@ function seleccionarDia(idx) {
 
   // Alertas cultivo (vpd sigue calculado para heurísticas)
   renderAlertas(tMax, tMin, humMedia, viento, uv ?? 0, prob, vpd);
-
-  syncMeteoRiegoCta(idx);
-  try {
-    document.querySelectorAll('#meteoDiasDots .meteo-dias-dot').forEach((dot, i) => {
-      dot.classList.toggle('meteo-dias-dot--active', i === idx);
-    });
-    const strip = document.getElementById('meteoDias');
-    const card = strip && strip.children[idx];
-    if (card && typeof card.scrollIntoView === 'function') {
-      card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }
-  } catch (_) {}
 }
 
 function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
@@ -22536,28 +22295,11 @@ function riegoIndiceDemandaNocturna(params) {
     d *= Math.max(0.9, Math.min(1.14, 0.85 + 0.22 * Math.min(1.6, r)));
   }
   if (params.toldo) d *= 0.96;
-  /* Sin fotosíntesis la planta casi no transpira: no subir el índice como de día; cap más bajo. */
-  d *= 0.93;
-  return Math.max(0.36, Math.min(1.08, d));
+  return Math.max(0.4, Math.min(1.22, d));
 }
 
-/**
- * De noche el sustrato capilar (esponja, fibras) puede encharcar sin captación foliar → riesgo de anoxia.
- * Reduce el índice que entra en los minutos ON/OFF (no el texto de demanda climática) según retención.
- */
-function riegoNocFactorOxigenacionRadicular(retencion) {
-  const r = Math.max(0.2, Math.min(0.85, Number(retencion) || 0.5));
-  return Math.max(0.82, Math.min(0.95, 0.92 - (r - 0.28) * 0.065));
-}
-
-/**
- * Referencia Tª agua nocturna (neutral en factor): depósito con termostato que no baja de ~19 °C.
- * Coherente con consigna típica de calentador en nutriente.
- */
-const RIEGO_NOC_TEMP_AGUA_REF_C = 19;
-/** Viento nocturno (km/h): &lt; bajo = aire casi quieto; &lt; medio = brisa; desde medio = ventoso (misma rejilla que «medio» de la tabla, OFF un poco más corto). */
-const RIEGO_NOC_VIENTO_BAJO_MAX_KMH = 10;
-const RIEGO_NOC_VIENTO_MEDIO_MAX_KMH = 18;
+/** Riego nocturno: corrección acotada por Tª del agua (~18 °C de referencia, ~0,7 %/°C). */
+const RIEGO_NOC_TEMP_AGUA_REF_C = 18;
 const RIEGO_NOC_TEMP_AGUA_PCT_POR_GRADO = 0.007;
 const RIEGO_NOC_TEMP_AGUA_F_MIN = 0.94;
 const RIEGO_NOC_TEMP_AGUA_F_MAX = 1.06;
@@ -22581,113 +22323,6 @@ function riegoTempAguaNocheEfectiva(cfg, ultimaMedicion, tempAireNocProxyC) {
   const p = Number(tempAireNocProxyC);
   if (Number.isFinite(p)) return p;
   return RIEGO_NOC_TEMP_AGUA_REF_C;
-}
-
-/**
- * Corredor nocturno (ON/OFF min) alineado con tabla torre+lechuga; viento en km/h reales del tramo 21–07.
- * No se muestra en UI. Viento ≥ MEDIO_MAX usa el mismo corredor que «medio» con OFF ligeramente acotado.
- */
-function riegoNocCorredorTablaTorre(tNocC, rhPct, vientoKmh) {
-  const t = Number(tNocC);
-  const rh = Number(rhPct);
-  const v = Math.max(0, Number(vientoKmh) || 0);
-  const bajo = v < RIEGO_NOC_VIENTO_BAJO_MAX_KMH;
-  const medio = v < RIEGO_NOC_VIENTO_MEDIO_MAX_KMH;
-  const facOffVentoso = !medio ? 0.92 : 1;
-
-  const pick = (onMin, onMax, offMin, offMax) => ({
-    onMin,
-    onMax,
-    offMin: Math.round(offMin * facOffVentoso),
-    offMax: Math.round(offMax * facOffVentoso),
-  });
-
-  if (!Number.isFinite(t) || !Number.isFinite(rh)) {
-    return { onMin: 3, onMax: 5, offMin: 90, offMax: 240 };
-  }
-
-  if (t <= 16) {
-    if (bajo) {
-      if (rh >= 80) return pick(3, 3, 300, 360);
-      if (rh >= 70) return pick(3, 3, 240, 300);
-      if (rh >= 60) return pick(3, 5, 180, 240);
-      if (rh >= 50) return pick(3, 5, 150, 180);
-      return pick(3, 5, 120, 150);
-    }
-    if (medio) {
-      if (rh >= 60) return pick(3, 5, 150, 180);
-      return pick(3, 5, 120, 120);
-    }
-    if (rh >= 60) return pick(3, 5, 150, 180);
-    return pick(3, 5, 120, 120);
-  }
-
-  if (t <= 20) {
-    if (bajo) {
-      if (rh >= 80) return pick(3, 3, 240, 300);
-      if (rh >= 70) return pick(3, 5, 180, 240);
-      if (rh >= 60) return pick(3, 5, 150, 180);
-      if (rh >= 50) return pick(3, 5, 120, 150);
-      return pick(3, 5, 90, 120);
-    }
-    if (medio) {
-      if (rh >= 60) return pick(3, 5, 120, 150);
-      return pick(3, 5, 90, 120);
-    }
-    if (rh >= 60) return pick(3, 5, 120, 150);
-    return pick(3, 5, 90, 120);
-  }
-
-  if (t <= 24) {
-    if (bajo) {
-      if (rh >= 80) return pick(3, 5, 180, 240);
-      if (rh >= 70) return pick(3, 5, 150, 180);
-      if (rh >= 60) return pick(3, 5, 120, 150);
-      if (rh >= 50) return pick(3, 5, 90, 120);
-      return pick(3, 5, 60, 90);
-    }
-    if (medio) {
-      if (rh >= 60) return pick(3, 5, 90, 120);
-      return pick(3, 5, 60, 90);
-    }
-    if (rh >= 60) return pick(3, 5, 90, 120);
-    return pick(3, 5, 60, 90);
-  }
-
-  if (bajo) {
-    if (rh >= 80) return pick(3, 5, 150, 180);
-    if (rh >= 70) return pick(3, 5, 120, 150);
-    if (rh >= 60) return pick(3, 5, 90, 120);
-    if (rh >= 50) return pick(3, 5, 60, 90);
-    return pick(3, 5, 45, 60);
-  }
-  if (medio) {
-    if (rh >= 60) return pick(3, 5, 60, 90);
-    return pick(3, 5, 45, 60);
-  }
-  if (rh >= 60) return pick(3, 5, 60, 90);
-  return pick(3, 5, 45, 60);
-}
-
-function riegoNocAjusteCorredorEsponja(env, sustratoKey) {
-  const k = sustratoKey || 'esponja';
-  if (k !== 'esponja' && k !== 'turba_enraiz') return env;
-  const f = 1.12;
-  return {
-    onMin: Math.min(4, env.onMin),
-    onMax: Math.min(4, env.onMax),
-    offMin: Math.round(env.offMin * f),
-    offMax: Math.round(env.offMax * f),
-  };
-}
-
-function riegoNocClampModeloACorredor(minON, minOFF, env) {
-  const on = Math.min(env.onMax, Math.max(env.onMin, minON));
-  const off = Math.min(env.offMax, Math.max(env.offMin, minOFF));
-  return {
-    minON: Math.max(3, Math.min(5, Math.round(on))),
-    minOFF: Math.max(45, Math.round(off)),
-  };
 }
 
 function riegoFactorDemandaNocPorTempAgua(tempAguaC) {
@@ -22787,7 +22422,8 @@ function riegoNocDemandaMin1Ciclo(tempMinDiaria) {
 }
 
 /**
- * Torre de goteo al aire libre: omitir bloque nocturno solo ante señal clara (muy húmedo / noche fría).
+ * Torre de goteo al aire libre: por defecto hay refresco nocturno (30 s ~04:00).
+ * Solo se omite el bloque nocturno ante causas climatológicas claras.
  */
 function riegoTorreExteriorOmiteNocturnoPorClima(p) {
   const tN = Number(p.tempNoc);
@@ -22806,6 +22442,9 @@ function riegoTorreExteriorOmiteNocturnoPorClima(p) {
   return { omit: false, clave: '' };
 }
 
+/** Refresco nocturno por defecto en torre exterior (30 s ~04:00; si la noche es muy exigente, el programa pasa a ciclos calculados). */
+const RIEGO_NOC_REFRESCO_TORRE_EXT_SEG = 30;
+
 /**
  * Riego al aire libre — cadena de cálculo (orden):
  * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) alineado al **mismo día civil** que daily[0|1];
@@ -22816,8 +22455,8 @@ function riegoTorreExteriorOmiteNocturnoPorClima(p) {
  * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
- * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Índice solo con T/HR/viento/ET₀ del tramo nocturno (Open-Meteo) + fase/sustrato/sensor/agua; interior: T/HR de sala (ajuste nocturno ligero), sin mezclar demanda diurna. Omitir con riegoTorreExteriorOmiteNocturnoPorClima o umbrales interior.
- * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en `state.ultimoRiego` y reproducir con la API el día elegido.
+ * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Exterior: por defecto refresco fijo ~30 s (~04:00); se omite solo si riegoTorreExteriorOmiteNocturnoPorClima; noches muy exigentes usan programa calculado. Interior: demanda ≈ 0,52×demanda día; omitir con riegoNocUmbralesOmitir.
+ * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
@@ -23260,22 +22899,13 @@ async function calcularRiego(opts = {}) {
     const totalONMedio = minONMedio * ciclosMedio;
     const dutyMedioPct = Math.round((100 * minONMedio) / (minONMedio + minOFFMedio));
 
-    // ── Programa nocturno 21:00–07:00: clima nocturno o sala + cultivo (sin mezclar día) ─────────
+    // ── Programa nocturno 21:00–07:00 (recarga sustrato; ON 3–5 min) ─────────
     const statsNoct = riegoStatsNocturnosFromHourly(dayHourIdx, times, tempHArr, rhArr, windHArr);
     const dTNocPlanta = dTempPlanta * 0.38;
     let tempNocUse;
     let rhNocUse;
     let vientoNocKmh;
-    if (esInterior) {
-      const cfgN = state.configTorre || {};
-      const tIn = parseFloat(cfgN.interiorTempC);
-      const hIn = parseFloat(cfgN.interiorHumedadAmbPct);
-      const T = Number.isFinite(tIn) ? tIn : 22;
-      const H = Number.isFinite(hIn) ? hIn : 55;
-      tempNocUse = Math.max(8, Math.min(32, T - 0.8));
-      rhNocUse = Math.min(96, Math.max(18, H + 4));
-      vientoNocKmh = cfgN.interiorCirculacionAire ? 2.2 : 0.8;
-    } else if (statsNoct) {
+    if (statsNoct) {
       tempNocUse = statsNoct.temp + dTNocPlanta + (toldoAct ? -0.35 : 0);
       rhNocUse = statsNoct.rh;
       vientoNocKmh = Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
@@ -23286,37 +22916,38 @@ async function calcularRiego(opts = {}) {
       rhNocUse = Math.min(94, humMedia + 9);
       vientoNocKmh = viento * 0.55;
     }
-    const vpdNocVal = riegoVPDkPa(tempNocUse, rhNocUse);
-    let demandaNoc =
-      riegoIndiceDemandaNocturna({
+    let demandaNocRaw;
+    let vpdNocVal;
+    let demandaNoc;
+    if (esInterior) {
+      vpdNocVal = vpdInterior;
+      demandaNocRaw = Math.max(0.42, Math.min(0.95, demandaDia * 0.52));
+      demandaNoc = Math.max(0.38, Math.min(1.02, demandaNocRaw));
+    } else {
+      vpdNocVal = riegoVPDkPa(tempNocUse, rhNocUse);
+      demandaNocRaw = riegoIndiceDemandaNocturna({
         vpdKpa: vpdNocVal,
         vientoKmh: vientoNocKmh,
-        tempMin: esInterior ? tempNocUse : tempMin,
-        probLluvia: esInterior ? 0 : probLluvia,
-        et0NightMm: esInterior ? null : et0NightSum,
-        toldo: esInterior ? false : toldoAct
-      }) * multFase;
-    demandaNoc *= riegoAjusteClimaPorSustrato({
-      retencion: sustrato.retencion,
-      humMediaPct: rhNocUse,
-      probLluviaPct: esInterior ? 0 : probLluvia,
-      uvIdx: 0,
-      vpdKpa: vpdNocVal,
-      et0DayMm: esInterior ? null : et0NightSum
-    });
-    demandaNoc *= riegoMargenSeguridadDinamico({
-      tramo: 'noche',
-      retencion: sustrato.retencion,
-      vpdKpa: vpdNocVal,
-      vientoKmh: vientoNocKmh,
-      uvIdx: 0,
-      et0DayMm: et0NightSum != null ? et0NightSum * 11 : 0,
-      probLluviaPct: esInterior ? 0 : probLluvia,
-      faseMult: multFase
-    });
-    demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
-    if (sensRiego.mult !== 1) {
-      demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc * sensRiego.mult));
+        tempMin,
+        probLluvia,
+        et0NightMm: et0NightSum,
+        toldo: toldoAct
+      });
+      demandaNoc = demandaNocRaw * multFase;
+      demandaNoc *= riegoMargenSeguridadDinamico({
+        tramo: 'noche',
+        retencion: sustrato.retencion,
+        vpdKpa: vpdNocVal,
+        vientoKmh: vientoNocKmh,
+        uvIdx: 0,
+        et0DayMm: et0NightSum != null ? et0NightSum * 11 : 0,
+        probLluviaPct: probLluvia,
+        faseMult: multFase
+      });
+      demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
+      if (sensRiego.mult !== 1) {
+        demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc * sensRiego.mult));
+      }
     }
     const cfgRiegoNoc = state.configTorre || {};
     const interiorTNoc = parseFloat(cfgRiegoNoc.interiorTempC);
@@ -23326,7 +22957,9 @@ async function calcularRiego(opts = {}) {
     const fNocTempAgua = riegoFactorDemandaNocPorTempAgua(tempAguaNocUse);
     const fNocDifusor = riegoFactorDemandaNocPorDifusor(cfgRiegoNoc.equipamiento);
     demandaNoc *= fNocTempAgua * fNocDifusor;
-    demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
+    demandaNoc = esInterior
+      ? Math.max(0.38, Math.min(1.02, demandaNoc))
+      : Math.max(0.38, Math.min(1.12, demandaNoc));
 
     if (!esInterior && tipoRiego === 'torre' && mcNear) {
       const anaN = meteoclimaticFactorNocDesdeMc(mcNear, tempNocUse, rhNocUse, dTempPlanta, 0.38);
@@ -23340,17 +22973,12 @@ async function calcularRiego(opts = {}) {
       }
     }
 
-    const windSkipProxy = esInterior
-      ? vientoNocKmh
-      : statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
-        ? statsNoct.vientoMax
-        : viento * 0.52;
+    const windSkipProxy = statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
+      ? statsNoct.vientoMax
+      : viento * 0.52;
     const umbNocSkip = riegoNocUmbralesOmitir(tempMin, probLluvia, et0NightSum);
-    const secaNocEtExterior =
-      !esInterior &&
-      et0NightSum != null &&
-      typeof et0NightSum === 'number' &&
-      et0NightSum >= 0.19;
+    const secaNocEt =
+      et0NightSum != null && typeof et0NightSum === 'number' && et0NightSum >= 0.19;
     let nocSkip = false;
     let nocSkipClave = '';
     if (!esInterior) {
@@ -23366,7 +22994,7 @@ async function calcularRiego(opts = {}) {
       }
     } else {
       if (
-        !secaNocEtExterior &&
+        !secaNocEt &&
         demandaNoc < umbNocSkip.demMax &&
         vpdNocVal < umbNocSkip.vpdMax &&
         windSkipProxy < umbNocSkip.windMax
@@ -23375,35 +23003,52 @@ async function calcularRiego(opts = {}) {
       }
     }
     const kcNoc = Math.max(0.25, Math.min(0.48, kcMedio * 0.36));
-    const demandaNocPulsos = demandaNoc * riegoNocFactorOxigenacionRadicular(sustrato.retencion);
-    const cicloNoc0 = riegoMinutosDesdeDemanda(demandaNocPulsos, nPlantas, kcNoc, sustrato, esInterior);
-    let minONNoc = Math.min(4, Math.max(3, cicloNoc0.minON));
+    const cicloNoc0 = riegoMinutosDesdeDemanda(demandaNoc, nPlantas, kcNoc, sustrato, esInterior);
+    let minONNoc = Math.min(5, Math.max(3, cicloNoc0.minON));
     let minOFFNoc = Math.max(
-      esInterior ? 28 : 42,
-      Math.round(cicloNoc0.minOFF * (1.1 + sustrato.retencion * 0.07))
+      esInterior ? 26 : 36,
+      Math.round(cicloNoc0.minOFF * (1.08 + sustrato.retencion * 0.055))
     );
-    try {
-      let envN = riegoNocCorredorTablaTorre(tempNocUse, rhNocUse, vientoNocKmh);
-      envN = riegoNocAjusteCorredorEsponja(envN, riegoSustratoKey());
-      const clN = riegoNocClampModeloACorredor(minONNoc, minOFFNoc, envN);
-      minONNoc = clN.minON;
-      minOFFNoc = clN.minOFF;
-    } catch (eCorN) {}
     let minCicloNoc = minONNoc + minOFFNoc;
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
     ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
-    if (
+    let usarNocCalculadoExt = false;
+    if (!esInterior && !nocSkip) {
+      const nocheCalidaExt =
+        (Number.isFinite(tempMin) && tempMin >= 23.5) ||
+        (Number.isFinite(tempNocUse) && tempNocUse >= 24);
+      const olaCalorExt =
+        Number.isFinite(tempMax) &&
+        tempMax >= 28 &&
+        ((Number.isFinite(tempMin) && tempMin >= 23) ||
+          (Number.isFinite(tempNocUse) && tempNocUse >= 23.5));
+      usarNocCalculadoExt =
+        secaNocEt || demandaNoc >= 0.72 || nocheCalidaExt || olaCalorExt;
+      if (!usarNocCalculadoExt) {
+        minONNoc = RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60;
+        minCicloNoc = minONNoc + minOFFNoc;
+        ciclosNoc = 1;
+      } else {
+        if (ciclosNoc === 0 && minCicloNoc <= 600) ciclosNoc = 1;
+      }
+    } else if (!esInterior && nocSkip) {
+      ciclosNoc = 0;
+    } else if (
+      esInterior &&
       !nocSkip &&
       ciclosNoc === 0 &&
       minCicloNoc <= 600 &&
-      demandaNoc >= riegoNocDemandaMin1Ciclo(esInterior ? tempNocUse : tempMin)
+      demandaNoc >= riegoNocDemandaMin1Ciclo(tempMin)
     ) {
       ciclosNoc = 1;
     }
-    const totalONNoc = minONNoc * ciclosNoc;
+    const esNocRefrescoTorreExt = !esInterior && !nocSkip && ciclosNoc > 0 && !usarNocCalculadoExt;
+    const totalONNoc = esNocRefrescoTorreExt
+      ? (RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60) * ciclosNoc
+      : minONNoc * ciclosNoc;
     const espNoc = ciclosNoc > 0 ? Math.round(600 / ciclosNoc) : 0;
     let dutyNocPct = null;
-    if (ciclosNoc > 0) {
+    if (ciclosNoc > 0 && !esNocRefrescoTorreExt) {
       dutyNocPct = Math.round((100 * minONNoc) / minCicloNoc);
     }
 
@@ -23453,28 +23098,32 @@ async function calcularRiego(opts = {}) {
     const elNocLabelA = document.getElementById('resNocLabelA');
     const elNocLabelB = document.getElementById('resNocLabelB');
     const nocSinResultado = esInterior ? (nocSkip || ciclosNoc === 0) : (ciclosNoc === 0);
-    if (elNocLabelA) elNocLabelA.textContent = 'min ON';
-    if (elNocLabelB) elNocLabelB.textContent = 'min OFF';
+    if (elNocLabelA) elNocLabelA.textContent = esNocRefrescoTorreExt ? 'Refresco' : 'min ON';
+    if (elNocLabelB) elNocLabelB.textContent = esNocRefrescoTorreExt ? 'Hora' : 'min OFF';
     if (elNocON) {
-      elNocON.textContent = nocSinResultado ? '—' : String(minONNoc);
+      elNocON.textContent =
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(minONNoc);
     }
     if (elNocOFF) {
-      elNocOFF.textContent = nocSinResultado ? '—' : String(minOFFNoc);
+      elNocOFF.textContent =
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04:00' : String(minOFFNoc);
     }
     if (elNocC) elNocC.textContent = nocSinResultado ? '—' : String(ciclosNoc);
     if (elNocT) {
-      elNocT.textContent = nocSinResultado ? '—' : String(totalONNoc);
+      elNocT.textContent =
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(totalONNoc);
     }
     if (elNocE) {
-      elNocE.textContent = nocSinResultado ? '—' : String(espNoc);
-      elNocE.style.fontSize = '';
-      elNocE.style.whiteSpace = '';
-      elNocE.style.lineHeight = '';
+      elNocE.textContent =
+        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04' : String(espNoc);
+      elNocE.style.fontSize = esNocRefrescoTorreExt ? '28px' : '';
+      elNocE.style.whiteSpace = esNocRefrescoTorreExt ? 'normal' : '';
+      elNocE.style.lineHeight = esNocRefrescoTorreExt ? '1.05' : '';
     }
     const elNocEspLabel = document.querySelector('#resNocEspaciado')?.nextElementSibling;
     if (elNocEspLabel) {
-      elNocEspLabel.textContent = 'Espaciado';
-      elNocEspLabel.style.fontWeight = '';
+      elNocEspLabel.textContent = esNocRefrescoTorreExt ? 'AM' : 'Espaciado';
+      elNocEspLabel.style.fontWeight = esNocRefrescoTorreExt ? '900' : '';
     }
     if (elNocD) {
       elNocD.textContent =
@@ -23486,26 +23135,64 @@ async function calcularRiego(opts = {}) {
       elNocNota.textContent = '';
     }
 
-    try {
-      const rcu = document.getElementById('riegoClimaUsado');
-      if (rcu) {
-        rcu.innerHTML = '';
-        rcu.classList.add('setup-hidden');
-        rcu.setAttribute('aria-hidden', 'true');
-      }
-    } catch (_) {}
+    const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
+    const precipMm = Math.round((Number(daily.precipitation_sum?.[idx]) || 0) * 10) / 10;
+    const uvClimaStr = esInterior ? '—' : (uvAlineado == null ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
+    const lineaClima =
+      '🌡️ Temperatura: ' + Math.round(tempMin) + '–' + Math.round(tempMax) + ' °C' +
+      ' · 💧 Humedad media: ' + humMedia + '%' +
+      ' · ☀️ Índice UV: ' + uvClimaStr +
+      ' · 🌧️ Prob. lluvia: ' + probLluvia + '% · ' + precipMm + ' mm';
+    const lineaTramo1315 = !esInterior
+      ? '<br>🕐 Mediodía modelo (' + String(medHIni).padStart(2, '0') + '–' + String(medHFin).padStart(2, '0') + ' h): ' + temp1315 + ' °C · ' + hum1315 + '% HR'
+      : '';
+    const vpdDiaTxt = Math.round(vpd * 1000) / 1000;
+    const vpdMedTxt = Math.round(vpdMediodia * 1000) / 1000;
+    const demDiaTxt = Math.round(demandaDia * 100) / 100;
+    const demMedTxt = Math.round(demandaMed * 100) / 100;
+    const demNocTxt = Math.round(demandaNoc * 100) / 100;
+    const facNocAguaDifTxt =
+      'T agua modelo ~' + Math.round(tempAguaNocUse * 10) / 10 + ' °C · ajuste noct. ×' +
+      Math.round(fNocTempAgua * fNocDifusor * 1000) / 1000;
+    const vpdNocTxt = Math.round(vpdNocVal * 1000) / 1000;
+    const et0NocTxt = et0NightSum != null && Number.isFinite(et0NightSum) ? String(et0NightSum) : '—';
+    const windNocTxt = Math.round(vientoNocKmh * 10) / 10;
+    const tempNocTxt = Math.round(tempNocUse * 10) / 10;
+    const rhNocTxt = Math.round(rhNocUse);
+    const fechaModTxt = escHtmlUi(dailyDateStr || '—');
+    let notaRedondeo = '';
+    if (!esInterior && (demDiaTxt !== demMedTxt || vpdDiaTxt !== vpdMedTxt) && minON === minONMedio && minOFF === minOFFMedio) {
+      notaRedondeo =
+        '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «franja de mayor intensidad solar», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
+    }
+    const lineaNocClima = esInterior
+      ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice). · ' + facNocAguaDifTxt
+      : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt;
+    const lineaMcRiego = meteoclimaticFormatLineaHtml(mcNear) + (mcRiegoLineaAjuste || '');
+    document.getElementById('riegoClimaUsado').innerHTML =
+      '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
+      lineaNocClima +
+      lineaMcRiego +
+      '<br><span class="riego-clima-meta-line">📆 Día en el modelo: <strong>' + fechaModTxt +
+      '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs ventana dinámica de mayor intensidad solar + pico radiación) · Demanda rel. ' +
+      demDiaTxt + ' / ' + demMedTxt + ' (general / intensidad solar).</span>' +
+      '<br><span class="riego-clima-nota-peq">Si <strong>hoy</strong> y <strong>mañana</strong> dan el mismo programa, suele ser previsión muy parecida en la API + mismos redondeos; comprueba que cambian temperatura/UV arriba y la fecha del modelo.</span>' +
+      notaRedondeo +
+      (esInterior
+        ? '<br><span class="riego-clima-int-torre">🏠 Torre en interior — estos valores son de la ubicación en previsión; el cálculo usa también luz y ambiente de sala (bloque de intensidad solar = mismo índice que el día).</span>'
+        : '');
 
     // Guardar en state para uso en otros módulos
     state.ultimoRiego = { minON, minOFF, ciclos, totalON, espaciado,
       minONMedio, minOFFMedio, ciclosMedio, totalONMedio,
       dutyCicloPct, dutyMedioPct,
       minONNoc: nocSkip || ciclosNoc === 0 ? null : minONNoc,
-      minOFFNoc: nocSkip || ciclosNoc === 0 ? null : minOFFNoc,
+      minOFFNoc: nocSkip || ciclosNoc === 0 || esNocRefrescoTorreExt ? null : minOFFNoc,
       ciclosNoc: nocSkip || ciclosNoc === 0 ? 0 : ciclosNoc,
       totalONNoc: nocSkip || ciclosNoc === 0 ? 0 : totalONNoc,
-      espaciadoNoc: nocSkip || ciclosNoc === 0 ? null : espNoc,
-      espaciadoNocRefrescoHora: null,
-      nocRefrescoSeg: null,
+      espaciadoNoc: nocSkip || ciclosNoc === 0 || esNocRefrescoTorreExt ? null : espNoc,
+      espaciadoNocRefrescoHora: esNocRefrescoTorreExt ? '04:00' : null,
+      nocRefrescoSeg: esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG : null,
       dutyNocPct: nocSkip || ciclosNoc === 0 || dutyNocPct == null ? null : dutyNocPct,
       demandaNoc: Math.round(demandaNoc * 1000) / 1000,
       vpdNoc: Math.round(vpdNocVal * 1000) / 1000,
@@ -23565,7 +23252,7 @@ function updateDashboard() {
   const elUltima = document.getElementById('dashUltimaMedicion');
   if (state.ultimaMedicion) {
     const m = state.ultimaMedicion;
-    elUltima.textContent = 'Última medición · ' + m.fecha + ' · ' + m.hora;
+    elUltima.textContent = `Última medición: ${m.fecha} ${m.hora}`;
     updateTiles(m);
   } else {
     elUltima.textContent = 'Sin mediciones aún';
@@ -23582,8 +23269,6 @@ function updateDashboard() {
 
   // Meteo
   fetchMeteoAlert();
-  try { updateDashClimaFreshness(); } catch (_) {}
-  try { updateDashInicioTileHints(); } catch (_) {}
 
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
 
@@ -23602,69 +23287,6 @@ function getTileClass(param, val) {
   return 'bad';
 }
 
-function updateDashMedicionValoresLine(m) {
-  const el = document.getElementById('dashMedicionValores');
-  if (!el) return;
-  if (!m) {
-    el.textContent = '';
-    el.classList.add('setup-hidden');
-    return;
-  }
-  const ec = (m.ec != null && String(m.ec).trim() !== '') ? 'EC ' + String(m.ec).trim() + ' µS/cm' : 'EC —';
-  const ph = (m.ph != null && String(m.ph).trim() !== '') ? 'pH ' + String(m.ph).trim() : 'pH —';
-  const temp = (m.temp != null && String(m.temp).trim() !== '') ? 'Temp. ' + String(m.temp).trim() + ' °C' : 'Temp. —';
-  const vol = (m.vol != null && String(m.vol).trim() !== '') ? 'Vol. ' + String(m.vol).trim() + ' L' : 'Vol. —';
-  el.textContent = ec + ' · ' + ph + ' · ' + temp + ' · ' + vol;
-  el.classList.remove('setup-hidden');
-}
-
-function renderMedirMedicionesRecientes() {
-  const box = document.getElementById('medirMedsRecentList');
-  const card = document.getElementById('medirMedsRecentCard');
-  const scope = document.getElementById('medirMedsRecentScope');
-  if (!box || !card) return;
-  if (scope) {
-    try {
-      initTorres();
-      if (state.torres && state.torres.length > 1) {
-        const t = getTorreActiva();
-        const nom = ((t && t.nombre) || '').trim() || 'Instalación activa';
-        const em = t && t.emoji ? t.emoji + ' ' : '';
-        scope.textContent = 'Lista de la instalación activa: ' + em + nom;
-        scope.classList.remove('setup-hidden');
-      } else {
-        scope.textContent = '';
-        scope.classList.add('setup-hidden');
-      }
-    } catch (_) {
-      if (scope) {
-        scope.textContent = '';
-        scope.classList.add('setup-hidden');
-      }
-    }
-  }
-  const list = (state.mediciones || []).filter(function (x) {
-    return x && (!x.tipo || x.tipo === 'medicion');
-  }).slice(0, 6);
-  if (!list.length) {
-    box.innerHTML = '<p class="medir-meds-recent-empty">Sin mediciones guardadas aún en esta instalación.</p>';
-    card.classList.add('medir-meds-recent-card--empty');
-    return;
-  }
-  card.classList.remove('medir-meds-recent-card--empty');
-  box.innerHTML = list.map(function (m) {
-    const ec = m.ec != null && String(m.ec).trim() !== '' ? escHtmlUi(String(m.ec).trim()) + ' µS/cm' : '—';
-    const ph = m.ph != null && String(m.ph).trim() !== '' ? escHtmlUi(String(m.ph).trim()) : '—';
-    const te = m.temp != null && String(m.temp).trim() !== '' ? escHtmlUi(String(m.temp).trim()) + ' °C' : '—';
-    const vo = m.vol != null && String(m.vol).trim() !== '' ? escHtmlUi(String(m.vol).trim()) + ' L' : '—';
-    const fh = escHtmlUi(String(m.fecha || '') + ' ' + String(m.hora || '')).trim() || '—';
-    return '<div class="medir-meds-recent-row" role="listitem">' +
-      '<span class="medir-meds-recent-d">' + fh + '</span>' +
-      '<span class="medir-meds-recent-v">EC ' + ec + ' · pH ' + ph + ' · ' + te + ' · ' + vo + '</span>' +
-      '</div>';
-  }).join('');
-}
-
 function updateTiles(m) {
   if (!m) {
     ['EC', 'PH', 'Temp', 'Vol'].forEach(id => {
@@ -23678,8 +23300,6 @@ function updateTiles(m) {
       statusEl.className = 'tile-status empty';
       statusEl.textContent = 'Sin datos';
     });
-    updateDashInicioTileHints();
-    updateDashMedicionValoresLine(null);
     return;
   }
   const params = [
@@ -23708,29 +23328,6 @@ function updateTiles(m) {
     statusEl.className = `tile-status ${tipo}`;
     statusEl.textContent = statusLabels[p.key]?.[tipo] || (tipo === 'empty' ? 'Sin datos' : '');
   });
-  updateDashInicioTileHints();
-  updateDashMedicionValoresLine(m);
-}
-
-function updateDashInicioTileHints() {
-  const hEc = document.getElementById('tileECHint');
-  const hPh = document.getElementById('tilePHHint');
-  if (!hEc && !hPh) return;
-  try {
-    const eo = getECOptimaTorre();
-    if (hEc) {
-      hEc.setAttribute(
-        'title',
-        'Rango orientativo según cultivos y nutriente: ' + eo.min + '–' + eo.max + ' µS/cm'
-      );
-    }
-    const nut = getNutrienteTorre();
-    const phMin = nut.pHRango ? nut.pHRango[0] : 5.5;
-    const phMax = nut.pHRango ? nut.pHRango[1] : 6.5;
-    if (hPh) {
-      hPh.setAttribute('title', 'Rango recomendado con tu nutriente: pH ' + phMin + '–' + phMax);
-    }
-  } catch (_) {}
 }
 
 function updateDashTorre() {
@@ -24119,13 +23716,9 @@ Las plantas están en condiciones ideales de crecimiento.`;
 
     // Guardar en estado para uso en riego
     state.meteoActual = { temp, hum, viento, uv, uvMaxHoy: uvMaxN, vpd };
-    try {
-      state._climaInicioActualizadoAt = Date.now();
-    } catch (_) {}
     saveState();
     clearMeteoAlertRetry();
     _meteoAlertRetryStep = 0;
-    updateDashClimaFreshness();
 
   } catch(e) {
     alertEl.className = 'meteo-alert warn';
@@ -24140,30 +23733,8 @@ Las plantas están en condiciones ideales de crecimiento.`;
   }
   })().finally(() => {
     _meteoAlertInFlight = null;
-    try { updateDashClimaFreshness(); } catch (_) {}
   });
   return _meteoAlertInFlight;
-}
-
-function updateDashClimaFreshness() {
-  const el = document.getElementById('dashMeteoFresh');
-  if (!el) return;
-  const t = state._climaInicioActualizadoAt;
-  if (!t || !Number.isFinite(t)) {
-    el.classList.add('setup-hidden');
-    el.textContent = '';
-    el.setAttribute('aria-hidden', 'true');
-    return;
-  }
-  const sec = Math.max(0, Math.round((Date.now() - t) / 1000));
-  let txt;
-  if (sec < 45) txt = 'Clima actualizado hace un momento';
-  else if (sec < 3600) txt = 'Clima actualizado hace ' + Math.max(1, Math.floor(sec / 60)) + ' min';
-  else if (sec < 86400) txt = 'Clima actualizado hace ' + Math.floor(sec / 3600) + ' h';
-  else txt = 'Clima actualizado hace ' + Math.floor(sec / 86400) + ' días';
-  el.textContent = txt;
-  el.classList.remove('setup-hidden');
-  el.setAttribute('aria-hidden', 'false');
 }
 
 // ── Meteo: ubicación automática (GPS) ────────────────────────────────────────
@@ -24796,23 +24367,7 @@ async function guardarMedicion() {
 
   updateDashboard();
   updateRecargaBar();
-  try { updateHistTabBadges(); } catch (_) {}
-  try { renderMedirMedicionesRecientes(); } catch (_) {}
-  requestAnimationFrame(function () {
-    const card = document.getElementById('ultimaMedicionCard');
-    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-  showToast('✅ Medición guardada · EC:' + (ec||'—') + ' pH:' + (ph||'—'), false, {
-    label: 'Ver en historial',
-    onClick: function () {
-      goTab('historial');
-      histTab('mediciones');
-      requestAnimationFrame(function () {
-        const hm = document.getElementById('histMediciones');
-        if (hm) hm.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    },
-  });
+  showToast('✅ Medición guardada · EC:' + (ec||'—') + ' pH:' + (ph||'—'));
 
   // ── 3. INTENTAR ENVIAR A GOOGLE SHEETS (opcional) ────────────────────────
   const alertas = [];
@@ -24845,46 +24400,29 @@ async function guardarMedicion() {
 }
 
 
-function showToast(msg, error=false, action) {
+function showToast(msg, error=false) {
   let t = document.getElementById('toast');
   if (!t) {
     t = document.createElement('div');
     t.id = 'toast';
-    t.className = 'toast-host';
     t.setAttribute('role', 'status');
     t.setAttribute('aria-live', 'polite');
     t.setAttribute('aria-atomic', 'true');
+    t.style.cssText =
+      'position:fixed;top:max(70px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%) translateY(-10px);' +
+      'background:var(--green);color:var(--bg);font-family:var(--font-display);font-weight:700;font-size:13px;' +
+      'line-height:1.35;padding:12px 16px;border-radius:16px;opacity:0;transition:all 0.3s;pointer-events:none;' +
+      'z-index:9000;max-width:min(100vw - 24px, 420px);width:max-content;box-sizing:border-box;text-align:center;' +
+      'white-space:normal;word-break:break-word;hyphens:auto;';
     document.body.appendChild(t);
   }
-  clearTimeout(t._toastHideT);
-  t.innerHTML = '';
-  const span = document.createElement('span');
-  span.className = 'toast-msg';
-  span.textContent = msg;
-  t.appendChild(span);
-  if (action && action.label && typeof action.onClick === 'function') {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'toast-action-btn';
-    btn.textContent = action.label;
-    btn.onclick = function (e) {
-      e.stopPropagation();
-      try { action.onClick(); } catch (_) {}
-    };
-    t.appendChild(btn);
-    t.classList.add('toast-host--action');
-  } else {
-    t.classList.remove('toast-host--action');
-  }
+  t.textContent = msg;
   t.setAttribute('aria-live', error ? 'assertive' : 'polite');
-  t.dataset.error = error ? '1' : '0';
+  t.style.background = error ? 'var(--red)' : 'var(--green)';
+  t.style.color = error ? 'white' : 'var(--bg)';
   t.style.opacity = '1';
   t.style.transform = 'translateX(-50%) translateY(0)';
-  const hideMs = action && action.label ? 5200 : 3500;
-  t._toastHideT = setTimeout(function () {
-    t.style.opacity = '0';
-    t.style.transform = 'translateX(-50%) translateY(-10px)';
-  }, hideMs);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-10px)'; }, 3500);
 }
 
 // ══════════════════════════════════════════════════
@@ -25545,7 +25083,6 @@ function cambiarTorreActiva(idx) {
   saveState();
   cerrarModalTorres();
   actualizarHeaderTorre();
-  renderSistemaInstalacionSelect();
   renderTorre();
   updateTorreStats();
   updateDashboard();
@@ -25751,7 +25288,6 @@ function actualizarHeaderTorre() {
 
 function renderSistemaInstalacionSelect() {
   const sel = document.getElementById('sistemaInstalacionSelect');
-  const unica = document.getElementById('sistemaInstalacionUnica');
   if (!sel) return;
   const torres = state.torres || [];
   const n = torres.length;
@@ -25768,27 +25304,6 @@ function renderSistemaInstalacionSelect() {
     sel.appendChild(opt);
   });
   if (n) sel.value = String(activa);
-
-  if (unica) {
-    if (n <= 1) {
-      const t = torres[0];
-      const nom = t ? ((t.nombre || '').trim() || 'Instalación') : 'Instalación';
-      const emoji = t?.emoji || '🌿';
-      const ti = t?.config?.tipoInstalacion;
-      const tipo = ti === 'nft' ? 'NFT' : ti === 'dwc' ? 'DWC' : 'Torre vertical';
-      unica.textContent = emoji + ' ' + nom + ' · ' + tipo;
-      unica.classList.remove('setup-hidden');
-      unica.setAttribute('aria-hidden', 'false');
-      sel.classList.add('setup-hidden');
-      sel.setAttribute('aria-hidden', 'true');
-    } else {
-      unica.classList.add('setup-hidden');
-      unica.textContent = '';
-      unica.setAttribute('aria-hidden', 'true');
-      sel.classList.remove('setup-hidden');
-      sel.setAttribute('aria-hidden', 'false');
-    }
-  }
 }
 
 function onSistemaInstalacionSelectChange(el) {
