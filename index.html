@@ -22379,8 +22379,7 @@ function riegoNocDemandaMin1Ciclo(tempMinDiaria) {
 }
 
 /**
- * Torre de goteo al aire libre: por defecto hay refresco nocturno (30 s ~04:00).
- * Solo se omite el bloque nocturno ante causas climatológicas claras.
+ * Torre de goteo al aire libre: omitir bloque nocturno solo ante señal clara (muy húmedo / noche fría).
  */
 function riegoTorreExteriorOmiteNocturnoPorClima(p) {
   const tN = Number(p.tempNoc);
@@ -22399,9 +22398,6 @@ function riegoTorreExteriorOmiteNocturnoPorClima(p) {
   return { omit: false, clave: '' };
 }
 
-/** Refresco nocturno por defecto en torre exterior (30 s ~04:00; si la noche es muy exigente, el programa pasa a ciclos calculados). */
-const RIEGO_NOC_REFRESCO_TORRE_EXT_SEG = 30;
-
 /**
  * Riego al aire libre — cadena de cálculo (orden):
  * 1) Open-Meteo: ECMWF IFS diario (tª mín/máx, viento máx, prob. y suma lluvia) + horario (tª, HR) alineado al **mismo día civil** que daily[0|1];
@@ -22412,7 +22408,7 @@ const RIEGO_NOC_REFRESCO_TORRE_EXT_SEG = 30;
  * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
- * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Prioridad: evitar encharque/ anoxia en sustrato sin fotosíntesis (índice acotado, pulsos ON bajos, OFF largo, factor retención). Exterior: por defecto refresco fijo ~30 s (~04:00); se omite solo si riegoTorreExteriorOmiteNocturnoPorClima; solo noches muy secas/cálidas usan ciclos calculados. Interior: demanda ≈ 0,52×demanda día; omitir con riegoNocUmbralesOmitir.
+ * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Índice solo con T/HR/viento/ET₀ del tramo nocturno (Open-Meteo) + fase/sustrato/sensor/agua; interior: T/HR de sala (ajuste nocturno ligero), sin mezclar demanda diurna. Omitir con riegoTorreExteriorOmiteNocturnoPorClima o umbrales interior.
  * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
@@ -22856,13 +22852,22 @@ async function calcularRiego(opts = {}) {
     const totalONMedio = minONMedio * ciclosMedio;
     const dutyMedioPct = Math.round((100 * minONMedio) / (minONMedio + minOFFMedio));
 
-    // ── Programa nocturno 21:00–07:00 (recarga sustrato; ON 3–5 min) ─────────
+    // ── Programa nocturno 21:00–07:00: clima nocturno o sala + cultivo (sin mezclar día) ─────────
     const statsNoct = riegoStatsNocturnosFromHourly(dayHourIdx, times, tempHArr, rhArr, windHArr);
     const dTNocPlanta = dTempPlanta * 0.38;
     let tempNocUse;
     let rhNocUse;
     let vientoNocKmh;
-    if (statsNoct) {
+    if (esInterior) {
+      const cfgN = state.configTorre || {};
+      const tIn = parseFloat(cfgN.interiorTempC);
+      const hIn = parseFloat(cfgN.interiorHumedadAmbPct);
+      const T = Number.isFinite(tIn) ? tIn : 22;
+      const H = Number.isFinite(hIn) ? hIn : 55;
+      tempNocUse = Math.max(8, Math.min(32, T - 0.8));
+      rhNocUse = Math.min(96, Math.max(18, H + 4));
+      vientoNocKmh = cfgN.interiorCirculacionAire ? 2.2 : 0.8;
+    } else if (statsNoct) {
       tempNocUse = statsNoct.temp + dTNocPlanta + (toldoAct ? -0.35 : 0);
       rhNocUse = statsNoct.rh;
       vientoNocKmh = Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
@@ -22873,38 +22878,37 @@ async function calcularRiego(opts = {}) {
       rhNocUse = Math.min(94, humMedia + 9);
       vientoNocKmh = viento * 0.55;
     }
-    let demandaNocRaw;
-    let vpdNocVal;
-    let demandaNoc;
-    if (esInterior) {
-      vpdNocVal = vpdInterior;
-      demandaNocRaw = Math.max(0.42, Math.min(0.95, demandaDia * 0.52));
-      demandaNoc = Math.max(0.38, Math.min(1.02, demandaNocRaw));
-    } else {
-      vpdNocVal = riegoVPDkPa(tempNocUse, rhNocUse);
-      demandaNocRaw = riegoIndiceDemandaNocturna({
+    const vpdNocVal = riegoVPDkPa(tempNocUse, rhNocUse);
+    let demandaNoc =
+      riegoIndiceDemandaNocturna({
         vpdKpa: vpdNocVal,
         vientoKmh: vientoNocKmh,
-        tempMin,
-        probLluvia,
-        et0NightMm: et0NightSum,
-        toldo: toldoAct
-      });
-      demandaNoc = demandaNocRaw * multFase;
-      demandaNoc *= riegoMargenSeguridadDinamico({
-        tramo: 'noche',
-        retencion: sustrato.retencion,
-        vpdKpa: vpdNocVal,
-        vientoKmh: vientoNocKmh,
-        uvIdx: 0,
-        et0DayMm: et0NightSum != null ? et0NightSum * 11 : 0,
-        probLluviaPct: probLluvia,
-        faseMult: multFase
-      });
-      demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
-      if (sensRiego.mult !== 1) {
-        demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc * sensRiego.mult));
-      }
+        tempMin: esInterior ? tempNocUse : tempMin,
+        probLluvia: esInterior ? 0 : probLluvia,
+        et0NightMm: esInterior ? null : et0NightSum,
+        toldo: esInterior ? false : toldoAct
+      }) * multFase;
+    demandaNoc *= riegoAjusteClimaPorSustrato({
+      retencion: sustrato.retencion,
+      humMediaPct: rhNocUse,
+      probLluviaPct: esInterior ? 0 : probLluvia,
+      uvIdx: 0,
+      vpdKpa: vpdNocVal,
+      et0DayMm: esInterior ? null : et0NightSum
+    });
+    demandaNoc *= riegoMargenSeguridadDinamico({
+      tramo: 'noche',
+      retencion: sustrato.retencion,
+      vpdKpa: vpdNocVal,
+      vientoKmh: vientoNocKmh,
+      uvIdx: 0,
+      et0DayMm: et0NightSum != null ? et0NightSum * 11 : 0,
+      probLluviaPct: esInterior ? 0 : probLluvia,
+      faseMult: multFase
+    });
+    demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
+    if (sensRiego.mult !== 1) {
+      demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc * sensRiego.mult));
     }
     const cfgRiegoNoc = state.configTorre || {};
     const interiorTNoc = parseFloat(cfgRiegoNoc.interiorTempC);
@@ -22914,9 +22918,7 @@ async function calcularRiego(opts = {}) {
     const fNocTempAgua = riegoFactorDemandaNocPorTempAgua(tempAguaNocUse);
     const fNocDifusor = riegoFactorDemandaNocPorDifusor(cfgRiegoNoc.equipamiento);
     demandaNoc *= fNocTempAgua * fNocDifusor;
-    demandaNoc = esInterior
-      ? Math.max(0.38, Math.min(1.02, demandaNoc))
-      : Math.max(0.38, Math.min(1.12, demandaNoc));
+    demandaNoc = Math.max(0.38, Math.min(1.12, demandaNoc));
 
     if (!esInterior && tipoRiego === 'torre' && mcNear) {
       const anaN = meteoclimaticFactorNocDesdeMc(mcNear, tempNocUse, rhNocUse, dTempPlanta, 0.38);
@@ -22930,12 +22932,17 @@ async function calcularRiego(opts = {}) {
       }
     }
 
-    const windSkipProxy = statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
-      ? statsNoct.vientoMax
-      : viento * 0.52;
+    const windSkipProxy = esInterior
+      ? vientoNocKmh
+      : statsNoct && Number.isFinite(statsNoct.vientoMax) && statsNoct.vientoMax > 0
+        ? statsNoct.vientoMax
+        : viento * 0.52;
     const umbNocSkip = riegoNocUmbralesOmitir(tempMin, probLluvia, et0NightSum);
-    const secaNocEt =
-      et0NightSum != null && typeof et0NightSum === 'number' && et0NightSum >= 0.19;
+    const secaNocEtExterior =
+      !esInterior &&
+      et0NightSum != null &&
+      typeof et0NightSum === 'number' &&
+      et0NightSum >= 0.19;
     let nocSkip = false;
     let nocSkipClave = '';
     if (!esInterior) {
@@ -22951,7 +22958,7 @@ async function calcularRiego(opts = {}) {
       }
     } else {
       if (
-        !secaNocEt &&
+        !secaNocEtExterior &&
         demandaNoc < umbNocSkip.demMax &&
         vpdNocVal < umbNocSkip.vpdMax &&
         windSkipProxy < umbNocSkip.windMax
@@ -22970,43 +22977,18 @@ async function calcularRiego(opts = {}) {
     let minCicloNoc = minONNoc + minOFFNoc;
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
     ciclosNoc = Math.min(8, Math.max(0, ciclosNoc));
-    let usarNocCalculadoExt = false;
-    if (!esInterior && !nocSkip) {
-      const nocheCalidaExt =
-        (Number.isFinite(tempMin) && tempMin >= 23.5) ||
-        (Number.isFinite(tempNocUse) && tempNocUse >= 24);
-      const olaCalorExt =
-        Number.isFinite(tempMax) &&
-        tempMax >= 28 &&
-        ((Number.isFinite(tempMin) && tempMin >= 23) ||
-          (Number.isFinite(tempNocUse) && tempNocUse >= 23.5));
-      usarNocCalculadoExt =
-        secaNocEt || demandaNoc >= 0.78 || nocheCalidaExt || olaCalorExt;
-      if (!usarNocCalculadoExt) {
-        minONNoc = RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60;
-        minCicloNoc = minONNoc + minOFFNoc;
-        ciclosNoc = 1;
-      } else {
-        if (ciclosNoc === 0 && minCicloNoc <= 600) ciclosNoc = 1;
-      }
-    } else if (!esInterior && nocSkip) {
-      ciclosNoc = 0;
-    } else if (
-      esInterior &&
+    if (
       !nocSkip &&
       ciclosNoc === 0 &&
       minCicloNoc <= 600 &&
-      demandaNoc >= riegoNocDemandaMin1Ciclo(tempMin)
+      demandaNoc >= riegoNocDemandaMin1Ciclo(esInterior ? tempNocUse : tempMin)
     ) {
       ciclosNoc = 1;
     }
-    const esNocRefrescoTorreExt = !esInterior && !nocSkip && ciclosNoc > 0 && !usarNocCalculadoExt;
-    const totalONNoc = esNocRefrescoTorreExt
-      ? (RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60) * ciclosNoc
-      : minONNoc * ciclosNoc;
+    const totalONNoc = minONNoc * ciclosNoc;
     const espNoc = ciclosNoc > 0 ? Math.round(600 / ciclosNoc) : 0;
     let dutyNocPct = null;
-    if (ciclosNoc > 0 && !esNocRefrescoTorreExt) {
+    if (ciclosNoc > 0) {
       dutyNocPct = Math.round((100 * minONNoc) / minCicloNoc);
     }
 
@@ -23056,32 +23038,28 @@ async function calcularRiego(opts = {}) {
     const elNocLabelA = document.getElementById('resNocLabelA');
     const elNocLabelB = document.getElementById('resNocLabelB');
     const nocSinResultado = esInterior ? (nocSkip || ciclosNoc === 0) : (ciclosNoc === 0);
-    if (elNocLabelA) elNocLabelA.textContent = esNocRefrescoTorreExt ? 'Refresco' : 'min ON';
-    if (elNocLabelB) elNocLabelB.textContent = esNocRefrescoTorreExt ? 'Hora' : 'min OFF';
+    if (elNocLabelA) elNocLabelA.textContent = 'min ON';
+    if (elNocLabelB) elNocLabelB.textContent = 'min OFF';
     if (elNocON) {
-      elNocON.textContent =
-        nocSinResultado ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(minONNoc);
+      elNocON.textContent = nocSinResultado ? '—' : String(minONNoc);
     }
     if (elNocOFF) {
-      elNocOFF.textContent =
-        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04:00' : String(minOFFNoc);
+      elNocOFF.textContent = nocSinResultado ? '—' : String(minOFFNoc);
     }
     if (elNocC) elNocC.textContent = nocSinResultado ? '—' : String(ciclosNoc);
     if (elNocT) {
-      elNocT.textContent =
-        nocSinResultado ? '—' : esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG + ' s' : String(totalONNoc);
+      elNocT.textContent = nocSinResultado ? '—' : String(totalONNoc);
     }
     if (elNocE) {
-      elNocE.textContent =
-        nocSinResultado ? '—' : esNocRefrescoTorreExt ? '04' : String(espNoc);
-      elNocE.style.fontSize = esNocRefrescoTorreExt ? '28px' : '';
-      elNocE.style.whiteSpace = esNocRefrescoTorreExt ? 'normal' : '';
-      elNocE.style.lineHeight = esNocRefrescoTorreExt ? '1.05' : '';
+      elNocE.textContent = nocSinResultado ? '—' : String(espNoc);
+      elNocE.style.fontSize = '';
+      elNocE.style.whiteSpace = '';
+      elNocE.style.lineHeight = '';
     }
     const elNocEspLabel = document.querySelector('#resNocEspaciado')?.nextElementSibling;
     if (elNocEspLabel) {
-      elNocEspLabel.textContent = esNocRefrescoTorreExt ? 'AM' : 'Espaciado';
-      elNocEspLabel.style.fontWeight = esNocRefrescoTorreExt ? '900' : '';
+      elNocEspLabel.textContent = 'Espaciado';
+      elNocEspLabel.style.fontWeight = '';
     }
     if (elNocD) {
       elNocD.textContent =
@@ -23124,10 +23102,10 @@ async function calcularRiego(opts = {}) {
         '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «franja de mayor intensidad solar», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
     }
     const pieNocOx =
-      '<br><span class="riego-clima-nota-peq">🌙 <strong>Nocturno:</strong> los minutos ON/OFF se calculan con margen para <strong>oxigenación en raíz</strong> (poca transpiración sin luz; sustratos capilares encharcan antes). La demanda rel. resume el clima.</span>';
+      '<br><span class="riego-clima-nota-peq">🌙 <strong>Nocturno:</strong> índice y pulsos solo con T/HR (y viento/ET₀ en exterior) del tramo nocturno o de sala ajustada + cultivo; margen para <strong>oxigenación radicular</strong>.</span>';
     const lineaNocClima = esInterior
-      ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice). · ' + facNocAguaDifTxt + pieNocOx
-      : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt + pieNocOx;
+      ? '<br>🌙 Nocturno (interior, T/HR noche modelo sala): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' · ' + facNocAguaDifTxt + pieNocOx
+      : '<br>🌙 Nocturno (serie local 21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt + pieNocOx;
     const lineaMcRiego = meteoclimaticFormatLineaHtml(mcNear) + (mcRiegoLineaAjuste || '');
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
@@ -23147,12 +23125,12 @@ async function calcularRiego(opts = {}) {
       minONMedio, minOFFMedio, ciclosMedio, totalONMedio,
       dutyCicloPct, dutyMedioPct,
       minONNoc: nocSkip || ciclosNoc === 0 ? null : minONNoc,
-      minOFFNoc: nocSkip || ciclosNoc === 0 || esNocRefrescoTorreExt ? null : minOFFNoc,
+      minOFFNoc: nocSkip || ciclosNoc === 0 ? null : minOFFNoc,
       ciclosNoc: nocSkip || ciclosNoc === 0 ? 0 : ciclosNoc,
       totalONNoc: nocSkip || ciclosNoc === 0 ? 0 : totalONNoc,
-      espaciadoNoc: nocSkip || ciclosNoc === 0 || esNocRefrescoTorreExt ? null : espNoc,
-      espaciadoNocRefrescoHora: esNocRefrescoTorreExt ? '04:00' : null,
-      nocRefrescoSeg: esNocRefrescoTorreExt ? RIEGO_NOC_REFRESCO_TORRE_EXT_SEG : null,
+      espaciadoNoc: nocSkip || ciclosNoc === 0 ? null : espNoc,
+      espaciadoNocRefrescoHora: null,
+      nocRefrescoSeg: null,
       dutyNocPct: nocSkip || ciclosNoc === 0 || dutyNocPct == null ? null : dutyNocPct,
       demandaNoc: Math.round(demandaNoc * 1000) / 1000,
       vpdNoc: Math.round(vpdNocVal * 1000) / 1000,
