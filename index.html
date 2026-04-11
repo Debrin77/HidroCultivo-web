@@ -165,7 +165,8 @@
       </section>
 
       <!-- 3. Alerta meteorológica / ambiente (prominente tras el contexto de instalación) -->
-      <div class="meteo-alert ok" id="meteoAlert">
+      <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
+      <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
         <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
         <div class="meteo-alert-body">
           <div class="meteo-alert-title" id="meteoAlertTitle">Cargando datos meteorológicos...</div>
@@ -173,13 +174,16 @@
         </div>
       </div>
 
-      <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite">
+      <p class="dash-block-label" id="dashUbicacionLabel">Ubicación del sistema</p>
+      <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite" aria-labelledby="dashUbicacionLabel">
         <span class="dash-localidad-clima-icon" aria-hidden="true">📍</span>
         <span id="dashLocalidadClimaText" class="dash-localidad-clima-text">—</span>
       </div>
 
       <!-- 4. Nutriente seleccionado -->
+      <p class="dash-block-label" id="dashNutrienteLabel">Nutriente seleccionado</p>
       <div id="dashSistemaInfo" class="dash-sistema-info" role="button" tabindex="0"
+        aria-describedby="dashNutrienteLabel"
         aria-label="Ir a mediciones: nutriente, sistema y ubicación"
         onclick="goTab('mediciones')"
         onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">

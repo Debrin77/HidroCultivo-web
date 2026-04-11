@@ -2223,6 +2223,14 @@ body.hc-welcome-open #app {
   margin: 0 0 8px 0;
   letter-spacing: 0.02em;
 }
+/** Rótulos de sección antes de recuadros en Inicio (misma jerarquía que «Sistema seleccionado»). */
+.dash-block-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 12px 0 8px 0;
+  letter-spacing: 0.02em;
+}
 .dash-medicion-y-cultivo {
   margin-top: 4px;
 }
