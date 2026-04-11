@@ -9446,7 +9446,27 @@ function aplicarSistemaDwcDesdeFormulario() {
   try {
     refreshDwcSistemaMedidasUI();
   } catch (eH) {}
-  showToast('Datos DWC guardados');
+  let msgGuardado = 'Datos DWC guardados';
+  try {
+    const oHint = dwcMaxCestasDesdeConfigTorre(cfg);
+    if (
+      oHint &&
+      oHint.max >= 1 &&
+      (oHint.cols > DWC_REJILLA_MAX_COLS || oHint.filas > DWC_REJILLA_MAX_FILAS)
+    ) {
+      msgGuardado +=
+        ' · En tapa cabrían hasta ~' +
+        oHint.cols +
+        '×' +
+        oHint.filas +
+        ' cestas; el dibujo de la app se limita a ' +
+        DWC_REJILLA_MAX_COLS +
+        '×' +
+        DWC_REJILLA_MAX_FILAS +
+        '.';
+    }
+  } catch (eNote) {}
+  showToast(msgGuardado);
 }
 
 /**
@@ -22221,7 +22241,18 @@ function riegoIndiceDemandaNocturna(params) {
     d *= Math.max(0.9, Math.min(1.14, 0.85 + 0.22 * Math.min(1.6, r)));
   }
   if (params.toldo) d *= 0.96;
-  return Math.max(0.4, Math.min(1.22, d));
+  /* Sin fotosíntesis la planta casi no transpira: no subir el índice como de día; cap más bajo. */
+  d *= 0.93;
+  return Math.max(0.36, Math.min(1.08, d));
+}
+
+/**
+ * De noche el sustrato capilar (esponja, fibras) puede encharcar sin captación foliar → riesgo de anoxia.
+ * Reduce el índice que entra en los minutos ON/OFF (no el texto de demanda climática) según retención.
+ */
+function riegoNocFactorOxigenacionRadicular(retencion) {
+  const r = Math.max(0.2, Math.min(0.85, Number(retencion) || 0.5));
+  return Math.max(0.82, Math.min(0.95, 0.92 - (r - 0.28) * 0.065));
 }
 
 /** Riego nocturno: corrección acotada por Tª del agua (~18 °C de referencia, ~0,7 %/°C). */
@@ -22381,7 +22412,7 @@ const RIEGO_NOC_REFRESCO_TORRE_EXT_SEG = 30;
  * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
- * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Exterior: por defecto refresco fijo ~30 s (~04:00); se omite solo si riegoTorreExteriorOmiteNocturnoPorClima; noches muy exigentes usan programa calculado. Interior: demanda ≈ 0,52×demanda día; omitir con riegoNocUmbralesOmitir.
+ * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Prioridad: evitar encharque/ anoxia en sustrato sin fotosíntesis (índice acotado, pulsos ON bajos, OFF largo, factor retención). Exterior: por defecto refresco fijo ~30 s (~04:00); se omite solo si riegoTorreExteriorOmiteNocturnoPorClima; solo noches muy secas/cálidas usan ciclos calculados. Interior: demanda ≈ 0,52×demanda día; omitir con riegoNocUmbralesOmitir.
  * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
@@ -22929,11 +22960,12 @@ async function calcularRiego(opts = {}) {
       }
     }
     const kcNoc = Math.max(0.25, Math.min(0.48, kcMedio * 0.36));
-    const cicloNoc0 = riegoMinutosDesdeDemanda(demandaNoc, nPlantas, kcNoc, sustrato, esInterior);
-    let minONNoc = Math.min(5, Math.max(3, cicloNoc0.minON));
+    const demandaNocPulsos = demandaNoc * riegoNocFactorOxigenacionRadicular(sustrato.retencion);
+    const cicloNoc0 = riegoMinutosDesdeDemanda(demandaNocPulsos, nPlantas, kcNoc, sustrato, esInterior);
+    let minONNoc = Math.min(4, Math.max(3, cicloNoc0.minON));
     let minOFFNoc = Math.max(
-      esInterior ? 26 : 36,
-      Math.round(cicloNoc0.minOFF * (1.08 + sustrato.retencion * 0.055))
+      esInterior ? 28 : 42,
+      Math.round(cicloNoc0.minOFF * (1.1 + sustrato.retencion * 0.07))
     );
     let minCicloNoc = minONNoc + minOFFNoc;
     let ciclosNoc = nocSkip ? 0 : Math.floor(600 / minCicloNoc);
@@ -22949,7 +22981,7 @@ async function calcularRiego(opts = {}) {
         ((Number.isFinite(tempMin) && tempMin >= 23) ||
           (Number.isFinite(tempNocUse) && tempNocUse >= 23.5));
       usarNocCalculadoExt =
-        secaNocEt || demandaNoc >= 0.72 || nocheCalidaExt || olaCalorExt;
+        secaNocEt || demandaNoc >= 0.78 || nocheCalidaExt || olaCalorExt;
       if (!usarNocCalculadoExt) {
         minONNoc = RIEGO_NOC_REFRESCO_TORRE_EXT_SEG / 60;
         minCicloNoc = minONNoc + minOFFNoc;
@@ -23091,9 +23123,11 @@ async function calcularRiego(opts = {}) {
       notaRedondeo =
         '<br><span class="riego-clima-nota-peq">ℹ️ La demanda o el VPD cambian entre «día» y «franja de mayor intensidad solar», pero al <strong>redondear a minutos enteros</strong> el pulso ON/OFF puede salir igual.</span>';
     }
+    const pieNocOx =
+      '<br><span class="riego-clima-nota-peq">🌙 <strong>Nocturno:</strong> los minutos ON/OFF se calculan con margen para <strong>oxigenación en raíz</strong> (poca transpiración sin luz; sustratos capilares encharcan antes). La demanda rel. resume el clima.</span>';
     const lineaNocClima = esInterior
-      ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice). · ' + facNocAguaDifTxt
-      : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt;
+      ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice). · ' + facNocAguaDifTxt + pieNocOx
+      : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt + pieNocOx;
     const lineaMcRiego = meteoclimaticFormatLineaHtml(mcNear) + (mcRiegoLineaAjuste || '');
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
