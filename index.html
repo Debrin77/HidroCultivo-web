@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-10-ui-shell">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-10-ui-ux-v2">
 </head>
 <body>
 
@@ -162,11 +162,14 @@
       </section>
 
       <!-- 3. Alerta meteorológica / ambiente (prominente tras el contexto de instalación) -->
-      <div class="meteo-alert ok" id="meteoAlert">
+      <div class="meteo-alert ok meteo-alert--clickable" id="meteoAlert" role="button" tabindex="0"
+        onclick="goTab('meteo')" onkeydown="a11yKeyActivate(event, function(){ goTab('meteo'); })"
+        aria-label="Ver meteorología detallada. Resumen de condiciones actuales">
         <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
         <div class="meteo-alert-body">
           <div class="meteo-alert-title" id="meteoAlertTitle">Cargando datos meteorológicos...</div>
           <div class="meteo-alert-text" id="meteoAlertText">Obteniendo condiciones actuales</div>
+          <div class="meteo-alert-fresh setup-hidden" id="dashMeteoFresh" aria-hidden="true"></div>
         </div>
       </div>
 
@@ -203,16 +206,18 @@
           <span id="dashUltimaMedicion">Sin mediciones aún</span>
         </div>
         <div class="params-grid">
-          <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC">
+          <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC"
+            title="" data-tile-hint="">
             <div class="tile-icon" aria-hidden="true">⚡</div>
             <div class="tile-value empty" id="tileECVal">—</div>
-            <div class="tile-label">EC µS/cm</div>
+            <div class="tile-label">EC µS/cm <span class="tile-hint-mark" id="tileECHint" aria-hidden="true" title="">ⓘ</span></div>
             <div class="tile-status empty" id="tileECStatus">Sin datos</div>
           </button>
-          <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH">
+          <button type="button" class="param-tile empty" id="tilePH" onclick="goTab('mediciones')" aria-label="Ir a mediciones: pH"
+            title="" data-tile-hint="">
             <div class="tile-icon" aria-hidden="true">🧪</div>
             <div class="tile-value empty" id="tilePHVal">—</div>
-            <div class="tile-label">pH</div>
+            <div class="tile-label">pH <span class="tile-hint-mark" id="tilePHHint" aria-hidden="true" title="">ⓘ</span></div>
             <div class="tile-status empty" id="tilePHStatus">Sin datos</div>
           </button>
           <button type="button" class="param-tile empty" id="tileTemp" onclick="goTab('mediciones')" aria-label="Ir a mediciones: temperatura del agua">
@@ -981,7 +986,8 @@
       <div class="section-title torre-section-heading torre-tab-toolbar">
         <div class="torre-tab-toolbar-main">
           <span><span class="section-title-accent" aria-hidden="true"></span><span class="accent" id="torreTabTitle">—</span></span>
-          <label for="sistemaInstalacionSelect" class="visually-hidden">Instalación a editar en esta pestaña</label>
+          <label for="sistemaInstalacionSelect" class="visually-hidden" id="sistemaInstalacionSelectLabel">Instalación a editar en esta pestaña</label>
+          <span id="sistemaInstalacionUnica" class="torre-instalacion-unica setup-hidden" aria-hidden="true"></span>
           <select id="sistemaInstalacionSelect" class="form-input torre-tab-instalacion-select"
             aria-label="Elegir instalación"
             onchange="onSistemaInstalacionSelectChange(this)"></select>
@@ -1481,6 +1487,8 @@
       <!-- Grid calendario -->
       <div id="calGrid" class="cal-grid"></div>
 
+      <div id="calDiaPreview" class="cal-dia-preview setup-hidden" role="status" aria-live="polite"></div>
+
       <!-- Próximos eventos / detalle día (antes de la leyenda: lectura prioritaria) -->
       <div class="card" id="calEventosCard">
         <div class="card-title">📋 Próximos eventos</div>
@@ -1490,13 +1498,13 @@
         </div>
       </div>
 
-      <!-- Leyenda -->
-      <div class="cal-legend-row">
-        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-medicion"></div>Medición</div>
-        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-recarga"></div>Recarga</div>
-        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-limpieza"></div>Limpieza</div>
-        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-cosecha"></div>Cosecha</div>
-        <div class="cal-legend-item"><div class="cal-legend-dot cal-legend-dot-ph"></div>pH plántula nueva (5 días)</div>
+      <!-- Leyenda (filtro opcional: pulsa de nuevo para quitar) -->
+      <div class="cal-legend-row" role="group" aria-label="Filtrar días por tipo de evento">
+        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="medicion" onclick="toggleCalLegendFilter('medicion')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-medicion"></div>Medición</button>
+        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="recarga" onclick="toggleCalLegendFilter('recarga')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-recarga"></div>Recarga</button>
+        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="limpieza" onclick="toggleCalLegendFilter('limpieza')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-limpieza"></div>Limpieza</button>
+        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="cosecha" onclick="toggleCalLegendFilter('cosecha')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-cosecha"></div>Cosecha</button>
+        <button type="button" class="cal-legend-item cal-legend-filter-btn" data-cal-filter="plantula-ph" onclick="toggleCalLegendFilter('plantula-ph')" aria-pressed="false"><div class="cal-legend-dot cal-legend-dot-ph"></div>pH plántula (5 días)</button>
       </div>
 
       <div class="card cal-rutina-card">
@@ -1633,6 +1641,19 @@
 
       <!-- Resultado programa general -->
       <div class="riego-resultado setup-hidden" id="riegoResultado">
+
+        <div id="riegoStickyBar" class="riego-sticky-bar setup-hidden" aria-label="Resumen del programa de riego">
+          <div class="riego-sticky-inner">
+            <div class="riego-sticky-chip"><span class="riego-sticky-k">General</span><span id="riegoStickyGen" class="riego-sticky-v">—</span></div>
+            <div class="riego-sticky-chip riego-sticky-chip--amber"><span class="riego-sticky-k">Mediodía</span><span id="riegoStickyMed" class="riego-sticky-v">—</span></div>
+            <div class="riego-sticky-chip riego-sticky-chip--indigo"><span class="riego-sticky-k">Noche</span><span id="riegoStickyNoc" class="riego-sticky-v">—</span></div>
+          </div>
+        </div>
+
+        <details class="riego-por-que-details setup-hidden" id="riegoPorQueDetails">
+          <summary class="riego-por-que-summary">Por qué estos valores (resumen)</summary>
+          <ul class="riego-por-que-list" id="riegoPorQueList"></ul>
+        </details>
 
         <div id="riegoNftPanel" class="riego-panel-nft setup-hidden">
           <div class="riego-panel-inner">
@@ -1777,6 +1798,7 @@
         <button type="button" class="btn btn-primary" onclick="calcularRiego({ forceRefresh: true, manual: true })" id="btnCalcRiego">
           🔄 Calcular riego ahora
         </button>
+        <p class="riego-calc-meta setup-hidden" id="riegoCalcMeta" role="status" aria-live="polite"></p>
         <p class="riego-horario-recomendado" id="riegoHorarioRecomendado" role="status" aria-live="polite">
           Tras calcular, aquí verás el horario sugerido del bloque de mayor intensidad solar (4 h). «Calcular riego ahora» pide datos meteorológicos <strong>actualizados</strong> a la API; al entrar en esta pestaña puede usarse caché breve (~1 min) para ir más rápido.
         </p>
@@ -1806,7 +1828,10 @@
       </div>
 
       <!-- Cards 7 días scroll horizontal -->
-      <div class="meteo-dias setup-hidden" id="meteoDias"></div>
+      <div class="meteo-dias-outer setup-hidden" id="meteoDiasOuter">
+        <div class="meteo-dias setup-hidden" id="meteoDias"></div>
+        <div class="meteo-dias-dots setup-hidden" id="meteoDiasDots" aria-hidden="true"></div>
+      </div>
 
       <!-- Detalle día seleccionado -->
       <div class="meteo-detalle setup-hidden" id="meteoDetalle">
@@ -1846,6 +1871,14 @@
           </div>
         </div>
 
+        <div class="meteo-riego-cta-wrap">
+          <button type="button" class="btn btn-secondary meteo-btn-usar-riego setup-hidden" id="meteoBtnUsarRiego"
+            onclick="meteoUsarDiaEnRiego()">
+            Usar este día en Riego
+          </button>
+          <p class="meteo-riego-cta-hint setup-hidden" id="meteoRiegoCtaHint">Solo «Hoy» y «Mañana» enlazan con el cálculo (modelo 48 h).</p>
+        </div>
+
       </div>
 
     </div>
@@ -1856,6 +1889,8 @@
 
       <div class="section-title">💡 <span class="accent">Consejos</span></div>
       <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando.</p>
+
+      <div id="consejoParaTiWrap" class="consejo-para-ti-wrap setup-hidden" role="region" aria-label="Según tu situación actual"></div>
 
       <!-- Categorías -->
       <div class="consejos-cats" id="consejosCats"></div>
@@ -1878,10 +1913,10 @@
       <!-- Sub-tabs + checklist (dos filas: evita solapamiento en móvil) -->
       <div class="hist-toolbar">
         <div class="hist-tabs" role="tablist" aria-label="Apartados del historial">
-          <button type="button" class="hist-tab active" role="tab" id="htab-mediciones" aria-selected="true" aria-controls="histMediciones" tabindex="0" onclick="histTab('mediciones')">📊 Mediciones</button>
-          <button type="button" class="hist-tab" role="tab" id="htab-recargas" aria-selected="false" aria-controls="histRecargas" tabindex="-1" onclick="histTab('recargas')">🔄 Recargas</button>
-          <button type="button" class="hist-tab" role="tab" id="htab-registro" aria-selected="false" aria-controls="histRegistroPanel" tabindex="-1" onclick="histTab('registro')">📋 Registro</button>
-          <button type="button" class="hist-tab" role="tab" id="htab-diario" aria-selected="false" aria-controls="histDiarioPanel" tabindex="-1" onclick="histTab('diario')">📸 Diario</button>
+          <button type="button" class="hist-tab active" role="tab" id="htab-mediciones" aria-selected="true" aria-controls="histMediciones" tabindex="0" onclick="histTab('mediciones')"><span class="hist-tab-lab">📊 Mediciones</span><span class="hist-tab-badge" id="histBadgeMed" aria-hidden="true"></span></button>
+          <button type="button" class="hist-tab" role="tab" id="htab-recargas" aria-selected="false" aria-controls="histRecargas" tabindex="-1" onclick="histTab('recargas')"><span class="hist-tab-lab">🔄 Recargas</span><span class="hist-tab-badge" id="histBadgeRec" aria-hidden="true"></span></button>
+          <button type="button" class="hist-tab" role="tab" id="htab-registro" aria-selected="false" aria-controls="histRegistroPanel" tabindex="-1" onclick="histTab('registro')"><span class="hist-tab-lab">📋 Registro</span><span class="hist-tab-badge" id="histBadgeReg" aria-hidden="true"></span></button>
+          <button type="button" class="hist-tab" role="tab" id="htab-diario" aria-selected="false" aria-controls="histDiarioPanel" tabindex="-1" onclick="histTab('diario')"><span class="hist-tab-lab">📸 Diario</span><span class="hist-tab-badge" id="histBadgeDia" aria-hidden="true"></span></button>
         </div>
         <button type="button" class="hist-checklist-btn" onclick="abrirChecklist(false)"
           aria-label="Abrir checklist de recarga de la instalación activa">
@@ -1951,6 +1986,10 @@
         <div class="coming-soon-icon">📊</div>
         <h3>Sin datos aún</h3>
         <p>Registra mediciones diarias para<br>ver la evolución de los parámetros</p>
+        <div class="hist-empty-actions">
+          <button type="button" class="btn btn-primary" onclick="goTab('mediciones')">Ir a Mediciones</button>
+          <button type="button" class="btn btn-secondary" onclick="goTab('sistema')">Revisar Sistema</button>
+        </div>
       </div>
 
       <!-- Panel registro -->
@@ -18650,6 +18689,53 @@ function recolectarMedicionesTodasInstalaciones() {
   return todas;
 }
 
+function contarFotosDiarioTodas() {
+  let n = 0;
+  try {
+    initTorres();
+    if (state.torres && state.torres.length) {
+      state.torres.forEach(t => {
+        (t.torre || []).forEach(row => {
+          (row || []).forEach(c => {
+            if (c && Array.isArray(c.fotoKeys)) n += c.fotoKeys.length;
+          });
+        });
+      });
+    }
+    const fs = state.fotosSistemaCompleto && Array.isArray(state.fotosSistemaCompleto.fotoKeys)
+      ? state.fotosSistemaCompleto.fotoKeys.length
+      : 0;
+    n += fs;
+  } catch (_) {}
+  return n;
+}
+
+function updateHistTabBadges() {
+  try {
+    const nMed = recolectarMedicionesTodasInstalaciones().length;
+    const nRec = (state.recargasLocal || []).length;
+    const nReg = recolectarRegistroTodasInstalaciones().length;
+    const nDia = contarFotosDiarioTodas();
+    const setBadge = function (id, n) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (n > 0) {
+        el.textContent = n > 99 ? '99+' : String(n);
+        el.classList.remove('setup-hidden');
+        el.setAttribute('aria-hidden', 'false');
+      } else {
+        el.textContent = '';
+        el.classList.add('setup-hidden');
+        el.setAttribute('aria-hidden', 'true');
+      }
+    };
+    setBadge('histBadgeMed', nMed);
+    setBadge('histBadgeRec', nRec);
+    setBadge('histBadgeReg', nReg);
+    setBadge('histBadgeDia', nDia);
+  } catch (_) {}
+}
+
 function cargarHistorial() {
   document.getElementById('histLoader').style.display = 'none';
   document.getElementById('histSinDatos').classList.add('setup-hidden');
@@ -18666,6 +18752,8 @@ function cargarHistorial() {
     const fw = document.getElementById('filtroTorreWrapGlobal');
     if (fw) fw.style.display = 'none';
   }
+
+  updateHistTabBadges();
 
   if (todasMediciones.length === 0) {
     document.getElementById('histSinDatos').classList.remove('setup-hidden');
@@ -18909,6 +18997,7 @@ function renderRegistro() {
       '<div class="registro-empty-box">' +
       '📋 El registro agrupa mediciones, <strong>recargas completas</strong>, <strong>reposiciones parciales</strong> (litros añadidos, agua o agua+nutrientes sin vaciar), cosechas y fotos de plantas en una línea de tiempo.' +
       extra + '</div>';
+    updateHistTabBadges();
     return;
   }
 
@@ -19032,6 +19121,7 @@ function renderRegistro() {
       cols + '</div>';
   }).join('');
   void hydrateRegistroFotoThumbs(lista);
+  updateHistTabBadges();
 }
 
 
@@ -19044,6 +19134,7 @@ function renderHistMediciones() {
   mediciones = mediciones.slice(0, 20);
   if (mediciones.length === 0) {
     document.getElementById('histSinDatos').classList.remove('setup-hidden');
+    updateHistTabBadges();
     return;
   }
 
@@ -19073,6 +19164,7 @@ function renderHistMediciones() {
       ${m.notas ? `<span class="hist-val hist-note-line">📝 ${m.notas}</span>` : ''}
     </div>
   `).join('');
+  updateHistTabBadges();
 }
 
 
@@ -19176,6 +19268,7 @@ function renderHistRecargas() {
     const sheetsSection = document.getElementById('sheetsRecargasSection');
     if (sheetsSection) sheetsSection.classList.add('setup-hidden');
   }
+  updateHistTabBadges();
 }
 
 
@@ -19398,7 +19491,13 @@ function renderDiagnostico() {
   }).join('');
 }
 
-let consejoCatActiva = 'cultivo';
+let consejoCatActiva = (function () {
+  try {
+    const c = localStorage.getItem('hc_consejo_cat');
+    if (c && CONSEJOS_DATA[c]) return c;
+  } catch (_) {}
+  return 'cultivo';
+})();
 
 /** µS/cm y pH orientativos (bibliografía / manuales de hidroponía) — ajustar por nutriente, agua y fase */
 const REF_CULTIVOS_EC_PH = [
@@ -19964,9 +20063,52 @@ function refreshConsejosSiVisible() {
   if (p && p.classList.contains('active')) renderConsejos();
 }
 
+function buildConsejoParaTiHTML() {
+  const tips = [];
+  const m = state.ultimaMedicion;
+  try {
+    const nut = getNutrienteTorre();
+    const eo = getECOptimaTorre();
+    if (m && m.ec && eo) {
+      const ec = parseFloat(String(m.ec).replace(',', '.'));
+      if (Number.isFinite(ec)) {
+        if (ec < eo.min) tips.push('Tu última EC (' + ec + ') está por debajo del rango orientativo del cultivo (' + eo.min + '–' + eo.max + ' µS/cm). Revisa dilución o recarga.');
+        else if (ec > eo.max) tips.push('EC alta respecto al rango orientativo — vigila síntomas de estrés osmótico y diluye si procede.');
+      }
+    }
+    if (m && m.ph && nut && nut.pHRango) {
+      const ph = parseFloat(String(m.ph).replace(',', '.'));
+      const lo = nut.pHRango[0];
+      const hi = nut.pHRango[1];
+      if (Number.isFinite(ph) && (ph < lo || ph > hi)) {
+        tips.push('pH fuera del rango recomendado para ' + (nut.nombre || 'tu nutriente') + ' (' + lo + '–' + hi + '): corrige con pH+ o pH− tras medir bien.');
+      }
+    }
+    if (state.ultimaRecarga) {
+      const diff = Date.now() - new Date(state.ultimaRecarga).getTime();
+      const d = Math.floor(diff / 86400000);
+      if (d >= 12) tips.push('Llevas ' + d + ' días desde la última recarga completa anotada: conviene planificar vaciado y mezcla nueva según tu checklist.');
+    }
+  } catch (_) {}
+  if (tips.length === 0) {
+    tips.push('Registra mediciones con regularidad: son la referencia real frente al clima modelo y al riego sugerido.');
+  }
+  return (
+    '<div class="consejo-para-ti-card">' +
+    '<div class="consejo-para-ti-kicker">Para ti ahora</div>' +
+    '<p class="consejo-para-ti-text">' + tips.slice(0, 2).map(t => escHtmlUi(t)).join(' ') + '</p>' +
+    '</div>'
+  );
+}
+
 function renderConsejos() {
   const cats = document.getElementById('consejosCats');
   const lista = document.getElementById('consejosLista');
+  const paraTi = document.getElementById('consejoParaTiWrap');
+  if (paraTi) {
+    paraTi.innerHTML = buildConsejoParaTiHTML();
+    paraTi.classList.remove('setup-hidden');
+  }
   cats.setAttribute('role', 'tablist');
   cats.setAttribute('aria-label', 'Categorías de consejos');
 
@@ -19995,6 +20137,9 @@ function renderConsejos() {
 
 function selConsejoCat(key) {
   consejoCatActiva = key;
+  try {
+    localStorage.setItem('hc_consejo_cat', key);
+  } catch (_) {}
   renderConsejos();
   document.getElementById('consejosLista').scrollTop = 0;
 }
@@ -20292,6 +20437,8 @@ function renderConsejosLista() {
 let calFecha = new Date();
 /** null = lista «próximos eventos»; Date = detalle de ese día en la tarjeta. */
 let calDiaSeleccionado = null;
+/** Filtro leyenda calendario: resalta días con este tipo de evento */
+let calLegendTipo = null;
 
 const MESES_LARGO = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -20547,6 +20694,8 @@ function renderCalendario() {
     if (esHoy) cellClass += ' cal-cell--today';
     else if (evs.length > 0) cellClass += ' cal-cell--marked';
     if (esSel) cellClass += ' cal-cell--selected';
+    const matchLegend = !calLegendTipo || evs.some(e => e.tipo === calLegendTipo);
+    if (calLegendTipo && evs.length > 0 && !matchLegend) cellClass += ' cal-cell--dimmed';
     const numInner =
       '<div class="cal-cell-num">' + d + '</div>' +
       '<div class="cal-cell-dots">' + dots + '</div>';
@@ -20587,6 +20736,8 @@ function renderCalendario() {
   if (selEnMes) {
     mostrarEventosDia(sel);
   } else {
+    const prevEl = document.getElementById('calDiaPreview');
+    if (prevEl) prevEl.classList.add('setup-hidden');
     if (calDiaLabelEl) calDiaLabelEl.textContent = '';
     if (proximos.length === 0) {
       eventosDiaEl.innerHTML = '<div class="cal-list-empty">No hay eventos próximos este mes</div>';
@@ -20603,7 +20754,21 @@ function renderCalendario() {
     }
   }
 
+  try {
+    document.querySelectorAll('.cal-legend-filter-btn').forEach(b => {
+      const k = b.getAttribute('data-cal-filter');
+      const on = k === calLegendTipo;
+      b.classList.toggle('cal-legend-filter-btn--active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  } catch (_) {}
+
   } catch(e) { console.error("renderCalendario error:", e); }
+}
+
+function toggleCalLegendFilter(tipo) {
+  calLegendTipo = calLegendTipo === tipo ? null : tipo;
+  renderCalendario();
 }
 
 function mostrarEventosDiaHC(d, mes, año) {
@@ -20636,6 +20801,13 @@ function mostrarEventosDia(fecha) {
 
   const eventos = generarEventos(fecha);
   const lista = document.getElementById('eventosDia');
+  const prevEl = document.getElementById('calDiaPreview');
+  if (prevEl) {
+    prevEl.classList.remove('setup-hidden');
+    prevEl.textContent = eventos.length
+      ? eventos.length + ' evento' + (eventos.length === 1 ? '' : 's') + ' este día'
+      : 'Sin eventos programados este día';
+  }
 
   if (eventos.length === 0) {
     lista.innerHTML = '<div class="cal-day-empty">Sin eventos especiales este día</div>';
@@ -21229,6 +21401,17 @@ function meteoclimaticFactorNocDesdeMc(mc, tNocMod, rhNocMod, dTempPlanta, dNocF
   return { factor: f, dT, dRh };
 }
 
+function mcPubDateToEdadRelativa(pubDate) {
+  if (!pubDate || typeof pubDate !== 'string') return '';
+  const d = Date.parse(pubDate);
+  if (!Number.isFinite(d)) return '';
+  const sec = Math.round((Date.now() - d) / 1000);
+  if (sec < 120) return ' · lectura hace unos segundos';
+  if (sec < 3600) return ' · lectura hace ~' + Math.max(1, Math.floor(sec / 60)) + ' min';
+  if (sec < 86400) return ' · lectura hace ~' + Math.floor(sec / 3600) + ' h';
+  return ' · lectura hace ' + Math.floor(sec / 86400) + ' días';
+}
+
 function renderMeteoclimaticPanelMeteo(mc) {
   const box = document.getElementById('meteoMeteoclimaticBox');
   const inner = document.getElementById('meteoMeteoclimaticInner');
@@ -21243,13 +21426,14 @@ function renderMeteoclimaticPanelMeteo(mc) {
   const linkHtml = href
     ? '<a href="' + href + '" target="_blank" rel="noopener noreferrer">Ver ficha en meteoclimatic.net</a>'
     : '';
+  const edad = mcPubDateToEdadRelativa(mc.pubDate);
   inner.innerHTML =
     '<div class="meteo-mc-title">📡 Estación cercana (Meteoclimatic)</div>' +
     '<div class="meteo-mc-body"><strong>' + escHtmlUi(mc.title || '') + '</strong> · ~' + Math.round(mc.distKm * 10) / 10 + ' km' +
     '<br>T actual: <strong>' + (Math.round(mc.temp * 10) / 10) + '</strong> °C · HR: ' + (mc.rh != null ? Math.round(mc.rh) + '%' : '—') +
     ' · Viento: ' + (mc.wind != null ? Math.round(mc.wind * 10) / 10 + ' km/h' : '—') +
     ' · Lluvia 24 h: ' + (mc.rain24h != null ? Math.round(mc.rain24h * 10) / 10 + ' mm' : '—') +
-    '<br><span class="meteo-mc-small">' + escHtmlUi(mc.pubDate || '') + '</span>' + (linkHtml ? ' · ' + linkHtml : '') +
+    '<br><span class="meteo-mc-small">' + escHtmlUi(mc.pubDate || '') + edad + '</span>' + (linkHtml ? ' · ' + linkHtml : '') +
     '<br><span class="meteo-mc-note">Red de estaciones aficionadas en la península y archipiélagos (gratis). Si no ves datos, la red puede estar saturada o el navegador bloquea el acceso: prueba más tarde.</span></div>';
 }
 
@@ -21273,6 +21457,13 @@ async function cargarMeteo() {
   const meteoAvisosOficiales = document.getElementById('meteoAvisosOficiales');
   const mcBoxLoad = document.getElementById('meteoMeteoclimaticBox');
   if (meteoDias) meteoDias.classList.add('setup-hidden');
+  const meteoOuterLoad = document.getElementById('meteoDiasOuter');
+  const meteoDotsLoad = document.getElementById('meteoDiasDots');
+  if (meteoOuterLoad) meteoOuterLoad.classList.add('setup-hidden');
+  if (meteoDotsLoad) {
+    meteoDotsLoad.classList.add('setup-hidden');
+    meteoDotsLoad.setAttribute('aria-hidden', 'true');
+  }
   if (meteoDetalle) meteoDetalle.classList.add('setup-hidden');
   if (meteoAlertas) meteoAlertas.classList.add('setup-hidden');
   if (meteoAvisosOficiales) meteoAvisosOficiales.classList.add('setup-hidden');
@@ -21327,9 +21518,20 @@ async function cargarMeteo() {
     saveState();
 
     renderMeteoDias();
+    initMeteoDiasStrip();
     seleccionarDia(0);
 
     document.getElementById('meteoLoader').style.display = 'none';
+    const meteoOuter = document.getElementById('meteoDiasOuter');
+    const meteoDotsEl = document.getElementById('meteoDiasDots');
+    if (meteoOuter) {
+      meteoOuter.classList.remove('setup-hidden');
+      meteoOuter.style.display = '';
+    }
+    if (meteoDotsEl) {
+      meteoDotsEl.classList.remove('setup-hidden');
+      meteoDotsEl.setAttribute('aria-hidden', 'false');
+    }
     document.getElementById('meteoDias').classList.remove('setup-hidden');
     document.getElementById('meteoDetalle').classList.remove('setup-hidden');
     document.getElementById('meteoAlertas').classList.remove('setup-hidden');
@@ -21353,8 +21555,19 @@ async function cargarMeteo() {
       meteoData = cached;
       try {
         renderMeteoDias();
+        initMeteoDiasStrip();
         seleccionarDia(0);
         document.getElementById('meteoLoader').style.display = 'none';
+        const mo = document.getElementById('meteoDiasOuter');
+        const md = document.getElementById('meteoDiasDots');
+        if (mo) {
+          mo.classList.remove('setup-hidden');
+          mo.style.display = '';
+        }
+        if (md) {
+          md.classList.remove('setup-hidden');
+          md.setAttribute('aria-hidden', 'false');
+        }
         document.getElementById('meteoDias').classList.remove('setup-hidden');
         document.getElementById('meteoDetalle').classList.remove('setup-hidden');
         document.getElementById('meteoAlertas').classList.remove('setup-hidden');
@@ -21400,6 +21613,76 @@ function renderMeteoDias() {
     card.onclick = () => seleccionarDia(i);
     dias.appendChild(card);
   });
+}
+
+function initMeteoDiasStrip() {
+  const strip = document.getElementById('meteoDias');
+  const outer = document.getElementById('meteoDiasOuter');
+  const dots = document.getElementById('meteoDiasDots');
+  if (!strip || !outer || !dots) return;
+  outer.classList.remove('setup-hidden');
+  outer.style.display = '';
+  dots.classList.remove('setup-hidden');
+  dots.setAttribute('aria-hidden', 'false');
+  const n = strip.children.length;
+  dots.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'meteo-dias-dot';
+    dot.setAttribute('aria-label', 'Día ' + (i + 1));
+    dot.onclick = () => seleccionarDia(i);
+    dots.appendChild(dot);
+  }
+  if (!strip._meteoScrollBound) {
+    strip._meteoScrollBound = true;
+    strip.addEventListener('scroll', function () {
+      const dts = document.querySelectorAll('#meteoDiasDots .meteo-dias-dot');
+      if (!dts.length) return;
+      let best = 0;
+      let bestD = Infinity;
+      const rectStrip = strip.getBoundingClientRect();
+      const mid = rectStrip.left + rectStrip.width / 2;
+      for (let j = 0; j < strip.children.length; j++) {
+        const r = strip.children[j].getBoundingClientRect();
+        const c = r.left + r.width / 2;
+        const dist = Math.abs(c - mid);
+        if (dist < bestD) { bestD = dist; best = j; }
+      }
+      dts.forEach((d, j) => d.classList.toggle('meteo-dias-dot--active', j === best));
+    }, { passive: true });
+  }
+}
+
+function syncMeteoRiegoCta(idx) {
+  const btn = document.getElementById('meteoBtnUsarRiego');
+  const hint = document.getElementById('meteoRiegoCtaHint');
+  if (!btn || !hint) return;
+  const d = meteoData && meteoData.daily && meteoData.daily.time && meteoData.daily.time[idx]
+    ? new Date(meteoData.daily.time[idx])
+    : null;
+  const nombre = d
+    ? (idx === 0 ? 'Hoy' : idx === 1 ? 'Mañana' : DIAS_SEMANA[d.getDay()] + ' ' + d.getDate())
+    : 'este día';
+  hint.textContent = 'Usará temperatura media de ' + nombre + ' como temperatura exterior en Riego.';
+  btn.classList.remove('setup-hidden');
+  hint.classList.remove('setup-hidden');
+}
+
+function meteoUsarDiaEnRiego() {
+  if (!meteoData || !meteoData.daily || diaSeleccionado < 0) return;
+  const idx = diaSeleccionado;
+  const tMax = Math.round(meteoData.daily.temperature_2m_max[idx]);
+  const tMin = Math.round(meteoData.daily.temperature_2m_min[idx]);
+  const tMedia = (tMax + tMin) / 2;
+  const el = document.getElementById('tempExt');
+  if (el) el.value = String(Math.round(tMedia * 10) / 10);
+  goTab('riego');
+  const riegoCard = document.getElementById('tempExt') && document.getElementById('tempExt').closest('.card');
+  if (riegoCard) requestAnimationFrame(function () {
+    riegoCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  showToast('Temperatura aplicada: ' + Math.round(tMedia * 10) / 10 + ' °C. Revisa superficie y cultivo.');
 }
 
 function seleccionarDia(idx) {
@@ -21452,6 +21735,18 @@ function seleccionarDia(idx) {
 
   // Alertas cultivo (vpd sigue calculado para heurísticas)
   renderAlertas(tMax, tMin, humMedia, viento, uv ?? 0, prob, vpd);
+
+  syncMeteoRiegoCta(idx);
+  try {
+    document.querySelectorAll('#meteoDiasDots .meteo-dias-dot').forEach((dot, i) => {
+      dot.classList.toggle('meteo-dias-dot--active', i === idx);
+    });
+    const strip = document.getElementById('meteoDias');
+    const card = strip && strip.children[idx];
+    if (card && typeof card.scrollIntoView === 'function') {
+      card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  } catch (_) {}
 }
 
 function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
@@ -22526,6 +22821,53 @@ function riegoTorreExteriorOmiteNocturnoPorClima(p) {
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
+function ocultarRiegoStickyExtras() {
+  ['riegoStickyBar', 'riegoPorQueDetails', 'riegoCalcMeta'].forEach(function (id) {
+    const x = document.getElementById(id);
+    if (x) x.classList.add('setup-hidden');
+  });
+}
+
+function applyRiegoTorreStickyExtras(p) {
+  const sticky = document.getElementById('riegoStickyBar');
+  const g = document.getElementById('riegoStickyGen');
+  const md = document.getElementById('riegoStickyMed');
+  const nc = document.getElementById('riegoStickyNoc');
+  const det = document.getElementById('riegoPorQueDetails');
+  const ul = document.getElementById('riegoPorQueList');
+  const meta = document.getElementById('riegoCalcMeta');
+  if (g) g.textContent = p.minON + '/' + p.minOFF + ' · ' + p.ciclos + ' cicl.';
+  if (md) md.textContent = p.minONMedio + '/' + p.minOFFMedio + ' · ' + p.ciclosMedio + ' cicl.';
+  if (nc) {
+    nc.textContent = p.nocSinResultado ? '—' : (p.minONNoc + '/' + p.minOFFNoc + ' · ' + p.ciclosNoc + ' cicl.');
+  }
+  if (sticky) sticky.classList.remove('setup-hidden');
+  if (ul && det) {
+    const hh = function (n) { return String(n).padStart(2, '0') + ':00'; };
+    const vent = (typeof p.medHIni === 'number' && typeof p.medHFin === 'number')
+      ? hh(p.medHIni) + '–' + hh(p.medHFin)
+      : '11:00–15:00';
+    const diaNom = p.diaRiego === 'manana' ? 'mañana (previsión)' : 'hoy';
+    ul.innerHTML =
+      '<li><strong>General (07:00–21:00):</strong> ' + p.minON + ' min ON / ' + p.minOFF + ' min OFF, ' + p.ciclos +
+      ' ciclos/día, ~' + p.totalON + ' min bomba, espacio ~' + p.espaciado + ' min, duty ~' + p.dutyCicloPct + '%.</li>' +
+      '<li><strong>Mediodía</strong> (' + vent + ', ' + diaNom + '): ' + p.minONMedio + '/' + p.minOFFMedio + ' min, ' + p.ciclosMedio +
+      ' ciclos en ventana, duty ~' + p.dutyMedioPct + '%.</li>' +
+      (p.nocSinResultado
+        ? '<li><strong>Nocturno:</strong> sin pulsos en este cálculo (umbral interior u omitido por clima).</li>'
+        : '<li><strong>Nocturno (21:00–07:00):</strong> ' + p.minONNoc + '/' + p.minOFFNoc + ' min, ' + p.ciclosNoc + ' ciclos, espaciado ~' + p.espNoc + ' min' +
+          (p.dutyNocPct != null ? ', duty ~' + p.dutyNocPct + '%' : '') + '.</li>');
+    det.classList.remove('setup-hidden');
+  }
+  if (meta) {
+    const pie = p.refetchMeteo
+      ? 'Datos meteorológicos pedidos a la API en esta consulta.'
+      : 'Puede usarse caché reciente (~1 min); pulsa de nuevo para forzar.';
+    meta.textContent = 'Calculado ' + new Date().toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + pie;
+    meta.classList.remove('setup-hidden');
+  }
+}
+
 async function calcularRiego(opts = {}) {
   /** Recalcular a mano o forzar refresco: siempre nueva petición a la API y sin devolver meteo obsoleto si falla la red. */
   const refetchMeteo = !!opts.forceRefresh || !!opts.manual;
@@ -22884,6 +23226,7 @@ async function calcularRiego(opts = {}) {
       try {
         actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
       } catch (_) {}
+      ocultarRiegoStickyExtras();
       document.getElementById('riegoLoader').classList.add('setup-hidden');
       document.getElementById('riegoResultado').classList.remove('setup-hidden');
       return;
@@ -23274,11 +23617,19 @@ async function calcularRiego(opts = {}) {
       actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
     } catch (_) {}
 
+    applyRiegoTorreStickyExtras({
+      minON, minOFF, ciclos, totalON, espaciado, dutyCicloPct,
+      minONMedio, minOFFMedio, ciclosMedio, totalONMedio, dutyMedioPct,
+      nocSinResultado, minONNoc, minOFFNoc, ciclosNoc, totalONNoc, espNoc, dutyNocPct,
+      diaRiego, medHIni, medHFin, refetchMeteo,
+    });
+
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     document.getElementById('riegoResultado').classList.remove('setup-hidden');
 
   } catch(e) {
     ocultarRiegoToldoRecoUI();
+    ocultarRiegoStickyExtras();
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     const elH = document.getElementById('riegoHorarioRecomendado');
     if (elH) {
@@ -23327,6 +23678,8 @@ function updateDashboard() {
 
   // Meteo
   fetchMeteoAlert();
+  try { updateDashClimaFreshness(); } catch (_) {}
+  try { updateDashInicioTileHints(); } catch (_) {}
 
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
 
@@ -23358,6 +23711,7 @@ function updateTiles(m) {
       statusEl.className = 'tile-status empty';
       statusEl.textContent = 'Sin datos';
     });
+    updateDashInicioTileHints();
     return;
   }
   const params = [
@@ -23386,6 +23740,28 @@ function updateTiles(m) {
     statusEl.className = `tile-status ${tipo}`;
     statusEl.textContent = statusLabels[p.key]?.[tipo] || (tipo === 'empty' ? 'Sin datos' : '');
   });
+  updateDashInicioTileHints();
+}
+
+function updateDashInicioTileHints() {
+  const hEc = document.getElementById('tileECHint');
+  const hPh = document.getElementById('tilePHHint');
+  if (!hEc && !hPh) return;
+  try {
+    const eo = getECOptimaTorre();
+    if (hEc) {
+      hEc.setAttribute(
+        'title',
+        'Rango orientativo según cultivos y nutriente: ' + eo.min + '–' + eo.max + ' µS/cm'
+      );
+    }
+    const nut = getNutrienteTorre();
+    const phMin = nut.pHRango ? nut.pHRango[0] : 5.5;
+    const phMax = nut.pHRango ? nut.pHRango[1] : 6.5;
+    if (hPh) {
+      hPh.setAttribute('title', 'Rango recomendado con tu nutriente: pH ' + phMin + '–' + phMax);
+    }
+  } catch (_) {}
 }
 
 function updateDashTorre() {
@@ -23774,9 +24150,13 @@ Las plantas están en condiciones ideales de crecimiento.`;
 
     // Guardar en estado para uso en riego
     state.meteoActual = { temp, hum, viento, uv, uvMaxHoy: uvMaxN, vpd };
+    try {
+      state._climaInicioActualizadoAt = Date.now();
+    } catch (_) {}
     saveState();
     clearMeteoAlertRetry();
     _meteoAlertRetryStep = 0;
+    updateDashClimaFreshness();
 
   } catch(e) {
     alertEl.className = 'meteo-alert warn';
@@ -23791,8 +24171,30 @@ Las plantas están en condiciones ideales de crecimiento.`;
   }
   })().finally(() => {
     _meteoAlertInFlight = null;
+    try { updateDashClimaFreshness(); } catch (_) {}
   });
   return _meteoAlertInFlight;
+}
+
+function updateDashClimaFreshness() {
+  const el = document.getElementById('dashMeteoFresh');
+  if (!el) return;
+  const t = state._climaInicioActualizadoAt;
+  if (!t || !Number.isFinite(t)) {
+    el.classList.add('setup-hidden');
+    el.textContent = '';
+    el.setAttribute('aria-hidden', 'true');
+    return;
+  }
+  const sec = Math.max(0, Math.round((Date.now() - t) / 1000));
+  let txt;
+  if (sec < 45) txt = 'Clima actualizado hace un momento';
+  else if (sec < 3600) txt = 'Clima actualizado hace ' + Math.max(1, Math.floor(sec / 60)) + ' min';
+  else if (sec < 86400) txt = 'Clima actualizado hace ' + Math.floor(sec / 3600) + ' h';
+  else txt = 'Clima actualizado hace ' + Math.floor(sec / 86400) + ' días';
+  el.textContent = txt;
+  el.classList.remove('setup-hidden');
+  el.setAttribute('aria-hidden', 'false');
 }
 
 // ── Meteo: ubicación automática (GPS) ────────────────────────────────────────
@@ -24425,7 +24827,22 @@ async function guardarMedicion() {
 
   updateDashboard();
   updateRecargaBar();
-  showToast('✅ Medición guardada · EC:' + (ec||'—') + ' pH:' + (ph||'—'));
+  try { updateHistTabBadges(); } catch (_) {}
+  requestAnimationFrame(function () {
+    const card = document.getElementById('ultimaMedicionCard');
+    if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+  showToast('✅ Medición guardada · EC:' + (ec||'—') + ' pH:' + (ph||'—'), false, {
+    label: 'Ver en historial',
+    onClick: function () {
+      goTab('historial');
+      histTab('mediciones');
+      requestAnimationFrame(function () {
+        const hm = document.getElementById('histMediciones');
+        if (hm) hm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    },
+  });
 
   // ── 3. INTENTAR ENVIAR A GOOGLE SHEETS (opcional) ────────────────────────
   const alertas = [];
@@ -24458,29 +24875,46 @@ async function guardarMedicion() {
 }
 
 
-function showToast(msg, error=false) {
+function showToast(msg, error=false, action) {
   let t = document.getElementById('toast');
   if (!t) {
     t = document.createElement('div');
     t.id = 'toast';
+    t.className = 'toast-host';
     t.setAttribute('role', 'status');
     t.setAttribute('aria-live', 'polite');
     t.setAttribute('aria-atomic', 'true');
-    t.style.cssText =
-      'position:fixed;top:max(70px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%) translateY(-10px);' +
-      'background:var(--green);color:var(--bg);font-family:var(--font-display);font-weight:700;font-size:13px;' +
-      'line-height:1.35;padding:12px 16px;border-radius:16px;opacity:0;transition:all 0.3s;pointer-events:none;' +
-      'z-index:9000;max-width:min(100vw - 24px, 420px);width:max-content;box-sizing:border-box;text-align:center;' +
-      'white-space:normal;word-break:break-word;hyphens:auto;';
     document.body.appendChild(t);
   }
-  t.textContent = msg;
+  clearTimeout(t._toastHideT);
+  t.innerHTML = '';
+  const span = document.createElement('span');
+  span.className = 'toast-msg';
+  span.textContent = msg;
+  t.appendChild(span);
+  if (action && action.label && typeof action.onClick === 'function') {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action-btn';
+    btn.textContent = action.label;
+    btn.onclick = function (e) {
+      e.stopPropagation();
+      try { action.onClick(); } catch (_) {}
+    };
+    t.appendChild(btn);
+    t.classList.add('toast-host--action');
+  } else {
+    t.classList.remove('toast-host--action');
+  }
   t.setAttribute('aria-live', error ? 'assertive' : 'polite');
-  t.style.background = error ? 'var(--red)' : 'var(--green)';
-  t.style.color = error ? 'white' : 'var(--bg)';
+  t.dataset.error = error ? '1' : '0';
   t.style.opacity = '1';
   t.style.transform = 'translateX(-50%) translateY(0)';
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-10px)'; }, 3500);
+  const hideMs = action && action.label ? 5200 : 3500;
+  t._toastHideT = setTimeout(function () {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(-10px)';
+  }, hideMs);
 }
 
 // ══════════════════════════════════════════════════
@@ -25141,6 +25575,7 @@ function cambiarTorreActiva(idx) {
   saveState();
   cerrarModalTorres();
   actualizarHeaderTorre();
+  renderSistemaInstalacionSelect();
   renderTorre();
   updateTorreStats();
   updateDashboard();
@@ -25346,6 +25781,7 @@ function actualizarHeaderTorre() {
 
 function renderSistemaInstalacionSelect() {
   const sel = document.getElementById('sistemaInstalacionSelect');
+  const unica = document.getElementById('sistemaInstalacionUnica');
   if (!sel) return;
   const torres = state.torres || [];
   const n = torres.length;
@@ -25362,6 +25798,27 @@ function renderSistemaInstalacionSelect() {
     sel.appendChild(opt);
   });
   if (n) sel.value = String(activa);
+
+  if (unica) {
+    if (n <= 1) {
+      const t = torres[0];
+      const nom = t ? ((t.nombre || '').trim() || 'Instalación') : 'Instalación';
+      const emoji = t?.emoji || '🌿';
+      const ti = t?.config?.tipoInstalacion;
+      const tipo = ti === 'nft' ? 'NFT' : ti === 'dwc' ? 'DWC' : 'Torre vertical';
+      unica.textContent = emoji + ' ' + nom + ' · ' + tipo;
+      unica.classList.remove('setup-hidden');
+      unica.setAttribute('aria-hidden', 'false');
+      sel.classList.add('setup-hidden');
+      sel.setAttribute('aria-hidden', 'true');
+    } else {
+      unica.classList.add('setup-hidden');
+      unica.textContent = '';
+      unica.setAttribute('aria-hidden', 'true');
+      sel.classList.remove('setup-hidden');
+      sel.setAttribute('aria-hidden', 'false');
+    }
+  }
 }
 
 function onSistemaInstalacionSelectChange(el) {
