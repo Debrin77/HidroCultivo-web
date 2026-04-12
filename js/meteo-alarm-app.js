@@ -1,7 +1,7 @@
 /**
  * MeteoAlarm: orquestación (EMMA, Nominatim, feed Atom, banner inicio, panel meteo, heurísticas).
- * Requiere antes: js/meteo-alarm-utils.js, js/meteo-alarm-parse.js y el script principal (state, saveState,
- * meteoData, tipoInstalacionNormalizado, goTab, invalidateMeteoNomiCache, globales _meteoNomi*).
+ * Requiere antes: js/meteo-alarm-utils.js, js/meteo-alarm-parse.js, js/meteo-forecast.js, js/riego-calculo.js,
+ * script principal (state, saveState, tipoInstalacionNormalizado, goTab).
  */
 
 // ── Avisos: MeteoAlarm (CAP en js/meteo-alarm-utils.js; parse/coincidencias en js/meteo-alarm-parse.js) ──
