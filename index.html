@@ -24031,12 +24031,19 @@ function meteoCapExtractEmmaId(entry) {
   const geos = entry.getElementsByTagNameNS(ns, 'geocode');
   for (let gi = 0; gi < geos.length; gi++) {
     const geo = geos[gi];
-    const vnames = geo.getElementsByTagNameNS(ns, 'valueName');
-    const vals = geo.getElementsByTagNameNS(ns, 'value');
-    for (let vi = 0; vi < vnames.length; vi++) {
-      if (vnames[vi].textContent.trim() === 'EMMA_ID' && vals[vi]) {
-        return vals[vi].textContent.trim();
+    const kids = geo.children;
+    for (let k = 0; k < kids.length; k++) {
+      const el = kids[k];
+      if (el.localName !== 'valueName' || el.textContent.trim() !== 'EMMA_ID') continue;
+      const next = kids[k + 1];
+      if (next && next.localName === 'value') {
+        const id = next.textContent.trim();
+        if (id) return id;
       }
+      const valsNs = geo.getElementsByTagNameNS(ns, 'value');
+      if (valsNs.length) return valsNs[0].textContent.trim();
+      const valsAny = geo.getElementsByTagName('value');
+      if (valsAny.length) return valsAny[0].textContent.trim();
     }
   }
   return '';
@@ -24059,7 +24066,12 @@ function meteoHaversineKm(lat1, lon1, lat2, lon2) {
 async function meteoCargarZonasEmmaCentroides() {
   if (_meteoEmmaZonasLista) return _meteoEmmaZonasLista;
   if (_meteoEmmaZonasPromise) return _meteoEmmaZonasPromise;
-  _meteoEmmaZonasPromise = fetch('data/meteoalarm-emma-centroids.json', { cache: 'force-cache' })
+  _meteoEmmaZonasPromise = fetch(
+    (typeof URL !== 'undefined' && typeof window !== 'undefined' && window.location && window.location.href)
+      ? new URL('data/meteoalarm-emma-centroids.json', window.location.href).href
+      : 'data/meteoalarm-emma-centroids.json',
+    { cache: 'force-cache' }
+  )
     .then((r) => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
