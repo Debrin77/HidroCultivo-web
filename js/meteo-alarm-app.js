@@ -1,6 +1,6 @@
 /**
  * MeteoAlarm: orquestación (EMMA, Nominatim, feed Atom, banner inicio, panel meteo, heurísticas).
- * Requiere antes: meteo-alarm-utils/parse, meteo-forecast-meteo.js, meteo-forecast-dashboard.js, riego-calculo.js,
+ * Requiere antes: meteo-alarm-utils/parse, meteo-forecast-meteo.js, meteo-forecast-dashboard.js, riego-calculo-helpers.js, riego-calculo-calcular.js,
  * script principal (state, saveState, tipoInstalacionNormalizado, goTab).
  */
 

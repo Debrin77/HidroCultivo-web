@@ -1,6 +1,6 @@
 ﻿/**
  * resetApp, initApp, reloj, a11y de diálogos, goTab, irMedirMunicipioClima.
- * Tras onboarding; antes de torre-render.js (initApp/goTab llaman código de módulos posteriores en runtime).
+ * Tras onboarding; antes de torre-render-build.js / torre-render-main.js (initApp/goTab en runtime).
  */
 // ══════════════════════════════════════════════════
 // INIT APP

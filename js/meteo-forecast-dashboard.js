@@ -1,6 +1,6 @@
 ﻿/**
  * Inicio, dashboard, tiles, recarga, GPS meteo.
- * Tras meteo-forecast-meteo.js; antes de riego-calculo.js.
+ * Tras meteo-forecast-meteo.js; antes de riego-calculo-helpers.js / riego-calculo-calcular.js.
  */
 
 // ══════════════════════════════════════════════════
