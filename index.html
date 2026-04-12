@@ -1013,23 +1013,6 @@
     <!-- TAB 3: TORRE ══════════════════════════════════ -->
     <div class="tab-panel" id="tab-sistema" role="tabpanel" aria-labelledby="btn-sistema" aria-hidden="true">
 
-      <div class="section-title torre-section-heading torre-tab-toolbar">
-        <h1 class="torre-tab-main-title">
-          <span class="section-title-accent" aria-hidden="true"></span>
-          <span class="accent" id="torreTabTitle">—</span>
-        </h1>
-        <div class="torre-tab-toolbar-main">
-          <label for="sistemaInstalacionSelect" class="visually-hidden">Instalación a editar en esta pestaña</label>
-          <select id="sistemaInstalacionSelect" class="form-input torre-tab-instalacion-select"
-            aria-label="Elegir instalación"
-            onchange="onSistemaInstalacionSelectChange(this)"></select>
-        </div>
-        <button type="button" onclick="abrirTutorialTorrePestanaSiPrimeraVez({ force: true })"
-          class="torre-tab-guia-btn">
-          Guía de pantalla
-        </button>
-      </div>
-
       <div id="tabContextHintSistema" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">
           <strong>Sistema</strong> define <strong>qué cultivas y dónde</strong> (cestas, variedades, fechas). Sin fechas válidas, los cálculos de riego usan valores por defecto: revísalo para que coincidan con tu realidad.
@@ -1037,16 +1020,23 @@
         </div>
       </div>
 
-      <!-- Nombre personalizado (torre / futuro NFT) -->
+      <!-- Instalación: selector, nombre, ubicación -->
       <div id="torreNombreCard" class="torre-card-elevated">
+        <div class="torre-instalacion-top-row">
+          <div class="torre-tab-toolbar-main torre-instalacion-select-wrap">
+            <label for="sistemaInstalacionSelect" class="visually-hidden">Instalación a editar en esta pestaña</label>
+            <select id="sistemaInstalacionSelect" class="form-input torre-tab-instalacion-select"
+              aria-label="Elegir instalación"
+              onchange="onSistemaInstalacionSelectChange(this)"></select>
+          </div>
+          <button type="button" onclick="abrirTutorialTorrePestanaSiPrimeraVez({ force: true })"
+            class="torre-tab-guia-btn">
+            Guía de pantalla
+          </button>
+        </div>
         <label class="form-label torre-field-label-sm" for="torreNombreInstalacionInput">
           Nombre de esta instalación
         </label>
-        <p id="torreNombreCardLocalidad" class="torre-nombre-localidad-line" role="status"></p>
-        <button type="button" id="torreBtnIrMedirMunicipio" class="torre-btn-ir-medir-municipio setup-hidden"
-          onclick="irMedirMunicipioClima()">
-          Ir a Medir — municipio (clima y avisos)
-        </button>
         <div class="torre-nombre-row">
           <input type="text" id="torreNombreInstalacionInput" class="form-input torre-nombre-input" maxlength="40"
             autocomplete="off" placeholder="Ej. Torre terraza, NFT balcón, Lechugas cocina…"
@@ -1061,6 +1051,11 @@
         <div class="torre-hint-micro">
           Aparece en Inicio, Mediciones e historial. Puedes cambiarlo cuando quieras.
         </div>
+        <p id="torreNombreCardLocalidad" class="torre-nombre-localidad-line" role="status"></p>
+        <button type="button" id="torreBtnIrMedirMunicipio" class="torre-btn-ir-medir-municipio setup-hidden"
+          onclick="irMedirMunicipioClima()">
+          Ir a Medir — municipio (clima y avisos)
+        </button>
       </div>
 
       <!-- Métricas, avisos y nutriente antes del montaje y del esquema (lectura de arriba abajo) -->

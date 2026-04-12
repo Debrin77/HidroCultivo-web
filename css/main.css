@@ -772,22 +772,6 @@ h1.section-title {
   margin-block-start: 0;
 }
 
-/* Título de pestaña Sistema: h1 válido sin envolver <select> (controles fuera del encabezado) */
-h1.torre-tab-main-title {
-  margin: 0;
-  font-family: var(--font-ui);
-  font-size: var(--text-3xl);
-  font-weight: 700;
-  color: var(--white);
-  letter-spacing: -0.02em;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  line-height: 1.2;
-}
-
 /* ══ Torre · acciones y copia local (antes inline) ══ */
 .hc-grid-2 {
   display: grid;
@@ -1489,15 +1473,6 @@ select#editVariedad option {
   font-size: 15px;
   line-height: 1;
   flex-shrink: 0;
-}
-.torre-section-heading .section-title-accent {
-  display: inline-block;
-  width: 4px;
-  height: 1.1em;
-  margin-right: 8px;
-  border-radius: 2px;
-  background: var(--green);
-  vertical-align: -0.15em;
 }
 .torre-info-banner-icon {
   width: 8px;
@@ -7178,6 +7153,22 @@ button.config-option {
   min-width: 0;
   flex: 1;
 }
+.torre-instalacion-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.torre-instalacion-select-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.torre-instalacion-select-wrap .torre-tab-instalacion-select {
+  width: 100%;
+  max-width: none;
+}
 .torre-tab-instalacion-select {
   max-width: 260px;
   font-size: 13px;
@@ -7237,7 +7228,7 @@ button.config-option {
   font-size: 12px;
   font-weight: 700;
   color: #0f172a;
-  margin: -2px 0 8px;
+  margin: 10px 0 6px;
   line-height: 1.35;
 }
 .torre-nombre-localidad-line--vacío {

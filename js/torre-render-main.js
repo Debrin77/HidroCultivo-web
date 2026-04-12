@@ -754,12 +754,6 @@ function updateTorreStats() {
   // Título torre
   renderTablaVariedades();
   const locStr = textoLocalidadMeteoCfg(cfg);
-  const ttEl = document.getElementById('torreTabTitle');
-  if (ttEl) {
-    const tipoSuf = esNftCfg ? ' · NFT' : esDwcCfg ? ' · DWC' : '';
-    const locSuf = locStr ? ' · ' + locStr : '';
-    ttEl.textContent = torreNombre + tipoSuf + locSuf;
-  }
   const locCard = document.getElementById('torreNombreCardLocalidad');
   if (locCard) {
     locCard.textContent = locStr ? '📍 ' + locStr : '📍 Sin municipio — configúralo en Medir';
