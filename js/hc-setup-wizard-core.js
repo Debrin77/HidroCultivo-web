@@ -794,6 +794,80 @@ function redimensionarMatrizTorreNftPreservando(cfg) {
   cfg.numCestas = nHx;
 }
 
+function textoResumenMontajeNftSistema(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'nft') return '';
+  const d = nftDisposicionNormalizada(cfg.nftDisposicion || 'mesa');
+  const dTxt = d === 'mesa' ? 'Mesa' : d === 'escalera' ? 'Escalera' : 'Pared';
+  let nCh = cfg.nftNumCanales ?? cfg.numNiveles ?? 4;
+  try {
+    const hyd = getNftHidraulicaDesdeConfig(cfg);
+    if (hyd && Number.isFinite(hyd.nCh)) nCh = hyd.nCh;
+  } catch (_) {}
+  const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
+  const pend = cfg.nftPendientePct ?? 2;
+  return dTxt + ' · ' + nCh + ' tubos × ' + hx + ' huecos · ' + pend + '% pend.';
+}
+
+function textoResumenSistemaDwcPanel(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return '';
+  const L = cfg.dwcDepositoLargoCm;
+  const W = cfg.dwcDepositoAnchoCm;
+  const P = cfg.dwcDepositoProfCm;
+  const n = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
+  const c = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
+  const parts = [];
+  if (L && W && P) {
+    parts.push(
+      Math.round(Number(L)) + '×' + Math.round(Number(W)) + '×' + Math.round(Number(P)) + ' cm'
+    );
+  }
+  if (cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0) {
+    parts.push('Ø' + Math.round(Number(cfg.dwcNetPotRimMm)) + ' mm');
+  }
+  parts.push(n + '×' + c + ' macetas');
+  return parts.join(' · ');
+}
+
+function applySistemaTipoPanelesColapsablesUI() {
+  const cfg = state.configTorre;
+  const nftCard = document.getElementById('sistemaNftMontajeCard');
+  const nftBtn = document.getElementById('btnToggleSistemaNftMontaje');
+  const nftBody = document.getElementById('sistemaNftMontajeBody');
+  const nftRes = document.getElementById('sistemaNftMontajeResumen');
+  if (nftCard && nftBtn && nftBody && cfg && cfg.tipoInstalacion === 'nft' && nftCard.style.display === 'block') {
+    if (nftRes) nftRes.textContent = textoResumenMontajeNftSistema(cfg);
+    const col = cfg.uiSistemaNftMontajeColapsado === true;
+    nftBody.hidden = col;
+    nftBtn.setAttribute('aria-expanded', col ? 'false' : 'true');
+  }
+  const dwcCard = document.getElementById('sistemaDwcAyudaCard');
+  const dwcBtn = document.getElementById('btnToggleSistemaDwc');
+  const dwcBody = document.getElementById('sistemaDwcAyudaBody');
+  const dwcRes = document.getElementById('sistemaDwcResumen');
+  if (dwcCard && dwcBtn && dwcBody && cfg && cfg.tipoInstalacion === 'dwc' && dwcCard.style.display === 'block') {
+    if (dwcRes) dwcRes.textContent = textoResumenSistemaDwcPanel(cfg);
+    const colD = cfg.uiSistemaDwcColapsado === true;
+    dwcBody.hidden = colD;
+    dwcBtn.setAttribute('aria-expanded', colD ? 'false' : 'true');
+  }
+}
+
+function toggleSistemaNftMontajePanel() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') return;
+  state.configTorre.uiSistemaNftMontajeColapsado = !state.configTorre.uiSistemaNftMontajeColapsado;
+  guardarEstadoTorreActual();
+  saveState();
+  applySistemaTipoPanelesColapsablesUI();
+}
+
+function toggleSistemaDwcPanel() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  state.configTorre.uiSistemaDwcColapsado = !state.configTorre.uiSistemaDwcColapsado;
+  guardarEstadoTorreActual();
+  saveState();
+  applySistemaTipoPanelesColapsablesUI();
+}
+
 function sincronizarSistemaNftMontajeUI() {
   const card = document.getElementById('sistemaNftMontajeCard');
   const dwcInfo = document.getElementById('sistemaDwcAyudaCard');
@@ -809,9 +883,13 @@ function sincronizarSistemaNftMontajeUI() {
       dwcInfo.style.display = 'none';
     }
   }
-  if (!card) return;
+  if (!card) {
+    applySistemaTipoPanelesColapsablesUI();
+    return;
+  }
   if (!cfg || cfg.tipoInstalacion !== 'nft') {
     card.style.display = 'none';
+    applySistemaTipoPanelesColapsablesUI();
     return;
   }
   card.style.display = 'block';
@@ -871,6 +949,7 @@ function sincronizarSistemaNftMontajeUI() {
   }
   onSistemaNftMesaMultinivelToggle();
   refrescarSistemaNftMontajeSubpanels();
+  applySistemaTipoPanelesColapsablesUI();
 }
 
 /** Desde Sistema: mismo overlay que «configurar», saltando al paso 1 (NFT: canal, tubo Ø, lámina, bomba). */
@@ -943,6 +1022,7 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   }
   cfg.nftBombaEstimada = getNftBombaDesdeConfig(cfg);
   redimensionarMatrizTorreNftPreservando(cfg);
+  cfg.uiSistemaNftMontajeColapsado = true;
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
@@ -959,6 +1039,9 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
     } catch (e2) {}
   }
   showToast('Montaje NFT aplicado');
+  try {
+    applySistemaTipoPanelesColapsablesUI();
+  } catch (_) {}
 }
 
 const DWC_FORM_IDS_SISTEMA = {

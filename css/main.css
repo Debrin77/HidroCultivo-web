@@ -7564,6 +7564,69 @@ button.config-option {
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
+/* Pestaña Sistema: montaje NFT y datos DWC como panel desplegable */
+.torre-sistema-panel {
+  padding-top: 2px;
+}
+.torre-sistema-panel-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: -2px -2px 0;
+  border: none;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--green) 6%, #fff);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.torre-sistema-panel-head--dwc {
+  background: color-mix(in srgb, #06b6d4 10%, #fff);
+  border: 1.5px solid rgba(6, 182, 212, 0.35);
+  margin: 0 0 8px;
+}
+.torre-sistema-panel--dwc .torre-sistema-panel-body {
+  margin-top: 0;
+}
+.torre-sistema-panel-head-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.torre-sistema-panel-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.torre-sistema-panel-sub {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+  max-width: 100%;
+}
+.torre-sistema-panel-head-caret {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+.torre-sistema-panel-head[aria-expanded="false"] .torre-sistema-panel-head-caret {
+  transform: rotate(-90deg);
+}
+.torre-sistema-panel-body {
+  margin-top: 8px;
+}
 .torre-nft-apply-btn {
   width: 100%;
   padding: 11px 14px;

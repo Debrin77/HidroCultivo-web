@@ -1089,11 +1089,17 @@
         </div>
       </section>
 
-      <!-- Montaje NFT (Sistema): mismo criterio que el asistente, sin abrir el wizard -->
-      <div id="sistemaNftMontajeCard" class="torre-card-elevated setup-hidden">
-        <div class="torre-nft-kicker">
-          Montaje NFT
-        </div>
+      <!-- Montaje NFT (Sistema): desplegable con resumen tras aplicar -->
+      <div id="sistemaNftMontajeCard" class="torre-card-elevated torre-sistema-panel setup-hidden">
+        <button type="button" id="btnToggleSistemaNftMontaje" class="torre-sistema-panel-head"
+          aria-expanded="true" aria-controls="sistemaNftMontajeBody" onclick="toggleSistemaNftMontajePanel()">
+          <span class="torre-sistema-panel-head-stack">
+            <span class="torre-sistema-panel-kicker">Montaje NFT</span>
+            <span id="sistemaNftMontajeResumen" class="torre-sistema-panel-sub"></span>
+          </span>
+          <span class="torre-sistema-panel-head-caret" aria-hidden="true">▾</span>
+        </button>
+        <div id="sistemaNftMontajeBody" class="torre-sistema-panel-body">
         <p class="torre-nft-p">
           Disposición, multinivel, escalera/A y pendiente. Los datos coinciden con el <strong>asistente de configuración</strong>; aquí puedes retocarlos y pulsar <strong>Aplicar</strong>.
         </p>
@@ -1187,10 +1193,19 @@
         <button type="button" class="torre-nft-apply-btn" onclick="aplicarSistemaNftMontajeDesdeFormulario()">
           Aplicar montaje NFT
         </button>
+        </div>
       </div>
 
-      <div id="sistemaDwcAyudaCard" class="torre-dwc-card setup-hidden">
-        <div class="torre-dwc-inner">
+      <div id="sistemaDwcAyudaCard" class="torre-dwc-card torre-sistema-panel--dwc setup-hidden">
+        <button type="button" id="btnToggleSistemaDwc" class="torre-sistema-panel-head torre-sistema-panel-head--dwc"
+          aria-expanded="true" aria-controls="sistemaDwcAyudaBody" onclick="toggleSistemaDwcPanel()">
+          <span class="torre-sistema-panel-head-stack">
+            <span class="torre-sistema-panel-kicker">Depósito DWC</span>
+            <span id="sistemaDwcResumen" class="torre-sistema-panel-sub"></span>
+          </span>
+          <span class="torre-sistema-panel-head-caret" aria-hidden="true">▾</span>
+        </button>
+        <div id="sistemaDwcAyudaBody" class="torre-dwc-inner torre-sistema-panel-body">
           <div class="torre-dwc-grid-3">
             <div>
               <label class="form-label torre-dwc-lbl-mono" for="sysDwcLargoCm">L cm</label>

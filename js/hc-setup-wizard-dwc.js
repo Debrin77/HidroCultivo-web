@@ -920,6 +920,7 @@ function aplicarSistemaDwcDesdeFormulario() {
   try {
     dwcPersistSnapshotMaxCestasEnCfg(cfg);
   } catch (e0) {}
+  cfg.uiSistemaDwcColapsado = true;
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
@@ -930,5 +931,8 @@ function aplicarSistemaDwcDesdeFormulario() {
     refreshDwcSistemaMedidasUI();
   } catch (eH) {}
   showToast('Datos DWC guardados');
+  try {
+    applySistemaTipoPanelesColapsablesUI();
+  } catch (_) {}
 }
 
