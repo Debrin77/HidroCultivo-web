@@ -44,6 +44,9 @@
   --card-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.05);
   --card-shadow-press: 0 1px 2px rgba(15, 23, 42, 0.03);
   --focus-ring: 0 0 0 2px rgba(29, 78, 216, 0.26);
+  /* Feedback al pulsar bloques tipo tarjeta (solo mientras :active) */
+  --surface-attention-ms: 0.14s;
+  --surface-press-y: 1px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -110,6 +113,16 @@
     animation: none !important;
     opacity: 1;
     transform: none;
+  }
+  .card:active,
+  .info-banner:active,
+  .meteo-alert:active,
+  .dash-torre-banner:active,
+  .dash-sistema-info[role="button"]:active {
+    transform: none !important;
+  }
+  .meteo-alert:active {
+    filter: none !important;
   }
 }
 
@@ -703,6 +716,15 @@ body::before { display: none; }
   padding: 16px;
   margin-bottom: 12px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition:
+    transform var(--surface-attention-ms) ease,
+    box-shadow var(--surface-attention-ms) ease,
+    border-color var(--surface-attention-ms) ease;
+}
+.card:active {
+  transform: translateY(var(--surface-press-y));
+  box-shadow: var(--card-shadow-press);
+  border-color: color-mix(in srgb, var(--green) 35%, var(--border));
 }
 .card-title {
   font-family: var(--font-ui);
@@ -1902,6 +1924,15 @@ select#editVariedad option {
   gap: 8px;
   align-items: flex-start;
   box-shadow: var(--card-shadow-soft);
+  transition:
+    transform var(--surface-attention-ms) ease,
+    box-shadow var(--surface-attention-ms) ease,
+    border-color var(--surface-attention-ms) ease;
+}
+.info-banner:active {
+  transform: translateY(var(--surface-press-y));
+  box-shadow: var(--card-shadow-press);
+  border-color: rgba(21, 128, 61, 0.38);
 }
 .aviso-cestas-sin-fecha {
   margin: 0 0 12px;
@@ -2274,6 +2305,15 @@ body.hc-welcome-open #app {
   text-align: left;
   appearance: none;
   -webkit-appearance: none;
+  transition:
+    transform var(--surface-attention-ms) ease,
+    box-shadow var(--surface-attention-ms) ease,
+    border-color var(--surface-attention-ms) ease;
+}
+.dash-torre-banner:active {
+  transform: translateY(var(--surface-press-y));
+  box-shadow: var(--card-shadow-press);
+  border-color: #4ade80;
 }
 .dash-torre-banner-main {
   display: flex;
@@ -2315,6 +2355,15 @@ body.hc-welcome-open #app {
   margin-bottom: 10px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    transform var(--surface-attention-ms) ease,
+    box-shadow var(--surface-attention-ms) ease,
+    border-color var(--surface-attention-ms) ease;
+}
+.dash-sistema-info[role="button"]:active {
+  transform: translateY(var(--surface-press-y));
+  box-shadow: var(--card-shadow-press);
+  border-color: #cbd5e1;
 }
 .dash-sistema-main {
   display: flex;
@@ -2726,6 +2775,15 @@ button.torre-summary:focus-visible,
   align-items: flex-start;
   border: 1px solid;
   box-shadow: var(--card-shadow-soft);
+  transition:
+    transform var(--surface-attention-ms) ease,
+    box-shadow var(--surface-attention-ms) ease,
+    filter var(--surface-attention-ms) ease;
+}
+.meteo-alert:active {
+  transform: translateY(var(--surface-press-y));
+  box-shadow: var(--card-shadow-press);
+  filter: brightness(0.98);
 }
 .meteo-alert.ok     { background: #f0fdf4; border-color: #16a34a; }
 .meteo-alert.warn   { background: #fffbeb; border-color: #d97706; }
