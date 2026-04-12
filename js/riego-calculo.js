@@ -1,6 +1,6 @@
 /**
  * Cálculo de riego (torre/NFT/DWC), toldo, sincronización con torre activa, integración Meteoclimatic en el modelo.
- * Carga después de js/meteo-forecast.js (meteoFetchConFallback, meteoclimaticObservacionCercana, …).
+ * Carga después de meteo-forecast-meteo.js / meteo-forecast-dashboard.js (meteoFetchConFallback, …).
  * Depende del script principal: state, saveState, tipoInstalacionNormalizado, setupCoordenadas, helpers torre/cultivo.
  */
 
