@@ -671,6 +671,27 @@ body::before { display: none; }
   border: 1.5px solid var(--bg2);
 }
 
+/* Pestañas con etiqueta larga: más ancho + una sola línea (la barra ya es scrollable horizontalmente) */
+.tab-btn#btn-calendario,
+.tab-btn#btn-historial {
+  flex: 0 0 auto;
+  min-width: max(5.5rem, 12ch);
+  max-width: none;
+  padding-inline: 5px;
+}
+.tab-btn#btn-calendario .tab-label,
+.tab-btn#btn-historial .tab-label {
+  display: block;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  -webkit-box-orient: unset;
+  overflow: visible;
+  white-space: nowrap;
+  word-break: normal;
+  hyphens: manual;
+  line-height: 1.15;
+}
+
 .ctp-modal-overlay { z-index: 850; }
 .ctp-intro {
   font-size: 13px;
