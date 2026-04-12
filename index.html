@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-10-mc-riego-ajuste">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-10-meteo-flash-error">
 </head>
 <body>
 
@@ -3253,6 +3253,7 @@
   <script src="js/state-torre-logic.js"></script>
   <script src="js/ui-tabs.js"></script>
   <script src="js/meteo-alarm-utils.js?v=1"></script>
+  <script src="js/meteo-alarm-parse.js?v=1"></script>
 <script>
 // ══════════════════════════════════════════════════
 // CONFIG
@@ -24014,7 +24015,7 @@ async function ensureMeteoCoordsAuto() {
   return _meteoGeoInFlight;
 }
 
-// ── Avisos: MeteoAlarm (helpers CAP en js/meteo-alarm-utils.js) ──
+// ── Avisos: MeteoAlarm (CAP en js/meteo-alarm-utils.js; parse/coincidencias en js/meteo-alarm-parse.js) ──
 let _meteoEmmaZonasLista = null;
 let _meteoEmmaZonasPromise = null;
 
@@ -24065,42 +24066,6 @@ async function meteoEmmaIdParaUbicacion(lat, lon) {
   return best;
 }
 
-/**
- * Variantes normalizadas del nombre de municipio para MeteoAlarm (avisos en castellano/valenciano/inglés).
- * Ej.: Castelló de la Plana ↔ Castellón de la Plana; Alacant ↔ Alicante.
- */
-function meteoMunicipioVariantesNormalizadas(mFullNorm) {
-  const m = String(mFullNorm || '').replace(/\s+/g, ' ').trim();
-  const set = new Set([m]);
-  const add = (s) => { const t = String(s || '').replace(/\s+/g, ' ').trim(); if (t) set.add(t); };
-
-  if (/^castellon?\s+de\s+la\s+plana$/.test(m)) {
-    add('castello de la plana');
-    add('castellon de la plana');
-    add('castello');
-    add('castellon');
-  } else if (m === 'castello' || m === 'castellon') {
-    add('castello de la plana');
-    add('castellon de la plana');
-    add('castello');
-    add('castellon');
-  }
-
-  if (m === 'alicante' || m === 'alacant') {
-    add('alicante');
-    add('alacant');
-  }
-  if (m === 'valencia') {
-    add('valencia');
-  }
-  if (m === 'vitoria-gasteiz' || m === 'vitoria' || m === 'gasteiz') {
-    add('vitoria-gasteiz');
-    add('vitoria');
-    add('gasteiz');
-  }
-  return [...set];
-}
-
 /** Coordenadas asociadas al municipio de avisos (geocodificación del texto) o, si no hay, a la instalación. */
 function getMeteoLatLonParaNominatim(cfg) {
   const c = cfg || state.configTorre || {};
@@ -24113,99 +24078,6 @@ function getMeteoLatLonParaNominatim(cfg) {
   return { lat: NaN, lon: NaN };
 }
 
-function meteoExtraeRegionTrasUltimoDe(areaDesc) {
-  const s = String(areaDesc || '').trim();
-  const low = s.toLowerCase();
-  const idx = low.lastIndexOf(' de ');
-  if (idx >= 0) {
-    return s.slice(idx + 4).trim().replace(/\s*\([^)]*\)\s*$/g, '').trim();
-  }
-  if (/\bcosta\s*[-–]\s*/i.test(s)) {
-    const parts = s.split(/\s*[-–]\s*/);
-    const last = parts[parts.length - 1].trim();
-    if (last.length >= 2) return last.replace(/\s*\([^)]*\)\s*$/g, '').trim();
-  }
-  return '';
-}
-
-/** MeteoAlarm España usa subzonas tipo «Litoral sur de Alicante», no siempre el nombre del pueblo. */
-function meteoAreaPareceZonaAemetEsp(areaDesc) {
-  const s = meteoNormTxt(areaDesc);
-  if (/\b(litoral|interior|prelitoral|costa|campo|marina|vega|valle|altiplano|pirine|serra|axarquia|guadalhorce|ampurd|emporda)\b/.test(s)) return true;
-  if (/\b(sur|norte|este|oeste|central|noroeste|sureste|noreste|suroeste)\s+de\s+\w/.test(s)) return true;
-  if (/(-|–)\s*sur\s+de\s+/.test(s)) return true;
-  return false;
-}
-
-function meteoNormParaCoincidenciaProvincia(s) {
-  return meteoNormTxt(String(s || ''))
-    .replace(/\s+/g, ' ')
-    .replace(/\bcastello\b/g, 'castellon')
-    .trim();
-}
-
-/**
- * Respaldo si no hay coords o no se pudo cargar centroides EMMA: provincia/comarca en el geocoding
- * frente al texto de la zona del CAP (puede ser impreciso con varios sectores en la misma provincia).
- */
-function meteoalarmCoincideZonaProvinciaNominatim(areaDesc, _title) {
-  const ad = String(areaDesc || '').trim();
-  if (!ad) return false;
-  if (!meteoAreaPareceZonaAemetEsp(ad)) return false;
-
-  let region = meteoExtraeRegionTrasUltimoDe(ad);
-  if (!region || region.length < 2) region = ad;
-  let provN = meteoNormParaCoincidenciaProvincia(region);
-  if (provN.length < 3) return false;
-  const blob = _meteoNomiBlobProvincia;
-  if (!blob || blob.length < 5) return false;
-  const b = meteoNormParaCoincidenciaProvincia(blob);
-  if (b.includes(provN)) return true;
-  const parts = provN.split(/\s+/).filter(t => t.length >= 4);
-  if (parts.length >= 1 && parts.every(p => b.includes(p))) return true;
-  const parts3 = provN.split(/\s+/).filter(t => t.length === 3);
-  if (parts3.length && parts3.every(p => b.includes(p))) return true;
-  return false;
-}
-
-/** Coincidencia estricta con municipio/localidad (no provincia ni CCAA solas). */
-function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
-  const raw = String(municipio || '').split(',')[0].trim();
-  if (!raw) return false;
-  const mFull = meteoNormTxt(raw).replace(/\s+/g, ' ').trim();
-  const blob = (meteoNormTxt(areaDesc) + ' ' + meteoNormTxt(title)).replace(/\s+/g, ' ').trim();
-  if (!blob) return false;
-
-  const variantes = meteoMunicipioVariantesNormalizadas(mFull);
-  for (let vi = 0; vi < variantes.length; vi++) {
-    const vf = variantes[vi];
-    if (vf.length >= 12 && blob.includes(vf)) return true;
-  }
-
-  if ((mFull === 'alicante' || mFull === 'alacant') &&
-      (blob.includes('alicante') || blob.includes('alacant'))) return true;
-
-  if (mFull.length >= 6 && blob.includes(mFull)) return true;
-
-  const stop = { de:1, la:1, el:1, las:1, los:1, del:1, les:1, els:1, en:1, y:1, i:1, al:1, sa:1 };
-  const tokens = mFull.split(/\s+/).filter(t => t.length >= 3 && !stop[t]);
-  const significant = tokens.filter(t => t.length >= 4);
-  const toCheck = significant.length ? significant : tokens;
-  if (toCheck.length === 0) {
-    return mFull.length >= 3 && blob.includes(mFull);
-  }
-
-  if (toCheck.length === 1 && toCheck[0].length < 10) {
-    const broad = /\b(provincia|comarca|comunitat|comunidad autonoma|comunitat autonoma|costera|costa|litoral|prelitoral|interior|illes|islas|illa de|camp de|camp del|marina|ribera|altiplano|pirine|serrania|muntanya)\b/;
-    if (broad.test(blob)) return false;
-  }
-
-  for (let i = 0; i < toCheck.length; i++) {
-    if (!blob.includes(toCheck[i])) return false;
-  }
-  return true;
-}
-
 function getMunicipioMeteoFiltro() {
   const cfg = state.configTorre || {};
   const ex = (cfg.localidadMeteo || '').trim();
@@ -24214,118 +24086,6 @@ function getMunicipioMeteoFiltro() {
   if (nom) return nom;
   const c = (cfg.ciudad || '').trim();
   return c ? c.split(',')[0].trim() : '';
-}
-
-/**
- * El Atom MeteoAlarm España suele traer &lt;title&gt; y &lt;cap:event&gt; en inglés; &lt;cap:areaDesc&gt; ya va en español.
- * Construimos un título legible en español; si el título ya parece español, lo respetamos.
- */
-function meteoAvisoTituloEs(tipo, title, event, areaDesc) {
-  const t0 = String(title || '').trim();
-  const pareceIngles =
-    /\b(Yellow|Orange|Red|Warning issued|Moderate wind|Moderate rain|coastalevent)\b/i.test(t0) ||
-    /\b(Moderate|Severe|Minor|Extreme)\s+(wind|rain|snow|thunderstorm|coastalevent|fog)\s+warning\b/i.test(String(event || ''));
-  if (t0 && !pareceIngles && /\b(Aviso|Advertencia|Alerta|Amarillo|Naranja|Rojo)\b/i.test(t0)) {
-    return t0;
-  }
-  const nivel = tipo === 'bad' ? 'rojo' : tipo === 'severe' ? 'naranja' : 'amarillo';
-  const blob = (String(event || '') + ' ' + t0).toLowerCase();
-  const temas = [
-    [/wind|viento/, 'viento'],
-    [/rain|lluvia|precipitation|shower/, 'lluvia'],
-    [/thunderstorm|tormenta|storm/, 'tormentas'],
-    [/snow|nieve/, 'nieve'],
-    [/fog|niebla|mist/, 'niebla'],
-    [/heat|high temperature|temperature|calor|ola de calor/, 'temperaturas'],
-    [/cold|frost|freeze|fr[ií]o|helada/, 'frío'],
-    [/coastal|coastalevent|oleaje|wave|rough sea/, 'fenómenos costeros'],
-    [/avalanche|alud/, 'aludes'],
-    [/flood|inundaci|flash flood/, 'inundaciones'],
-    [/forest fire|incendio|wildfire/, 'incendios'],
-    [/ice|hielo|icing/, 'hielo'],
-    [/tornado/, 'tornados'],
-    [/lightning|rayo/, 'rayos'],
-  ];
-  let tema = 'fenómenos meteorológicos adversos';
-  for (let i = 0; i < temas.length; i++) {
-    if (temas[i][0].test(blob)) {
-      tema = temas[i][1];
-      break;
-    }
-  }
-  const zona = String(areaDesc || '').trim();
-  if (zona) return 'Aviso ' + nivel + ' por ' + tema + ' — ' + zona;
-  return 'Aviso ' + nivel + ' por ' + tema;
-}
-
-function meteoAvisoDetalleEs(event, areaDesc) {
-  const zona = String(areaDesc || '').trim();
-  const e = String(event || '').toLowerCase();
-  let tipoEv = '';
-  if (/wind/.test(e)) tipoEv = 'Viento';
-  else if (/rain|shower|precipitation/.test(e)) tipoEv = 'Lluvia';
-  else if (/thunderstorm/.test(e)) tipoEv = 'Tormentas';
-  else if (/snow/.test(e)) tipoEv = 'Nieve';
-  else if (/fog|mist/.test(e)) tipoEv = 'Niebla';
-  else if (/heat|temperature/.test(e)) tipoEv = 'Temperatura';
-  else if (/cold|frost/.test(e)) tipoEv = 'Frío';
-  else if (/coastal|coastalevent|wave/.test(e)) tipoEv = 'Costeros';
-  else if (e) tipoEv = event.trim();
-  const partes = [];
-  if (zona) partes.push('Zona: ' + zona);
-  if (tipoEv) partes.push('Tipo: ' + tipoEv);
-  return partes.join(' · ') || (zona || 'Aviso meteorológico oficial (AEMET / MeteoAlarm)');
-}
-
-function parseMeteoalarmAtomEntries(xmlText) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlText, 'text/xml');
-  if (doc.querySelector('parsererror')) return [];
-  const now = new Date();
-  const out = [];
-  const seenId = new Set();
-
-  doc.querySelectorAll('entry').forEach(entry => {
-    const msgType = meteoCapTag(entry, 'message_type');
-    if (msgType === 'Cancel') return;
-    const st = meteoCapTag(entry, 'status');
-    if (st && st !== 'Actual') return;
-    const expiresStr = meteoCapTag(entry, 'expires');
-    if (expiresStr) {
-      const ex = new Date(expiresStr);
-      if (!isNaN(ex.getTime()) && ex < now) return;
-    }
-    const titleEl = entry.querySelector('title');
-    const title = titleEl ? titleEl.textContent.trim() : '';
-    const sev = meteoCapTag(entry, 'severity');
-    const areaDesc = meteoCapTag(entry, 'areaDesc');
-    const event = meteoCapTag(entry, 'event');
-    if (!title && !areaDesc) return;
-
-    // MeteoAlarm España: el <title> puede ir en inglés (Yellow…) o en español (Amarillo…)
-    let tipo = '';
-    const titleS = title || '';
-    if (/\bRed\b|\bRojo\b/i.test(titleS) || sev === 'Extreme') tipo = 'bad';
-    else if (/\bOrange\b|\bNaranja\b/i.test(titleS) || sev === 'Severe') tipo = 'severe';
-    else if (/\bYellow\b|\bAmarillo\b/i.test(titleS) || sev === 'Moderate') tipo = 'warn';
-    if (!tipo) return;
-
-    const ident = meteoCapTag(entry, 'identifier') || title + areaDesc;
-    if (seenId.has(ident)) return;
-    seenId.add(ident);
-
-    const effective = meteoCapTag(entry, 'effective');
-    const onset = meteoCapTag(entry, 'onset');
-    const emmaId = meteoCapExtractEmmaId(entry);
-    const icon = tipo === 'bad' ? '🔴' : tipo === 'severe' ? '🟠' : '🟡';
-    const titulo = meteoAvisoTituloEs(tipo, title, event, areaDesc);
-    const txt = meteoAvisoDetalleEs(event, areaDesc);
-    out.push({
-      tipo, icon, titulo, txt, areaDesc, title, identifier: ident, emmaId,
-      effective, onset, expires: expiresStr || ''
-    });
-  });
-  return out;
 }
 
 /** Municipio/localidad efectiva (campo avisos, Nominatim con coords de la torre, o primera parte de «ciudad»). */
@@ -24340,27 +24100,6 @@ function getMeteoUbicacionTorreContexto() {
 function tieneDatosUbicacionParaAvisosMeteo(ctx) {
   const m = (ctx.municipioFiltro || '').trim();
   return m.length >= 2;
-}
-
-/**
- * Aviso aplicable: por EMMA_ID (centroide más cercano al municipio geocodificado) o, si falla, por texto.
- */
-function meteoalarmItemAfectaUbicacion(it, ctx, userEmma) {
-  const m = (ctx.municipioFiltro || '').trim();
-  if (m.length < 2) return false;
-  if (userEmma && it.emmaId) {
-    return it.emmaId === userEmma;
-  }
-  if (userEmma && !it.emmaId) {
-    return meteoalarmMunicipioCoincide(m, it.areaDesc, it.title);
-  }
-  return meteoalarmMunicipioCoincide(m, it.areaDesc, it.title)
-    || meteoalarmCoincideZonaProvinciaNominatim(it.areaDesc, it.title);
-}
-
-function ordenarMeteoalarmPorRelevancia(items) {
-  const pri = { bad: 0, severe: 1, warn: 2 };
-  return items.slice().sort((a, b) => (pri[a.tipo] ?? 3) - (pri[b.tipo] ?? 3));
 }
 
 /** GPS solo para completar ubicación de avisos si falta texto (no sustituye la ciudad que tú escribiste en la torre). */
@@ -24525,7 +24264,7 @@ async function obtenerMeteoalarmParaTorre() {
     ctx = getMeteoUbicacionTorreContexto();
   }
   if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) {
-    return { relevantes: [] };
+    return { relevantes: [], error: null };
   }
   const cfg = state.configTorre || {};
   const { lat, lon } = getMeteoLatLonParaNominatim(cfg);
@@ -24534,36 +24273,42 @@ async function obtenerMeteoalarmParaTorre() {
   if (Date.now() - _meteoalarmListaCache.ts < 90000
     && _meteoalarmListaCache.key === keyFresh
     && Array.isArray(_meteoalarmListaCache.relevantes)) {
-    return { relevantes: _meteoalarmListaCache.relevantes };
+    return { relevantes: _meteoalarmListaCache.relevantes, error: null };
   }
-  const xml = await fetchMeteoalarmSpainProxied();
+  let xml;
+  try {
+    xml = await fetchMeteoalarmSpainProxied();
+  } catch (e) {
+    const msg = e && e.message ? e.message : String(e);
+    _meteoalarmListaCache = { ts: 0, key: '', relevantes: null };
+    return { relevantes: [], error: msg };
+  }
   const items = parseMeteoalarmAtomEntries(xml);
   const relevantes = items.filter(it => meteoalarmItemAfectaUbicacion(it, ctx, userEmma));
   const key = keyFresh;
   _meteoalarmListaCache = { ts: Date.now(), key, relevantes };
-  return { relevantes };
+  return { relevantes, error: null };
 }
 
-function meteoFormateaRangoAvisoCaps(a) {
-  const o = a.onset || a.effective || '';
-  const e = a.expires || '';
-  const fmt = (s) => {
-    const d = new Date(s);
-    return !isNaN(d.getTime())
-      ? d.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
-      : '';
-  };
-  const lo = o ? fmt(o) : '';
-  const le = e ? fmt(e) : '';
-  if (lo && le) return lo + ' → ' + le;
-  if (lo) return 'desde ' + lo;
-  if (le) return 'hasta ' + le;
-  return '';
-}
-
-function renderMeteoFlashBanner(relevantes) {
+function renderMeteoFlashBanner(relevantes, opts) {
   const el = document.getElementById('meteoFlashAviso');
   if (!el) return;
+  el.classList.remove('meteo-flash-aviso--error');
+  const errMsg = opts && opts.error ? String(opts.error) : '';
+  if (errMsg) {
+    el.classList.add('meteo-flash-aviso--error');
+    el.innerHTML =
+      '<div class="meteo-flash-inner meteo-flash-inner--error">' +
+      '<div class="meteo-flash-kicker">Avisos oficiales (MeteoAlarm)</div>' +
+      '<div class="meteo-flash-row meteo-flash-row--error">' +
+      '<span class="meteo-flash-text"><span class="meteo-flash-title">' +
+      meteoEscHtml('No se pudo cargar el feed: ' + errMsg) +
+      '</span></span></div>' +
+      '<button type="button" class="meteo-flash-cta" onclick="goTab(\'meteo\')">Meteorología</button>' +
+      '</div>';
+    el.classList.remove('setup-hidden');
+    return;
+  }
   if (!relevantes || relevantes.length === 0) {
     el.classList.add('setup-hidden');
     el.innerHTML = '';
@@ -24597,8 +24342,9 @@ async function refreshMeteoAlarmFlashDashboard() {
   if (_meteoFlashDashPromise) return _meteoFlashDashPromise;
   _meteoFlashDashPromise = (async () => {
     try {
-      const { relevantes } = await obtenerMeteoalarmParaTorre();
-      renderMeteoFlashBanner(relevantes || []);
+      const { relevantes, error } = await obtenerMeteoalarmParaTorre();
+      if (error) renderMeteoFlashBanner([], { error });
+      else renderMeteoFlashBanner(relevantes || []);
     } catch (_) {
       renderMeteoFlashBanner([]);
     } finally {
@@ -24667,17 +24413,6 @@ function buildAvisosMeteoHeuristicas() {
   return alertas;
 }
 
-function meteoAlertaRowHtml(a) {
-  const rango = meteoFormateaRangoAvisoCaps(a);
-  const sub = rango ? (meteoEscHtml(a.txt) + '<br><span class="meteo-alerta-fechas">' + meteoEscHtml(rango) + '</span>')
-    : meteoEscHtml(a.txt);
-  return '<div class="meteo-alerta-item ' + a.tipo + '">' +
-    '<span class="meteo-alerta-icon">' + a.icon + '</span>' +
-    '<span><strong>' + meteoEscHtml(a.titulo) + '</strong><br>' +
-    '<span class="meteo-alerta-desc">' + sub + '</span></span>' +
-    '</div>';
-}
-
 function enviarNotificacionSiAcordado(titulo, cuerpo, icono) {
   if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
@@ -24697,8 +24432,8 @@ function enviarNotificacionSiAcordado(titulo, cuerpo, icono) {
 async function refrescarAvisosMeteoalarmEnSegundoPlano() {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
-    const { relevantes } = await obtenerMeteoalarmParaTorre();
-    if (relevantes && relevantes.length) maybeNotificarMeteoalarmRelevantes(relevantes);
+    const { relevantes, error } = await obtenerMeteoalarmParaTorre();
+    if (!error && relevantes && relevantes.length) maybeNotificarMeteoalarmRelevantes(relevantes);
   } catch (_) {}
 }
 
@@ -24728,9 +24463,22 @@ async function renderMeteoPanelOficialMeteoalarmSiAplica() {
   wrap.innerHTML = '';
 
   let relevantes;
+  let feedError = null;
   try {
-    relevantes = (await obtenerMeteoalarmParaTorre()).relevantes;
+    const r = await obtenerMeteoalarmParaTorre();
+    relevantes = r.relevantes;
+    feedError = r.error || null;
   } catch (_) {
+    return;
+  }
+  if (feedError) {
+    wrap.innerHTML =
+      '<div class="meteo-alerta-item warn">' +
+      '<span class="meteo-alerta-icon" aria-hidden="true">⚠️</span>' +
+      '<span><strong>No se pudieron cargar los avisos oficiales</strong><br>' +
+      '<span class="meteo-alerta-desc">' + meteoEscHtml(feedError) + '</span></span>' +
+      '</div>';
+    wrap.classList.remove('setup-hidden');
     return;
   }
   if (!relevantes || relevantes.length === 0) return;

@@ -2685,6 +2685,18 @@ button.torre-summary:focus-visible,
     border-color: rgba(245, 158, 11, 1);
   }
 }
+.meteo-flash-aviso.meteo-flash-aviso--error {
+  animation: none;
+  border-color: rgba(248, 113, 113, 0.85);
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.98), rgba(254, 202, 202, 0.45));
+  box-shadow: 0 4px 14px rgba(185, 28, 28, 0.12);
+}
+.meteo-flash-inner--error .meteo-flash-kicker {
+  color: #991b1b;
+}
+.meteo-flash-row--error .meteo-flash-text {
+  color: #7f1d1d;
+}
 .meteo-flash-inner {
   padding: 12px 14px 14px;
   font-family: var(--font-ui);
