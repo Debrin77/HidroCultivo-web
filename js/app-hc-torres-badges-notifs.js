@@ -307,31 +307,32 @@ function actualizarHeaderTorre() {
   if (btnCrear) btnCrear.style.display = (state.torres.length >= MAX_TORRES) ? 'none' : 'block';
 }
 
-function renderSistemaInstalacionSelect() {
-  const sel = document.getElementById('sistemaInstalacionSelect');
-  if (!sel) return;
+function textoTipoInstalacionTorre(cfg) {
+  const ti = cfg && cfg.tipoInstalacion;
+  if (ti === 'nft') return 'NFT';
+  if (ti === 'dwc') return 'DWC';
+  return 'Torre vertical';
+}
+
+/** Actualiza el botón de dos líneas (nombre + tipo) de la instalación activa en la pestaña Torre. */
+function renderTorreInstalacionPicker() {
+  const btn = document.getElementById('torreInstalacionPickerBtn');
+  const elEmoji = document.getElementById('torreInstalacionPickerEmoji');
+  const elNom = document.getElementById('torreInstalacionPickerNombre');
+  const elTipo = document.getElementById('torreInstalacionPickerTipo');
+  if (!btn || !elNom || !elTipo) return;
   const torres = state.torres || [];
   const n = torres.length;
   const activa = n ? Math.min(Math.max(0, state.torreActiva || 0), n - 1) : 0;
-  sel.innerHTML = '';
-  torres.forEach((t, i) => {
-    const opt = document.createElement('option');
-    opt.value = String(i);
-    const nom = ((t?.nombre || '').trim() || 'Instalación ' + (i + 1));
-    const emoji = t?.emoji || '🌿';
-    const ti = t?.config?.tipoInstalacion;
-    const tipo = ti === 'nft' ? 'NFT' : ti === 'dwc' ? 'DWC' : 'Torre vertical';
-    opt.textContent = emoji + ' ' + nom + ' · ' + tipo;
-    sel.appendChild(opt);
-  });
-  if (n) sel.value = String(activa);
-}
-
-function onSistemaInstalacionSelectChange(el) {
-  const idx = parseInt(el.value, 10);
-  if (!Number.isFinite(idx) || idx < 0 || idx >= (state.torres || []).length) return;
-  if (idx === (state.torreActiva || 0)) return;
-  cambiarTorreActiva(idx);
+  const t = n ? torres[activa] : null;
+  const nom = t ? (((t.nombre || '').trim()) || ('Instalación ' + (activa + 1))) : '—';
+  const emoji = t ? (t.emoji || '🌿') : '🌿';
+  const tipoTxt = t ? textoTipoInstalacionTorre(t.config) : '—';
+  if (elEmoji) elEmoji.textContent = emoji;
+  elNom.textContent = nom;
+  elTipo.textContent = tipoTxt;
+  btn.setAttribute('aria-label',
+    'Instalación actual: ' + nom + ', ' + tipoTxt + '. Abrir lista para elegir otra instalación');
 }
 
 function abrirSelectorTorres() {
@@ -469,24 +470,12 @@ function editarNombreTorre(idx) {
   }
 }
 
-function guardarNombreInstalacionDesdeTorre() {
+/** Desde la pestaña Torre: abre el diálogo para editar el nombre de la instalación activa. */
+function cambiarNombreInstalacionActivaDesdeTorre() {
   initTorres();
-  const inp = document.getElementById('torreNombreInstalacionInput');
-  if (!inp) return;
   const idx = state.torreActiva || 0;
-  const raw = (inp.value || '').trim().slice(0, 40);
-  if (!raw) {
-    showToast('Escribe un nombre o deja el que había', true);
-    inp.value = state.torres[idx]?.nombre || '';
-    return;
-  }
   if (!state.torres[idx]) return;
-  state.torres[idx].nombre = raw;
-  saveState();
-  updateTorreStats();
-  updateDashboard();
-  actualizarHeaderTorre();
-  showToast('✅ Nombre guardado: ' + raw);
+  editarNombreTorre(idx);
 }
 
 function borrarTorre(idx) {

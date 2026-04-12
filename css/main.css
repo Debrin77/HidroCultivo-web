@@ -7159,23 +7159,104 @@ button.config-option {
   justify-content: space-between;
   gap: 8px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 .torre-instalacion-select-wrap {
   flex: 1;
   min-width: 0;
 }
-.torre-instalacion-select-wrap .torre-tab-instalacion-select {
+.torre-instalacion-picker-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
-  max-width: none;
+  min-height: 48px;
+  padding: 8px 10px 8px 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+  background: linear-gradient(180deg, #fff, #f8fafc);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-ui);
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.torre-tab-instalacion-select {
-  max-width: 260px;
-  font-size: 13px;
-  font-weight: 700;
-  padding: 8px 10px;
-  border-radius: 10px;
+.torre-instalacion-picker-btn:hover {
+  border-color: rgba(21, 128, 61, 0.35);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+.torre-instalacion-picker-btn:active {
+  transform: scale(0.995);
+}
+.torre-instalacion-picker-emoji {
   flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+.torre-instalacion-picker-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+.torre-instalacion-picker-nombre {
+  font-size: 16px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.torre-instalacion-picker-tipo {
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+.torre-instalacion-picker-caret {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1;
+  padding: 4px 2px 0 0;
+}
+.torre-cambiar-nombre-row {
+  margin: 0 0 8px;
+}
+.torre-btn-cambiar-nombre {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #15803d;
+  background: #f0fdf4;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: #14532d;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.torre-btn-cambiar-nombre:active {
+  opacity: 0.92;
+  transform: scale(0.99);
 }
 .torre-tab-guia-btn {
   padding: 5px 10px;

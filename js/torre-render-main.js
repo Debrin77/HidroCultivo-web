@@ -762,11 +762,6 @@ function updateTorreStats() {
   const locBtn = document.getElementById('torreBtnIrMedirMunicipio');
   if (locBtn) locBtn.classList.toggle('setup-hidden', !!locStr);
 
-  const nomInpTorre = document.getElementById('torreNombreInstalacionInput');
-  if (nomInpTorre && document.activeElement !== nomInpTorre) {
-    nomInpTorre.value = rawNombre;
-  }
-
   // Info depósito
   const depEl = document.getElementById('depositoTitulo');
   if (depEl) {
@@ -804,7 +799,7 @@ function updateTorreStats() {
   }
 
   actualizarAvisoCestasSinFecha();
-  renderSistemaInstalacionSelect();
+  renderTorreInstalacionPicker();
 }
 
 /** Editar capacidad máxima y litros de mezcla desde la pestaña Torre. */

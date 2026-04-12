@@ -1023,33 +1023,26 @@
       <!-- Instalación: selector, nombre, ubicación -->
       <div id="torreNombreCard" class="torre-card-elevated">
         <div class="torre-instalacion-top-row">
-          <div class="torre-tab-toolbar-main torre-instalacion-select-wrap">
-            <label for="sistemaInstalacionSelect" class="visually-hidden">Instalación a editar en esta pestaña</label>
-            <select id="sistemaInstalacionSelect" class="form-input torre-tab-instalacion-select"
-              aria-label="Elegir instalación"
-              onchange="onSistemaInstalacionSelectChange(this)"></select>
+          <div class="torre-instalacion-select-wrap">
+            <button type="button" id="torreInstalacionPickerBtn" class="torre-instalacion-picker-btn"
+              onclick="abrirSelectorTorres()" aria-haspopup="dialog" aria-controls="modalTorres">
+              <span class="torre-instalacion-picker-emoji" id="torreInstalacionPickerEmoji" aria-hidden="true">🌿</span>
+              <span class="torre-instalacion-picker-text">
+                <span class="torre-instalacion-picker-nombre" id="torreInstalacionPickerNombre">—</span>
+                <span class="torre-instalacion-picker-tipo" id="torreInstalacionPickerTipo">—</span>
+              </span>
+              <span class="torre-instalacion-picker-caret" aria-hidden="true">▾</span>
+            </button>
           </div>
           <button type="button" onclick="abrirTutorialTorrePestanaSiPrimeraVez({ force: true })"
             class="torre-tab-guia-btn">
             Guía de pantalla
           </button>
         </div>
-        <label class="form-label torre-field-label-sm" for="torreNombreInstalacionInput">
-          Nombre de esta instalación
-        </label>
-        <div class="torre-nombre-row">
-          <input type="text" id="torreNombreInstalacionInput" class="form-input torre-nombre-input" maxlength="40"
-            autocomplete="off" placeholder="Ej. Torre terraza, NFT balcón, Lechugas cocina…"
-            aria-label="Nombre de la instalación activa"
-            onchange="guardarNombreInstalacionDesdeTorre()"
-            onblur="guardarNombreInstalacionDesdeTorre()">
-          <button type="button" onclick="guardarNombreInstalacionDesdeTorre()"
-            class="torre-btn-nombre-guardar">
-            Guardar nombre
+        <div class="torre-cambiar-nombre-row">
+          <button type="button" class="torre-btn-cambiar-nombre" onclick="cambiarNombreInstalacionActivaDesdeTorre()">
+            Cambiar nombre
           </button>
-        </div>
-        <div class="torre-hint-micro">
-          Aparece en Inicio, Mediciones e historial. Puedes cambiarlo cuando quieras.
         </div>
         <p id="torreNombreCardLocalidad" class="torre-nombre-localidad-line" role="status"></p>
         <button type="button" id="torreBtnIrMedirMunicipio" class="torre-btn-ir-medir-municipio setup-hidden"
