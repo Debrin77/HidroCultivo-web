@@ -2658,6 +2658,93 @@ button.torre-summary:focus-visible,
   background: rgba(248, 113, 113, 0.1);
   color: #991b1b;
 }
+
+/* Aviso oficial MeteoAlarm en Inicio (flash suave) */
+.meteo-flash-aviso {
+  display: block;
+  margin: 0 0 14px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid rgba(234, 179, 8, 0.9);
+  background: linear-gradient(135deg, rgba(254, 249, 231, 0.98), rgba(253, 230, 138, 0.55));
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.14);
+  animation: meteoFlashPulse 2.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .meteo-flash-aviso {
+    animation: none;
+  }
+}
+@keyframes meteoFlashPulse {
+  0%, 100% {
+    box-shadow: 0 4px 14px rgba(217, 119, 6, 0.14);
+    border-color: rgba(234, 179, 8, 0.85);
+  }
+  50% {
+    box-shadow: 0 6px 22px rgba(217, 119, 6, 0.26);
+    border-color: rgba(245, 158, 11, 1);
+  }
+}
+.meteo-flash-inner {
+  padding: 12px 14px 14px;
+  font-family: var(--font-ui);
+}
+.meteo-flash-kicker {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #92400e;
+  margin-bottom: 8px;
+}
+.meteo-flash-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.meteo-flash-row:last-of-type {
+  margin-bottom: 10px;
+}
+.meteo-flash-icon {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+.meteo-flash-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: #78350f;
+}
+.meteo-flash-title {
+  font-weight: 700;
+}
+.meteo-flash-dates {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: #a16207;
+  opacity: 0.95;
+}
+.meteo-flash-cta {
+  width: 100%;
+  margin-top: 2px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  background: rgba(255, 255, 255, 0.65);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #92400e;
+  cursor: pointer;
+}
+.meteo-flash-cta:active {
+  transform: translateY(1px);
+}
 .recarga-confirm-panel {
   margin-top: 12px;
   padding-top: 10px;
@@ -3837,6 +3924,14 @@ button.torre-summary:focus-visible,
 .meteo-alerta-item.bad    { background: #fef2f2; border-color: #dc2626; color: #7f1d1d; }
 .meteo-alerta-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
 .meteo-alerta-desc { font-size: 11px; opacity: 0.9; }
+.meteo-alerta-fechas {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.92;
+  color: var(--muted);
+}
 .meteo-aviso-inline { font-size: 11px; }
 .meteo-aviso-kicker {
   font-size: 10px;

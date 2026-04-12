@@ -164,6 +164,9 @@
         <p class="hc-guia-nota" id="guiaPrimerosNota">Clima y riego calculado son <strong>orientativos</strong> (modelo meteorológico y supuestos de la instalación); las <strong>mediciones</strong> que registres son las que validan el estado real del agua.</p>
       </section>
 
+      <!-- Aviso oficial AEMET/MeteoAlarm (flash en Inicio; zona inferida del municipio por geocodificación) -->
+      <div id="meteoFlashAviso" class="meteo-flash-aviso setup-hidden" role="alert" aria-live="polite" aria-atomic="true"></div>
+
       <!-- 3. Alerta meteorológica / ambiente (prominente tras el contexto de instalación) -->
       <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
       <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
@@ -319,7 +322,7 @@
         <button type="button" class="quick-btn quick-btn-info quick-btn-hidden" id="btnActivarNotif"
           onclick="activarNotificacionesDesdeInicio(event)"
           aria-label="Activar notificaciones y alertas"
-          title="Avisos del sistema: recarga, mediciones, cosecha y MeteoAlarm solo si el aviso nombra tu municipio (si ya diste permiso)."
+          title="Avisos del sistema: recarga, mediciones, cosecha y MeteoAlarm si el aviso afecta a tu municipio o a la zona provincial AEMET asociada (si ya diste permiso)."
           >
           <span class="quick-btn-icon" aria-hidden="true">🔔</span>
           <span>Activar alertas</span>
@@ -1822,7 +1825,7 @@
         <div id="meteoMeteoclimaticInner" class="meteo-meteoclimatic-inner"></div>
       </div>
 
-      <!-- Avisos AEMET/MeteoAlarm solo si hay alerta que nombra tu municipio -->
+      <!-- Avisos AEMET/MeteoAlarm: municipio o zona provincial (MeteoAlarm) -->
       <div id="meteoAvisosOficiales" class="meteo-alertas setup-hidden"></div>
       <div id="meteoPrevisionDia" class="meteo-alertas meteo-prevision-dia setup-hidden"></div>
       <div id="meteoAlertas" class="meteo-alertas setup-hidden"></div>
@@ -4337,7 +4340,7 @@ function activarNotificacionesDesdeInicio(ev) {
   const el = ev.currentTarget;
   pedirPermisoNotificaciones().then(ok => {
     if (ok) {
-      showToast('🔔 Notificaciones activadas (recarga, medición, cosecha, MeteoAlarm si nombra tu municipio)');
+      showToast('🔔 Notificaciones activadas (recarga, medición, cosecha, MeteoAlarm si afecta a tu zona)');
       el.style.display = 'none';
     } else {
       showToast('Actívalas en Ajustes del navegador', true);
@@ -16447,6 +16450,7 @@ function persistLocalidadMeteo() {
   saveState();
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
   try { updateTorreStats(); } catch (_) {}
+  void geocodificarLocalidadMeteoParaAvisos();
 }
 
 /** Municipio para clima y avisos (cfg de instalación o activa). */
@@ -16522,6 +16526,7 @@ function cargarLocalidadMeteoUI() {
     btn.classList.toggle('setup-hidden', !(state.configAgua === 'grifo' && state.configAguaMunicipio));
   }
   refreshMeteoFuenteActivaUI();
+  if (v) void geocodificarLocalidadMeteoParaAvisos();
 }
 
 function cargarInteriorGrowUI() {
@@ -20765,11 +20770,19 @@ let diaSeleccionado = 0;
 let _meteoNomiKey = null;
 let _meteoNomiContext = '';
 let _meteoNomiMunicipio = '';
+/** Texto normalizado (provincia, comarca, display_name) para cruzar con zonas MeteoAlarm «… de Provincia». */
+let _meteoNomiBlobProvincia = '';
+let _meteoalarmListaCache = { ts: 0, key: '', relevantes: null };
+let _geocodificarLocalidadMeteoPromise = null;
 
 function invalidateMeteoNomiCache() {
   _meteoNomiKey = null;
   _meteoNomiContext = '';
   _meteoNomiMunicipio = '';
+  _meteoNomiBlobProvincia = '';
+  _meteoalarmListaCache.ts = 0;
+  _meteoalarmListaCache.key = '';
+  _meteoalarmListaCache.relevantes = null;
 }
 
 function condEmoji(precipProb, tempMax, uv) {
@@ -21878,6 +21891,11 @@ function calcularEdadAutomatica() {
 // Obtener coordenadas de la torre activa (o Castelló por defecto)
 function getCoordsActivas() {
   const cfg = state.configTorre || {};
+  const gl = parseFloat(cfg.meteoGeoLat);
+  const glo = parseFloat(cfg.meteoGeoLon);
+  if (isFinite(gl) && isFinite(glo)) {
+    return { lat: gl, lon: glo };
+  }
   return {
     lat: cfg.lat || setupCoordenadas.lat || 39.9864,
     lon: cfg.lon || setupCoordenadas.lon || -0.0495,
@@ -23435,6 +23453,8 @@ function updateDashboard() {
     actualizarGuiaPrimerosPasos();
     actualizarQuickActionsNoviceMode();
   } catch (_) {}
+
+  try { void refreshMeteoAlarmFlashDashboard(); } catch (_) {}
 }
 
 function getTileClass(param, val) {
@@ -24049,6 +24069,72 @@ function meteoMunicipioVariantesNormalizadas(mFullNorm) {
   return [...set];
 }
 
+/** Coordenadas asociadas al municipio de avisos (geocodificación del texto) o, si no hay, a la instalación. */
+function getMeteoLatLonParaNominatim(cfg) {
+  const c = cfg || state.configTorre || {};
+  const gl = parseFloat(c.meteoGeoLat);
+  const glo = parseFloat(c.meteoGeoLon);
+  if (isFinite(gl) && isFinite(glo)) return { lat: gl, lon: glo };
+  const l = parseFloat(c.lat);
+  const o = parseFloat(c.lon);
+  if (isFinite(l) && isFinite(o)) return { lat: l, lon: o };
+  return { lat: NaN, lon: NaN };
+}
+
+function meteoExtraeRegionTrasUltimoDe(areaDesc) {
+  const s = String(areaDesc || '').trim();
+  const low = s.toLowerCase();
+  const idx = low.lastIndexOf(' de ');
+  if (idx >= 0) {
+    return s.slice(idx + 4).trim().replace(/\s*\([^)]*\)\s*$/g, '').trim();
+  }
+  if (/\bcosta\s*[-–]\s*/i.test(s)) {
+    const parts = s.split(/\s*[-–]\s*/);
+    const last = parts[parts.length - 1].trim();
+    if (last.length >= 2) return last.replace(/\s*\([^)]*\)\s*$/g, '').trim();
+  }
+  return '';
+}
+
+/** MeteoAlarm España usa subzonas tipo «Litoral sur de Alicante», no siempre el nombre del pueblo. */
+function meteoAreaPareceZonaAemetEsp(areaDesc) {
+  const s = meteoNormTxt(areaDesc);
+  if (/\b(litoral|interior|prelitoral|costa|campo|marina|vega|valle|altiplano|pirine|serra|axarquia|guadalhorce|ampurd|emporda)\b/.test(s)) return true;
+  if (/\b(sur|norte|este|oeste|central|noroeste|sureste|noreste|suroeste)\s+de\s+\w/.test(s)) return true;
+  if (/(-|–)\s*sur\s+de\s+/.test(s)) return true;
+  return false;
+}
+
+function meteoNormParaCoincidenciaProvincia(s) {
+  return meteoNormTxt(String(s || ''))
+    .replace(/\s+/g, ' ')
+    .replace(/\bcastello\b/g, 'castellon')
+    .trim();
+}
+
+/**
+ * Si el municipio geocodificado cae en la misma provincia/comunidad nominal que la zona del CAP
+ * («Interior sur de Castellón», «Litoral sur de Alicante»…), el aviso aplica.
+ */
+function meteoalarmCoincideZonaProvinciaNominatim(areaDesc, _title) {
+  const ad = String(areaDesc || '').trim();
+  if (!ad) return false;
+  if (!meteoAreaPareceZonaAemetEsp(ad)) return false;
+  let region = meteoExtraeRegionTrasUltimoDe(ad);
+  if (!region || region.length < 2) region = ad;
+  let provN = meteoNormParaCoincidenciaProvincia(region);
+  if (provN.length < 3) return false;
+  const blob = _meteoNomiBlobProvincia;
+  if (!blob || blob.length < 5) return false;
+  const b = meteoNormParaCoincidenciaProvincia(blob);
+  if (b.includes(provN)) return true;
+  const parts = provN.split(/\s+/).filter(t => t.length >= 4);
+  if (parts.length >= 1 && parts.every(p => b.includes(p))) return true;
+  const parts3 = provN.split(/\s+/).filter(t => t.length === 3);
+  if (parts3.length && parts3.every(p => b.includes(p))) return true;
+  return false;
+}
+
 /** Coincidencia estricta con municipio/localidad (no provincia ni CCAA solas). */
 function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
   const raw = String(municipio || '').split(',')[0].trim();
@@ -24139,10 +24225,15 @@ function parseMeteoalarmAtomEntries(xmlText) {
     if (seenId.has(ident)) return;
     seenId.add(ident);
 
+    const effective = meteoCapTag(entry, 'effective');
+    const onset = meteoCapTag(entry, 'onset');
     const icon = tipo === 'bad' ? '🔴' : tipo === 'severe' ? '🟠' : '🟡';
     const titulo = title || ((event || 'Aviso') + ' — ' + areaDesc);
     const txt = areaDesc ? ('Zona: ' + areaDesc) : (event || '');
-    out.push({ tipo, icon, titulo, txt, areaDesc, title, identifier: ident });
+    out.push({
+      tipo, icon, titulo, txt, areaDesc, title, identifier: ident,
+      effective, onset, expires: expiresStr || ''
+    });
   });
   return out;
 }
@@ -24165,7 +24256,8 @@ function tieneDatosUbicacionParaAvisosMeteo(ctx) {
 function meteoalarmAfectaUbicacionTorre(it, ctx) {
   const m = (ctx.municipioFiltro || '').trim();
   if (m.length < 2) return false;
-  return meteoalarmMunicipioCoincide(m, it.areaDesc, it.title);
+  return meteoalarmMunicipioCoincide(m, it.areaDesc, it.title)
+    || meteoalarmCoincideZonaProvinciaNominatim(it.areaDesc, it.title);
 }
 
 function ordenarMeteoalarmPorRelevancia(items) {
@@ -24236,19 +24328,20 @@ async function ensureGpsUbicacionMeteoAvisos() {
 
 async function refreshMeteoNominatimContext() {
   const cfg = state.configTorre || {};
-  const lat = parseFloat(cfg.lat);
-  const lon = parseFloat(cfg.lon);
+  const { lat, lon } = getMeteoLatLonParaNominatim(cfg);
   if (!isFinite(lat) || !isFinite(lon)) {
     _meteoNomiContext = '';
     _meteoNomiMunicipio = '';
+    _meteoNomiBlobProvincia = '';
     _meteoNomiKey = null;
     return;
   }
   const key = String(Math.round(lat * 5000)) + '_' + String(Math.round(lon * 5000));
-  if (_meteoNomiKey === key && _meteoNomiMunicipio) return;
+  if (_meteoNomiKey === key && _meteoNomiMunicipio && _meteoNomiBlobProvincia) return;
   _meteoNomiKey = key;
   _meteoNomiContext = '';
   _meteoNomiMunicipio = '';
+  _meteoNomiBlobProvincia = '';
   try {
     const url = 'https://nominatim.openstreetmap.org/reverse?lat=' + encodeURIComponent(lat) +
       '&lon=' + encodeURIComponent(lon) + '&format=json&accept-language=es';
@@ -24265,10 +24358,153 @@ async function refreshMeteoNominatimContext() {
     const muni = String(a.city || a.town || a.village || a.municipality || '').trim();
     _meteoNomiMunicipio = muni;
     _meteoNomiContext = muni;
+    const bits = [
+      a.city, a.town, a.village, a.municipality, a.hamlet, a.county, a.state_district,
+      a.region, a.state, a.province, a.country, d.display_name
+    ].filter(Boolean).join(' | ');
+    _meteoNomiBlobProvincia = meteoNormTxt(bits).replace(/\s+/g, ' ').trim();
   } catch (_) {
     _meteoNomiContext = '';
     _meteoNomiMunicipio = '';
+    _meteoNomiBlobProvincia = '';
   }
+}
+
+/** Geocodifica el municipio escrito en Medir (oculto) para alinear avisos con zonas MeteoAlarm por provincia. */
+async function geocodificarLocalidadMeteoParaAvisos() {
+  const v = (state.configTorre && state.configTorre.localidadMeteo) ? String(state.configTorre.localidadMeteo).trim() : '';
+  if (!v) return;
+  if (_geocodificarLocalidadMeteoPromise) return _geocodificarLocalidadMeteoPromise;
+  _geocodificarLocalidadMeteoPromise = (async () => {
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(v + ', España') +
+        '&format=json&limit=1&countrycodes=es';
+      const res = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'Accept-Language': 'es',
+          'User-Agent': 'HydrocaruTorre/1.0'
+        }
+      });
+      if (!res.ok) return;
+      const arr = await res.json();
+      if (!Array.isArray(arr) || !arr[0]) return;
+      const la = parseFloat(arr[0].lat);
+      const lo = parseFloat(arr[0].lon);
+      if (!isFinite(la) || !isFinite(lo)) return;
+      if (!state.configTorre) state.configTorre = {};
+      state.configTorre.meteoGeoLat = la;
+      state.configTorre.meteoGeoLon = lo;
+      invalidateMeteoNomiCache();
+      saveState();
+      try { void refreshMeteoAlarmFlashDashboard(); } catch (_) {}
+    } catch (_) {
+    } finally {
+      _geocodificarLocalidadMeteoPromise = null;
+    }
+  })();
+  return _geocodificarLocalidadMeteoPromise;
+}
+
+function meteoAlarmCacheKey() {
+  const ctx = getMeteoUbicacionTorreContexto();
+  const m = (ctx.municipioFiltro || '').trim();
+  const cfg = state.configTorre || {};
+  const la = parseFloat(cfg.meteoGeoLat);
+  const lo = parseFloat(cfg.meteoGeoLon);
+  const useGeo = isFinite(la) && isFinite(lo);
+  const latK = useGeo ? Math.round(la * 5000) : (Number.isFinite(ctx.lat) ? Math.round(ctx.lat * 5000) : 'x');
+  const lonK = useGeo ? Math.round(lo * 5000) : (Number.isFinite(ctx.lon) ? Math.round(ctx.lon * 5000) : 'x');
+  return m + '|' + latK + '|' + lonK;
+}
+
+async function obtenerMeteoalarmParaTorre() {
+  const keyFresh = meteoAlarmCacheKey();
+  if (Date.now() - _meteoalarmListaCache.ts < 90000
+    && _meteoalarmListaCache.key === keyFresh
+    && Array.isArray(_meteoalarmListaCache.relevantes)) {
+    return { relevantes: _meteoalarmListaCache.relevantes };
+  }
+  await refreshMeteoNominatimContext();
+  let ctx = getMeteoUbicacionTorreContexto();
+  if (!ctx.municipioFiltro && (!Number.isFinite(ctx.lat) || !Number.isFinite(ctx.lon))) {
+    await ensureGpsUbicacionMeteoAvisos();
+    await refreshMeteoNominatimContext();
+    ctx = getMeteoUbicacionTorreContexto();
+  }
+  if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) {
+    return { relevantes: [] };
+  }
+  const xml = await fetchMeteoalarmSpainProxied();
+  const items = parseMeteoalarmAtomEntries(xml);
+  const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
+  const key = meteoAlarmCacheKey();
+  _meteoalarmListaCache = { ts: Date.now(), key, relevantes };
+  return { relevantes };
+}
+
+function meteoFormateaRangoAvisoCaps(a) {
+  const o = a.onset || a.effective || '';
+  const e = a.expires || '';
+  const fmt = (s) => {
+    const d = new Date(s);
+    return !isNaN(d.getTime())
+      ? d.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })
+      : '';
+  };
+  const lo = o ? fmt(o) : '';
+  const le = e ? fmt(e) : '';
+  if (lo && le) return lo + ' → ' + le;
+  if (lo) return 'desde ' + lo;
+  if (le) return 'hasta ' + le;
+  return '';
+}
+
+function renderMeteoFlashBanner(relevantes) {
+  const el = document.getElementById('meteoFlashAviso');
+  if (!el) return;
+  if (!relevantes || relevantes.length === 0) {
+    el.classList.add('setup-hidden');
+    el.innerHTML = '';
+    return;
+  }
+  const primeros = ordenarMeteoalarmPorRelevancia(relevantes).slice(0, 2);
+  const rows = primeros.map((a) => {
+    const rango = meteoFormateaRangoAvisoCaps(a);
+    return '<div class="meteo-flash-row">' +
+      '<span class="meteo-flash-icon" aria-hidden="true">' + a.icon + '</span>' +
+      '<span class="meteo-flash-text">' +
+      '<span class="meteo-flash-title">' + meteoEscHtml(a.titulo) + '</span>' +
+      (rango ? '<span class="meteo-flash-dates">' + meteoEscHtml(rango) + '</span>' : '') +
+      '</span></div>';
+  });
+  el.innerHTML =
+    '<div class="meteo-flash-inner">' +
+    '<div class="meteo-flash-kicker">Aviso meteorológico (AEMET / MeteoAlarm)</div>' +
+    rows.join('') +
+    '<button type="button" class="meteo-flash-cta" onclick="goTab(\'meteo\')">Ver en Meteorología</button>' +
+    '</div>';
+  el.classList.remove('setup-hidden');
+}
+
+let _meteoFlashDashPromise = null;
+async function refreshMeteoAlarmFlashDashboard() {
+  if (!tieneDatosUbicacionParaAvisosMeteo(getMeteoUbicacionTorreContexto())) {
+    renderMeteoFlashBanner([]);
+    return;
+  }
+  if (_meteoFlashDashPromise) return _meteoFlashDashPromise;
+  _meteoFlashDashPromise = (async () => {
+    try {
+      const { relevantes } = await obtenerMeteoalarmParaTorre();
+      renderMeteoFlashBanner(relevantes || []);
+    } catch (_) {
+      renderMeteoFlashBanner([]);
+    } finally {
+      setTimeout(() => { _meteoFlashDashPromise = null; }, 800);
+    }
+  })();
+  return _meteoFlashDashPromise;
 }
 
 async function fetchMeteoalarmSpainProxied() {
@@ -24331,10 +24567,13 @@ function buildAvisosMeteoHeuristicas() {
 }
 
 function meteoAlertaRowHtml(a) {
+  const rango = meteoFormateaRangoAvisoCaps(a);
+  const sub = rango ? (meteoEscHtml(a.txt) + '<br><span class="meteo-alerta-fechas">' + meteoEscHtml(rango) + '</span>')
+    : meteoEscHtml(a.txt);
   return '<div class="meteo-alerta-item ' + a.tipo + '">' +
     '<span class="meteo-alerta-icon">' + a.icon + '</span>' +
     '<span><strong>' + meteoEscHtml(a.titulo) + '</strong><br>' +
-    '<span class="meteo-alerta-desc">' + meteoEscHtml(a.txt) + '</span></span>' +
+    '<span class="meteo-alerta-desc">' + sub + '</span></span>' +
     '</div>';
 }
 
@@ -24357,13 +24596,8 @@ function enviarNotificacionSiAcordado(titulo, cuerpo, icono) {
 async function refrescarAvisosMeteoalarmEnSegundoPlano() {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
-    await refreshMeteoNominatimContext();
-    let ctx = getMeteoUbicacionTorreContexto();
-    if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) return;
-    const xml = await fetchMeteoalarmSpainProxied();
-    const items = parseMeteoalarmAtomEntries(xml);
-    const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
-    if (relevantes.length) maybeNotificarMeteoalarmRelevantes(relevantes);
+    const { relevantes } = await obtenerMeteoalarmParaTorre();
+    if (relevantes && relevantes.length) maybeNotificarMeteoalarmRelevantes(relevantes);
   } catch (_) {}
 }
 
@@ -24380,7 +24614,7 @@ function maybeNotificarMeteoalarmRelevantes(relevantes) {
     : relevantes.some(r => r.tipo === 'severe') ? '🟠' : '🟡';
   const cuerpo = relevantes.map(r => r.titulo).slice(0, 3).join(' · ');
   enviarNotificacionSiAcordado(
-    iconoNivel + ' HidroCultivo — Aviso meteorológico (tu municipio)',
+    iconoNivel + ' HidroCultivo — Aviso meteorológico (tu zona)',
     cuerpo + (relevantes.length > 3 ? '…' : ''),
     'icons/icon-192.png'
   );
@@ -24392,23 +24626,15 @@ async function renderMeteoPanelOficialMeteoalarmSiAplica() {
   wrap.classList.add('setup-hidden');
   wrap.innerHTML = '';
 
-  await refreshMeteoNominatimContext();
-  let ctx = getMeteoUbicacionTorreContexto();
-
-  if (!ctx.municipioFiltro && (!Number.isFinite(ctx.lat) || !Number.isFinite(ctx.lon))) {
-    await ensureGpsUbicacionMeteoAvisos();
-    await refreshMeteoNominatimContext();
-    ctx = getMeteoUbicacionTorreContexto();
+  let relevantes;
+  try {
+    relevantes = (await obtenerMeteoalarmParaTorre()).relevantes;
+  } catch (_) {
+    return;
   }
-
-  if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) return;
+  if (!relevantes || relevantes.length === 0) return;
 
   try {
-    const xml = await fetchMeteoalarmSpainProxied();
-    const items = parseMeteoalarmAtomEntries(xml);
-    const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
-    if (relevantes.length === 0) return;
-
     maybeNotificarMeteoalarmRelevantes(relevantes);
     const fuertes = relevantes.filter(it => it.tipo === 'severe' || it.tipo === 'bad');
     const amarillas = relevantes.filter(it => it.tipo === 'warn');
