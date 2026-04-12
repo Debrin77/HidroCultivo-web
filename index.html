@@ -72,19 +72,19 @@
     <div class="pin-dot" id="d3"></div>
   </div>
     <div class="pin-err" id="pinErr" role="alert" aria-live="assertive"></div>
-  <div class="pin-pad" id="pinPad">
-    <div class="pin-key" data-digit="1">1</div>
-    <div class="pin-key" data-digit="2">2</div>
-    <div class="pin-key" data-digit="3">3</div>
-    <div class="pin-key" data-digit="4">4</div>
-    <div class="pin-key" data-digit="5">5</div>
-    <div class="pin-key" data-digit="6">6</div>
-    <div class="pin-key" data-digit="7">7</div>
-    <div class="pin-key" data-digit="8">8</div>
-    <div class="pin-key" data-digit="9">9</div>
-    <div class="pin-key empty"></div>
-    <div class="pin-key" data-digit="0">0</div>
-    <div class="pin-key del" id="pinDelBtn">⌫</div>
+  <div class="pin-pad" id="pinPad" role="group" aria-label="Teclado numérico del PIN">
+    <button type="button" class="pin-key" data-digit="1" aria-label="Dígito 1">1</button>
+    <button type="button" class="pin-key" data-digit="2" aria-label="Dígito 2">2</button>
+    <button type="button" class="pin-key" data-digit="3" aria-label="Dígito 3">3</button>
+    <button type="button" class="pin-key" data-digit="4" aria-label="Dígito 4">4</button>
+    <button type="button" class="pin-key" data-digit="5" aria-label="Dígito 5">5</button>
+    <button type="button" class="pin-key" data-digit="6" aria-label="Dígito 6">6</button>
+    <button type="button" class="pin-key" data-digit="7" aria-label="Dígito 7">7</button>
+    <button type="button" class="pin-key" data-digit="8" aria-label="Dígito 8">8</button>
+    <button type="button" class="pin-key" data-digit="9" aria-label="Dígito 9">9</button>
+    <div class="pin-key pin-key--spacer" aria-hidden="true"></div>
+    <button type="button" class="pin-key" data-digit="0" aria-label="Dígito 0">0</button>
+    <button type="button" class="pin-key del" id="pinDelBtn" aria-label="Borrar último dígito">⌫</button>
   </div>
   <p class="pin-footer-hint" id="pinFooterHint">Protege tus datos en este dispositivo. Puedes acortar el PIN en <strong>Inicio → Más opciones → Seguridad de acceso</strong> (recordar sesión o biometría).</p>
 </div>
@@ -112,7 +112,7 @@
     <div class="tab-panel active" id="tab-inicio" role="tabpanel" aria-labelledby="btn-inicio" aria-hidden="false">
 
       <!-- 1. Saludo y fecha -->
-      <div class="dash-greeting" id="dashGreeting">Buenos días 🌿</div>
+      <h1 class="dash-greeting" id="dashGreeting">Buenos días 🌿</h1>
       <div class="dash-subtitle dash-subtitle--fecha">
         <span id="dashFecha">—</span>
       </div>
@@ -357,9 +357,9 @@
     <!-- TAB 2: MEDICIONES ══════════════════════════════ -->
     <div class="tab-panel" id="tab-mediciones" role="tabpanel" aria-labelledby="btn-mediciones" aria-hidden="true">
 
-      <div class="section-title">
+      <h1 class="section-title">
         📊 <span class="accent">Mediciones</span> diarias
-      </div>
+      </h1>
 
       <div id="tabContextHintMediciones" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">
@@ -1011,8 +1011,11 @@
     <div class="tab-panel" id="tab-sistema" role="tabpanel" aria-labelledby="btn-sistema" aria-hidden="true">
 
       <div class="section-title torre-section-heading torre-tab-toolbar">
+        <h1 class="torre-tab-main-title">
+          <span class="section-title-accent" aria-hidden="true"></span>
+          <span class="accent" id="torreTabTitle">—</span>
+        </h1>
         <div class="torre-tab-toolbar-main">
-          <span><span class="section-title-accent" aria-hidden="true"></span><span class="accent" id="torreTabTitle">—</span></span>
           <label for="sistemaInstalacionSelect" class="visually-hidden">Instalación a editar en esta pestaña</label>
           <select id="sistemaInstalacionSelect" class="form-input torre-tab-instalacion-select"
             aria-label="Elegir instalación"
@@ -1482,7 +1485,7 @@
     <!-- TAB 4: CALENDARIO ══════════════════════════════ -->
     <div class="tab-panel" id="tab-calendario" role="tabpanel" aria-labelledby="btn-calendario" aria-hidden="true">
 
-      <div class="section-title">📅 <span class="accent">Calendario</span></div>
+      <h1 class="section-title">📅 <span class="accent">Calendario</span></h1>
 
       <!-- Navegación mes -->
       <div class="cal-nav-row">
@@ -1537,7 +1540,7 @@
     <!-- TAB 5: RIEGO ══════════════════════════════════ -->
     <div class="tab-panel" id="tab-riego" role="tabpanel" aria-labelledby="btn-riego" aria-hidden="true">
 
-      <div class="section-title" id="riegoSectionTitle">💧 Cálculo de <span class="accent">Riego</span></div>
+      <h1 class="section-title" id="riegoSectionTitle">💧 Cálculo de <span class="accent">Riego</span></h1>
 
       <div id="tabContextHintRiego" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">
@@ -1812,7 +1815,7 @@
     <!-- TAB 6: METEOROLOGÍA ════════════════════════════ -->
     <div class="tab-panel" id="tab-meteo" role="tabpanel" aria-labelledby="btn-meteo" aria-hidden="true">
 
-      <div class="section-title">🌤️ <span class="accent">Meteorología</span></div>
+      <h1 class="section-title">🌤️ <span class="accent">Meteorología</span></h1>
       <div class="meteo-ubic-caption">📍 Ubicación actual: <strong id="meteoUbicacionActual">—</strong></div>
 
       <div id="meteoMeteoclimaticBox" class="meteo-meteoclimatic-box setup-hidden" role="region" aria-label="Datos de estación cercana Meteoclimatic">
@@ -1878,7 +1881,7 @@
     <!-- TAB 8: CONSEJOS ════════════════════════════════ -->
     <div class="tab-panel" id="tab-consejos" role="tabpanel" aria-labelledby="btn-consejos" aria-hidden="true">
 
-      <div class="section-title">💡 <span class="accent">Consejos</span></div>
+      <h1 class="section-title">💡 <span class="accent">Consejos</span></h1>
       <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando.</p>
 
       <!-- Categorías -->
@@ -1893,7 +1896,7 @@
     <!-- TAB 7: HISTORIAL ════════════════════════════════ -->
     <div class="tab-panel" id="tab-historial" role="tabpanel" aria-labelledby="btn-historial" aria-hidden="true">
 
-      <div class="section-title">📈 <span class="accent">Historial</span></div>
+      <h1 class="section-title">📈 <span class="accent">Historial</span></h1>
 
       <div id="filtroTorreWrapGlobal" class="hist-torre-filter-wrap" style="display:none" role="group" aria-label="Filtrar historial por instalación">
         <div id="filtroTorreBtnsGlobal" class="hist-torre-filter-btns"></div>
