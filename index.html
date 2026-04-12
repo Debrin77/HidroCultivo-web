@@ -24113,13 +24113,30 @@ function meteoNormParaCoincidenciaProvincia(s) {
 }
 
 /**
+ * AEMET divide Castellón en 4 sectores; aquí solo fijamos la capital (costa sur provincial).
+ * Otros municipios: la rama genérica de abajo usa nombre de provincia en el geocoding y puede
+ * coincidir con varios sectores; acotar al sector real requeriría mapa/comarca o polígonos AEMET.
+ */
+const METEO_ZONA_AEMET_CASTELLO_PLANA = 'litoral sur de castellon';
+
+/**
  * Si el municipio geocodificado cae en la misma provincia/comunidad nominal que la zona del CAP
  * («Interior sur de Castellón», «Litoral sur de Alicante»…), el aviso aplica.
+ * Nota: si el nombre de la provincia en el aviso coincide con el del usuario pero hay varios sectores
+ * en esa provincia, puede mostrarse más de un aviso salvo casos con regla explícita (p. ej. capital de Castellón).
  */
 function meteoalarmCoincideZonaProvinciaNominatim(areaDesc, _title) {
   const ad = String(areaDesc || '').trim();
   if (!ad) return false;
   if (!meteoAreaPareceZonaAemetEsp(ad)) return false;
+
+  const muni = meteoNormTxt(String(getMunicipioMeteoFiltro() || '').split(',')[0])
+    .replace(/\s+/g, ' ').trim();
+  if (muni === 'castello de la plana' || muni === 'castellon de la plana') {
+    const zona = meteoNormParaCoincidenciaProvincia(ad);
+    return zona === METEO_ZONA_AEMET_CASTELLO_PLANA;
+  }
+
   let region = meteoExtraeRegionTrasUltimoDe(ad);
   if (!region || region.length < 2) region = ad;
   let provN = meteoNormParaCoincidenciaProvincia(region);
@@ -24143,9 +24160,9 @@ function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
   const blob = (meteoNormTxt(areaDesc) + ' ' + meteoNormTxt(title)).replace(/\s+/g, ' ').trim();
   if (!blob) return false;
 
-  // MeteoAlarm usa subzonas AEMET ("Litoral sur de Castellón"), no el nombre de la capital.
+  // Capital provincial: solo el sector AEMET donde está el municipio (no los 4 sectores «de Castellón»).
   if (mFull === 'castello de la plana' || mFull === 'castellon de la plana') {
-    if (/\b(litoral|interior|prelitoral)\s+(norte|sur|este|oeste|central)\s+de\s+castellon\b/.test(blob)) return true;
+    if (/\blitoral\s+sur\s+de\s+castellon\b/.test(blob)) return true;
   }
 
   const variantes = meteoMunicipioVariantesNormalizadas(mFull);
