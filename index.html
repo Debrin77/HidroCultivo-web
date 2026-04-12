@@ -24268,6 +24268,67 @@ function getMunicipioMeteoFiltro() {
   return c ? c.split(',')[0].trim() : '';
 }
 
+/**
+ * El Atom MeteoAlarm España suele traer &lt;title&gt; y &lt;cap:event&gt; en inglés; &lt;cap:areaDesc&gt; ya va en español.
+ * Construimos un título legible en español; si el título ya parece español, lo respetamos.
+ */
+function meteoAvisoTituloEs(tipo, title, event, areaDesc) {
+  const t0 = String(title || '').trim();
+  const pareceIngles =
+    /\b(Yellow|Orange|Red|Warning issued|Moderate wind|Moderate rain|coastalevent)\b/i.test(t0) ||
+    /\b(Moderate|Severe|Minor|Extreme)\s+(wind|rain|snow|thunderstorm|coastalevent|fog)\s+warning\b/i.test(String(event || ''));
+  if (t0 && !pareceIngles && /\b(Aviso|Advertencia|Alerta|Amarillo|Naranja|Rojo)\b/i.test(t0)) {
+    return t0;
+  }
+  const nivel = tipo === 'bad' ? 'rojo' : tipo === 'severe' ? 'naranja' : 'amarillo';
+  const blob = (String(event || '') + ' ' + t0).toLowerCase();
+  const temas = [
+    [/wind|viento/, 'viento'],
+    [/rain|lluvia|precipitation|shower/, 'lluvia'],
+    [/thunderstorm|tormenta|storm/, 'tormentas'],
+    [/snow|nieve/, 'nieve'],
+    [/fog|niebla|mist/, 'niebla'],
+    [/heat|high temperature|temperature|calor|ola de calor/, 'temperaturas'],
+    [/cold|frost|freeze|fr[ií]o|helada/, 'frío'],
+    [/coastal|coastalevent|oleaje|wave|rough sea/, 'fenómenos costeros'],
+    [/avalanche|alud/, 'aludes'],
+    [/flood|inundaci|flash flood/, 'inundaciones'],
+    [/forest fire|incendio|wildfire/, 'incendios'],
+    [/ice|hielo|icing/, 'hielo'],
+    [/tornado/, 'tornados'],
+    [/lightning|rayo/, 'rayos'],
+  ];
+  let tema = 'fenómenos meteorológicos adversos';
+  for (let i = 0; i < temas.length; i++) {
+    if (temas[i][0].test(blob)) {
+      tema = temas[i][1];
+      break;
+    }
+  }
+  const zona = String(areaDesc || '').trim();
+  if (zona) return 'Aviso ' + nivel + ' por ' + tema + ' — ' + zona;
+  return 'Aviso ' + nivel + ' por ' + tema;
+}
+
+function meteoAvisoDetalleEs(event, areaDesc) {
+  const zona = String(areaDesc || '').trim();
+  const e = String(event || '').toLowerCase();
+  let tipoEv = '';
+  if (/wind/.test(e)) tipoEv = 'Viento';
+  else if (/rain|shower|precipitation/.test(e)) tipoEv = 'Lluvia';
+  else if (/thunderstorm/.test(e)) tipoEv = 'Tormentas';
+  else if (/snow/.test(e)) tipoEv = 'Nieve';
+  else if (/fog|mist/.test(e)) tipoEv = 'Niebla';
+  else if (/heat|temperature/.test(e)) tipoEv = 'Temperatura';
+  else if (/cold|frost/.test(e)) tipoEv = 'Frío';
+  else if (/coastal|coastalevent|wave/.test(e)) tipoEv = 'Costeros';
+  else if (e) tipoEv = event.trim();
+  const partes = [];
+  if (zona) partes.push('Zona: ' + zona);
+  if (tipoEv) partes.push('Tipo: ' + tipoEv);
+  return partes.join(' · ') || (zona || 'Aviso meteorológico oficial (AEMET / MeteoAlarm)');
+}
+
 function parseMeteoalarmAtomEntries(xmlText) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlText, 'text/xml');
@@ -24309,8 +24370,8 @@ function parseMeteoalarmAtomEntries(xmlText) {
     const onset = meteoCapTag(entry, 'onset');
     const emmaId = meteoCapExtractEmmaId(entry);
     const icon = tipo === 'bad' ? '🔴' : tipo === 'severe' ? '🟠' : '🟡';
-    const titulo = title || ((event || 'Aviso') + ' — ' + areaDesc);
-    const txt = areaDesc ? ('Zona: ' + areaDesc) : (event || '');
+    const titulo = meteoAvisoTituloEs(tipo, title, event, areaDesc);
+    const txt = meteoAvisoDetalleEs(event, areaDesc);
     out.push({
       tipo, icon, titulo, txt, areaDesc, title, identifier: ident, emmaId,
       effective, onset, expires: expiresStr || ''
