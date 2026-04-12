@@ -316,6 +316,7 @@ function textoTipoInstalacionTorre(cfg) {
 
 /** Actualiza el botón de dos líneas (nombre + tipo) de la instalación activa en la pestaña Torre. */
 function renderTorreInstalacionPicker() {
+  initTorres();
   const btn = document.getElementById('torreInstalacionPickerBtn');
   const elEmoji = document.getElementById('torreInstalacionPickerEmoji');
   const elNom = document.getElementById('torreInstalacionPickerNombre');

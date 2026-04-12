@@ -717,6 +717,7 @@ function getEmoji(estado) {
 }
 
 function updateTorreStats() {
+  try { initTorres(); } catch (_) {}
   let totalPlantas = 0;
   let totalDias = 0;
   let plantasConFecha = 0;

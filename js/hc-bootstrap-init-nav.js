@@ -51,16 +51,16 @@ function initApp() {
   const m = MODOS_CULTIVO[modoActual];
   if (m) document.getElementById('modoInfoText').textContent =
     `${m.desc} — Editar ficha o asignar cultivo (barra encima del esquema)`;
+  // Multi-instalación antes del primer render (state.torres, nombre en UI, esquema)
+  initTorres();
+  reconciliarSlotTorreActivaAntesDeCargar();
+  cargarEstadoTorre(state.torreActiva || 0);
   renderTorre();
   updateTorreStats();
   updateDashboard();
   initConfigUI();
   setInterval(updateDashboard, 300000);
 
-  // Inicializar sistema multi-torre
-  initTorres();
-  reconciliarSlotTorreActivaAntesDeCargar();
-  cargarEstadoTorre(state.torreActiva || 0);
   actualizarHeaderTorre();
   actualizarVistaRiegoPorTipoInstalacion();
 
