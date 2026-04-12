@@ -123,23 +123,29 @@ function showToast(msg, error=false) {
   if (!t) {
     t = document.createElement('div');
     t.id = 'toast';
+    t.className = 'hc-toast';
     t.setAttribute('role', 'status');
     t.setAttribute('aria-live', 'polite');
     t.setAttribute('aria-atomic', 'true');
-    t.style.cssText =
-      'position:fixed;top:max(70px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%) translateY(-10px);' +
-      'background:var(--green);color:var(--bg);font-family:var(--font-display);font-weight:700;font-size:13px;' +
-      'line-height:1.35;padding:12px 16px;border-radius:16px;opacity:0;transition:all 0.3s;pointer-events:none;' +
-      'z-index:9000;max-width:min(100vw - 24px, 420px);width:max-content;box-sizing:border-box;text-align:center;' +
-      'white-space:normal;word-break:break-word;hyphens:auto;';
     document.body.appendChild(t);
+  } else if (!t.classList.contains('hc-toast')) {
+    t.classList.add('hc-toast');
   }
+  t.style.removeProperty('top');
   t.textContent = msg;
   t.setAttribute('aria-live', error ? 'assertive' : 'polite');
   t.style.background = error ? 'var(--red)' : 'var(--green)';
   t.style.color = error ? 'white' : 'var(--bg)';
+  t.style.opacity = '0';
+  t.style.transform = 'translateX(-50%) translateY(14px)';
+  void t.offsetWidth;
   t.style.opacity = '1';
   t.style.transform = 'translateX(-50%) translateY(0)';
-  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-10px)'; }, 3500);
+  if (t._toastHideId) clearTimeout(t._toastHideId);
+  t._toastHideId = setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(14px)';
+    t._toastHideId = 0;
+  }, 3500);
 }
 
