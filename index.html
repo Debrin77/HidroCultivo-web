@@ -24057,6 +24057,11 @@ function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
   const blob = (meteoNormTxt(areaDesc) + ' ' + meteoNormTxt(title)).replace(/\s+/g, ' ').trim();
   if (!blob) return false;
 
+  // MeteoAlarm usa subzonas AEMET ("Litoral sur de Castellón"), no el nombre de la capital.
+  if (mFull === 'castello de la plana' || mFull === 'castellon de la plana') {
+    if (/\b(litoral|interior|prelitoral)\s+(norte|sur|este|oeste|central)\s+de\s+castellon\b/.test(blob)) return true;
+  }
+
   const variantes = meteoMunicipioVariantesNormalizadas(mFull);
   for (let vi = 0; vi < variantes.length; vi++) {
     const vf = variantes[vi];
