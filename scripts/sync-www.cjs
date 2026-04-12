@@ -8,7 +8,7 @@ const root = path.join(__dirname, '..');
 const www = path.join(root, 'www');
 
 const files = ['index.html', 'manifest.json', 'service-worker.js'];
-const dirs = ['css', 'js', 'icons'];
+const dirs = ['css', 'js', 'icons', 'data'];
 
 function rmrf(dir) {
   if (fs.existsSync(dir)) fs.rmSync(dir, { recursive: true, force: true });

@@ -24026,6 +24026,78 @@ function meteoCapTag(entry, localName) {
   return list.length ? list[0].textContent.trim() : '';
 }
 
+function meteoCapExtractEmmaId(entry) {
+  const ns = CAP_NS_METEO;
+  const geos = entry.getElementsByTagNameNS(ns, 'geocode');
+  for (let gi = 0; gi < geos.length; gi++) {
+    const geo = geos[gi];
+    const vnames = geo.getElementsByTagNameNS(ns, 'valueName');
+    const vals = geo.getElementsByTagNameNS(ns, 'value');
+    for (let vi = 0; vi < vnames.length; vi++) {
+      if (vnames[vi].textContent.trim() === 'EMMA_ID' && vals[vi]) {
+        return vals[vi].textContent.trim();
+      }
+    }
+  }
+  return '';
+}
+
+let _meteoEmmaZonasLista = null;
+let _meteoEmmaZonasPromise = null;
+
+function meteoHaversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const toR = (d) => (d * Math.PI) / 180;
+  const dLat = toR(lat2 - lat1);
+  const dLon = toR(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toR(lat1)) * Math.cos(toR(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
+async function meteoCargarZonasEmmaCentroides() {
+  if (_meteoEmmaZonasLista) return _meteoEmmaZonasLista;
+  if (_meteoEmmaZonasPromise) return _meteoEmmaZonasPromise;
+  _meteoEmmaZonasPromise = fetch('data/meteoalarm-emma-centroids.json', { cache: 'force-cache' })
+    .then((r) => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then((j) => {
+      const z = Array.isArray(j.zones) ? j.zones : [];
+      _meteoEmmaZonasLista = z.filter((x) => x != null && Number.isFinite(x.lat) && Number.isFinite(x.lon));
+      return _meteoEmmaZonasLista;
+    })
+    .catch(() => {
+      _meteoEmmaZonasLista = [];
+      return _meteoEmmaZonasLista;
+    })
+    .finally(() => {
+      _meteoEmmaZonasPromise = null;
+    });
+  return _meteoEmmaZonasPromise;
+}
+
+/** Resuelve el EMMA_ID MeteoAlarm más cercano al municipio geocodificado (data/meteoalarm-emma-centroids.json). */
+async function meteoEmmaIdParaUbicacion(lat, lon) {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return '';
+  const zonas = await meteoCargarZonasEmmaCentroides();
+  if (!zonas || zonas.length === 0) return '';
+  let best = '';
+  let bestKm = Infinity;
+  for (let i = 0; i < zonas.length; i++) {
+    const z = zonas[i];
+    const km = meteoHaversineKm(lat, lon, z.lat, z.lon);
+    if (km < bestKm) {
+      bestKm = km;
+      best = z.emma;
+    }
+  }
+  if (bestKm > 380) return '';
+  return best;
+}
+
 function meteoNormTxt(s) {
   return String(s || '')
     .toLowerCase()
@@ -24113,29 +24185,13 @@ function meteoNormParaCoincidenciaProvincia(s) {
 }
 
 /**
- * AEMET divide Castellón en 4 sectores; aquí solo fijamos la capital (costa sur provincial).
- * Otros municipios: la rama genérica de abajo usa nombre de provincia en el geocoding y puede
- * coincidir con varios sectores; acotar al sector real requeriría mapa/comarca o polígonos AEMET.
- */
-const METEO_ZONA_AEMET_CASTELLO_PLANA = 'litoral sur de castellon';
-
-/**
- * Si el municipio geocodificado cae en la misma provincia/comunidad nominal que la zona del CAP
- * («Interior sur de Castellón», «Litoral sur de Alicante»…), el aviso aplica.
- * Nota: si el nombre de la provincia en el aviso coincide con el del usuario pero hay varios sectores
- * en esa provincia, puede mostrarse más de un aviso salvo casos con regla explícita (p. ej. capital de Castellón).
+ * Respaldo si no hay coords o no se pudo cargar centroides EMMA: provincia/comarca en el geocoding
+ * frente al texto de la zona del CAP (puede ser impreciso con varios sectores en la misma provincia).
  */
 function meteoalarmCoincideZonaProvinciaNominatim(areaDesc, _title) {
   const ad = String(areaDesc || '').trim();
   if (!ad) return false;
   if (!meteoAreaPareceZonaAemetEsp(ad)) return false;
-
-  const muni = meteoNormTxt(String(getMunicipioMeteoFiltro() || '').split(',')[0])
-    .replace(/\s+/g, ' ').trim();
-  if (muni === 'castello de la plana' || muni === 'castellon de la plana') {
-    const zona = meteoNormParaCoincidenciaProvincia(ad);
-    return zona === METEO_ZONA_AEMET_CASTELLO_PLANA;
-  }
 
   let region = meteoExtraeRegionTrasUltimoDe(ad);
   if (!region || region.length < 2) region = ad;
@@ -24159,11 +24215,6 @@ function meteoalarmMunicipioCoincide(municipio, areaDesc, title) {
   const mFull = meteoNormTxt(raw).replace(/\s+/g, ' ').trim();
   const blob = (meteoNormTxt(areaDesc) + ' ' + meteoNormTxt(title)).replace(/\s+/g, ' ').trim();
   if (!blob) return false;
-
-  // Capital provincial: solo el sector AEMET donde está el municipio (no los 4 sectores «de Castellón»).
-  if (mFull === 'castello de la plana' || mFull === 'castellon de la plana') {
-    if (/\blitoral\s+sur\s+de\s+castellon\b/.test(blob)) return true;
-  }
 
   const variantes = meteoMunicipioVariantesNormalizadas(mFull);
   for (let vi = 0; vi < variantes.length; vi++) {
@@ -24244,11 +24295,12 @@ function parseMeteoalarmAtomEntries(xmlText) {
 
     const effective = meteoCapTag(entry, 'effective');
     const onset = meteoCapTag(entry, 'onset');
+    const emmaId = meteoCapExtractEmmaId(entry);
     const icon = tipo === 'bad' ? '🔴' : tipo === 'severe' ? '🟠' : '🟡';
     const titulo = title || ((event || 'Aviso') + ' — ' + areaDesc);
     const txt = areaDesc ? ('Zona: ' + areaDesc) : (event || '');
     out.push({
-      tipo, icon, titulo, txt, areaDesc, title, identifier: ident,
+      tipo, icon, titulo, txt, areaDesc, title, identifier: ident, emmaId,
       effective, onset, expires: expiresStr || ''
     });
   });
@@ -24269,10 +24321,18 @@ function tieneDatosUbicacionParaAvisosMeteo(ctx) {
   return m.length >= 2;
 }
 
-/** Solo avisos cuyo texto nombra el mismo municipio/localidad que la torre (no comarca ni provincia solas). */
-function meteoalarmAfectaUbicacionTorre(it, ctx) {
+/**
+ * Aviso aplicable: por EMMA_ID (centroide más cercano al municipio geocodificado) o, si falla, por texto.
+ */
+function meteoalarmItemAfectaUbicacion(it, ctx, userEmma) {
   const m = (ctx.municipioFiltro || '').trim();
   if (m.length < 2) return false;
+  if (userEmma && it.emmaId) {
+    return it.emmaId === userEmma;
+  }
+  if (userEmma && !it.emmaId) {
+    return meteoalarmMunicipioCoincide(m, it.areaDesc, it.title);
+  }
   return meteoalarmMunicipioCoincide(m, it.areaDesc, it.title)
     || meteoalarmCoincideZonaProvinciaNominatim(it.areaDesc, it.title);
 }
@@ -24436,12 +24496,6 @@ function meteoAlarmCacheKey() {
 }
 
 async function obtenerMeteoalarmParaTorre() {
-  const keyFresh = meteoAlarmCacheKey();
-  if (Date.now() - _meteoalarmListaCache.ts < 90000
-    && _meteoalarmListaCache.key === keyFresh
-    && Array.isArray(_meteoalarmListaCache.relevantes)) {
-    return { relevantes: _meteoalarmListaCache.relevantes };
-  }
   await refreshMeteoNominatimContext();
   let ctx = getMeteoUbicacionTorreContexto();
   if (!ctx.municipioFiltro && (!Number.isFinite(ctx.lat) || !Number.isFinite(ctx.lon))) {
@@ -24452,10 +24506,19 @@ async function obtenerMeteoalarmParaTorre() {
   if (!tieneDatosUbicacionParaAvisosMeteo(ctx)) {
     return { relevantes: [] };
   }
+  const cfg = state.configTorre || {};
+  const { lat, lon } = getMeteoLatLonParaNominatim(cfg);
+  const userEmma = await meteoEmmaIdParaUbicacion(lat, lon);
+  const keyFresh = meteoAlarmCacheKey() + '|emma:' + (userEmma || '—');
+  if (Date.now() - _meteoalarmListaCache.ts < 90000
+    && _meteoalarmListaCache.key === keyFresh
+    && Array.isArray(_meteoalarmListaCache.relevantes)) {
+    return { relevantes: _meteoalarmListaCache.relevantes };
+  }
   const xml = await fetchMeteoalarmSpainProxied();
   const items = parseMeteoalarmAtomEntries(xml);
-  const relevantes = items.filter(it => meteoalarmAfectaUbicacionTorre(it, ctx));
-  const key = meteoAlarmCacheKey();
+  const relevantes = items.filter(it => meteoalarmItemAfectaUbicacion(it, ctx, userEmma));
+  const key = keyFresh;
   _meteoalarmListaCache = { ts: Date.now(), key, relevantes };
   return { relevantes };
 }
