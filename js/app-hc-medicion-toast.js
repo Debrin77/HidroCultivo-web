@@ -1,0 +1,145 @@
+﻿/**
+ * Medición rápida (guardarMedicion) y showToast global.
+ * Último bloque de la app; carga tras meteo-alarm-app.js. Siguiente: app-hc-setup-onboarding.js.
+ */
+async function guardarMedicion() {
+  const ec    = document.getElementById('inputEC').value.trim();
+  const ph    = document.getElementById('inputPH').value.trim();
+  const temp  = document.getElementById('inputTemp').value.trim();
+  const vol   = document.getElementById('inputVol').value.trim();
+  const humS  = '';
+  const notas = document.getElementById('inputNotas').value.trim();
+
+  if (!ec && !ph && !temp && !vol) {
+    showToast('⚠️ Introduce al menos un valor', true);
+    return;
+  }
+
+  const now   = new Date();
+  const dia   = String(now.getDate()).padStart(2,'0');
+  const mes   = String(now.getMonth()+1).padStart(2,'0');
+  const anyo  = now.getFullYear();
+  const fecha = dia + '/' + mes + '/' + anyo;
+  const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+
+  // ── 1. GUARDAR SIEMPRE EN LOCAL PRIMERO ───────────────────────────────────
+  state.ultimaMedicion = { fecha, hora, ec, ph, temp, vol, humSustrato: humS };
+  if (!state.mediciones) state.mediciones = [];
+  state.mediciones.unshift({ fecha, hora, tipo:'medicion', ec, ph, temp, vol, humSustrato: humS, notas });
+  if (state.mediciones.length > 200)
+    state.mediciones = state.mediciones.slice(0, 200);
+
+  // Línea única en el registro unificado (Historial → Registro)
+  addRegistro('medicion', { ec, ph, temp, vol, humSustrato: humS, notas, icono: '📊' });
+
+  // Si es una recarga marcada
+  if (esRecarga) {
+    state.ultimaRecarga = now.toISOString().split('T')[0];
+    state.recargaSnoozeHasta = null;
+    esRecarga = false;
+    const rsw = document.getElementById('recargaSwitch');
+    rsw.className = 'toggle-switch';
+    rsw.setAttribute('aria-checked', 'false');
+    if (!state.recargasLocal) state.recargasLocal = [];
+    const _nr = getNutrienteTorre();
+    state.recargasLocal.unshift({
+      fecha, hora, ecFinal: ec, phFinal: ph, tempFinal: temp, volFinal: vol,
+      torreId: getTorreActiva().id != null ? getTorreActiva().id : (state.torreActiva || 0),
+      torreNombre: (getTorreActiva().nombre || '').trim() || 'Instalación',
+      torreEmoji: getTorreActiva().emoji || '🌿',
+      calmagMl: '',
+      vegaAMl: String(calcularMlParteNutriente(0)),
+      vegaBMl: _nr.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
+      vegaCMl: _nr.partes >= 3 ? String(calcularMlParteNutriente(2)) : '',
+      phMasMl: '', phMenosMl: '', notas
+    });
+  }
+
+  saveState(); // Guardar en localStorage SIEMPRE
+
+  // Refrescar historial si está visible
+  if (document.getElementById('tab-historial').classList.contains('active')) {
+    cargarHistorial();
+  }
+
+  // ── 2. ACTUALIZAR UI ──────────────────────────────────────────────────────
+  document.getElementById('depositoStats').textContent =
+    'EC: ' + (ec||'—') + ' µS/cm · pH: ' + (ph||'—') + ' · Temp: ' + (temp||'—') + '°C · Vol: ' + (vol||'—') + 'L';
+
+  // Limpiar campos
+  ['inputEC','inputPH','inputTemp','inputVol','inputNotas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['statusEC','statusPH','statusTemp','statusVol'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'param-status'; el.innerHTML = ''; }
+  });
+  ['cardEC','cardPH','cardTemp','cardVol'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.className = 'param-card';
+  });
+  ['correccionEC','correccionPH','correccionTemp','correccionVol'].forEach(id => {
+    showCorreccion(id, '');
+  });
+
+  updateDashboard();
+  updateRecargaBar();
+  showToast('✅ Medición guardada · EC:' + (ec||'—') + ' pH:' + (ph||'—'));
+
+  // ── 3. INTENTAR ENVIAR A GOOGLE SHEETS (opcional) ────────────────────────
+  const alertas = [];
+  const ecNumSheets = ec ? parseFloat(String(ec).replace(',', '.')) : NaN;
+  if (ec && Number.isFinite(ecNumSheets)) {
+    const cfgS = state.configTorre || {};
+    const mObj = cfgS.checklistEcObjetivoUs;
+    if (Number.isFinite(mObj) && mObj >= 200 && mObj <= 6000) {
+      const o = Math.round(mObj);
+      const t = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
+      if (ecNumSheets < o - t || ecNumSheets > o + t) {
+        alertas.push('EC ' + ec + ' µS/cm fuera del margen del objetivo (' + o + ' ±' + t + ')');
+      }
+    } else {
+      const eo = getECOptimaTorre();
+      if (ecNumSheets < eo.min || ecNumSheets > eo.max) {
+        alertas.push('EC ' + ec + ' µS/cm fuera del rango cultivo (' + eo.min + '–' + eo.max + ')');
+      }
+    }
+  }
+  if (ph && (parseFloat(ph) < 5.7  || parseFloat(ph) > 6.4))  alertas.push('pH ' + ph + ' fuera de rango');
+  if (temp && (parseFloat(temp) < 18 || parseFloat(temp) > 22)) alertas.push('Temp ' + temp + '°C fuera de rango');
+  if (vol && parseFloat(vol) < 16) alertas.push('Vol ' + vol + 'L bajo');
+
+  await hcPostSheets({
+    action: 'medicion', fecha, hora, ec, ph, temp, volumen: vol,
+    humSustrato: humS || null,
+    notas, alertas: alertas.join(' | ')
+  });
+}
+
+
+function showToast(msg, error=false) {
+  let t = document.getElementById('toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.setAttribute('role', 'status');
+    t.setAttribute('aria-live', 'polite');
+    t.setAttribute('aria-atomic', 'true');
+    t.style.cssText =
+      'position:fixed;top:max(70px,env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%) translateY(-10px);' +
+      'background:var(--green);color:var(--bg);font-family:var(--font-display);font-weight:700;font-size:13px;' +
+      'line-height:1.35;padding:12px 16px;border-radius:16px;opacity:0;transition:all 0.3s;pointer-events:none;' +
+      'z-index:9000;max-width:min(100vw - 24px, 420px);width:max-content;box-sizing:border-box;text-align:center;' +
+      'white-space:normal;word-break:break-word;hyphens:auto;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.setAttribute('aria-live', error ? 'assertive' : 'polite');
+  t.style.background = error ? 'var(--red)' : 'var(--green)';
+  t.style.color = error ? 'white' : 'var(--bg)';
+  t.style.opacity = '1';
+  t.style.transform = 'translateX(-50%) translateY(0)';
+  setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(-10px)'; }, 3500);
+}
+

@@ -2,6 +2,7 @@
  * MeteoAlarm: orquestación (EMMA, Nominatim, feed Atom, banner inicio, panel meteo, heurísticas).
  * Requiere antes: meteo-alarm-utils/parse, meteo-forecast-meteo.js, meteo-forecast-dashboard.js, riego-calculo-helpers.js, riego-calculo-calcular.js,
  * script principal (state, saveState, tipoInstalacionNormalizado, goTab).
+ * Siguiente en index: app-hc-medicion-toast.js → setup-onboarding → torres-badges-notifs → pwa-fotodb.
  */
 
 // ── Avisos: MeteoAlarm (CAP en js/meteo-alarm-utils.js; parse/coincidencias en js/meteo-alarm-parse.js) ──
