@@ -671,25 +671,33 @@ body::before { display: none; }
   border: 1.5px solid var(--bg2);
 }
 
-/* Pestañas con etiqueta larga: más ancho + una sola línea (la barra ya es scrollable horizontalmente) */
+/* Pestañas con etiqueta larga: ancho según texto (iOS no debe heredar max-width:100% del label genérico) */
 .tab-btn#btn-calendario,
 .tab-btn#btn-historial {
   flex: 0 0 auto;
-  min-width: max(5.5rem, 12ch);
+  flex-shrink: 0;
+  min-width: max-content;
+  width: auto;
   max-width: none;
-  padding-inline: 5px;
+  padding-inline: 7px;
+  box-sizing: border-box;
 }
 .tab-btn#btn-calendario .tab-label,
 .tab-btn#btn-historial .tab-label {
   display: block;
+  max-width: none;
+  width: max-content;
+  max-inline-size: none;
   -webkit-line-clamp: unset;
   line-clamp: unset;
   -webkit-box-orient: unset;
   overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
   word-break: normal;
   hyphens: manual;
   line-height: 1.15;
+  margin-inline: auto;
 }
 
 .ctp-modal-overlay { z-index: 850; }
