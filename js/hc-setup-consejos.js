@@ -928,6 +928,9 @@ function buildConsejosNftHidraulica() {
   const cat = CONSEJOS_DATA.nft;
   const cfg = state.configTorre || {};
   const resumenTxt = cfg.tipoInstalacion === 'nft' ? nftTextoResumenInstalacion(cfg) : '';
+  const recoNft = cfg.tipoInstalacion === 'nft' && typeof nftRecomendacionCultivoDesdeConfig === 'function'
+    ? nftRecomendacionCultivoDesdeConfig(cfg)
+    : null;
   const b = cfg.tipoInstalacion === 'nft' ? getNftBombaDesdeConfig(cfg) : null;
   let dyn;
   if (b) {
@@ -959,11 +962,40 @@ function buildConsejosNftHidraulica() {
       'Se aproxima el <strong>área</strong> de la lámina en el fondo del canal: en tubo redondo, una <em>cuerda</em> del arco inundado; en perfil rectangular, <strong>ancho útil × altura de lámina</strong>. Con velocidad de película ~0,08–0,12 m/s (según pendiente) se obtiene L/h por canal. La app <strong>combina</strong> este resultado con un modelo empírico y adopta el caudal más exigente. No sustituye medición in situ ni el catálogo de la bomba.',
     alerta: { tipo: 'info', txt: 'ℹ️ Lámina habitual ~2–4 mm (~3 mm); si sube mucho, suele haber exceso de caudal o pendiente insuficiente.' },
   });
+  const cultivo = recoNft
+    ? htmlConsejoCard(cat, {
+        icono: '🧭',
+        titulo: 'Diseño del canal según cultivo objetivo',
+        texto:
+          '<strong>' +
+          meteoEscHtml(recoNft.perfil.etiqueta) +
+          '</strong>: canal recomendado <strong>Ø' +
+          recoNft.perfil.canalMinMm +
+          '–' +
+          recoNft.perfil.canalMaxMm +
+          ' mm</strong>, cesta <strong>' +
+          meteoEscHtml(recoNft.perfil.cestaTxt) +
+          '</strong> y separación <strong>' +
+          meteoEscHtml(recoNft.perfil.sepTxt) +
+          '</strong>.<br>Tu canal actual: <strong>' +
+          (recoNft.diamActualMm != null ? 'Ø' + recoNft.diamActualMm + ' mm' : '—') +
+          '</strong> · ' +
+          meteoEscHtml(recoNft.veredicto) +
+          '.',
+        alerta: {
+          tipo: recoNft.estado === 'bad' ? 'warn' : recoNft.estado === 'warn' ? 'warn' : 'ok',
+          txt:
+            recoNft.estado === 'bad'
+              ? '⚠️ Para este grupo conviene otro sistema o canales mucho más anchos en NFT.'
+              : 'ℹ️ Orientativo para evitar taponamientos de raíz y exceso de densidad.',
+        },
+      })
+    : '';
   const docWrap =
     '<div class="consejo-card"><div class="consejo-texto consejo-texto--flush">' +
     nftTuberiaReferenciaDocHtml({ forChecklist: true }) +
     '</div></div>';
-  return dyn + formula + docWrap;
+  return dyn + cultivo + formula + docWrap;
 }
 
 function buildConsejosDwcDifusorBloque() {

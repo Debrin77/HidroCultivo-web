@@ -313,6 +313,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       foot += ' · ⚠ revisar margen de depósito en panel';
     }
   }
+  try {
+    const recoTxt = nftRecomendacionCultivoTextoCorto(cfg);
+    if (recoTxt) foot += ' · ' + recoTxt;
+  } catch (_) {}
   foot += NFT_SVG_FOOT_ORIENT_HINT;
 
   const serpTitleFs = isParedSerp ? 18.5 : 11.5;
@@ -599,6 +603,10 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       footSub += ' · ⚠ margen depósito: ver panel';
     }
   }
+  try {
+    const recoTxt2 = nftRecomendacionCultivoTextoCorto(EO.cfgSnapshot || {});
+    if (recoTxt2) footSub += ' · ' + recoTxt2;
+  } catch (_) {}
 
   return (
     '<svg class="torre-svg-diagram nft-diagram--scroll svg-fit-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + Wsvg + ' ' + H + '" width="100%" ' +

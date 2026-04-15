@@ -435,6 +435,15 @@ function generarSVGDwc() {
   const volPct = Math.min(1, Math.max(0, volTrabajo / Math.max(1, volMax)));
   const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
   const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
+  const objSpec =
+    typeof dwcGetObjetivoSpec === 'function' && typeof dwcGetObjetivoCultivo === 'function'
+      ? dwcGetObjetivoSpec(dwcGetObjetivoCultivo(cfg))
+      : { label: 'Lechuga final', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
+  const rejModo =
+    typeof dwcGetRejillaModoPreferido === 'function'
+      ? dwcGetRejillaModoPreferido(cfg)
+      : (cfg.dwcRejillaModoPreferido === 'max' ? 'max' : 'objetivo');
+  const rejTxt = rejModo === 'max' ? 'principal: máxima geométrica' : 'principal: recomendada por objetivo';
 
   const W = 400;
   const H = 518;
@@ -608,7 +617,7 @@ function generarSVGDwc() {
   s += `<rect width="${W}" height="${H}" fill="url(#dwcBgGrad)"/>`;
 
   s += `<text x="${W / 2}" y="30" text-anchor="middle" fill="#0f172a" font-size="17" font-weight="900" font-family="Syne,system-ui,sans-serif">DWC · AGUA PROFUNDA</text>`;
-  s += `<text x="${W / 2}" y="46" text-anchor="middle" fill="#64748b" font-size="10.5" font-weight="600">Tapa (cenital) · ${N} filas × ${C} columnas</text>`;
+  s += `<text x="${W / 2}" y="46" text-anchor="middle" fill="#64748b" font-size="10.5" font-weight="600">Tapa (cenital) · ${N} filas × ${C} columnas · ${objSpec.label}</text>`;
 
   /* ── Tapa vista cenital ── */
   s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
@@ -698,6 +707,7 @@ function generarSVGDwc() {
     torreInteraccionModo === 'asignar'
       ? 'Asignar: cultivo arriba · toca macetas en la tapa (vista superior) o Lista'
       : 'Editar: macetas en planta o Lista · Abajo: frente del depósito (ilustrativo)';
+  s += `<text x="${W / 2}" y="${H - 18}" font-family="Inconsolata,monospace" font-size="7.2" fill="#64748b" text-anchor="middle" font-weight="600">Objetivo ${objSpec.label} · ${objSpec.ccTxt} c-c · ${objSpec.litrosTxt} · ${rejTxt}</text>`;
   s += `<text x="${W / 2}" y="${H - 7}" font-family="Inconsolata,monospace" font-size="7.5" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
 
   const pad = 14;
@@ -705,7 +715,7 @@ function generarSVGDwc() {
   const vbH = H + pad * 2;
   return (
     `<svg class="torre-svg-diagram dwc-svg-diagram svg-centered-block" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
-    `<title id="dwcDiagTitle">DWC: tapa superior ${N} por ${C} macetas; debajo frente del depósito con solución. Toca una maceta para la ficha.</title>${s}</svg>`
+    `<title id="dwcDiagTitle">DWC: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. Debajo, frente del depósito con solución. Toca una maceta para la ficha.</title>${s}</svg>`
   );
 }
 

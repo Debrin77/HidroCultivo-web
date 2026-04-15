@@ -254,6 +254,187 @@ function nftDepositoVeredictoBloqueHtml(b, volUsuarioL) {
   );
 }
 
+function nftRecoPerfilPorGrupo(grupo) {
+  const g = String(grupo || '').trim().toLowerCase();
+  if (g === 'lechugas') {
+    return {
+      grupo: 'lechugas',
+      etiqueta: 'Lechugas',
+      canalMinMm: 90,
+      canalMaxMm: 110,
+      cestaTxt: '44–50 mm',
+      sepTxt: '15–20 cm c-c',
+      uso: 'Producción estándar',
+      permite: true,
+    };
+  }
+  if (g === 'asiaticas') {
+    return {
+      grupo: 'asiaticas',
+      etiqueta: 'Asiáticas / hojas rápidas',
+      canalMinMm: 75,
+      canalMaxMm: 100,
+      cestaTxt: '44–50 mm',
+      sepTxt: '12–20 cm c-c',
+      uso: 'Baby leaf o ciclo corto',
+      permite: true,
+    };
+  }
+  if (g === 'hierbas') {
+    return {
+      grupo: 'hierbas',
+      etiqueta: 'Hierbas',
+      canalMinMm: 75,
+      canalMaxMm: 100,
+      cestaTxt: '50–75 mm',
+      sepTxt: '15–25 cm c-c',
+      uso: 'Aromáticas medianas',
+      permite: true,
+    };
+  }
+  if (g === 'hojas') {
+    return {
+      grupo: 'hojas',
+      etiqueta: 'Hojas voluminosas',
+      canalMinMm: 100,
+      canalMaxMm: 125,
+      cestaTxt: '50–75 mm',
+      sepTxt: '20–30 cm c-c',
+      uso: 'Acelga, kale, espinaca grande',
+      permite: true,
+    };
+  }
+  if (g === 'microgreens') {
+    return {
+      grupo: 'microgreens',
+      etiqueta: 'Microgreens',
+      canalMinMm: 63,
+      canalMaxMm: 75,
+      cestaTxt: '27–44 mm',
+      sepTxt: '6–10 cm c-c',
+      uso: 'Alta densidad y ciclo muy corto',
+      permite: true,
+    };
+  }
+  if (g === 'frutos' || g === 'fresas' || g === 'raices') {
+    return {
+      grupo: g || 'frutos',
+      etiqueta: g === 'fresas' ? 'Fresas' : g === 'raices' ? 'Raíces' : 'Frutos',
+      canalMinMm: 125,
+      canalMaxMm: 160,
+      cestaTxt: '75–100 mm',
+      sepTxt: '25–40 cm c-c',
+      uso: 'NFT avanzado y poca densidad',
+      permite: false,
+    };
+  }
+  return {
+    grupo: 'lechugas',
+    etiqueta: 'Lechugas',
+    canalMinMm: 90,
+    canalMaxMm: 110,
+    cestaTxt: '44–50 mm',
+    sepTxt: '15–20 cm c-c',
+    uso: 'Referencia general',
+    permite: true,
+  };
+}
+
+function nftGrupoObjetivoDesdeConfig(cfg) {
+  cfg = cfg || state.configTorre || {};
+  const cnt = {};
+  const addG = g => {
+    const k = String(g || '').trim().toLowerCase();
+    if (!k) return;
+    cnt[k] = (cnt[k] || 0) + 1;
+  };
+  try {
+    const tor = state.torre || [];
+    for (let i = 0; i < tor.length; i++) {
+      const row = tor[i] || [];
+      for (let j = 0; j < row.length; j++) {
+        const v = row[j] && row[j].variedad;
+        if (!v) continue;
+        const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
+        if (c && c.grupo) addG(c.grupo);
+      }
+    }
+  } catch (_) {}
+  if (Array.isArray(cfg.cultivosIniciales)) {
+    for (let i = 0; i < cfg.cultivosIniciales.length; i++) {
+      const v = cfg.cultivosIniciales[i];
+      if (!v) continue;
+      const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
+      if (c && c.grupo) addG(c.grupo);
+    }
+  }
+  let best = '';
+  let bestN = -1;
+  for (const k in cnt) {
+    if (cnt[k] > bestN) {
+      bestN = cnt[k];
+      best = k;
+    }
+  }
+  if (best) return best;
+  const mk = typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
+  if (mk === 'intensivo') return 'hojas';
+  if (mk === 'mixto') return 'asiaticas';
+  if (mk === 'mini') return 'microgreens';
+  return 'lechugas';
+}
+
+function nftRecomendacionCultivoDesdeConfig(cfg) {
+  cfg = cfg || state.configTorre || {};
+  if (cfg.tipoInstalacion !== 'nft') return null;
+  const grupo = nftGrupoObjetivoDesdeConfig(cfg);
+  const p = nftRecoPerfilPorGrupo(grupo);
+  const geom = nftCanalGeomDesdeConfig(cfg);
+  const d = Number(geom.diamMm);
+  let estado = 'ok';
+  let veredicto = 'Dentro de rango recomendado';
+  if (!p.permite) {
+    estado = 'bad';
+    veredicto = 'Grupo poco recomendable para NFT de tubo estándar';
+  } else if (!Number.isFinite(d) || d <= 0) {
+    estado = 'warn';
+    veredicto = 'Falta diámetro de canal';
+  } else if (d < p.canalMinMm) {
+    estado = 'warn';
+    veredicto = 'Canal justo para este grupo';
+  } else if (d > p.canalMaxMm + 15) {
+    estado = 'warn';
+    veredicto = 'Canal sobredimensionado para este grupo';
+  }
+  return {
+    grupo,
+    perfil: p,
+    diamActualMm: Number.isFinite(d) ? d : null,
+    estado,
+    veredicto,
+  };
+}
+
+function nftRecomendacionCultivoTextoCorto(cfg) {
+  const r = nftRecomendacionCultivoDesdeConfig(cfg);
+  if (!r) return '';
+  const p = r.perfil;
+  const dTxt = r.diamActualMm != null ? 'Ø' + r.diamActualMm + ' mm' : 'Ø—';
+  return (
+    'Cultivo objetivo: ' +
+    p.etiqueta +
+    ' · canal rec. Ø' +
+    p.canalMinMm +
+    '–' +
+    p.canalMaxMm +
+    ' mm · actual ' +
+    dTxt +
+    ' · ' +
+    r.veredicto +
+    '.'
+  );
+}
+
 /** Una sola línea de resumen NFT para #depositoTitulo, diagrama y Consejos (config activa). */
 function nftTextoResumenInstalacion(cfg) {
   cfg = cfg || state.configTorre || {};
@@ -283,6 +464,19 @@ function nftTextoResumenInstalacion(cfg) {
   if (altEff > 0) s += ' · ↑~' + altEff + ' cm';
   if (b) {
     s += ' · alim. Ø' + tubo + ' mm · bomba/depósito: ver checklist o asistente';
+  }
+  const reco = nftRecomendacionCultivoDesdeConfig(cfg);
+  if (reco) {
+    s +=
+      ' · cultivo ' +
+      reco.perfil.etiqueta +
+      ': canal Ø' +
+      reco.perfil.canalMinMm +
+      '–' +
+      reco.perfil.canalMaxMm +
+      ' mm (' +
+      reco.veredicto +
+      ')';
   }
   return s;
 }
@@ -349,6 +543,29 @@ function renderTorreSistemaResumenTabla(cfg) {
       String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
     ]);
     rows.push(['Canal de cultivo', escHtmlUi(canalTxt + ' · long. ' + longM)]);
+    const reco = nftRecomendacionCultivoDesdeConfig(cfg);
+    if (reco) {
+      const p = reco.perfil;
+      const sem = reco.estado === 'bad' ? '❌' : reco.estado === 'warn' ? '⚠️' : '✅';
+      rows.push([
+        'Diseño por cultivo',
+        escHtmlUi(
+          sem +
+            ' ' +
+            p.etiqueta +
+            ' · canal Ø' +
+            p.canalMinMm +
+            '–' +
+            p.canalMaxMm +
+            ' mm · cesta ' +
+            p.cestaTxt +
+            ' · sep. ' +
+            p.sepTxt +
+            ' · ' +
+            reco.veredicto
+        ),
+      ]);
+    }
     rows.push(['Tubería riego (Ø)', 'Ø' + tuboRi + ' mm <span class="nft-resumen-hint">(tramo que limita)</span>']);
     if (altCm > 0) rows.push(['Altura bombeo', String(altCm) + ' cm']);
     const qU = cfg.nftBombaUsuarioCaudalLh;

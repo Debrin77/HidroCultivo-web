@@ -578,6 +578,9 @@ function getCLPasos() {
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
+  const nftReco = esNft && typeof nftRecomendacionCultivoDesdeConfig === 'function'
+    ? nftRecomendacionCultivoDesdeConfig(cfg)
+    : null;
   const nftCh = nftHyd ? nftHyd.nCh : 0;
   const nftHx = nftHyd ? nftHyd.nHx : 0;
   const shCl = ensureSensoresHardware();
@@ -777,6 +780,30 @@ function getCLPasos() {
       postCamposHtml:
         '<div id="clNftLayoutResumen" class="cl-nft-layout-resumen" role="status"></div>' +
         '<div id="clNftGeomRecalcMsg" class="cl-nft-geom-recalc-msg" role="status"></div>',
+    }, {
+      id: 'Ncult',
+      seccion: null,
+      paso: 'N·cult',
+      desc:
+        'Verificar que canal, cestas y separación están alineados con el cultivo principal antes de cerrar la recarga.',
+      nota:
+        nftReco
+          ? ('Cultivo objetivo detectado: <strong>' +
+            nftReco.perfil.etiqueta +
+            '</strong> · canal recomendado <strong>Ø' +
+            nftReco.perfil.canalMinMm +
+            '–' +
+            nftReco.perfil.canalMaxMm +
+            ' mm</strong> · cesta <strong>' +
+            nftReco.perfil.cestaTxt +
+            '</strong> · separación <strong>' +
+            nftReco.perfil.sepTxt +
+            '</strong>. Tu canal actual: <strong>' +
+            (nftReco.diamActualMm != null ? 'Ø' + nftReco.diamActualMm + ' mm' : '—') +
+            '</strong> · ' +
+            nftReco.veredicto +
+            '.')
+          : 'Sin datos suficientes para validar por cultivo. Completa canal y cultivos en Sistema o Asistente.',
     }]
     : [];
   const primerLlenado = clRutaChecklist === 'primer_llenado';
