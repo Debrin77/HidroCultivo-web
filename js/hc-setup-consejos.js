@@ -1039,6 +1039,10 @@ function buildConsejosDwc() {
     typeof dwcGetObjetivoSpec === 'function'
       ? dwcGetObjetivoSpec(objKey)
       : { label: 'Lechuga final', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
+  const recoCultivo =
+    cfg.tipoInstalacion === 'dwc' && typeof dwcRecomendacionCultivoDesdeConfig === 'function'
+      ? dwcRecomendacionCultivoDesdeConfig(cfg)
+      : null;
   const intro = htmlConsejoCard(cat, {
     icono: '🌊',
     titulo: 'DWC en esta app',
@@ -1066,8 +1070,30 @@ function buildConsejosDwc() {
       meteoEscHtml(objSpec.litrosTxt) +
       '</strong> y separación <strong>' +
       meteoEscHtml(objSpec.ccTxt) +
-      '</strong> centro a centro.',
-    alerta: { tipo: 'info', txt: 'ℹ️ Puedes cambiarlo en Sistema o en el asistente DWC. El aviso de rejilla se adapta a ese objetivo.' },
+      '</strong> centro a centro.' +
+      (recoCultivo
+        ? '<br>Grupo detectado: <strong>' +
+          meteoEscHtml(recoCultivo.perfil.etiqueta) +
+          '</strong> · cesta recomendada <strong>' +
+          meteoEscHtml(recoCultivo.perfil.cestaTxt) +
+          '</strong> · actual <strong>' +
+          (recoCultivo.rimActualMm != null ? recoCultivo.rimActualMm + ' mm' : '—') +
+          '</strong> · ' +
+          meteoEscHtml(recoCultivo.veredicto) +
+          '.'
+        : ''),
+    alerta: {
+      tipo:
+        recoCultivo && recoCultivo.estado === 'bad'
+          ? 'warn'
+          : recoCultivo && recoCultivo.estado === 'warn'
+            ? 'warn'
+            : 'info',
+      txt:
+        recoCultivo && recoCultivo.estado === 'bad'
+          ? '⚠️ Para este grupo conviene sistema dedicado o mayor volumen/soporte que un DWC estándar.'
+          : 'ℹ️ Puedes cambiarlo en Sistema o en el asistente DWC. El aviso de rejilla se adapta a ese objetivo.',
+    },
   });
   const nivelDep = htmlConsejoCard(cat, {
     icono: '📍',

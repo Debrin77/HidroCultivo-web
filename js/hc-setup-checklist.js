@@ -698,11 +698,28 @@ function getCLPasos() {
                   ? dwcGetRejillaModoPreferido(cfg)
                   : (cfg.dwcRejillaModoPreferido === 'max' ? 'max' : 'objetivo');
               const modoTxt = modoPri === 'max' ? 'máxima geométrica' : 'recomendada por objetivo';
+              const reco =
+                typeof dwcRecomendacionCultivoDesdeConfig === 'function'
+                  ? dwcRecomendacionCultivoDesdeConfig(cfg)
+                  : null;
               let rangoTxt = '';
               if (typeof dwcMaxCestasDesdeConfigTorre === 'function' && typeof dwcRangoCestasOrientativoPorObjetivo === 'function') {
                 const maxTap = dwcMaxCestasDesdeConfigTorre(cfg);
                 const r = dwcRangoCestasOrientativoPorObjetivo(maxTap, spec);
                 if (r) rangoTxt = ' Rango orientativo por objetivo: ~' + r.min + '–' + r.max + ' cestas.';
+              }
+              let cestaTxt = '';
+              if (reco) {
+                cestaTxt =
+                  ' Grupo detectado: <strong>' +
+                  reco.perfil.etiqueta +
+                  '</strong> · cesta rec. <strong>' +
+                  reco.perfil.cestaTxt +
+                  '</strong> · actual <strong>' +
+                  (reco.rimActualMm != null ? reco.rimActualMm + ' mm' : '—') +
+                  '</strong> · ' +
+                  reco.veredicto +
+                  '.';
               }
               return (
                 'Objetivo activo: <strong>' +
@@ -714,7 +731,8 @@ function getCLPasos() {
                 '). Botón principal en Sistema/Asistente: <strong>' +
                 modoTxt +
                 '</strong>.' +
-                rangoTxt
+                rangoTxt +
+                cestaTxt
               );
             })(),
         },

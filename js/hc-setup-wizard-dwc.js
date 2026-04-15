@@ -63,6 +63,193 @@ function dwcGetObjetivoSpec(objetivo) {
   };
 }
 
+function dwcGrupoObjetivoDesdeConfig(cfg) {
+  cfg = cfg || state.configTorre || {};
+  const cnt = {};
+  const addG = g => {
+    const k = String(g || '').trim().toLowerCase();
+    if (!k) return;
+    cnt[k] = (cnt[k] || 0) + 1;
+  };
+  try {
+    const tor = state.torre || [];
+    for (let i = 0; i < tor.length; i++) {
+      const row = tor[i] || [];
+      for (let j = 0; j < row.length; j++) {
+        const v = row[j] && row[j].variedad;
+        if (!v) continue;
+        const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
+        if (c && c.grupo) addG(c.grupo);
+      }
+    }
+  } catch (_) {}
+  if (Array.isArray(cfg.cultivosIniciales)) {
+    for (let i = 0; i < cfg.cultivosIniciales.length; i++) {
+      const v = cfg.cultivosIniciales[i];
+      if (!v) continue;
+      const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
+      if (c && c.grupo) addG(c.grupo);
+    }
+  }
+  let best = '';
+  let bestN = -1;
+  for (const k in cnt) {
+    if (cnt[k] > bestN) {
+      bestN = cnt[k];
+      best = k;
+    }
+  }
+  if (best) return best;
+  const mk = typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
+  if (mk === 'mini') return 'microgreens';
+  if (mk === 'mixto') return 'asiaticas';
+  if (mk === 'intensivo') return 'hojas';
+  return 'lechugas';
+}
+
+function dwcRimMmDesdeConfig(cfg) {
+  const c = cfg || state.configTorre || {};
+  const rim = Number(c.dwcNetPotRimMm);
+  if (Number.isFinite(rim) && rim >= 25 && rim <= 120) return Math.round(rim);
+  if (c.tamanoCesta === 'custom') {
+    const cm = Number(String(c.tamanoCestaCustom || '').replace(',', '.'));
+    if (Number.isFinite(cm) && cm >= 2.5 && cm <= 12) return Math.round(cm * 10);
+  }
+  const map = { '38': 38, '40': 40, '50': 50, '75': 75, '100': 100 };
+  if (map[c.tamanoCesta]) return map[c.tamanoCesta];
+  return null;
+}
+
+function dwcRecoPerfilPorGrupo(grupo, objetivo) {
+  const g = String(grupo || '').trim().toLowerCase();
+  const obj = dwcNormalizeObjetivoCultivo(objetivo);
+  const esBaby = obj === 'baby';
+  if (g === 'microgreens') {
+    return {
+      grupo: 'microgreens',
+      etiqueta: 'Microgreens',
+      objetivo: esBaby ? 'alta densidad' : 'ciclo corto',
+      cestaMinMm: 25,
+      cestaMaxMm: 32,
+      cestaTxt: '25–32 mm',
+      permite: true,
+    };
+  }
+  if (g === 'asiaticas') {
+    if (esBaby) {
+      return {
+        grupo: 'asiaticas',
+        etiqueta: 'Asiáticas (baby)',
+        objetivo: 'alta densidad',
+        cestaMinMm: 25,
+        cestaMaxMm: 32,
+        cestaTxt: '25–32 mm',
+        permite: true,
+      };
+    }
+    return {
+      grupo: 'asiaticas',
+      etiqueta: 'Asiáticas (planta final)',
+      objetivo: 'producción final',
+      cestaMinMm: 50,
+      cestaMaxMm: 75,
+      cestaTxt: '50–75 mm',
+      permite: true,
+    };
+  }
+  if (g === 'hojas' || g === 'hierbas') {
+    return {
+      grupo: g || 'hojas',
+      etiqueta: g === 'hierbas' ? 'Hierbas' : 'Hojas voluminosas',
+      objetivo: esBaby ? 'alta densidad' : 'producción final',
+      cestaMinMm: esBaby ? 32 : 50,
+      cestaMaxMm: esBaby ? 50 : 75,
+      cestaTxt: esBaby ? '32–50 mm' : '50–75 mm',
+      permite: true,
+    };
+  }
+  if (g === 'frutos' || g === 'fresas' || g === 'raices') {
+    return {
+      grupo: g || 'frutos',
+      etiqueta: g === 'fresas' ? 'Fresas' : g === 'raices' ? 'Raíces' : 'Frutos',
+      objetivo: 'sistema dedicado',
+      cestaMinMm: 75,
+      cestaMaxMm: 100,
+      cestaTxt: '75–100 mm',
+      permite: false,
+    };
+  }
+  if (esBaby) {
+    return {
+      grupo: 'lechugas',
+      etiqueta: 'Lechugas / hojas ligeras (baby)',
+      objetivo: 'alta densidad',
+      cestaMinMm: 25,
+      cestaMaxMm: 32,
+      cestaTxt: '25–32 mm',
+      permite: true,
+    };
+  }
+  return {
+    grupo: 'lechugas',
+    etiqueta: 'Lechugas / hojas ligeras (final)',
+    objetivo: 'producción final',
+    cestaMinMm: 50,
+    cestaMaxMm: 50,
+    cestaTxt: '50 mm',
+    permite: true,
+  };
+}
+
+function dwcRecomendacionCultivoDesdeConfig(cfg) {
+  cfg = cfg || state.configTorre || {};
+  if (cfg.tipoInstalacion !== 'dwc') return null;
+  const objetivo = dwcGetObjetivoCultivo(cfg);
+  const grupo = dwcGrupoObjetivoDesdeConfig(cfg);
+  const perfil = dwcRecoPerfilPorGrupo(grupo, objetivo);
+  const rimActualMm = dwcRimMmDesdeConfig(cfg);
+  let estado = 'ok';
+  let veredicto = 'Cesta dentro del rango recomendado';
+  if (!perfil.permite) {
+    estado = 'bad';
+    veredicto = 'Grupo poco recomendable para DWC estándar en un solo depósito';
+  } else if (!Number.isFinite(rimActualMm) || rimActualMm <= 0) {
+    estado = 'warn';
+    veredicto = 'Falta diámetro de cesta para validar';
+  } else if (rimActualMm < perfil.cestaMinMm) {
+    estado = 'warn';
+    veredicto = 'Cesta pequeña para este cultivo/objetivo';
+  } else if (rimActualMm > perfil.cestaMaxMm + 5) {
+    estado = 'warn';
+    veredicto = 'Cesta sobredimensionada para esta densidad';
+  }
+  return {
+    grupo,
+    objetivo,
+    perfil,
+    rimActualMm: Number.isFinite(rimActualMm) ? rimActualMm : null,
+    estado,
+    veredicto,
+  };
+}
+
+function dwcRecomendacionCultivoTextoCorto(cfg) {
+  const r = dwcRecomendacionCultivoDesdeConfig(cfg);
+  if (!r) return '';
+  const dTxt = r.rimActualMm != null ? r.rimActualMm + ' mm' : '—';
+  return (
+    'Cultivo objetivo: ' +
+    r.perfil.etiqueta +
+    ' · cesta rec. ' +
+    r.perfil.cestaTxt +
+    ' · actual ' +
+    dTxt +
+    ' · ' +
+    r.veredicto +
+    '.'
+  );
+}
+
 function dwcObjetivoDesdeInputId(id, cfg) {
   const el = document.getElementById(id);
   if (el && el.value) return dwcNormalizeObjetivoCultivo(el.value);
@@ -758,6 +945,16 @@ function refreshDwcMaxCestasHintSistema() {
       spec.litrosTxt +
       ').'
     : '';
+  const recoCultivo = typeof dwcRecomendacionCultivoDesdeConfig === 'function' ? dwcRecomendacionCultivoDesdeConfig(cfgCalc) : null;
+  const extraCesta = recoCultivo
+    ? ' Cesta por cultivo: rec. ' +
+      recoCultivo.perfil.cestaTxt +
+      ' · actual ' +
+      (recoCultivo.rimActualMm != null ? recoCultivo.rimActualMm + ' mm' : '—') +
+      ' · ' +
+      recoCultivo.veredicto +
+      '.'
+    : '';
   const metaTs = cfg.dwcCestasMaxRecomendadasMeta && cfg.dwcCestasMaxRecomendadasMeta.ts;
   el.textContent =
     '📐 Máx. orientativo en tapa: ~' +
@@ -772,6 +969,7 @@ function refreshDwcMaxCestasHintSistema() {
     o.hueco +
     ' mm entre cestas).' +
     extraObj +
+    extraCesta +
     extraModo +
     (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
   el.classList.remove('setup-hidden');
