@@ -1000,6 +1000,13 @@ function buildConsejosDwcDifusorBloque() {
 
 function buildConsejosDwc() {
   const cat = CONSEJOS_DATA.dwc;
+  const cfg = state.configTorre || {};
+  const objKey =
+    typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(cfg) : 'final';
+  const objSpec =
+    typeof dwcGetObjetivoSpec === 'function'
+      ? dwcGetObjetivoSpec(objKey)
+      : { label: 'Lechuga final', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
   const intro = htmlConsejoCard(cat, {
     icono: '🌊',
     titulo: 'DWC en esta app',
@@ -1016,6 +1023,19 @@ function buildConsejosDwc() {
     texto:
       'Con <strong>L, A y P</strong> (profundidad útil) se estima la capacidad bruta. Si indicas <strong>litros de mezcla</strong> por debajo del máximo, checklist y <strong>Consejos → Agua y EC</strong> escalan nutrientes con ese volumen. Si lo dejas vacío, la app usa la capacidad calculada o un valor orientativo interno.',
     alerta: { tipo: 'ok', txt: '✅ En Sistema y en el asistente verás los litros útiles al completar largo, ancho y profundidad.' },
+  });
+  const densidad = htmlConsejoCard(cat, {
+    icono: '🧭',
+    titulo: 'Objetivo de densidad activo',
+    texto:
+      'En esta instalación está activo <strong>' +
+      meteoEscHtml(objSpec.label) +
+      '</strong>. Como referencia de diseño: <strong>' +
+      meteoEscHtml(objSpec.litrosTxt) +
+      '</strong> y separación <strong>' +
+      meteoEscHtml(objSpec.ccTxt) +
+      '</strong> centro a centro.',
+    alerta: { tipo: 'info', txt: 'ℹ️ Puedes cambiarlo en Sistema o en el asistente DWC. El aviso de rejilla se adapta a ese objetivo.' },
   });
   const nivelDep = htmlConsejoCard(cat, {
     icono: '📍',
@@ -1051,7 +1071,7 @@ function buildConsejosDwc() {
     '<div id="mountDwcCestasGuiaConsejos"></div>' +
     '</div>' +
     '</div>';
-  return intro + vol + nivelDep + difusor + med + extras + tabla;
+  return intro + vol + densidad + nivelDep + difusor + med + extras + tabla;
 }
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */

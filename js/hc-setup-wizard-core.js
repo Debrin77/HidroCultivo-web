@@ -1050,6 +1050,8 @@ const DWC_FORM_IDS_SISTEMA = {
   prof: 'sysDwcProfCm',
   rim: 'sysDwcPotRimMm',
   alt: 'sysDwcPotHmm',
+  objetivo: 'sysDwcObjetivoCultivo',
+  rejillaModo: 'sysDwcRejillaPreferida',
   cupulas: 'sysDwcCupulas',
   aire: 'sysDwcEntradaAire',
 };
@@ -1059,6 +1061,8 @@ const DWC_FORM_IDS_SETUP = {
   prof: 'setupDwcProfCm',
   rim: 'setupDwcPotRimMm',
   alt: 'setupDwcPotHmm',
+  objetivo: 'setupDwcObjetivoCultivo',
+  rejillaModo: 'setupDwcRejillaPreferida',
   marco: 'setupDwcTapaMarcoMm',
   hueco: 'setupDwcTapaHuecoMm',
   cupulas: 'setupDwcCupulas',

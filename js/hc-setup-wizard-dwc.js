@@ -13,6 +13,100 @@ function _dwcParseOptMm(id, min, max) {
   return v;
 }
 
+function dwcNormalizeObjetivoCultivo(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  if (v === 'baby' || v === 'babyleaf' || v === 'alta') return 'baby';
+  return 'final';
+}
+
+function dwcObjetivoCultivoDesdeRimMm(rimMm) {
+  const r = Number(rimMm);
+  if (Number.isFinite(r) && r > 0 && r <= 32) return 'baby';
+  return 'final';
+}
+
+function dwcNormalizeRejillaModo(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  return v === 'max' ? 'max' : 'objetivo';
+}
+
+function dwcGetRejillaModoPreferido(cfg) {
+  const c = cfg || state.configTorre || {};
+  return dwcNormalizeRejillaModo(c.dwcRejillaModoPreferido);
+}
+
+function dwcGetObjetivoCultivo(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (c.dwcObjetivoCultivo) return dwcNormalizeObjetivoCultivo(c.dwcObjetivoCultivo);
+  return dwcObjetivoCultivoDesdeRimMm(c.dwcNetPotRimMm);
+}
+
+function dwcGetObjetivoSpec(objetivo) {
+  const k = dwcNormalizeObjetivoCultivo(objetivo);
+  if (k === 'baby') {
+    return {
+      key: 'baby',
+      label: 'Baby leaf / alta densidad',
+      litrosTxt: '1–2 L/planta',
+      ccTxt: '8–12 cm',
+      ccMinMm: 80,
+      ccMaxMm: 120,
+    };
+  }
+  return {
+    key: 'final',
+    label: 'Lechuga final',
+    litrosTxt: '3–5 L/planta',
+    ccTxt: '15–25 cm',
+    ccMinMm: 150,
+    ccMaxMm: 250,
+  };
+}
+
+function dwcObjetivoDesdeInputId(id, cfg) {
+  const el = document.getElementById(id);
+  if (el && el.value) return dwcNormalizeObjetivoCultivo(el.value);
+  return dwcGetObjetivoCultivo(cfg);
+}
+
+function dwcRangoCestasOrientativoPorObjetivo(maxTap, objetivoSpec) {
+  if (!maxTap || maxTap.max < 1) return null;
+  const L = Number(maxTap.Lmm);
+  const W = Number(maxTap.Wmm);
+  if (!Number.isFinite(L) || !Number.isFinite(W) || L <= 0 || W <= 0) return null;
+  const nAt = cc => Math.max(1, Math.floor(L / cc) * Math.floor(W / cc));
+  const nMin = Math.min(maxTap.max, nAt(objetivoSpec.ccMaxMm));
+  const nMax = Math.min(maxTap.max, nAt(objetivoSpec.ccMinMm));
+  return {
+    min: Math.max(1, Math.min(nMin, nMax)),
+    max: Math.max(1, Math.max(nMin, nMax)),
+  };
+}
+
+function dwcTextoHintBotonPrincipal(modoPri, spec, maxTap, rangoObj) {
+  if (dwcNormalizeRejillaModo(modoPri) === 'max') {
+    return (
+      'Principal = máxima geométrica: prioriza ocupación de tapa (hasta ~' +
+      maxTap.max +
+      ' cestas). Úsala si buscas exprimir espacio y luego ajustar manualmente.'
+    );
+  }
+  let rangoTxt = '';
+  if (rangoObj) {
+    rangoTxt = ' (~' + rangoObj.min + '–' + rangoObj.max + ' cestas orientativas)';
+  }
+  return (
+    'Principal = recomendada por objetivo: ' +
+    spec.label +
+    ' · ' +
+    spec.ccTxt +
+    ' c-c · ' +
+    spec.litrosTxt +
+    rangoTxt +
+    '.'
+  );
+}
+
 /** Marco tapa (mm por lado) y hueco entre cestas: vacío = usar defectos en el aviso (marco 0, hueco 4 mm). */
 function _dwcParseMarcoHuecoMmIds(marcoId, huecoId) {
   const elM = document.getElementById(marcoId);
@@ -396,6 +490,7 @@ function dwcPersistSnapshotMaxCestasEnCfg(cfg) {
     rimMm: cfg.dwcNetPotRimMm,
     huecoMm: o.hueco,
     marcoMm: o.marco,
+    objetivoCultivo: dwcGetObjetivoCultivo(cfg),
     modoCultivo: modoKey,
     ts: new Date().toISOString().slice(0, 10),
   };
@@ -434,6 +529,33 @@ function redimensionarMatrizTorreDwcPreservando(cfg, nFilas, nCols) {
 
 /** Pestaña Sistema DWC: aplica filas×columnas teóricas máximas según L, A, Ø y separación (respetando tope 12×12 del esquema). */
 function aplicarDwcRejillaMaximaDesdeFormularioSistema() {
+  aplicarDwcRejillaDesdeFormularioSistema('max');
+}
+
+function aplicarDwcRejillaRecomendadaDesdeFormularioSistema() {
+  aplicarDwcRejillaDesdeFormularioSistema('objetivo');
+}
+
+function aplicarDwcRejillaPreferidaDesdeFormularioSistema() {
+  const cfg = state.configTorre || {};
+  aplicarDwcRejillaDesdeFormularioSistema(dwcGetRejillaModoPreferido(cfg));
+}
+
+function dwcCalcRejillaObjetivoDesdeMax(o, objetivoSpec) {
+  if (!o || o.max < 1 || !objetivoSpec) return null;
+  const Lmm = Number(o.Lmm);
+  const Wmm = Number(o.Wmm);
+  if (!Number.isFinite(Lmm) || !Number.isFinite(Wmm) || Lmm <= 0 || Wmm <= 0) return null;
+  const ccPref = Math.round((objetivoSpec.ccMinMm + objetivoSpec.ccMaxMm) / 2);
+  let cols = Math.max(1, Math.floor(Lmm / ccPref));
+  let filas = Math.max(1, Math.floor(Wmm / ccPref));
+  cols = Math.min(cols, o.cols);
+  filas = Math.min(filas, o.filas);
+  if (cols < 1 || filas < 1) return null;
+  return { filas, cols };
+}
+
+function aplicarDwcRejillaDesdeFormularioSistema(modoAplicacion) {
   if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
   initTorres();
   const cfg = state.configTorre;
@@ -441,14 +563,19 @@ function aplicarDwcRejillaMaximaDesdeFormularioSistema() {
     dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
   } catch (e) {}
   const o = dwcMaxCestasDesdeConfigTorre(cfg);
-  const btn = document.getElementById('btnDwcAplicarRejillaMax');
+  const btnMax = document.getElementById('btnDwcAplicarRejillaPrincipal');
+  const btnObj = document.getElementById('btnDwcAplicarRejillaSecundaria');
   if (!o || o.max < 1) {
     showToast('Indica largo, ancho y diámetro de cesta válidos para calcular la rejilla.', true);
-    if (btn) btn.disabled = true;
+    if (btnObj) btnObj.disabled = true;
+    if (btnMax) btnMax.disabled = true;
     return;
   }
-  const rawF = o.filas;
-  const rawC = o.cols;
+  const spec = dwcGetObjetivoSpec(dwcGetObjetivoCultivo(cfg));
+  const rejObj = dwcCalcRejillaObjetivoDesdeMax(o, spec);
+  const usaObj = modoAplicacion === 'objetivo' && rejObj;
+  const rawF = usaObj ? rejObj.filas : o.filas;
+  const rawC = usaObj ? rejObj.cols : o.cols;
   const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, rawF));
   const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, rawC));
   redimensionarMatrizTorreDwcPreservando(cfg, nf, nc);
@@ -466,7 +593,17 @@ function aplicarDwcRejillaMaximaDesdeFormularioSistema() {
   try {
     refreshDwcSistemaMedidasUI();
   } catch (e4) {}
-  let msg = 'Rejilla aplicada: ' + nf + '×' + nc + ' macetas (' + nf * nc + ' huecos).';
+  let msg =
+    (usaObj ? 'Rejilla recomendada aplicada: ' : 'Rejilla máxima aplicada: ') +
+    nf +
+    '×' +
+    nc +
+    ' macetas (' +
+    nf * nc +
+    ' huecos).';
+  if (usaObj) {
+    msg += ' Objetivo: ' + spec.label + ' (' + spec.ccTxt + ' c-c).';
+  }
   if (rawF > DWC_REJILLA_MAX_FILAS || rawC > DWC_REJILLA_MAX_COLS) {
     msg +=
       ' Teórico hasta ' +
@@ -484,6 +621,19 @@ function aplicarDwcRejillaMaximaDesdeFormularioSistema() {
 
 /** Asistente: ajusta deslizadores al máximo que cabe (tope 10×8 en esta pantalla). */
 function aplicarDwcRejillaMaximaDesdeSetup() {
+  aplicarDwcRejillaDesdeSetup('max');
+}
+
+function aplicarDwcRejillaRecomendadaDesdeSetup() {
+  aplicarDwcRejillaDesdeSetup('objetivo');
+}
+
+function aplicarDwcRejillaPreferidaDesdeSetup() {
+  const modo = dwcNormalizeRejillaModo(document.getElementById('setupDwcRejillaPreferida')?.value);
+  aplicarDwcRejillaDesdeSetup(modo);
+}
+
+function aplicarDwcRejillaDesdeSetup(modoAplicacion) {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
   const rim = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
   const L = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
@@ -500,8 +650,11 @@ function aplicarDwcRejillaMaximaDesdeSetup() {
     showToast('No se puede calcular la rejilla con esos datos.', true);
     return;
   }
-  const rawF = o.filas;
-  const rawC = o.cols;
+  const spec = dwcGetObjetivoSpec(dwcObjetivoDesdeInputId('setupDwcObjetivoCultivo'));
+  const rejObj = dwcCalcRejillaObjetivoDesdeMax(o, spec);
+  const usaObj = modoAplicacion === 'objetivo' && rejObj;
+  const rawF = usaObj ? rejObj.filas : o.filas;
+  const rawC = usaObj ? rejObj.cols : o.cols;
   const nf = Math.max(1, Math.min(DWC_SETUP_SLIDER_MAX_FILAS, rawF));
   const nc = Math.max(1, Math.min(DWC_SETUP_SLIDER_MAX_COLS, rawC));
   const sn = document.getElementById('sliderNiveles');
@@ -517,7 +670,15 @@ function aplicarDwcRejillaMaximaDesdeSetup() {
   try {
     actualizarResumenSetup();
   } catch (e3) {}
-  let msg = 'Deslizadores: ' + nf + ' filas × ' + nc + ' columnas.';
+  let msg =
+    (usaObj ? 'Rejilla recomendada: ' : 'Rejilla máxima: ') +
+    nf +
+    ' filas × ' +
+    nc +
+    ' columnas.';
+  if (usaObj) {
+    msg += ' Objetivo ' + spec.label + ' (' + spec.ccTxt + ' c-c).';
+  }
   if (rawF > DWC_SETUP_SLIDER_MAX_FILAS || rawC > DWC_SETUP_SLIDER_MAX_COLS) {
     msg +=
       ' Teórico en tapa hasta ' +
@@ -539,16 +700,20 @@ function aplicarDwcRejillaMaximaDesdeSetup() {
 
 function refreshDwcMaxCestasHintSistema() {
   const el = document.getElementById('sysDwcMaxCestasHint');
-  const btn = document.getElementById('btnDwcAplicarRejillaMax');
+  const hintPri = document.getElementById('sysDwcRejillaHintPrincipal');
+  const btnPri = document.getElementById('btnDwcAplicarRejillaPrincipal');
+  const btnSec = document.getElementById('btnDwcAplicarRejillaSecundaria');
   const cfg = state.configTorre;
   if (!el || !cfg || cfg.tipoInstalacion !== 'dwc') {
     if (el) {
       el.classList.add('setup-hidden');
       el.textContent = '';
     }
-    if (btn) {
-      btn.classList.add('setup-hidden');
-      btn.disabled = true;
+    if (btnPri) { btnPri.classList.add('setup-hidden'); btnPri.disabled = true; }
+    if (btnSec) { btnSec.classList.add('setup-hidden'); btnSec.disabled = true; }
+    if (hintPri) {
+      hintPri.classList.add('setup-hidden');
+      hintPri.textContent = '';
     }
     return;
   }
@@ -560,21 +725,39 @@ function refreshDwcMaxCestasHintSistema() {
   if (!o || o.max < 1) {
     el.classList.add('setup-hidden');
     el.textContent = '';
-    if (btn) {
-      btn.classList.add('setup-hidden');
-      btn.disabled = true;
+    if (btnPri) { btnPri.classList.add('setup-hidden'); btnPri.disabled = true; }
+    if (btnSec) { btnSec.classList.add('setup-hidden'); btnSec.disabled = true; }
+    if (hintPri) {
+      hintPri.classList.add('setup-hidden');
+      hintPri.textContent = '';
     }
     return;
   }
   const modoKey =
     typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
   const modoLbl = (MODOS_CULTIVO[modoKey] && MODOS_CULTIVO[modoKey].nombre) || 'tu cultivo';
+  const objetivo = dwcObjetivoDesdeInputId('sysDwcObjetivoCultivo', cfgCalc);
+  const spec = dwcGetObjetivoSpec(objetivo);
+  const rangoObj = dwcRangoCestasOrientativoPorObjetivo(o, spec);
   const rimShow =
     cfgCalc.dwcNetPotRimMm != null ? cfgCalc.dwcNetPotRimMm : cfg.dwcNetPotRimMm;
-  const extra =
+  const extraModo =
     modoKey === 'intensivo' || modoKey === 'mixto'
-      ? ' En cultivos de porte amplio suele convenir menos cestas que el máximo teórico.'
+      ? ' Modo de torre «' + modoLbl + '»: si hay cultivos de porte amplio, reduce densidad.'
       : ' Si el follaje ensancha mucho respecto al aro, deja margen y menos cestas.';
+  const extraObj = rangoObj
+    ? ' Objetivo «' +
+      spec.label +
+      '»: orientativo ~' +
+      rangoObj.min +
+      '–' +
+      rangoObj.max +
+      ' cestas (distancia c-c ' +
+      spec.ccTxt +
+      ', ' +
+      spec.litrosTxt +
+      ').'
+    : '';
   const metaTs = cfg.dwcCestasMaxRecomendadasMeta && cfg.dwcCestasMaxRecomendadasMeta.ts;
   el.textContent =
     '📐 Máx. orientativo en tapa: ~' +
@@ -587,28 +770,54 @@ function refreshDwcMaxCestasHintSistema() {
     rimShow +
     ' mm; ' +
     o.hueco +
-    ' mm entre cestas). Modo «' +
-    modoLbl +
-    '»:' +
-    extra +
+    ' mm entre cestas).' +
+    extraObj +
+    extraModo +
     (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
   el.classList.remove('setup-hidden');
-  if (btn) {
-    btn.classList.remove('setup-hidden');
-    btn.disabled = false;
+  const modoPri = dwcNormalizeRejillaModo(document.getElementById('sysDwcRejillaPreferida')?.value || cfgCalc.dwcRejillaModoPreferido);
+  if (btnPri) {
+    btnPri.classList.remove('setup-hidden');
+    btnPri.disabled = false;
+    if (dwcNormalizeRejillaModo(modoPri) === 'max') {
+      btnPri.onclick = aplicarDwcRejillaMaximaDesdeFormularioSistema;
+      btnPri.textContent = 'Aplicar rejilla máxima (principal)';
+    } else {
+      btnPri.onclick = aplicarDwcRejillaRecomendadaDesdeFormularioSistema;
+      btnPri.textContent = 'Aplicar rejilla recomendada (principal)';
+    }
+  }
+  if (btnSec) {
+    btnSec.classList.remove('setup-hidden');
+    btnSec.disabled = false;
+    if (dwcNormalizeRejillaModo(modoPri) === 'max') {
+      btnSec.onclick = aplicarDwcRejillaRecomendadaDesdeFormularioSistema;
+      btnSec.textContent = 'Aplicar rejilla recomendada (alternativa)';
+    } else {
+      btnSec.onclick = aplicarDwcRejillaMaximaDesdeFormularioSistema;
+      btnSec.textContent = 'Aplicar rejilla máxima (alternativa)';
+    }
+  }
+  if (hintPri) {
+    hintPri.classList.remove('setup-hidden');
+    hintPri.textContent = dwcTextoHintBotonPrincipal(modoPri, spec, o, rangoObj);
   }
 }
 
 function refreshDwcTapHintSetup() {
   const el = document.getElementById('setupDwcTapaCestasHint');
+  const hintPri = document.getElementById('setupDwcRejillaHintPrincipal');
   if (!el) return;
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') {
     el.classList.add('setup-hidden');
     el.textContent = '';
-    const bx = document.getElementById('btnDwcAplicarRejillaMaxSetup');
-    if (bx) {
-      bx.classList.add('setup-hidden');
-      bx.disabled = true;
+    const bx = document.getElementById('btnDwcAplicarRejillaPrincipalSetup');
+    const by = document.getElementById('btnDwcAplicarRejillaSecundariaSetup');
+    if (bx) { bx.classList.add('setup-hidden'); bx.disabled = true; }
+    if (by) { by.classList.add('setup-hidden'); by.disabled = true; }
+    if (hintPri) {
+      hintPri.classList.add('setup-hidden');
+      hintPri.textContent = '';
     }
     return;
   }
@@ -620,14 +829,18 @@ function refreshDwcTapHintSetup() {
   const mh = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
   const marcoE = mh.marco != null ? mh.marco : 0;
   const huecoE = mh.hueco != null ? mh.hueco : DWC_TAPA_HUECO_DEFAULT_MM;
+  const spec = dwcGetObjetivoSpec(dwcObjetivoDesdeInputId('setupDwcObjetivoCultivo'));
   const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE);
   if (ev.estado === 'incompleto') {
     el.classList.add('setup-hidden');
     el.textContent = '';
-    const b0 = document.getElementById('btnDwcAplicarRejillaMaxSetup');
-    if (b0) {
-      b0.classList.add('setup-hidden');
-      b0.disabled = true;
+    const b0 = document.getElementById('btnDwcAplicarRejillaPrincipalSetup');
+    const b1 = document.getElementById('btnDwcAplicarRejillaSecundariaSetup');
+    if (b0) { b0.classList.add('setup-hidden'); b0.disabled = true; }
+    if (b1) { b1.classList.add('setup-hidden'); b1.disabled = true; }
+    if (hintPri) {
+      hintPri.classList.add('setup-hidden');
+      hintPri.textContent = '';
     }
     return;
   }
@@ -650,7 +863,11 @@ function refreshDwcTapHintSetup() {
       ev.marco +
       ' mm/lado, ' +
       ev.hueco +
-      ' mm entre cestas). Orientativo.';
+      ' mm entre cestas). Objetivo: ' +
+      spec.label +
+      ' (' +
+      spec.ccTxt +
+      ' c-c).';
   } else {
     el.style.background = '#fffbeb';
     el.style.border = '1.5px solid #fde68a';
@@ -658,20 +875,66 @@ function refreshDwcTapHintSetup() {
     el.textContent = '⚠️ ' + ev.msg;
   }
 
-  const btnS = document.getElementById('btnDwcAplicarRejillaMaxSetup');
-  if (btnS) {
-    if (rim != null && L != null && W != null) {
-      const om = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
-      if (om && om.max >= 1) {
-        btnS.classList.remove('setup-hidden');
-        btnS.disabled = false;
+  const btnPriS = document.getElementById('btnDwcAplicarRejillaPrincipalSetup');
+  const btnSecS = document.getElementById('btnDwcAplicarRejillaSecundariaSetup');
+  if (rim != null && L != null && W != null) {
+    const om = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
+    const modoPri = dwcNormalizeRejillaModo(document.getElementById('setupDwcRejillaPreferida')?.value);
+    const rangoObj = dwcRangoCestasOrientativoPorObjetivo(om, spec);
+    const ok = om && om.max >= 1;
+    if (btnPriS) {
+      if (ok) {
+        btnPriS.classList.remove('setup-hidden');
+        btnPriS.disabled = false;
+        if (modoPri === 'max') {
+          btnPriS.onclick = aplicarDwcRejillaMaximaDesdeSetup;
+          btnPriS.textContent = 'Aplicar rejilla máxima (principal)';
+        } else {
+          btnPriS.onclick = aplicarDwcRejillaRecomendadaDesdeSetup;
+          btnPriS.textContent = 'Aplicar rejilla recomendada (principal)';
+        }
       } else {
-        btnS.classList.add('setup-hidden');
-        btnS.disabled = true;
+        btnPriS.classList.add('setup-hidden');
+        btnPriS.disabled = true;
       }
-    } else {
-      btnS.classList.add('setup-hidden');
-      btnS.disabled = true;
+    }
+    if (btnSecS) {
+      if (ok) {
+        btnSecS.classList.remove('setup-hidden');
+        btnSecS.disabled = false;
+        if (modoPri === 'max') {
+          btnSecS.onclick = aplicarDwcRejillaRecomendadaDesdeSetup;
+          btnSecS.textContent = 'Aplicar rejilla recomendada (alternativa)';
+        } else {
+          btnSecS.onclick = aplicarDwcRejillaMaximaDesdeSetup;
+          btnSecS.textContent = 'Aplicar rejilla máxima (alternativa)';
+        }
+      } else {
+        btnSecS.classList.add('setup-hidden');
+        btnSecS.disabled = true;
+      }
+    }
+    if (hintPri) {
+      if (ok) {
+        hintPri.classList.remove('setup-hidden');
+        hintPri.textContent = dwcTextoHintBotonPrincipal(modoPri, spec, om, rangoObj);
+      } else {
+        hintPri.classList.add('setup-hidden');
+        hintPri.textContent = '';
+      }
+    }
+  } else {
+    if (btnPriS) {
+      btnPriS.classList.add('setup-hidden');
+      btnPriS.disabled = true;
+    }
+    if (btnSecS) {
+      btnSecS.classList.add('setup-hidden');
+      btnSecS.disabled = true;
+    }
+    if (hintPri) {
+      hintPri.classList.add('setup-hidden');
+      hintPri.textContent = '';
     }
   }
 }
@@ -853,6 +1116,15 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   if (P != null) cfg.dwcDepositoProfCm = P; else delete cfg.dwcDepositoProfCm;
   if (rim != null) cfg.dwcNetPotRimMm = rim; else delete cfg.dwcNetPotRimMm;
   if (hPot != null) cfg.dwcNetPotHeightMm = hPot; else delete cfg.dwcNetPotHeightMm;
+  if (ids.objetivo) {
+    const elObj = document.getElementById(ids.objetivo);
+    if (elObj && elObj.value) cfg.dwcObjetivoCultivo = dwcNormalizeObjetivoCultivo(elObj.value);
+    else cfg.dwcObjetivoCultivo = dwcObjetivoCultivoDesdeRimMm(rim);
+  }
+  if (ids.rejillaModo) {
+    const elModo = document.getElementById(ids.rejillaModo);
+    cfg.dwcRejillaModoPreferido = dwcNormalizeRejillaModo(elModo && elModo.value);
+  }
   cfg.dwcCupulas = document.getElementById(ids.cupulas)?.checked === true;
   if (!cfg.dwcCupulas) delete cfg.dwcCupulas;
   cfg.dwcEntradaAireManguera = document.getElementById(ids.aire)?.checked === true;
@@ -903,6 +1175,8 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   setVal(ids.prof, c.dwcDepositoProfCm);
   setVal(ids.rim, c.dwcNetPotRimMm);
   setVal(ids.alt, c.dwcNetPotHeightMm);
+  if (ids.objetivo) setVal(ids.objetivo, dwcGetObjetivoCultivo(c));
+  if (ids.rejillaModo) setVal(ids.rejillaModo, dwcGetRejillaModoPreferido(c));
   if (ids.marco) setVal(ids.marco, c.dwcTapaMarcoPorLadoMm);
   if (ids.hueco) setVal(ids.hueco, c.dwcTapaHuecoMm);
   const cu = document.getElementById(ids.cupulas);

@@ -9472,7 +9472,7 @@ button.toggle-switch {
 .dwc-cestas-guia-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 280px;
+  min-width: 640px;
   font-size: 10px;
   line-height: 1.35;
 }
@@ -9493,6 +9493,14 @@ button.toggle-switch {
 .dwc-cestas-guia-table tbody td.dwc-cestas-guia-diam {
   font-weight: 700;
   color: #0f172a;
+}
+.dwc-cestas-guia-table tbody tr.dwc-cestas-guia-section td {
+  font-size: 9px;
+  font-weight: 800;
+  color: #0c4a6e;
+  background: #ecfeff;
+  border-top: 1px solid #bae6fd;
+  border-bottom: 1px solid #bae6fd;
 }
 .dwc-cestas-guia-table tbody tr.dwc-cestas-guia-row-alt {
   background: #fafafa;

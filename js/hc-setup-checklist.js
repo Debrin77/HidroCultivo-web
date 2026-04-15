@@ -676,6 +676,45 @@ function getCLPasos() {
           postCamposHtml:
             '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" role="status" aria-live="polite"></div>',
         },
+        {
+          id: 'D0b',
+          seccion: null,
+          paso: 'D·0b',
+          desc:
+            'Rejilla DWC activa: valida si aplicar <strong>máxima geométrica</strong> o <strong>recomendada por objetivo</strong> antes de cerrar la recarga.',
+          nota:
+            (function () {
+              const objKey =
+                typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(cfg) : 'final';
+              const spec =
+                typeof dwcGetObjetivoSpec === 'function'
+                  ? dwcGetObjetivoSpec(objKey)
+                  : { label: 'Lechuga final', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
+              const modoPri =
+                typeof dwcGetRejillaModoPreferido === 'function'
+                  ? dwcGetRejillaModoPreferido(cfg)
+                  : (cfg.dwcRejillaModoPreferido === 'max' ? 'max' : 'objetivo');
+              const modoTxt = modoPri === 'max' ? 'máxima geométrica' : 'recomendada por objetivo';
+              let rangoTxt = '';
+              if (typeof dwcMaxCestasDesdeConfigTorre === 'function' && typeof dwcRangoCestasOrientativoPorObjetivo === 'function') {
+                const maxTap = dwcMaxCestasDesdeConfigTorre(cfg);
+                const r = dwcRangoCestasOrientativoPorObjetivo(maxTap, spec);
+                if (r) rangoTxt = ' Rango orientativo por objetivo: ~' + r.min + '–' + r.max + ' cestas.';
+              }
+              return (
+                'Objetivo activo: <strong>' +
+                spec.label +
+                '</strong> (' +
+                spec.ccTxt +
+                ' c-c, ' +
+                spec.litrosTxt +
+                '). Botón principal en Sistema/Asistente: <strong>' +
+                modoTxt +
+                '</strong>.' +
+                rangoTxt
+              );
+            })(),
+        },
       ]
     : [];
 
@@ -1329,6 +1368,14 @@ async function finalizarChecklist() {
     colorAgua:    gCL('clColorAgua')    || '',
     estadoPlantas:gCL('clEstadoPlantas')|| '',
     minSinBomba:  gCL('clMinSinBomba')  || '',
+    dwcObjetivoCultivo:
+      (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
+        ? (state.configTorre.dwcObjetivoCultivo || (typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(state.configTorre) : 'final'))
+        : '',
+    dwcRejillaModoPreferido:
+      (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
+        ? (state.configTorre.dwcRejillaModoPreferido || (typeof dwcGetRejillaModoPreferido === 'function' ? dwcGetRejillaModoPreferido(state.configTorre) : 'objetivo'))
+        : '',
     notas:        'Recarga completa del depósito',
   };
   state.recargasLocal.unshift(recargaData);
@@ -1343,6 +1390,8 @@ async function finalizarChecklist() {
     phMenosMl: recargaData.phMenosMl || '',
     colorAgua: recargaData.colorAgua,
     estadoPlantas: recargaData.estadoPlantas,
+    dwcObjetivoCultivo: recargaData.dwcObjetivoCultivo || '',
+    dwcRejillaModoPreferido: recargaData.dwcRejillaModoPreferido || '',
     icono: '🔄'
   });
 
@@ -1374,6 +1423,9 @@ async function finalizarChecklist() {
     phMasMl: phMasTot ? String(phMasTot) : '',
     nutriente: nutR.nombre,
     observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}` +
+      ((state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
+        ? ` · DWC objetivo: ${recargaData.dwcObjetivoCultivo || '-'} · Rejilla: ${recargaData.dwcRejillaModoPreferido || '-'}`
+        : '') +
       (recargaData.phMenosMl ? ` · pH−: ${recargaData.phMenosMl} ml` : '')
   });
   await hcPostSheets({

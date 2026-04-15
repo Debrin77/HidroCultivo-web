@@ -196,6 +196,11 @@ function actualizarResumenSetup() {
     }
     if (document.getElementById('setupDwcCupulas')?.checked) geoDwcRes += ' · cúpulas';
     if (document.getElementById('setupDwcEntradaAire')?.checked) geoDwcRes += ' · entrada aire';
+    const objSel = document.getElementById('setupDwcObjetivoCultivo')?.value;
+    const objLbl = dwcNormalizeObjetivoCultivo(objSel) === 'baby' ? 'baby leaf' : 'lechuga final';
+    geoDwcRes += ' · objetivo ' + objLbl;
+    const rejSel = dwcNormalizeRejillaModo(document.getElementById('setupDwcRejillaPreferida')?.value);
+    geoDwcRes += ' · botón principal ' + (rejSel === 'max' ? 'máxima' : 'recomendada');
     const mhG = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
     if (mhG.marco != null && mhG.marco > 0) geoDwcRes += ' · marco tapa ' + mhG.marco + ' mm/lado';
     if (mhG.hueco != null) geoDwcRes += ' · entre cestas ' + mhG.hueco + ' mm';
