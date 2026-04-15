@@ -947,12 +947,12 @@ function refreshDwcMaxCestasHintSistema() {
     : '';
   const recoCultivo = typeof dwcRecomendacionCultivoDesdeConfig === 'function' ? dwcRecomendacionCultivoDesdeConfig(cfgCalc) : null;
   const extraCesta = recoCultivo
-    ? ' Cesta por cultivo: rec. ' +
+    ? ' Cesta: rec. ' +
       recoCultivo.perfil.cestaTxt +
       ' · actual ' +
       (recoCultivo.rimActualMm != null ? recoCultivo.rimActualMm + ' mm' : '—') +
       ' · ' +
-      recoCultivo.veredicto +
+      (recoCultivo.estado === 'ok' ? 'OK' : recoCultivo.estado === 'warn' ? 'Ajustar' : 'No recomendado') +
       '.'
     : '';
   const metaTs = cfg.dwcCestasMaxRecomendadasMeta && cfg.dwcCestasMaxRecomendadasMeta.ts;
@@ -970,7 +970,7 @@ function refreshDwcMaxCestasHintSistema() {
     ' mm entre cestas).' +
     extraObj +
     extraCesta +
-    extraModo +
+    (recoCultivo && recoCultivo.estado !== 'ok' ? extraModo : '') +
     (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
   el.classList.remove('setup-hidden');
   const modoPri = dwcNormalizeRejillaModo(document.getElementById('sysDwcRejillaPreferida')?.value || cfgCalc.dwcRejillaModoPreferido);

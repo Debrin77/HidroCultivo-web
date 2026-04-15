@@ -8,6 +8,12 @@ let clEsPrimeraVez = false;
 /** 'recarga' = flujo completo (apagar, vaciar, cubrir…); 'primer_llenado' = depósito sin cultivo previo */
 let clRutaChecklist = 'recarga';
 
+function clEstadoChipHtml(estado) {
+  const k = estado === 'bad' ? 'bad' : estado === 'warn' ? 'warn' : 'ok';
+  const txt = k === 'ok' ? 'OK' : k === 'warn' ? 'Ajustar' : 'No recomendado';
+  return '<span class="cultivo-status-chip cultivo-status-chip--' + k + '">' + txt + '</span>';
+}
+
 /** Si no se elige ruta en modal: reanudar la que tenga progreso guardado (por torre). */
 function elegirClRutaChecklistAlAbrir() {
   const por = state.configTorre && state.configTorre.checklistAvancePorRuta;
@@ -702,36 +708,23 @@ function getCLPasos() {
                 typeof dwcRecomendacionCultivoDesdeConfig === 'function'
                   ? dwcRecomendacionCultivoDesdeConfig(cfg)
                   : null;
-              let rangoTxt = '';
-              if (typeof dwcMaxCestasDesdeConfigTorre === 'function' && typeof dwcRangoCestasOrientativoPorObjetivo === 'function') {
-                const maxTap = dwcMaxCestasDesdeConfigTorre(cfg);
-                const r = dwcRangoCestasOrientativoPorObjetivo(maxTap, spec);
-                if (r) rangoTxt = ' Rango orientativo por objetivo: ~' + r.min + '–' + r.max + ' cestas.';
-              }
               let cestaTxt = '';
               if (reco) {
                 cestaTxt =
-                  ' Grupo detectado: <strong>' +
-                  reco.perfil.etiqueta +
-                  '</strong> · cesta rec. <strong>' +
+                  ' Cesta: <strong>' +
                   reco.perfil.cestaTxt +
                   '</strong> · actual <strong>' +
                   (reco.rimActualMm != null ? reco.rimActualMm + ' mm' : '—') +
-                  '</strong> · ' +
-                  reco.veredicto +
-                  '.';
+                  '</strong> · ' + clEstadoChipHtml(reco.estado) + '.';
               }
               return (
                 'Objetivo activo: <strong>' +
                 spec.label +
                 '</strong> (' +
                 spec.ccTxt +
-                ' c-c, ' +
-                spec.litrosTxt +
-                '). Botón principal en Sistema/Asistente: <strong>' +
+                ' c-c). Botón principal: <strong>' +
                 modoTxt +
                 '</strong>.' +
-                rangoTxt +
                 cestaTxt
               );
             })(),
@@ -806,9 +799,9 @@ function getCLPasos() {
         'Verificar que canal, cestas y separación están alineados con el cultivo principal antes de cerrar la recarga.',
       nota:
         nftReco
-          ? ('Cultivo objetivo detectado: <strong>' +
+          ? ('Cultivo: <strong>' +
             nftReco.perfil.etiqueta +
-            '</strong> · canal recomendado <strong>Ø' +
+            '</strong> · canal <strong>Ø' +
             nftReco.perfil.canalMinMm +
             '–' +
             nftReco.perfil.canalMaxMm +
@@ -816,10 +809,10 @@ function getCLPasos() {
             nftReco.perfil.cestaTxt +
             '</strong> · separación <strong>' +
             nftReco.perfil.sepTxt +
-            '</strong>. Tu canal actual: <strong>' +
+            '</strong> · actual <strong>' +
             (nftReco.diamActualMm != null ? 'Ø' + nftReco.diamActualMm + ' mm' : '—') +
             '</strong> · ' +
-            nftReco.veredicto +
+            clEstadoChipHtml(nftReco.estado) +
             '.')
           : 'Sin datos suficientes para validar por cultivo. Completa canal y cultivos en Sistema o Asistente.',
     }]

@@ -420,17 +420,18 @@ function nftRecomendacionCultivoTextoCorto(cfg) {
   if (!r) return '';
   const p = r.perfil;
   const dTxt = r.diamActualMm != null ? 'Ø' + r.diamActualMm + ' mm' : 'Ø—';
+  const estadoTxt = r.estado === 'ok' ? 'OK' : r.estado === 'warn' ? 'Ajustar' : 'No recomendado';
   return (
-    'Cultivo objetivo: ' +
+    'Cultivo: ' +
     p.etiqueta +
-    ' · canal rec. Ø' +
+    ' · canal Ø' +
     p.canalMinMm +
     '–' +
     p.canalMaxMm +
     ' mm · actual ' +
     dTxt +
     ' · ' +
-    r.veredicto +
+    estadoTxt +
     '.'
   );
 }
@@ -467,6 +468,7 @@ function nftTextoResumenInstalacion(cfg) {
   }
   const reco = nftRecomendacionCultivoDesdeConfig(cfg);
   if (reco) {
+    const estadoTxt = reco.estado === 'ok' ? 'OK' : reco.estado === 'warn' ? 'Ajustar' : 'No recomendado';
     s +=
       ' · cultivo ' +
       reco.perfil.etiqueta +
@@ -474,9 +476,7 @@ function nftTextoResumenInstalacion(cfg) {
       reco.perfil.canalMinMm +
       '–' +
       reco.perfil.canalMaxMm +
-      ' mm (' +
-      reco.veredicto +
-      ')';
+      ' mm (' + estadoTxt + ')';
   }
   return s;
 }

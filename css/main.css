@@ -3151,6 +3151,42 @@ button.torre-summary:focus-visible,
 .param-status.bad  { background: #fee2e2; color: #7f1d1d; }
 .param-status.empty { display: none; }
 
+/* Chip compacto para estado de recomendación cultivo (NFT / DWC). */
+.cultivo-status-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.45;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+.cultivo-status-chip--ok {
+  background: #dcfce7;
+  color: #14532d;
+  border: 1px solid #86efac;
+}
+.cultivo-status-chip--warn {
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #fcd34d;
+}
+.cultivo-status-chip--bad {
+  background: #fee2e2;
+  color: #7f1d1d;
+  border: 1px solid #fca5a5;
+}
+@media (max-width: 520px) {
+  .cultivo-status-chip {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+}
+
 .correccion-box {
   margin-top: 8px;
   padding: 10px 12px;

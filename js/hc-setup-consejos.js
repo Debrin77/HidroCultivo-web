@@ -924,6 +924,12 @@ function buildConsejosAguaNutrienteDinamico() {
   });
 }
 
+function cultivoEstadoChipHtml(estado) {
+  const k = estado === 'bad' ? 'bad' : estado === 'warn' ? 'warn' : 'ok';
+  const txt = k === 'ok' ? 'OK' : k === 'warn' ? 'Ajustar' : 'No recomendado';
+  return '<span class="cultivo-status-chip cultivo-status-chip--' + k + '">' + txt + '</span>';
+}
+
 function buildConsejosNftHidraulica() {
   const cat = CONSEJOS_DATA.nft;
   const cfg = state.configTorre || {};
@@ -966,28 +972,31 @@ function buildConsejosNftHidraulica() {
     ? htmlConsejoCard(cat, {
         icono: '🧭',
         titulo: 'Diseño del canal según cultivo objetivo',
+        // Modo compacto: conservar decisión principal sin saturar texto.
         texto:
           '<strong>' +
           meteoEscHtml(recoNft.perfil.etiqueta) +
-          '</strong>: canal recomendado <strong>Ø' +
+          '</strong> · canal <strong>Ø' +
           recoNft.perfil.canalMinMm +
           '–' +
           recoNft.perfil.canalMaxMm +
-          ' mm</strong>, cesta <strong>' +
+          ' mm</strong> · cesta <strong>' +
           meteoEscHtml(recoNft.perfil.cestaTxt) +
-          '</strong> y separación <strong>' +
+          '</strong> · separación <strong>' +
           meteoEscHtml(recoNft.perfil.sepTxt) +
-          '</strong>.<br>Tu canal actual: <strong>' +
+          '</strong>.<br>Actual: <strong>' +
           (recoNft.diamActualMm != null ? 'Ø' + recoNft.diamActualMm + ' mm' : '—') +
           '</strong> · ' +
-          meteoEscHtml(recoNft.veredicto) +
+          cultivoEstadoChipHtml(recoNft.estado) +
           '.',
         alerta: {
           tipo: recoNft.estado === 'bad' ? 'warn' : recoNft.estado === 'warn' ? 'warn' : 'ok',
           txt:
             recoNft.estado === 'bad'
-              ? '⚠️ Para este grupo conviene otro sistema o canales mucho más anchos en NFT.'
-              : 'ℹ️ Orientativo para evitar taponamientos de raíz y exceso de densidad.',
+              ? '⚠️ Mejor otro sistema o NFT de frutos dedicado.'
+              : recoNft.estado === 'warn'
+                ? '⚠️ Ajusta diámetro de canal para mejorar el encaje.'
+                : '✅ Configuración alineada con el cultivo objetivo.',
         },
       })
     : '';
@@ -1079,7 +1088,7 @@ function buildConsejosDwc() {
           '</strong> · actual <strong>' +
           (recoCultivo.rimActualMm != null ? recoCultivo.rimActualMm + ' mm' : '—') +
           '</strong> · ' +
-          meteoEscHtml(recoCultivo.veredicto) +
+          cultivoEstadoChipHtml(recoCultivo.estado) +
           '.'
         : ''),
     alerta: {
@@ -1090,9 +1099,13 @@ function buildConsejosDwc() {
             ? 'warn'
             : 'info',
       txt:
-        recoCultivo && recoCultivo.estado === 'bad'
-          ? '⚠️ Para este grupo conviene sistema dedicado o mayor volumen/soporte que un DWC estándar.'
-          : 'ℹ️ Puedes cambiarlo en Sistema o en el asistente DWC. El aviso de rejilla se adapta a ese objetivo.',
+        recoCultivo
+          ? (recoCultivo.estado === 'ok'
+              ? '✅ Configuración alineada con el cultivo objetivo.'
+              : recoCultivo.estado === 'warn'
+                ? '⚠️ Ajusta diámetro de cesta u objetivo para mejorar el encaje.'
+                : '⚠️ Grupo poco recomendable en DWC estándar; mejor sistema dedicado.')
+          : 'ℹ️ Puedes cambiarlo en Sistema o en el asistente DWC.',
     },
   });
   const nivelDep = htmlConsejoCard(cat, {

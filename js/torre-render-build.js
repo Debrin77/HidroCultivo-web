@@ -444,9 +444,9 @@ function generarSVGDwc() {
       ? dwcGetRejillaModoPreferido(cfg)
       : (cfg.dwcRejillaModoPreferido === 'max' ? 'max' : 'objetivo');
   const rejTxt = rejModo === 'max' ? 'principal: máxima geométrica' : 'principal: recomendada por objetivo';
-  const recoCultivoTxt =
-    typeof dwcRecomendacionCultivoTextoCorto === 'function'
-      ? dwcRecomendacionCultivoTextoCorto(cfg)
+  const recoCultivo =
+    typeof dwcRecomendacionCultivoDesdeConfig === 'function'
+      ? dwcRecomendacionCultivoDesdeConfig(cfg)
       : '';
 
   const W = 400;
@@ -711,8 +711,11 @@ function generarSVGDwc() {
     torreInteraccionModo === 'asignar'
       ? 'Asignar: cultivo arriba · toca macetas en la tapa (vista superior) o Lista'
       : 'Editar: macetas en planta o Lista · Abajo: frente del depósito (ilustrativo)';
-  const pieReco = recoCultivoTxt ? ' · ' + recoCultivoTxt : '';
-  s += `<text x="${W / 2}" y="${H - 18}" font-family="Inconsolata,monospace" font-size="7.2" fill="#64748b" text-anchor="middle" font-weight="600">Objetivo ${objSpec.label} · ${objSpec.ccTxt} c-c · ${objSpec.litrosTxt} · ${rejTxt}${pieReco}</text>`;
+  const recoEstado = recoCultivo
+    ? (recoCultivo.estado === 'ok' ? 'OK' : recoCultivo.estado === 'warn' ? 'Ajustar' : 'No recomendado')
+    : '';
+  const pieReco = recoCultivo ? ` · cesta ${recoCultivo.perfil.cestaTxt} · ${recoEstado}` : '';
+  s += `<text x="${W / 2}" y="${H - 18}" font-family="Inconsolata,monospace" font-size="7.2" fill="#64748b" text-anchor="middle" font-weight="600">Objetivo ${objSpec.label} · ${rejTxt}${pieReco}</text>`;
   s += `<text x="${W / 2}" y="${H - 7}" font-family="Inconsolata,monospace" font-size="7.5" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
 
   const pad = 14;
@@ -720,7 +723,7 @@ function generarSVGDwc() {
   const vbH = H + pad * 2;
   return (
     `<svg class="torre-svg-diagram dwc-svg-diagram svg-centered-block" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
-    `<title id="dwcDiagTitle">DWC: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. ${recoCultivoTxt} Debajo, frente del depósito con solución. Toca una maceta para la ficha.</title>${s}</svg>`
+    `<title id="dwcDiagTitle">DWC: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''} Debajo, frente del depósito con solución. Toca una maceta para la ficha.</title>${s}</svg>`
   );
 }
 
