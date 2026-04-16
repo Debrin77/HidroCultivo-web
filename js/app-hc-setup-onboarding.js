@@ -89,7 +89,10 @@ function renderSetupPlantasGrid() {
         txt += '• ' + orden[1] + ': <strong>' + d.mlAB + ' ml</strong><br>';
         txt += '• ' + orden[2] + ': <strong>' + d.mlAB + ' ml</strong><br>';
       }
-      txt += '• pH objetivo: <strong>' + (nut.pHRango?.[0]||5.5) + '–' + (nut.pHRango?.[1]||6.5) + '</strong>';
+      const phR = typeof torreGetPhRangoObjetivo === 'function'
+        ? torreGetPhRangoObjetivo(nut, state.configTorre || {})
+        : [nut.pHRango?.[0] || 5.5, nut.pHRango?.[1] || 6.5];
+      txt += '• pH objetivo: <strong>' + phR[0] + '–' + phR[1] + '</strong>';
       if (ecObj.advertencia) txt += '<br><span class="setup-ec-warn">⚠️ Cultivos con EC distinta — ajustar por torre</span>';
       dosisText.innerHTML = txt;
     }

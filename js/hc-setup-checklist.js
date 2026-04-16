@@ -174,7 +174,8 @@ function generarPasosNutriente() {
   const ecCM   = usarCalMagEnRecarga() && mlCM > 0 ? estimarEcCalMagMicroS(mlCM, vol) : 0;
   const ecFinal = getRecargaEcMetaMicroS();
   const tieneBuffer = nut.pHBuffer;
-  const pHRango = nut.pHRango || [5.5, 6.5];
+  const pHRango =
+    typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : (nut.pHRango || [5.5, 6.5]);
   const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
   const suf    = dosisSufijoNutriente(nut);
   const pasos  = [];
@@ -577,7 +578,8 @@ function getCLPasos() {
   const ecMin = ecOpt.min;
   const ecMax = ecOpt.max;
   const nut = getNutrienteTorre();
-  const pHR = nut.pHRango || [5.5, 6.5];
+  const pHR =
+    typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : (nut.pHRango || [5.5, 6.5]);
   const phObj = ((pHR[0] + pHR[1]) / 2).toFixed(1);
   const ecMed = Math.round((ecMin + ecMax) / 2);
   const ecRecTarget = getRecargaEcMetaMicroS();

@@ -278,7 +278,10 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
     const dat  = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad:'', fecha:'', fotos:[] };
     const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
     const est  = dat.variedad ? getEstado(dat.variedad, dias) : '';
-    const diasT = DIAS_COSECHA[dat.variedad] || 50;
+    const diasBase = DIAS_COSECHA[dat.variedad] || 50;
+    const diasT = typeof torreGetDiasCosechaObjetivo === 'function'
+      ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
+      : diasBase;
     const pct  = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
 
     /** Icono encima de la cesta según etapa de crecimiento (🌱 🌿 🥬 ✂️) */
@@ -474,7 +477,10 @@ function generarSVGDwc() {
         : { variedad: '', fecha: '', fotos: [] };
     const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
     const est = dat.variedad ? getEstado(dat.variedad, dias) : '';
-    const diasT = DIAS_COSECHA[dat.variedad] || 50;
+    const diasBase = DIAS_COSECHA[dat.variedad] || 50;
+    const diasT = typeof torreGetDiasCosechaObjetivo === 'function'
+      ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
+      : diasBase;
     const pct = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
     let fill, stroke, phaseEmoji;
     if (!dat.variedad) {
@@ -985,7 +991,10 @@ function renderTablaVariedades() {
       if (!c || !c.variedad) return;
       const dias   = c.fecha ? getDias(c.fecha) : null;
       const cultivo = getCultivoDB(c.variedad);
-      const diasTotal = cultivo?.dias || 45;
+      const diasBase = cultivo?.dias || 45;
+      const diasTotal = typeof torreGetDiasCosechaObjetivo === 'function'
+        ? torreGetDiasCosechaObjetivo(diasBase, cfg)
+        : diasBase;
       const pct    = dias !== null ? Math.min(100, Math.round((dias / diasTotal) * 100)) : null;
       const estado = dias === null ? 'Sin fecha'
         : pct >= 100 ? 'Cosechar'

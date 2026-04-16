@@ -717,7 +717,10 @@ function programarRecordatorios() {
     (state.torre[n] || []).forEach((c, ci) => {
       if (!c.variedad || !c.fecha) return;
       const dias = Math.floor((ahora - new Date(c.fecha)) / 86400000);
-      const diasTotal = DIAS_COSECHA[c.variedad] || 50;
+      const diasBase = DIAS_COSECHA[c.variedad] || 50;
+      const diasTotal = typeof torreGetDiasCosechaObjetivo === 'function'
+        ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
+        : diasBase;
       if (dias >= diasTotal) {
         const labN = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
         enviarNotificacion(

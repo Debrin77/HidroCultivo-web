@@ -65,6 +65,83 @@ function torreObjetivoMultiplicadorDemanda(cfg, objetivo) {
   return obj === 'baby' ? multBaby : multFinal;
 }
 
+/**
+ * Perfil agronómico orientativo para torre según objetivo de cosecha.
+ * Basado en prácticas habituales (baby: algo menos de EC, ciclo más corto).
+ */
+function torreGetObjetivoAjustes(cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  const obj = torreNormalizeObjetivoCultivo(objetivo || torreGetObjetivoCultivo(c));
+  const ecBabyRaw = Number(c.torreObjetivoEcMultBaby);
+  const ecFinalRaw = Number(c.torreObjetivoEcMultFinal);
+  const phBabyRaw = Number(c.torreObjetivoPhShiftBaby);
+  const diasBabyRaw = Number(c.torreObjetivoDiasMultBaby);
+  const diasFinalRaw = Number(c.torreObjetivoDiasMultFinal);
+  return {
+    objetivo: obj,
+    ecMult: obj === 'baby'
+      ? (Number.isFinite(ecBabyRaw) ? Math.max(0.7, Math.min(1.15, ecBabyRaw)) : 0.88)
+      : (Number.isFinite(ecFinalRaw) ? Math.max(0.8, Math.min(1.25, ecFinalRaw)) : 1),
+    phShift: obj === 'baby'
+      ? (Number.isFinite(phBabyRaw) ? Math.max(-0.3, Math.min(0.4, phBabyRaw)) : 0.1)
+      : 0,
+    diasMult: obj === 'baby'
+      ? (Number.isFinite(diasBabyRaw) ? Math.max(0.5, Math.min(1.1, diasBabyRaw)) : 0.72)
+      : (Number.isFinite(diasFinalRaw) ? Math.max(0.8, Math.min(1.4, diasFinalRaw)) : 1),
+  };
+}
+
+function torreAplicarObjetivoEcRango(ecRange, cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  if (tipoInstalacionNormalizado(c) !== 'torre') return ecRange;
+  const baseMin = Number(ecRange && ecRange.min);
+  const baseMax = Number(ecRange && ecRange.max);
+  if (!Number.isFinite(baseMin) || !Number.isFinite(baseMax)) return ecRange;
+  const adj = torreGetObjetivoAjustes(c, objetivo);
+  const minAdj = Math.max(350, Math.round(baseMin * adj.ecMult));
+  const maxAdj = Math.max(minAdj + 80, Math.round(baseMax * adj.ecMult));
+  return { min: minAdj, max: maxAdj };
+}
+
+function torreGetPhRangoObjetivo(nut, cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  const n = nut || getNutrienteTorre();
+  const base = (n && Array.isArray(n.pHRango) && n.pHRango.length >= 2) ? n.pHRango : [5.5, 6.5];
+  if (tipoInstalacionNormalizado(c) !== 'torre') return [base[0], base[1]];
+  const adj = torreGetObjetivoAjustes(c, objetivo);
+  const pMin = Math.round((Math.max(4.8, Math.min(6.9, Number(base[0]) + adj.phShift))) * 10) / 10;
+  const pMax = Math.round((Math.max(pMin + 0.2, Math.min(7.2, Number(base[1]) + adj.phShift))) * 10) / 10;
+  return [pMin, pMax];
+}
+
+function torreGetDiasCosechaObjetivo(diasBase, cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  const d = Number(diasBase);
+  if (!Number.isFinite(d) || d <= 0) return 45;
+  if (tipoInstalacionNormalizado(c) !== 'torre') return Math.max(18, Math.round(d));
+  const adj = torreGetObjetivoAjustes(c, objetivo);
+  return Math.max(14, Math.round(d * adj.diasMult));
+}
+
+function textoAjustesObjetivoTorreSistema(cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  const adj = torreGetObjetivoAjustes(c, objetivo);
+  const ecPct = Math.round((adj.ecMult - 1) * 100);
+  const diasPct = Math.round((adj.diasMult - 1) * 100);
+  const ecTxt = (ecPct >= 0 ? '+' : '') + ecPct + '%';
+  const pHTxt = (adj.phShift >= 0 ? '+' : '') + (Math.round(adj.phShift * 10) / 10);
+  const diasTxt = (diasPct >= 0 ? '+' : '') + diasPct + '%';
+  return (
+    'Perfil activo: EC ' +
+    ecTxt +
+    ' · pH ' +
+    pHTxt +
+    ' · ciclo ' +
+    diasTxt +
+    ' vs estándar. Ajuste orientativo para torre.'
+  );
+}
+
 /** Etiquetas de nivel y plaza según tipo de instalación (índices 1-based en texto). */
 function labelsUbicacionInstalacion(tipoInstal) {
   const t = tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'torre' ? tipoInstal : 'torre';
@@ -978,6 +1055,11 @@ function sincronizarSistemaNftMontajeUI() {
         hint.classList.remove('setup-hidden');
         hint.textContent = 'Referencia: ' + sp.densidadTxt + ' · ' + sp.cicloTxt + '.';
       }
+      const adj = document.getElementById('sysTorreObjetivoAjustes');
+      if (adj) {
+        adj.classList.remove('setup-hidden');
+        adj.textContent = textoAjustesObjetivoTorreSistema(cfg, torreGetObjetivoCultivo(cfg));
+      }
     } else {
       torreObj.style.display = 'none';
     }
@@ -1090,6 +1172,11 @@ function aplicarSistemaTorreObjetivoDesdeFormulario() {
   const sel = document.getElementById('sysTorreObjetivoCultivo');
   const objetivo = torreNormalizeObjetivoCultivo(sel && sel.value);
   state.configTorre.torreObjetivoCultivo = objetivo;
+  const adj = document.getElementById('sysTorreObjetivoAjustes');
+  if (adj) {
+    adj.classList.remove('setup-hidden');
+    adj.textContent = textoAjustesObjetivoTorreSistema(state.configTorre, objetivo);
+  }
   guardarEstadoTorreActual();
   saveState();
   try { renderTorreSistemaResumenTabla(state.configTorre); } catch (_) {}

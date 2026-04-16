@@ -704,7 +704,10 @@ function actualizarAvisoCestasSinFecha() {
 }
 
 function getEstado(variedad, dias) {
-  const total = DIAS_COSECHA[variedad] || 50;
+  const base = DIAS_COSECHA[variedad] || 50;
+  const total = typeof torreGetDiasCosechaObjetivo === 'function'
+    ? torreGetDiasCosechaObjetivo(base, state.configTorre || {})
+    : base;
   if (dias < 7) return 'plantula';
   if (dias < total * 0.5) return 'crecimiento';
   if (dias < total * 0.85) return 'madurez';

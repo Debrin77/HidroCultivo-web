@@ -603,7 +603,10 @@ function calcularFactorEdadRiego(edadSemManual) {
 /** Avance del ciclo 0–1+ (trasplante → cosecha) por planta */
 function riegoPctCicloPlanta(cesta, edadSemManual) {
   const cult = getCultivoDB(cesta.variedad) || { dias: 45, grupo: 'lechugas' };
-  const diasTot = Math.max(18, cult.dias || 45);
+  const diasBase = cult.dias || 45;
+  const diasTot = typeof torreGetDiasCosechaObjetivo === 'function'
+    ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
+    : Math.max(18, diasBase);
   const s = Math.max(0.05, Math.min(24, Number(edadSemManual) || 4));
   let pct;
   if (cestaTieneFechaValida(cesta.fecha)) {

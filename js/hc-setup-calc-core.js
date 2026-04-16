@@ -34,19 +34,24 @@ function getECOptimaTorre() {
   // Sin plantas → usar rango del nutriente
   if (rangos.length === 0) {
     const nut = getNutrienteTorre();
-    return { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400 };
+    const base = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400 };
+    return typeof torreAplicarObjetivoEcRango === 'function' ? torreAplicarObjetivoEcRango(base, cfg) : base;
   }
 
   // Con plantas → intersección de rangos
   const ecMin = Math.max(...rangos.map(r => r.min));
   const ecMax = Math.min(...rangos.map(r => r.max));
-  if (ecMax >= ecMin + 100) return { min: ecMin, max: ecMax };
+  if (ecMax >= ecMin + 100) {
+    const inter = { min: ecMin, max: ecMax };
+    return typeof torreAplicarObjetivoEcRango === 'function' ? torreAplicarObjetivoEcRango(inter, cfg) : inter;
+  }
 
   // Sin intersección → promedio
-  return {
+  const avg = {
     min: Math.round(rangos.reduce((s,r) => s+r.min, 0) / rangos.length),
     max: Math.round(rangos.reduce((s,r) => s+r.max, 0) / rangos.length)
   };
+  return typeof torreAplicarObjetivoEcRango === 'function' ? torreAplicarObjetivoEcRango(avg, cfg) : avg;
 }
 
 /** EC meta (µS/cm) para recarga / checklist: manual en torre o intermedio óptimo automático */
@@ -120,7 +125,12 @@ function getSetupECObjetivo() {
   if (setupPlantasSeleccionadas.size === 0) {
     // Sin cultivos → usar EC del nutriente
     const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
-    return { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400, fuente: 'nutriente' };
+    let out = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400, fuente: 'nutriente' };
+    if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
+      const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+      out = { ...out, min: adj.min, max: adj.max };
+    }
+    return out;
   }
   // Con cultivos → calcular intersección de rangos
   const rangos = [];
@@ -130,14 +140,33 @@ function getSetupECObjetivo() {
     const partes = g.ec.split('-').map(Number);
     if (partes.length === 2) rangos.push({ min: partes[0], max: partes[1] });
   });
-  if (rangos.length === 0) return { min: 900, max: 1400, fuente: 'default' };
+  if (rangos.length === 0) {
+    let out = { min: 900, max: 1400, fuente: 'default' };
+    if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
+      const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+      out = { ...out, min: adj.min, max: adj.max };
+    }
+    return out;
+  }
   const ecMin = Math.max(...rangos.map(r => r.min));
   const ecMax = Math.min(...rangos.map(r => r.max));
-  if (ecMax >= ecMin + 100) return { min: ecMin, max: ecMax, fuente: 'cultivos' };
+  if (ecMax >= ecMin + 100) {
+    let out = { min: ecMin, max: ecMax, fuente: 'cultivos' };
+    if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
+      const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+      out = { ...out, min: adj.min, max: adj.max };
+    }
+    return out;
+  }
   // Sin intersección → promedio
   const avgMin = Math.round(rangos.reduce((s,r) => s+r.min,0) / rangos.length);
   const avgMax = Math.round(rangos.reduce((s,r) => s+r.max,0) / rangos.length);
-  return { min: avgMin, max: avgMax, fuente: 'promedio', advertencia: true };
+  let out = { min: avgMin, max: avgMax, fuente: 'promedio', advertencia: true };
+  if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
+    const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+    out = { ...out, min: adj.min, max: adj.max };
+  }
+  return out;
 }
 
 function calcularDosisSetup(nutId, vol, ecObj) {
@@ -212,7 +241,8 @@ function renderDosisSetup() {
   }
 
   // pH
-  const pHRango = nut.pHRango || [5.5, 6.5];
+  const pHRango =
+    typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, state.configTorre || {}) : (nut.pHRango || [5.5, 6.5]);
   html += '<div class="nut-dosis-row nut-dosis-row--ph">' +
     '<span class="nut-dosis-lab"><strong>' + paso + '.</strong> pH objetivo</span>' +
     '<span class="nut-dosis-val-blue">' + pHRango[0] + '–' + pHRango[1] + '</span></div>';
@@ -676,8 +706,11 @@ function preguntarIniciarChecklist() {
         '<span class="check-dosis-val-green">' + (mlCadaParte[i]||0) + ' ml</span></div>';
     }
   }
-  const pHMin = nut.pHRango?.[0] || 5.5;
-  const pHMax = nut.pHRango?.[1] || 6.5;
+  const pHR = typeof torreGetPhRangoObjetivo === 'function'
+    ? torreGetPhRangoObjetivo(nut, cfg)
+    : (nut.pHRango || [5.5, 6.5]);
+  const pHMin = pHR[0] || 5.5;
+  const pHMax = pHR[1] || 6.5;
   dosisLineas += '<div class="check-dosis-row check-dosis-row--last">' +
     '<span>' + paso + '. pH objetivo</span>' +
     '<span class="check-dosis-val-blue">' + (nut.pHBuffer ? pHMin + ' (buffers hacen el resto)' : pHMin + '–' + pHMax) + '</span></div>';
