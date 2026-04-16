@@ -349,26 +349,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '" x1="0" y1="0" x2="0" y2="1">' +
     '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
     '</defs>' +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    hdrSerp.yMain +
-    '" text-anchor="middle" fill="#0f172a" font-size="' +
-    hdrSerp.mainFs +
-    '" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    hdrSerp.ySub +
-    '" text-anchor="middle" fill="#64748b" font-size="' +
-    hdrSerp.subFs +
-    '" font-weight="600">' +
-    (dispLayout === 'escalera'
-      ? 'NFT · escalera (canales escalonados)'
-      : dispLayout === 'pared'
-        ? 'NFT · pared (tubos horizontales en zigzag)'
-        : 'NFT · mesa (paralelos, pendiente por tubo)') +
-    '</text>' +
     back +
     channels +
     flowLayer +

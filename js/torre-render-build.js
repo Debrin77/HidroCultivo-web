@@ -620,9 +620,6 @@ function generarSVGDwc() {
 
   s += `<rect width="${W}" height="${H}" fill="url(#dwcBgGrad)"/>`;
 
-  s += `<text x="${W / 2}" y="30" text-anchor="middle" fill="#0f172a" font-size="17" font-weight="900" font-family="Syne,system-ui,sans-serif">DWC · AGUA PROFUNDA</text>`;
-  s += `<text x="${W / 2}" y="46" text-anchor="middle" fill="#64748b" font-size="10.5" font-weight="600">Tapa (cenital) · ${N} filas × ${C} columnas · ${objSpec.label}</text>`;
-
   /* ── Tapa vista cenital ── */
   s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
   s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;

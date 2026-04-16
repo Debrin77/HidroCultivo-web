@@ -2073,22 +2073,6 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '" x1="0" y1="0" x2="0" y2="1">' +
     '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
     '</defs>' +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    hdrMesa.yMain +
-    '" text-anchor="middle" fill="#0f172a" font-size="' +
-    hdrMesa.mainFs +
-    '" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    hdrMesa.ySub +
-    '" text-anchor="middle" fill="#64748b" font-size="' +
-    hdrMesa.subFs +
-    '" font-weight="600">' +
-    mesaSubtit.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
-    '</text>' +
     nftMesaEscaleraLegendSvg(cxTitle, hdrMesa.legendY, gidCh, compactMesa, true) +
     tierBandsMm +
     back +
@@ -2647,24 +2631,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '" x1="0" y1="0" x2="0" y2="1">' +
     '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
     '</defs>' +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    hdrEscDraw.yMain +
-    '" text-anchor="middle" fill="#0f172a" font-size="' +
-    hdrEscDraw.mainFs +
-    '" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    hdrEscDraw.ySub +
-    '" text-anchor="middle" fill="#64748b" font-size="' +
-    hdrEscDraw.subFs +
-    '" font-weight="600">NFT · escalera' +
-    (car === 2 ? ' (estructura A)' : ' / inclinado') +
-    ' · ' +
-    car +
-    ' cara(s)</text>' +
     nftMesaEscaleraLegendSvg(cxTitle, hdrEscDraw.legendY, gidCh, compactEsc, true) +
     frame +
     back +
