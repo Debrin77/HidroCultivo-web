@@ -303,6 +303,7 @@ function construirTextoChecklistPreliminar() {
   }
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esTorre = !esNft && !esDwc;
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
     p1Partes.join(' + ') + '. Remover bien.' +
     (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '') +
@@ -377,6 +378,7 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
     antiRaices: 'tubo_interior',
     alturaTorre: 1.2,
     sensoresHardware: { ec: false, ph: false, humedad: false },
+    torreObjetivoCultivo: 'final',
   };
 
   if (tipo === 'nft') {
@@ -732,6 +734,29 @@ function getCLPasos() {
       ]
     : [];
 
+  const pasosTorreObjetivo = esTorre
+    ? [{
+      id: 'Tobj',
+      seccion: '🧭 Torre vertical — objetivo de cultivo',
+      paso: 'T·obj',
+      desc: 'Confirmar si esta torre está orientada a <strong>baby leaf</strong> o <strong>planta completa</strong>.',
+      nota: (function () {
+        const sp = typeof torreGetObjetivoSpec === 'function' && typeof torreGetObjetivoCultivo === 'function'
+          ? torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg))
+          : { label: 'Planta completa', densidadTxt: '15–25 cm c-c', cicloTxt: 'cosecha completa' };
+        return (
+          'Objetivo activo: <strong>' +
+          sp.label +
+          '</strong> · densidad orientativa <strong>' +
+          sp.densidadTxt +
+          '</strong> · ' +
+          sp.cicloTxt +
+          '. Cambia el objetivo en <strong>Sistema</strong> si buscas otro ritmo de cosecha.'
+        );
+      })(),
+    }]
+    : [];
+
   const pasoNftTuberiaRef = esNft
     ? [{
       id: 'Nref',
@@ -952,6 +977,7 @@ function getCLPasos() {
 
   return [
     ...(primerLlenado ? [...pasosConfigPrimerLlenado, ...pasosLimpiezaPrimerLlenado] : pasosCabeceraRecargaCompleta),
+    ...pasosTorreObjetivo,
     ...pasosDwcOxigenacion,
     ...pasoNftTuberiaRef,
     ...pasosNftExtra,

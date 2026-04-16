@@ -182,6 +182,7 @@ function actualizarResumenSetup() {
     : '📟 Sensores / medidores: <strong>sin marcar</strong> (configúralo en paso Equipamiento o en Mediciones)<br>';
 
   let geoDwcRes = '';
+  let geoTorreRes = '';
   if (isDwc) {
     const Ld = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
     const Wd = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
@@ -205,6 +206,14 @@ function actualizarResumenSetup() {
     if (mhG.marco != null && mhG.marco > 0) geoDwcRes += ' · marco tapa ' + mhG.marco + ' mm/lado';
     if (mhG.hueco != null) geoDwcRes += ' · entre cestas ' + mhG.hueco + ' mm';
   }
+  if (!isNft && !isDwc) {
+    const tObj = (state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final';
+    const tSpec =
+      typeof torreGetObjetivoSpec === 'function'
+        ? torreGetObjetivoSpec(tObj)
+        : { label: tObj === 'baby' ? 'Baby leaf / alta densidad' : 'Planta completa' };
+    geoTorreRes = ' · objetivo ' + tSpec.label;
+  }
 
   el.innerHTML =
     (isNft
@@ -220,7 +229,7 @@ function actualizarResumenSetup() {
           : '')
       : isDwc
         ? '🌊 DWC: <strong>' + niveles + ' filas × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
-        : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong><br>') +
+        : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoTorreRes + '<br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span class="setup-ec-fuente">(según cultivos)</span>' : '') + '<br>' +
@@ -399,9 +408,10 @@ function seleccionarCesta(tam) {
   // Info según tamaño
   const infoEl = document.getElementById('cestaInfo');
   if (!infoEl) return;
-  const cm = tam === 'custom'
-    ? (parseFloat(document.getElementById('cestaCmCustom')?.value) || 0)
-    : parseFloat(tam);
+  const cm =
+    tam === 'custom'
+      ? parseFloat(document.getElementById('cestaCmCustom')?.value) || 0
+      : parseFloat(tam) / 10;
   const infos = {
     3.8: '⚪ 3.8cm — Para microgreens y germinación. Esponja 2.5cm.',
     4.0: '🌿 4.0cm — Muy habitual en torres verticales comerciales. Ideal para lechugas, mizuna y hierbas. La raíz sale hacia el agua y el tamaño de cesta no suele limitar el crecimiento.',

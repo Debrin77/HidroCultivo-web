@@ -468,6 +468,8 @@ function guardarSetupYContinuar() {
     lon:          Number.isFinite(lonWizard) ? lonWizard : -0.0495,
     localidadMeteo: usarNuevaEntrada ? (locWizard || '') : (locWizard || prevLocMet || ''),
     sensoresHardware: sensHwGuardar,
+    torreObjetivoCultivo:
+      ((state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final'),
   };
   const ccSetup = parseFloat(String(document.getElementById('setupCalentadorConsignaC')?.value || '').replace(',', '.'));
   if (setupEquipamiento.has('calentador') && Number.isFinite(ccSetup) && ccSetup >= 10 && ccSetup <= 35) {
@@ -814,12 +816,14 @@ function aplicarConfigTorre() {
       nutriente: 'canna_aqua',
       agua: state.configAgua || 'destilada',
       checklistInstalacionConfirmada: false,
+      torreObjetivoCultivo: 'final',
       lat: 39.9864,
       lon: -0.0495,
       ciudad: 'Castelló de la Plana',
     };
   }
   if (!state.configTorre.tipoInstalacion) state.configTorre.tipoInstalacion = 'torre';
+  if (!state.configTorre.torreObjetivoCultivo) state.configTorre.torreObjetivoCultivo = 'final';
   const cfg = state.configTorre;
 
   // Sincronizar nutriente global con la torre activa (cada torre puede tener el mar suyo)

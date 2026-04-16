@@ -19,6 +19,52 @@ function tipoInstalacionNormalizado(cfg) {
   return 'torre';
 }
 
+function torreNormalizeObjetivoCultivo(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  return v === 'baby' || v === 'babyleaf' || v === 'alta' ? 'baby' : 'final';
+}
+
+function torreGetObjetivoCultivo(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (c.torreObjetivoCultivo) return torreNormalizeObjetivoCultivo(c.torreObjetivoCultivo);
+  const mk = typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
+  return mk === 'mini' ? 'baby' : 'final';
+}
+
+function torreGetObjetivoSpec(objetivo) {
+  const k = torreNormalizeObjetivoCultivo(objetivo);
+  if (k === 'baby') {
+    return {
+      key: 'baby',
+      label: 'Baby leaf / alta densidad',
+      densidadTxt: '8–12 cm c-c',
+      cicloTxt: 'cosecha joven (aprox. 20–35 días)',
+    };
+  }
+  return {
+    key: 'final',
+    label: 'Planta completa',
+    densidadTxt: '15–25 cm c-c',
+    cicloTxt: 'cosecha completa (aprox. 35–60 días)',
+  };
+}
+
+/**
+ * Multiplicador de demanda de riego para torre vertical según objetivo.
+ * Permite override técnico en config (sin exponer más UI por ahora):
+ * - cfg.torreObjetivoMultBaby (por defecto 0.92)
+ * - cfg.torreObjetivoMultFinal (por defecto 1.06)
+ */
+function torreObjetivoMultiplicadorDemanda(cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  const obj = torreNormalizeObjetivoCultivo(objetivo || torreGetObjetivoCultivo(c));
+  const bRaw = Number(c.torreObjetivoMultBaby);
+  const fRaw = Number(c.torreObjetivoMultFinal);
+  const multBaby = Number.isFinite(bRaw) ? Math.max(0.7, Math.min(1.2, bRaw)) : 0.92;
+  const multFinal = Number.isFinite(fRaw) ? Math.max(0.7, Math.min(1.3, fRaw)) : 1.06;
+  return obj === 'baby' ? multBaby : multFinal;
+}
+
 /** Etiquetas de nivel y plaza según tipo de instalación (índices 1-based en texto). */
 function labelsUbicacionInstalacion(tipoInstal) {
   const t = tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'torre' ? tipoInstal : 'torre';
@@ -871,7 +917,23 @@ function toggleSistemaDwcPanel() {
 function sincronizarSistemaNftMontajeUI() {
   const card = document.getElementById('sistemaNftMontajeCard');
   const dwcInfo = document.getElementById('sistemaDwcAyudaCard');
+  const torreObj = document.getElementById('sistemaTorreObjetivoCard');
   const cfg = state.configTorre;
+  if (torreObj) {
+    if (cfg && cfg.tipoInstalacion === 'torre') {
+      torreObj.style.display = 'block';
+      const sel = document.getElementById('sysTorreObjetivoCultivo');
+      if (sel) sel.value = torreGetObjetivoCultivo(cfg);
+      const hint = document.getElementById('sysTorreObjetivoHint');
+      if (hint) {
+        const sp = torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg));
+        hint.classList.remove('setup-hidden');
+        hint.textContent = 'Referencia: ' + sp.densidadTxt + ' · ' + sp.cicloTxt + '.';
+      }
+    } else {
+      torreObj.style.display = 'none';
+    }
+  }
   if (dwcInfo) {
     if (cfg && cfg.tipoInstalacion === 'dwc') {
       dwcInfo.style.display = 'block';
@@ -950,6 +1012,18 @@ function sincronizarSistemaNftMontajeUI() {
   onSistemaNftMesaMultinivelToggle();
   refrescarSistemaNftMontajeSubpanels();
   applySistemaTipoPanelesColapsablesUI();
+}
+
+function aplicarSistemaTorreObjetivoDesdeFormulario() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'torre') return;
+  const sel = document.getElementById('sysTorreObjetivoCultivo');
+  const objetivo = torreNormalizeObjetivoCultivo(sel && sel.value);
+  state.configTorre.torreObjetivoCultivo = objetivo;
+  guardarEstadoTorreActual();
+  saveState();
+  try { renderTorreSistemaResumenTabla(state.configTorre); } catch (_) {}
+  try { refreshConsejosSiVisible(); } catch (_) {}
+  showToast('Objetivo de torre guardado: ' + (objetivo === 'baby' ? 'Baby leaf' : 'Planta completa'));
 }
 
 /** Desde Sistema: mismo overlay que «configurar», saltando al paso 1 (NFT: canal, tubo Ø, lámina, bomba). */

@@ -537,6 +537,10 @@ function renderTorreSistemaResumenTabla(cfg) {
     rows.push(['Canales (tubos)', String(hyd.nCh)]);
     rows.push(['Huecos por canal', String(hyd.nHx)]);
     rows.push(['Huecos totales', String(hyd.nCh * hyd.nHx)]);
+    rows.push([
+      'Cestas (net pot)',
+      escHtmlUi('27–50 mm habitual u otro Ø en mm (personalizado), como en el asistente'),
+    ]);
     rows.push(['Pendiente', '~' + pend + ' %']);
     rows.push([
       'Depósito (cap. máx)',
@@ -594,6 +598,10 @@ function renderTorreSistemaResumenTabla(cfg) {
     rows.push([esDwcTab ? 'Filas' : 'Niveles', String(N)]);
     rows.push([esDwcTab ? 'Cestas por fila' : 'Cestas por nivel', String(C)]);
     rows.push([esDwcTab ? 'Cestas totales' : 'Cestas totales', String(N * C)]);
+    if (!esDwcTab && typeof torreGetObjetivoSpec === 'function' && typeof torreGetObjetivoCultivo === 'function') {
+      const spT = torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg));
+      rows.push(['Objetivo de cosecha', escHtmlUi(spT.label + ' · ' + spT.densidadTxt)]);
+    }
     rows.push([
       'Depósito (cap. máx)',
       String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
@@ -623,7 +631,16 @@ function renderTorreSistemaResumenTabla(cfg) {
       if (rim != null || hp != null) {
         rows.push([
           'Cesta (net pot)',
-          escHtmlUi((rim != null ? 'Ø ' + rim + ' mm' : '—') + (hp != null ? ' · alto ' + hp + ' mm' : '')),
+          escHtmlUi(
+            (rim != null ? 'Ø ' + rim + ' mm' : '—') +
+              (hp != null ? ' · alto ' + hp + ' mm' : '') +
+              ' · ref. 27–50 mm o personalizado (asistente)'
+          ),
+        ]);
+      } else {
+        rows.push([
+          'Cesta (net pot)',
+          escHtmlUi('Indica Ø en mm en Sistema o asistente · ref. 27–50 mm o personalizado'),
         ]);
       }
       const mTap = cfg.dwcTapaMarcoPorLadoMm;
@@ -1062,6 +1079,26 @@ function nftDiagramCanvasW0() {
 }
 
 /**
+ * Título y subtítulo del diagrama NFT: escala con el ancho del viewBox para que no queden ilegibles al encoger el SVG.
+ * @param {number} Wref ancho de referencia (p. ej. W0 o canvasW)
+ * @param {{ compact?: boolean, withLegend?: boolean }} [opts] withLegend false = serpentín (sin franja leyenda bajo el subtítulo)
+ */
+function nftDiagramHeaderTypography(Wref, opts) {
+  const compact = !!(opts && opts.compact);
+  const withLegend = !(opts && opts.withLegend === false);
+  const W = Math.max(420, Math.min(2000, Number(Wref) || 800));
+  const mainFs = Math.round(Math.max(compact ? 24 : 26, Math.min(48, W * 0.038)));
+  const subFs = Math.round(Math.max(compact ? 15 : 16, Math.min(28, W * 0.025)));
+  const yMain = Math.round(mainFs * 0.72 + 8);
+  const ySub = yMain + Math.round(subFs * 1.08 + 4);
+  const legendY = withLegend ? ySub + (compact ? 14 : 16) : ySub;
+  const footFs = Math.round(Math.max(10, Math.min(16, W * 0.012)));
+  const headerBottom = withLegend ? legendY + (compact ? 14 : 16) : ySub + (compact ? 10 : 12);
+  const topPadMin = Math.max(withLegend ? 66 : 44, headerBottom + (withLegend ? 14 : 18));
+  return { mainFs, subFs, yMain, ySub, legendY, footFs, topPadMin };
+}
+
+/**
  * Leyenda fija solo en NFT mesa multinivel y escalera (esquema tipo manual).
  * @param {number} cx centro horizontal del título (viewBox)
  * @param {number} yLine línea base visual (centro de iconos)
@@ -1256,13 +1293,14 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     nftDiagramCanvasW0(),
     Math.min(compactMesa ? 1100 : 1240, minRowForHuecos + 96 + 2 * 12 + Math.max(0, nTiers - 2) * 8)
   );
+  const hdrMesa = nftDiagramHeaderTypography(W0, { compact: compactMesa, withLegend: true });
   const xLmmPre = 40;
   const xRmmPre = W0 - 40;
   const padFlowMMPre = 12;
   const rowInnerPreMM = Math.max(160, xRmmPre - xLmmPre - 2 * padFlowMMPre);
   const maxNtPreMM = Math.max(1, maxTubosPorNivelMesa);
   const colWPreMM = (rowInnerPreMM - Math.max(0, maxNtPreMM - 1) * gapT) / maxNtPreMM;
-  const topPad = 70 + (compactMesa ? 8 : 0);
+  const topPad = Math.max(70 + (compactMesa ? 8 : 0), hdrMesa.topPadMin);
   const botTank = 130;
   let tierRowH = Math.max(
     88,
@@ -1984,13 +2022,21 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '</defs>' +
     '<text x="' +
     cxTitle +
-    '" y="22" text-anchor="middle" fill="#0f172a" font-size="15.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '" y="' +
+    hdrMesa.yMain +
+    '" text-anchor="middle" fill="#0f172a" font-size="' +
+    hdrMesa.mainFs +
+    '" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
-    '" y="40" text-anchor="middle" fill="#64748b" font-size="10.25" font-weight="600">' +
+    '" y="' +
+    hdrMesa.ySub +
+    '" text-anchor="middle" fill="#64748b" font-size="' +
+    hdrMesa.subFs +
+    '" font-weight="600">' +
     mesaSubtit.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     '</text>' +
-    nftMesaEscaleraLegendSvg(cxTitle, 54, gidCh, compactMesa, true) +
+    nftMesaEscaleraLegendSvg(cxTitle, hdrMesa.legendY, gidCh, compactMesa, true) +
     tierBandsMm +
     back +
     channels +
@@ -2002,7 +2048,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     cxTitle +
     '" y="' +
     (H - 4) +
-    '" text-anchor="middle" fill="#475569" font-size="7.5" font-weight="600">' +
+    '" text-anchor="middle" fill="#475569" font-size="' +
+    hdrMesa.footFs +
+    '" font-weight="600">' +
     foot +
     '</text>' +
     '</svg>'
@@ -2072,7 +2120,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const cxMid = W0base / 2;
   const cx = Math.max(cxMid, minCxEsc);
   const W0 = Math.max(W0base + Math.max(0, cx - cxMid), minRungSpanUnits + baseHalf + 200);
-  const topPad = 92 + (compactEsc ? 10 : 0);
+  const hdrEsc = nftDiagramHeaderTypography(W0, { compact: compactEsc, withLegend: true });
+  const topPad = Math.max(92 + (compactEsc ? 10 : 0), hdrEsc.topPadMin);
   const botTank = 130;
   const yApex = topPad + 4;
   let dy =
@@ -2127,6 +2176,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   });
   const Wsvg = altBadgeEsc.canvasW;
   const cxTitle = Wsvg / 2;
+  const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
 
   /** Dos caras, primer peldaño: ancho libre bajo la T (suministro entre canales). */
   const topCenterGap2 = car === 2 ? (compactEsc ? 24 : 34) : 0;
@@ -2546,15 +2596,23 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '</defs>' +
     '<text x="' +
     cxTitle +
-    '" y="26" text-anchor="middle" fill="#0f172a" font-size="17.5" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
+    '" y="' +
+    hdrEscDraw.yMain +
+    '" text-anchor="middle" fill="#0f172a" font-size="' +
+    hdrEscDraw.mainFs +
+    '" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
-    '" y="48" text-anchor="middle" fill="#64748b" font-size="11.75" font-weight="600">NFT · escalera' +
+    '" y="' +
+    hdrEscDraw.ySub +
+    '" text-anchor="middle" fill="#64748b" font-size="' +
+    hdrEscDraw.subFs +
+    '" font-weight="600">NFT · escalera' +
     (car === 2 ? ' (estructura A)' : ' / inclinado') +
     ' · ' +
     car +
     ' cara(s)</text>' +
-    nftMesaEscaleraLegendSvg(cxTitle, 62, gidCh, compactEsc, true) +
+    nftMesaEscaleraLegendSvg(cxTitle, hdrEscDraw.legendY, gidCh, compactEsc, true) +
     frame +
     back +
     channels +
@@ -2567,7 +2625,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     cxTitle +
     '" y="' +
     (H - 4) +
-    '" text-anchor="middle" fill="#475569" font-size="7.5" font-weight="600">' +
+    '" text-anchor="middle" fill="#475569" font-size="' +
+    hdrEscDraw.footFs +
+    '" font-weight="600">' +
     foot +
     '</text>' +
     '</svg>'

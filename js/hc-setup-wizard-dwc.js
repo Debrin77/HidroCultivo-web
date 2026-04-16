@@ -129,9 +129,9 @@ function dwcRecoPerfilPorGrupo(grupo, objetivo) {
       grupo: 'microgreens',
       etiqueta: 'Microgreens',
       objetivo: esBaby ? 'alta densidad' : 'ciclo corto',
-      cestaMinMm: 25,
-      cestaMaxMm: 32,
-      cestaTxt: '25–32 mm',
+      cestaMinMm: 27,
+      cestaMaxMm: 50,
+      cestaTxt: '27–50 mm',
       permite: true,
     };
   }
@@ -141,9 +141,9 @@ function dwcRecoPerfilPorGrupo(grupo, objetivo) {
         grupo: 'asiaticas',
         etiqueta: 'Asiáticas (baby)',
         objetivo: 'alta densidad',
-        cestaMinMm: 25,
-        cestaMaxMm: 32,
-        cestaTxt: '25–32 mm',
+        cestaMinMm: 27,
+        cestaMaxMm: 50,
+        cestaTxt: '27–50 mm',
         permite: true,
       };
     }
@@ -162,9 +162,9 @@ function dwcRecoPerfilPorGrupo(grupo, objetivo) {
       grupo: g || 'hojas',
       etiqueta: g === 'hierbas' ? 'Hierbas' : 'Hojas voluminosas',
       objetivo: esBaby ? 'alta densidad' : 'producción final',
-      cestaMinMm: esBaby ? 32 : 50,
+      cestaMinMm: esBaby ? 27 : 50,
       cestaMaxMm: esBaby ? 50 : 75,
-      cestaTxt: esBaby ? '32–50 mm' : '50–75 mm',
+      cestaTxt: esBaby ? '27–50 mm' : '50–75 mm',
       permite: true,
     };
   }
@@ -184,9 +184,9 @@ function dwcRecoPerfilPorGrupo(grupo, objetivo) {
       grupo: 'lechugas',
       etiqueta: 'Lechugas / hojas ligeras (baby)',
       objetivo: 'alta densidad',
-      cestaMinMm: 25,
-      cestaMaxMm: 32,
-      cestaTxt: '25–32 mm',
+      cestaMinMm: 27,
+      cestaMaxMm: 50,
+      cestaTxt: '27–50 mm',
       permite: true,
     };
   }
@@ -1337,6 +1337,21 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
 }
 
 /** DWC: rellena tamanoCesta / tamanoCestaCustom desde Ø cesta en mm (asistente) para no duplicar el bloque de tamaños. */
+/**
+ * Instalaciones antiguas: cesta 5 cm (tamanoCesta '50') con Ø 44 mm guardado;
+ * la referencia nominal unificada con el asistente es 50 mm.
+ * @returns {boolean} si se alteró cfg
+ */
+function dwcMigrarRimLegacy44SiCestaCm50(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return false;
+  const rim = Number(cfg.dwcNetPotRimMm);
+  if (!Number.isFinite(rim) || rim !== 44) return false;
+  if (String(cfg.tamanoCesta || '') !== '50') return false;
+  cfg.dwcNetPotRimMm = 50;
+  dwcSincronizarTamanoCestaDesdeRim(cfg);
+  return true;
+}
+
 function dwcSincronizarTamanoCestaDesdeRim(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
   const rim = cfg.dwcNetPotRimMm;
@@ -1364,6 +1379,12 @@ function dwcSincronizarTamanoCestaDesdeRim(cfg) {
 function syncDwcFormInputsDesdeConfig(c, ids) {
   if (!ids) return;
   c = c || {};
+  if (c === state.configTorre && dwcMigrarRimLegacy44SiCestaCm50(c)) {
+    try {
+      guardarEstadoTorreActual();
+      saveState();
+    } catch (_) {}
+  }
   const setVal = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.value = val != null && val !== '' ? String(val) : '';

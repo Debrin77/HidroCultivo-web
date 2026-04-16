@@ -1089,6 +1089,28 @@
         </div>
       </section>
 
+      <div id="sistemaTorreObjetivoCard" class="torre-card-elevated setup-hidden">
+        <div class="torre-sistema-panel-kicker">Objetivo en torre vertical</div>
+        <p class="torre-nft-p torre-objetivo-torre-p">
+          Diferencia si buscas <strong>baby leaf</strong> (más densidad, cosecha joven) o <strong>planta completa</strong> (más espacio por cesta).
+        </p>
+        <div class="torre-dwc-grid-2">
+          <div>
+            <label class="form-label torre-dwc-lbl-mono" for="sysTorreObjetivoCultivo">Objetivo de cosecha</label>
+            <select id="sysTorreObjetivoCultivo" class="torre-dwc-input" aria-label="Objetivo de cosecha en torre vertical">
+              <option value="final">Planta completa</option>
+              <option value="baby">Baby leaf / alta densidad</option>
+            </select>
+          </div>
+          <div class="torre-objetivo-torre-actions">
+            <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaTorreObjetivoDesdeFormulario()">
+              Guardar objetivo torre
+            </button>
+          </div>
+        </div>
+        <p id="sysTorreObjetivoHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
+      </div>
+
       <!-- Montaje NFT (Sistema): desplegable con resumen tras aplicar -->
       <div id="sistemaNftMontajeCard" class="torre-card-elevated torre-sistema-panel setup-hidden">
         <button type="button" id="btnToggleSistemaNftMontaje" class="torre-sistema-panel-head"
@@ -1113,6 +1135,9 @@
         </p>
         <p class="torre-nft-p-soft">
           Si cambiaste el montaje aquí, pulsa <strong>Aplicar</strong> antes de abrir el asistente para que cargue lo último.
+        </p>
+        <p class="torre-nft-p-soft">
+          Cestas en el canal (net pot): referencia <strong>27–50 mm</strong> u otro Ø en mm (<strong>personalizado</strong>), como en el asistente; el <strong>Ø del tubo de cultivo</strong> se configura al abrir el asistente (canal / lámina / bomba).
         </p>
         <button type="button" onclick="abrirAsistenteNftCanalYTuboDesdeSistema()"
           class="torre-nft-btn-dashed">
@@ -1226,7 +1251,7 @@
           <div class="torre-dwc-grid-2">
             <div>
               <label class="form-label torre-dwc-lbl-mono" for="sysDwcPotRimMm">Diám. cesta (mm)</label>
-              <input type="number" id="sysDwcPotRimMm" class="torre-dwc-input" min="25" max="120" step="1" placeholder="—" inputmode="numeric" autocomplete="off" aria-label="Diámetro cesta mm"
+              <input type="number" id="sysDwcPotRimMm" class="torre-dwc-input" min="25" max="120" step="1" placeholder="50" inputmode="numeric" autocomplete="off" aria-label="Diámetro cesta mm"
                 oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
             </div>
             <div>
@@ -1235,6 +1260,9 @@
                 oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
             </div>
           </div>
+          <p class="torre-nft-p-soft torre-dwc-cesta-mm-hint">
+            Referencia de cestas (net pot), alineada con el asistente: <strong>27–50 mm</strong> habitual u otro valor en mm (<strong>personalizado</strong>).
+          </p>
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcObjetivoCultivo">Objetivo de cultivo</label>
             <select id="sysDwcObjetivoCultivo" class="torre-dwc-input" aria-label="Objetivo de densidad DWC"

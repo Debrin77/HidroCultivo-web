@@ -52,12 +52,14 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
 
   const isParedSerp = dispLayout === 'pared';
   const W0 = nftDiagramCanvasW0();
+  const compactSerpHeader = nCh * huecosN > 20;
+  const hdrSerpPad = nftDiagramHeaderTypography(W0, { compact: compactSerpHeader, withLegend: false });
   const rowStep = Math.max(
     isParedSerp ? 58 : 54,
     Math.min(74, Math.floor((isParedSerp ? 840 : 820) / Math.max(nCh, 1)))
   );
-  /** Pared: cabecera alineada con escalera/mesa (título grande); mesa/escalera serpentín más compacto. */
-  const topPad = isParedSerp ? 80 : 38;
+  /** Cabecera: espacio mínimo según tamaño de título (serpentín no lleva leyenda Canal/Cesta bajo el subtítulo). */
+  const topPad = Math.max(isParedSerp ? 80 : 38, hdrSerpPad.topPadMin);
   const botTank = 130;
   const stairExtra = dispLayout === 'escalera' ? Math.max(0, nCh - 1) * 28 : 0;
   const H = topPad + nCh * rowStep + botTank + stairExtra;
@@ -82,6 +84,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const altBadgeSerp = nftAlturaBadgeBesideTank(altCmSerp, tx, tankY, tankW, tankH, W0, legHintSerp);
   const Wsvg = altBadgeSerp.canvasW;
   const cxTitle = Wsvg / 2;
+  const hdrSerp = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactSerpHeader, withLegend: false });
 
   const yRow = i =>
     topPad + i * rowStep + Math.floor(rowStep / 2) + (dispLayout === 'escalera' ? i * 14 : 0);
@@ -319,12 +322,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   } catch (_) {}
   foot += NFT_SVG_FOOT_ORIENT_HINT;
 
-  const serpTitleFs = isParedSerp ? 18.5 : 11.5;
-  const serpSubFs = isParedSerp ? 12.25 : 8;
-  const serpTitleY = isParedSerp ? 28 : 20;
-  const serpSubY = isParedSerp ? 50 : 32;
-  const serpFootFs = isParedSerp ? 9 : 7.5;
-
   return (
     '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll' +
     (isParedSerp ? ' nft-serpentine--pared' : '') +
@@ -355,16 +352,16 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '<text x="' +
     cxTitle +
     '" y="' +
-    serpTitleY +
+    hdrSerp.yMain +
     '" text-anchor="middle" fill="#0f172a" font-size="' +
-    serpTitleFs +
+    hdrSerp.mainFs +
     '" font-weight="900" font-family="Syne,system-ui,sans-serif">DIAGRAMA DEL SISTEMA</text>' +
     '<text x="' +
     cxTitle +
     '" y="' +
-    serpSubY +
+    hdrSerp.ySub +
     '" text-anchor="middle" fill="#64748b" font-size="' +
-    serpSubFs +
+    hdrSerp.subFs +
     '" font-weight="600">' +
     (dispLayout === 'escalera'
       ? 'NFT · escalera (canales escalonados)'
@@ -383,7 +380,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '" y="' +
     (H - 4) +
     '" text-anchor="middle" fill="#475569" font-size="' +
-    serpFootFs +
+    hdrSerp.footFs +
     '" font-weight="600">' +
     foot +
     '</text>' +

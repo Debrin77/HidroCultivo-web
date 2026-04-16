@@ -930,6 +930,26 @@ function cultivoEstadoChipHtml(estado) {
   return '<span class="cultivo-status-chip cultivo-status-chip--' + k + '">' + txt + '</span>';
 }
 
+function buildConsejoObjetivoTorreCultivo() {
+  const cfg = state.configTorre || {};
+  if (cfg.tipoInstalacion !== 'torre') return '';
+  if (typeof torreGetObjetivoSpec !== 'function' || typeof torreGetObjetivoCultivo !== 'function') return '';
+  const sp = torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg));
+  return htmlConsejoCard(CONSEJOS_DATA.cultivo, {
+    icono: '🧭',
+    titulo: 'Objetivo de cosecha en torre vertical',
+    texto:
+      'Objetivo activo: <strong>' +
+      meteoEscHtml(sp.label) +
+      '</strong>. Densidad orientativa <strong>' +
+      meteoEscHtml(sp.densidadTxt) +
+      '</strong> · ' +
+      meteoEscHtml(sp.cicloTxt) +
+      '.',
+    alerta: { tipo: 'info', txt: 'ℹ️ Puedes cambiarlo en Sistema → Objetivo en torre vertical.' },
+  });
+}
+
 function buildConsejosNftHidraulica() {
   const cat = CONSEJOS_DATA.nft;
   const cfg = state.configTorre || {};
@@ -984,7 +1004,7 @@ function buildConsejosNftHidraulica() {
           meteoEscHtml(recoNft.perfil.cestaTxt) +
           '</strong> · separación <strong>' +
           meteoEscHtml(recoNft.perfil.sepTxt) +
-          '</strong>.<br>Actual: <strong>' +
+          '</strong>.<br>Canal (Ø actual): <strong>' +
           (recoNft.diamActualMm != null ? 'Ø' + recoNft.diamActualMm + ' mm' : '—') +
           '</strong> · ' +
           cultivoEstadoChipHtml(recoNft.estado) +
@@ -1190,6 +1210,11 @@ function renderConsejosLista() {
   if (consejoCatActiva === 'agua') {
     const [cEc, cColor] = cat.consejos;
     lista.innerHTML = htmlConsejoCard(cat, cEc) + buildConsejosAguaNutrienteDinamico() + htmlConsejoCard(cat, cColor);
+    return;
+  }
+
+  if (consejoCatActiva === 'cultivo') {
+    lista.innerHTML = cat.consejos.map(c => htmlConsejoCard(cat, c)).join('') + buildConsejoObjetivoTorreCultivo();
     return;
   }
 

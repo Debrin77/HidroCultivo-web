@@ -60,6 +60,16 @@ async function calcularRiego(opts = {}) {
   try {
     // ── Obtener datos Open-Meteo ──────────────────────────────────────────
     const tipoRiego = tipoInstalacionNormalizado(state.configTorre || {});
+    const objetivoTorre =
+      tipoRiego === 'torre' && typeof torreGetObjetivoCultivo === 'function'
+        ? torreGetObjetivoCultivo(state.configTorre || {})
+        : 'final';
+    const multObjetivoTorre =
+      tipoRiego !== 'torre'
+        ? 1
+        : (typeof torreObjetivoMultiplicadorDemanda === 'function'
+            ? torreObjetivoMultiplicadorDemanda(state.configTorre || {}, objetivoTorre)
+            : (objetivoTorre === 'baby' ? 0.92 : 1.06));
     const idx = (tipoRiego === 'nft' || tipoRiego === 'dwc') ? 0 : (diaRiego === 'manana' ? 1 : 0);
     const offsetHoras = idx * 24;
 
@@ -280,6 +290,9 @@ async function calcularRiego(opts = {}) {
     if (sensRiego.mult !== 1) {
       demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * sensRiego.mult));
     }
+    if (tipoRiego === 'torre') {
+      demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * multObjetivoTorre));
+    }
 
     if (!esInterior && tipoRiego === 'torre' && mcNear) {
       const refH = meteoclimaticRiegoModeloHoraEnDia(times, dayHourIdx, tempHArr, rhArr, temp1315, hum1315);
@@ -439,6 +452,9 @@ async function calcularRiego(opts = {}) {
     if (sensRiego.mult !== 1) {
       demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * sensRiego.mult));
     }
+    if (tipoRiego === 'torre') {
+      demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * multObjetivoTorre));
+    }
 
     if (!esInterior && tipoRiego === 'torre' && factorMcDiaRiego !== 1) {
       demandaMed *= factorMcDiaRiego;
@@ -513,6 +529,9 @@ async function calcularRiego(opts = {}) {
     const fNocTempAgua = riegoFactorDemandaNocPorTempAgua(tempAguaNocUse);
     const fNocDifusor = riegoFactorDemandaNocPorDifusor(cfgRiegoNoc.equipamiento);
     demandaNoc *= fNocTempAgua * fNocDifusor;
+    if (tipoRiego === 'torre') {
+      demandaNoc *= multObjetivoTorre;
+    }
     demandaNoc = esInterior
       ? Math.max(0.38, Math.min(1.02, demandaNoc))
       : Math.max(0.38, Math.min(1.12, demandaNoc));
@@ -772,6 +791,8 @@ async function calcularRiego(opts = {}) {
       fecha: new Date().toLocaleDateString('es-ES'),
       mcRiegoFactorDia: factorMcDiaRiego !== 1 ? Math.round(factorMcDiaRiego * 1000) / 1000 : null,
       mcRiegoFactorNoc: factorMcNocRiego !== 1 ? Math.round(factorMcNocRiego * 1000) / 1000 : null,
+      objetivoTorreCultivo: tipoRiego === 'torre' ? objetivoTorre : null,
+      multObjetivoTorre: tipoRiego === 'torre' ? Math.round(multObjetivoTorre * 100) / 100 : null,
     };
     saveState();
 
