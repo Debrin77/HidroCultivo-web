@@ -123,6 +123,37 @@ function torreGetDiasCosechaObjetivo(diasBase, cfg, objetivo) {
   return Math.max(14, Math.round(d * adj.diasMult));
 }
 
+function nftNormalizeObjetivoCultivo(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  return v === 'baby' || v === 'babyleaf' || v === 'alta' ? 'baby' : 'final';
+}
+
+function nftGetObjetivoCultivo(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (c.nftObjetivoCultivo) return nftNormalizeObjetivoCultivo(c.nftObjetivoCultivo);
+  if (c.torreObjetivoCultivo) return torreNormalizeObjetivoCultivo(c.torreObjetivoCultivo);
+  const mk = typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
+  return mk === 'mini' ? 'baby' : 'final';
+}
+
+function nftGetObjetivoSpec(objetivo) {
+  const k = nftNormalizeObjetivoCultivo(objetivo);
+  if (k === 'baby') {
+    return {
+      key: 'baby',
+      label: 'Baby leaf / alta densidad',
+      densidadTxt: '8–12 cm c-c',
+      cicloTxt: 'cosecha joven (aprox. 20–35 días)',
+    };
+  }
+  return {
+    key: 'final',
+    label: 'Planta completa',
+    densidadTxt: '15–25 cm c-c',
+    cicloTxt: 'cosecha completa (aprox. 35–60 días)',
+  };
+}
+
 function textoAjustesObjetivoTorreSistema(cfg, objetivo) {
   const c = cfg || state.configTorre || {};
   const adj = torreGetObjetivoAjustes(c, objetivo);
@@ -958,7 +989,8 @@ function textoResumenMontajeNftSistema(cfg) {
         ? Math.round(Number(cfg.dwcNetPotRimMm))
         : null;
   const cestaShort = rim != null ? ' · cesta Ø' + rim + ' mm' : '';
-  return dTxt + ' · ' + nCh + ' tubos × ' + hx + ' huecos · ' + pend + '% pend.' + cestaShort;
+  const objLbl = nftGetObjetivoSpec(nftGetObjetivoCultivo(cfg)).key === 'baby' ? 'baby' : 'final';
+  return dTxt + ' · ' + nCh + ' tubos × ' + hx + ' huecos · ' + pend + '% pend. · obj ' + objLbl + cestaShort;
 }
 
 const SISTEMA_NFT_POT_RIM_PRESETS_MM = [27, 38, 40, 50, 75];
@@ -1096,6 +1128,14 @@ function sincronizarSistemaNftMontajeUI() {
   if (hxEl) hxEl.value = String(Math.max(2, Math.min(30, cfg.nftHuecosPorCanal || cfg.numCestas || 8)));
   const pendEl = document.getElementById('sysNftPendiente');
   if (pendEl) pendEl.value = String(Math.max(1, Math.min(4, Math.round(Number(cfg.nftPendientePct)) || 2)));
+  const objSel = document.getElementById('sysNftObjetivoCultivo');
+  if (objSel) objSel.value = nftGetObjetivoCultivo(cfg);
+  const objHint = document.getElementById('sysNftObjetivoHint');
+  if (objHint) {
+    const spN = nftGetObjetivoSpec(nftGetObjetivoCultivo(cfg));
+    objHint.classList.remove('setup-hidden');
+    objHint.textContent = 'Referencia: ' + spN.densidadTxt + ' · ' + spN.cicloTxt + '.';
+  }
   const rimSysIn = document.getElementById('sysNftPotRimMm');
   const hSysIn = document.getElementById('sysNftPotHmm');
   if (rimSysIn) {
@@ -1210,6 +1250,7 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   else delete cfg.nftAlturaBombeoCm;
   const pendSel = parseInt(String(document.getElementById('sysNftPendiente')?.value || '2'), 10);
   cfg.nftPendientePct = Math.max(1, Math.min(4, Number.isFinite(pendSel) ? pendSel : 2));
+  cfg.nftObjetivoCultivo = nftNormalizeObjetivoCultivo(document.getElementById('sysNftObjetivoCultivo')?.value || cfg.nftObjetivoCultivo);
   const hxInp = parseInt(String(document.getElementById('sysNftHuecos')?.value || ''), 10);
   cfg.nftHuecosPorCanal = Math.max(2, Math.min(30, Number.isFinite(hxInp) ? hxInp : cfg.nftHuecosPorCanal || 8));
   const rimSys = parseInt(String(document.getElementById('sysNftPotRimMm')?.value ?? '').trim(), 10);

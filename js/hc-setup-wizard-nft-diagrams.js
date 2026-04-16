@@ -452,6 +452,12 @@ function nftTextoResumenInstalacion(cfg) {
   const dispTxt = disp === 'escalera' ? 'escalera' : disp === 'pared' ? 'pared' : 'mesa';
   const altEff = getNftAlturaBombeoEfectivaCm(cfg);
   const b = getNftBombaDesdeConfig(cfg);
+  const objNft =
+    typeof nftGetObjetivoCultivo === 'function' ? nftGetObjetivoCultivo(cfg) : 'final';
+  const objSpec =
+    typeof nftGetObjetivoSpec === 'function'
+      ? nftGetObjetivoSpec(objNft)
+      : { label: objNft === 'baby' ? 'Baby leaf / alta densidad' : 'Planta completa' };
   let extraDisp = '';
   if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
     extraDisp = ' multinivel ' + hyd.mesaTiers.join('+');
@@ -462,6 +468,7 @@ function nftTextoResumenInstalacion(cfg) {
   const vMez = getVolumenMezclaLitros(cfg);
   const volTxt = vMez < vol - 0.05 ? vol + ' L (mezcla ' + vMez + ' L)' : vol + ' L';
   let s = nombre + ' — ' + ch + ' tubos × ' + hx + ' huecos — ' + volTxt + ' · ' + dispTxt + extraDisp + ' · pend. ~' + pend + '%';
+  s += ' · objetivo ' + objSpec.label;
   if (altEff > 0) s += ' · ↑~' + altEff + ' cm';
   if (b) {
     s += ' · alim. Ø' + tubo + ' mm · bomba/depósito: ver checklist o asistente';
@@ -537,6 +544,13 @@ function renderTorreSistemaResumenTabla(cfg) {
     rows.push(['Canales (tubos)', String(hyd.nCh)]);
     rows.push(['Huecos por canal', String(hyd.nHx)]);
     rows.push(['Huecos totales', String(hyd.nCh * hyd.nHx)]);
+    const objNft =
+      typeof nftGetObjetivoCultivo === 'function' ? nftGetObjetivoCultivo(cfg) : 'final';
+    const objSpec =
+      typeof nftGetObjetivoSpec === 'function'
+        ? nftGetObjetivoSpec(objNft)
+        : { label: objNft === 'baby' ? 'Baby leaf / alta densidad' : 'Planta completa', densidadTxt: '—', cicloTxt: '—' };
+    rows.push(['Objetivo cultivo', escHtmlUi(objSpec.label + ' · ' + objSpec.densidadTxt + ' · ' + objSpec.cicloTxt)]);
     const nftRim =
       cfg.nftNetPotRimMm != null && Number(cfg.nftNetPotRimMm) > 0
         ? Math.round(Number(cfg.nftNetPotRimMm))

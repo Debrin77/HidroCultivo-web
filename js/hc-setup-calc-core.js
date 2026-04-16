@@ -555,6 +555,10 @@ function guardarSetupYContinuar() {
       wInp ? wInp.value : ''
     );
     if (vPump.tipo === 'error' && vPump.toast) showToast(vPump.toast, true);
+    state.configTorre.nftObjetivoCultivo =
+      typeof nftGetObjetivoCultivo === 'function'
+        ? nftGetObjetivoCultivo(state.configTorre)
+        : 'final';
     const potRimEl = document.getElementById('setupNftPotRimMm');
     const potHEl = document.getElementById('setupNftPotHmm');
     const rimParsed = parseInt(String(potRimEl?.value ?? '').trim(), 10);
@@ -591,6 +595,7 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftEscaleraNivelesCara;
     delete state.configTorre.nftNetPotRimMm;
     delete state.configTorre.nftNetPotHeightMm;
+    delete state.configTorre.nftObjetivoCultivo;
   }
   if (isDwc) {
     dwcMergeCamposFormularioEnCfg(state.configTorre, DWC_FORM_IDS_SETUP);
