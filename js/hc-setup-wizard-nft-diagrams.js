@@ -537,10 +537,27 @@ function renderTorreSistemaResumenTabla(cfg) {
     rows.push(['Canales (tubos)', String(hyd.nCh)]);
     rows.push(['Huecos por canal', String(hyd.nHx)]);
     rows.push(['Huecos totales', String(hyd.nCh * hyd.nHx)]);
-    rows.push([
-      'Cestas (net pot)',
-      escHtmlUi('27–50 mm habitual u otro Ø en mm (personalizado), como en el asistente'),
-    ]);
+    const nftRim =
+      cfg.nftNetPotRimMm != null && Number(cfg.nftNetPotRimMm) > 0
+        ? Math.round(Number(cfg.nftNetPotRimMm))
+        : cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0
+          ? Math.round(Number(cfg.dwcNetPotRimMm))
+          : null;
+    const nftH =
+      cfg.nftNetPotHeightMm != null && Number(cfg.nftNetPotHeightMm) > 0
+        ? Math.round(Number(cfg.nftNetPotHeightMm))
+        : cfg.dwcNetPotHeightMm != null && Number(cfg.dwcNetPotHeightMm) > 0
+          ? Math.round(Number(cfg.dwcNetPotHeightMm))
+          : null;
+    const cestaNftTxt =
+      nftRim != null
+        ? 'Ø ' +
+          nftRim +
+          ' mm' +
+          (nftH != null ? ' · alto ' + nftH + ' mm' : '') +
+          ' · ref. 27–50 mm u otro Ø (personalizado)'
+        : 'Indica Ø en asistente (paso Canal / tubo / bomba) · ref. 27–50 mm u personalizado';
+    rows.push(['Cestas (net pot)', escHtmlUi(cestaNftTxt)]);
     rows.push(['Pendiente', '~' + pend + ' %']);
     rows.push([
       'Depósito (cap. máx)',
@@ -937,6 +954,41 @@ function seleccionarTuboNft(mm) {
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
 }
 
+const NFT_POT_RIM_PRESETS_MM = [27, 38, 40, 50, 75];
+
+function readNftPotCestaFromSetupUi() {
+  const rimEl = document.getElementById('setupNftPotRimMm');
+  const hEl = document.getElementById('setupNftPotHmm');
+  const rim = parseInt(String(rimEl && rimEl.value != null ? rimEl.value : '').trim(), 10);
+  const h = parseInt(String(hEl && hEl.value != null ? hEl.value : '').trim(), 10);
+  return {
+    rimMm: Number.isFinite(rim) && rim >= 25 && rim <= 120 ? rim : null,
+    heightMm: Number.isFinite(h) && h >= 30 && h <= 200 ? h : null,
+  };
+}
+
+function syncNftPotRimChipsFromInput() {
+  const el = document.getElementById('setupNftPotRimMm');
+  const raw = parseInt(String(el && el.value != null ? el.value : '').trim(), 10);
+  NFT_POT_RIM_PRESETS_MM.forEach(d => {
+    const b = document.getElementById('nftPotRim' + d);
+    if (b) b.classList.toggle('selected', Number.isFinite(raw) && raw === d);
+  });
+}
+
+function seleccionarNftPotRimPreset(mm) {
+  const v = Math.max(25, Math.min(120, parseInt(String(mm), 10) || 50));
+  const el = document.getElementById('setupNftPotRimMm');
+  if (el) el.value = String(v);
+  syncNftPotRimChipsFromInput();
+  try {
+    if (typeof updateNftSetupPreview === 'function') updateNftSetupPreview();
+  } catch (_) {}
+  try {
+    if (typeof actualizarResumenSetup === 'function') actualizarResumenSetup();
+  } catch (_) {}
+}
+
 function pintarResultadoBombaNftUI(b, volUsuarioL) {
   const el = document.getElementById('resultadoBombaNft');
   if (!el) return;
@@ -1087,14 +1139,15 @@ function nftDiagramHeaderTypography(Wref, opts) {
   const compact = !!(opts && opts.compact);
   const withLegend = !(opts && opts.withLegend === false);
   const W = Math.max(420, Math.min(2000, Number(Wref) || 800));
-  const mainFs = Math.round(Math.max(compact ? 24 : 26, Math.min(48, W * 0.038)));
-  const subFs = Math.round(Math.max(compact ? 15 : 16, Math.min(28, W * 0.025)));
-  const yMain = Math.round(mainFs * 0.72 + 8);
-  const ySub = yMain + Math.round(subFs * 1.08 + 4);
-  const legendY = withLegend ? ySub + (compact ? 14 : 16) : ySub;
-  const footFs = Math.round(Math.max(10, Math.min(16, W * 0.012)));
-  const headerBottom = withLegend ? legendY + (compact ? 14 : 16) : ySub + (compact ? 10 : 12);
-  const topPadMin = Math.max(withLegend ? 66 : 44, headerBottom + (withLegend ? 14 : 18));
+  /** Título principal: mínimos altos porque el SVG se escala al ancho CSS y ~26 u era ~14 px en móvil. */
+  const mainFs = Math.round(Math.max(compact ? 34 : 40, Math.min(72, W * 0.058)));
+  const subFs = Math.round(Math.max(compact ? 19 : 22, Math.min(36, W * 0.036)));
+  const yMain = Math.round(mainFs * 0.72 + 10);
+  const ySub = yMain + Math.round(subFs * 1.1 + 6);
+  const legendY = withLegend ? ySub + (compact ? 16 : 18) : ySub;
+  const footFs = Math.round(Math.max(11, Math.min(18, W * 0.014)));
+  const headerBottom = withLegend ? legendY + (compact ? 16 : 18) : ySub + (compact ? 12 : 14);
+  const topPadMin = Math.max(withLegend ? 72 : 50, headerBottom + (withLegend ? 16 : 20));
   return { mainFs, subFs, yMain, ySub, legendY, footFs, topPadMin };
 }
 

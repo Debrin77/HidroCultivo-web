@@ -1128,7 +1128,7 @@
         <ol class="torre-nft-ol">
           <li>Elige <strong>mesa, escalera o pared</strong> y, si aplica, multinivel o caras del A.</li>
           <li>Ajusta <strong>tubos, huecos y pendiente</strong> (los huecos son el mismo número en cada tubo del dibujo).</li>
-          <li>Pulsa <strong>Aplicar montaje NFT</strong>. Canal, lámina, Ø de tubería de riego (alimentación) y bomba siguen en el asistente.</li>
+          <li>Indica <strong>cesta (net pot)</strong> abajo o en el asistente; pulsa <strong>Aplicar montaje NFT</strong>. Canal, lámina, Ø tubería de riego y bomba siguen en el asistente.</li>
         </ol>
         <p class="torre-nft-p">
           En <strong>escalera / A</strong>, el esquema NFT asume alimentación al <strong>primer tubo</strong> por cara (T en el vértice si hay dos caras), cascada en <strong>zigzag</strong> entre extremos de cada peldaño y <strong>retorno al depósito</strong> desde el último peldaño, en línea con montajes NFT en pendiente habituales.
@@ -1137,7 +1137,7 @@
           Si cambiaste el montaje aquí, pulsa <strong>Aplicar</strong> antes de abrir el asistente para que cargue lo último.
         </p>
         <p class="torre-nft-p-soft">
-          Cestas en el canal (net pot): referencia <strong>27–50 mm</strong> u otro Ø en mm (<strong>personalizado</strong>), como en el asistente; el <strong>Ø del tubo de cultivo</strong> se configura al abrir el asistente (canal / lámina / bomba).
+          El <strong>Ø del tubo de cultivo</strong> y el canal siguen en el asistente (canal / lámina / bomba). La <strong>cesta (net pot)</strong> puedes editarla aquí o allí; ambos sitios guardan lo mismo.
         </p>
         <button type="button" onclick="abrirAsistenteNftCanalYTuboDesdeSistema()"
           class="torre-nft-btn-dashed">
@@ -1201,6 +1201,32 @@
           </div>
           <label class="form-label torre-nft-label-xs" for="sysNftPeldaños">Peldaños por cara</label>
           <input type="number" id="sysNftPeldaños" class="torre-nft-input-mt" min="1" max="12" step="1">
+        </div>
+        <div class="torre-nft-bomba-wrap torre-nft-row-mb">
+          <div class="torre-nft-bomba-kicker">Cestas (net pot)</div>
+          <p class="torre-nft-p-note">Diámetro del <strong>aro</strong> de la cesta en el canal (no el Ø del tubo de cultivo). Ref. habitual <strong>27–50 mm</strong>; cualquier otro Ø en mm vale como personalizado.</p>
+          <div class="torre-nft-grid-3">
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftPotRim27" onclick="seleccionarSistemaNftPotRimPreset(27)">27</button>
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftPotRim38" onclick="seleccionarSistemaNftPotRimPreset(38)">38</button>
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftPotRim40" onclick="seleccionarSistemaNftPotRimPreset(40)">40</button>
+          </div>
+          <div class="torre-nft-grid-2 torre-nft-row-mb">
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftPotRim50" onclick="seleccionarSistemaNftPotRimPreset(50)">50</button>
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftPotRim75" onclick="seleccionarSistemaNftPotRimPreset(75)">75</button>
+          </div>
+          <div class="torre-nft-grid-2-8">
+            <div>
+              <label class="form-label torre-nft-label-xs" for="sysNftPotRimMm">Diám. cesta (mm)</label>
+              <input type="number" id="sysNftPotRimMm" class="torre-nft-input-mt" min="25" max="120" step="1" placeholder="ej. 50"
+                inputmode="numeric" autocomplete="off"
+                oninput="syncSistemaNftPotRimChipsFromInput()">
+            </div>
+            <div>
+              <label class="form-label torre-nft-label-xs" for="sysNftPotHmm">Alt. cesta (mm, opcional)</label>
+              <input type="number" id="sysNftPotHmm" class="torre-nft-input-mt" min="30" max="200" step="1" placeholder="—"
+                inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
         </div>
         <div class="torre-nft-bomba-wrap">
           <div class="torre-nft-bomba-kicker">Bomba — datos de placa (opcional)</div>
@@ -2370,6 +2396,7 @@
               <ol class="setup-nft-guide-list">
                 <li class="setup-nft-guide-item"><strong>Primero</strong> la disposición (mesa, escalera o pared) y la <strong>altura de bombeo</strong> si el agua sube al primer tubo.</li>
                 <li class="setup-nft-guide-item"><strong>Después</strong> tubos / peldaños y huecos: en el dibujo todos los tubos comparten el mismo perfil y el mismo número de huecos.</li>
+                <li class="setup-nft-guide-item">Indica el <strong>diámetro de cesta</strong> (net pot, aro en el canal): referencia habitual <strong>27–50 mm</strong> u otro valor (personalizado).</li>
                 <li>Abajo afinas <strong>canal, lámina y bomba</strong>. En la pestaña <strong>Sistema</strong> puedes retocar montaje y <strong>Aplicar</strong> sin repetir todo.</li>
               </ol>
             </div>
@@ -2467,6 +2494,34 @@
               </div>
               <input type="range" class="torre-slider" id="sliderNftPendiente"
                 min="1" max="4" value="2" step="1" oninput="updateNftSetupPreview()">
+            </div>
+            <div class="setup-nft-cesta-wrap setup-mt-10">
+              <div class="setup-nft-layout-title">Cestas (net pot)</div>
+              <p class="setup-nft-layout-help">
+                <strong>Diámetro del aro</strong> de la cesta en el canal (no es el Ø del tubo de cultivo de más abajo).
+                Referencia habitual <strong>27–50 mm</strong>; cualquier otro valor en mm cuenta como <strong>personalizado</strong>.
+              </p>
+              <div class="setup-nft-grid-3-tight setup-mb-8">
+                <button type="button" class="equip-card setup-nft-chip-sm" id="nftPotRim27" onclick="seleccionarNftPotRimPreset(27)">27</button>
+                <button type="button" class="equip-card setup-nft-chip-sm" id="nftPotRim38" onclick="seleccionarNftPotRimPreset(38)">38</button>
+                <button type="button" class="equip-card setup-nft-chip-sm" id="nftPotRim40" onclick="seleccionarNftPotRimPreset(40)">40</button>
+                <button type="button" class="equip-card setup-nft-chip-sm" id="nftPotRim50" onclick="seleccionarNftPotRimPreset(50)">50</button>
+                <button type="button" class="equip-card setup-nft-chip-sm" id="nftPotRim75" onclick="seleccionarNftPotRimPreset(75)">75</button>
+              </div>
+              <div class="setup-grid-2 setup-grid-gap-8 setup-align-end">
+                <div>
+                  <label for="setupNftPotRimMm" class="setup-label-tiny">Diám. cesta (mm)</label>
+                  <input type="number" id="setupNftPotRimMm" class="setup-input-compact" min="25" max="120" step="1" placeholder="ej. 50"
+                    inputmode="numeric" autocomplete="off"
+                    oninput="syncNftPotRimChipsFromInput(); try{updateNftSetupPreview()}catch(e){}; try{actualizarResumenSetup()}catch(e){}">
+                </div>
+                <div>
+                  <label for="setupNftPotHmm" class="setup-label-tiny">Alt. cesta (mm, opcional)</label>
+                  <input type="number" id="setupNftPotHmm" class="setup-input-compact" min="30" max="200" step="1" placeholder="—"
+                    inputmode="numeric" autocomplete="off"
+                    oninput="try{updateNftSetupPreview()}catch(e){}; try{actualizarResumenSetup()}catch(e){}">
+                </div>
+              </div>
             </div>
             <div class="setup-nft-channel-wrap">
               <div class="setup-nft-layout-title">

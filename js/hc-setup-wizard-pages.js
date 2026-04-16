@@ -666,6 +666,9 @@ function buildNftDraftConfigFromSetupUi() {
     draft.nftEscaleraNivelesCara = Math.max(1, Math.min(12, canalesSlider));
     draft.nftNumCanales = draft.nftEscaleraNivelesCara * mont.escaleraCaras;
   }
+  const pot = typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : { rimMm: null, heightMm: null };
+  if (pot.rimMm != null) draft.nftNetPotRimMm = pot.rimMm;
+  if (pot.heightMm != null) draft.nftNetPotHeightMm = pot.heightMm;
   return draft;
 }
 

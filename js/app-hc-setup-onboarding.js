@@ -159,6 +159,8 @@ function actualizarResumenSetup() {
   const hydNFT = isNft ? getNftHidraulicaDesdeConfig(draftNFT) : null;
   const bResumenNft = isNft ? getNftBombaDesdeConfig(draftNFT) : null;
   const altResNFT = isNft ? getNftAlturaBombeoEfectivaCm(draftNFT) : 0;
+  const potNft =
+    isNft && typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : { rimMm: null, heightMm: null };
   const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volMez, ecObj);
   const ordenR = (d.nut.orden && d.nut.orden.length >= d.nut.partes) ? d.nut.orden : ['Parte A','Parte B','Parte C'];
 
@@ -222,6 +224,11 @@ function actualizarResumenSetup() {
         (montR.disposicion === 'mesa' && montR.mesaMultinivel ? ' · multinivel' : '') +
         (montR.disposicion === 'escalera' && montR.escaleraCaras === 2 ? ' · A (2 caras)' : '') +
         '</strong>' +
+        (potNft.rimMm != null || potNft.heightMm != null
+          ? ' · cesta net pot' +
+            (potNft.rimMm != null ? ' Ø <strong>' + potNft.rimMm + ' mm</strong>' : '') +
+            (potNft.heightMm != null ? ' · alto <strong>' + potNft.heightMm + ' mm</strong>' : '')
+          : '') +
         (altResNFT > 0 ? ' · bombeo (efectivo) al 1.º tubo <strong>' + altResNFT + ' cm</strong>' : '') +
         '<br>' +
         (bResumenNft

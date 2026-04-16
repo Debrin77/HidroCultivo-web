@@ -525,6 +525,20 @@ function guardarSetupYContinuar() {
       wInp ? wInp.value : ''
     );
     if (vPump.tipo === 'error' && vPump.toast) showToast(vPump.toast, true);
+    const potRimEl = document.getElementById('setupNftPotRimMm');
+    const potHEl = document.getElementById('setupNftPotHmm');
+    const rimParsed = parseInt(String(potRimEl?.value ?? '').trim(), 10);
+    const hParsed = parseInt(String(potHEl?.value ?? '').trim(), 10);
+    if (Number.isFinite(rimParsed) && rimParsed >= 25 && rimParsed <= 120) {
+      state.configTorre.nftNetPotRimMm = rimParsed;
+    } else {
+      delete state.configTorre.nftNetPotRimMm;
+    }
+    if (Number.isFinite(hParsed) && hParsed >= 30 && hParsed <= 200) {
+      state.configTorre.nftNetPotHeightMm = hParsed;
+    } else {
+      delete state.configTorre.nftNetPotHeightMm;
+    }
   } else {
     delete state.configTorre.nftNumCanales;
     delete state.configTorre.nftHuecosPorCanal;
@@ -545,6 +559,8 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftMesaSeparacionNivelesCm;
     delete state.configTorre.nftEscaleraCaras;
     delete state.configTorre.nftEscaleraNivelesCara;
+    delete state.configTorre.nftNetPotRimMm;
+    delete state.configTorre.nftNetPotHeightMm;
   }
   if (isDwc) {
     dwcMergeCamposFormularioEnCfg(state.configTorre, DWC_FORM_IDS_SETUP);

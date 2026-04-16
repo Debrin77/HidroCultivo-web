@@ -236,6 +236,29 @@ function abrirSetup() {
   if (lcmEl) lcmEl.value = c.nftLongCanalM != null && c.nftLongCanalM !== '' ? String(c.nftLongCanalM) : '';
   seleccionarNftCanalForma(c.nftCanalForma === 'rectangular' ? 'rectangular' : 'redondo');
   seleccionarNftCanalDiam(setupNftCanalDiamMm);
+  const rimNftIn = document.getElementById('setupNftPotRimMm');
+  const hNftIn = document.getElementById('setupNftPotHmm');
+  if (rimNftIn) {
+    const rNv =
+      c.nftNetPotRimMm != null && Number(c.nftNetPotRimMm) > 0
+        ? Math.round(Number(c.nftNetPotRimMm))
+        : c.dwcNetPotRimMm != null && Number(c.dwcNetPotRimMm) > 0
+          ? Math.round(Number(c.dwcNetPotRimMm))
+          : '';
+    rimNftIn.value = rNv !== '' ? String(rNv) : '';
+  }
+  if (hNftIn) {
+    const hNv =
+      c.nftNetPotHeightMm != null && Number(c.nftNetPotHeightMm) > 0
+        ? Math.round(Number(c.nftNetPotHeightMm))
+        : c.dwcNetPotHeightMm != null && Number(c.dwcNetPotHeightMm) > 0
+          ? Math.round(Number(c.dwcNetPotHeightMm))
+          : '';
+    hNftIn.value = hNv !== '' ? String(hNv) : '';
+  }
+  try {
+    syncNftPotRimChipsFromInput();
+  } catch (_) {}
   const lamEl = document.getElementById('sliderNftLamina');
   if (lamEl) {
     const lm = Number.isFinite(parseFloat(String(c.nftLaminaAguaMm)))
@@ -851,7 +874,32 @@ function textoResumenMontajeNftSistema(cfg) {
   } catch (_) {}
   const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
   const pend = cfg.nftPendientePct ?? 2;
-  return dTxt + ' · ' + nCh + ' tubos × ' + hx + ' huecos · ' + pend + '% pend.';
+  let rim =
+    cfg.nftNetPotRimMm != null && Number(cfg.nftNetPotRimMm) > 0
+      ? Math.round(Number(cfg.nftNetPotRimMm))
+      : cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0
+        ? Math.round(Number(cfg.dwcNetPotRimMm))
+        : null;
+  const cestaShort = rim != null ? ' · cesta Ø' + rim + ' mm' : '';
+  return dTxt + ' · ' + nCh + ' tubos × ' + hx + ' huecos · ' + pend + '% pend.' + cestaShort;
+}
+
+const SISTEMA_NFT_POT_RIM_PRESETS_MM = [27, 38, 40, 50, 75];
+
+function syncSistemaNftPotRimChipsFromInput() {
+  const el = document.getElementById('sysNftPotRimMm');
+  const raw = parseInt(String(el && el.value != null ? el.value : '').trim(), 10);
+  SISTEMA_NFT_POT_RIM_PRESETS_MM.forEach(d => {
+    const b = document.getElementById('sysNftPotRim' + d);
+    if (b) b.classList.toggle('selected', Number.isFinite(raw) && raw === d);
+  });
+}
+
+function seleccionarSistemaNftPotRimPreset(mm) {
+  const v = Math.max(25, Math.min(120, parseInt(String(mm), 10) || 50));
+  const inp = document.getElementById('sysNftPotRimMm');
+  if (inp) inp.value = String(v);
+  syncSistemaNftPotRimChipsFromInput();
 }
 
 function textoResumenSistemaDwcPanel(cfg) {
@@ -966,6 +1014,29 @@ function sincronizarSistemaNftMontajeUI() {
   if (hxEl) hxEl.value = String(Math.max(2, Math.min(30, cfg.nftHuecosPorCanal || cfg.numCestas || 8)));
   const pendEl = document.getElementById('sysNftPendiente');
   if (pendEl) pendEl.value = String(Math.max(1, Math.min(4, Math.round(Number(cfg.nftPendientePct)) || 2)));
+  const rimSysIn = document.getElementById('sysNftPotRimMm');
+  const hSysIn = document.getElementById('sysNftPotHmm');
+  if (rimSysIn) {
+    const rNv =
+      cfg.nftNetPotRimMm != null && Number(cfg.nftNetPotRimMm) > 0
+        ? Math.round(Number(cfg.nftNetPotRimMm))
+        : cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0
+          ? Math.round(Number(cfg.dwcNetPotRimMm))
+          : '';
+    rimSysIn.value = rNv !== '' ? String(rNv) : '';
+  }
+  if (hSysIn) {
+    const hNv =
+      cfg.nftNetPotHeightMm != null && Number(cfg.nftNetPotHeightMm) > 0
+        ? Math.round(Number(cfg.nftNetPotHeightMm))
+        : cfg.dwcNetPotHeightMm != null && Number(cfg.dwcNetPotHeightMm) > 0
+          ? Math.round(Number(cfg.dwcNetPotHeightMm))
+          : '';
+    hSysIn.value = hNv !== '' ? String(hNv) : '';
+  }
+  try {
+    syncSistemaNftPotRimChipsFromInput();
+  } catch (_) {}
   const mmChk = document.getElementById('sysNftMesaMultinivelChk');
   if (mmChk) mmChk.checked = cfg.nftMesaMultinivel === true;
   const mmGridS = document.getElementById('sysNftMesaTubosPorNivelGrid');
@@ -1054,6 +1125,12 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   cfg.nftPendientePct = Math.max(1, Math.min(4, Number.isFinite(pendSel) ? pendSel : 2));
   const hxInp = parseInt(String(document.getElementById('sysNftHuecos')?.value || ''), 10);
   cfg.nftHuecosPorCanal = Math.max(2, Math.min(30, Number.isFinite(hxInp) ? hxInp : cfg.nftHuecosPorCanal || 8));
+  const rimSys = parseInt(String(document.getElementById('sysNftPotRimMm')?.value ?? '').trim(), 10);
+  const hSys = parseInt(String(document.getElementById('sysNftPotHmm')?.value ?? '').trim(), 10);
+  if (Number.isFinite(rimSys) && rimSys >= 25 && rimSys <= 120) cfg.nftNetPotRimMm = rimSys;
+  else delete cfg.nftNetPotRimMm;
+  if (Number.isFinite(hSys) && hSys >= 30 && hSys <= 200) cfg.nftNetPotHeightMm = hSys;
+  else delete cfg.nftNetPotHeightMm;
   const lhSys = parseFloat(String(document.getElementById('sysNftBombaLh')?.value || '').replace(',', '.'));
   const wSys = parseFloat(String(document.getElementById('sysNftBombaW')?.value || '').replace(',', '.'));
   if (Number.isFinite(lhSys) && lhSys > 0) cfg.nftBombaUsuarioCaudalLh = Math.round(lhSys);
@@ -1113,6 +1190,9 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
     } catch (e2) {}
   }
   showToast('Montaje NFT aplicado');
+  try {
+    renderTorreSistemaResumenTabla(cfg);
+  } catch (_) {}
   try {
     applySistemaTipoPanelesColapsablesUI();
   } catch (_) {}
