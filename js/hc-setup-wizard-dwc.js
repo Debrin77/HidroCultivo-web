@@ -742,6 +742,113 @@ function dwcCalcRejillaObjetivoDesdeMax(o, objetivoSpec) {
   return { filas, cols };
 }
 
+/**
+ * Rejilla filas × columnas para un total deseado de macetas, priorizando proporción columnas/filas ≈ largo/ancho útil de la tapa.
+ * Si no existe factorización exacta ≤ tope, elige la sub-rejilla válida con el mayor producto ≤ tope (luego afinación por proporción).
+ */
+function dwcCalcRejillaDesdeTotalCestas(o, nDeseado) {
+  if (!o || o.max < 1) return null;
+  const F = o.filas;
+  const C = o.cols;
+  let nRaw = parseInt(String(nDeseado), 10);
+  if (!Number.isFinite(nRaw) || nRaw < 1) nRaw = o.max;
+  const nCap = Math.min(nRaw, o.max);
+  const ratio = o.Lmm / Math.max(o.Wmm, 1e-6);
+  const aspectScore = (nf, nc) => {
+    const r = nc / Math.max(nf, 1e-6);
+    return Math.abs(Math.log(r + 1e-9) - Math.log(ratio + 1e-9));
+  };
+  const candidates = [];
+  for (let nf = 1; nf <= F; nf++) {
+    for (let nc = 1; nc <= C; nc++) {
+      const prod = nf * nc;
+      if (prod > o.max || prod > nCap) continue;
+      candidates.push({ filas: nf, cols: nc, prod });
+    }
+  }
+  if (!candidates.length) {
+    return { filas: 1, cols: 1, producto: 1, exacto: nCap === 1, solicitado: nRaw, cap: nCap, teoricoMax: o.max };
+  }
+  const exact = candidates.filter(c => c.prod === nCap);
+  const pool = exact.length ? exact : candidates.filter(c => c.prod === Math.max(...candidates.map(x => x.prod)));
+  pool.sort((a, b) => {
+    const da = aspectScore(a.filas, a.cols);
+    const db = aspectScore(b.filas, b.cols);
+    if (da !== db) return da - db;
+    return Math.abs(nCap - a.prod) - Math.abs(nCap - b.prod);
+  });
+  const pick = pool[0];
+  return {
+    filas: pick.filas,
+    cols: pick.cols,
+    producto: pick.prod,
+    exacto: pick.prod === nCap,
+    solicitado: nRaw,
+    cap: nCap,
+    teoricoMax: o.max,
+  };
+}
+
+function aplicarDwcRejillaVoluntariaDesdeFormularioSistema() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  initTorres();
+  const cfg = state.configTorre;
+  try {
+    dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
+  } catch (e0) {}
+  const o = dwcMaxCestasDesdeConfigTorre(cfg);
+  if (!o || o.max < 1) {
+    showToast('Indica largo, ancho y diámetro de cesta válidos para calcular la rejilla.', true);
+    return;
+  }
+  const raw = parseInt(String(document.getElementById('sysDwcMacetasTotalesDeseadas')?.value || '').trim(), 10);
+  if (!Number.isFinite(raw) || raw < 1) {
+    showToast('Indica un número total de macetas (1 o más).', true);
+    return;
+  }
+  const r = dwcCalcRejillaDesdeTotalCestas(o, raw);
+  const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, r.filas));
+  const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, r.cols));
+  redimensionarMatrizTorreDwcPreservando(cfg, nf, nc);
+  cfg.dwcRejillaVoluntariaUltimaTotal = raw;
+  try {
+    dwcSincronizarTamanoCestaDesdeRim(cfg);
+  } catch (e1) {}
+  try {
+    dwcPersistSnapshotMaxCestasEnCfg(cfg);
+  } catch (e2) {}
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  renderTorre();
+  updateTorreStats();
+  try {
+    refreshDwcSistemaMedidasUI();
+  } catch (e3) {}
+  const hintV = document.getElementById('sysDwcRejillaVoluntariaHint');
+  if (hintV) {
+    hintV.classList.remove('setup-hidden');
+    let t =
+      'Rejilla aplicada: ' +
+      nf +
+      ' filas × ' +
+      nc +
+      ' columnas = ' +
+      nf * nc +
+      ' macetas.';
+    if (raw > o.max) {
+      t += ' Pedías ' + raw + '; en tapa caben como máximo ' + o.max + ' con estos datos.';
+    } else if (!r.exacto) {
+      t +=
+        ' Con ese total no hay subdivisión exacta en la rejilla física; se ha elegido la mayor válida ≤ ' +
+        r.cap +
+        ' y proporcional al largo/ancho útil de la tapa.';
+    }
+    hintV.textContent = t;
+  }
+  showToast('Rejilla personalizada: ' + nf + '×' + nc + ' (' + nf * nc + ' macetas).');
+}
+
 function aplicarDwcRejillaDesdeFormularioSistema(modoAplicacion) {
   if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
   initTorres();
@@ -891,6 +998,17 @@ function refreshDwcMaxCestasHintSistema() {
   const btnPri = document.getElementById('btnDwcAplicarRejillaPrincipal');
   const btnSec = document.getElementById('btnDwcAplicarRejillaSecundaria');
   const cfg = state.configTorre;
+  const wrapVol = document.getElementById('sysDwcRejillaVoluntariaWrap');
+  const btnVol = document.getElementById('btnDwcAplicarRejillaVoluntaria');
+  const hintVol = document.getElementById('sysDwcRejillaVoluntariaHint');
+  const hideVoluntaria = () => {
+    if (wrapVol) wrapVol.classList.add('setup-hidden');
+    if (btnVol) btnVol.disabled = true;
+    if (hintVol) {
+      hintVol.classList.add('setup-hidden');
+      hintVol.textContent = '';
+    }
+  };
   if (!el || !cfg || cfg.tipoInstalacion !== 'dwc') {
     if (el) {
       el.classList.add('setup-hidden');
@@ -902,6 +1020,7 @@ function refreshDwcMaxCestasHintSistema() {
       hintPri.classList.add('setup-hidden');
       hintPri.textContent = '';
     }
+    hideVoluntaria();
     return;
   }
   const cfgCalc = Object.assign({}, cfg);
@@ -918,6 +1037,7 @@ function refreshDwcMaxCestasHintSistema() {
       hintPri.classList.add('setup-hidden');
       hintPri.textContent = '';
     }
+    hideVoluntaria();
     return;
   }
   const modoKey =
@@ -999,6 +1119,19 @@ function refreshDwcMaxCestasHintSistema() {
   if (hintPri) {
     hintPri.classList.remove('setup-hidden');
     hintPri.textContent = dwcTextoHintBotonPrincipal(modoPri, spec, o, rangoObj);
+  }
+  const inpVol = document.getElementById('sysDwcMacetasTotalesDeseadas');
+  if (wrapVol && inpVol && btnVol) {
+    wrapVol.classList.remove('setup-hidden');
+    btnVol.disabled = false;
+    if (!String(inpVol.value || '').trim()) {
+      const def =
+        cfg.dwcRejillaVoluntariaUltimaTotal != null && Number(cfg.dwcRejillaVoluntariaUltimaTotal) > 0
+          ? Math.round(Number(cfg.dwcRejillaVoluntariaUltimaTotal))
+          : Math.max(1, (cfg.numNiveles || 1) * (cfg.numCestas || 1));
+      inpVol.value = String(Math.min(o.max, Math.max(1, def)));
+    }
+    inpVol.max = String(o.max);
   }
 }
 

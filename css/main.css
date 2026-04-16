@@ -7834,6 +7834,23 @@ button.config-option {
   opacity: 0.45;
   cursor: not-allowed;
 }
+.torre-dwc-voluntaria-rejilla {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #bae6fd;
+}
+.torre-dwc-voluntaria-intro {
+  margin: 8px 0 6px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: #475569;
+  font-weight: 600;
+}
+.torre-dwc-voluntaria-rejilla-btn-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
 .setup-dwc-apply-grid-btn {
   width: 100%;
   margin-top: 8px;
