@@ -1135,6 +1135,16 @@ function buildConsejosDwc() {
       'Orientativo: la plántula suele ir casi al ras del <strong>fondo de la maceta</strong>; con raíces largas cuelgan en líquido <strong>oxigenado</strong>. La app no fija un porcentaje de llenado: lo crítico es el <strong>aireador 24 h</strong>. EC, pH y volumen los controlas en <strong>Mediciones</strong> y en las recargas.',
     alerta: { tipo: 'info', txt: 'ℹ️ En DWC no hay riego por goteo: el difusor mantiene oxígeno disuelto en el depósito.' },
   });
+  const nivelMon = htmlConsejoCard(cat, {
+    icono: '📉',
+    titulo: 'Monitor nivel 1 — depósito',
+    texto:
+      '<strong>Nivel 1</strong> en esta app es: <strong>flotador o sensor de nivel mínimo</strong> + <strong>aviso</strong> (sin válvula ni bomba de relleno automático). En <strong>Sistema → Depósito DWC</strong> puedes activar el seguimiento, elegir el tipo de aviso y una nota breve. Si eliges <strong>recordatorio en calendario</strong>, verás un control diario junto al resto de tareas.',
+    alerta: {
+      tipo: 'ok',
+      txt: '✅ Repone agua a mano; tras grandes aportes, revisa EC y pH antes de asumir que la mezcla sigue bien.',
+    },
+  });
   const difusor = buildConsejosDwcDifusorBloque();
   const med = htmlConsejoCard(cat, {
     icono: '📐',
@@ -1162,7 +1172,7 @@ function buildConsejosDwc() {
     '<div id="mountDwcCestasGuiaConsejos"></div>' +
     '</div>' +
     '</div>';
-  return intro + vol + densidad + nivelDep + difusor + med + extras + tabla;
+  return intro + vol + densidad + nivelDep + nivelMon + difusor + med + extras + tabla;
 }
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */

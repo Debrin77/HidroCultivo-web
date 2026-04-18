@@ -1360,6 +1360,31 @@
             <input type="checkbox" id="sysDwcEntradaAire" class="torre-dwc-check">
             <span>Entrada aire (tapa o borde)</span>
           </label>
+          <div class="torre-dwc-nivel1-block torre-dwc-inner" role="group" aria-labelledby="sysDwcNivel1Legend">
+            <p id="sysDwcNivel1Legend" class="torre-nft-p-soft torre-dwc-nivel1-intro">
+              <strong>Monitor nivel 1</strong> (sin relleno automático): <strong>flotador o sensor de nivel mínimo</strong> en el depósito + <strong>aviso</strong> cuando falte agua (revisión, calendario o alarma externa).
+            </p>
+            <label class="torre-dwc-check-row torre-dwc-check-row--mb6">
+              <input type="checkbox" id="sysDwcNivel1Activo" class="torre-dwc-check"
+                onchange="try{refreshDwcNivel1UI()}catch(e){}">
+              <span>Seguimiento activado (hardware + aviso documentado)</span>
+            </label>
+            <div>
+              <label class="form-label torre-dwc-lbl-mono" for="sysDwcNivel1Aviso">Tipo de aviso</label>
+              <select id="sysDwcNivel1Aviso" class="torre-dwc-input" aria-label="Cómo te avisas si el nivel es bajo"
+                onchange="try{refreshDwcNivel1UI()}catch(e){}">
+                <option value="calendario">Recordatorio en calendario de la app</option>
+                <option value="visual">Revisión visual al pasar (sin recordatorio en app)</option>
+                <option value="alarma">Alarma o aviso externo (SMS, timbre, domótica…)</option>
+                <option value="otro">Otro (detalla en nota)</option>
+              </select>
+            </div>
+            <div>
+              <label class="form-label torre-dwc-lbl-mono" for="sysDwcNivel1Nota">Nota breve (opcional)</label>
+              <input type="text" id="sysDwcNivel1Nota" class="torre-dwc-input" maxlength="120" autocomplete="off"
+                placeholder="Ej. flotador cable negro · mirar LED rojo" aria-label="Nota sobre el monitor de nivel">
+            </div>
+          </div>
           <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaDwcDesdeFormulario()">
             Guardar datos DWC
           </button>

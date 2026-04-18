@@ -1028,6 +1028,9 @@ function textoResumenSistemaDwcPanel(cfg) {
     parts.push('Ø' + Math.round(Number(cfg.dwcNetPotRimMm)) + ' mm');
   }
   parts.push(n + '×' + c + ' macetas');
+  if (cfg.dwcNivel1Activo === true) {
+    parts.push('nivel 1 ✓');
+  }
   return parts.join(' · ');
 }
 
@@ -1336,6 +1339,9 @@ const DWC_FORM_IDS_SISTEMA = {
   rejillaModo: 'sysDwcRejillaPreferida',
   cupulas: 'sysDwcCupulas',
   aire: 'sysDwcEntradaAire',
+  nivel1Activo: 'sysDwcNivel1Activo',
+  nivel1Aviso: 'sysDwcNivel1Aviso',
+  nivel1Nota: 'sysDwcNivel1Nota',
 };
 const DWC_FORM_IDS_SETUP = {
   largo: 'setupDwcLargoCm',

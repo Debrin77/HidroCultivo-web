@@ -733,6 +733,15 @@ function getCLPasos() {
               );
             })(),
         },
+        {
+          id: 'D1',
+          seccion: '📉 DWC — Nivel mínimo (monitorización nivel 1)',
+          paso: 'D·1',
+          desc:
+            'Monta un <strong>flotador o sensor de nivel mínimo</strong> en el depósito y define <strong>cómo te avisará</strong> (revisión, calendario en esta app, alarma externa…). El nivel 1 <strong>no rellena solo</strong>: solo detecta y avisa; tú repone agua y ajustas EC/pH si añades mucho volumen.',
+          nota:
+            'Activa y guarda el seguimiento en <strong>Sistema → Depósito DWC → Monitor nivel 1</strong>. Así queda registrado y el <strong>calendario</strong> puede recordarte el control si eliges «Recordatorio en calendario».',
+        },
       ]
     : [];
 

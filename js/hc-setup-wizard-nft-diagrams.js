@@ -685,6 +685,24 @@ function renderTorreSistemaResumenTabla(cfg) {
       if (cfg.dwcCupulas === true) acc.push('Cúpulas / humedad');
       if (cfg.dwcEntradaAireManguera === true) acc.push('Entrada manguera de aire');
       if (acc.length) rows.push(['Accesorios', escHtmlUi(acc.join(' · '))]);
+      if (cfg.dwcNivel1Activo === true) {
+        const av = cfg.dwcNivel1Aviso;
+        const avTxt =
+          av === 'calendario'
+            ? 'Calendario app'
+            : av === 'visual'
+              ? 'Revisión visual'
+              : av === 'alarma'
+                ? 'Alarma/aviso externo'
+                : av === 'otro'
+                  ? 'Otro'
+                  : 'Calendario app';
+        const nota = cfg.dwcNivel1Nota ? String(cfg.dwcNivel1Nota).trim() : '';
+        rows.push([
+          'Monitor nivel 1 (depósito)',
+          escHtmlUi('Activo · aviso: ' + avTxt + (nota ? ' · ' + nota : '')),
+        ]);
+      }
     }
   }
 
