@@ -43,7 +43,7 @@ function generarEventos(fecha) {
       icono: '📉',
       titulo: 'Nivel depósito DWC (monitor nivel 1)',
       desc:
-        'Revisar flotador/sensor de mínimo y aviso. Si repone agua, comprobar EC/pH si el volumen añadido es grande.',
+        'Mirar el indicador de boya (MIN/MAX) o el nivel en el depósito. Si repone mucha agua, revisar EC/pH.',
     });
   }
 

@@ -1139,10 +1139,10 @@ function buildConsejosDwc() {
     icono: '📉',
     titulo: 'Monitor nivel 1 — depósito',
     texto:
-      '<strong>Nivel 1</strong> en esta app es: <strong>flotador o sensor de nivel mínimo</strong> + <strong>aviso</strong> (sin válvula ni bomba de relleno automático). En <strong>Sistema → Depósito DWC</strong> puedes activar el seguimiento, elegir el tipo de aviso y una nota breve. Si eliges <strong>recordatorio en calendario</strong>, verás un control diario junto al resto de tareas.',
+      '<strong>Nivel 1</strong> aquí significa: en el depósito usas un <strong>indicador de boya</strong> (escala MIN/MAX, lectura <strong>visual</strong>) u otro medio mecánico para ver el nivel; <strong>sin sensores electrónicos ni relleno automático</strong> en la app. En <strong>Sistema → Depósito DWC</strong> documentas que miras ese indicador y <strong>cómo te avisas</strong> (calendario de la app, rutina, etc.).',
     alerta: {
       tipo: 'ok',
-      txt: '✅ Repone agua a mano; tras grandes aportes, revisa EC y pH antes de asumir que la mezcla sigue bien.',
+      txt: '✅ Repone solución a mano según lo que veas en la boya; tras grandes aportes, revisa EC y pH.',
     },
   });
   const difusor = buildConsejosDwcDifusorBloque();

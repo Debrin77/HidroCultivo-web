@@ -699,7 +699,7 @@ function renderTorreSistemaResumenTabla(cfg) {
                   : 'Calendario app';
         const nota = cfg.dwcNivel1Nota ? String(cfg.dwcNivel1Nota).trim() : '';
         rows.push([
-          'Monitor nivel 1 (depósito)',
+          'Monitor nivel 1 (indicador boya)',
           escHtmlUi('Activo · aviso: ' + avTxt + (nota ? ' · ' + nota : '')),
         ]);
       }

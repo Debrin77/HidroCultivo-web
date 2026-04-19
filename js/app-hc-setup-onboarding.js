@@ -225,7 +225,7 @@ function actualizarResumenSetup() {
               ? 'otro (nota en Sistema)'
               : 'calendario app';
     dwcNivel1ResumenLine =
-      '📉 Monitor nivel 1 (depósito): <strong>activo</strong> · aviso: <strong>' + avLbl + '</strong>.<br>';
+      '📉 Monitor nivel 1 (indicador boya): <strong>activo</strong> · aviso: <strong>' + avLbl + '</strong>.<br>';
   }
   if (!isNft && !isDwc) {
     const tObj = (state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final';

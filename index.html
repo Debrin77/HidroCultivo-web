@@ -1362,16 +1362,16 @@
           </label>
           <div class="torre-dwc-nivel1-block torre-dwc-inner" role="group" aria-labelledby="sysDwcNivel1Legend">
             <p id="sysDwcNivel1Legend" class="torre-nft-p-soft torre-dwc-nivel1-intro">
-              <strong>Monitor nivel 1</strong> (sin relleno automático): <strong>flotador o sensor de nivel mínimo</strong> en el depósito + <strong>aviso</strong> cuando falte agua (revisión, calendario o alarma externa).
+              <strong>Monitor nivel 1</strong> (manual, sin relleno automático): indicador de <strong>boya con escala</strong> (lectura <strong>óptica</strong> MIN/MAX en el tubo) o equivalente mecánico. Tú miras el nivel y repone solución; la app solo documenta tu rutina de aviso.
             </p>
             <label class="torre-dwc-check-row torre-dwc-check-row--mb6">
               <input type="checkbox" id="sysDwcNivel1Activo" class="torre-dwc-check"
                 onchange="try{refreshDwcNivel1UI()}catch(e){}">
-              <span>Seguimiento activado (hardware + aviso documentado)</span>
+              <span>Seguimiento activado (indicador de boya + aviso documentado)</span>
             </label>
             <div>
               <label class="form-label torre-dwc-lbl-mono" for="sysDwcNivel1Aviso">Tipo de aviso</label>
-              <select id="sysDwcNivel1Aviso" class="torre-dwc-input" aria-label="Cómo te avisas si el nivel es bajo"
+              <select id="sysDwcNivel1Aviso" class="torre-dwc-input" aria-label="Cómo te recuerdas revisar el indicador de nivel"
                 onchange="try{refreshDwcNivel1UI()}catch(e){}">
                 <option value="calendario">Recordatorio en calendario de la app</option>
                 <option value="visual">Revisión visual al pasar (sin recordatorio en app)</option>
@@ -1382,7 +1382,7 @@
             <div>
               <label class="form-label torre-dwc-lbl-mono" for="sysDwcNivel1Nota">Nota breve (opcional)</label>
               <input type="text" id="sysDwcNivel1Nota" class="torre-dwc-input" maxlength="120" autocomplete="off"
-                placeholder="Ej. flotador cable negro · mirar LED rojo" aria-label="Nota sobre el monitor de nivel">
+                placeholder="Ej. tubo boya lateral · marcar rojo cerca de MIN" aria-label="Nota sobre el monitor de nivel">
             </div>
           </div>
           <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaDwcDesdeFormulario()">

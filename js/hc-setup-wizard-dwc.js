@@ -1571,7 +1571,7 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   } catch (_) {}
 }
 
-/** Habilita aviso y nota solo si el seguimiento nivel 1 está activo (pestaña Sistema DWC). */
+/** Habilita aviso y nota solo si el seguimiento nivel 1 está activo (boya / lectura óptica, pestaña Sistema DWC). */
 function refreshDwcNivel1UI() {
   const act = document.getElementById('sysDwcNivel1Activo');
   const on = act && act.checked === true;
