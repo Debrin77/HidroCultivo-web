@@ -151,6 +151,15 @@ function updateRecargaBar() {
   const notaEl = document.getElementById('recargaNota');
   if (!diasEl || !barEl || !notaEl) return;
 
+  const sysLbl =
+    typeof etiquetaSistemaHidroponicoBreve === 'function'
+      ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
+      : '—';
+  const sisTag = document.getElementById('recargaSistemaTag');
+  const sisNombre = document.getElementById('recargaSistemaNombre');
+  if (sisTag) sisTag.textContent = 'Sistema: ' + sysLbl;
+  if (sisNombre) sisNombre.textContent = sysLbl;
+
   const diasRecarga = 15;
   let diasTranscurridos = 0;
 
@@ -164,16 +173,20 @@ function updateRecargaBar() {
 
   diasEl.textContent = diasRestantes > 0 ? diasRestantes + 'd' : '¡HOY!';
 
+  const sisHint = ' · ' + sysLbl;
   let color, nota;
   if (pct < 60) {
     color = '#16a34a';
-    nota = 'Última recarga completa hace ' + diasTranscurridos + ' días';
+    nota = 'Última recarga completa hace ' + diasTranscurridos + ' días' + sisHint;
   } else if (pct < 85) {
     color = '#d97706';
-    nota = '⚠️ Recarga completa próxima — quedan ~' + diasRestantes + ' días';
+    nota = '⚠️ Recarga completa próxima (' + sysLbl + ') — quedan ~' + diasRestantes + ' días';
   } else {
     color = '#dc2626';
-    nota = '🔴 Recarga completa necesaria' + (diasRestantes === 0 ? ' HOY' : ' en ~' + diasRestantes + ' días');
+    nota =
+      '🔴 Recarga completa necesaria en ' +
+      sysLbl +
+      (diasRestantes === 0 ? ' — HOY' : ' — en ~' + diasRestantes + ' días');
   }
 
   diasEl.style.color = color;
@@ -203,7 +216,10 @@ function updateRecargaBar() {
   if (!state.ultimaRecarga) {
     diasEl.textContent = '—';
     barEl.style.width = '0%';
-    notaEl.textContent = 'Registra cuándo hiciste la última recarga completa (checklist o interruptor al guardar medición).';
+    notaEl.textContent =
+      'Registra cuándo hiciste la última recarga completa en ' +
+      sysLbl +
+      ' (checklist o interruptor al guardar medición).';
     notaEl.style.color = '#6b7280';
   }
 
@@ -223,6 +239,11 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
   const banner = document.getElementById('recargaUrgenteBanner');
   const snoozeHint = document.getElementById('recargaSnoozeHint');
   if (!banner || !snoozeHint) return;
+
+  const sysLbl =
+    typeof etiquetaSistemaHidroponicoBreve === 'function'
+      ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
+      : '';
 
   const snoozeMs = state.recargaSnoozeHasta;
   const snooze = snoozeMs != null && Date.now() < snoozeMs;
@@ -247,17 +268,23 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
   }
 
   banner.style.display = 'block';
+  const pref = sysLbl ? sysLbl + ' — ' : '';
   if (!state.ultimaRecarga && nPlantas > 0) {
     banner.classList.add('bad');
     banner.textContent =
+      pref +
       '⚠️ No hay fecha de recarga completa. Si ya vaciaste y mezclaste de cero → checklist o interruptor «Recarga completa» al guardar. Si solo rellenaste volumen (plantas/evaporación) → reposición parcial; no reinicia este contador.';
   } else if (pct >= 85) {
     banner.classList.add('bad');
     banner.textContent =
-      '🔴 Llevas ' + diasTranscurridos + ' días desde la última recarga completa. ¿Toca vaciar, limpiar y checklist? Si solo faltaba agua en el mismo cultivo, usa reposición parcial.';
+      pref +
+      '🔴 Llevas ' +
+      diasTranscurridos +
+      ' días desde la última recarga completa. ¿Toca vaciar, limpiar y checklist? Si solo faltaba agua en el mismo cultivo, usa reposición parcial.';
   } else {
     banner.classList.remove('bad');
     banner.textContent =
+      pref +
       '⚠️ Pronto toca valorar una recarga completa (' +
       (diasRestantes <= 0 ? 'hoy según calendario' : 'quedan ~' + diasRestantes + ' d') +
       '). Rellenar sin vaciar = reposición parcial.';

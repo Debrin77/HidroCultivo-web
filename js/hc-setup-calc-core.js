@@ -17,6 +17,13 @@ function getNutrienteTorre() {
   return NUTRIENTES_DB.find(n => n.id === id) || NUTRIENTES_DB[0];
 }
 
+function aplicarAjusteEcObjetivoPorInstalacion(ecRange, cfg) {
+  let r = ecRange;
+  if (typeof torreAplicarObjetivoEcRango === 'function') r = torreAplicarObjetivoEcRango(r, cfg);
+  if (typeof dwcAplicarObjetivoEcRango === 'function') r = dwcAplicarObjetivoEcRango(r, cfg);
+  return r;
+}
+
 // EC óptima según cultivos plantados en la torre ACTIVA (no setup)
 function getECOptimaTorre() {
   const cfg = state.configTorre || {};
@@ -35,7 +42,7 @@ function getECOptimaTorre() {
   if (rangos.length === 0) {
     const nut = getNutrienteTorre();
     const base = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400 };
-    return typeof torreAplicarObjetivoEcRango === 'function' ? torreAplicarObjetivoEcRango(base, cfg) : base;
+    return aplicarAjusteEcObjetivoPorInstalacion(base, cfg);
   }
 
   // Con plantas → intersección de rangos
@@ -43,7 +50,7 @@ function getECOptimaTorre() {
   const ecMax = Math.min(...rangos.map(r => r.max));
   if (ecMax >= ecMin + 100) {
     const inter = { min: ecMin, max: ecMax };
-    return typeof torreAplicarObjetivoEcRango === 'function' ? torreAplicarObjetivoEcRango(inter, cfg) : inter;
+    return aplicarAjusteEcObjetivoPorInstalacion(inter, cfg);
   }
 
   // Sin intersección → promedio
@@ -51,7 +58,7 @@ function getECOptimaTorre() {
     min: Math.round(rangos.reduce((s,r) => s+r.min, 0) / rangos.length),
     max: Math.round(rangos.reduce((s,r) => s+r.max, 0) / rangos.length)
   };
-  return typeof torreAplicarObjetivoEcRango === 'function' ? torreAplicarObjetivoEcRango(avg, cfg) : avg;
+  return aplicarAjusteEcObjetivoPorInstalacion(avg, cfg);
 }
 
 /** EC meta (µS/cm) para recarga / checklist: manual en torre o intermedio óptimo automático */
@@ -126,8 +133,8 @@ function getSetupECObjetivo() {
     // Sin cultivos → usar EC del nutriente
     const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
     let out = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400, fuente: 'nutriente' };
-    if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
-      const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+    if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+      const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
       out = { ...out, min: adj.min, max: adj.max };
     }
     return out;
@@ -142,8 +149,8 @@ function getSetupECObjetivo() {
   });
   if (rangos.length === 0) {
     let out = { min: 900, max: 1400, fuente: 'default' };
-    if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
-      const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+    if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+      const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
       out = { ...out, min: adj.min, max: adj.max };
     }
     return out;
@@ -152,8 +159,8 @@ function getSetupECObjetivo() {
   const ecMax = Math.min(...rangos.map(r => r.max));
   if (ecMax >= ecMin + 100) {
     let out = { min: ecMin, max: ecMax, fuente: 'cultivos' };
-    if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
-      const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+    if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+      const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
       out = { ...out, min: adj.min, max: adj.max };
     }
     return out;
@@ -162,8 +169,8 @@ function getSetupECObjetivo() {
   const avgMin = Math.round(rangos.reduce((s,r) => s+r.min,0) / rangos.length);
   const avgMax = Math.round(rangos.reduce((s,r) => s+r.max,0) / rangos.length);
   let out = { min: avgMin, max: avgMax, fuente: 'promedio', advertencia: true };
-  if (setupTipoInstalacion === 'torre' && typeof torreAplicarObjetivoEcRango === 'function') {
-    const adj = torreAplicarObjetivoEcRango(out, state.configTorre || {});
+  if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+    const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
     out = { ...out, min: adj.min, max: adj.max };
   }
   return out;
@@ -600,10 +607,17 @@ function guardarSetupYContinuar() {
   if (isDwc) {
     dwcMergeCamposFormularioEnCfg(state.configTorre, DWC_FORM_IDS_SETUP);
     dwcSincronizarTamanoCestaDesdeRim(state.configTorre);
+    try {
+      dwcSyncVolDepositoDesdeCapacidadEstimada(state.configTorre);
+    } catch (eSync) {}
   }
+  const volEfectivo =
+    isDwc && Number(state.configTorre.volDeposito) > 0
+      ? Number(state.configTorre.volDeposito)
+      : vol;
   const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
-  if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < vol - 0.02) {
-    state.configTorre.volMezclaLitros = Math.min(vol, Math.max(0.5, Math.round(mezParsed * 10) / 10));
+  if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < volEfectivo - 0.02) {
+    state.configTorre.volMezclaLitros = Math.min(volEfectivo, Math.max(0.5, Math.round(mezParsed * 10) / 10));
   } else {
     delete state.configTorre.volMezclaLitros;
   }

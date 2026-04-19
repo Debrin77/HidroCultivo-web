@@ -296,6 +296,9 @@ function cargarEstadoTorre(idx) {
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
   syncRiegoAvanzadoUI();
   if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
+  try {
+    if (typeof updateRecargaBar === 'function') updateRecargaBar();
+  } catch (_) {}
 }
 
 function actualizarHeaderTorre() {
@@ -308,10 +311,13 @@ function actualizarHeaderTorre() {
 }
 
 function textoTipoInstalacionTorre(cfg) {
-  const ti = cfg && cfg.tipoInstalacion;
-  if (ti === 'nft') return 'NFT';
-  if (ti === 'dwc') return 'DWC';
-  return 'Torre vertical';
+  return typeof etiquetaSistemaHidroponicoBreve === 'function'
+    ? etiquetaSistemaHidroponicoBreve(cfg)
+    : (cfg && cfg.tipoInstalacion === 'nft'
+      ? 'NFT'
+      : cfg && cfg.tipoInstalacion === 'dwc'
+        ? 'DWC'
+        : 'Torre vertical');
 }
 
 /** Actualiza el botón de dos líneas (nombre + tipo) de la instalación activa en la pestaña Torre. */
@@ -686,9 +692,17 @@ function programarRecordatorios() {
     const ultima = new Date(state.ultimaRecarga);
     const diasDesde = Math.floor((ahora - ultima) / 86400000);
     if (diasDesde >= 14) {
+      const sis =
+        typeof etiquetaSistemaHidroponicoBreve === 'function'
+          ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
+          : '';
+      const sisTxt = sis ? 'Sistema ' + sis + ': ' : '';
       enviarNotificacion(
-        '💧 HidroCultivo — Recarga completa pendiente',
-        'Han pasado ' + diasDesde + ' días desde la última recarga completa (vaciado + mezcla). Revisa el checklist en la app.',
+        '💧 HidroCultivo — Recarga completa pendiente' + (sis ? ' · ' + sis : ''),
+        sisTxt +
+          'Han pasado ' +
+          diasDesde +
+          ' días desde la última recarga completa (vaciado + mezcla). Revisa el checklist en la app.',
         ''
       );
     }

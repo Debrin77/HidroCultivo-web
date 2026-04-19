@@ -46,7 +46,7 @@ function dwcGetObjetivoSpec(objetivo) {
   if (k === 'baby') {
     return {
       key: 'baby',
-      label: 'Baby leaf / alta densidad',
+      label: 'Alta densidad / baby leaf (cosecha joven)',
       litrosTxt: '1–2 L/planta',
       ccTxt: '8–12 cm',
       ccMinMm: 80,
@@ -55,12 +55,69 @@ function dwcGetObjetivoSpec(objetivo) {
   }
   return {
     key: 'final',
-    label: 'Lechuga final',
+    label: 'Planta adulta (tamaño completo)',
     litrosTxt: '3–5 L/planta',
     ccTxt: '15–25 cm',
     ccMinMm: 150,
     ccMaxMm: 250,
   };
+}
+
+/**
+ * Capacidad útil del depósito DWC (L) desde config guardada (L×A×P cm), sin leer el DOM.
+ */
+function getDwcCapacidadLitrosDesdeConfig(cfg) {
+  cfg = cfg || {};
+  const L = Number(cfg.dwcDepositoLargoCm);
+  const W = Number(cfg.dwcDepositoAnchoCm);
+  const P = Number(cfg.dwcDepositoProfCm);
+  if (!Number.isFinite(L) || !Number.isFinite(W) || !Number.isFinite(P)) return null;
+  if (L < 5 || L > 300 || W < 5 || W > 300 || P < 5 || P > 200) return null;
+  const litros = (L * W * P) / 1000;
+  if (!Number.isFinite(litros) || litros <= 0) return null;
+  return Math.round(litros * 10) / 10;
+}
+
+/** Mantiene volDeposito alineado con L×A×P cuando el usuario guarda sistema DWC. */
+function dwcSyncVolDepositoDesdeCapacidadEstimada(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
+  const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
+  if (cap == null || cap < 1) return;
+  cfg.volDeposito = Math.min(800, Math.max(1, Math.round(cap * 10) / 10));
+}
+
+/**
+ * Volumen efectivo (L) para validar checklist: volDeposito o, en DWC, capacidad por dimensiones.
+ */
+function litrosDepositoParaChecklist(cfg) {
+  cfg = cfg || {};
+  const v = Number(cfg.volDeposito);
+  if (Number.isFinite(v) && v >= 1 && v <= 800) return Math.round(v * 10) / 10;
+  if (cfg.tipoInstalacion === 'dwc') {
+    const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
+    if (cap != null && cap >= 1 && cap <= 800) return cap;
+  }
+  return null;
+}
+
+/**
+ * Ajuste de rango EC por objetivo baby/final en DWC (misma lógica orientativa que torre).
+ */
+function dwcAplicarObjetivoEcRango(ecRange, cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  if (tipoInstalacionNormalizado(c) !== 'dwc') return ecRange;
+  const baseMin = Number(ecRange && ecRange.min);
+  const baseMax = Number(ecRange && ecRange.max);
+  if (!Number.isFinite(baseMin) || !Number.isFinite(baseMax)) return ecRange;
+  const objRaw =
+    objetivo != null
+      ? objetivo
+      : (typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(c) : 'final');
+  const obj = torreNormalizeObjetivoCultivo(objRaw);
+  const adj = torreGetObjetivoAjustes(c, obj);
+  const minAdj = Math.max(350, Math.round(baseMin * adj.ecMult));
+  const maxAdj = Math.max(minAdj + 80, Math.round(baseMax * adj.ecMult));
+  return { min: minAdj, max: maxAdj };
 }
 
 function dwcGrupoObjetivoDesdeConfig(cfg) {
@@ -1842,6 +1899,9 @@ function aplicarSistemaDwcDesdeFormulario() {
   try {
     dwcPersistSnapshotMaxCestasEnCfg(cfg);
   } catch (e0) {}
+  try {
+    dwcSyncVolDepositoDesdeCapacidadEstimada(cfg);
+  } catch (eV) {}
   cfg.uiSistemaDwcColapsado = true;
   guardarEstadoTorreActual();
   saveState();

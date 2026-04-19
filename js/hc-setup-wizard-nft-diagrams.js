@@ -457,7 +457,7 @@ function nftTextoResumenInstalacion(cfg) {
   const objSpec =
     typeof nftGetObjetivoSpec === 'function'
       ? nftGetObjetivoSpec(objNft)
-      : { label: objNft === 'baby' ? 'Baby leaf / alta densidad' : 'Planta completa' };
+      : { label: objNft === 'baby' ? 'Alta densidad / baby leaf (cosecha joven)' : 'Planta adulta (tamaño completo)' };
   let extraDisp = '';
   if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
     extraDisp = ' multinivel ' + hyd.mesaTiers.join('+');
@@ -549,7 +549,7 @@ function renderTorreSistemaResumenTabla(cfg) {
     const objSpec =
       typeof nftGetObjetivoSpec === 'function'
         ? nftGetObjetivoSpec(objNft)
-        : { label: objNft === 'baby' ? 'Baby leaf / alta densidad' : 'Planta completa', densidadTxt: '—', cicloTxt: '—' };
+        : { label: objNft === 'baby' ? 'Alta densidad / baby leaf (cosecha joven)' : 'Planta adulta (tamaño completo)', densidadTxt: '—', cicloTxt: '—' };
     rows.push(['Objetivo cultivo', escHtmlUi(objSpec.label + ' · ' + objSpec.densidadTxt + ' · ' + objSpec.cicloTxt)]);
     const nftRim =
       cfg.nftNetPotRimMm != null && Number(cfg.nftNetPotRimMm) > 0

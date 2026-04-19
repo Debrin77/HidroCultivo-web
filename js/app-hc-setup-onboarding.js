@@ -216,7 +216,7 @@ function actualizarResumenSetup() {
     const tSpec =
       typeof torreGetObjetivoSpec === 'function'
         ? torreGetObjetivoSpec(tObj)
-        : { label: tObj === 'baby' ? 'Baby leaf / alta densidad' : 'Planta completa' };
+        : { label: tObj === 'baby' ? 'Alta densidad / baby leaf (cosecha joven)' : 'Planta adulta (tamaño completo)' };
     geoTorreRes = ' · objetivo ' + tSpec.label;
   }
 

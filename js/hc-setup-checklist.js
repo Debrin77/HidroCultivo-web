@@ -327,7 +327,10 @@ function construirTextoChecklistPreliminar() {
 function checklistInstalacionCompletaParaRecarga() {
   const cfg = state.configTorre;
   if (!cfg || typeof cfg !== 'object') return false;
-  const vol = Number(cfg.volDeposito);
+  const vol =
+    typeof litrosDepositoParaChecklist === 'function'
+      ? litrosDepositoParaChecklist(cfg)
+      : Number(cfg.volDeposito);
   if (!Number.isFinite(vol) || vol < 1 || vol > 800) return false;
   const vm = Number(cfg.volMezclaLitros);
   if (Number.isFinite(vm) && vm > 0 && (vm > vol + 0.01 || vm < 0.5)) return false;
@@ -450,8 +453,16 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
 function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   cerrarOverlayChecklistDatosInstalacion();
   const cfg = state.configTorre || {};
-  const volIni = Number.isFinite(Number(cfg.volDeposito)) && Number(cfg.volDeposito) > 0 ? Math.round(Number(cfg.volDeposito)) : 20;
-  const capRef = Number.isFinite(Number(cfg.volDeposito)) && Number(cfg.volDeposito) > 0 ? Number(cfg.volDeposito) : volIni;
+  const volDesdeCfg =
+    typeof litrosDepositoParaChecklist === 'function'
+      ? litrosDepositoParaChecklist(cfg)
+      : (Number.isFinite(Number(cfg.volDeposito)) && Number(cfg.volDeposito) > 0 ? Number(cfg.volDeposito) : null);
+  const volIni =
+    volDesdeCfg != null && Number.isFinite(volDesdeCfg) && volDesdeCfg > 0
+      ? Math.round(volDesdeCfg)
+      : 20;
+  const capRef =
+    volDesdeCfg != null && Number.isFinite(volDesdeCfg) && volDesdeCfg > 0 ? volDesdeCfg : volIni;
   const vmIniRaw = Number(cfg.volMezclaLitros);
   const mezIni =
     Number.isFinite(vmIniRaw) && vmIniRaw > 0 && vmIniRaw < capRef - 0.02
@@ -702,7 +713,7 @@ function getCLPasos() {
               const spec =
                 typeof dwcGetObjetivoSpec === 'function'
                   ? dwcGetObjetivoSpec(objKey)
-                  : { label: 'Lechuga final', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
+                  : { label: 'Planta adulta (tamaño completo)', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
               const modoPri =
                 typeof dwcGetRejillaModoPreferido === 'function'
                   ? dwcGetRejillaModoPreferido(cfg)
@@ -745,7 +756,7 @@ function getCLPasos() {
       nota: (function () {
         const sp = typeof torreGetObjetivoSpec === 'function' && typeof torreGetObjetivoCultivo === 'function'
           ? torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg))
-          : { label: 'Planta completa', densidadTxt: '15–25 cm c-c', cicloTxt: 'cosecha completa' };
+          : { label: 'Planta adulta (tamaño completo)', densidadTxt: '15–25 cm c-c', cicloTxt: 'cosecha completa' };
         return (
           'Objetivo activo: <strong>' +
           sp.label +

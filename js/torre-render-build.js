@@ -441,7 +441,7 @@ function generarSVGDwc() {
   const objSpec =
     typeof dwcGetObjetivoSpec === 'function' && typeof dwcGetObjetivoCultivo === 'function'
       ? dwcGetObjetivoSpec(dwcGetObjetivoCultivo(cfg))
-      : { label: 'Lechuga final', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
+      : { label: 'Planta adulta (tamaño completo)', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
   const rejModo =
     typeof dwcGetRejillaModoPreferido === 'function'
       ? dwcGetRejillaModoPreferido(cfg)

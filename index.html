@@ -919,10 +919,13 @@
       <!-- Barra recarga depósito (junto al volumen medido) -->
       <div class="recarga-card recarga-card--mt-4" id="recargaCardMediciones">
         <div class="recarga-header">
-          <div class="recarga-title">🔄 Próxima recarga <strong>completa</strong></div>
+          <div class="recarga-header-main">
+            <div class="recarga-title">🔄 Próxima recarga <strong>completa</strong></div>
+            <div class="recarga-sistema-line" id="recargaSistemaTag">Sistema: —</div>
+          </div>
           <div class="recarga-dias" id="recargaDias">—</div>
         </div>
-        <p class="recarga-instalacion-aviso" role="note">Solo para la <strong>instalación activa</strong> (mismo selector que arriba en Mediciones). Si tienes varias, cambia antes de usar el checklist o el interruptor.</p>
+        <p class="recarga-instalacion-aviso" role="note"><strong>Sistema hidropónico (activo):</strong> <span id="recargaSistemaNombre">—</span>. Solo este montaje (mismo selector arriba en Mediciones). Si tienes varias instalaciones, cambia antes del checklist o del interruptor.</p>
         <div class="progress-track">
           <div class="progress-fill-bar" id="recargaBar"></div>
         </div>
@@ -1092,14 +1095,14 @@
       <div id="sistemaTorreObjetivoCard" class="torre-card-elevated setup-hidden">
         <div class="torre-sistema-panel-kicker">Objetivo en torre vertical</div>
         <p class="torre-nft-p torre-objetivo-torre-p">
-          Diferencia si buscas <strong>baby leaf</strong> (más densidad, cosecha joven) o <strong>planta completa</strong> (más espacio por cesta).
+          Diferencia si buscas <strong>baby leaf</strong> (más densidad, cosecha joven) o <strong>planta adulta</strong> (más espacio por cesta).
         </p>
         <div class="torre-dwc-grid-2">
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysTorreObjetivoCultivo">Objetivo de cosecha</label>
             <select id="sysTorreObjetivoCultivo" class="torre-dwc-input" aria-label="Objetivo de cosecha en torre vertical">
-              <option value="final">Planta completa</option>
-              <option value="baby">Baby leaf / alta densidad</option>
+              <option value="final">Planta adulta (tamaño completo)</option>
+              <option value="baby">Alta densidad / baby leaf (cosecha joven)</option>
             </select>
           </div>
           <div class="torre-objetivo-torre-actions">
@@ -1176,8 +1179,8 @@
           <div>
             <label class="form-label torre-nft-label-xs" for="sysNftObjetivoCultivo">Objetivo de cultivo</label>
             <select id="sysNftObjetivoCultivo" class="torre-nft-input-mt" aria-label="Objetivo de cultivo en NFT">
-              <option value="final">Planta completa</option>
-              <option value="baby">Baby leaf / alta densidad</option>
+              <option value="final">Planta adulta (tamaño completo)</option>
+              <option value="baby">Alta densidad / baby leaf (cosecha joven)</option>
             </select>
           </div>
           <div>
@@ -1303,8 +1306,8 @@
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcObjetivoCultivo">Objetivo de cultivo</label>
             <select id="sysDwcObjetivoCultivo" class="torre-dwc-input" aria-label="Objetivo de densidad DWC"
               oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
-              <option value="final">Lechuga final (tamaño completo)</option>
-              <option value="baby">Baby leaf / alta densidad</option>
+              <option value="final">Planta adulta (tamaño completo)</option>
+              <option value="baby">Alta densidad / baby leaf (cosecha joven)</option>
             </select>
           </div>
           <div>
@@ -2370,8 +2373,8 @@
             onchange="try{actualizarResumenSetup()}catch(e){}"
             oninput="try{refreshDwcTapHintSetup()}catch(e){}"
             aria-label="Objetivo de densidad para el DWC del asistente">
-            <option value="final">Lechuga final (tamaño completo)</option>
-            <option value="baby">Baby leaf / alta densidad</option>
+            <option value="final">Planta adulta (tamaño completo)</option>
+            <option value="baby">Alta densidad / baby leaf (cosecha joven)</option>
           </select>
         </div>
         <div>

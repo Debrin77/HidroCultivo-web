@@ -1067,7 +1067,7 @@ function buildConsejosDwc() {
   const objSpec =
     typeof dwcGetObjetivoSpec === 'function'
       ? dwcGetObjetivoSpec(objKey)
-      : { label: 'Lechuga final', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
+      : { label: 'Planta adulta (tamaño completo)', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
   const recoCultivo =
     cfg.tipoInstalacion === 'dwc' && typeof dwcRecomendacionCultivoDesdeConfig === 'function'
       ? dwcRecomendacionCultivoDesdeConfig(cfg)

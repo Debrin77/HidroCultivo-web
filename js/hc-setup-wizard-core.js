@@ -19,6 +19,14 @@ function tipoInstalacionNormalizado(cfg) {
   return 'torre';
 }
 
+/** Etiqueta corta para avisos (recarga, calendario, notificaciones): Torre vertical | NFT | DWC */
+function etiquetaSistemaHidroponicoBreve(cfg) {
+  const t = tipoInstalacionNormalizado(cfg || {});
+  if (t === 'nft') return 'NFT';
+  if (t === 'dwc') return 'DWC';
+  return 'Torre vertical';
+}
+
 function torreNormalizeObjetivoCultivo(raw) {
   const v = String(raw == null ? '' : raw).trim().toLowerCase();
   return v === 'baby' || v === 'babyleaf' || v === 'alta' ? 'baby' : 'final';
@@ -36,14 +44,14 @@ function torreGetObjetivoSpec(objetivo) {
   if (k === 'baby') {
     return {
       key: 'baby',
-      label: 'Baby leaf / alta densidad',
+      label: 'Alta densidad / baby leaf (cosecha joven)',
       densidadTxt: '8–12 cm c-c',
       cicloTxt: 'cosecha joven (aprox. 20–35 días)',
     };
   }
   return {
     key: 'final',
-    label: 'Planta completa',
+    label: 'Planta adulta (tamaño completo)',
     densidadTxt: '15–25 cm c-c',
     cicloTxt: 'cosecha completa (aprox. 35–60 días)',
   };
@@ -141,14 +149,14 @@ function nftGetObjetivoSpec(objetivo) {
   if (k === 'baby') {
     return {
       key: 'baby',
-      label: 'Baby leaf / alta densidad',
+      label: 'Alta densidad / baby leaf (cosecha joven)',
       densidadTxt: '8–12 cm c-c',
       cicloTxt: 'cosecha joven (aprox. 20–35 días)',
     };
   }
   return {
     key: 'final',
-    label: 'Planta completa',
+    label: 'Planta adulta (tamaño completo)',
     densidadTxt: '15–25 cm c-c',
     cicloTxt: 'cosecha completa (aprox. 35–60 días)',
   };
@@ -1226,7 +1234,7 @@ function aplicarSistemaTorreObjetivoDesdeFormulario() {
   saveState();
   try { renderTorreSistemaResumenTabla(state.configTorre); } catch (_) {}
   try { refreshConsejosSiVisible(); } catch (_) {}
-  showToast('Objetivo de torre guardado: ' + (objetivo === 'baby' ? 'Baby leaf' : 'Planta completa'));
+  showToast('Objetivo de torre guardado: ' + (objetivo === 'baby' ? 'Alta densidad / baby leaf' : 'Planta adulta (tamaño completo)'));
 }
 
 /** Desde Sistema: mismo overlay que «configurar», saltando al paso 1 (NFT: canal, tubo Ø, lámina, bomba). */

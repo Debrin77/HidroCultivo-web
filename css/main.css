@@ -2597,8 +2597,23 @@ button.torre-summary:focus-visible,
 .recarga-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 10px;
+}
+.recarga-header-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+  flex: 1;
+  min-width: 0;
+}
+.recarga-sistema-line {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1.25;
 }
 .recarga-title {
   font-family: var(--font-ui);

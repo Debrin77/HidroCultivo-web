@@ -26,6 +26,10 @@ function generarEventos(fecha) {
   d.setHours(0,0,0,0);
   const diffDias = Math.round((d - hoy) / 86400000);
   const tCal = tipoInstalacionNormalizado(state.configTorre || {});
+  const sisLab =
+    typeof etiquetaSistemaHidroponicoBreve === 'function'
+      ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
+      : '';
   const fmtUbicPlantaCal = (n, ci) => formatoUbicacionEnRegistro(tCal, n + 1, ci + 1);
 
   // ── Control diario EC y pH ────────────────────────────────────────────
@@ -43,16 +47,20 @@ function generarEventos(fecha) {
       eventos.push({
         tipo: 'recarga',
         icono: '🔄',
-        titulo: diasDesdeRecarga >= 15 ? '¡Recarga completa del depósito!' : 'Recarga completa próxima',
-        desc: `Día ${diasDesdeRecarga} desde la última recarga completa (vaciado + mezcla). Preparar checklist: agua, CalMag, A+B…`
+        titulo:
+          (diasDesdeRecarga >= 15 ? '¡Recarga completa del depósito!' : 'Recarga completa próxima') +
+          (sisLab ? ' · ' + sisLab : ''),
+        desc: `Día ${diasDesdeRecarga} desde la última recarga completa en ${sisLab || 'el sistema activo'} (vaciado + mezcla). Preparar checklist: agua, CalMag, A+B…`
       });
     }
   } else if (diffDias === 0) {
     eventos.push({
       tipo: 'recarga',
       icono: '🔄',
-      titulo: 'Registra tu última recarga completa',
-      desc: 'En Mediciones: checklist de recarga o interruptor «Recarga completa» al guardar medición. Las reposiciones parciales no cuentan para este recordatorio.'
+      titulo: 'Registra tu última recarga completa' + (sisLab ? ' · ' + sisLab : ''),
+      desc:
+        'En Mediciones: checklist de recarga o interruptor «Recarga completa» al guardar medición. Las reposiciones parciales no cuentan para este recordatorio' +
+        (sisLab ? ' del ' + sisLab + '.' : '.'),
     });
   }
 
@@ -168,6 +176,10 @@ function renderCalendario() {
   const hoy  = new Date();
   const año  = calFecha.getFullYear();
   const mes  = calFecha.getMonth();
+  const sisCal =
+    typeof etiquetaSistemaHidroponicoBreve === 'function'
+      ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
+      : '';
   calMesLabel.textContent = MESES_LARGO[mes] + ' ' + año;
 
   // ── Construir mapa de eventos ────────────────────────────────────────────
@@ -193,7 +205,12 @@ function renderCalendario() {
     for (let i = 0; i <= 8; i++) {
       const rec = new Date(base.getTime() + i * 15 * 86400000);
       if (rec.getMonth() === mes && rec.getFullYear() === año)
-        addEvento(rec.getDate(), 'recarga', '#16a34a', '💧 Recarga completa depósito');
+        addEvento(
+          rec.getDate(),
+          'recarga',
+          '#16a34a',
+          '💧 Recarga completa' + (sisCal ? ' · ' + sisCal : '')
+        );
     }
   }
 
