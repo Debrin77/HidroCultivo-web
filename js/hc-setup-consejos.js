@@ -1132,17 +1132,10 @@ function buildConsejosDwc() {
     icono: '📍',
     titulo: 'Nivel de solución y planta',
     texto:
-      'Orientativo: la plántula suele ir casi al ras del <strong>fondo de la maceta</strong>; con raíces largas cuelgan en líquido <strong>oxigenado</strong>. La app no fija un porcentaje de llenado: lo crítico es el <strong>aireador 24 h</strong>. EC, pH y volumen los controlas en <strong>Mediciones</strong> y en las recargas.',
-    alerta: { tipo: 'info', txt: 'ℹ️ En DWC no hay riego por goteo: el difusor mantiene oxígeno disuelto en el depósito.' },
-  });
-  const nivelMon = htmlConsejoCard(cat, {
-    icono: '📉',
-    titulo: 'Monitor nivel 1 — depósito',
-    texto:
-      '<strong>Nivel 1</strong> aquí significa: en el depósito usas un <strong>indicador de boya</strong> (escala MIN/MAX, lectura <strong>visual</strong>) u otro medio mecánico para ver el nivel; <strong>sin sensores electrónicos ni relleno automático</strong> en la app. En <strong>Sistema → Depósito DWC</strong> documentas que miras ese indicador y <strong>cómo te avisas</strong> (calendario de la app, rutina, etc.).',
+      'Aquí se asume <strong>DWC con aireación continua</strong> (difusor u oxigenador siempre activo): sin eso, las referencias de nivel respecto al sustrato no aplican igual. Orientativo: la plántula suele ir casi al ras del <strong>fondo de la maceta</strong>; con raíces largas cuelgan en líquido oxigenado. La altura de la solución respecto al sustrato depende del <strong>tipo de medio</strong> (esponja, lana de roca, arcilla, etc.) y de la fase del cultivo: <strong>compruébalo</strong> con guías de hidroponía y hojas técnicas en internet u otras fuentes especializadas; esta app no sustituye esas referencias ni fija milímetros. EC, pH y volumen los registras en <strong>Mediciones</strong> y en las recargas.',
     alerta: {
-      tipo: 'ok',
-      txt: '✅ Repone solución a mano según lo que veas en la boya; tras grandes aportes, revisa EC y pH.',
+      tipo: 'info',
+      txt: 'ℹ️ En DWC no hay riego por goteo: el difusor mantiene oxígeno disuelto en todo el depósito. Revisa el sustrato elegido en <strong>Sistema</strong> (referencia) y contrasta el nivel adecuado fuera de la app.',
     },
   });
   const difusor = buildConsejosDwcDifusorBloque();
@@ -1172,7 +1165,7 @@ function buildConsejosDwc() {
     '<div id="mountDwcCestasGuiaConsejos"></div>' +
     '</div>' +
     '</div>';
-  return intro + vol + densidad + nivelDep + nivelMon + difusor + med + extras + tabla;
+  return intro + vol + densidad + nivelDep + difusor + med + extras + tabla;
 }
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */

@@ -1337,9 +1337,6 @@ function refreshDwcSistemaMedidasUI() {
         'Indica L, A y P del depósito o configura el volumen para obtener la recomendación de L/min y difusores.';
     }
   }
-  try {
-    refreshDwcNivel1UI();
-  } catch (_) {}
 }
 
 function refreshDwcTapHintSistema() {
@@ -1463,24 +1460,6 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   if (!cfg.dwcCupulas) delete cfg.dwcCupulas;
   cfg.dwcEntradaAireManguera = document.getElementById(ids.aire)?.checked === true;
   if (!cfg.dwcEntradaAireManguera) delete cfg.dwcEntradaAireManguera;
-  if (ids.nivel1Activo) {
-    const n1On = document.getElementById(ids.nivel1Activo)?.checked === true;
-    if (n1On) cfg.dwcNivel1Activo = true;
-    else delete cfg.dwcNivel1Activo;
-    const elAv = ids.nivel1Aviso ? document.getElementById(ids.nivel1Aviso) : null;
-    const avRaw = elAv && elAv.value ? String(elAv.value).trim() : 'calendario';
-    const av =
-      avRaw === 'visual' || avRaw === 'alarma' || avRaw === 'otro' || avRaw === 'calendario' ? avRaw : 'calendario';
-    if (n1On) cfg.dwcNivel1Aviso = av;
-    else delete cfg.dwcNivel1Aviso;
-    const nota = ids.nivel1Nota
-      ? String(document.getElementById(ids.nivel1Nota)?.value || '')
-          .trim()
-          .slice(0, 120)
-      : '';
-    if (n1On && nota) cfg.dwcNivel1Nota = nota;
-    else delete cfg.dwcNivel1Nota;
-  }
   if (ids.marco && ids.hueco) {
     const mh = _dwcParseMarcoHuecoMmIds(ids.marco, ids.hueco);
     if (mh.marco != null) cfg.dwcTapaMarcoPorLadoMm = mh.marco;
@@ -1556,35 +1535,6 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   if (cu) cu.checked = c.dwcCupulas === true;
   const air = document.getElementById(ids.aire);
   if (air) air.checked = c.dwcEntradaAireManguera === true;
-  if (ids.nivel1Activo) {
-    const n1 = document.getElementById(ids.nivel1Activo);
-    if (n1) n1.checked = c.dwcNivel1Activo === true;
-    if (ids.nivel1Aviso) {
-      const av = c.dwcNivel1Aviso;
-      const ok = av === 'visual' || av === 'alarma' || av === 'otro' || av === 'calendario';
-      setVal(ids.nivel1Aviso, ok ? av : 'calendario');
-    }
-    if (ids.nivel1Nota) setVal(ids.nivel1Nota, c.dwcNivel1Nota || '');
-  }
-  try {
-    refreshDwcNivel1UI();
-  } catch (_) {}
-}
-
-/** Habilita aviso y nota solo si el seguimiento nivel 1 está activo (boya / lectura óptica, pestaña Sistema DWC). */
-function refreshDwcNivel1UI() {
-  const act = document.getElementById('sysDwcNivel1Activo');
-  const on = act && act.checked === true;
-  const sel = document.getElementById('sysDwcNivel1Aviso');
-  const nota = document.getElementById('sysDwcNivel1Nota');
-  if (sel) {
-    sel.disabled = !on;
-    sel.setAttribute('aria-disabled', on ? 'false' : 'true');
-  }
-  if (nota) {
-    nota.disabled = !on;
-    nota.setAttribute('aria-disabled', on ? 'false' : 'true');
-  }
 }
 
 function aplicarSistemaDwcDesdeFormulario() {

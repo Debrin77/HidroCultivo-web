@@ -1360,31 +1360,9 @@
             <input type="checkbox" id="sysDwcEntradaAire" class="torre-dwc-check">
             <span>Entrada aire (tapa o borde)</span>
           </label>
-          <div class="torre-dwc-nivel1-block torre-dwc-inner" role="group" aria-labelledby="sysDwcNivel1Legend">
-            <p id="sysDwcNivel1Legend" class="torre-nft-p-soft torre-dwc-nivel1-intro">
-              <strong>Monitor nivel 1</strong> (manual, sin relleno automático): indicador de <strong>boya con escala</strong> (lectura <strong>óptica</strong> MIN/MAX en el tubo) o equivalente mecánico. Tú miras el nivel y repone solución; la app solo documenta tu rutina de aviso.
-            </p>
-            <label class="torre-dwc-check-row torre-dwc-check-row--mb6">
-              <input type="checkbox" id="sysDwcNivel1Activo" class="torre-dwc-check"
-                onchange="try{refreshDwcNivel1UI()}catch(e){}">
-              <span>Seguimiento activado (indicador de boya + aviso documentado)</span>
-            </label>
-            <div>
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcNivel1Aviso">Tipo de aviso</label>
-              <select id="sysDwcNivel1Aviso" class="torre-dwc-input" aria-label="Cómo te recuerdas revisar el indicador de nivel"
-                onchange="try{refreshDwcNivel1UI()}catch(e){}">
-                <option value="calendario">Recordatorio en calendario de la app</option>
-                <option value="visual">Revisión visual al pasar (sin recordatorio en app)</option>
-                <option value="alarma">Alarma o aviso externo (SMS, timbre, domótica…)</option>
-                <option value="otro">Otro (detalla en nota)</option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcNivel1Nota">Nota breve (opcional)</label>
-              <input type="text" id="sysDwcNivel1Nota" class="torre-dwc-input" maxlength="120" autocomplete="off"
-                placeholder="Ej. tubo boya lateral · marcar rojo cerca de MIN" aria-label="Nota sobre el monitor de nivel">
-            </div>
-          </div>
+          <p class="torre-nft-p-soft torre-dwc-nivel-sustrato-hint">
+            <strong>Altura de solución y sustrato:</strong> en este tipo de DWC se da por hecho que hay <strong>difusor u oxigenador</strong> en marcha de forma continua. Comprueba que el nivel de agua y nutrientes respecto a la base de la cesta sea coherente con el <strong>sustrato</strong> (esponja, lana de roca, arcilla expandida, etc.) y la fase de la planta. Esta app no fija milímetros: contrasta con <strong>guías de cultivo hidropónico</strong> y fabricantes en internet u otras fuentes especializadas.
+          </p>
           <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaDwcDesdeFormulario()">
             Guardar datos DWC
           </button>

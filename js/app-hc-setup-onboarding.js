@@ -211,22 +211,6 @@ function actualizarResumenSetup() {
     if (mhG.marco != null && mhG.marco > 0) geoDwcRes += ' · marco tapa ' + mhG.marco + ' mm/lado';
     if (mhG.hueco != null) geoDwcRes += ' · entre cestas ' + mhG.hueco + ' mm';
   }
-  let dwcNivel1ResumenLine = '';
-  if (isDwc && state.configTorre && state.configTorre.dwcNivel1Activo === true) {
-    const av = state.configTorre.dwcNivel1Aviso;
-    const avLbl =
-      av === 'calendario'
-        ? 'recordatorio en calendario'
-        : av === 'visual'
-          ? 'revisión visual'
-          : av === 'alarma'
-            ? 'aviso externo'
-            : av === 'otro'
-              ? 'otro (nota en Sistema)'
-              : 'calendario app';
-    dwcNivel1ResumenLine =
-      '📉 Monitor nivel 1 (indicador boya): <strong>activo</strong> · aviso: <strong>' + avLbl + '</strong>.<br>';
-  }
   if (!isNft && !isDwc) {
     const tObj = (state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final';
     const tSpec =
@@ -254,7 +238,7 @@ function actualizarResumenSetup() {
           ? '⚡ NFT: circulación <strong>24 h</strong> · criterio bomba/depósito en el paso de equipo y en checklist (veredicto visible; cifras en «detalle técnico»).<br>'
           : '')
       : isDwc
-        ? '🌊 DWC: <strong>' + niveles + ' filas × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>' + dwcNivel1ResumenLine + '⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
+        ? '🌊 DWC: <strong>' + niveles + ' filas × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
         : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoTorreRes + '<br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +

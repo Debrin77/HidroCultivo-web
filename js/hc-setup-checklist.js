@@ -733,15 +733,6 @@ function getCLPasos() {
               );
             })(),
         },
-        {
-          id: 'D1',
-          seccion: '📉 DWC — Nivel mínimo (monitorización nivel 1)',
-          paso: 'D·1',
-          desc:
-            'Instala un <strong>indicador de boya</strong> (tubo con MIN/MAX y marca visible) u otro sistema de <strong>lectura óptica</strong> del nivel: no mide la app ni hay automatismo; tú miras si estás cerca del mínimo y repone solución. Define <strong>cómo te organizas para mirarlo</strong> (revisión al pasar, recordatorio en esta app, alarma externa…).',
-          nota:
-            'Activa y guarda el seguimiento en <strong>Sistema → Depósito DWC → Monitor nivel 1</strong>. Así queda registrado y el <strong>calendario</strong> puede recordarte echar un vistazo si eliges «Recordatorio en calendario».',
-        },
       ]
     : [];
 

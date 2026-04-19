@@ -36,17 +36,6 @@ function generarEventos(fecha) {
     desc: 'Medir EC (objetivo 1300-1400 µS/cm), pH (5.7-6.4) y temperatura del agua (18-22°C).'
   });
 
-  const cfgCal = state.configTorre || {};
-  if (tCal === 'dwc' && cfgCal.dwcNivel1Activo === true && cfgCal.dwcNivel1Aviso === 'calendario') {
-    eventos.push({
-      tipo: 'control',
-      icono: '📉',
-      titulo: 'Nivel depósito DWC (monitor nivel 1)',
-      desc:
-        'Mirar el indicador de boya (MIN/MAX) o el nivel en el depósito. Si repone mucha agua, revisar EC/pH.',
-    });
-  }
-
   // ── Recarga del depósito ──────────────────────────────────────────────
   if (state.ultimaRecarga) {
     const diasDesdeRecarga = Math.round((d - new Date(state.ultimaRecarga)) / 86400000);
