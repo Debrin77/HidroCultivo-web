@@ -641,6 +641,7 @@ function getCLPasos() {
   const nNiv = cfg.numNiveles || NUM_NIVELES;
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esTorre = !esNft && !esDwc;
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
   const nftReco = esNft && typeof nftRecomendacionCultivoDesdeConfig === 'function'
     ? nftRecomendacionCultivoDesdeConfig(cfg)
