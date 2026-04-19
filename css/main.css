@@ -2628,6 +2628,20 @@ button.torre-summary:focus-visible,
   color: var(--green);
   font-variant-numeric: tabular-nums;
 }
+/* Mediciones — bloque «Próxima recarga completa» desplegable */
+.recarga-proxima-main-head {
+  align-items: flex-start;
+  padding: 4px 0 12px;
+  border-radius: 12px;
+}
+.recarga-proxima-main-head .recarga-dias {
+  line-height: 1.15;
+  margin-top: 2px;
+}
+.recarga-card .recarga-proxima-collapse-body {
+  padding-left: 0;
+  padding-right: 0;
+}
 .recarga-instalacion-aviso {
   font-size: 12px;
   line-height: 1.45;

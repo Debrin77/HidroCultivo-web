@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-19-checklist-stack">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-19-recarga-collapse">
 </head>
 <body>
 
@@ -916,15 +916,19 @@
         <div class="correccion-box" id="correccionVol"></div>
       </div>
 
-      <!-- Barra recarga depósito (junto al volumen medido) -->
+      <!-- Barra recarga depósito (junto al volumen medido) — cabecera desplegable -->
       <div class="recarga-card recarga-card--mt-4" id="recargaCardMediciones">
-        <div class="recarga-header">
-          <div class="recarga-header-main">
-            <div class="recarga-title">🔄 Próxima recarga <strong>completa</strong></div>
-            <div class="recarga-sistema-line" id="recargaSistemaTag">Sistema: —</div>
-          </div>
-          <div class="recarga-dias" id="recargaDias">—</div>
-        </div>
+        <button type="button" class="config-section-collapse-head recarga-proxima-main-head" id="btnCollapseRecargaProxima"
+          onclick="toggleMedirCollapse('recargaProxima')"
+          aria-expanded="true" aria-controls="collapseBodyRecargaProxima">
+          <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+          <span class="config-section-collapse-title-wrap">
+            <span class="config-section-collapse-title">🔄 Próxima recarga <strong>completa</strong></span>
+            <span class="recarga-sistema-line" id="recargaSistemaTag">Sistema: —</span>
+          </span>
+          <span class="recarga-dias" id="recargaDias">—</span>
+        </button>
+        <div class="config-section-collapse-body recarga-proxima-collapse-body" id="collapseBodyRecargaProxima">
         <p class="recarga-instalacion-aviso" role="note"><strong>Sistema hidropónico (activo):</strong> <span id="recargaSistemaNombre">—</span>. Solo este montaje (mismo selector arriba en Mediciones). Si tienes varias instalaciones, cambia antes del checklist o del interruptor.</p>
         <div class="progress-track">
           <div class="progress-fill-bar" id="recargaBar"></div>
@@ -993,6 +997,7 @@
             onclick="posponerRecordatorioRecarga()"
             aria-label="Posponer recordatorio de recarga completa">⏰ Recordar mañana</button>
           <div id="recargaSnoozeHint" class="recarga-snooze-hint"></div>
+        </div>
         </div>
       </div>
 
@@ -3512,7 +3517,7 @@
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=1"></script>
   <script src="js/hc-setup-registro.js?v=1"></script>
-  <script src="js/hc-setup-agua-sustrato.js?v=1"></script>
+  <script src="js/hc-setup-agua-sustrato.js?v=2"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=1"></script>
   <script src="js/hc-setup-checklist.js?v=3"></script>
   <script src="js/hc-setup-historial-tabs.js?v=1"></script>

@@ -1050,6 +1050,9 @@ function resolveMedirExpanded(key, humActivo, hwAny) {
   if (key === 'recargaParcial') {
     return ui.recargaParcial !== undefined ? !!ui.recargaParcial : false;
   }
+  if (key === 'recargaProxima') {
+    return ui.recargaProxima !== undefined ? !!ui.recargaProxima : true;
+  }
   if (key === 'interiorGrow') {
     return ui.interiorGrow !== undefined ? !!ui.interiorGrow : true;
   }
@@ -1066,6 +1069,7 @@ function applyMedirCollapseUI() {
 
   const rows = [
     { body: 'collapseBodySensoresAjusteFino', btn: 'btnCollapseSensoresAjusteFino', key: 'sensoresAjusteFino' },
+    { body: 'collapseBodyRecargaProxima', btn: 'btnCollapseRecargaProxima', key: 'recargaProxima' },
     { body: 'collapseBodyRecargaTotal', btn: 'btnCollapseRecargaTotal', key: 'recargaTotal' },
     { body: 'collapseBodyRecargaParcial', btn: 'btnCollapseRecargaParcial', key: 'recargaParcial' }
   ];
