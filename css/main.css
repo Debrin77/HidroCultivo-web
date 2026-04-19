@@ -7805,6 +7805,42 @@ button.config-option {
   height: 16px;
   accent-color: #0891b2;
 }
+.torre-dwc-dist-sistema-mount {
+  margin: 0 0 12px;
+}
+.torre-dwc-llenado-live {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+  background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+.consejo-texto .torre-dwc-llenado-live {
+  margin-top: 4px;
+}
+.torre-dwc-llenado-kicker {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+.torre-dwc-llenado-value {
+  margin: 0 0 8px;
+  font-size: 18px;
+  line-height: 1.25;
+  color: #0c4a6e;
+}
+.torre-dwc-llenado-def {
+  margin: 0 0 6px !important;
+}
+.torre-dwc-llenado-meta {
+  margin: 8px 0 0 !important;
+}
+.torre-dwc-llenado-warn {
+  margin: 6px 0 0 !important;
+  color: #92400e;
+}
 .torre-dwc-save-btn {
   width: 100%;
   padding: 10px 12px;

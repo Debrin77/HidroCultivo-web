@@ -1270,6 +1270,250 @@ function refreshDwcTapHintSetup() {
   }
 }
 
+/** Grupos de cultivo para los que aplica el modelo de distancia (hojas, sin frutos en DWC estándar). */
+function dwcGrupoEnTablaDistancia(grupo) {
+  const g = String(grupo || '')
+    .trim()
+    .toLowerCase();
+  return g === 'lechugas' || g === 'asiaticas' || g === 'hojas' || g === 'hierbas';
+}
+
+/** Perfil «coco fino» frente a esponja / lana / espuma (tabla interna; no se muestra al usuario). */
+function dwcSustratoFamiliaCoco(sustratoKey) {
+  return normalizaSustratoKey(String(sustratoKey || 'esponja')) === 'coco';
+}
+
+function dwcFmtCmComma(n) {
+  const x = Number(n);
+  if (!Number.isFinite(x)) return '—';
+  const s = (Math.round(x * 10) / 10).toFixed(1);
+  return s.replace('.', ',');
+}
+
+function dwcFmtRangoCm(lo, hi) {
+  const a = dwcFmtCmComma(lo);
+  const b = dwcFmtCmComma(hi);
+  return a === b ? a : a + ' – ' + b;
+}
+
+function dwcParseFechaTrasplante(raw) {
+  if (raw == null || raw === '') return null;
+  const s = String(raw).trim();
+  const parts = s.split('/');
+  if (parts.length >= 3) {
+    const d = parseInt(parts[0], 10);
+    const mo = parseInt(parts[1], 10) - 1;
+    const y = parseInt(parts[2], 10);
+    if (Number.isFinite(d) && Number.isFinite(mo) && Number.isFinite(y)) {
+      const dt = new Date(y, mo, d);
+      if (!isNaN(dt.getTime())) return dt;
+    }
+  }
+  const t = new Date(s);
+  if (!isNaN(t.getTime())) return t;
+  return null;
+}
+
+/** Fase derivada de días desde trasplante y ciclo estimado de la variedad. */
+function dwcFaseKeyDesdeDias(dias, diasCiclo) {
+  const d = Math.max(0, Number(dias) || 0);
+  const T = Math.max(21, Number(diasCiclo) || 50);
+  if (d <= 4) return 'recien';
+  if (d <= 12) return 'pequena';
+  const p = d / T;
+  if (p <= 0.42) return 'vegTemprana';
+  if (p <= 0.68) return 'vegMedia';
+  return 'finalHoja';
+}
+
+/**
+ * Rango [min, max] en cm — superficie del nutriente a base del sustrato (sin tabla visible).
+ * fibra: esponja, lana, espuma, mezclas no coco; coco: fibra de coco según CONFIG.
+ */
+function dwcRangoCmPorFaseYFamilia(faseKey, esCoco) {
+  const fibra = {
+    recien: [0, 0.5],
+    pequena: [0.5, 1],
+    vegTemprana: [1, 1.5],
+    vegMedia: [1.5, 2],
+    finalHoja: [2, 3],
+  };
+  const tabCoco = {
+    recien: [0, 0],
+    pequena: [0.5, 0.5],
+    vegTemprana: [1, 1.2],
+    vegMedia: [1.2, 1.8],
+    finalHoja: [1.5, 2.5],
+  };
+  const tab = esCoco ? tabCoco : fibra;
+  return tab[faseKey] || fibra.pequena;
+}
+
+function dwcNombreFase(faseKey) {
+  const m = {
+    recien: 'plántula recién trasplantada',
+    pequena: 'plántula pequeña',
+    vegTemprana: 'vegetativo temprano',
+    vegMedia: 'vegetativo medio',
+    finalHoja: 'final de hoja / pre-cosecha',
+  };
+  return m[faseKey] || faseKey;
+}
+
+/**
+ * HTML: recomendación en vivo de distancia de llenado (nutriente → base sustrato en cesta).
+ * Usa sustrato de la instalación, fichas (variedad + fecha) y DIAS_COSECHA.
+ */
+function dwcHtmlDistanciaLlenadoTiempoReal(cfg) {
+  cfg = cfg || state.configTorre || {};
+  const sKey =
+    typeof normalizaSustratoKey === 'function'
+      ? normalizaSustratoKey(cfg.sustrato || (typeof state !== 'undefined' && state.configSustrato) || 'esponja')
+      : 'esponja';
+  let suNombre = 'Sustrato';
+  try {
+    if (typeof CONFIG_SUSTRATO !== 'undefined' && CONFIG_SUSTRATO[sKey]) suNombre = CONFIG_SUSTRATO[sKey].nombre || sKey;
+  } catch (e) {
+    suNombre = sKey;
+  }
+  const esCoco = dwcSustratoFamiliaCoco(sKey);
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const rangos = [];
+  const sinFecha = [];
+  const fueraPerfil = [];
+
+  const tor = (typeof state !== 'undefined' && state.torre) || [];
+  for (let i = 0; i < tor.length; i++) {
+    const row = tor[i] || [];
+    for (let j = 0; j < row.length; j++) {
+      const c = row[j];
+      if (!c || !c.variedad) continue;
+      const db = typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null;
+      const grupo = db && db.grupo ? String(db.grupo) : '';
+      if (!dwcGrupoEnTablaDistancia(grupo)) {
+        if (fueraPerfil.indexOf(c.variedad) < 0) fueraPerfil.push(c.variedad);
+        continue;
+      }
+      if (!c.fecha) {
+        sinFecha.push({ fila: i + 1, col: j + 1 });
+        continue;
+      }
+      const dt = dwcParseFechaTrasplante(c.fecha);
+      if (!dt) {
+        sinFecha.push({ fila: i + 1, col: j + 1 });
+        continue;
+      }
+      dt.setHours(0, 0, 0, 0);
+      const dias = Math.round((hoy - dt) / 86400000);
+      const diasCiclo =
+        typeof DIAS_COSECHA !== 'undefined' && DIAS_COSECHA[c.variedad] != null
+          ? Number(DIAS_COSECHA[c.variedad])
+          : 50;
+      const fase = dwcFaseKeyDesdeDias(dias, diasCiclo);
+      const r = dwcRangoCmPorFaseYFamilia(fase, esCoco);
+      rangos.push({ r, fase, dias, variedad: c.variedad });
+    }
+  }
+
+  if (rangos.length === 0 && fueraPerfil.length > 0 && sinFecha.length === 0) {
+    return (
+      '<div class="torre-dwc-llenado-live" role="region" aria-label="Llenado DWC">' +
+      '<p class="torre-dwc-llenado-kicker">Llenado · distancia a la base del sustrato</p>' +
+      '<p class="torre-nft-p-soft">La recomendación automática aplica a <strong>cultivos de hoja</strong> (lechuga, asiáticas, hojas, hierbas) con fecha en la ficha. Tus plantas en rejilla son de <strong>otros grupos</strong> (p. ej. frutos): aquí no se calcula ese llenado.</p>' +
+      '<p class="torre-nft-p-soft">Sustrato de referencia en Sistema: <strong>' +
+      (typeof meteoEscHtml === 'function' ? meteoEscHtml(suNombre) : suNombre) +
+      '</strong>.</p>' +
+      '</div>'
+    );
+  }
+
+  let lo;
+  let hi;
+  let detalleFases = '';
+
+  if (rangos.length === 0) {
+    const faseDefault = 'recien';
+    const r0 = dwcRangoCmPorFaseYFamilia(faseDefault, esCoco);
+    lo = r0[0];
+    hi = r0[1];
+    detalleFases =
+      '<p class="torre-nft-p-soft torre-dwc-llenado-meta">Sin <strong>fecha de trasplante</strong> en las fichas de cultivo de hoja, se usa fase «' +
+      dwcNombreFase(faseDefault) +
+      '». Añade la fecha en cada cesta para afinar al día.</p>';
+    if (sinFecha.length) {
+      detalleFases +=
+        '<p class="torre-nft-p-soft torre-dwc-llenado-warn">Hay cestas con cultivo elegido pero <strong>sin fecha</strong>: complétala en la ficha para incluirlas en el cálculo.</p>';
+    }
+  } else {
+    lo = Math.min.apply(
+      null,
+      rangos.map(x => x.r[0])
+    );
+    hi = Math.max.apply(
+      null,
+      rangos.map(x => x.r[1])
+    );
+    const fasesU = {};
+    for (let k = 0; k < rangos.length; k++) {
+      fasesU[rangos[k].fase] = true;
+    }
+    const fLista = Object.keys(fasesU)
+      .map(dwcNombreFase)
+      .join(', ');
+    detalleFases =
+      '<p class="torre-nft-p-soft torre-dwc-llenado-meta">Según <strong>edad</strong> desde el trasplante en tus fichas (cultivos de hoja). Fases consideradas: ' +
+      fLista +
+      '.</p>';
+    if (sinFecha.length) {
+      detalleFases +=
+        '<p class="torre-nft-p-soft torre-dwc-llenado-warn">Quedan cestas con cultivo pero sin fecha: no entran en el rango unido.</p>';
+    }
+  }
+
+  let extraFuera = '';
+  if (fueraPerfil.length) {
+    extraFuera =
+      '<p class="torre-nft-p-soft torre-dwc-llenado-warn">Cultivos fuera de este perfil (p. ej. frutos): ' +
+      fueraPerfil
+        .slice(0, 6)
+        .map(v => (typeof meteoEscHtml === 'function' ? meteoEscHtml(v) : String(v)))
+        .join(', ') +
+      (fueraPerfil.length > 6 ? '…' : '') +
+      '. Para ellos no se aplica esta recomendación de hoja.</p>';
+  }
+
+  const valStr = dwcFmtRangoCm(lo, hi);
+  return (
+    '<div class="torre-dwc-llenado-live" role="region" aria-label="Llenado DWC recomendado">' +
+    '<p class="torre-dwc-llenado-kicker">Llenado · distancia a la base del sustrato (tiempo real)</p>' +
+    '<p class="torre-dwc-llenado-value"><strong>' +
+    valStr +
+    ' cm</strong></p>' +
+    '<p class="torre-nft-p-soft torre-dwc-llenado-def">Medida vertical entre la <strong>superficie del nutriente</strong> y la <strong>base del sustrato</strong> en la cesta de la tapa. Con <strong>difusor u oxigenador</strong> continuo.</p>' +
+    '<p class="torre-nft-p-soft">Sustrato de referencia: <strong>' +
+    (typeof meteoEscHtml === 'function' ? meteoEscHtml(suNombre) : suNombre) +
+    '</strong> · perfil «' +
+    (esCoco ? 'coco' : 'esponja / lana / espuma') +
+    '».</p>' +
+    detalleFases +
+    extraFuera +
+    '</div>'
+  );
+}
+
+function mountDwcDistanciaLlenadoTiempoReal() {
+  const el = document.getElementById('sysDwcDistanciaSustratoWrap');
+  if (!el) return;
+  try {
+    el.innerHTML = dwcHtmlDistanciaLlenadoTiempoReal(state.configTorre);
+  } catch (e) {
+    el.innerHTML =
+      '<p class="torre-nft-p-soft">No se pudo calcular la recomendación de llenado. Revisa sustrato y fichas de cultivo.</p>';
+  }
+}
+
 /** Actualiza volumen estimado (L), oxigenación/difusor (L/min) y aviso de rejilla en la pestaña Sistema DWC. */
 function refreshDwcSistemaMedidasUI() {
   const volEl = document.getElementById('sysDwcVolumenLitrosHint');
@@ -1284,6 +1528,8 @@ function refreshDwcSistemaMedidasUI() {
       oxEl.style.display = 'none';
       oxEl.textContent = '';
     }
+    const distWClear = document.getElementById('sysDwcDistanciaSustratoWrap');
+    if (distWClear) distWClear.innerHTML = '';
     try {
       refreshDwcTapHintSistema();
     } catch (e) {}
@@ -1337,6 +1583,9 @@ function refreshDwcSistemaMedidasUI() {
         'Indica L, A y P del depósito o configura el volumen para obtener la recomendación de L/min y difusores.';
     }
   }
+  try {
+    mountDwcDistanciaLlenadoTiempoReal();
+  } catch (eMnt) {}
 }
 
 function refreshDwcTapHintSistema() {
@@ -1561,4 +1810,15 @@ function aplicarSistemaDwcDesdeFormulario() {
     applySistemaTipoPanelesColapsablesUI();
   } catch (_) {}
 }
+
+(function initDwcDistanciaLlenadoMount() {
+  if (typeof document === 'undefined') return;
+  const run = function () {
+    try {
+      mountDwcDistanciaLlenadoTiempoReal();
+    } catch (e) {}
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+  else run();
+})();
 

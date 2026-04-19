@@ -1128,14 +1128,19 @@ function buildConsejosDwc() {
           : 'ℹ️ Puedes cambiarlo en Sistema o en el asistente DWC.',
     },
   });
+  const panelLlenDw =
+    typeof dwcHtmlDistanciaLlenadoTiempoReal === 'function'
+      ? dwcHtmlDistanciaLlenadoTiempoReal(state.configTorre)
+      : '';
   const nivelDep = htmlConsejoCard(cat, {
-    icono: '📍',
-    titulo: 'Nivel de solución y planta',
+    icono: '📏',
+    titulo: 'Llenado: distancia al sustrato (DWC)',
     texto:
-      'Aquí se asume <strong>DWC con aireación continua</strong> (difusor u oxigenador siempre activo): sin eso, las referencias de nivel respecto al sustrato no aplican igual. Orientativo: la plántula suele ir casi al ras del <strong>fondo de la maceta</strong>; con raíces largas cuelgan en líquido oxigenado. La altura de la solución respecto al sustrato depende del <strong>tipo de medio</strong> (esponja, lana de roca, arcilla, etc.) y de la fase del cultivo: <strong>compruébalo</strong> con guías de hidroponía y hojas técnicas en internet u otras fuentes especializadas; esta app no sustituye esas referencias ni fija milímetros. EC, pH y volumen los registras en <strong>Mediciones</strong> y en las recargas.',
+      panelLlenDw +
+      '<p style="margin:12px 0 0;line-height:1.45;font-size:12px">Modelo para <strong>cultivos de hoja</strong> (lechuga, asiáticas, hojas, hierbas). EC, pH y volumen en <strong>Mediciones</strong> y recargas.</p>',
     alerta: {
       tipo: 'info',
-      txt: 'ℹ️ En DWC no hay riego por goteo: el difusor mantiene oxígeno disuelto en todo el depósito. Revisa el sustrato elegido en <strong>Sistema</strong> (referencia) y contrasta el nivel adecuado fuera de la app.',
+      txt: 'ℹ️ Cálculo en vivo desde sustrato en Sistema + variedad y fecha en cada cesta. Ajusta según observación y temperatura.',
     },
   });
   const difusor = buildConsejosDwcDifusorBloque();
