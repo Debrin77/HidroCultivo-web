@@ -130,34 +130,44 @@ function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
 }
 
 function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
-  aplicarConfigTorre();
+  try {
+    aplicarConfigTorre();
 
-  const clTit = document.getElementById('checklistTitle');
-  if (clTit) {
-    const tCh = tipoInstalacionNormalizado(state.configTorre || {});
-    const titPrimer =
-      tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
-      : tCh === 'dwc' ? '🌊 Primer llenado DWC — checklist'
-      : '🌿 Primer llenado — torre vertical — checklist';
-    const titRecarga =
-      tCh === 'nft' ? '🪴 Recarga NFT — checklist'
-      : tCh === 'dwc' ? '🌊 Recarga DWC — checklist'
-      : '🌿 Recarga — torre vertical — checklist';
-    if (clRutaChecklist === 'primer_llenado') {
-      clTit.textContent = titPrimer;
-    } else {
-      clTit.textContent = titRecarga;
+    const clTit = document.getElementById('checklistTitle');
+    if (clTit) {
+      const tCh = tipoInstalacionNormalizado(state.configTorre || {});
+      const titPrimer =
+        tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
+        : tCh === 'dwc' ? '🌊 Primer llenado DWC — checklist'
+        : '🌿 Primer llenado — torre vertical — checklist';
+      const titRecarga =
+        tCh === 'nft' ? '🪴 Recarga NFT — checklist'
+        : tCh === 'dwc' ? '🌊 Recarga DWC — checklist'
+        : '🌿 Recarga — torre vertical — checklist';
+      if (clRutaChecklist === 'primer_llenado') {
+        clTit.textContent = titPrimer;
+      } else {
+        clTit.textContent = titRecarga;
+      }
     }
+
+    const closeBtn = document.getElementById('checklistCloseBtn');
+    if (closeBtn) closeBtn.style.display = esPrimeraVez ? 'none' : 'flex';
+
+    restaurarClCheckedDesdeEstado();
+    renderChecklist();
+    const co = document.getElementById('checklistOverlay');
+    if (!co) {
+      showToast('No se pudo abrir el checklist (interfaz). Recarga la página si persiste.', true);
+      return;
+    }
+    co.classList.add('open');
+    updateClProgress();
+    a11yDialogOpened(co);
+  } catch (e) {
+    console.error('abrirChecklistDespuesDeElegirRuta', e);
+    showToast('Error al abrir el checklist: ' + (e && e.message ? e.message : 'desconocido'), true);
   }
-
-  document.getElementById('checklistCloseBtn').style.display = esPrimeraVez ? 'none' : 'flex';
-
-  restaurarClCheckedDesdeEstado();
-  renderChecklist();
-  const co = document.getElementById('checklistOverlay');
-  co.classList.add('open');
-  updateClProgress();
-  a11yDialogOpened(co);
 }
 
 // Definición de pasos del checklist

@@ -5426,8 +5426,8 @@ button.dia-card {
   position: fixed;
   inset: 0;
   background: var(--bg);
-  /* Por encima de toasts (~9600), preguntas post-asistente (~9999) y modales ctp (~850); por debajo del asistente (10200) y bienvenida (12000) */
-  z-index: 10100;
+  /* Por encima del asistente (10200), bienvenida (12000) y toasts — si no, el checklist queda invisible y parece que vuelve a Inicio */
+  z-index: 12500;
   /* sombra suave en tema claro */
   display: none;
   flex-direction: column;
@@ -5707,7 +5707,7 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
-  z-index: 9999;
+  z-index: 12540;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -5883,10 +5883,10 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   padding: 12px;
   padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
 }
-.checklist-dark-overlay--ruta { z-index: 10030; }
-.checklist-dark-overlay--datos { z-index: 10020; }
+.checklist-dark-overlay--ruta { z-index: 12560; }
+.checklist-dark-overlay--datos { z-index: 12560; }
 .checklist-dark-overlay--tabla {
-  z-index: 10085;
+  z-index: 12570;
   align-items: center;
 }
 .checklist-dark-sheet {

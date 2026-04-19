@@ -31,9 +31,9 @@ function lanzarSetupOChecklistSiCorresponde() {
   const esPrimeraVez = !hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
   if (esPrimeraVez) {
     setTimeout(() => abrirSetup(), 450);
-  } else if (hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas) {
-    setTimeout(() => abrirChecklist(true), 450);
   }
+  // No abrir el checklist automáticamente en cada arranque (molestaba y el modal podía quedar bajo otros velos).
+  // Sigue disponible en Inicio → Iniciar recarga e Historial → Checklist.
 }
 
 function mostrarBienvenidaOContinuarArranque() {
