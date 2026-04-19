@@ -180,14 +180,25 @@ function generarPasosNutriente() {
   const suf    = dosisSufijoNutriente(nut);
   const pasos  = [];
   const esDwcNut = cfg.tipoInstalacion === 'dwc';
+  const faPl = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
+  const notaArranquePl =
+    faPl < 1
+      ? ' Plántulas en hidro (primeras ~12 d): dosis iniciales atenuadas (~' +
+        Math.round((1 - faPl) * 100) +
+        '%) respecto a planta establecida; sube según observación.'
+      : '';
 
   // PASO 4.2 — CalMag (solo si el usuario / agua lo activan)
   if (usarCalMagEnRecarga() && mlCM > 0) {
     pasos.push({
       id:'4.2', seccion:null, paso:'4.2',
       desc: 'Añadir CalMag: ' + mlCM + ' ml — remover 2 min',
-      nota: 'Con agua destilada u ósmosis el objetivo es ~' + EC_CALMAG_BASE + ' µS/cm (~' + (EC_CALMAG_BASE / 1000).toFixed(2) + ' mS/cm). Tras estos ml: ~' + ecCM + ' µS estimados. Con grifo, valorar si hace falta.' +
-        (cfg.agua === 'grifo' ? ' Con agua del grifo, verificar si es necesario.' : ''),
+      nota:
+        (faPl < 1
+          ? 'Arranque suave: menos CalMag que en mezcla «adulta»; tras estos ml: ~' + ecCM + ' µS estimados. '
+          : 'Con agua destilada u ósmosis el objetivo habitual es ~' + EC_CALMAG_BASE + ' µS/cm (~' + (EC_CALMAG_BASE / 1000).toFixed(2) + ' mS/cm). Tras estos ml: ~' + ecCM + ' µS estimados. ') +
+        (cfg.agua === 'grifo' ? 'Con agua del grifo, verificar si es necesario.' : '') +
+        notaArranquePl,
       campos: [
         { id:'clCalmagMl', label:'ml CalMag:', type:'number', step:'0.1', placeholder: String(mlCM) },
         { id:'clEcCalMag', label:'EC tras CalMag:', unit:'µS/cm', type:'number', step:'1', placeholder: String(ecCM) }
@@ -201,7 +212,7 @@ function generarPasosNutriente() {
       id:'4.3', seccion:null, paso:'4.3', alert:true,
       desc: 'Añadir ' + orden[0] + ': ' + mlP0 + suf + ' — remover 3 min',
       nota: 'Dosis recomendada: ' + nut.dosis.recomendado + ' ' + nut.dosis.unidad +
-        '. EC objetivo: ' + ecFinal + ' µS/cm.',
+        '. EC objetivo: ' + ecFinal + ' µS/cm.' + notaArranquePl,
       campos:[{ id:'clEcAB', label:'EC tras mezcla:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 2) {
@@ -211,12 +222,13 @@ function generarPasosNutriente() {
       nota: '⚠️ NUNCA mezclar ' + orden[0] + ' y ' + orden[1] + ' puros — añade la primera parte, remueve, luego la segunda. La EC útil es tras las dos partes (paso 4.4).' +
         (refNut.mlPorLitro.length >= 2 && Math.abs(refNut.mlPorLitro[0] - refNut.mlPorLitro[1]) < 1e-6
           ? ' Cantidades calculadas para ~' + ecFinal + ' µS/cm tras CalMag (modelo orientativo).'
-          : ''),
+          : '') +
+        notaArranquePl,
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
       desc: 'Agitar ' + orden[1] + '. Añadir ' + mlP1 + suf + ' — remover 3 min',
-      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.',
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaArranquePl,
       campos:[{ id:'clEcAB', label:'EC tras mezcla completa (A+B):', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 3) {
@@ -232,7 +244,7 @@ function generarPasosNutriente() {
     pasos.push({
       id:'4.4b', seccion:null, paso:'4.4b',
       desc: 'Añadir ' + orden[2] + ': ' + mlP2 + suf + ' — remover 3 min',
-      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.',
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaArranquePl,
       campos:[{ id:'clEcAB', label:'EC tras mezcla completa:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   }
@@ -343,7 +355,22 @@ function checklistInstalacionCompletaParaRecarga() {
   const hayUso =
     !!(state.ultimaRecarga || state.ultimaMedicion) ||
     getNivelesActivos().some(n => (state.torre[n] || []).some(c => c && c.variedad));
-  return hayUso;
+  if (hayUso) return true;
+
+  // DWC: depósito y nutriente ya guardados en Sistema (sin medición previa ni plantas) — permitir checklist
+  if (cfg.tipoInstalacion === 'dwc') {
+    const cap =
+      typeof getDwcCapacidadLitrosDesdeConfig === 'function'
+        ? getDwcCapacidadLitrosDesdeConfig(cfg)
+        : null;
+    const volManual = Number(cfg.volDeposito);
+    const dwcVolOk =
+      (cap != null && cap >= 1) ||
+      (Number.isFinite(volManual) && volManual >= 1 && volManual <= 800);
+    if (dwcVolOk) return true;
+  }
+
+  return false;
 }
 
 function cerrarOverlayChecklistDatosInstalacion() {

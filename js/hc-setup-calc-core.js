@@ -61,6 +61,36 @@ function getECOptimaTorre() {
   return aplicarAjusteEcObjetivoPorInstalacion(avg, cfg);
 }
 
+/** Días desde el trasplante/germinación en registro: menor valor entre todas las plantas con fecha. */
+function getMenorDiasDesdeTrasplanteEnTorreActiva() {
+  let best = Infinity;
+  try {
+    const tor = state.torre || [];
+    for (let n = 0; n < tor.length; n++) {
+      const row = tor[n] || [];
+      for (let i = 0; i < row.length; i++) {
+        const c = row[i];
+        if (!c || !c.variedad || !c.fecha) continue;
+        const ms = new Date(c.fecha).getTime();
+        if (!Number.isFinite(ms)) continue;
+        const d = Math.floor((Date.now() - ms) / 86400000);
+        if (d >= 0) best = Math.min(best, d);
+      }
+    }
+  } catch (_) {}
+  return best === Infinity ? null : best;
+}
+
+/** ~12 días tras plantar: reduce EC meta y CalMag (arranque suave en hidro). Sin plantas con fecha → 1. */
+const DIAS_ARRANQUE_PLANTULA_HIDRO = 12;
+
+function getFactorArranquePlantulaHidro() {
+  const d = getMenorDiasDesdeTrasplanteEnTorreActiva();
+  if (d == null || d > DIAS_ARRANQUE_PLANTULA_HIDRO) return 1;
+  const t = d / DIAS_ARRANQUE_PLANTULA_HIDRO;
+  return Math.max(0.52, Math.min(1, 0.52 + t * 0.48));
+}
+
 /** EC meta (µS/cm) para recarga / checklist: manual en torre o intermedio óptimo automático */
 function getRecargaEcMetaMicroS() {
   const cfg = state.configTorre || {};
@@ -69,7 +99,13 @@ function getRecargaEcMetaMicroS() {
     return Math.round(manual);
   }
   const o = getECOptimaTorre();
-  return Math.round((o.min + o.max) / 2);
+  let meta = Math.round((o.min + o.max) / 2);
+  const fa = getFactorArranquePlantulaHidro();
+  if (fa < 1) {
+    meta = Math.round(meta * fa);
+    meta = Math.max(320, meta);
+  }
+  return meta;
 }
 
 /**
@@ -657,15 +693,25 @@ function guardarSetupYContinuar() {
       modoActual: 'lechuga',
       mediciones: [],
       registro: [],
+      ultimaMedicion: null,
+      ultimaRecarga: null,
+      recargaSnoozeHasta: null,
       fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
     };
     if (!state.torres) state.torres = [];
     state.torres.push(nuevaTorre);
     const newIdx = state.torres.length - 1;
     state.torreActiva = newIdx;
-    state.torre       = nuevaTorre.torre;
-    state.mediciones  = [];
-    state.registro    = [];
+    try {
+      cargarEstadoTorre(newIdx);
+    } catch (eCarga) {
+      state.torre = nuevaTorre.torre;
+      state.mediciones = [];
+      state.registro = [];
+      state.ultimaMedicion = null;
+      state.ultimaRecarga = null;
+      state.recargaSnoozeHasta = null;
+    }
   } else {
     // ── RECONFIGURAR TORRE EXISTENTE ──────────────────────────────────────
     const tIdx = state.torreActiva || 0;
@@ -697,12 +743,16 @@ function preguntarIniciarChecklist() {
   const volMax     = getVolumenDepositoMaxLitros(cfg);
   const vol        = getVolumenMezclaLitros(cfg);
   const ecObj      = getECOptimaTorre();
+  const faArr      = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
+  const ecMetaRec  = typeof getRecargaEcMetaMicroS === 'function' ? getRecargaEcMetaMicroS() : Math.round((ecObj.min + ecObj.max) / 2);
 
   const mlCalMag   = calcularMlCalMag();
   const ecCalMag   = estimarEcCalMagMicroS(mlCalMag, vol);
   const orden      = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B','Parte C'];
   const mlCadaParte = [];
-  for (let i = 0; i < (nut.partes || 2); i++) mlCadaParte.push(mlNutrientePorParte(nut.id, i, vol));
+  for (let i = 0; i < (nut.partes || 2); i++) {
+    mlCadaParte.push(typeof calcularMlParteNutriente === 'function' ? calcularMlParteNutriente(i) : mlNutrientePorParte(nut.id, i, vol));
+  }
 
   let dosisLineas = '';
   if (mlCalMag > 0) {
@@ -761,7 +811,9 @@ function preguntarIniciarChecklist() {
           '</div>' +
           '<div class="checklist-pregunta-subtitle">' +
             (vol < volMax - 0.05 ? vol + ' L mezcla · máx ' + volMax + ' L · ' : vol + ' L · ') +
-            'EC objetivo ' + ecObj.min + '–' + ecObj.max + ' µS/cm' +
+            (faArr < 1
+              ? 'EC orientativa recarga ~' + ecMetaRec + ' µS/cm (arranque plántula; rango cultivo ' + ecObj.min + '–' + ecObj.max + ')'
+              : 'EC objetivo ' + ecObj.min + '–' + ecObj.max + ' µS/cm') +
           '</div>' +
         '</div>' +
       '</div>' +

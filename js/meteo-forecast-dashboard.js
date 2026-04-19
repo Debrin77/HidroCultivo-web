@@ -8,6 +8,12 @@
 // ══════════════════════════════════════════════════
 
 function updateDashboard() {
+  try {
+    if (typeof sincronizarUltimaMedicionYRecargaDesdeTorreActiva === 'function') {
+      sincronizarUltimaMedicionYRecargaDesdeTorreActiva();
+    }
+  } catch (eSync) {}
+
   // Fecha y saludo
   const now = new Date();
   const hora = now.getHours();

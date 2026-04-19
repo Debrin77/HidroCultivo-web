@@ -57,6 +57,36 @@ function getTorreActiva() {
   return state.torres[idx] || state.torres[0];
 }
 
+/**
+ * Alinea `state.ultimaMedicion`, recarga y snooze con el **slot** de la instalación activa.
+ * Evita mostrar en Inicio datos de otra instalación si el estado global quedó desincronizado.
+ */
+function sincronizarUltimaMedicionYRecargaDesdeTorreActiva() {
+  initTorres();
+  const idx = state.torreActiva || 0;
+  const t = state.torres && state.torres[idx];
+  if (!t) return;
+  const umSlot = t.ultimaMedicion;
+  if (umSlot && typeof umSlot === 'object') {
+    state.ultimaMedicion = { ...umSlot };
+  } else {
+    const med0 = (t.mediciones || []).find(m => m && (m.tipo === 'medicion' || !m.tipo));
+    state.ultimaMedicion = med0
+      ? {
+          fecha: med0.fecha,
+          hora: med0.hora,
+          ec: med0.ec,
+          ph: med0.ph,
+          temp: med0.temp,
+          vol: med0.vol,
+          humSustrato: med0.humSustrato,
+        }
+      : null;
+  }
+  state.ultimaRecarga = t.ultimaRecarga != null ? t.ultimaRecarga : null;
+  state.recargaSnoozeHasta = t.recargaSnoozeHasta != null ? t.recargaSnoozeHasta : null;
+}
+
 
 // Actualizar todos los datos de la torre activa
 function actualizarTorreActual() {

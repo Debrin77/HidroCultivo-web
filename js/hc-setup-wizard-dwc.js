@@ -86,6 +86,17 @@ function dwcSyncVolDepositoDesdeCapacidadEstimada(cfg) {
   cfg.volDeposito = Math.min(800, Math.max(1, Math.round(cap * 10) / 10));
 }
 
+/** Si había litros de mezcla guardados con otro máximo, recortar al depósito actual (evita fallo en checklist). */
+function dwcClampVolMezclaACapacidadDeposito(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
+  const vmax = Number(cfg.volDeposito);
+  if (!Number.isFinite(vmax) || vmax < 1) return;
+  const vm = Number(cfg.volMezclaLitros);
+  if (Number.isFinite(vm) && vm > 0 && vm > vmax + 0.01) {
+    cfg.volMezclaLitros = Math.round(vmax * 10) / 10;
+  }
+}
+
 /**
  * Volumen efectivo (L) para validar checklist: volDeposito o, en DWC, capacidad por dimensiones.
  */
@@ -1902,6 +1913,16 @@ function aplicarSistemaDwcDesdeFormulario() {
   try {
     dwcSyncVolDepositoDesdeCapacidadEstimada(cfg);
   } catch (eV) {}
+  try {
+    dwcClampVolMezclaACapacidadDeposito(cfg);
+  } catch (eM) {}
+  if (
+    cfg.nutriente &&
+    typeof litrosDepositoParaChecklist === 'function' &&
+    litrosDepositoParaChecklist(cfg) != null
+  ) {
+    cfg.checklistInstalacionConfirmada = true;
+  }
   cfg.uiSistemaDwcColapsado = true;
   guardarEstadoTorreActual();
   saveState();

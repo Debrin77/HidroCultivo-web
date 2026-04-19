@@ -96,7 +96,12 @@ function calcularMlCalMag() {
   if (!nut.calmagNecesario) return 0;
   const cfg = state.configTorre || {};
   const volObj = getVolumenMezclaLitros(cfg);
-  return mlCalMagParaAguaBlanda(volObj);
+  let ml = mlCalMagParaAguaBlanda(volObj);
+  if (typeof getFactorArranquePlantulaHidro === 'function') {
+    const fa = getFactorArranquePlantulaHidro();
+    if (fa < 1) ml = Math.round(ml * fa * 10) / 10;
+  }
+  return ml;
 }
 
 function calcularDescAB(parte) {
