@@ -37,8 +37,7 @@ function resetApp() {
   initConfigUI();
   goTab('inicio');
 
-  showToast('🔄 Sistema reseteado');
-  setTimeout(() => abrirChecklist(true), 1000);
+  showToast('🔄 Sistema reseteado · el checklist se abre solo desde Inicio o Historial cuando lo necesites');
 }
 
 function initApp() {

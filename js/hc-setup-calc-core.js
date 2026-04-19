@@ -899,7 +899,6 @@ function preguntarIniciarChecklist() {
     a11yDialogClosed(overlay);
     overlay.remove();
     showToast('✅ ' + nombreTorre + ' lista · Checklist en pestaña Historial cuando quieras');
-    goTab('inicio');
   });
   } catch(e) {
     console.error('preguntarIniciarChecklist error:', e);

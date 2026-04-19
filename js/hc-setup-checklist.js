@@ -72,8 +72,9 @@ function limpiarClChecklistAvanceActual() {
   if (o && Object.keys(o).length === 0) delete state.configTorre.checklistAvancePorRuta;
 }
 
-function debePreguntarRutaChecklist(esPrimeraVezApp) {
-  return !!esPrimeraVezApp || !state.ultimaRecarga;
+/** Solo hasta registrar la primera recarga completa; no depende de «primera vez en app» (evita modal fantasma al arrancar). */
+function debePreguntarRutaChecklist() {
+  return !state.ultimaRecarga;
 }
 
 function cerrarOverlayRutaChecklistRecarga() {
@@ -129,8 +130,15 @@ function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
   });
 }
 
+/** El nodo debe ser el último hijo de body para ganar el apilamiento frente a #app / velos. */
+function ensureChecklistOverlayLastInBody() {
+  const co = document.getElementById('checklistOverlay');
+  if (co && co.parentNode) document.body.appendChild(co);
+}
+
 function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
   try {
+    ensureChecklistOverlayLastInBody();
     aplicarConfigTorre();
 
     const clTit = document.getElementById('checklistTitle');
@@ -614,7 +622,6 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   document.getElementById('cldBtnDespues').addEventListener('click', () => {
     cerrarOverlayChecklistDatosInstalacion();
     showToast('Cuando quieras: Historial → checklist o Inicio → recarga');
-    if (esPrimeraVezChecklist) try { goTab('inicio'); } catch (e) {}
   });
 }
 
@@ -1121,6 +1128,7 @@ function getCLTotal() { return getCLPasos().length; }
  */
 function abrirChecklist(esPrimeraVez = false, opts) {
   clEsPrimeraVez = esPrimeraVez;
+  ensureChecklistOverlayLastInBody();
   const saltarPreguntaRuta = !!(opts && opts.saltarPreguntaRuta);
 
   if (!checklistInstalacionCompletaParaRecarga()) {
@@ -1128,7 +1136,7 @@ function abrirChecklist(esPrimeraVez = false, opts) {
     return;
   }
 
-  if (!saltarPreguntaRuta && debePreguntarRutaChecklist(esPrimeraVez)) {
+  if (!saltarPreguntaRuta && debePreguntarRutaChecklist()) {
     mostrarOverlayRutaChecklistRecarga(esPrimeraVez);
     return;
   }
@@ -1568,8 +1576,5 @@ async function finalizarChecklist() {
       abrirModalConsejosTablaPersonal(volFinal);
     } catch (e) { console.error(e); }
   }
-
-  // Si era primera vez, ir al dashboard
-  if (clEsPrimeraVez) goTab('inicio');
 }
 
