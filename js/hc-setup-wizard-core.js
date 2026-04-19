@@ -1028,7 +1028,12 @@ function textoResumenSistemaDwcPanel(cfg) {
     parts.push('Ø' + Math.round(Number(cfg.dwcNetPotRimMm)) + ' mm');
   }
   parts.push(n + '×' + c + ' macetas');
-  return parts.join(' · ');
+  let line = parts.join(' · ');
+  if (typeof dwcTextoResumenLlenadoCm === 'function') {
+    const ll = dwcTextoResumenLlenadoCm(cfg);
+    if (ll) line += ll;
+  }
+  return line;
 }
 
 function applySistemaTipoPanelesColapsablesUI() {

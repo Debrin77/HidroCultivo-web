@@ -1299,9 +1299,6 @@
                 oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
             </div>
           </div>
-          <p class="torre-nft-p-soft torre-dwc-cesta-mm-hint">
-            Referencia de cestas (net pot), alineada con el asistente: <strong>27–50 mm</strong> habitual u otro valor en mm (<strong>personalizado</strong>).
-          </p>
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcObjetivoCultivo">Objetivo de cultivo</label>
             <select id="sysDwcObjetivoCultivo" class="torre-dwc-input" aria-label="Objetivo de densidad DWC"
@@ -1331,17 +1328,14 @@
             Aplicar rejilla máxima (tapa)
           </button>
           <div id="sysDwcRejillaVoluntariaWrap" class="torre-dwc-voluntaria-rejilla setup-hidden">
-            <p class="torre-dwc-voluntaria-intro">
-              O elige tú el <strong>total de macetas</strong> (opcional): se reparten en filas × columnas de forma <strong>proporcional al rectángulo útil de la tapa</strong> (largo / ancho), sin superar el máximo que cabe físicamente.
-            </p>
             <div class="torre-dwc-grid-2">
               <div>
-                <label class="form-label torre-dwc-lbl-mono" for="sysDwcMacetasTotalesDeseadas">Total macetas</label>
-                <input type="number" id="sysDwcMacetasTotalesDeseadas" class="torre-dwc-input" min="1" max="144" step="1" placeholder="ej. 12"
-                  inputmode="numeric" autocomplete="off" aria-label="Número total de macetas en la tapa">
+                <label class="form-label torre-dwc-lbl-mono" for="sysDwcMacetasTotalesDeseadas">Total macetas en tapa</label>
+                <input type="number" id="sysDwcMacetasTotalesDeseadas" class="torre-dwc-input" min="1" max="144" step="1" placeholder="—"
+                  inputmode="numeric" autocomplete="off" aria-label="Total de macetas a repartir en la tapa">
               </div>
               <div class="torre-dwc-voluntaria-rejilla-btn-wrap">
-                <span class="visually-hidden">Aplicar rejilla por total de macetas</span>
+                <span class="visually-hidden">Repartir en la tapa</span>
                 <button type="button" class="torre-dwc-apply-grid-btn" id="btnDwcAplicarRejillaVoluntaria" disabled
                   onclick="aplicarDwcRejillaVoluntariaDesdeFormularioSistema()"
                   aria-label="Repartir en la tapa el total de macetas indicado">
@@ -1360,7 +1354,8 @@
             <input type="checkbox" id="sysDwcEntradaAire" class="torre-dwc-check">
             <span>Entrada aire (tapa o borde)</span>
           </label>
-          <div id="sysDwcDistanciaSustratoWrap" class="torre-dwc-dist-sistema-mount" aria-label="Llenado DWC: distancia nutriente a base del sustrato según fichas"></div>
+          <p class="torre-dwc-llenado-section-label">Distancia de llenado (nutriente → base del sustrato, <strong>cm</strong>)</p>
+          <div id="sysDwcDistanciaSustratoWrap" class="torre-dwc-dist-sistema-mount" aria-label="Llenado DWC: distancia en cm del nutriente a la base del sustrato según fichas"></div>
           <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaDwcDesdeFormulario()">
             Guardar datos DWC
           </button>

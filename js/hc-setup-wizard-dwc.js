@@ -1009,13 +1009,19 @@ function refreshDwcMaxCestasHintSistema() {
       hintVol.textContent = '';
     }
   };
-  if (!el || !cfg || cfg.tipoInstalacion !== 'dwc') {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') {
     if (el) {
       el.classList.add('setup-hidden');
       el.textContent = '';
     }
-    if (btnPri) { btnPri.classList.add('setup-hidden'); btnPri.disabled = true; }
-    if (btnSec) { btnSec.classList.add('setup-hidden'); btnSec.disabled = true; }
+    if (btnPri) {
+      btnPri.classList.add('setup-hidden');
+      btnPri.disabled = true;
+    }
+    if (btnSec) {
+      btnSec.classList.add('setup-hidden');
+      btnSec.disabled = true;
+    }
     if (hintPri) {
       hintPri.classList.add('setup-hidden');
       hintPri.textContent = '';
@@ -1029,10 +1035,18 @@ function refreshDwcMaxCestasHintSistema() {
   } catch (eM) {}
   const o = dwcMaxCestasDesdeConfigTorre(cfgCalc);
   if (!o || o.max < 1) {
-    el.classList.add('setup-hidden');
-    el.textContent = '';
-    if (btnPri) { btnPri.classList.add('setup-hidden'); btnPri.disabled = true; }
-    if (btnSec) { btnSec.classList.add('setup-hidden'); btnSec.disabled = true; }
+    if (el) {
+      el.classList.add('setup-hidden');
+      el.textContent = '';
+    }
+    if (btnPri) {
+      btnPri.classList.add('setup-hidden');
+      btnPri.disabled = true;
+    }
+    if (btnSec) {
+      btnSec.classList.add('setup-hidden');
+      btnSec.disabled = true;
+    }
     if (hintPri) {
       hintPri.classList.add('setup-hidden');
       hintPri.textContent = '';
@@ -1076,23 +1090,25 @@ function refreshDwcMaxCestasHintSistema() {
       '.'
     : '';
   const metaTs = cfg.dwcCestasMaxRecomendadasMeta && cfg.dwcCestasMaxRecomendadasMeta.ts;
-  el.textContent =
-    '📐 Máx. orientativo en tapa: ~' +
-    o.max +
-    ' cestas (rejilla ~' +
-    o.cols +
-    '×' +
-    o.filas +
-    '; Ø ' +
-    rimShow +
-    ' mm; ' +
-    o.hueco +
-    ' mm entre cestas).' +
-    extraObj +
-    extraCesta +
-    (recoCultivo && recoCultivo.estado !== 'ok' ? extraModo : '') +
-    (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
-  el.classList.remove('setup-hidden');
+  if (el) {
+    el.textContent =
+      '📐 Máx. orientativo en tapa: ~' +
+      o.max +
+      ' cestas (rejilla ~' +
+      o.cols +
+      '×' +
+      o.filas +
+      '; Ø ' +
+      rimShow +
+      ' mm; ' +
+      o.hueco +
+      ' mm entre cestas).' +
+      extraObj +
+      extraCesta +
+      (recoCultivo && recoCultivo.estado !== 'ok' ? extraModo : '') +
+      (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
+    el.classList.remove('setup-hidden');
+  }
   const modoPri = dwcNormalizeRejillaModo(document.getElementById('sysDwcRejillaPreferida')?.value || cfgCalc.dwcRejillaModoPreferido);
   if (btnPri) {
     btnPri.classList.remove('setup-hidden');
@@ -1361,10 +1377,9 @@ function dwcNombreFase(faseKey) {
 }
 
 /**
- * HTML: recomendación en vivo de distancia de llenado (nutriente → base sustrato en cesta).
- * Usa sustrato de la instalación, fichas (variedad + fecha) y DIAS_COSECHA.
+ * Análisis compartido: distancia de llenado (nutriente → base del sustrato, cm).
  */
-function dwcHtmlDistanciaLlenadoTiempoReal(cfg) {
+function dwcAnalisisLlenadoDistancia(cfg) {
   cfg = cfg || state.configTorre || {};
   const sKey =
     typeof normalizaSustratoKey === 'function'
@@ -1418,9 +1433,72 @@ function dwcHtmlDistanciaLlenadoTiempoReal(cfg) {
   }
 
   if (rangos.length === 0 && fueraPerfil.length > 0 && sinFecha.length === 0) {
+    return {
+      variant: 'solo_fuera',
+      suNombre,
+      esCoco,
+      rangos,
+      sinFecha,
+      fueraPerfil,
+    };
+  }
+
+  if (rangos.length === 0) {
+    const faseDefault = 'recien';
+    const r0 = dwcRangoCmPorFaseYFamilia(faseDefault, esCoco);
+    return {
+      variant: 'fallback',
+      lo: r0[0],
+      hi: r0[1],
+      faseDefault,
+      suNombre,
+      esCoco,
+      rangos,
+      sinFecha,
+      fueraPerfil,
+    };
+  }
+
+  const lo = Math.min.apply(
+    null,
+    rangos.map(x => x.r[0])
+  );
+  const hi = Math.max.apply(
+    null,
+    rangos.map(x => x.r[1])
+  );
+  return {
+    variant: 'union',
+    lo,
+    hi,
+    suNombre,
+    esCoco,
+    rangos,
+    sinFecha,
+    fueraPerfil,
+  };
+}
+
+/** Fragmento para el subtítulo del panel «Depósito DWC» (incluye rango de llenado en cm). */
+function dwcTextoResumenLlenadoCm(cfg) {
+  const a = dwcAnalisisLlenadoDistancia(cfg);
+  if (a.variant === 'solo_fuera') return '';
+  if (a.lo == null || a.hi == null) return '';
+  return ' · Llenado ' + dwcFmtRangoCm(a.lo, a.hi) + ' cm';
+}
+
+/**
+ * HTML: recomendación en vivo de distancia de llenado (nutriente → base sustrato en cesta).
+ * Usa sustrato de la instalación, fichas (variedad + fecha) y DIAS_COSECHA.
+ */
+function dwcHtmlDistanciaLlenadoTiempoReal(cfg) {
+  const a = dwcAnalisisLlenadoDistancia(cfg);
+
+  if (a.variant === 'solo_fuera') {
+    const suNombre = a.suNombre;
     return (
       '<div class="torre-dwc-llenado-live" role="region" aria-label="Llenado DWC">' +
-      '<p class="torre-dwc-llenado-kicker">Llenado · distancia a la base del sustrato</p>' +
+      '<p class="torre-dwc-llenado-kicker">Llenado · distancia nutriente → sustrato (cm)</p>' +
       '<p class="torre-nft-p-soft">La recomendación automática aplica a <strong>cultivos de hoja</strong> (lechuga, asiáticas, hojas, hierbas) con fecha en la ficha. Tus plantas en rejilla son de <strong>otros grupos</strong> (p. ej. frutos): aquí no se calcula ese llenado.</p>' +
       '<p class="torre-nft-p-soft">Sustrato de referencia en Sistema: <strong>' +
       (typeof meteoEscHtml === 'function' ? meteoEscHtml(suNombre) : suNombre) +
@@ -1429,35 +1507,20 @@ function dwcHtmlDistanciaLlenadoTiempoReal(cfg) {
     );
   }
 
-  let lo;
-  let hi;
   let detalleFases = '';
-
-  if (rangos.length === 0) {
-    const faseDefault = 'recien';
-    const r0 = dwcRangoCmPorFaseYFamilia(faseDefault, esCoco);
-    lo = r0[0];
-    hi = r0[1];
+  if (a.variant === 'fallback') {
     detalleFases =
       '<p class="torre-nft-p-soft torre-dwc-llenado-meta">Sin <strong>fecha de trasplante</strong> en las fichas de cultivo de hoja, se usa fase «' +
-      dwcNombreFase(faseDefault) +
+      dwcNombreFase(a.faseDefault || 'recien') +
       '». Añade la fecha en cada cesta para afinar al día.</p>';
-    if (sinFecha.length) {
+    if (a.sinFecha.length) {
       detalleFases +=
         '<p class="torre-nft-p-soft torre-dwc-llenado-warn">Hay cestas con cultivo elegido pero <strong>sin fecha</strong>: complétala en la ficha para incluirlas en el cálculo.</p>';
     }
   } else {
-    lo = Math.min.apply(
-      null,
-      rangos.map(x => x.r[0])
-    );
-    hi = Math.max.apply(
-      null,
-      rangos.map(x => x.r[1])
-    );
     const fasesU = {};
-    for (let k = 0; k < rangos.length; k++) {
-      fasesU[rangos[k].fase] = true;
+    for (let k = 0; k < a.rangos.length; k++) {
+      fasesU[a.rangos[k].fase] = true;
     }
     const fLista = Object.keys(fasesU)
       .map(dwcNombreFase)
@@ -1466,36 +1529,36 @@ function dwcHtmlDistanciaLlenadoTiempoReal(cfg) {
       '<p class="torre-nft-p-soft torre-dwc-llenado-meta">Según <strong>edad</strong> desde el trasplante en tus fichas (cultivos de hoja). Fases consideradas: ' +
       fLista +
       '.</p>';
-    if (sinFecha.length) {
+    if (a.sinFecha.length) {
       detalleFases +=
         '<p class="torre-nft-p-soft torre-dwc-llenado-warn">Quedan cestas con cultivo pero sin fecha: no entran en el rango unido.</p>';
     }
   }
 
   let extraFuera = '';
-  if (fueraPerfil.length) {
+  if (a.fueraPerfil.length) {
     extraFuera =
       '<p class="torre-nft-p-soft torre-dwc-llenado-warn">Cultivos fuera de este perfil (p. ej. frutos): ' +
-      fueraPerfil
+      a.fueraPerfil
         .slice(0, 6)
         .map(v => (typeof meteoEscHtml === 'function' ? meteoEscHtml(v) : String(v)))
         .join(', ') +
-      (fueraPerfil.length > 6 ? '…' : '') +
+      (a.fueraPerfil.length > 6 ? '…' : '') +
       '. Para ellos no se aplica esta recomendación de hoja.</p>';
   }
 
-  const valStr = dwcFmtRangoCm(lo, hi);
+  const valStr = dwcFmtRangoCm(a.lo, a.hi);
   return (
     '<div class="torre-dwc-llenado-live" role="region" aria-label="Llenado DWC recomendado">' +
-    '<p class="torre-dwc-llenado-kicker">Llenado · distancia a la base del sustrato (tiempo real)</p>' +
+    '<p class="torre-dwc-llenado-kicker">Llenado · distancia nutriente → sustrato (cm, tiempo real)</p>' +
     '<p class="torre-dwc-llenado-value"><strong>' +
     valStr +
     ' cm</strong></p>' +
     '<p class="torre-nft-p-soft torre-dwc-llenado-def">Medida vertical entre la <strong>superficie del nutriente</strong> y la <strong>base del sustrato</strong> en la cesta de la tapa. Con <strong>difusor u oxigenador</strong> continuo.</p>' +
     '<p class="torre-nft-p-soft">Sustrato de referencia: <strong>' +
-    (typeof meteoEscHtml === 'function' ? meteoEscHtml(suNombre) : suNombre) +
+    (typeof meteoEscHtml === 'function' ? meteoEscHtml(a.suNombre) : a.suNombre) +
     '</strong> · perfil «' +
-    (esCoco ? 'coco' : 'esponja / lana / espuma') +
+    (a.esCoco ? 'coco' : 'esponja / lana / espuma') +
     '».</p>' +
     detalleFases +
     extraFuera +
@@ -1514,7 +1577,7 @@ function mountDwcDistanciaLlenadoTiempoReal() {
   }
 }
 
-/** Actualiza volumen estimado (L), oxigenación/difusor (L/min) y aviso de rejilla en la pestaña Sistema DWC. */
+/** Actualiza volumen (L), tapa/rejilla, máx. cestas, oxigenación/difusor y llenado (cm) en la pestaña Sistema DWC. */
 function refreshDwcSistemaMedidasUI() {
   const volEl = document.getElementById('sysDwcVolumenLitrosHint');
   const oxEl = document.getElementById('sysDwcOxigenacionHint');
@@ -1586,6 +1649,11 @@ function refreshDwcSistemaMedidasUI() {
   try {
     mountDwcDistanciaLlenadoTiempoReal();
   } catch (eMnt) {}
+  try {
+    if (typeof applySistemaTipoPanelesColapsablesUI === 'function') {
+      applySistemaTipoPanelesColapsablesUI();
+    }
+  } catch (_) {}
 }
 
 function refreshDwcTapHintSistema() {
