@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-19-recarga-collapse">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-19-luz-origen-collapse">
 </head>
 <body>
 
@@ -552,7 +552,16 @@
             </button>
           </div>
           <div id="wrapLuzOrigenMediciones" class="setup-hidden medir-wrap-luz-origen">
-            <div class="medir-luz-subtitle">Origen de la luz</div>
+            <button type="button" class="config-section-collapse-head medir-luz-origen-head" id="btnCollapseLuzOrigen"
+              onclick="toggleMedirCollapse('luzOrigen')"
+              aria-expanded="true" aria-controls="collapseBodyLuzOrigen">
+              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+              <span class="config-section-collapse-title-wrap">
+                <span class="config-section-collapse-title">💡 Origen de la luz</span>
+                <span class="config-section-collapse-subtitle">Natural, LED, mixta… y horas de fotoperíodo</span>
+              </span>
+            </button>
+            <div class="config-section-collapse-body medir-luz-origen-body" id="collapseBodyLuzOrigen">
             <div class="medir-grid-2-gap-8 medir-mb-12">
               <button type="button" class="config-option" id="opt-interior-luz-natural" role="radio" aria-checked="false"
                 onclick="setInteriorLuzTipo('natural')" aria-label="Luz natural ventana">
@@ -614,6 +623,7 @@
               <div class="medir-range-legend">
                 <span>12 h</span><span>16 h</span><span>20 h</span>
               </div>
+            </div>
             </div>
           </div>
         </div>
@@ -3517,7 +3527,7 @@
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=1"></script>
   <script src="js/hc-setup-registro.js?v=1"></script>
-  <script src="js/hc-setup-agua-sustrato.js?v=2"></script>
+  <script src="js/hc-setup-agua-sustrato.js?v=3"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=1"></script>
   <script src="js/hc-setup-checklist.js?v=3"></script>
   <script src="js/hc-setup-historial-tabs.js?v=1"></script>

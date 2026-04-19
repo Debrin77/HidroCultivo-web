@@ -6829,14 +6829,17 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
 }
 .medir-wrap-luz-origen {
   margin-top: 12px;
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
 }
-.medir-luz-subtitle {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--white);
-  margin-bottom: 8px;
+.medir-luz-origen-head {
+  align-items: flex-start;
+  padding: 6px 0 10px;
+  border-radius: 12px;
+}
+.medir-wrap-luz-origen .medir-luz-origen-body.config-section-collapse-body {
+  padding-left: 0;
+  padding-right: 0;
 }
 .medir-grid-2-gap-8 {
   display: grid;
