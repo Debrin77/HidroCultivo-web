@@ -1317,12 +1317,10 @@
           </div>
           <p id="sysDwcVolumenLitrosHint" class="torre-dwc-vol-hint setup-hidden" role="status"></p>
           <p id="sysDwcTapaCestasHint" class="torre-dwc-tapa-hint setup-hidden" role="status"></p>
-          <p id="sysDwcMaxCestasHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
           <button type="button" class="torre-dwc-apply-grid-btn setup-hidden" id="btnDwcAplicarRejillaPrincipal"
             onclick="aplicarDwcRejillaPreferidaDesdeFormularioSistema()">
             Aplicar rejilla recomendada (objetivo)
           </button>
-          <p id="sysDwcRejillaHintPrincipal" class="torre-dwc-vol-hint setup-hidden" role="status"></p>
           <button type="button" class="torre-dwc-apply-grid-btn setup-hidden" id="btnDwcAplicarRejillaSecundaria"
             onclick="aplicarDwcRejillaMaximaDesdeFormularioSistema()">
             Aplicar rejilla máxima (tapa)
@@ -1332,7 +1330,8 @@
               <div>
                 <label class="form-label torre-dwc-lbl-mono" for="sysDwcMacetasTotalesDeseadas">Total macetas en tapa</label>
                 <input type="number" id="sysDwcMacetasTotalesDeseadas" class="torre-dwc-input" min="1" max="144" step="1" placeholder="—"
-                  inputmode="numeric" autocomplete="off" aria-label="Total de macetas a repartir en la tapa">
+                  inputmode="numeric" autocomplete="off" aria-label="Total de macetas a repartir en la tapa"
+                  oninput="try{refreshDwcVoluntariaCabenHint()}catch(e){}">
               </div>
               <div class="torre-dwc-voluntaria-rejilla-btn-wrap">
                 <span class="visually-hidden">Repartir en la tapa</span>
@@ -1354,8 +1353,18 @@
             <input type="checkbox" id="sysDwcEntradaAire" class="torre-dwc-check">
             <span>Entrada aire (tapa o borde)</span>
           </label>
-          <p class="torre-dwc-llenado-section-label">Distancia de llenado (nutriente → base del sustrato, <strong>cm</strong>)</p>
-          <div id="sysDwcDistanciaSustratoWrap" class="torre-dwc-dist-sistema-mount" aria-label="Llenado DWC: distancia en cm del nutriente a la base del sustrato según fichas"></div>
+          <div class="torre-dwc-llenado-collapsible" id="sistemaDwcLlenadoCollapsible">
+            <button type="button" class="torre-dwc-llenado-collapse-head" id="btnToggleSistemaDwcLlenado"
+              aria-expanded="true" aria-controls="sistemaDwcLlenadoBody" onclick="toggleSistemaDwcLlenadoPanel()">
+              <span class="torre-dwc-llenado-collapse-chevron" aria-hidden="true">▼</span>
+              <span class="torre-dwc-llenado-collapse-title-wrap">
+                <span class="torre-dwc-llenado-collapse-title">Llenado · distancia nutriente → base del sustrato (cm)</span>
+              </span>
+            </button>
+            <div class="torre-dwc-llenado-collapse-body" id="sistemaDwcLlenadoBody">
+              <div id="sysDwcDistanciaSustratoWrap" class="torre-dwc-dist-sistema-mount" aria-label="Llenado DWC: distancia en cm del nutriente a la base del sustrato según fichas"></div>
+            </div>
+          </div>
           <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaDwcDesdeFormulario()">
             Guardar datos DWC
           </button>

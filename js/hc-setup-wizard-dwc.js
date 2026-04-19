@@ -828,23 +828,14 @@ function aplicarDwcRejillaVoluntariaDesdeFormularioSistema() {
   const hintV = document.getElementById('sysDwcRejillaVoluntariaHint');
   if (hintV) {
     hintV.classList.remove('setup-hidden');
-    let t =
-      'Rejilla aplicada: ' +
-      nf +
-      ' filas × ' +
-      nc +
-      ' columnas = ' +
-      nf * nc +
-      ' macetas.';
+    hintV.classList.remove('torre-dwc-vol-hint--bad', 'torre-dwc-vol-hint--ok');
     if (raw > o.max) {
-      t += ' Pedías ' + raw + '; en tapa caben como máximo ' + o.max + ' con estos datos.';
-    } else if (!r.exacto) {
-      t +=
-        ' Con ese total no hay subdivisión exacta en la rejilla física; se ha elegido la mayor válida ≤ ' +
-        r.cap +
-        ' y proporcional al largo/ancho útil de la tapa.';
+      hintV.textContent = '✗ No caben (máx. ' + o.max + ').';
+      hintV.classList.add('torre-dwc-vol-hint--bad');
+    } else {
+      hintV.textContent = '✓ Caben.';
+      hintV.classList.add('torre-dwc-vol-hint--ok');
     }
-    hintV.textContent = t;
   }
   showToast('Rejilla personalizada: ' + nf + '×' + nc + ' (' + nf * nc + ' macetas).');
 }
@@ -992,9 +983,65 @@ function aplicarDwcRejillaDesdeSetup(modoAplicacion) {
   showToast(msg);
 }
 
+/** Solo «✓ Caben» / «✗ No caben» según total manual vs máximo en tapa. */
+function refreshDwcVoluntariaCabenHint() {
+  const hintV = document.getElementById('sysDwcRejillaVoluntariaHint');
+  const inp = document.getElementById('sysDwcMacetasTotalesDeseadas');
+  const wrapVol = document.getElementById('sysDwcRejillaVoluntariaWrap');
+  if (!hintV || !inp || !wrapVol || wrapVol.classList.contains('setup-hidden')) return;
+  const cfg = state.configTorre;
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
+  const cfgCalc = Object.assign({}, cfg);
+  try {
+    dwcMergeCamposFormularioEnCfg(cfgCalc, DWC_FORM_IDS_SISTEMA);
+  } catch (e) {}
+  const o = dwcMaxCestasDesdeConfigTorre(cfgCalc);
+  if (!o || o.max < 1) {
+    hintV.classList.add('setup-hidden');
+    hintV.textContent = '';
+    hintV.classList.remove('torre-dwc-vol-hint--bad', 'torre-dwc-vol-hint--ok');
+    return;
+  }
+  const raw = parseInt(String(inp.value || '').trim(), 10);
+  if (!Number.isFinite(raw) || raw < 1) {
+    hintV.classList.add('setup-hidden');
+    hintV.textContent = '';
+    hintV.classList.remove('torre-dwc-vol-hint--bad', 'torre-dwc-vol-hint--ok');
+    return;
+  }
+  hintV.classList.remove('setup-hidden', 'torre-dwc-vol-hint--bad', 'torre-dwc-vol-hint--ok');
+  if (raw > o.max) {
+    hintV.textContent = '✗ No caben (máx. ' + o.max + ').';
+    hintV.classList.add('torre-dwc-vol-hint--bad');
+  } else {
+    hintV.textContent = '✓ Caben.';
+    hintV.classList.add('torre-dwc-vol-hint--ok');
+  }
+}
+
+function applySistemaDwcLlenadoCollapseUI() {
+  const body = document.getElementById('sistemaDwcLlenadoBody');
+  const btn = document.getElementById('btnToggleSistemaDwcLlenado');
+  if (!body || !btn) return;
+  const cfg = state.configTorre;
+  const col = cfg && cfg.tipoInstalacion === 'dwc' && cfg.uiSistemaDwcLlenadoColapsado === true;
+  body.hidden = col;
+  btn.setAttribute('aria-expanded', col ? 'false' : 'true');
+  btn.classList.toggle('is-collapsed', col);
+}
+
+function toggleSistemaDwcLlenadoPanel() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  const cur = state.configTorre.uiSistemaDwcLlenadoColapsado === true;
+  state.configTorre.uiSistemaDwcLlenadoColapsado = !cur;
+  try {
+    guardarEstadoTorreActual();
+    saveState();
+  } catch (e) {}
+  applySistemaDwcLlenadoCollapseUI();
+}
+
 function refreshDwcMaxCestasHintSistema() {
-  const el = document.getElementById('sysDwcMaxCestasHint');
-  const hintPri = document.getElementById('sysDwcRejillaHintPrincipal');
   const btnPri = document.getElementById('btnDwcAplicarRejillaPrincipal');
   const btnSec = document.getElementById('btnDwcAplicarRejillaSecundaria');
   const cfg = state.configTorre;
@@ -1007,13 +1054,10 @@ function refreshDwcMaxCestasHintSistema() {
     if (hintVol) {
       hintVol.classList.add('setup-hidden');
       hintVol.textContent = '';
+      hintVol.classList.remove('torre-dwc-vol-hint--bad', 'torre-dwc-vol-hint--ok');
     }
   };
   if (!cfg || cfg.tipoInstalacion !== 'dwc') {
-    if (el) {
-      el.classList.add('setup-hidden');
-      el.textContent = '';
-    }
     if (btnPri) {
       btnPri.classList.add('setup-hidden');
       btnPri.disabled = true;
@@ -1021,10 +1065,6 @@ function refreshDwcMaxCestasHintSistema() {
     if (btnSec) {
       btnSec.classList.add('setup-hidden');
       btnSec.disabled = true;
-    }
-    if (hintPri) {
-      hintPri.classList.add('setup-hidden');
-      hintPri.textContent = '';
     }
     hideVoluntaria();
     return;
@@ -1035,10 +1075,6 @@ function refreshDwcMaxCestasHintSistema() {
   } catch (eM) {}
   const o = dwcMaxCestasDesdeConfigTorre(cfgCalc);
   if (!o || o.max < 1) {
-    if (el) {
-      el.classList.add('setup-hidden');
-      el.textContent = '';
-    }
     if (btnPri) {
       btnPri.classList.add('setup-hidden');
       btnPri.disabled = true;
@@ -1047,67 +1083,8 @@ function refreshDwcMaxCestasHintSistema() {
       btnSec.classList.add('setup-hidden');
       btnSec.disabled = true;
     }
-    if (hintPri) {
-      hintPri.classList.add('setup-hidden');
-      hintPri.textContent = '';
-    }
     hideVoluntaria();
     return;
-  }
-  const modoKey =
-    typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
-  const modoLbl = (MODOS_CULTIVO[modoKey] && MODOS_CULTIVO[modoKey].nombre) || 'tu cultivo';
-  const objetivo = dwcObjetivoDesdeInputId('sysDwcObjetivoCultivo', cfgCalc);
-  const spec = dwcGetObjetivoSpec(objetivo);
-  const rangoObj = dwcRangoCestasOrientativoPorObjetivo(o, spec);
-  const rimShow =
-    cfgCalc.dwcNetPotRimMm != null ? cfgCalc.dwcNetPotRimMm : cfg.dwcNetPotRimMm;
-  const extraModo =
-    modoKey === 'intensivo' || modoKey === 'mixto'
-      ? ' Modo de torre «' + modoLbl + '»: si hay cultivos de porte amplio, reduce densidad.'
-      : ' Si el follaje ensancha mucho respecto al aro, deja margen y menos cestas.';
-  const extraObj = rangoObj
-    ? ' Objetivo «' +
-      spec.label +
-      '»: orientativo ~' +
-      rangoObj.min +
-      '–' +
-      rangoObj.max +
-      ' cestas (distancia c-c ' +
-      spec.ccTxt +
-      ', ' +
-      spec.litrosTxt +
-      ').'
-    : '';
-  const recoCultivo = typeof dwcRecomendacionCultivoDesdeConfig === 'function' ? dwcRecomendacionCultivoDesdeConfig(cfgCalc) : null;
-  const extraCesta = recoCultivo
-    ? ' Cesta: rec. ' +
-      recoCultivo.perfil.cestaTxt +
-      ' · actual ' +
-      (recoCultivo.rimActualMm != null ? recoCultivo.rimActualMm + ' mm' : '—') +
-      ' · ' +
-      (recoCultivo.estado === 'ok' ? 'OK' : recoCultivo.estado === 'warn' ? 'Ajustar' : 'No recomendado') +
-      '.'
-    : '';
-  const metaTs = cfg.dwcCestasMaxRecomendadasMeta && cfg.dwcCestasMaxRecomendadasMeta.ts;
-  if (el) {
-    el.textContent =
-      '📐 Máx. orientativo en tapa: ~' +
-      o.max +
-      ' cestas (rejilla ~' +
-      o.cols +
-      '×' +
-      o.filas +
-      '; Ø ' +
-      rimShow +
-      ' mm; ' +
-      o.hueco +
-      ' mm entre cestas).' +
-      extraObj +
-      extraCesta +
-      (recoCultivo && recoCultivo.estado !== 'ok' ? extraModo : '') +
-      (metaTs ? ' Referencia guardada en la instalación (' + metaTs + ').' : '');
-    el.classList.remove('setup-hidden');
   }
   const modoPri = dwcNormalizeRejillaModo(document.getElementById('sysDwcRejillaPreferida')?.value || cfgCalc.dwcRejillaModoPreferido);
   if (btnPri) {
@@ -1132,10 +1109,6 @@ function refreshDwcMaxCestasHintSistema() {
       btnSec.textContent = 'Aplicar rejilla máxima (alternativa)';
     }
   }
-  if (hintPri) {
-    hintPri.classList.remove('setup-hidden');
-    hintPri.textContent = dwcTextoHintBotonPrincipal(modoPri, spec, o, rangoObj);
-  }
   const inpVol = document.getElementById('sysDwcMacetasTotalesDeseadas');
   if (wrapVol && inpVol && btnVol) {
     wrapVol.classList.remove('setup-hidden');
@@ -1149,6 +1122,9 @@ function refreshDwcMaxCestasHintSistema() {
     }
     inpVol.max = String(o.max);
   }
+  try {
+    refreshDwcVoluntariaCabenHint();
+  } catch (eV) {}
 }
 
 function refreshDwcTapHintSetup() {
@@ -1654,6 +1630,9 @@ function refreshDwcSistemaMedidasUI() {
       applySistemaTipoPanelesColapsablesUI();
     }
   } catch (_) {}
+  try {
+    applySistemaDwcLlenadoCollapseUI();
+  } catch (_) {}
 }
 
 function refreshDwcTapHintSistema() {
@@ -1885,6 +1864,9 @@ function aplicarSistemaDwcDesdeFormulario() {
     try {
       mountDwcDistanciaLlenadoTiempoReal();
     } catch (e) {}
+    try {
+      applySistemaDwcLlenadoCollapseUI();
+    } catch (e2) {}
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
   else run();
