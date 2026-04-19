@@ -642,6 +642,7 @@ function getCLPasos() {
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
   const esTorre = !esNft && !esDwc;
+  const checklistTieneCalentador = Array.isArray(cfg.equipamiento) && cfg.equipamiento.includes('calentador');
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
   const nftReco = esNft && typeof nftRecomendacionCultivoDesdeConfig === 'function'
     ? nftRecomendacionCultivoDesdeConfig(cfg)
@@ -1068,9 +1069,11 @@ function getCLPasos() {
       : esNft
         ? 'Revisar circuito y racores: película continua y sin fugas en alimentación o retornos'
         : 'Si el depósito lleva piedra o difusor de aire, encenderlo; si solo riegas por bomba, confirma circulación estable por la torre' },
-  { id:'5.3', seccion:null, paso:'5.3',
+  ...(checklistTieneCalentador ? [{
+    id:'5.3', seccion:null, paso:'5.3',
     desc:'Encender calentador — objetivo 20°C',
-    campos:[{ id:'clTempAguaInicial', label:'Temp inicial:', unit:'°C', type:'number', step:'0.1', placeholder:'17' }] },
+    campos:[{ id:'clTempAguaInicial', label:'Temp inicial:', unit:'°C', type:'number', step:'0.1', placeholder:'17' }],
+  }] : []),
   { id:'5.4', seccion:null, paso:'5.4',
     desc: esDwc
       ? 'Esperar 20 minutos con el aireador en marcha antes de medir'
