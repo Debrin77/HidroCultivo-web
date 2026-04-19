@@ -891,7 +891,9 @@ function preguntarIniciarChecklist() {
   document.getElementById('btnIniciarChecklist').addEventListener('click', () => {
     a11yDialogClosed(overlay);
     overlay.remove();
-    abrirChecklist(true);
+    const t = window._tipoChecklist;
+    clRutaChecklist = t === 'tras_limpieza' ? 'recarga' : 'primer_llenado';
+    abrirChecklist(false, { saltarPreguntaRuta: true });
   });
   document.getElementById('btnChecklistDespues').addEventListener('click', () => {
     a11yDialogClosed(overlay);

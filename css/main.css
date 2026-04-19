@@ -5426,7 +5426,8 @@ button.dia-card {
   position: fixed;
   inset: 0;
   background: var(--bg);
-  z-index: 800;
+  /* Por encima de toasts (~9600), preguntas post-asistente (~9999) y modales ctp (~850); por debajo del asistente (10200) y bienvenida (12000) */
+  z-index: 10100;
   /* sombra suave en tema claro */
   display: none;
   flex-direction: column;

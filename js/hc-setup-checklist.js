@@ -126,7 +126,6 @@ function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
   document.getElementById('clRutaCompleta').addEventListener('click', () => continuar('recarga'));
   document.getElementById('clRutaCancelar').addEventListener('click', () => {
     cerrarOverlayRutaChecklistRecarga();
-    if (esPrimeraVez) try { goTab('inicio'); } catch (e2) {}
   });
 }
 
@@ -1106,20 +1105,25 @@ function getCLPasos() {
 
 function getCLTotal() { return getCLPasos().length; }
 
-function abrirChecklist(esPrimeraVez = false) {
+/**
+ * @param {boolean} esPrimeraVez - Flujo onboarding / primera recarga en app (cierra checklist con confirmación).
+ * @param {{ saltarPreguntaRuta?: boolean }} [opts] - Tras elegir ruta en el panel post-asistente: no repetir el modal de ruta.
+ */
+function abrirChecklist(esPrimeraVez = false, opts) {
   clEsPrimeraVez = esPrimeraVez;
+  const saltarPreguntaRuta = !!(opts && opts.saltarPreguntaRuta);
 
   if (!checklistInstalacionCompletaParaRecarga()) {
     mostrarOverlayChecklistDatosInstalacion(esPrimeraVez);
     return;
   }
 
-  if (debePreguntarRutaChecklist(esPrimeraVez)) {
+  if (!saltarPreguntaRuta && debePreguntarRutaChecklist(esPrimeraVez)) {
     mostrarOverlayRutaChecklistRecarga(esPrimeraVez);
     return;
   }
 
-  elegirClRutaChecklistAlAbrir();
+  if (!saltarPreguntaRuta) elegirClRutaChecklistAlAbrir();
   abrirChecklistDespuesDeElegirRuta(esPrimeraVez);
 }
 
