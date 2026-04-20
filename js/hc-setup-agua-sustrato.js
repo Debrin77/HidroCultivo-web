@@ -1415,7 +1415,21 @@ function actualizarRangoEC() {
   }
 }
 
+function toggleMedirDwcConfigBlock(n) {
+  const body = document.getElementById(n === 1 ? 'medirDwcBlock1Body' : 'medirDwcBlock2Body');
+  const btn = document.getElementById(n === 1 ? 'btnMedirDwcBlock1' : 'btnMedirDwcBlock2');
+  if (!body || !btn) return;
+  const expanded = btn.getAttribute('aria-expanded') === 'true';
+  btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  body.hidden = expanded;
+  btn.classList.toggle('medir-dwc-block-head--collapsed', expanded);
+}
+
 function initConfigUI() {
+  const cfgTorre = state.configTorre || {};
+  const cp = document.getElementById('configPanel');
+  if (cp) cp.classList.toggle('config-panel--dwc', cfgTorre.tipoInstalacion === 'dwc');
+
   const agua = state.configAgua || 'destilada';
   const sustrato = state.configTorre?.sustrato || state.configSustrato || 'esponja';
   const authRememberSel = document.getElementById('authRememberSelect');

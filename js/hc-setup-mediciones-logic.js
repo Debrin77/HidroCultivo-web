@@ -44,6 +44,12 @@ const PH_PLUS_POR_ML    = 0.34;  // unidades pH por ml de pH+ (25-30%) en 18L
                                   // Dato real: 8ml pH+ subieron de 3.5 a ~6.2 en 19.5L ≈ 0.34/ml
 const VOL_OBJETIVO      = 18;    // litros referencia calibración (tablas 18 L)
 
+/** Instalación en interior (Medir / Sistema): sin bloque de ambiente meteorológico en Inicio ni avisos de exterior en Meteorología. */
+function instalacionEsUbicacionInterior(cfg) {
+  const c = cfg || state.configTorre || {};
+  return (c.ubicacion || 'exterior') === 'interior';
+}
+
 /** Capacidad máxima del depósito (L) — tope físico del recipiente. `volDeposito` en config. */
 function getVolumenDepositoMaxLitros(cfg) {
   cfg = cfg || state.configTorre || {};

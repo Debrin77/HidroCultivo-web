@@ -167,7 +167,8 @@
       <!-- Aviso oficial AEMET/MeteoAlarm (flash en Inicio; zona inferida del municipio por geocodificación) -->
       <div id="meteoFlashAviso" class="meteo-flash-aviso setup-hidden" role="alert" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- 3. Alerta meteorológica / ambiente (prominente tras el contexto de instalación) -->
+      <!-- Ambiente meteorológico y localidad: solo si la instalación está en exterior (Medir → ubicación) -->
+      <div id="dashBloqueAmbienteExterior" class="dash-bloque-ambiente-exterior">
       <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
       <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
         <div class="meteo-alert-icon" id="meteoAlertIcon">🌤️</div>
@@ -181,6 +182,7 @@
       <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite" aria-labelledby="dashUbicacionLabel">
         <span class="dash-localidad-clima-icon" aria-hidden="true">📍</span>
         <span id="dashLocalidadClimaText" class="dash-localidad-clima-text">—</span>
+      </div>
       </div>
 
       <!-- 4. Nutriente seleccionado -->
@@ -394,6 +396,16 @@
       <!-- Configuración agua y sustrato -->
       <div id="configPanel">
 
+        <div class="medir-dwc-block medir-dwc-block--1">
+          <button type="button" class="medir-dwc-block-head" id="btnMedirDwcBlock1" onclick="toggleMedirDwcConfigBlock(1)"
+            aria-expanded="true" aria-controls="medirDwcBlock1Body">
+            <span class="medir-dwc-block-chevron" aria-hidden="true">▼</span>
+            <span class="medir-dwc-block-titles">
+              <span class="medir-dwc-block-title">💧 Tipo de agua y municipio (clima / avisos)</span>
+              <span class="medir-dwc-block-sub">Calidad del agua y localidad para previsión y avisos</span>
+            </span>
+          </button>
+          <div class="medir-dwc-block-body" id="medirDwcBlock1Body">
         <div class="config-section">
           <div class="config-section-title" id="labelConfigAgua">💧 Tipo de agua</div>
           <p id="medirAguaResumen" class="medir-resumen-text"></p>
@@ -526,7 +538,19 @@
             Fuente activa: <strong id="configMeteoFuenteActiva">Open-Meteo</strong>. La app usa respaldo automático gratuito (met.no + UV free) y caché local si hay incidencias.
           </div>
         </div>
+          </div>
+        </div>
 
+        <div class="medir-dwc-block medir-dwc-block--2">
+          <button type="button" class="medir-dwc-block-head" id="btnMedirDwcBlock2" onclick="toggleMedirDwcConfigBlock(2)"
+            aria-expanded="true" aria-controls="medirDwcBlock2Body">
+            <span class="medir-dwc-block-chevron" aria-hidden="true">▼</span>
+            <span class="medir-dwc-block-titles">
+              <span class="medir-dwc-block-title">💡 Ubicación del sistema, luz y sustrato</span>
+              <span class="medir-dwc-block-sub">Interior / exterior, fotoperíodo y medio en cestas</span>
+            </span>
+          </button>
+          <div class="medir-dwc-block-body" id="medirDwcBlock2Body">
         <div class="config-section medir-panel-ubic-luz" id="panelUbicacionLuzMediciones">
           <div class="config-section-title" id="labelUbicacionLuzMed">💡 Ubicación del sistema y origen de luz (riego)</div>
           <div class="medir-note-block medir-note-block--ubic-luz">
@@ -703,6 +727,8 @@
               </span>
             </button>
           </div>
+          </div>
+        </div>
           </div>
         </div>
 
@@ -1494,8 +1520,10 @@
             <div class="deposito-icon" aria-hidden="true"></div>
             <div class="deposito-info torre-deposito-info">
               <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
+              <div id="torreDepositoLecturasRow" class="torre-deposito-lecturas-row">
               <div class="deposito-stats" id="depositoStats">EC: — µS/cm · pH: — · Temp: —°C · Vol: —L</div>
-              <p class="torre-vol-ref-hint">Capacidad y litros de mezcla están en el <strong>resumen del sistema</strong> (arriba), mismo origen que el checklist.</p>
+              </div>
+              <p class="torre-vol-ref-hint" id="torreDepositoVolHint">Capacidad y litros de mezcla están en el <strong>resumen del sistema</strong> (arriba), mismo origen que el checklist.</p>
               <details id="torreVolDepDetalles" class="torre-vol-detalles">
                 <summary class="torre-vol-detalles-summary">Cambiar capacidad o litros de mezcla</summary>
                 <div id="torreVolDepWrap" class="torre-vol-wrap torre-vol-wrap--inner">

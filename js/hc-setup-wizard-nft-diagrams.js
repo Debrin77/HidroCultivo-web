@@ -637,6 +637,14 @@ function renderTorreSistemaResumenTabla(cfg) {
       'Depósito (cap. máx)',
       String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
     ]);
+    if (esDwcTab) {
+      rows.push([
+        'Nivel de solución (DWC)',
+        escHtmlUi(
+          'En DWC el líquido suele quedar por debajo del tope geométrico: hace falta una cámara de aire entre la superficie del nutriente y la base del sustrato en las cestas; al crecer las raíces ese hueco suele aumentar. Indica «litros de mezcla» por debajo del máximo si no llenas al borde.'
+        ),
+      ]);
+    }
     const eqArrDw = cfg.equipamiento;
     if (esDwcTab && Array.isArray(eqArrDw) && eqArrDw.length) {
       const bitsD = [];
@@ -699,10 +707,7 @@ function renderTorreSistemaResumenTabla(cfg) {
       v +
       '</td></tr>';
   }
-  mount.innerHTML =
-    '<div class="torre-sistema-resumen-title">' +
-    escHtmlUi('Resumen del sistema configurado') +
-    '</div>' +
+  const capTable =
     '<table class="torre-sistema-resumen-table">' +
     '<caption class="visually-hidden">' +
     escHtmlUi('Valores principales de la instalación según la configuración guardada') +
@@ -710,7 +715,50 @@ function renderTorreSistemaResumenTabla(cfg) {
     '<tbody>' +
     body +
     '</tbody></table>';
+  const esDwcResumen = cfg.tipoInstalacion === 'dwc';
+  if (esDwcResumen) {
+    mount.innerHTML =
+      '<button type="button" id="btnToggleTorreSistemaResumenDwc" class="torre-sistema-resumen-dwc-head" ' +
+      'aria-expanded="true" aria-controls="torreSistemaResumenDwcInner" onclick="toggleTorreSistemaResumenDwcPanel()">' +
+      '<span class="torre-sistema-resumen-dwc-chevron" aria-hidden="true">▼</span>' +
+      '<span class="torre-sistema-resumen-dwc-head-text">' +
+      escHtmlUi('Resumen del sistema configurado') +
+      '</span></button>' +
+      '<div id="torreSistemaResumenDwcInner" class="torre-sistema-resumen-dwc-inner">' +
+      capTable +
+      '</div>';
+    applyTorreSistemaResumenDwcCollapseUI();
+  } else {
+    mount.innerHTML =
+      '<div class="torre-sistema-resumen-title">' +
+      escHtmlUi('Resumen del sistema configurado') +
+      '</div>' +
+      capTable;
+  }
   mount.removeAttribute('hidden');
+}
+
+function applyTorreSistemaResumenDwcCollapseUI() {
+  const cfg = state.configTorre || {};
+  if (cfg.tipoInstalacion !== 'dwc') return;
+  const btn = document.getElementById('btnToggleTorreSistemaResumenDwc');
+  const inner = document.getElementById('torreSistemaResumenDwcInner');
+  if (!btn || !inner) return;
+  const col = cfg.uiTorreSistemaResumenDwcColapsado === true;
+  inner.hidden = col;
+  btn.setAttribute('aria-expanded', col ? 'false' : 'true');
+  btn.classList.toggle('torre-sistema-resumen-dwc-head--collapsed', col);
+}
+
+function toggleTorreSistemaResumenDwcPanel() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  const cur = state.configTorre.uiTorreSistemaResumenDwcColapsado === true;
+  state.configTorre.uiTorreSistemaResumenDwcColapsado = !cur;
+  try {
+    guardarEstadoTorreActual();
+    saveState();
+  } catch (e) {}
+  applyTorreSistemaResumenDwcCollapseUI();
 }
 
 /**

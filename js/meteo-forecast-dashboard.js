@@ -41,8 +41,13 @@ function updateDashboard() {
 
   actualizarAvisoCestasSinFecha();
 
-  // Meteo
-  fetchMeteoAlert();
+  // Meteo (solo si instalación en exterior)
+  try {
+    applyInicioAmbienteExteriorVisibility();
+  } catch (_) {}
+  if (!(typeof instalacionEsUbicacionInterior === 'function' && instalacionEsUbicacionInterior())) {
+    fetchMeteoAlert();
+  }
 
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
 
@@ -440,6 +445,14 @@ function clearMeteoAlertRetry() {
   }
 }
 
+/** Inicio: oculta condiciones meteorológicas y localidad si la instalación está en interior (Medir). */
+function applyInicioAmbienteExteriorVisibility() {
+  const wrap = document.getElementById('dashBloqueAmbienteExterior');
+  if (!wrap) return;
+  const int = typeof instalacionEsUbicacionInterior === 'function' && instalacionEsUbicacionInterior();
+  wrap.classList.toggle('setup-hidden', !!int);
+}
+
 function programarReintentoMeteoAlert() {
   if (_meteoAlertRetryTimer) return;
   const idx = Math.min(_meteoAlertRetryStep, METEO_ALERT_RETRY_MS.length - 1);
@@ -458,6 +471,15 @@ async function fetchMeteoAlert() {
   const iconEl    = document.getElementById('meteoAlertIcon');
   const titleEl   = document.getElementById('meteoAlertTitle');
   const textEl    = document.getElementById('meteoAlertText');
+
+  if (typeof instalacionEsUbicacionInterior === 'function' && instalacionEsUbicacionInterior()) {
+    clearMeteoAlertRetry();
+    _meteoAlertRetryStep = 0;
+    try {
+      applyInicioAmbienteExteriorVisibility();
+    } catch (_) {}
+    return;
+  }
 
   try {
     // No bloquear la alerta por geolocalización (usar coords actuales y refrescar luego).
