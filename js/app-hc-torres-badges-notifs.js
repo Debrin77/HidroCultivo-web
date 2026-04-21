@@ -568,7 +568,7 @@ function actualizarBadgesNutriente() {
   if (dashUbicacion) {
     const ub = cfg.ubicacion || 'exterior';
     if (ub === 'interior') {
-      const lz = { natural: 'natural', led: 'LED', mixto: 'mixto', fluorescente: 'T5', hps: 'HPS', sin_luz: 'sin luz' }[cfg.luz || 'led'] || 'LED';
+      const lz = { natural: 'natural', led: 'LED', mixto: 'natural + LED', fluorescente: 'T5', hps: 'HPS', sin_luz: 'sin luz' }[cfg.luz || 'led'] || 'LED';
       const h = cfg.horasLuz || 16;
       dashUbicacion.textContent = '🏠 Interior · ' + lz + ' · ' + h + 'h';
     } else {

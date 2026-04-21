@@ -145,7 +145,7 @@ function actualizarResumenSetup() {
   const nut     = NUTRIENTES_DB.find(n => n.id === (window.setupNutriente || 'canna_aqua'));
   const ubic    = setupData.ubicacion || window.setupUbicacion || 'exterior';
   const luzResumenTxt = {
-    natural: 'Luz natural (ventana)', led: 'LED', mixto: 'Mixto ventana + artificial',
+    natural: 'Luz natural (ventana)', led: 'LED', mixto: 'Natural + LED (ventana + artificial)',
     fluorescente: 'Fluorescente T5', hps: 'HPS / HM', sin_luz: 'Sin luz adecuada'
   }[setupData.luz || 'led'] || 'LED';
   const hLuzRes = Math.max(12, Math.min(20, parseInt(String(setupData.horasLuz || 16), 10) || 16));
@@ -469,7 +469,7 @@ function seleccionarUbicacion(tipo) {
 }
 
 function syncWizardLuzUI() {
-  const map = { natural:'Natural', mixto:'Mixto', led:'LED', fluorescente:'Fluorescent', hps:'HPS', sin_luz:'SinLuz' };
+  const map = { natural:'Natural', mixto:'Natural+LED', led:'LED', fluorescente:'Fluorescent', hps:'HPS', sin_luz:'SinLuz' };
   const tipo = setupData.luz || 'led';
   ['Natural','Mixto','LED','Fluorescent','HPS','SinLuz'].forEach(suf => {
     const el = document.getElementById('luz' + suf);
@@ -492,7 +492,7 @@ function syncWizardLuzUI() {
 
 function seleccionarLuz(tipo) {
   setupData.luz = tipo;
-  const map = { natural:'Natural', mixto:'Mixto', led:'LED', fluorescente:'Fluorescent', hps:'HPS', sin_luz:'SinLuz' };
+  const map = { natural:'Natural', mixto:'Natural+LED', led:'LED', fluorescente:'Fluorescent', hps:'HPS', sin_luz:'SinLuz' };
   ['Natural','Mixto','LED','Fluorescent','HPS','SinLuz'].forEach(suf => {
     const el = document.getElementById('luz' + suf);
     if (el) el.classList.remove('selected');
