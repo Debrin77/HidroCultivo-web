@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-19-medir-disclosure">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-19-dwc-scale-notif-panel-state">
 </head>
 <body>
 
@@ -337,24 +337,33 @@
         </details>
       </div>
 
-      <section class="dash-notif-prefs" id="dashNotifPrefsCard" aria-labelledby="dashNotifPrefsTitle">
-        <div class="dash-notif-prefs-title" id="dashNotifPrefsTitle">🔔 Avisos en el teléfono</div>
-        <p class="dash-notif-prefs-lead">Las alertas meteorológicas (MeteoAlarm / AEMET en tu zona) siguen con el permiso del navegador. Aquí eliges si quieres avisos <strong>extra</strong> de cultivo.</p>
-        <fieldset class="dash-notif-prefs-fieldset" id="dashNotifPrefsFieldset">
-          <label class="dash-notif-toggle-row">
-            <input type="checkbox" id="notifOptRecarga" onchange="persistNotifOpciones()">
-            <span>Recarga completa pendiente (~15 días)</span>
-          </label>
-          <label class="dash-notif-toggle-row">
-            <input type="checkbox" id="notifOptMedicion" onchange="persistNotifOpciones()">
-            <span>Si llevas días sin medir</span>
-          </label>
-          <label class="dash-notif-toggle-row">
-            <input type="checkbox" id="notifOptCosecha" onchange="persistNotifOpciones()">
-            <span>Plantas listas para cosechar</span>
-          </label>
-        </fieldset>
-        <p class="dash-notif-prefs-hint setup-hidden" id="dashNotifPrefsHint">Primero concede permiso con «Activar alertas» en Más opciones; luego podrás marcar estas casillas.</p>
+      <section class="dash-notif-prefs config-section-collapsible" id="dashNotifPrefsCard" aria-labelledby="dashNotifPrefsTitle">
+        <button type="button" class="config-section-collapse-head medir-disclosure-main-head dash-notif-prefs-head"
+          id="btnNotifPrefsInicio" onclick="toggleAvisosTelefonoInicio()"
+          aria-expanded="true" aria-controls="panelNotifPrefsInicio" aria-label="Mostrar u ocultar avisos en el teléfono">
+          <span class="config-section-collapse-title-wrap">
+            <span class="config-section-collapse-title dash-notif-prefs-title" id="dashNotifPrefsTitle">🔔 Avisos en el teléfono</span>
+          </span>
+          <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+        </button>
+        <div class="config-section-collapse-body recarga-proxima-collapse-body" id="panelNotifPrefsInicio">
+          <p class="dash-notif-prefs-lead">Las alertas meteorológicas (MeteoAlarm / AEMET en tu zona) siguen con el permiso del navegador. Aquí eliges si quieres avisos <strong>extra</strong> de cultivo.</p>
+          <fieldset class="dash-notif-prefs-fieldset" id="dashNotifPrefsFieldset">
+            <label class="dash-notif-toggle-row">
+              <input type="checkbox" id="notifOptRecarga" onchange="persistNotifOpciones()">
+              <span>Recarga completa pendiente (~15 días)</span>
+            </label>
+            <label class="dash-notif-toggle-row">
+              <input type="checkbox" id="notifOptMedicion" onchange="persistNotifOpciones()">
+              <span>Si llevas días sin medir</span>
+            </label>
+            <label class="dash-notif-toggle-row">
+              <input type="checkbox" id="notifOptCosecha" onchange="persistNotifOpciones()">
+              <span>Plantas listas para cosechar</span>
+            </label>
+          </fieldset>
+          <p class="dash-notif-prefs-hint setup-hidden" id="dashNotifPrefsHint">Primero concede permiso con «Activar alertas» en Más opciones; luego podrás marcar estas casillas.</p>
+        </div>
       </section>
 
       <div id="panelSeguridadAccesoInicio" class="dash-seguridad-panel setup-hidden" role="region"
@@ -3549,11 +3558,11 @@
   <script src="js/meteo-alarm-utils.js?v=1"></script>
   <script src="js/meteo-alarm-parse.js?v=1"></script>
   <script src="js/hc-bootstrap-config.js?v=1"></script>
-  <script src="js/hc-bootstrap-state.js?v=2"></script>
-  <script src="js/hc-bootstrap-pin.js?v=1"></script>
+  <script src="js/hc-bootstrap-state.js?v=3"></script>
+  <script src="js/hc-bootstrap-pin.js?v=3"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=2"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=3"></script>
-  <script src="js/torre-render-build.js?v=1"></script>
+  <script src="js/torre-render-build.js?v=2"></script>
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=1"></script>
@@ -3579,7 +3588,7 @@
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=2"></script>
   <script src="js/app-hc-setup-onboarding.js?v=1"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=2"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=3"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=1"></script>
 </body>
 </html>

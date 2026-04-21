@@ -717,7 +717,7 @@ function ensureNotifOpciones() {
   if (typeof normalizarNotifOpcionesEnState === 'function') {
     normalizarNotifOpcionesEnState(state);
   } else if (!state.notifOpciones || typeof state.notifOpciones !== 'object') {
-    state.notifOpciones = { recarga: false, medicion: false, cosecha: false };
+    state.notifOpciones = { recarga: false, medicion: false, cosecha: false, panelInicioColapsado: false };
   }
 }
 
@@ -736,10 +736,14 @@ function refreshDashNotificacionesUI() {
   ensureNotifOpciones();
   const fs = document.getElementById('dashNotifPrefsFieldset');
   const hint = document.getElementById('dashNotifPrefsHint');
+  const panel = document.getElementById('panelNotifPrefsInicio');
+  const btn = document.getElementById('btnNotifPrefsInicio');
   const nr = document.getElementById('notifOptRecarga');
   const nm = document.getElementById('notifOptMedicion');
   const nc = document.getElementById('notifOptCosecha');
   const o = state.notifOpciones;
+  if (panel) panel.hidden = !!o.panelInicioColapsado;
+  if (btn) btn.setAttribute('aria-expanded', o.panelInicioColapsado ? 'false' : 'true');
   if (nr) nr.checked = !!o.recarga;
   if (nm) nm.checked = !!o.medicion;
   if (nc) nc.checked = !!o.cosecha;
@@ -792,6 +796,8 @@ function programarRecordatorios() {
   }
 
   if (prefs.cosecha) {
+    let cultivosListos = 0;
+    const muestras = [];
     const nivelesActivos = getNivelesActivos();
     nivelesActivos.forEach(n => {
       (state.torre[n] || []).forEach((c, ci) => {
@@ -802,15 +808,25 @@ function programarRecordatorios() {
           ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
           : diasBase;
         if (dias >= diasTotal) {
-          const labN = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
-          enviarNotificacion(
-            '✂️ HidroCultivo — Cosecha lista',
-            labN + ' en Nivel ' + (n+1) + ' Cesta ' + (ci+1) + ' lleva ' + dias + ' días. Lista para cosechar.',
-            ''
-          );
+          cultivosListos++;
+          if (muestras.length < 2) {
+            const labN = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
+            muestras.push(labN + ' (N' + (n + 1) + '·C' + (ci + 1) + ')');
+          }
         }
       });
     });
+    if (cultivosListos > 0) {
+      const detalle =
+        muestras.length > 0
+          ? ' Ejemplos: ' + muestras.join(', ') + (cultivosListos > muestras.length ? '…' : '') + '.'
+          : '';
+      enviarNotificacion(
+        '✂️ HidroCultivo — Cosecha lista',
+        'Tienes ' + cultivosListos + ' cultivo' + (cultivosListos === 1 ? '' : 's') + ' listos para cosechar.' + detalle,
+        ''
+      );
+    }
   }
 }
 

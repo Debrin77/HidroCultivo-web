@@ -46,6 +46,22 @@ function toggleSeguridadAccesoInicio() {
   p.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
 }
 
+function toggleAvisosTelefonoInicio() {
+  const p = document.getElementById('panelNotifPrefsInicio');
+  const b = document.getElementById('btnNotifPrefsInicio');
+  if (!p || !b) return;
+  const expanded = b.getAttribute('aria-expanded') !== 'false';
+  p.hidden = expanded;
+  b.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+  try {
+    if (typeof ensureNotifOpciones === 'function') ensureNotifOpciones();
+    if (state && state.notifOpciones) {
+      state.notifOpciones.panelInicioColapsado = !!expanded;
+      if (typeof saveState === 'function') saveState();
+    }
+  } catch (_) {}
+}
+
 function hasValidAuthSession() {
   try {
     const rememberMin = getAuthRememberMinutes();

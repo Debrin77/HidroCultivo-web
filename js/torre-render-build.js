@@ -712,14 +712,15 @@ function generarSVGDwc() {
 
   const pieTxt =
     torreInteraccionModo === 'asignar'
-      ? 'Asignar: cultivo arriba · toca macetas en la tapa (vista superior) o Lista'
-      : 'Editar: macetas en planta o Lista · Abajo: frente del depósito (ilustrativo)';
+      ? 'Asignar: toca macetas arriba o usa Lista'
+      : 'Editar: macetas arriba o Lista · abajo, frente del depósito';
+  const objLabelBreve = /baby/i.test(String(objSpec.label || '')) ? 'baby' : 'adulta';
   const recoEstado = recoCultivo
-    ? (recoCultivo.estado === 'ok' ? 'OK' : recoCultivo.estado === 'warn' ? 'Ajustar' : 'No recomendado')
+    ? (recoCultivo.estado === 'ok' ? 'OK' : recoCultivo.estado === 'warn' ? 'ajustar' : 'revisar')
     : '';
   const pieReco = recoCultivo ? ` · cesta ${recoCultivo.perfil.cestaTxt} · ${recoEstado}` : '';
-  s += `<text x="${W / 2}" y="${H - 18}" font-family="Inconsolata,monospace" font-size="7.2" fill="#64748b" text-anchor="middle" font-weight="600">Objetivo ${objSpec.label} · ${rejTxt}${pieReco}</text>`;
-  s += `<text x="${W / 2}" y="${H - 7}" font-family="Inconsolata,monospace" font-size="7.5" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
+  s += `<text x="${W / 2}" y="${H - 18}" font-family="Inconsolata,monospace" font-size="6.8" fill="#64748b" text-anchor="middle" font-weight="600">Objetivo ${objLabelBreve} · ${rejTxt}${pieReco}</text>`;
+  s += `<text x="${W / 2}" y="${H - 7}" font-family="Inconsolata,monospace" font-size="6.8" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
 
   const pad = 14;
   const vbW = W + pad * 2;

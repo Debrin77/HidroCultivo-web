@@ -51,6 +51,7 @@ function normalizarNotifOpcionesEnState(s) {
     recarga: typeof p?.recarga === 'boolean' ? p.recarga : false,
     medicion: typeof p?.medicion === 'boolean' ? p.medicion : false,
     cosecha: typeof p?.cosecha === 'boolean' ? p.cosecha : false,
+    panelInicioColapsado: typeof p?.panelInicioColapsado === 'boolean' ? p.panelInicioColapsado : false,
   };
 }
 
