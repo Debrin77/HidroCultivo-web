@@ -118,6 +118,54 @@ const GERMINACION_POR_NOMBRE = {
     planton: '8–14 d.',
     nota: 'Calor >26 °C acelera floración: plantón joven al sistema o frescor en bandeja.',
   },
+  'Romana': { planton: '7–11 d; plántula vigorosa.', nota: 'Similar a otras lechugas; evitar etiolación excesiva antes de pasar luz.' },
+  'Trocadero': { planton: '7–11 d.', nota: 'Hoja más tierna: no retrasar demasiado el traslado si el cubo se queda pequeño.' },
+  'Maravilla': { planton: '8–12 d.', nota: 'En frío germina algo más lento; en calor acelera pero vigilar encharcamiento.' },
+  'Lolo Rosso': { planton: '7–11 d.', nota: 'Cotiledones a veces más lentos de abrir; luz suave los primeros días.' },
+  'Hoja Roble Rojo': { planton: '7–11 d.', nota: 'Hoja amplia: espacio entre plugs ayuda a evitar moho en contacto.' },
+  'Batavia': { planton: '8–12 d.', nota: 'Similar a mantecosa en ritmo; buena ventilación en bandeja.' },
+  'Mantecosa': { planton: '7–11 d.', nota: 'Sensible al calor después: plantón compacto antes de verano intenso.' },
+  'Acelga': { emerg: '3–6 d.', planton: '10–16 d.', nota: 'Semilla grande; siembra no demasiado profunda en plug.' },
+  'Kale / Col rizada': { emerg: '3–5 d.', planton: '10–18 d.', nota: 'Puede alargar bajo luz baja; subir DLI de forma progresiva.' },
+  'Berros': { emerg: '2–4 d.', planton: '6–10 d.', nota: 'Necesita humedad constante en superficie; luz moderada al inicio.' },
+  'Lechuga de agua': { emerg: '2–4 d.', planton: '6–10 d.', nota: 'Muy rápida; trasplantar pronto para no enredar raíces finas.' },
+  'Mizuna': { emerg: '2–3 d.', planton: '6–10 d.', nota: 'Entre las asiáticas más uniformes en bandeja.' },
+  'Komatsuna': { emerg: '2–4 d.', planton: '7–11 d.', nota: 'Similar a mizuna; hoja ancha — aire entre plantas.' },
+  'Tatsoi': { emerg: '2–4 d.', planton: '8–12 d.', nota: 'Roseta baja; no tapar semillas con grueso capa de sustrato.' },
+  'Mostaza roja/verde': { emerg: '2–3 d.', planton: '5–9 d.', nota: 'Muy rápida; puede espigarse en calor — plantón joven.' },
+  'Albahaca': { emerg: '5–8 d a ≥20 °C.', planton: '14–22 d.', nota: 'Frío estanca germinación; calor suave y capa fina de sustrato.' },
+  'Menta / Hierbabuena': { emerg: '7–14 d.', planton: '18–30 d.', nota: 'Luz tras emergencia; riego ligero para evitar pudrición.' },
+  'Orégano': { emerg: '7–12 d.', planton: '20–35 d.', nota: 'Semilla muy fina; no enterrar; mantiene lento crecimiento inicial.' },
+  'Romero': { emerg: '10–21 d.', planton: '28–45 d.', nota: 'Muy lento; paciencia y sustrato bien drenado en plug.' },
+  'Tomillo': { emerg: '7–14 d.', planton: '18–30 d.', nota: 'Semilla fina; superficie húmeda sin lavar semillas.' },
+  'Lavanda': { emerg: '10–20 d.', planton: '30–50 d.', nota: 'Estratificación en frío a veces recomendada en sobre; seguir fabricante.' },
+  'Eneldo': { emerg: '5–10 d.', planton: '12–20 d.', nota: 'Semilla fina; trasplantar con cuidado — raíz larga frágil.' },
+  'Cebollino': { emerg: '5–10 d.', planton: '10–18 d.', nota: 'Agrupar semillas o línea en plug; ritmo intermedio.' },
+  'Pimiento / Capsicum': {
+    emerg: '5–9 d a 24–28 °C.',
+    planton: '22–38 d.',
+    nota: 'Uniformidad con manta térmica en bandeja; evitar “legginess” con más luz o menos Tª nocturna.',
+  },
+  'Pimiento picante / Chile': {
+    emerg: '5–9 d.',
+    planton: '22–40 d.',
+    nota: 'Similar al pimiento dulce; puede ser más lento según accesión.',
+  },
+  'Calabacín / Zucchini': {
+    emerg: '3–6 d.',
+    planton: '12–22 d.',
+    nota: 'Cotiledón grande: no compactar demasiado el sustrato en el plug.',
+  },
+  'Fresa': {
+    emerg: '5–10 d.',
+    planton: '28–45 d antes de torre productiva',
+    nota: 'Primeras hojas lentas; mucha paciencia antes de exigir fruto.',
+  },
+  'Fresón / Albión': {
+    emerg: '5–10 d.',
+    planton: '28–42 d',
+    nota: 'Similar a fresa; seguir protocolo de vivero si viene de plug comercial.',
+  },
 };
 
 function getGerminacionSpecPorVariedad(nombreVariedad) {
@@ -140,9 +188,9 @@ function hcGerminacionPanelHtmlCompleto(nombreVariedad) {
   const nom = String(nombreVariedad || '').trim();
   const spec = getGerminacionSpecPorVariedad(nom);
   const esc = typeof meteoEscHtml === 'function' ? meteoEscHtml : s => String(s || '').replace(/</g, '&lt;').replace(/&/g, '&amp;');
-  const titVar = nom
-    ? '<p class="hc-origen-hint-p"><strong>' + esc(nom) + '</strong> — tiempos orientativos (bandeja, ~18–22 °C, sustrato húmedo sin encharcar):</p>'
-    : '<p class="hc-origen-hint-p"><strong>Elige un cultivo</strong> en la lista para ver tiempos orientativos de germinación.</p>';
+  const lead = nom
+    ? '<p class="hc-origen-hint-p">Tiempos <strong>orientativos</strong> en bandeja (~18–22 °C, sustrato húmedo sin encharcar).</p>'
+    : '<p class="hc-origen-hint-p"><strong>Elige un cultivo</strong> en la lista para ver los rangos de esa variedad.</p>';
   const pasos =
     '<p class="hc-origen-hint-p"><strong>Proceso típico en la app</strong></p>' +
     '<ol class="hc-origen-hint-ol">' +
@@ -159,5 +207,9 @@ function hcGerminacionPanelHtmlCompleto(nombreVariedad) {
     (spec.nota ? '<dt>Nota</dt><dd>' + esc(spec.nota) + '</dd>' : '') +
     '</dl>' +
     '<p class="hc-origen-hint-foot">Los sobres de semilla y la Tª real marcan el calendario; esto solo orienta.</p>';
-  return titVar + dl + pasos;
+  const inner = lead + dl + pasos;
+  const sum = nom ? 'Germinación · ' + esc(nom) : 'Germinación · tiempos y pasos';
+  return typeof hcWrapOrigenDetails === 'function'
+    ? hcWrapOrigenDetails(inner, sum, false)
+    : inner;
 }

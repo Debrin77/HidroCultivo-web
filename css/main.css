@@ -1419,6 +1419,15 @@ select#editVariedad option {
   margin-top: 4px;
   font-weight: 600;
 }
+.torre-lista-cesta-btn .tl-o {
+  font-size: 9px;
+  font-weight: 700;
+  color: #0369a1;
+  margin-top: 3px;
+  line-height: 1.2;
+  text-align: center;
+  max-width: 100%;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .torre-lista-cesta-btn:hover,
@@ -8247,6 +8256,84 @@ button.config-option {
   font-size: 10px;
   color: #64748b;
 }
+/* Desplegable técnico unificado (NFT, guías origen, tablas en Consejos) */
+.hc-details-tech {
+  margin: 10px 0 0;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fafafa;
+  overflow: hidden;
+}
+.hc-details-tech-sum {
+  list-style: none;
+  cursor: pointer;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-sizing: border-box;
+}
+.hc-details-tech-sum::-webkit-details-marker {
+  display: none;
+}
+.hc-details-tech-sum::after {
+  content: '▼';
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 23, 42, 0.2);
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+  transition: transform 0.2s ease;
+  transform: rotate(-90deg);
+}
+.hc-details-tech[open] .hc-details-tech-sum::after {
+  transform: rotate(0deg);
+}
+.hc-details-tech-body {
+  padding: 0 12px 12px;
+  font-size: 10px;
+  line-height: 1.55;
+  color: #334155;
+}
+.hc-details-tech--origen {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: #fafcff;
+}
+.hc-details-tech--origen .hc-details-tech-sum {
+  color: #1e40af;
+}
+.hc-details-tech--origen .hc-details-tech-sum::after {
+  border-color: rgba(30, 64, 175, 0.28);
+  color: #1e3a8a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+.hc-details-tech--origen .hc-details-tech-body {
+  font-size: 11px;
+  line-height: 1.45;
+  border-top: 1px solid rgba(37, 99, 235, 0.12);
+}
+/* Ayuda torre/modal: solo el details → un solo marco */
+.hc-origen-hint-box:has(> .hc-details-tech:only-child) {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.hc-origen-hint-box:has(> .hc-details-tech:only-child) > .hc-details-tech {
+  margin-top: 0;
+}
 .modal .hc-origen-hint-box {
   margin-top: 4px;
 }
@@ -8763,57 +8850,7 @@ button.config-option {
   line-height: 1.5;
 }
 .nft-ref-note--cl { font-size: 10px; }
-.nft-detalle-wrap {
-  margin-top: 10px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #fafafa;
-  overflow: hidden;
-}
-.nft-detalle-summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 10px 12px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #475569;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  box-sizing: border-box;
-}
-.nft-detalle-summary::-webkit-details-marker {
-  display: none;
-}
-.nft-detalle-summary::after {
-  content: '▼';
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1;
-  border-radius: 999px;
-  border: 1.5px solid rgba(15, 23, 42, 0.2);
-  background: #fff;
-  color: #0f172a;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
-  transition: transform 0.2s ease;
-  transform: rotate(-90deg);
-}
-.nft-detalle-wrap[open] .nft-detalle-summary::after {
-  transform: rotate(0deg);
-}
-.nft-detalle-body {
-  padding: 0 12px 12px;
-  font-size: 10px;
-  line-height: 1.55;
-  color: #334155;
-}
+/* Contenedor NFT: ver .hc-details-tech (+ cuerpo .hc-details-tech-body) */
 .nft-detalle-p { margin: 0 0 8px; }
 .nft-detalle-ul { margin: 0; padding-left: 1.2em; }
 .nft-detalle-foot { margin: 8px 0 0; font-size: 10px; color: #64748b; }

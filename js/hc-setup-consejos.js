@@ -993,18 +993,24 @@ function buildConsejoTablaGerminacionCultivos() {
       );
     })
     .join('');
+  const tableInner =
+    '<div class="hc-germ-table-scroll">' +
+    '<table class="hc-germ-table">' +
+    '<thead><tr><th scope="col">Cultivo</th><th scope="col">Oscuro / uniformidad</th><th scope="col">Hasta emergencia</th><th scope="col">Hasta plantón</th></tr></thead>' +
+    '<tbody>' +
+    rows +
+    '</tbody></table></div>';
+  const tableBlock =
+    typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails(tableInner, 'Tabla completa por cultivo (desplegar)', false)
+      : tableInner;
   return htmlConsejoCard(CONSEJOS_DATA.cultivo, {
     icono: '📆',
     titulo: 'Germinación en semillero — tabla por cultivo',
     texto:
       '<p class="consejo-germ-intro">Rangos <strong>orientativos</strong> (bandeja, Tª moderada). El sobre del semillero y tu invernadero marcan el ritmo real.</p>' +
-      '<div class="hc-germ-table-scroll">' +
-      '<table class="hc-germ-table">' +
-      '<thead><tr><th scope="col">Cultivo</th><th scope="col">Oscuro / uniformidad</th><th scope="col">Hasta emergencia</th><th scope="col">Hasta plantón</th></tr></thead>' +
-      '<tbody>' +
-      rows +
-      '</tbody></table></div>' +
-      '<p class="consejo-germ-foot">En <strong>Torre → Asignar cultivo</strong>, si eliges <strong>Germinación propia</strong>, la ayuda se actualiza al cambiar la variedad.</p>',
+      tableBlock +
+      '<p class="consejo-germ-foot">En <strong>Torre → Asignar cultivo</strong>, si eliges <strong>Germinación propia</strong>, la guía va en un <strong>desplegable</strong> y se actualiza al cambiar la variedad.</p>',
     alerta: {
       tipo: 'info',
       txt: 'ℹ️ “Hasta plantón” es cuando suele irse al NFT/DWC/torre; la fecha en la ficha debe ser el <strong>traslado al sistema</strong>.',

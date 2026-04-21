@@ -164,6 +164,8 @@ function renderTorreLista() {
       const faseLabels = { plantula: 'Plántula', crecimiento: 'Crecimiento', madurez: 'Maduración', cosecha: 'Listo para cosechar' };
       const faseTit = faseEst ? (faseLabels[faseEst] || faseEst) : '';
       const faseEmoji = faseEst ? getEmoji(faseEst) : '';
+      const origL =
+        typeof etiquetaOrigenPlantaBreve === 'function' ? etiquetaOrigenPlantaBreve(dat.origenPlanta) : '';
       const keys = Array.isArray(dat.fotoKeys) ? dat.fotoKeys : [];
       const ultFotoKey = keys.length ? keys[keys.length - 1] : '';
       const fkAttr = ultFotoKey
@@ -171,6 +173,11 @@ function renderTorreLista() {
         : '';
       let ariaLabel = (esNft ? 'Hueco ' : esDwc ? 'Maceta ' : 'Cesta ') + (c + 1) + ', ' + (dat.variedad ? titLista : tit) + ', ' + sub;
       if (faseTit) ariaLabel += ', fase: ' + faseTit;
+      if (origL) {
+        const oa = typeof normalizarOrigenPlanta === 'function' ? normalizarOrigenPlanta(dat.origenPlanta) : '';
+        if (oa === 'vivero') ariaLabel += ', origen vivero';
+        else if (oa === 'germinacion') ariaLabel += ', origen germinación propia';
+      }
       ariaLabel = ariaLabel.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
       h += '<button type="button" class="torre-lista-cesta-btn" data-n="' + n + '" data-c="' + c + '" ' +
         'aria-label="' + ariaLabel + '">';
@@ -184,6 +191,7 @@ function renderTorreLista() {
       h += '</span>';
       h += '<span class="tl-t">' + titEsc + '</span>';
       h += '<span class="tl-s">' + sub + '</span>';
+      if (origL) h += '<span class="tl-o">' + escHtmlUi(origL) + '</span>';
       h += '</button>';
     }
     h += '</div>';

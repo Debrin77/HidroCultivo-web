@@ -329,9 +329,14 @@ function importarMedicionesAlRegistro() {
     const esRecarga = /recarga completa/i.test(notas);
     let entry;
     if (m.tipo === 'cosecha') {
+      const orImp =
+        typeof normalizarOrigenPlanta === 'function'
+          ? normalizarOrigenPlanta(m.origenPlanta)
+          : '';
       entry = {
         tipo: 'cosecha', fecha: m.fecha, hora: m.hora, ...base,
         variedad: '', notas, icono: '✂️',
+        origenPlanta: orImp,
       };
     } else if (esRecarga) {
       entry = {

@@ -75,6 +75,41 @@ function escHtmlUi(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/**
+ * Desplegable técnico unificado (&lt;details&gt;): NFT, guías de origen, tablas largas.
+ * @param {string} innerHtml
+ * @param {string} [summaryLabel]
+ * @param {boolean} [openDefault]
+ * @param {string} [variant] '' neutro (pizarra) | 'origen' acento cultivo/agua
+ */
+function hcWrapDetailsTech(innerHtml, summaryLabel, openDefault, variant) {
+  const defLab = variant === 'origen' ? 'Ver guía' : 'Ver detalle técnico y cifras';
+  const lab =
+    summaryLabel != null && String(summaryLabel).trim() !== ''
+      ? String(summaryLabel).trim()
+      : defLab;
+  const op = openDefault ? ' open' : '';
+  const mod = variant === 'origen' ? ' hc-details-tech--origen' : '';
+  return (
+    '<details class="hc-details-tech' + mod + '"' + op + '>' +
+    '<summary class="hc-details-tech-sum">' +
+    escHtmlUi(lab) +
+    '</summary>' +
+    '<div class="hc-details-tech-body">' +
+    innerHtml +
+    '</div></details>'
+  );
+}
+
+/**
+ * @param {string} innerHtml
+ * @param {string} [summaryLabel]
+ * @param {boolean} [openDefault]
+ */
+function hcWrapOrigenDetails(innerHtml, summaryLabel, openDefault) {
+  return hcWrapDetailsTech(innerHtml, summaryLabel, openDefault, 'origen');
+}
+
 /** Etiqueta en listas/selects/torre; state.variedad sigue siendo el nombre canónico (sin prefijo). */
 function cultivoNombreLista(cultivo, variedadGuardada) {
   if (cultivo && cultivo.abrev) return cultivo.abrev + ' · ' + cultivo.nombre;

@@ -186,12 +186,15 @@ function nftWrapDetalleTecnicoSummary(innerHtml, summaryLabel) {
     summaryLabel != null && String(summaryLabel).trim() !== ''
       ? String(summaryLabel).trim()
       : 'Ver detalle técnico y cifras';
+  if (typeof hcWrapDetailsTech === 'function') {
+    return hcWrapDetailsTech(innerHtml, lab, false, '');
+  }
   return (
-    '<details class="nft-detalle-wrap">' +
-    '<summary class="nft-detalle-summary">' +
+    '<details class="hc-details-tech">' +
+    '<summary class="hc-details-tech-sum">' +
     escHtmlUi(lab) +
     '</summary>' +
-    '<div class="nft-detalle-body">' +
+    '<div class="hc-details-tech-body">' +
     innerHtml +
     '</div></details>'
   );

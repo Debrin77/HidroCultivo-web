@@ -80,17 +80,19 @@ function asegurarCamposFilaTorre(row) {
 }
 
 function hcOrientacionViveroHtml() {
-  return (
+  const inner =
     '<p class="hc-origen-hint-p"><strong>Plántula de vivero</strong>: suele traer algo de sustrato (turba, coco, etc.) en el pan de raíces. ' +
-    'En hidroponía conviene <strong>retirar con cuidado lo suelto</strong> o seguir las indicaciones del vivero; evita meter tierra suelta al circuito.</p>'
-  );
+    'En hidroponía conviene <strong>retirar con cuidado lo suelto</strong> o seguir las indicaciones del vivero; evita meter tierra suelta al circuito.</p>';
+  return typeof hcWrapOrigenDetails === 'function'
+    ? hcWrapOrigenDetails(inner, 'Plántula de vivero · sustrato y raíces', false)
+    : inner;
 }
 
 function hcOrientacionGerminacionHtml(nombreVariedad) {
   if (typeof hcGerminacionPanelHtmlCompleto === 'function') {
     return hcGerminacionPanelHtmlCompleto(nombreVariedad || '');
   }
-  return (
+  const fb =
     '<p class="hc-origen-hint-p"><strong>Germinación propia</strong> — referencia orientativa (ajusta según semillero y variedad):</p>' +
     '<ol class="hc-origen-hint-ol">' +
     '<li>Coloca la semilla en <strong>sustrato hidropónico</strong> húmedo (lana de roca, coco, etc.), sin enterrar en exceso.</li>' +
@@ -98,8 +100,10 @@ function hcOrientacionGerminacionHtml(nombreVariedad) {
     '<li>Pasa a <strong>luz de crecimiento</strong> (14–18 h/día, intensidad suave al inicio) hasta <strong>2–3 hojas reales</strong> y buen desarrollo radicular.</li>' +
     '<li><strong>Trasplanta al sistema</strong> (torre, NFT o DWC) y registra aquí la <strong>fecha de trasplante</strong>: es el día desde el que la app cuenta el ciclo.</li>' +
     '</ol>' +
-    '<p class="hc-origen-hint-foot">Los días exactos dependen de la variedad y de la temperatura; revisa siempre el sobre del semillero.</p>'
-  );
+    '<p class="hc-origen-hint-foot">Los días exactos dependen de la variedad y de la temperatura; revisa siempre el sobre del semillero.</p>';
+  return typeof hcWrapOrigenDetails === 'function'
+    ? hcWrapOrigenDetails(fb, 'Germinación propia · guía rápida', false)
+    : fb;
 }
 
 function onTorreAssignOrigenChange() {

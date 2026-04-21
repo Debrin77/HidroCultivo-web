@@ -72,13 +72,20 @@ function cosecharCesta() {
   const nomCosechaUi = cultivoNombreLista(getCultivoDB(data.variedad), data.variedad);
   const tCose = tipoInstalacionNormalizado(state.configTorre || {});
   const ubiCose = formatoUbicacionEnRegistro(tCose, nivel + 1, cesta + 1);
+  const orPl =
+    typeof normalizarOrigenPlanta === 'function'
+      ? normalizarOrigenPlanta(data.origenPlanta)
+      : '';
+  const orTxt = typeof etiquetaOrigenPlantaBreve === 'function' ? etiquetaOrigenPlantaBreve(orPl) : '';
   state.mediciones.unshift({
     fecha: state.registro[0].fecha,
     hora:  state.registro[0].hora,
     tipo:  'cosecha',
     ec: '', ph: '', temp: '', vol: '',
+    origenPlanta: orPl,
     notas: '✂️ Cosecha: ' + nomCosechaUi +
            (ubiCose ? ' · ' + ubiCose : '') +
+           (orTxt ? ' · ' + orTxt : '') +
            (diasCultivo ? ' · ' + diasCultivo + ' días' : '') +
            (data.notas ? ' · ' + data.notas : '')
   });
