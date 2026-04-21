@@ -901,6 +901,10 @@ function getCLPasos() {
     }]
     : [];
   const primerLlenado = clRutaChecklist === 'primer_llenado';
+  const checklistInterior =
+    typeof instalacionEsUbicacionInterior === 'function' && instalacionEsUbicacionInterior(cfg);
+  /** Recarga completa sin haber registrado antes una recarga en la app: sin parar bomba ni vaciar solución usada. */
+  const recargaCompletaPrimeraEnApp = !primerLlenado && !state.ultimaRecarga;
 
   const pasosNftExtra = esNft && nftBomb ? [
     { id:'N0', seccion:null, paso:'N0',
@@ -931,22 +935,14 @@ function getCLPasos() {
       nota:'Aire en el circuito suele dejar los primeros huecos sin película' },
   ] : [];
 
-  const pasosCabeceraRecargaCompleta = [
-  { id:'P1', seccion:'🌙 Preparación', paso:'P1',
-    desc: pre.descP1,
-    nota:'Para mantener raíces húmedas durante los 45 min sin bomba · Dosis escaladas desde tu depósito de ' + vol + 'L y ' + nut.nombre +
-      (esNft ? ' · NFT: prioriza humedad en raíces expuestas y entradas de canal.' : '') +
-      (esDwc ? ' · DWC: prioriza raíces sumergidas y oxigenación al reanudar.' : ''),
-    campos:[{ id:'clEcProvisional', label:'EC provisional:', unit:'mS/cm', type:'number', step:'0.01', placeholder: pre.placeholderProv }] },
-  { id:'P2', seccion:null, paso:'P2',
-    desc: pre.descP2,
-    nota:'Comprar lo faltante antes de empezar' },
-  { id:'P3', seccion:null, paso:'P3',
+  const pasoP3Toldo = {
+    id:'P3', seccion:null, paso:'P3',
     desc:'Poner toldo si hay sol directo o temperatura > 20°C',
     nota: esNft ? 'En NFT el sol directo seca rápido la película y las plántulas al inicio del canal'
       : esDwc ? 'En DWC el sol calienta depósito y follaje; toldo y depósito opaco reducen estrés y algas'
-      : 'Reduce transpiración durante los 45 min sin bomba' },
-
+      : 'Reduce transpiración durante los 45 min sin bomba',
+  };
+  const pasosPaso1ApagarRecarga = [
   { id:'1.1', seccion:'⏹️ Paso 1 — Apagar y riego provisional', paso:'1.1',
     desc: esDwc
       ? 'Apagar el aireador (y la bomba de agua si hubiera recirculación auxiliar) antes de vaciar'
@@ -987,7 +983,8 @@ function getCLPasos() {
       : esDwc
         ? 'En DWC las raíces cuelgan en el depósito — minimiza el tiempo fuera del líquido'
         : 'Prepara un cubo con solución del depósito actual por si necesitas mover alguna planta de forma imprescindible — mantén las raíces sumergidas en todo momento' },
-
+  ];
+  const pasosPaso2LimpiezaRecargaConUso = [
   { id:'2.1', seccion:'🧹 Paso 2 — Vaciar y limpiar', paso:'2.1',
     desc:'Vaciar completamente el depósito y anotar color del agua',
     campos:[{
@@ -1009,6 +1006,42 @@ function getCLPasos() {
       : esDwc
         ? 'Limpiar difusores, mangueras de aire, tapa y paredes del depósito; retirar raíces flotantes y biofilm'
         : 'Limpiar tubos, bomba exterior y conexiones' },
+  ];
+  const pasosPaso2SoloLimpiezaDepositoVacio = [
+  { id:'2.3', seccion:'🧹 Paso 2 — Limpiar depósito', paso:'2.3',
+    desc:'Limpiar paredes con agua oxigenada 3%: 15ml en 5L agua. Frotar con esponja suave',
+    nota:'Especial atención a manchas rojizas · Si es la primera recarga en la app y el depósito no tenía cultivo previo, basta con limpiar el interior vacío (sin vaciar solución usada).' },
+  { id:'2.4', seccion:null, paso:'2.4',
+    desc:'Aclarar con agua limpia — mínimo 2 veces',
+    nota:'Eliminar todo residuo de agua oxigenada' },
+  ];
+
+  const notaP1Prep =
+    'Para mantener raíces húmedas durante los 45 min sin bomba · Dosis escaladas desde tu depósito de ' + vol + 'L y ' + nut.nombre +
+    (esNft ? ' · NFT: prioriza humedad en raíces expuestas y entradas de canal.' : '') +
+    (esDwc ? ' · DWC: prioriza raíces sumergidas y oxigenación al reanudar.' : '') +
+    (recargaCompletaPrimeraEnApp
+      ? ' Si es la primera recarga en la app sin paro de bomba previo, el bloque «apagar» no aplica: esta mezcla en cubo sigue sirviendo como referencia de dosis o para humedecer al montar cestas.'
+      : '');
+  const notaP2Prep =
+    'Comprar lo faltante antes de empezar' +
+    (recargaCompletaPrimeraEnApp ? ' (incluye limpieza aunque no vacíes solución usada).' : '');
+
+  const pasosPrepRecarga = [
+  { id:'P1', seccion:'🌙 Preparación', paso:'P1',
+    desc: pre.descP1,
+    nota: notaP1Prep,
+    campos:[{ id:'clEcProvisional', label:'EC provisional:', unit:'mS/cm', type:'number', step:'0.01', placeholder: pre.placeholderProv }] },
+  { id:'P2', seccion:null, paso:'P2',
+    desc: pre.descP2,
+    nota: notaP2Prep },
+  ];
+  if (!checklistInterior) pasosPrepRecarga.push(pasoP3Toldo);
+
+  const pasosCabeceraRecargaCompleta = [
+  ...pasosPrepRecarga,
+  ...(recargaCompletaPrimeraEnApp ? [] : pasosPaso1ApagarRecarga),
+  ...(recargaCompletaPrimeraEnApp ? pasosPaso2SoloLimpiezaDepositoVacio : pasosPaso2LimpiezaRecargaConUso),
   ];
 
   const pasosCubiertaDeposito = [
@@ -1104,7 +1137,8 @@ function getCLPasos() {
       : esDwc
         ? 'Burbujeo estable; temperatura de agua razonable; depósito opaco y tapa bien cerrada'
         : ('Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre vertical') },
-  { id:'7.2', seccion:null, paso:'7.2',
+  ...(primerLlenado ? [] : [{
+    id:'7.2', seccion:null, paso:'7.2',
     desc: esNft
       ? 'Tras 30 min: plantas turgentes y entradas de canal sin marchitez; sin “chorros” que dañen plántulas'
       : esDwc
@@ -1115,7 +1149,8 @@ function getCLPasos() {
       opciones: esDwc
         ? ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar aireador / oxígeno']
         : ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar bomba / circulación']
-    }] },
+    }],
+  }]),
   { id:'7.3', seccion:null, paso:'7.3',
     desc: esNft
       ? 'Anotar en Historial / Mediciones; los próximos días ajusta caudal o pendiente si algún canal se queda corto de película'

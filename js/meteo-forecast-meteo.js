@@ -493,6 +493,11 @@ function renderMeteoclimaticPanelMeteo(mc) {
   const box = document.getElementById('meteoMeteoclimaticBox');
   const inner = document.getElementById('meteoMeteoclimaticInner');
   if (!box || !inner) return;
+  if (typeof instalacionEsUbicacionInterior === 'function' && instalacionEsUbicacionInterior()) {
+    box.classList.add('setup-hidden');
+    inner.innerHTML = '';
+    return;
+  }
   if (!mc || mc.temp == null) {
     box.classList.add('setup-hidden');
     inner.innerHTML = '';

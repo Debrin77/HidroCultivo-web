@@ -396,18 +396,15 @@
       <!-- Configuración agua y sustrato -->
       <div id="configPanel">
 
-        <div class="medir-dwc-block medir-dwc-block--1">
-          <button type="button" class="medir-dwc-block-head" id="btnMedirDwcBlock1" onclick="toggleMedirDwcConfigBlock(1)"
-            aria-expanded="true" aria-controls="medirDwcBlock1Body">
-            <span class="medir-dwc-block-chevron" aria-hidden="true">▼</span>
-            <span class="medir-dwc-block-titles">
-              <span class="medir-dwc-block-title">💧 Tipo de agua y municipio (clima / avisos)</span>
-              <span class="medir-dwc-block-sub">Calidad del agua y localidad para previsión y avisos</span>
-            </span>
+        <div class="config-section-collapsible medir-dwc-block medir-dwc-block--1">
+          <button type="button" class="config-section-collapse-head medir-dwc-outer-collapse" id="btnMedirDwcBlock1"
+            onclick="toggleMedirDwcConfigBlock(1)" aria-expanded="true" aria-controls="medirDwcBlock1Body"
+            aria-label="Tipo de agua, municipio del grifo si aplica y localidad para clima y avisos">
+            <span class="config-section-collapse-title" id="labelConfigAgua">💧 Tipo de agua</span>
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
-          <div class="medir-dwc-block-body" id="medirDwcBlock1Body">
+          <div class="config-section-collapse-body medir-dwc-block-body" id="medirDwcBlock1Body">
         <div class="config-section">
-          <div class="config-section-title" id="labelConfigAgua">💧 Tipo de agua</div>
           <p id="medirAguaResumen" class="medir-resumen-text"></p>
           <label class="medir-toggle-label">
             <input type="checkbox" id="chkMedirCambiarAgua" onchange="toggleMedirOpcionesAgua()"
@@ -541,18 +538,15 @@
           </div>
         </div>
 
-        <div class="medir-dwc-block medir-dwc-block--2">
-          <button type="button" class="medir-dwc-block-head" id="btnMedirDwcBlock2" onclick="toggleMedirDwcConfigBlock(2)"
-            aria-expanded="true" aria-controls="medirDwcBlock2Body">
-            <span class="medir-dwc-block-chevron" aria-hidden="true">▼</span>
-            <span class="medir-dwc-block-titles">
-              <span class="medir-dwc-block-title">💡 Ubicación del sistema, luz y sustrato</span>
-              <span class="medir-dwc-block-sub">Interior / exterior, fotoperíodo y medio en cestas</span>
-            </span>
+        <div class="config-section-collapsible medir-dwc-block medir-dwc-block--2">
+          <button type="button" class="config-section-collapse-head medir-dwc-outer-collapse" id="btnMedirDwcBlock2"
+            onclick="toggleMedirDwcConfigBlock(2)" aria-expanded="true" aria-controls="medirDwcBlock2Body"
+            aria-label="Ubicación del sistema, luz y sustrato">
+            <span class="config-section-collapse-title" id="labelUbicacionLuzMed">💡 Ubicación, luz y sustrato</span>
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
-          <div class="medir-dwc-block-body" id="medirDwcBlock2Body">
+          <div class="config-section-collapse-body medir-dwc-block-body" id="medirDwcBlock2Body">
         <div class="config-section medir-panel-ubic-luz" id="panelUbicacionLuzMediciones">
-          <div class="config-section-title" id="labelUbicacionLuzMed">💡 Ubicación del sistema y origen de luz (riego)</div>
           <div class="medir-note-block medir-note-block--ubic-luz">
             Si el sistema está <strong>dentro de casa, armario o con LED</strong>, elige <strong>Interior</strong>: aquí marcas si la luz es <strong>natural</strong> (ventana), <strong>LED</strong>, <strong>mixta</strong>, etc., y las <strong>horas de fotoperíodo</strong>.
             En <strong>Exterior</strong> el programa usa el clima de la ubicación; estos controles no se aplican.
@@ -578,12 +572,10 @@
           <div id="wrapLuzOrigenMediciones" class="setup-hidden medir-wrap-luz-origen">
             <button type="button" class="config-section-collapse-head medir-luz-origen-head" id="btnCollapseLuzOrigen"
               onclick="toggleMedirCollapse('luzOrigen')"
-              aria-expanded="true" aria-controls="collapseBodyLuzOrigen">
+              aria-expanded="true" aria-controls="collapseBodyLuzOrigen"
+              aria-label="Origen de la luz: natural, LED, mixta y horas de fotoperíodo">
+              <span class="config-section-collapse-title">💡 Origen de la luz</span>
               <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
-              <span class="config-section-collapse-title-wrap">
-                <span class="config-section-collapse-title">💡 Origen de la luz</span>
-                <span class="config-section-collapse-subtitle">Natural, LED, mixta… y horas de fotoperíodo</span>
-              </span>
             </button>
             <div class="config-section-collapse-body medir-luz-origen-body" id="collapseBodyLuzOrigen">
             <div class="medir-grid-2-gap-8 medir-mb-12">
@@ -653,7 +645,7 @@
         </div>
 
         <div class="config-section">
-          <div class="config-section-title" id="labelConfigSustrato">🌱 Sustrato</div>
+          <h3 class="medir-subsection-title medir-subsection--border" id="labelConfigSustrato">Sustrato</h3>
           <p id="medirSustratoResumen" class="medir-resumen-text"></p>
           <label class="medir-toggle-label">
             <input type="checkbox" id="chkMedirCambiarSustrato" onchange="toggleMedirOpcionesSustrato()"
@@ -736,11 +728,11 @@
           <button type="button" class="config-section-collapse-head" id="btnCollapseSensoresAjusteFino"
             aria-expanded="true" aria-controls="collapseBodySensoresAjusteFino"
             onclick="toggleMedirCollapse('sensoresAjusteFino')">
-            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
             <span class="config-section-collapse-title-wrap">
               <span class="config-section-collapse-title" id="labelSensoresAjusteFinoMain">📡 Sensores y ajuste fino (opcional)</span>
               <span class="config-section-collapse-subtitle">Afinar el riego con humedad de sustrato; inventario de sondas para tu montaje.</span>
             </span>
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
           <div class="config-section-collapse-body" id="collapseBodySensoresAjusteFino">
 
@@ -812,8 +804,10 @@
           <button type="button" class="config-section-collapse-head" id="btnCollapseCalentadorRiego"
             aria-expanded="true" aria-controls="collapseBodyCalentadorRiego"
             onclick="toggleMedirCollapse('calentadorRiego')">
+            <span class="config-section-collapse-title-wrap">
+              <span class="config-section-collapse-title">🌡️ Calentador del depósito (riego nocturno)</span>
+            </span>
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
-            <span class="config-section-collapse-title">🌡️ Calentador del depósito (riego nocturno)</span>
           </button>
           <div class="config-section-collapse-body" id="collapseBodyCalentadorRiego">
           <div class="medir-note-block">
@@ -834,8 +828,10 @@
           <button type="button" class="config-section-collapse-head" id="btnCollapseInteriorGrow"
             aria-expanded="true" aria-controls="collapseBodyInteriorGrow"
             onclick="toggleMedirCollapse('interiorGrow')">
+            <span class="config-section-collapse-title-wrap">
+              <span class="config-section-collapse-title">🏠 Sala interior (riego)</span>
+            </span>
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
-            <span class="config-section-collapse-title">🏠 Sala interior (riego)</span>
           </button>
           <div class="config-section-collapse-body" id="collapseBodyInteriorGrow">
           <div class="medir-note-block">
@@ -957,12 +953,12 @@
         <button type="button" class="config-section-collapse-head recarga-proxima-main-head" id="btnCollapseRecargaProxima"
           onclick="toggleMedirCollapse('recargaProxima')"
           aria-expanded="true" aria-controls="collapseBodyRecargaProxima">
-          <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           <span class="config-section-collapse-title-wrap">
             <span class="config-section-collapse-title">🔄 Próxima recarga <strong>completa</strong></span>
             <span class="recarga-sistema-line" id="recargaSistemaTag">Sistema: —</span>
+            <span class="recarga-dias" id="recargaDias">—</span>
           </span>
-          <span class="recarga-dias" id="recargaDias">—</span>
+          <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div class="config-section-collapse-body recarga-proxima-collapse-body" id="collapseBodyRecargaProxima">
         <p class="recarga-instalacion-aviso" role="note"><strong>Sistema hidropónico (activo):</strong> <span id="recargaSistemaNombre">—</span>. Solo este montaje (mismo selector arriba en Mediciones). Si tienes varias instalaciones, cambia antes del checklist o del interruptor.</p>
@@ -976,11 +972,11 @@
             <button type="button" class="config-section-collapse-head recarga-collapse-head is-collapsed" id="btnCollapseRecargaTotal"
               aria-expanded="false" aria-controls="collapseBodyRecargaTotal"
               onclick="toggleMedirCollapse('recargaTotal')">
-              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
               <span class="config-section-collapse-title-wrap">
                 <span class="config-section-collapse-title">🔧 Recarga total del depósito</span>
                 <span class="config-section-collapse-subtitle">Vaciar, limpiar y mezcla nueva; checklist o reinicio del contador al guardar.</span>
               </span>
+              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
             </button>
             <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaTotal" hidden>
               <p class="recarga-subhint">El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo.</p>
@@ -1003,11 +999,11 @@
             <button type="button" class="config-section-collapse-head recarga-collapse-head is-collapsed" id="btnCollapseRecargaParcial"
               aria-expanded="false" aria-controls="collapseBodyRecargaParcial"
               onclick="toggleMedirCollapse('recargaParcial')">
-              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
               <span class="config-section-collapse-title-wrap">
                 <span class="config-section-collapse-title">💠 Reposición parcial</span>
                 <span class="config-section-collapse-subtitle">Rellenar sin vaciar; no reinicia el contador de recarga completa.</span>
               </span>
+              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
             </button>
             <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaParcial" hidden>
               <p class="recarga-subhint">Sirve para que el depósito <strong>no baje de un nivel mínimo</strong>: las plantas beben agua, hay evaporación, y la <strong>bomba</strong> y el <strong>calefactor</strong> deben seguir <strong>sumergidos</strong> — si quedan al aire se pueden estropear.</p>
@@ -1164,7 +1160,7 @@
             <span class="torre-sistema-panel-kicker">Montaje NFT</span>
             <span id="sistemaNftMontajeResumen" class="torre-sistema-panel-sub"></span>
           </span>
-          <span class="torre-sistema-panel-head-caret" aria-hidden="true">▾</span>
+          <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div id="sistemaNftMontajeBody" class="torre-sistema-panel-body">
         <p class="torre-nft-p">
@@ -1311,7 +1307,7 @@
             <span class="torre-sistema-panel-kicker">Depósito DWC</span>
             <span id="sistemaDwcResumen" class="torre-sistema-panel-sub"></span>
           </span>
-          <span class="torre-sistema-panel-head-caret" aria-hidden="true">▾</span>
+          <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div id="sistemaDwcAyudaBody" class="torre-dwc-inner torre-sistema-panel-body">
           <div class="torre-dwc-grid-3">
@@ -1398,14 +1394,12 @@
             <span>Entrada aire (tapa o borde)</span>
           </label>
           <div class="torre-dwc-llenado-collapsible" id="sistemaDwcLlenadoCollapsible">
-            <button type="button" class="torre-dwc-llenado-collapse-head" id="btnToggleSistemaDwcLlenado"
+            <button type="button" class="config-section-collapse-head" id="btnToggleSistemaDwcLlenado"
               aria-expanded="true" aria-controls="sistemaDwcLlenadoBody" onclick="toggleSistemaDwcLlenadoPanel()">
-              <span class="torre-dwc-llenado-collapse-chevron" aria-hidden="true">▼</span>
-              <span class="torre-dwc-llenado-collapse-title-wrap">
-                <span class="torre-dwc-llenado-collapse-title">Llenado · distancia nutriente → base del sustrato (cm)</span>
-              </span>
+              <span class="config-section-collapse-title">Llenado · distancia nutriente → base del sustrato (cm)</span>
+              <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
             </button>
-            <div class="torre-dwc-llenado-collapse-body" id="sistemaDwcLlenadoBody">
+            <div class="config-section-collapse-body" id="sistemaDwcLlenadoBody">
               <div id="sysDwcDistanciaSustratoWrap" class="torre-dwc-dist-sistema-mount" aria-label="Llenado DWC: distancia en cm del nutriente a la base del sustrato según fichas"></div>
             </div>
           </div>

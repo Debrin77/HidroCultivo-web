@@ -967,6 +967,11 @@ function setUbicacionTorreMediciones(tipo) {
     actualizarVistaRiegoPorTipoInstalacion();
   } catch (ePol) {}
   if (document.getElementById('tab-riego')?.classList.contains('active') && typeof calcularRiego === 'function') calcularRiego();
+  if (document.getElementById('tab-meteo')?.classList.contains('active')) {
+    try {
+      if (typeof renderMeteoAvisosPanelCompleto === 'function') void renderMeteoAvisosPanelCompleto();
+    } catch (eMet) {}
+  }
 }
 
 function actualizarVisibilidadPanelInteriorGrow() {
@@ -1422,13 +1427,28 @@ function toggleMedirDwcConfigBlock(n) {
   const expanded = btn.getAttribute('aria-expanded') === 'true';
   btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
   body.hidden = expanded;
-  btn.classList.toggle('medir-dwc-block-head--collapsed', expanded);
+  btn.classList.toggle('is-collapsed', expanded);
 }
 
 function initConfigUI() {
   const cfgTorre = state.configTorre || {};
   const cp = document.getElementById('configPanel');
   if (cp) cp.classList.toggle('config-panel--dwc', cfgTorre.tipoInstalacion === 'dwc');
+
+  const b1 = document.getElementById('medirDwcBlock1Body');
+  const b2 = document.getElementById('medirDwcBlock2Body');
+  const btn1 = document.getElementById('btnMedirDwcBlock1');
+  const btn2 = document.getElementById('btnMedirDwcBlock2');
+  if (b1) b1.hidden = false;
+  if (b2) b2.hidden = false;
+  if (btn1) {
+    btn1.setAttribute('aria-expanded', 'true');
+    btn1.classList.remove('is-collapsed');
+  }
+  if (btn2) {
+    btn2.setAttribute('aria-expanded', 'true');
+    btn2.classList.remove('is-collapsed');
+  }
 
   const agua = state.configAgua || 'destilada';
   const sustrato = state.configTorre?.sustrato || state.configSustrato || 'esponja';

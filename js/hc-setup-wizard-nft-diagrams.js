@@ -718,13 +718,15 @@ function renderTorreSistemaResumenTabla(cfg) {
   const esDwcResumen = cfg.tipoInstalacion === 'dwc';
   if (esDwcResumen) {
     mount.innerHTML =
-      '<button type="button" id="btnToggleTorreSistemaResumenDwc" class="torre-sistema-resumen-dwc-head" ' +
+      '<button type="button" id="btnToggleTorreSistemaResumenDwc" ' +
+      'class="torre-sistema-panel-head torre-sistema-panel-head--dwc" ' +
       'aria-expanded="true" aria-controls="torreSistemaResumenDwcInner" onclick="toggleTorreSistemaResumenDwcPanel()">' +
-      '<span class="torre-sistema-resumen-dwc-chevron" aria-hidden="true">▼</span>' +
-      '<span class="torre-sistema-resumen-dwc-head-text">' +
+      '<span class="torre-sistema-panel-head-stack">' +
+      '<span class="torre-sistema-panel-sub">' +
       escHtmlUi('Resumen del sistema configurado') +
-      '</span></button>' +
-      '<div id="torreSistemaResumenDwcInner" class="torre-sistema-resumen-dwc-inner">' +
+      '</span></span>' +
+      '<span class="config-section-collapse-chevron" aria-hidden="true">▼</span></button>' +
+      '<div id="torreSistemaResumenDwcInner" class="torre-sistema-panel-body torre-sistema-resumen-dwc-inner">' +
       capTable +
       '</div>';
     applyTorreSistemaResumenDwcCollapseUI();
@@ -747,7 +749,6 @@ function applyTorreSistemaResumenDwcCollapseUI() {
   const col = cfg.uiTorreSistemaResumenDwcColapsado === true;
   inner.hidden = col;
   btn.setAttribute('aria-expanded', col ? 'false' : 'true');
-  btn.classList.toggle('torre-sistema-resumen-dwc-head--collapsed', col);
 }
 
 function toggleTorreSistemaResumenDwcPanel() {

@@ -1095,7 +1095,6 @@ function applySistemaDwcLlenadoCollapseUI() {
   const col = cfg && cfg.tipoInstalacion === 'dwc' && cfg.uiSistemaDwcLlenadoColapsado === true;
   body.hidden = col;
   btn.setAttribute('aria-expanded', col ? 'false' : 'true');
-  btn.classList.toggle('is-collapsed', col);
 }
 
 function toggleSistemaDwcLlenadoPanel() {
@@ -1650,7 +1649,9 @@ function refreshDwcSistemaMedidasUI() {
     if (cap != null && cap > 0) {
       volEl.style.display = 'block';
       volEl.textContent =
-        'Volumen útil estimado del depósito: ~' + cap + ' L (largo × ancho × prof. en cm ÷ 1000).';
+        'Volumen geométrico estimado del depósito: ~' +
+        cap +
+        ' L (largo × ancho × prof. en cm ÷ 1000). En cultivo el nivel de solución suele quedar por debajo de ese tope: entre el líquido y el sustrato de la cesta debe haber una cámara de aire que suele ampliarse al crecer las raíces; indica «litros de mezcla» por debajo del máximo si no llenas al borde.';
     } else {
       volEl.style.display = 'none';
       volEl.textContent = '';

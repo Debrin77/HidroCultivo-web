@@ -773,9 +773,23 @@ function updateTorreStats() {
     if (esNftCfg) {
       depEl.textContent = pref + 'Depósito (mezclas y lecturas)';
     } else if (esDwcCfg) {
-      depEl.textContent = pref + 'Depósito DWC (lecturas)';
+      depEl.textContent = pref + 'Depósito DWC (capacidad y mezcla)';
     } else {
       depEl.textContent = pref + 'Depósito (lecturas)';
+    }
+  }
+
+  const lectRow = document.getElementById('torreDepositoLecturasRow');
+  const volHintEl = document.getElementById('torreDepositoVolHint');
+  if (lectRow) lectRow.classList.toggle('setup-hidden', !!esDwcCfg);
+  if (volHintEl) {
+    if (esDwcCfg) {
+      volHintEl.classList.add('setup-hidden');
+      volHintEl.textContent = '';
+    } else {
+      volHintEl.classList.remove('setup-hidden');
+      volHintEl.innerHTML =
+        'Capacidad y litros de mezcla están en el <strong>resumen del sistema</strong> (arriba), mismo origen que el checklist.';
     }
   }
 
