@@ -1155,6 +1155,28 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   font-size: var(--text-md);
   line-height: 1.35;
 }
+/* Mismo indicador circular que Medir / paneles (borde visible en NFT y DWC) */
+#torreSistemaResumenWrap .config-section-collapse-head .config-section-collapse-chevron {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  opacity: 1;
+}
+#torreSistemaResumenWrap .config-section-collapse-head:hover .config-section-collapse-chevron,
+#torreSistemaResumenWrap .config-section-collapse-head:focus-visible .config-section-collapse-chevron {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+#torreSistemaResumenWrap .config-section-collapse-head[aria-expanded='false'] .config-section-collapse-chevron,
+#torreSistemaResumenWrap .config-section-collapse-head.is-collapsed .config-section-collapse-chevron {
+  transform: rotate(-90deg);
+}
 /* Sistema DWC: cuerpo del resumen bajo la cabecera tipo panel NFT/DWC */
 .torre-sistema-resumen-dwc-inner {
   margin-top: 0;
@@ -6485,6 +6507,70 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
 .consejo-p--flush { margin: 0; line-height: 1.6; color: var(--muted); }
 .consejo-texto--flush { padding-top: 0; }
 .consejo-texto--pt4 { padding-top: 4px; }
+.consejo-checklist-resumen {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 10px;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+.consejo-checklist-resumen-kicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  margin-bottom: 6px;
+}
+.consejo-checklist-resumen-inst {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--white);
+  line-height: 1.35;
+}
+.consejo-checklist-resumen-decl {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.consejo-checklist-resumen-dl {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.consejo-checklist-resumen-dl dt {
+  font-weight: 800;
+  color: #e2e8f0;
+  margin-top: 8px;
+}
+.consejo-checklist-resumen-dl dt:first-child {
+  margin-top: 0;
+}
+.consejo-checklist-resumen-dl dd {
+  margin: 3px 0 0;
+  padding: 0;
+}
+.consejo-checklist-resumen-dl dd strong {
+  color: var(--white);
+}
+.consejo-checklist-resumen-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+.consejo-checklist-resumen-foot {
+  margin: 10px 0 0;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.45;
+}
 .consejo-dwc-rec-box {
   margin: 12px 0 0;
   padding: 10px 12px;
@@ -7893,6 +7979,13 @@ button.config-option {
 .torre-sistema-panel-head--dwc:hover,
 .torre-sistema-panel-head--dwc:focus-visible {
   border-color: rgba(6, 182, 212, 0.6);
+}
+/* Círculo explícito (cabecera clara); alineado con .torre-dwc-llenado-collapsible */
+.torre-sistema-panel-head--dwc .config-section-collapse-chevron {
+  border-color: rgba(6, 182, 212, 0.45);
+  background: #fff;
+  color: #0e7490;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
 }
 .torre-sistema-panel--dwc .torre-sistema-panel-body {
   margin-top: 0;

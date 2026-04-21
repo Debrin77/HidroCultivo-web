@@ -245,6 +245,19 @@ const REF_CULTIVOS_EC_PH = [
   { cultivo: 'Flores de corte (p. ej. rosa)', ec: '1200–2200', ph: '5,5–6,2', nota: '' },
 ];
 
+/** Nombre instalación + NFT | DWC | Torre vertical (para títulos de tablas EC/pH). */
+function consejosTituloInstalacionSistemaLinea() {
+  const cfg = state.configTorre || {};
+  const sys =
+    typeof etiquetaSistemaHidroponicoBreve === 'function' ? etiquetaSistemaHidroponicoBreve(cfg) : 'Torre vertical';
+  let nombre = '';
+  try {
+    const ta = typeof getTorreActiva === 'function' ? getTorreActiva() : null;
+    if (ta && ta.nombre) nombre = String(ta.nombre).trim();
+  } catch (e) {}
+  return nombre !== '' ? meteoEscHtml(nombre) + ' · ' + meteoEscHtml(sys) : meteoEscHtml(sys);
+}
+
 function buildHtmlTablaEcPh(opts) {
   const omitId = opts && opts.omitAnchorId;
   const wrapAttr = omitId ? 'class="consejo-ecph-wrap"' : 'class="consejo-ecph-wrap" id="consejos-resumen-ec-ph"';
@@ -585,7 +598,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
   const prefCM = usarPreferenciaCalMagRecargaGlobal();
   const leyendaBlanda = aguaK === 'grifo'
     ? `Columnas destilada/ósmosis = guía si mezclas con <strong>agua blanca</strong> (con CalMag en filas que lo requieren). Tu tipo de agua en Mediciones: <strong>${aguaNom}</strong>.`
-    : `Tipo de agua (torre/Mediciones): <strong>${aguaNom}</strong>. CalMag en esas columnas: <strong>${prefCM ? 'sí' : 'no'}</strong> (pref. checklist).`;
+    : `Tipo de agua (instalación activa / Mediciones): <strong>${aguaNom}</strong>. CalMag en esas columnas: <strong>${prefCM ? 'sí' : 'no'}</strong> (pref. checklist).`;
 
   const nutActivo = getNutrienteTorre();
   const ref = getRefDosisFabricante(nutActivo.id);
@@ -635,7 +648,7 @@ function buildHtmlTablaConsejosPersonal() {
         <div class="consejo-titulo consejo-titulo--mb6">Tu tabla (volumen a medida)</div>
         <div class="consejo-ecph-note">
           Al <strong>completar el checklist de recarga</strong> (no es la primera configuración), puedes guardar aquí el nutriente y los litros del depósito.
-          Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen.
+          Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen, para el <strong>sistema activo</strong> (Torre, NFT o DWC) en la pestaña Sistema.
         </div>
       </div>`;
   }
@@ -652,7 +665,7 @@ function buildHtmlTablaConsejosPersonal() {
 
   return `
     <div class="consejo-dosis18-wrap consejo-dosis18-miTorre consejo-dosis18-wrap--mt" id="consejos-tabla-personal">
-      <div class="consejo-titulo consejo-titulo--mb8">Mi torre · ${meteoEscHtml(nut.nombre)} · ${fmtMlConsejo(vol)} L</div>
+      <div class="consejo-titulo consejo-titulo--mb8">${consejosTituloInstalacionSistemaLinea()} · ${meteoEscHtml(nut.nombre)} · ${fmtMlConsejo(vol)} L</div>
       <div class="consejo-ecph-note consejo-ecph-note--mb">
         Misma lógica dinámica que la tabla general (EC objetivo recarga, CalMag/blanca, grifo con EC base). Actualizado: ${meteoEscHtml(fecha || '—')}
       </div>
@@ -846,13 +859,115 @@ function htmlConsejoCard(cat, c) {
   `;
 }
 
+/** Bloque visible: mismos criterios que el checklist de recarga para la instalación activa. */
+function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
+  const t = typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : 'torre';
+  const sysLargo =
+    t === 'nft' ? 'NFT — canales en recirculación' : t === 'dwc' ? 'DWC — raíces en el depósito' : 'Torre vertical';
+  const sysBreve =
+    typeof etiquetaSistemaHidroponicoBreve === 'function' ? etiquetaSistemaHidroponicoBreve(cfg) : t === 'nft' ? 'NFT' : t === 'dwc' ? 'DWC' : 'Torre';
+
+  let nombreInst = '';
+  try {
+    const ta = typeof getTorreActiva === 'function' ? getTorreActiva() : null;
+    if (ta && ta.nombre) nombreInst = String(ta.nombre).trim();
+  } catch (e) {}
+
+  let objTxt = '—';
+  try {
+    if (t === 'dwc' && typeof dwcGetObjetivoSpec === 'function' && typeof dwcGetObjetivoCultivo === 'function') {
+      const s = dwcGetObjetivoSpec(dwcGetObjetivoCultivo(cfg));
+      objTxt = meteoEscHtml(s.label) + ' · ' + meteoEscHtml(s.densidadTxt);
+    } else if (t === 'nft' && typeof nftGetObjetivoSpec === 'function' && typeof nftGetObjetivoCultivo === 'function') {
+      const s = nftGetObjetivoSpec(nftGetObjetivoCultivo(cfg));
+      objTxt = meteoEscHtml(s.label) + ' · ' + meteoEscHtml(s.densidadTxt);
+    } else if (t === 'torre' && typeof torreGetObjetivoSpec === 'function' && typeof torreGetObjetivoCultivo === 'function') {
+      const s = torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg));
+      objTxt = meteoEscHtml(s.label) + ' · ' + meteoEscHtml(s.densidadTxt);
+    }
+  } catch (e) {}
+
+  const ecOpt = typeof getECOptimaTorre === 'function' ? getECOptimaTorre() : { min: 900, max: 1400 };
+  const ecMeta = typeof getRecargaEcMetaMicroS === 'function' ? getRecargaEcMetaMicroS() : 1100;
+  const pHR =
+    typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : nut && nut.pHRango ? nut.pHRango : [5.5, 6.5];
+  const phTxt = meteoEscHtml(String(pHR[0])) + ' – ' + meteoEscHtml(String(pHR[1]));
+
+  const volMax = typeof getVolumenDepositoMaxLitros === 'function' ? getVolumenDepositoMaxLitros(cfg) : 0;
+  const volObj = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : 0;
+  let volTxt = '';
+  if (volObj > 0) {
+    volTxt =
+      volMax > 0 && volObj < volMax - 0.05
+        ? '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong> de mezcla (depósito hasta <strong>' + meteoEscHtml(String(volMax)) + ' L</strong>)'
+        : '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong>';
+  } else {
+    volTxt = 'Configura capacidad y litros de mezcla en la pestaña <strong>Sistema</strong>.';
+  }
+
+  const manualEc = cfg && cfg.checklistEcObjetivoUs;
+  const metaFuente =
+    Number.isFinite(manualEc) && manualEc >= 200 && manualEc <= 6000
+      ? '<span class="consejo-checklist-resumen-note">Meta EC <strong>fijada a mano</strong> en el checklist.</span>'
+      : '<span class="consejo-checklist-resumen-note">Meta EC = punto medio del rango orientativo' +
+        (t === 'torre' || t === 'dwc' ? ' (ajustado por <strong>objetivo de cultivo</strong> en ' + meteoEscHtml(sysBreve) + ')' : '') +
+        '; puede atenuarse si hay <strong>plántulas</strong> recién trasplantadas.</span>';
+
+  const fa = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
+  const plantulaExtra =
+    fa < 1 && !(Number.isFinite(manualEc) && manualEc >= 200 && manualEc <= 6000)
+      ? '<p class="consejo-checklist-resumen-foot">Atenuación de arranque en hidro (~' +
+        Math.round((1 - fa) * 100) +
+        '%): las mezclas del checklist van algo más suaves en las primeras ~2 semanas tras el trasplante.</p>'
+      : '';
+
+  const instLine =
+    nombreInst !== ''
+      ? '<p class="consejo-checklist-resumen-inst"><strong>' + meteoEscHtml(nombreInst) + '</strong> · ' + meteoEscHtml(sysBreve) + '</p>'
+      : '<p class="consejo-checklist-resumen-inst">Instalación activa · <strong>' + meteoEscHtml(sysBreve) + '</strong></p>';
+
+  return (
+    '<div class="consejo-checklist-resumen" role="region" aria-label="Valores para el checklist según el sistema seleccionado">' +
+    '<div class="consejo-checklist-resumen-kicker">📋 Valores para el checklist (recarga)</div>' +
+    instLine +
+    '<p class="consejo-checklist-resumen-decl"><strong>Sistema configurado:</strong> ' +
+    meteoEscHtml(sysLargo) +
+    '. Lo siguiente es lo que usa la app en el <strong>checklist de recarga</strong> para <em>esta</em> instalación y nutriente seleccionado.</p>' +
+    '<dl class="consejo-checklist-resumen-dl">' +
+    '<dt>Objetivo de cultivo</dt><dd>' +
+    objTxt +
+    '</dd>' +
+    '<dt>Rango EC orientativo</dt><dd><strong>' +
+    ecOpt.min +
+    ' – ' +
+    ecOpt.max +
+    '</strong> µS/cm</dd>' +
+    '<dt>EC meta (checklist)</dt><dd><strong>' +
+    ecMeta +
+    '</strong> µS/cm · ' +
+    metaFuente +
+    '</dd>' +
+    '<dt>pH orientativo</dt><dd><strong>' +
+    phTxt +
+    '</strong></dd>' +
+    '<dt>Volumen de mezcla</dt><dd>' +
+    volTxt +
+    '</dd>' +
+    '</dl>' +
+    plantulaExtra +
+    '</div>'
+  );
+}
+
 /** Protocolo y reposición en Consejos → Agua y EC: según nutriente de la instalación activa. */
 function buildConsejosAguaNutrienteDinamico() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
   const volMax = getVolumenDepositoMaxLitros(cfg);
   const volObj = getVolumenMezclaLitros(cfg);
-  const ecMin = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
+  const ecOpt = getECOptimaTorre();
+  const ecMin = ecOpt.min;
+  const bloqueChecklist = buildConsejosNutrienteChecklistResumenHtml(nut, cfg);
   const pasos = (nut.protocolo || []).map(p =>
     '<li class="consejo-proto-li">' + meteoEscHtml(p) + '</li>'
   ).join('');
@@ -916,8 +1031,13 @@ function buildConsejosAguaNutrienteDinamico() {
   }, {
     icono:'🧪',
     titulo:'Protocolo de nutrientes — ' + meteoEscHtml(nut.nombre),
-    texto: 'Pasos orientativos del fabricante para <strong>' + meteoEscHtml(nut.nombre) + '</strong> (instalación activa). Coinciden con el orden del checklist de recarga.' +
-      listaProto + (ordenWarn ? '<p class="consejo-orden-warn">' + ordenWarn + '</p>' : ''),
+    texto:
+      bloqueChecklist +
+      '<p class="consejo-p consejo-p--tight">Pasos orientativos del fabricante para <strong>' +
+      meteoEscHtml(nut.nombre) +
+      '</strong>. El orden coincide con el checklist de recarga.</p>' +
+      listaProto +
+      (ordenWarn ? '<p class="consejo-orden-warn">' + ordenWarn + '</p>' : ''),
     alerta:{ tipo:'ok', txt:'✅ ' + calmagOk + ' ' + phOk }
   }) + htmlConsejoCard({
     nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)'
@@ -925,8 +1045,8 @@ function buildConsejosAguaNutrienteDinamico() {
     icono:'💧',
     titulo:'Reposición de agua — ' + meteoEscHtml(nut.nombre),
     texto: textoRepos,
-    alerta:{ tipo:'info', txt:'ℹ️ EC orientativa para añadir nutrientes: por debajo de ~' + ecMin +
-      ' µS/cm. En verano el nivel puede bajar más rápido; revisa cada 2–3 días.' }
+    alerta:{ tipo:'info', txt:'ℹ️ EC orientativa para valorar si hace falta nutriente: por debajo del rango (~' + ecMin +
+      ' µS/cm como referencia baja del sistema). En verano el nivel puede bajar más rápido; revisa cada 2–3 días.' }
   });
 }
 
