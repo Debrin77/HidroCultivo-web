@@ -365,6 +365,13 @@ function escRegistroAttr(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
+function escRegistroHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 /** Miniaturas de entradas tipo «foto» cargadas desde IndexedDB */
 async function hydrateRegistroFotoThumbs(container) {
   if (!container) return;
@@ -408,7 +415,7 @@ function renderRegistro() {
     }
     lista.innerHTML =
       '<div class="registro-empty-box">' +
-      '📋 El registro agrupa mediciones, <strong>recargas completas</strong>, <strong>reposiciones parciales</strong> (litros añadidos, agua o agua+nutrientes sin vaciar), cosechas y fotos de plantas en una línea de tiempo.' +
+      '📋 El registro agrupa mediciones, <strong>recargas completas</strong>, <strong>reposiciones parciales</strong>, <strong>apuntes</strong> (texto y números a mano), cosechas y fotos en una línea de tiempo.' +
       extra + '</div>';
     return;
   }
@@ -420,6 +427,7 @@ function renderRegistro() {
     foto:       { bg:'#faf5ff', border:'#9333ea', color:'#7e22ce',  icon:'📸' },
     foto_sistema: { bg:'#ecfdf5', border:'#059669', color:'#047857', icon:'🏗' },
     reposicion: { bg:'#ecfeff', border:'#06b6d4', color:'#0e7490',  icon:'💧' },
+    apunte: { bg:'#f5f3ff', border:'#7c3aed', color:'#5b21b6', icon:'📝' },
   };
 
   // Agrupar por fecha
@@ -500,6 +508,31 @@ function renderRegistro() {
         } else {
           detalle = (Ltxt || '') + (e.notas || 'Reposición registrada');
         }
+      } else if (e.tipo === 'apunte') {
+        const bloques = [];
+        if (e.apunteTexto) {
+          bloques.push(
+            '<div class="registro-apunte-txt">' +
+              escRegistroHtml(e.apunteTexto).replace(/\r\n|\n|\r/g, '<br>') +
+              '</div>'
+          );
+        }
+        const bits = [];
+        if (e.ec) bits.push('⚡ ' + escRegistroHtml(e.ec) + ' µS/cm');
+        if (e.ph) bits.push('🧪 pH ' + escRegistroHtml(e.ph));
+        if (e.temp) bits.push('🌡️ ' + escRegistroHtml(e.temp) + ' °C');
+        if (e.vol) bits.push('🪣 ' + escRegistroHtml(e.vol) + ' L');
+        if (bits.length) bloques.push('<div class="registro-apunte-nums">' + bits.join(' · ') + '</div>');
+        if (e.apunteEtiqueta1 && e.apunteValor1) {
+          bloques.push(
+            '<div class="registro-apunte-extra"><strong>' +
+              escRegistroHtml(e.apunteEtiqueta1) +
+              '</strong>: ' +
+              escRegistroHtml(e.apunteValor1) +
+              '</div>'
+          );
+        }
+        detalle = bloques.length ? bloques.join('') : '<span class="registro-note-sub">(sin detalle)</span>';
       }
       const slotIdx = typeof e._slotIdx === 'number' ? e._slotIdx : (state.torreActiva || 0);
       return '<div class="registro-entry-card" style="--reg-bg:' + c.bg + ';--reg-bd:' + c.border + ';--reg-badge:' + c.color + '">' +
@@ -515,7 +548,9 @@ function renderRegistro() {
                     ? 'Reposición parcial'
                     : e.tipo === 'recarga'
                       ? 'Recarga completa'
-                      : (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
+                      : e.tipo === 'apunte'
+                        ? 'Apunte'
+                        : (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
             '</span>' +
             (sis && sis.nombre ?
               '<span class="registro-entry-torre-chip">' +

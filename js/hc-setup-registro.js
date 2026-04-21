@@ -7,13 +7,15 @@ function initRegistro() {
   if (!state.registro) state.registro = [];
 }
 
-function addRegistro(tipo, datos) {
+function addRegistro(tipo, datos, horaConSegundos) {
   initRegistro();
   const now  = new Date();
   const dia  = String(now.getDate()).padStart(2,'0');
   const mes  = String(now.getMonth()+1).padStart(2,'0');
   const fecha = dia + '/' + mes + '/' + now.getFullYear();
-  const hora  = now.toLocaleTimeString('es-ES', { hour:'2-digit', minute:'2-digit' });
+  const hora = horaConSegundos
+    ? now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    : now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
   const tActiva = getTorreActiva();
   const d = datos && typeof datos === 'object' ? { ...datos } : {};
   let snap = d.tipoInstalSnap;
@@ -40,6 +42,76 @@ function addRegistro(tipo, datos) {
   });
   if (state.registro.length > 200) state.registro = state.registro.slice(0, 200);
   saveState();
+}
+
+function abrirModalApunteRegistro() {
+  const m = document.getElementById('modalApunteRegistro');
+  if (!m) return;
+  const ta = document.getElementById('apunteTexto');
+  const ids = ['apunteEc', 'apuntePh', 'apunteTemp', 'apunteVol', 'apunteEtiqueta1', 'apunteValor1'];
+  if (ta) ta.value = '';
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  m.classList.add('open');
+  if (typeof a11yDialogOpened === 'function') a11yDialogOpened(m);
+  setTimeout(() => ta && ta.focus(), 80);
+}
+
+function cerrarModalApunteRegistro(ev) {
+  const m = document.getElementById('modalApunteRegistro');
+  if (!m || !m.classList.contains('open')) return;
+  if (ev && ev.currentTarget === m && ev.target !== m) return;
+  m.classList.remove('open');
+  if (typeof a11yDialogClosed === 'function') a11yDialogClosed(m);
+}
+
+function guardarApunteRegistro() {
+  const texto = (document.getElementById('apunteTexto') && document.getElementById('apunteTexto').value.trim()) || '';
+  const ec = (document.getElementById('apunteEc') && document.getElementById('apunteEc').value.trim()) || '';
+  const ph = (document.getElementById('apuntePh') && document.getElementById('apuntePh').value.trim()) || '';
+  const temp = (document.getElementById('apunteTemp') && document.getElementById('apunteTemp').value.trim()) || '';
+  const vol = (document.getElementById('apunteVol') && document.getElementById('apunteVol').value.trim()) || '';
+  const lab1 = (document.getElementById('apunteEtiqueta1') && document.getElementById('apunteEtiqueta1').value.trim()) || '';
+  const val1 = (document.getElementById('apunteValor1') && document.getElementById('apunteValor1').value.trim()) || '';
+  const tieneNum = !!(ec || ph || temp || vol || val1);
+  if (!texto && !tieneNum) {
+    if (typeof showToast === 'function') showToast('Escribe un texto o al menos un valor numérico', true);
+    return;
+  }
+  if (lab1 && !val1) {
+    if (typeof showToast === 'function') showToast('Si pones etiqueta al dato extra, indica también el valor', true);
+    return;
+  }
+  if (!lab1 && val1) {
+    if (typeof showToast === 'function') showToast('Indica una etiqueta para el dato extra (p. ej. «ml», «€», «días»)', true);
+    return;
+  }
+  addRegistro(
+    'apunte',
+    {
+      icono: '📝',
+      apunteTexto: texto,
+      ec,
+      ph,
+      temp,
+      vol,
+      apunteEtiqueta1: lab1,
+      apunteValor1: val1,
+    },
+    true
+  );
+  cerrarModalApunteRegistro();
+  if (typeof showToast === 'function') showToast('📝 Apunte guardado en el registro');
+  const regPanel = document.getElementById('histRegistroPanel');
+  if (
+    regPanel &&
+    !regPanel.classList.contains('setup-hidden') &&
+    typeof renderRegistro === 'function'
+  ) {
+    renderRegistro();
+  }
 }
 
 // Cosechar una cesta y guardar trazabilidad completa
