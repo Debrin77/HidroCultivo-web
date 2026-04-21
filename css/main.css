@@ -1083,11 +1083,14 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 }
 /* NFT: el diagrama puede crecer en altura; el scroll es en el contenedor */
 .torre-sistema-resumen-wrap {
-  margin: 12px 10px 6px;
-  padding: 12px 12px 10px;
-  border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  margin: 10px 10px 6px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+}
+.torre-sistema-resumen-wrap .torre-sistema-resumen-disclosure.recarga-card {
+  margin-bottom: 0;
 }
 .torre-sistema-resumen-wrap[hidden] {
   display: none !important;
@@ -1145,8 +1148,8 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   margin-bottom: 12px;
 }
 
-/* Sistema DWC: título del resumen un poco mayor (misma cabecera que montaje NFT/DWC) */
-#torreSistemaResumenWrap .torre-sistema-panel-head .torre-sistema-panel-sub {
+/* Resumen sistema: título en cabecera desplegable tipo Medir */
+#torreSistemaResumenWrap .torre-sistema-resumen-disclosure .config-section-collapse-title {
   font-size: var(--text-md);
   line-height: 1.35;
 }
@@ -2659,13 +2662,13 @@ button.torre-summary:focus-visible,
   color: var(--green);
   font-variant-numeric: tabular-nums;
 }
-/* Mediciones — bloque «Próxima recarga completa» desplegable */
-.recarga-proxima-main-head {
+/* Medir / Sistema: cabecera desplegable tipo «Próxima recarga completa» */
+.medir-disclosure-main-head {
   align-items: flex-start;
   padding: 4px 0 12px;
   border-radius: 12px;
 }
-.recarga-proxima-main-head .recarga-dias {
+.medir-disclosure-main-head .recarga-dias {
   line-height: 1.15;
   margin-top: 2px;
 }
@@ -3135,6 +3138,63 @@ button.torre-summary:focus-visible,
 }
 .dash-seguridad-panel-hint {
   margin-bottom: 0;
+}
+
+/* Panel opciones de notificación cultivo (Inicio) */
+.dash-notif-prefs {
+  margin-top: 10px;
+  margin-bottom: 12px;
+  padding: 14px 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.06) 0%, var(--bg2) 55%);
+  box-shadow: var(--card-shadow-soft);
+}
+.dash-notif-prefs-title {
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+.dash-notif-prefs-lead {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+.dash-notif-prefs-fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.dash-notif-prefs-fieldset:disabled .dash-notif-toggle-row {
+  opacity: 0.55;
+}
+.dash-notif-toggle-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--white);
+  cursor: pointer;
+}
+.dash-notif-toggle-row input {
+  margin-top: 3px;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--green, #22c55e);
+}
+.dash-notif-prefs-hint {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
 }
 
 /* Quick wins visuales: loaders más limpios y legibles */
@@ -7092,6 +7152,24 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
 .torre-sistema-panel-head[aria-expanded="false"] .config-section-collapse-chevron {
   transform: rotate(-90deg);
 }
+/* Medir: mismo indicador circular en todos los desplegables (NFT o DWC) */
+#tab-mediciones .config-section-collapse-head .config-section-collapse-chevron {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+  font-weight: 900;
+  border-radius: 999px;
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--white);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  opacity: 1;
+}
+#tab-mediciones .config-section-collapse-head:hover .config-section-collapse-chevron,
+#tab-mediciones .config-section-collapse-head:focus-visible .config-section-collapse-chevron {
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+}
 .config-section-collapse-head > .config-section-collapse-title {
   flex: 1;
   min-width: 0;
@@ -8243,8 +8321,8 @@ button.config-option {
 .torre-vol-detalles-summary::after {
   content: '▼';
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -8252,11 +8330,11 @@ button.config-option {
   font-weight: 900;
   line-height: 1;
   border-radius: 999px;
-  border: 1.5px solid rgba(15, 23, 42, 0.2);
+  border: 1.5px solid rgba(15, 23, 42, 0.22);
   background: #fff;
   color: #0f172a;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
-  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.14);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   transform: rotate(-90deg);
 }
 .torre-vol-detalles[open] .torre-vol-detalles-summary::after {

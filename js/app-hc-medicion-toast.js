@@ -63,9 +63,6 @@ async function guardarMedicion() {
   }
 
   // ── 2. ACTUALIZAR UI ──────────────────────────────────────────────────────
-  document.getElementById('depositoStats').textContent =
-    'EC: ' + (ec||'—') + ' µS/cm · pH: ' + (ph||'—') + ' · Temp: ' + (temp||'—') + '°C · Vol: ' + (vol||'—') + 'L';
-
   // Limpiar campos
   ['inputEC','inputPH','inputTemp','inputVol','inputNotas'].forEach(id => {
     const el = document.getElementById(id);

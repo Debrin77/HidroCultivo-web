@@ -715,51 +715,54 @@ function renderTorreSistemaResumenTabla(cfg) {
     '<tbody>' +
     body +
     '</tbody></table>';
-  const esDwcResumen = cfg.tipoInstalacion === 'dwc';
-  if (esDwcResumen) {
-    mount.innerHTML =
-      '<button type="button" id="btnToggleTorreSistemaResumenDwc" ' +
-      'class="torre-sistema-panel-head torre-sistema-panel-head--dwc" ' +
-      'aria-expanded="true" aria-controls="torreSistemaResumenDwcInner" onclick="toggleTorreSistemaResumenDwcPanel()">' +
-      '<span class="torre-sistema-panel-head-stack">' +
-      '<span class="torre-sistema-panel-sub">' +
-      escHtmlUi('Resumen del sistema configurado') +
-      '</span></span>' +
-      '<span class="config-section-collapse-chevron" aria-hidden="true">▼</span></button>' +
-      '<div id="torreSistemaResumenDwcInner" class="torre-sistema-panel-body torre-sistema-resumen-dwc-inner">' +
-      capTable +
-      '</div>';
-    applyTorreSistemaResumenDwcCollapseUI();
-  } else {
-    mount.innerHTML =
-      '<div class="torre-sistema-resumen-title">' +
-      escHtmlUi('Resumen del sistema configurado') +
-      '</div>' +
-      capTable;
-  }
+  const disclosureHead =
+    '<button type="button" id="btnToggleTorreSistemaResumen" ' +
+    'class="config-section-collapse-head medir-disclosure-main-head" ' +
+    'aria-expanded="true" aria-controls="torreSistemaResumenInner" onclick="toggleTorreSistemaResumenPanel()">' +
+    '<span class="config-section-collapse-title-wrap">' +
+    '<span class="config-section-collapse-title">' +
+    escHtmlUi('Resumen del sistema configurado') +
+    '</span></span>' +
+    '<span class="config-section-collapse-chevron" aria-hidden="true">▼</span></button>';
+  const disclosureBody =
+    '<div id="torreSistemaResumenInner" class="config-section-collapse-body recarga-proxima-collapse-body torre-sistema-resumen-dwc-inner">' +
+    capTable +
+    '</div>';
+  mount.innerHTML =
+    '<div class="recarga-card config-section-collapsible torre-sistema-resumen-disclosure">' +
+    disclosureHead +
+    disclosureBody +
+    '</div>';
+  applyTorreSistemaResumenCollapseUI();
   mount.removeAttribute('hidden');
 }
 
-function applyTorreSistemaResumenDwcCollapseUI() {
+function torreSistemaResumenColapsoStorageKey() {
+  const t = (state.configTorre || {}).tipoInstalacion;
+  return t === 'dwc' ? 'uiTorreSistemaResumenDwcColapsado' : 'uiTorreSistemaResumenNftColapsado';
+}
+
+function applyTorreSistemaResumenCollapseUI() {
   const cfg = state.configTorre || {};
-  if (cfg.tipoInstalacion !== 'dwc') return;
-  const btn = document.getElementById('btnToggleTorreSistemaResumenDwc');
-  const inner = document.getElementById('torreSistemaResumenDwcInner');
+  const btn = document.getElementById('btnToggleTorreSistemaResumen');
+  const inner = document.getElementById('torreSistemaResumenInner');
   if (!btn || !inner) return;
-  const col = cfg.uiTorreSistemaResumenDwcColapsado === true;
+  const key = torreSistemaResumenColapsoStorageKey();
+  const col = cfg[key] === true;
   inner.hidden = col;
   btn.setAttribute('aria-expanded', col ? 'false' : 'true');
 }
 
-function toggleTorreSistemaResumenDwcPanel() {
-  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
-  const cur = state.configTorre.uiTorreSistemaResumenDwcColapsado === true;
-  state.configTorre.uiTorreSistemaResumenDwcColapsado = !cur;
+function toggleTorreSistemaResumenPanel() {
+  if (!state.configTorre) return;
+  const key = torreSistemaResumenColapsoStorageKey();
+  const cur = state.configTorre[key] === true;
+  state.configTorre[key] = !cur;
   try {
     guardarEstadoTorreActual();
     saveState();
   } catch (e) {}
-  applyTorreSistemaResumenDwcCollapseUI();
+  applyTorreSistemaResumenCollapseUI();
 }
 
 /**

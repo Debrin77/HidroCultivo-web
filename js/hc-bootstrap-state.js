@@ -34,12 +34,24 @@ function loadState() {
         while (nivel.length < NUM_CESTAS) nivel.push({ variedad:'', fecha:'', notas:'' });
       });
       if (s.modo) modoActual = s.modo;
+      normalizarNotifOpcionesEnState(s);
       console.log('Estado cargado:', s.torre.flat().filter(c => c.variedad).length, 'plantas');
       return s;
     }
   } catch(e) { console.error('Error loading state:', e); }
   console.log('Estado nuevo inicializado');
   return initState();
+}
+
+/** Recordatorios de cultivo (recarga / medición / cosecha): solo push si el usuario los activa. MeteoAlarm va aparte. */
+function normalizarNotifOpcionesEnState(s) {
+  if (!s || typeof s !== 'object') return;
+  const p = s.notifOpciones;
+  s.notifOpciones = {
+    recarga: typeof p?.recarga === 'boolean' ? p.recarga : false,
+    medicion: typeof p?.medicion === 'boolean' ? p.medicion : false,
+    cosecha: typeof p?.cosecha === 'boolean' ? p.cosecha : false,
+  };
 }
 
 // Inicializar state DESPUÉS de declarar todas las variables
@@ -53,7 +65,7 @@ function initState() {
       torre[n].push({ variedad: '', fecha: '', notas: '' });
     }
   }
-  return {
+  const st = {
     torre,
     modo: 'lechuga',
     ultimaMedicion: null,
@@ -61,8 +73,10 @@ function initState() {
     /** epoch ms — oculta aviso urgente de recarga hasta esa hora */
     recargaSnoozeHasta: null,
     configAgua: 'destilada',
-    configSustrato: 'esponja'
+    configSustrato: 'esponja',
   };
+  normalizarNotifOpcionesEnState(st);
+  return st;
 }
 
 function saveState() {

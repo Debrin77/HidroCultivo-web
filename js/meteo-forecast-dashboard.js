@@ -57,6 +57,10 @@ function updateDashboard() {
   } catch (_) {}
 
   try { void refreshMeteoAlarmFlashDashboard(); } catch (_) {}
+
+  try {
+    if (typeof refreshDashNotificacionesUI === 'function') refreshDashNotificacionesUI();
+  } catch (_) {}
 }
 
 function getTileClass(param, val) {

@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-19-luz-origen-collapse">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-19-medir-disclosure">
 </head>
 <body>
 
@@ -323,8 +323,8 @@
         </button>
         <button type="button" class="quick-btn quick-btn-info quick-btn-hidden" id="btnActivarNotif"
           onclick="activarNotificacionesDesdeInicio(event)"
-          aria-label="Activar notificaciones y alertas"
-          title="Avisos del sistema: recarga, mediciones, cosecha y MeteoAlarm si el aviso afecta a tu municipio o a la zona provincial AEMET asociada (si ya diste permiso)."
+          aria-label="Activar notificaciones y alertas meteorológicas"
+          title="Permite avisos en el dispositivo: MeteoAlarm/AEMET en tu zona. Recarga, medición y cosecha son opcionales (casillas en Inicio, debajo de acciones rápidas)."
           >
           <span class="quick-btn-icon" aria-hidden="true">🔔</span>
           <span>Activar alertas</span>
@@ -336,6 +336,26 @@
           </div>
         </details>
       </div>
+
+      <section class="dash-notif-prefs" id="dashNotifPrefsCard" aria-labelledby="dashNotifPrefsTitle">
+        <div class="dash-notif-prefs-title" id="dashNotifPrefsTitle">🔔 Avisos en el teléfono</div>
+        <p class="dash-notif-prefs-lead">Las alertas meteorológicas (MeteoAlarm / AEMET en tu zona) siguen con el permiso del navegador. Aquí eliges si quieres avisos <strong>extra</strong> de cultivo.</p>
+        <fieldset class="dash-notif-prefs-fieldset" id="dashNotifPrefsFieldset">
+          <label class="dash-notif-toggle-row">
+            <input type="checkbox" id="notifOptRecarga" onchange="persistNotifOpciones()">
+            <span>Recarga completa pendiente (~15 días)</span>
+          </label>
+          <label class="dash-notif-toggle-row">
+            <input type="checkbox" id="notifOptMedicion" onchange="persistNotifOpciones()">
+            <span>Si llevas días sin medir</span>
+          </label>
+          <label class="dash-notif-toggle-row">
+            <input type="checkbox" id="notifOptCosecha" onchange="persistNotifOpciones()">
+            <span>Plantas listas para cosechar</span>
+          </label>
+        </fieldset>
+        <p class="dash-notif-prefs-hint setup-hidden" id="dashNotifPrefsHint">Primero concede permiso con «Activar alertas» en Más opciones; luego podrás marcar estas casillas.</p>
+      </section>
 
       <div id="panelSeguridadAccesoInicio" class="dash-seguridad-panel setup-hidden" role="region"
         aria-labelledby="btnSeguridadAccesoInicio" aria-hidden="true">
@@ -396,8 +416,8 @@
       <!-- Configuración agua y sustrato -->
       <div id="configPanel">
 
-        <div class="config-section-collapsible medir-dwc-block medir-dwc-block--1">
-          <button type="button" class="config-section-collapse-head medir-dwc-outer-collapse" id="btnMedirDwcBlock1"
+        <div class="recarga-card config-section-collapsible medir-dwc-block medir-dwc-block--1">
+          <button type="button" class="config-section-collapse-head medir-disclosure-main-head medir-dwc-outer-collapse" id="btnMedirDwcBlock1"
             onclick="toggleMedirDwcConfigBlock(1)" aria-expanded="true" aria-controls="medirDwcBlock1Body"
             aria-label="Tipo de agua, municipio del grifo si aplica y localidad para clima y avisos">
             <span class="config-section-collapse-title" id="labelConfigAgua">💧 Tipo de agua</span>
@@ -538,8 +558,8 @@
           </div>
         </div>
 
-        <div class="config-section-collapsible medir-dwc-block medir-dwc-block--2">
-          <button type="button" class="config-section-collapse-head medir-dwc-outer-collapse" id="btnMedirDwcBlock2"
+        <div class="recarga-card config-section-collapsible medir-dwc-block medir-dwc-block--2">
+          <button type="button" class="config-section-collapse-head medir-disclosure-main-head medir-dwc-outer-collapse" id="btnMedirDwcBlock2"
             onclick="toggleMedirDwcConfigBlock(2)" aria-expanded="true" aria-controls="medirDwcBlock2Body"
             aria-label="Ubicación del sistema, luz y sustrato">
             <span class="config-section-collapse-title" id="labelUbicacionLuzMed">💡 Ubicación, luz y sustrato</span>
@@ -570,7 +590,7 @@
             </button>
           </div>
           <div id="wrapLuzOrigenMediciones" class="setup-hidden medir-wrap-luz-origen">
-            <button type="button" class="config-section-collapse-head medir-luz-origen-head" id="btnCollapseLuzOrigen"
+            <button type="button" class="config-section-collapse-head medir-disclosure-main-head medir-luz-origen-head" id="btnCollapseLuzOrigen"
               onclick="toggleMedirCollapse('luzOrigen')"
               aria-expanded="true" aria-controls="collapseBodyLuzOrigen"
               aria-label="Origen de la luz: natural, LED, mixta y horas de fotoperíodo">
@@ -724,8 +744,8 @@
           </div>
         </div>
 
-        <div class="config-section config-section-collapsible" id="panelSensoresAjusteFino">
-          <button type="button" class="config-section-collapse-head" id="btnCollapseSensoresAjusteFino"
+        <div class="recarga-card config-section-collapsible" id="panelSensoresAjusteFino">
+          <button type="button" class="config-section-collapse-head medir-disclosure-main-head" id="btnCollapseSensoresAjusteFino"
             aria-expanded="true" aria-controls="collapseBodySensoresAjusteFino"
             onclick="toggleMedirCollapse('sensoresAjusteFino')">
             <span class="config-section-collapse-title-wrap">
@@ -734,7 +754,7 @@
             </span>
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
-          <div class="config-section-collapse-body" id="collapseBodySensoresAjusteFino">
+          <div class="config-section-collapse-body recarga-proxima-collapse-body" id="collapseBodySensoresAjusteFino">
 
           <div class="medir-subsection" id="subsectionHumedadFino">
             <h3 class="medir-subsection-title" id="labelSensorSustrato">Ajuste fino de humedad</h3>
@@ -800,8 +820,8 @@
           </div>
         </div>
 
-        <div class="config-section config-section-collapsible" id="panelMedirCalentadorConsigna" style="display:none">
-          <button type="button" class="config-section-collapse-head" id="btnCollapseCalentadorRiego"
+        <div class="recarga-card config-section-collapsible" id="panelMedirCalentadorConsigna" style="display:none">
+          <button type="button" class="config-section-collapse-head medir-disclosure-main-head" id="btnCollapseCalentadorRiego"
             aria-expanded="true" aria-controls="collapseBodyCalentadorRiego"
             onclick="toggleMedirCollapse('calentadorRiego')">
             <span class="config-section-collapse-title-wrap">
@@ -809,7 +829,7 @@
             </span>
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
-          <div class="config-section-collapse-body" id="collapseBodyCalentadorRiego">
+          <div class="config-section-collapse-body recarga-proxima-collapse-body" id="collapseBodyCalentadorRiego">
           <div class="medir-note-block">
             Misma <strong>consigna</strong> que en el asistente (Equipamiento): la app la usa si marcas <strong>calentador</strong> en el equipo y no hay otra fuente preferente en el cálculo. También puedes editarla aquí.
           </div>
@@ -824,8 +844,8 @@
           </div>
         </div>
 
-        <div class="config-section config-section-collapsible setup-hidden" id="panelConfigInteriorGrow">
-          <button type="button" class="config-section-collapse-head" id="btnCollapseInteriorGrow"
+        <div class="recarga-card config-section-collapsible setup-hidden" id="panelConfigInteriorGrow">
+          <button type="button" class="config-section-collapse-head medir-disclosure-main-head" id="btnCollapseInteriorGrow"
             aria-expanded="true" aria-controls="collapseBodyInteriorGrow"
             onclick="toggleMedirCollapse('interiorGrow')">
             <span class="config-section-collapse-title-wrap">
@@ -833,7 +853,7 @@
             </span>
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
-          <div class="config-section-collapse-body" id="collapseBodyInteriorGrow">
+          <div class="config-section-collapse-body recarga-proxima-collapse-body" id="collapseBodyInteriorGrow">
           <div class="medir-note-block">
             Ajustes de <strong>sala</strong> para el VPD (Magnus–Tetens). El <strong>origen de luz y las horas</strong> están arriba, en
             <strong>«Ubicación del sistema y origen de luz»</strong>.
@@ -950,7 +970,7 @@
 
       <!-- Barra recarga depósito (junto al volumen medido) — cabecera desplegable -->
       <div class="recarga-card recarga-card--mt-4" id="recargaCardMediciones">
-        <button type="button" class="config-section-collapse-head recarga-proxima-main-head" id="btnCollapseRecargaProxima"
+        <button type="button" class="config-section-collapse-head medir-disclosure-main-head" id="btnCollapseRecargaProxima"
           onclick="toggleMedirCollapse('recargaProxima')"
           aria-expanded="true" aria-controls="collapseBodyRecargaProxima">
           <span class="config-section-collapse-title-wrap">
@@ -1514,9 +1534,6 @@
             <div class="deposito-icon" aria-hidden="true"></div>
             <div class="deposito-info torre-deposito-info">
               <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
-              <div id="torreDepositoLecturasRow" class="torre-deposito-lecturas-row">
-              <div class="deposito-stats" id="depositoStats">EC: — µS/cm · pH: — · Temp: —°C · Vol: —L</div>
-              </div>
               <p class="torre-vol-ref-hint" id="torreDepositoVolHint">Capacidad y litros de mezcla están en el <strong>resumen del sistema</strong> (arriba), mismo origen que el checklist.</p>
               <details id="torreVolDepDetalles" class="torre-vol-detalles">
                 <summary class="torre-vol-detalles-summary">Cambiar capacidad o litros de mezcla</summary>
@@ -3532,16 +3549,16 @@
   <script src="js/meteo-alarm-utils.js?v=1"></script>
   <script src="js/meteo-alarm-parse.js?v=1"></script>
   <script src="js/hc-bootstrap-config.js?v=1"></script>
-  <script src="js/hc-bootstrap-state.js?v=1"></script>
+  <script src="js/hc-bootstrap-state.js?v=2"></script>
   <script src="js/hc-bootstrap-pin.js?v=1"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=2"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=2"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=3"></script>
   <script src="js/torre-render-build.js?v=1"></script>
-  <script src="js/torre-render-main.js?v=1"></script>
+  <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=1"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=1"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=1"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2"></script>
   <script src="js/hc-setup-wizard-pages.js?v=1"></script>
   <script src="js/hc-setup-calc-core.js?v=2"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
@@ -3556,13 +3573,13 @@
   <script src="js/hc-setup-consejos.js?v=1"></script>
   <script src="js/calendario-logic.js?v=1"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
-  <script src="js/meteo-forecast-dashboard.js?v=1"></script>
+  <script src="js/meteo-forecast-dashboard.js?v=2"></script>
   <script src="js/riego-calculo-helpers.js?v=1"></script>
   <script src="js/riego-calculo-calcular.js?v=1"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
-  <script src="js/app-hc-medicion-toast.js?v=1"></script>
+  <script src="js/app-hc-medicion-toast.js?v=2"></script>
   <script src="js/app-hc-setup-onboarding.js?v=1"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=1"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=2"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=1"></script>
 </body>
 </html>

@@ -66,6 +66,7 @@ function initApp() {
   // Aplicar configuración de torre si existe
   aplicarConfigTorre();
   mostrarBtnNotificaciones();
+  if (typeof refreshDashNotificacionesUI === 'function') refreshDashNotificacionesUI();
   setTimeout(programarRecordatorios, 2000);
   setTimeout(() => { void refrescarAvisosMeteoalarmEnSegundoPlano(); }, 4500);
   // Badges DESPUÉS de cargar config y torre
@@ -233,8 +234,9 @@ function activarNotificacionesDesdeInicio(ev) {
   const el = ev.currentTarget;
   pedirPermisoNotificaciones().then(ok => {
     if (ok) {
-      showToast('🔔 Notificaciones activadas (recarga, medición, cosecha, MeteoAlarm si afecta a tu zona)');
+      showToast('🔔 Permiso concedido. MeteoAlarm en tu zona se avisa automáticamente; recarga, medición y cosecha solo si las marcas abajo.');
       el.style.display = 'none';
+      if (typeof refreshDashNotificacionesUI === 'function') refreshDashNotificacionesUI();
     } else {
       showToast('Actívalas en Ajustes del navegador', true);
     }

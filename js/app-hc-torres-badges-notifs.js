@@ -713,12 +713,49 @@ async function enviarNotificacion(titulo, cuerpo, icono) {
   });
 }
 
+function ensureNotifOpciones() {
+  if (typeof normalizarNotifOpcionesEnState === 'function') {
+    normalizarNotifOpcionesEnState(state);
+  } else if (!state.notifOpciones || typeof state.notifOpciones !== 'object') {
+    state.notifOpciones = { recarga: false, medicion: false, cosecha: false };
+  }
+}
+
+function persistNotifOpciones() {
+  ensureNotifOpciones();
+  const nr = document.getElementById('notifOptRecarga');
+  const nm = document.getElementById('notifOptMedicion');
+  const nc = document.getElementById('notifOptCosecha');
+  state.notifOpciones.recarga = !!(nr && nr.checked);
+  state.notifOpciones.medicion = !!(nm && nm.checked);
+  state.notifOpciones.cosecha = !!(nc && nc.checked);
+  saveState();
+}
+
+function refreshDashNotificacionesUI() {
+  ensureNotifOpciones();
+  const fs = document.getElementById('dashNotifPrefsFieldset');
+  const hint = document.getElementById('dashNotifPrefsHint');
+  const nr = document.getElementById('notifOptRecarga');
+  const nm = document.getElementById('notifOptMedicion');
+  const nc = document.getElementById('notifOptCosecha');
+  const o = state.notifOpciones;
+  if (nr) nr.checked = !!o.recarga;
+  if (nm) nm.checked = !!o.medicion;
+  if (nc) nc.checked = !!o.cosecha;
+  const granted = 'Notification' in window && Notification.permission === 'granted';
+  if (fs) fs.disabled = !granted;
+  if (hint) hint.classList.toggle('setup-hidden', granted);
+}
+
 function programarRecordatorios() {
-  // Verificar si hay recordatorios pendientes cada vez que se abre la app
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'granted') return;
+  ensureNotifOpciones();
+  const prefs = state.notifOpciones;
   const ahora = new Date();
 
-  // Recordatorio recarga — cada 15 días
-  if (state.ultimaRecarga) {
+  if (prefs.recarga && state.ultimaRecarga) {
     const ultima = new Date(state.ultimaRecarga);
     const diasDesde = Math.floor((ahora - ultima) / 86400000);
     if (diasDesde >= 14) {
@@ -738,8 +775,7 @@ function programarRecordatorios() {
     }
   }
 
-  // Recordatorio medición — si no has medido hoy
-  if (state.mediciones && state.mediciones.length > 0) {
+  if (prefs.medicion && state.mediciones && state.mediciones.length > 0) {
     const ultimaMed = state.mediciones[0];
     const hoy = ahora.toLocaleDateString('es-ES');
     if (ultimaMed.fecha !== hoy) {
@@ -755,33 +791,41 @@ function programarRecordatorios() {
     }
   }
 
-  // Alertas cosecha — plantas listas
-  const nivelesActivos = getNivelesActivos();
-  nivelesActivos.forEach(n => {
-    (state.torre[n] || []).forEach((c, ci) => {
-      if (!c.variedad || !c.fecha) return;
-      const dias = Math.floor((ahora - new Date(c.fecha)) / 86400000);
-      const diasBase = DIAS_COSECHA[c.variedad] || 50;
-      const diasTotal = typeof torreGetDiasCosechaObjetivo === 'function'
-        ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
-        : diasBase;
-      if (dias >= diasTotal) {
-        const labN = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
-        enviarNotificacion(
-          '✂️ HidroCultivo — Cosecha lista',
-          labN + ' en Nivel ' + (n+1) + ' Cesta ' + (ci+1) + ' lleva ' + dias + ' días. Lista para cosechar.',
-          ''
-        );
-      }
+  if (prefs.cosecha) {
+    const nivelesActivos = getNivelesActivos();
+    nivelesActivos.forEach(n => {
+      (state.torre[n] || []).forEach((c, ci) => {
+        if (!c.variedad || !c.fecha) return;
+        const dias = Math.floor((ahora - new Date(c.fecha)) / 86400000);
+        const diasBase = DIAS_COSECHA[c.variedad] || 50;
+        const diasTotal = typeof torreGetDiasCosechaObjetivo === 'function'
+          ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
+          : diasBase;
+        if (dias >= diasTotal) {
+          const labN = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
+          enviarNotificacion(
+            '✂️ HidroCultivo — Cosecha lista',
+            labN + ' en Nivel ' + (n+1) + ' Cesta ' + (ci+1) + ' lleva ' + dias + ' días. Lista para cosechar.',
+            ''
+          );
+        }
+      });
     });
-  });
+  }
 }
 
 // Botón para activar notificaciones en pestaña inicio
 function mostrarBtnNotificaciones() {
   if (!('Notification' in window)) return;
-  if (Notification.permission === 'granted') return;
   const btn = document.getElementById('btnActivarNotif');
-  if (btn) btn.style.display = 'flex';
+  if (Notification.permission === 'granted') {
+    if (btn) btn.style.display = 'none';
+  } else if (btn) {
+    btn.style.display = 'flex';
+  }
+  if (typeof refreshDashNotificacionesUI === 'function') refreshDashNotificacionesUI();
 }
 
+try {
+  refreshDashNotificacionesUI();
+} catch (_) {}

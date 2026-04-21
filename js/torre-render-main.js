@@ -771,17 +771,15 @@ function updateTorreStats() {
   if (depEl) {
     const pref = rawNombre ? rawNombre + ' · ' : '';
     if (esNftCfg) {
-      depEl.textContent = pref + 'Depósito (mezclas y lecturas)';
+      depEl.textContent = pref + 'Depósito (capacidad y mezcla)';
     } else if (esDwcCfg) {
       depEl.textContent = pref + 'Depósito DWC (capacidad y mezcla)';
     } else {
-      depEl.textContent = pref + 'Depósito (lecturas)';
+      depEl.textContent = pref + 'Depósito (capacidad y mezcla)';
     }
   }
 
-  const lectRow = document.getElementById('torreDepositoLecturasRow');
   const volHintEl = document.getElementById('torreDepositoVolHint');
-  if (lectRow) lectRow.classList.toggle('setup-hidden', !!esDwcCfg);
   if (volHintEl) {
     if (esDwcCfg) {
       volHintEl.classList.add('setup-hidden');
