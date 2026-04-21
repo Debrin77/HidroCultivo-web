@@ -39,11 +39,18 @@ function setModo(modo) {
     active.classList.add('active');
     active.setAttribute('aria-pressed', 'true');
   }
-  // Update info
-  const m = MODOS_CULTIVO[modo];
-  document.getElementById('modoInfoText').textContent =
-    `${m.desc} — Editar ficha o asignar cultivo (barra encima del esquema)`;
+  refreshModoInfoText();
   renderTorre();
+}
+
+/** Texto bajo el selector de modo (Sistema); respeta EC manual del checklist en modo lechuga. */
+function refreshModoInfoText() {
+  const el = document.getElementById('modoInfoText');
+  if (!el) return;
+  const m = MODOS_CULTIVO[modoActual];
+  if (!m) return;
+  const desc = typeof getModoInfoDescEfectivo === 'function' ? getModoInfoDescEfectivo(modoActual) : m.desc;
+  el.textContent = desc + ' — Editar ficha o asignar cultivo (barra encima del esquema)';
 }
 
 /** Animaciones SMIL del esquema (preferencia + “reducir movimiento” del sistema). */

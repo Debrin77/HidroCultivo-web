@@ -242,6 +242,10 @@ function renderMiniChart(containerId, datos, min, max, color, colorBad) {
 function getClaseVal(param, val) {
   const v = parseFloat(val);
   if (isNaN(v)) return '';
+  if (param === 'ec' && typeof getDashTileClassEc === 'function') {
+    const t = getDashTileClassEc(v);
+    return t === 'empty' ? '' : t;
+  }
   const r = RANGOS[param];
   if (!r) return '';
   if (v >= r.min && v <= r.max) return 'ok';

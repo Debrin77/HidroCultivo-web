@@ -334,6 +334,9 @@ function cargarEstadoTorre(idx) {
   try {
     if (typeof updateRecargaBar === 'function') updateRecargaBar();
   } catch (_) {}
+  try {
+    if (typeof refreshModoInfoText === 'function') refreshModoInfoText();
+  } catch (_) {}
 }
 
 function actualizarHeaderTorre() {

@@ -14,6 +14,55 @@ const RANGOS = {
 /** Con EC objetivo explícito en torre (checklist / PC·2), Mediciones corrige fuera de ± este margen (µS/cm). */
 const EC_MEDICION_TOLERANCIA_OBJETIVO_US = 50;
 
+/**
+ * Tile Inicio (y tablas que lo reutilicen): estado EC alineado con `evalEC`.
+ * Con `checklistEcObjetivoUs` válido → ok en [obj ± tol]; fuera, mismos umbrales warn/bad que Mediciones.
+ * Sin objetivo manual → `RANGOS.ec` (comportamiento anterior del dashboard).
+ */
+function getDashTileClassEc(val) {
+  if (val == null || !Number.isFinite(Number(val))) return 'empty';
+  const ec = Number(val);
+  const cfg = state.configTorre || {};
+  const manualRaw = cfg.checklistEcObjetivoUs;
+  const ecObjExplicito =
+    Number.isFinite(manualRaw) && manualRaw >= 200 && manualRaw <= 6000 ? Math.round(manualRaw) : null;
+  const tol = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
+
+  if (ecObjExplicito != null) {
+    const bandaLo = ecObjExplicito - tol;
+    const bandaHi = ecObjExplicito + tol;
+    if (ec >= bandaLo && ec <= bandaHi) return 'ok';
+    const ecOpt = typeof getECOptimaTorre === 'function' ? getECOptimaTorre() : { min: 900, max: 1400 };
+    const ecCritica = Math.round(ecOpt.min * 0.7);
+    if (ec < bandaLo) return ec < ecCritica ? 'bad' : 'warn';
+    return 'warn';
+  }
+
+  const r = RANGOS.ec;
+  if (ec >= r.min && ec <= r.max) return 'ok';
+  if (ec >= r.warnLow && ec <= r.warnHigh) return 'warn';
+  return 'bad';
+}
+
+/**
+ * Subtítulo del selector de modo (Sistema): en modo lechuga, si hay EC objetivo en checklist,
+ * sustituye el rango fijo 1300–1400 por ese objetivo (± `EC_MEDICION_TOLERANCIA_OBJETIVO_US`).
+ */
+function getModoInfoDescEfectivo(modoKey) {
+  const m = typeof MODOS_CULTIVO !== 'undefined' && MODOS_CULTIVO ? MODOS_CULTIVO[modoKey] : null;
+  if (!m) return '';
+  if (modoKey === 'lechuga') {
+    const cfg = state.configTorre || {};
+    const manualRaw = cfg.checklistEcObjetivoUs;
+    if (Number.isFinite(manualRaw) && manualRaw >= 200 && manualRaw <= 6000) {
+      const o = Math.round(manualRaw);
+      const t = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
+      return 'EC objetivo ' + o + ' ±' + t + ' µS/cm (checklist)';
+    }
+  }
+  return m.desc;
+}
+
 /** Litros de agua ~EC 0 para acercar ecActual a ecObjetivo (modelo EC·V constante). */
 function litrosAguaDiluirHastaEcUs(ecActual, volLitros, ecObjetivoUs) {
   if (!Number.isFinite(ecActual) || !Number.isFinite(volLitros) || volLitros <= 0) return 0.1;

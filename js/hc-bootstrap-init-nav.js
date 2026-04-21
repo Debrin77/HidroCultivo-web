@@ -32,6 +32,9 @@ function resetApp() {
 
   // Actualizar UI
   renderTorre();
+  try {
+    if (typeof refreshModoInfoText === 'function') refreshModoInfoText();
+  } catch (_) {}
   updateTorreStats();
   updateDashboard();
   initConfigUI();
@@ -47,9 +50,6 @@ function initApp() {
   document.querySelectorAll('.modo-btn').forEach(b => b.classList.remove('active'));
   const modoBtn = document.getElementById('modo-' + modoActual);
   if (modoBtn) modoBtn.classList.add('active');
-  const m = MODOS_CULTIVO[modoActual];
-  if (m) document.getElementById('modoInfoText').textContent =
-    `${m.desc} — Editar ficha o asignar cultivo (barra encima del esquema)`;
   // Multi-instalación antes del primer render (state.torres, nombre en UI, esquema)
   initTorres();
   reconciliarSlotTorreActivaAntesDeCargar();

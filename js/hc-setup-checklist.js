@@ -1213,6 +1213,9 @@ function onChecklistRecargaPrefsChanged() {
   saveState();
   renderChecklist();
   refreshConsejosSiVisible();
+  try {
+    if (typeof refreshModoInfoText === 'function') refreshModoInfoText();
+  } catch (_) {}
 }
 
 function onPrimerLlenadoVolDesdeChecklist() {
