@@ -8221,6 +8221,96 @@ button.config-option {
   margin-bottom: 8px;
   font-size: 13px;
 }
+.torre-assign-origen {
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+.hc-origen-hint-box {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.07);
+  border: 1px solid rgba(37, 99, 235, 0.16);
+  font-size: 11px;
+  line-height: 1.45;
+  color: #334155;
+}
+.hc-origen-hint-ol {
+  margin: 6px 0 0;
+  padding-left: 1.15rem;
+}
+.hc-origen-hint-p {
+  margin: 0 0 6px;
+}
+.hc-origen-hint-foot {
+  margin: 8px 0 0;
+  font-size: 10px;
+  color: #64748b;
+}
+.modal .hc-origen-hint-box {
+  margin-top: 4px;
+}
+.hc-origen-fecha-hint {
+  margin-top: 6px;
+  font-size: 10px;
+  color: #64748b;
+  line-height: 1.35;
+}
+.hc-germ-spec-dl {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.hc-germ-spec-dl dt {
+  font-weight: 700;
+  color: #1e293b;
+  margin-top: 6px;
+}
+.hc-germ-spec-dl dt:first-child {
+  margin-top: 0;
+}
+.hc-germ-spec-dl dd {
+  margin: 2px 0 0;
+  color: #475569;
+}
+.hc-germ-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 8px 0;
+  max-height: 70vh;
+}
+.hc-germ-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 10px;
+}
+.hc-germ-table th,
+.hc-germ-table td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 5px;
+  vertical-align: top;
+  text-align: left;
+}
+.hc-germ-table th {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: #334155;
+}
+.consejo-germ-intro,
+.consejo-germ-foot {
+  font-size: 11px;
+  margin: 6px 0;
+  color: #475569;
+  line-height: 1.45;
+}
+.torre-prog-origen {
+  font-size: 9px;
+  font-weight: 700;
+  color: #0369a1;
+  margin-top: 2px;
+  letter-spacing: 0.01em;
+}
 .torre-assign-grid {
   display: grid;
   grid-template-columns: 1fr;

@@ -61,6 +61,9 @@ function cosecharCesta() {
     fechaSiembra: data.fecha || '',
     diasCultivo: diasCultivo,
     notas:       data.notas || '',
+    origenPlanta: typeof normalizarOrigenPlanta === 'function'
+      ? normalizarOrigenPlanta(data.origenPlanta)
+      : (data.origenPlanta || ''),
     icono:       '✂️'
   });
 
@@ -81,7 +84,7 @@ function cosecharCesta() {
   });
 
   // Vaciar la cesta
-  state.torre[nivel][cesta] = { variedad: '', fecha: '', notas: '' };
+  state.torre[nivel][cesta] = { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
   saveState();
   renderTorre();
   updateTorreStats();
@@ -93,10 +96,16 @@ function saveCesta() {
   if (!editingCesta) return;
   const { nivel, cesta } = editingCesta;
   const prev = state.torre[nivel][cesta] || {};
+  const orEl = document.getElementById('editOrigenPlanta');
+  const orVal =
+    typeof normalizarOrigenPlanta === 'function' && orEl
+      ? normalizarOrigenPlanta(orEl.value)
+      : '';
   state.torre[nivel][cesta] = {
     variedad: document.getElementById('editVariedad').value,
     fecha: document.getElementById('editFecha').value,
     notas: document.getElementById('editNotas').value,
+    origenPlanta: orVal,
     fotos: Array.isArray(prev.fotos) ? prev.fotos : [],
     fotoKeys: Array.isArray(prev.fotoKeys) ? prev.fotoKeys : [],
   };
@@ -109,7 +118,7 @@ function saveCesta() {
 function clearCesta() {
   if (!editingCesta) return;
   const { nivel, cesta } = editingCesta;
-  state.torre[nivel][cesta] = { variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] };
+  state.torre[nivel][cesta] = { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
   saveState();
   renderTorre();
   updateTorreStats();

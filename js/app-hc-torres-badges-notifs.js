@@ -291,8 +291,13 @@ function cargarEstadoTorre(idx) {
   for (let n = 0; n < nivR; n++) {
     if (!state.torre[n]) state.torre[n] = [];
     while (state.torre[n].length < cesR) {
-      state.torre[n].push({ variedad:'', fecha:'', notas:'', fotos:[], fotoKeys:[] });
+      state.torre[n].push({ variedad:'', fecha:'', notas:'', origenPlanta:'', fotos:[], fotoKeys:[] });
     }
+  }
+  for (let n = 0; n < nivR; n++) {
+    (state.torre[n] || []).forEach(cell => {
+      if (typeof asegurarCamposFilaTorre === 'function') asegurarCamposFilaTorre(cell);
+    });
   }
   // Restaurar configuración de riego de esta torre
   const riegoData = t.riego || {};

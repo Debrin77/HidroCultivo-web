@@ -671,7 +671,7 @@ function guardarSetupYContinuar() {
   for (let n = 0; n < niveles; n++) {
     state.torre.push([]);
     for (let c = 0; c < cestas; c++) {
-      state.torre[n].push({ variedad: '', fecha: '', notas: '' });
+      state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
     }
   }
 

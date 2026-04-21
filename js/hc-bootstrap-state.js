@@ -28,10 +28,19 @@ function loadState() {
       }
       // Asegurar que torre tiene la estructura correcta (5 niveles x 5 cestas)
       while (s.torre.length < NUM_NIVELES) {
-        s.torre.push(Array(NUM_CESTAS).fill({ variedad:'', fecha:'', notas:'' }));
+        s.torre.push(
+          Array(NUM_CESTAS)
+            .fill(null)
+            .map(() => ({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] }))
+        );
       }
       s.torre.forEach((nivel, n) => {
-        while (nivel.length < NUM_CESTAS) nivel.push({ variedad:'', fecha:'', notas:'' });
+        while (nivel.length < NUM_CESTAS) {
+          nivel.push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
+        }
+      });
+      s.torre.forEach(nivel => {
+        (nivel || []).forEach(cell => asegurarCamposFilaTorre(cell));
       });
       if (s.modo) modoActual = s.modo;
       normalizarNotifOpcionesEnState(s);
@@ -55,6 +64,90 @@ function normalizarNotifOpcionesEnState(s) {
   };
 }
 
+/** Origen de la planta en ficha: vivero | germinacion | '' */
+function normalizarOrigenPlanta(v) {
+  const s = String(v == null ? '' : v).trim().toLowerCase();
+  if (s === 'germinacion' || s === 'germinación') return 'germinacion';
+  if (s === 'vivero') return 'vivero';
+  return '';
+}
+
+function asegurarCamposFilaTorre(row) {
+  if (!row || typeof row !== 'object') return;
+  if (!Array.isArray(row.fotos)) row.fotos = [];
+  if (!Array.isArray(row.fotoKeys)) row.fotoKeys = [];
+  row.origenPlanta = normalizarOrigenPlanta(row.origenPlanta);
+}
+
+function hcOrientacionViveroHtml() {
+  return (
+    '<p class="hc-origen-hint-p"><strong>Plántula de vivero</strong>: suele traer algo de sustrato (turba, coco, etc.) en el pan de raíces. ' +
+    'En hidroponía conviene <strong>retirar con cuidado lo suelto</strong> o seguir las indicaciones del vivero; evita meter tierra suelta al circuito.</p>'
+  );
+}
+
+function hcOrientacionGerminacionHtml(nombreVariedad) {
+  if (typeof hcGerminacionPanelHtmlCompleto === 'function') {
+    return hcGerminacionPanelHtmlCompleto(nombreVariedad || '');
+  }
+  return (
+    '<p class="hc-origen-hint-p"><strong>Germinación propia</strong> — referencia orientativa (ajusta según semillero y variedad):</p>' +
+    '<ol class="hc-origen-hint-ol">' +
+    '<li>Coloca la semilla en <strong>sustrato hidropónico</strong> húmedo (lana de roca, coco, etc.), sin enterrar en exceso.</li>' +
+    '<li>Bandeja en germinador <strong>a oscuras</strong> hasta que asome la radícula (suele ser unos <strong>2–4 días</strong> según especie y temperatura).</li>' +
+    '<li>Pasa a <strong>luz de crecimiento</strong> (14–18 h/día, intensidad suave al inicio) hasta <strong>2–3 hojas reales</strong> y buen desarrollo radicular.</li>' +
+    '<li><strong>Trasplanta al sistema</strong> (torre, NFT o DWC) y registra aquí la <strong>fecha de trasplante</strong>: es el día desde el que la app cuenta el ciclo.</li>' +
+    '</ol>' +
+    '<p class="hc-origen-hint-foot">Los días exactos dependen de la variedad y de la temperatura; revisa siempre el sobre del semillero.</p>'
+  );
+}
+
+function onTorreAssignOrigenChange() {
+  const sel = document.getElementById('torreAssignOrigen');
+  const box = document.getElementById('torreAssignOrigenHint');
+  if (!box) return;
+  const v = sel ? normalizarOrigenPlanta(sel.value) : '';
+  if (v === 'germinacion') {
+    box.classList.remove('setup-hidden');
+    const nom = document.getElementById('torreAssignVariedad')?.value?.trim() || '';
+    box.innerHTML = hcOrientacionGerminacionHtml(nom);
+  } else if (v === 'vivero') {
+    box.classList.remove('setup-hidden');
+    box.innerHTML = hcOrientacionViveroHtml();
+  } else {
+    box.classList.add('setup-hidden');
+    box.innerHTML = '';
+  }
+}
+
+function onEditOrigenPlantaChange() {
+  const sel = document.getElementById('editOrigenPlanta');
+  const box = document.getElementById('editOrigenGerminacionHint');
+  if (!box) return;
+  const v = sel ? normalizarOrigenPlanta(sel.value) : '';
+  if (v === 'germinacion') {
+    box.classList.remove('setup-hidden');
+    const nom = document.getElementById('editVariedad')?.value?.trim() || '';
+    box.innerHTML = hcOrientacionGerminacionHtml(nom);
+  } else if (v === 'vivero') {
+    box.classList.remove('setup-hidden');
+    box.innerHTML = hcOrientacionViveroHtml();
+  } else {
+    box.classList.add('setup-hidden');
+    box.innerHTML = '';
+  }
+}
+
+/** Al cambiar el cultivo en «Asignar», refresca el panel de germinación si está activo. */
+function onTorreAssignVariedadGerminHint() {
+  const or = document.getElementById('torreAssignOrigen');
+  if (!or || normalizarOrigenPlanta(or.value) !== 'germinacion') return;
+  const box = document.getElementById('torreAssignOrigenHint');
+  if (!box) return;
+  const nom = document.getElementById('torreAssignVariedad')?.value?.trim() || '';
+  box.innerHTML = hcOrientacionGerminacionHtml(nom);
+}
+
 // Inicializar state DESPUÉS de declarar todas las variables
 state = loadState();
 
@@ -63,7 +156,7 @@ function initState() {
   for (let n = 0; n < NUM_NIVELES; n++) {
     torre.push([]);
     for (let c = 0; c < NUM_CESTAS; c++) {
-      torre[n].push({ variedad: '', fecha: '', notas: '' });
+      torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
     }
   }
   const st = {

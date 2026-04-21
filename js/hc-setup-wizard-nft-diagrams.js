@@ -1847,7 +1847,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         const gx = L.xC;
         const gy = L.gyForJ(j);
         const numShow = j + 1;
-        let dat = { variedad: '', fecha: '' };
+        let dat = { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
         if (interactive && state.torre[G.g] && state.torre[G.g][j]) dat = state.torre[G.g][j];
         const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
         const col = interactive ? torreListaColorCesta(G.g, j) : { bg: '#f8fafc', border: '#94a3b8' };
@@ -1915,7 +1915,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       const gx = down ? S.x0 + padHuecoAlong + t * spanX : S.x1 - padHuecoAlong - t * spanX;
       const gy = S.yC - plantLift;
       const numShow = j + 1;
-      let dat = { variedad: '', fecha: '' };
+      let dat = { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
       if (interactive && state.torre[G.g] && state.torre[G.g][j]) dat = state.torre[G.g][j];
       const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
       const col = interactive ? torreListaColorCesta(G.g, j) : { bg: '#f8fafc', border: '#94a3b8' };
@@ -2551,7 +2551,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const t = huecosN <= 1 ? 0.5 : j / (huecosN - 1);
       const gx = rtl ? R.xR - padFlow - t * spanR : R.xL + padFlow + t * spanR;
       const gy = y - plantLiftEsc;
-      let dat = { variedad: '', fecha: '' };
+      let dat = { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
       if (interactive && state.torre[R.g] && state.torre[R.g][j]) dat = state.torre[R.g][j];
       const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
       const col = interactive ? torreListaColorCesta(R.g, j) : { bg: '#f8fafc', border: '#94a3b8' };

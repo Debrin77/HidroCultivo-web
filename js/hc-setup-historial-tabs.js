@@ -455,6 +455,10 @@ function renderRegistro() {
         if (ubiC) detalle += ' · ' + ubiC;
         if (e.fechaSiembra) detalle += ' · 🌱 ' + e.fechaSiembra;
         if (e.diasCultivo) detalle += ' · ' + e.diasCultivo + ' días';
+        if (typeof etiquetaOrigenPlantaBreve === 'function') {
+          const orL = etiquetaOrigenPlantaBreve(e.origenPlanta);
+          if (orL) detalle += ' · ' + orL;
+        }
         if (e.notas) detalle += '<br><span class="registro-note-sub">📝 ' + e.notas + '</span>';
       } else if (e.tipo === 'foto_sistema') {
         detalle = 'Vista completa de la instalación';

@@ -10,6 +10,12 @@ const CONSEJOS_DATA = {
       { icono:'🌱', titulo:'Plántulas — primeros días',
         texto:'Las primeras 48h son críticas. Mantén la esponja siempre húmeda pero no encharcada. El sistema de cascada debe estar activo desde el primer momento. <strong>No expongas las raíces al aire.</strong>',
         alerta:{ tipo:'info', txt:'ℹ️ Las plántulas nuevas pueden necesitar 2-3 días para adaptarse al sistema hidropónico si vienen de semillero en tierra.' } },
+      { icono:'🏪', titulo:'Origen en ficha: plántula de vivero',
+        texto:'Si compras en vivero o garden center, suele venir sustrato (coco, turba, plug de semillero) en el pan de raíces. En hidroponía conviene <strong>retirar con suavidad lo suelto</strong> o seguir las indicaciones del proveedor, para no arrastrar tierra o materia orgánica al depósito. En la ficha elige <strong>Plántula de vivero</strong> y la <strong>fecha en que entra al sistema</strong> (NFT, DWC o torre).',
+        alerta:{ tipo:'info', txt:'ℹ️ El origen es orientativo para ti y para el registro; el contador de días del calendario sigue basado en la fecha de trasplante al sistema.' } },
+      { icono:'🫘', titulo:'Origen en ficha: germinación propia',
+        texto:'Desde semilla en sustrato hidropónico: bandeja a <strong>oscuras</strong> hasta que asome la radícula (suelen ser unos 2–4 días según especie y temperatura), luego <strong>luz de crecimiento</strong> (14–18 h/día, suave al inicio) hasta 2–3 hojas reales y buen desarrollo radicular; entonces <strong>trasplanta al circuito</strong>. En la ficha marca <strong>Germinación propia</strong> y usa como fecha el <strong>día del traslado al sistema</strong> (no el de la siembra), para que el progreso y el riego coincidan con la planta en hidroponía.',
+        alerta:{ tipo:'ok', txt:'✅ En modo «Asignar cultivo» verás los mismos pasos al elegir germinación propia; los tiempos exactos dependen de la variedad y del sobre del semillero.' } },
       { icono:'⚗️', titulo:'pH inestable tras trasplantar plántulas',
         texto:'Es completamente normal que el pH suba 1-2 unidades en las primeras 24-72h tras añadir plántulas nuevas al sistema. Las raíces jóvenes absorben más aniones (nitratos) que cationes y liberan OH⁻ al agua, subiendo el pH. Con agua destilada este efecto es más pronunciado porque no hay carbonatos que amortigüen. <strong>No es un problema — es fisiología normal.</strong>',
         alerta:{ tipo:'warn', txt:'⚠️ Primera semana con plántulas nuevas: mide el pH cada 6-8h y ajusta con pH- si supera 7.0. A partir del día 4-5 el pH se estabiliza solo. Si el pH sube DE NOCHE también, puede indicar actividad bacteriana — revisar raíces.' } },
@@ -950,6 +956,62 @@ function buildConsejoObjetivoTorreCultivo() {
   });
 }
 
+/** Tabla de tiempos orientativos de germinación por cada cultivo del catálogo. */
+function buildConsejoTablaGerminacionCultivos() {
+  if (typeof getGerminacionSpecPorVariedad !== 'function' || typeof CULTIVOS_DB === 'undefined') return '';
+  const grupoOrder = {
+    lechugas: 0,
+    hojas: 1,
+    asiaticas: 2,
+    hierbas: 3,
+    frutos: 4,
+    fresas: 5,
+    raices: 6,
+    microgreens: 7,
+  };
+  const sorted = CULTIVOS_DB.slice().sort((a, b) => {
+    const ga = grupoOrder[a.grupo] != null ? grupoOrder[a.grupo] : 9;
+    const gb = grupoOrder[b.grupo] != null ? grupoOrder[b.grupo] : 9;
+    if (ga !== gb) return ga - gb;
+    return String(a.nombre).localeCompare(b.nombre, 'es');
+  });
+  const rows = sorted
+    .map(c => {
+      const s = getGerminacionSpecPorVariedad(c.nombre);
+      return (
+        '<tr><td>' +
+        cultivoEmojiHtml(c, 1) +
+        ' ' +
+        meteoEscHtml(c.nombre) +
+        '</td><td>' +
+        meteoEscHtml(s.osc) +
+        '</td><td>' +
+        meteoEscHtml(s.emerg) +
+        '</td><td>' +
+        meteoEscHtml(s.planton) +
+        '</td></tr>'
+      );
+    })
+    .join('');
+  return htmlConsejoCard(CONSEJOS_DATA.cultivo, {
+    icono: '📆',
+    titulo: 'Germinación en semillero — tabla por cultivo',
+    texto:
+      '<p class="consejo-germ-intro">Rangos <strong>orientativos</strong> (bandeja, Tª moderada). El sobre del semillero y tu invernadero marcan el ritmo real.</p>' +
+      '<div class="hc-germ-table-scroll">' +
+      '<table class="hc-germ-table">' +
+      '<thead><tr><th scope="col">Cultivo</th><th scope="col">Oscuro / uniformidad</th><th scope="col">Hasta emergencia</th><th scope="col">Hasta plantón</th></tr></thead>' +
+      '<tbody>' +
+      rows +
+      '</tbody></table></div>' +
+      '<p class="consejo-germ-foot">En <strong>Torre → Asignar cultivo</strong>, si eliges <strong>Germinación propia</strong>, la ayuda se actualiza al cambiar la variedad.</p>',
+    alerta: {
+      tipo: 'info',
+      txt: 'ℹ️ “Hasta plantón” es cuando suele irse al NFT/DWC/torre; la fecha en la ficha debe ser el <strong>traslado al sistema</strong>.',
+    },
+  });
+}
+
 function buildConsejosNftHidraulica() {
   const cat = CONSEJOS_DATA.nft;
   const cfg = state.configTorre || {};
@@ -1222,7 +1284,10 @@ function renderConsejosLista() {
   }
 
   if (consejoCatActiva === 'cultivo') {
-    lista.innerHTML = cat.consejos.map(c => htmlConsejoCard(cat, c)).join('') + buildConsejoObjetivoTorreCultivo();
+    lista.innerHTML =
+      cat.consejos.map(c => htmlConsejoCard(cat, c)).join('') +
+      buildConsejoObjetivoTorreCultivo() +
+      buildConsejoTablaGerminacionCultivos();
     return;
   }
 

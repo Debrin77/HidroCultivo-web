@@ -756,13 +756,17 @@ function redimensionarMatrizTorreDwcPreservando(cfg, nFilas, nCols) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
   const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, parseInt(String(nFilas), 10) || 1));
   const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, parseInt(String(nCols), 10) || 1));
-  const empty = () => ({ variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] });
+  const empty = () => ({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
   const copy = o => {
     if (!o || typeof o !== 'object') return empty();
     return {
       variedad: o.variedad || '',
       fecha: o.fecha || '',
       notas: o.notas || '',
+      origenPlanta:
+        typeof normalizarOrigenPlanta === 'function'
+          ? normalizarOrigenPlanta(o.origenPlanta)
+          : (o.origenPlanta || ''),
       fotos: Array.isArray(o.fotos) ? o.fotos.slice() : [],
       fotoKeys: Array.isArray(o.fotoKeys) ? o.fotoKeys.slice() : [],
     };

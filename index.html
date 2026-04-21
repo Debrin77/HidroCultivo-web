@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-19-dwc-scale-notif-panel-state">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-21-germinacion-tabla">
 </head>
 <body>
 
@@ -1491,7 +1491,16 @@
           </div>
           <div id="torreAssignPanel" class="setup-hidden">
             <label class="form-label torre-assign-label-main">1 · Cultivo a colocar</label>
-            <select id="torreAssignVariedad" class="form-select torre-assign-variedad" aria-label="Cultivo para asignar"></select>
+            <select id="torreAssignVariedad" class="form-select torre-assign-variedad" aria-label="Cultivo para asignar"
+              onchange="onTorreAssignVariedadGerminHint()"></select>
+            <label class="form-label torre-assign-label-sub" for="torreAssignOrigen">2 · Origen de la planta</label>
+            <select id="torreAssignOrigen" class="form-select torre-assign-origen" aria-label="Origen de la planta"
+              onchange="onTorreAssignOrigenChange()">
+              <option value="">— No indicado —</option>
+              <option value="vivero">Plántula de vivero (sustrato limpiado / lista para el sistema)</option>
+              <option value="germinacion">Germinación propia (semillero en casa)</option>
+            </select>
+            <div id="torreAssignOrigenHint" class="hc-origen-hint-box setup-hidden" aria-live="polite"></div>
             <div class="torre-assign-grid">
               <div>
                 <label class="form-label torre-assign-label-sub" for="torreAssignFecha">Fecha de trasplante (nuevas)</label>
@@ -3398,7 +3407,7 @@
 
     <div class="form-group">
       <label class="form-label">Variedad</label>
-      <select class="form-select" id="editVariedad" onchange="showCompatInfo()" aria-label="Seleccionar variedad de planta">
+      <select class="form-select" id="editVariedad" onchange="showCompatInfo(); if(typeof onEditOrigenPlantaChange==='function')onEditOrigenPlantaChange();" aria-label="Seleccionar variedad de planta">
         <option value="">— Vacía —</option>
       </select>
     </div>
@@ -3408,6 +3417,18 @@
     <div class="form-group">
       <label class="form-label">Fecha de trasplante</label>
       <input type="date" class="form-input" id="editFecha">
+      <p class="form-hint hc-origen-fecha-hint">Usa el día en que la planta <strong>entra al sistema</strong> (NFT, DWC o torre); así el calendario y el progreso coinciden con tu instalación.</p>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="editOrigenPlanta">Origen de la planta</label>
+      <select class="form-select" id="editOrigenPlanta" aria-label="Origen de la planta"
+        onchange="onEditOrigenPlantaChange()">
+        <option value="">— No indicado —</option>
+        <option value="vivero">Plántula de vivero (sustrato limpiado / lista para el sistema)</option>
+        <option value="germinacion">Germinación propia (semillero en casa)</option>
+      </select>
+      <div id="editOrigenGerminacionHint" class="hc-origen-hint-box setup-hidden" aria-live="polite"></div>
     </div>
 
     <div class="form-group">
@@ -3558,28 +3579,29 @@
   <script src="js/meteo-alarm-utils.js?v=1"></script>
   <script src="js/meteo-alarm-parse.js?v=1"></script>
   <script src="js/hc-bootstrap-config.js?v=1"></script>
-  <script src="js/hc-bootstrap-state.js?v=3"></script>
+  <script src="js/hc-bootstrap-state.js?v=5"></script>
   <script src="js/hc-bootstrap-pin.js?v=3"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=2"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=3"></script>
-  <script src="js/torre-render-build.js?v=2"></script>
+  <script src="js/torre-render-build.js?v=4"></script>
   <script src="js/torre-render-main.js?v=2"></script>
+  <script src="js/cultivos-germinacion.js?v=1"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=1"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=1"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=3"></script>
   <script src="js/hc-setup-wizard-pages.js?v=1"></script>
   <script src="js/hc-setup-calc-core.js?v=2"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=1"></script>
-  <script src="js/hc-setup-registro.js?v=1"></script>
+  <script src="js/hc-setup-registro.js?v=2"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=3"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=1"></script>
-  <script src="js/hc-setup-checklist.js?v=3"></script>
-  <script src="js/hc-setup-historial-tabs.js?v=1"></script>
-  <script src="js/hc-setup-consejos.js?v=1"></script>
+  <script src="js/hc-setup-checklist.js?v=4"></script>
+  <script src="js/hc-setup-historial-tabs.js?v=2"></script>
+  <script src="js/hc-setup-consejos.js?v=3"></script>
   <script src="js/calendario-logic.js?v=1"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
   <script src="js/meteo-forecast-dashboard.js?v=2"></script>
@@ -3588,7 +3610,7 @@
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=2"></script>
   <script src="js/app-hc-setup-onboarding.js?v=1"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=3"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=4"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=1"></script>
 </body>
 </html>

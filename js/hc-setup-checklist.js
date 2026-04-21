@@ -457,7 +457,7 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
     for (let n = 0; n < NUM_NIVELES; n++) {
       state.torre.push([]);
       for (let c = 0; c < NUM_CESTAS; c++) {
-        state.torre[n].push({ variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] });
+        state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
       }
     }
   } else {
@@ -470,7 +470,7 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
     for (let n = 0; n < NUM_NIVELES; n++) {
       state.torre.push([]);
       for (let c = 0; c < NUM_CESTAS; c++) {
-        state.torre[n].push({ variedad: '', fecha: '', notas: '', fotos: [], fotoKeys: [] });
+        state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
       }
     }
   }

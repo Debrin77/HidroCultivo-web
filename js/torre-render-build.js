@@ -1006,8 +1006,20 @@ function renderTablaVariedades() {
         : pct >= 70  ? '#d97706'
         : pct >= 30  ? '#16a34a'
         : '#2563eb';
-      plantas.push({ n, ci, variedad: c.variedad, dias, diasTotal, pct, estado, color,
-        fecha: c.fecha || '', ecMin: cultivo?.ecMin, ecMax: cultivo?.ecMax });
+      plantas.push({
+        n,
+        ci,
+        variedad: c.variedad,
+        dias,
+        diasTotal,
+        pct,
+        estado,
+        color,
+        fecha: c.fecha || '',
+        ecMin: cultivo?.ecMin,
+        ecMax: cultivo?.ecMax,
+        origenPlanta: c.origenPlanta,
+      });
     });
   }
 
@@ -1029,6 +1041,8 @@ function renderTablaVariedades() {
     const diasText = p.dias !== null ? p.dias + '/' + p.diasTotal : '—';
     const ecText   = p.ecMin ? p.ecMin + '-' + p.ecMax : '—';
     const cultRow  = getCultivoDB(p.variedad);
+    const origTxt =
+      typeof etiquetaOrigenPlantaBreve === 'function' ? etiquetaOrigenPlantaBreve(p.origenPlanta) : '';
 
     // Barra de progreso mini
     const barW = p.pct !== null ? Math.min(100, p.pct) : 0;
@@ -1041,6 +1055,7 @@ function renderTablaVariedades() {
         '<span class="torre-prog-emoji-wrap" aria-hidden="true">' + cultivoEmojiHtml(cultRow, 1.4) + '</span>' +
         '<div class="torre-prog-var-inner">' +
         '<div class="torre-prog-var-name">' + escHtmlUi(cultivoNombreLista(cultRow, p.variedad)) + '</div>' +
+        (origTxt ? '<div class="torre-prog-origen">' + origTxt + '</div>' : '') +
         (p.pct !== null ? '<div class="torre-prog-bar-track">' +
           '<div class="torre-prog-bar-fill" style="--tp-bar-w:' + barW + '%;--tp-bar-bg:' + barColor + '"></div>' +
           '</div>' : '') +
@@ -1587,6 +1602,7 @@ function setTorreInteraccionModo(m) {
     if (fd && !fd.value) fd.value = new Date().toISOString().slice(0, 10);
     const inst = document.getElementById('torreAssignInstant');
     if (inst) inst.checked = torreAsignarInstantaneo;
+    if (typeof onTorreAssignOrigenChange === 'function') onTorreAssignOrigenChange();
   }
   actualizarTorreAssignAyuda();
   actualizarTorreEditarAyuda();
@@ -1606,6 +1622,11 @@ function aplicarCultivoACestaUna(n, c, variedad) {
   row.fecha = fechaInp || row.fecha || hoy;
   if (!Array.isArray(row.fotos)) row.fotos = [];
   if (!Array.isArray(row.fotoKeys)) row.fotoKeys = [];
+  const orSel = document.getElementById('torreAssignOrigen');
+  row.origenPlanta =
+    typeof normalizarOrigenPlanta === 'function' && orSel
+      ? normalizarOrigenPlanta(orSel.value)
+      : '';
 }
 
 function aplicarCultivoSeleccionMultiple() {

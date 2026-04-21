@@ -108,7 +108,7 @@ function agregarFotoCesta(event) {
           if (!editingCesta) { resolve(); return; }
           const { nivel, cesta } = editingCesta;
           if (!state.torre[nivel]) state.torre[nivel] = [];
-          if (!state.torre[nivel][cesta]) state.torre[nivel][cesta] = { variedad:'', fecha:'', notas:'', fotos:[], fotoKeys:[] };
+          if (!state.torre[nivel][cesta]) state.torre[nivel][cesta] = { variedad:'', fecha:'', notas:'', origenPlanta:'', fotos:[], fotoKeys:[] };
           const cestaData = state.torre[nivel][cesta];
           if (!cestaData.fotos) cestaData.fotos = [];
 

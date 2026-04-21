@@ -721,9 +721,17 @@ function openModal(nivel, cesta) {
   const data = state.torre[nivel][cesta];
   document.getElementById('modalTitle').textContent = `Nivel ${nivel + 1} — Cesta ${cesta + 1}`;
   document.getElementById('editVariedad').value = data.variedad || '';
+  poblarSelectVariedades();
   document.getElementById('editFecha').value = data.fecha || '';
   document.getElementById('editNotas').value = data.notas || '';
-  poblarSelectVariedades();
+  const eo = document.getElementById('editOrigenPlanta');
+  if (eo) {
+    eo.value =
+      typeof normalizarOrigenPlanta === 'function'
+        ? normalizarOrigenPlanta(data.origenPlanta)
+        : (data.origenPlanta || '');
+    if (typeof onEditOrigenPlantaChange === 'function') onEditOrigenPlantaChange();
+  }
   const mo = document.getElementById('modalOverlay');
   mo.classList.add('open');
   a11yDialogOpened(mo);

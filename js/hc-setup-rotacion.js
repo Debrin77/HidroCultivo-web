@@ -158,14 +158,14 @@ function ejecutarRotacion() {
 
   // El más maduro se cosecha (vaciar)
   const nivelCosecha = edadesPorNivel[0].nivel;
-  state.torre[nivelCosecha] = Array(NUM_CESTAS).fill(null).map(() => ({ variedad: '', fecha: '', notas: '' }));
+  state.torre[nivelCosecha] = Array(NUM_CESTAS).fill(null).map(() => ({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] }));
 
   // Los demás se mueven al nivel siguiente (más maduro)
   for (let i = 1; i < edadesPorNivel.length; i++) {
     const nivelOrigen = edadesPorNivel[i].nivel;
     const nivelDestino = edadesPorNivel[i-1].nivel;
     state.torre[nivelDestino] = JSON.parse(JSON.stringify(state.torre[nivelOrigen]));
-    state.torre[nivelOrigen] = Array(NUM_CESTAS).fill(null).map(() => ({ variedad: '', fecha: '', notas: '' }));
+    state.torre[nivelOrigen] = Array(NUM_CESTAS).fill(null).map(() => ({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] }));
   }
 
   saveState();
