@@ -434,6 +434,36 @@ function evalPH(ph, vol) {
 
 function evalTemp(temp) {
   if (isNaN(temp)) { setStatus('statusTemp','empty','',''); setCard('cardTemp',''); showCorreccion('correccionTemp',''); return; }
+  const esKratky = typeof esDwcKratky === 'function' && esDwcKratky(state.configTorre || {});
+
+  if (esKratky) {
+    if (temp >= 17 && temp <= 21) {
+      setStatus('statusTemp','ok','✅','Temperatura correcta para Kratky (más estable)');
+      setCard('cardTemp','ok');
+      showCorreccion('correccionTemp','');
+      return;
+    }
+    if (temp < 17) {
+      const nivelK = temp < 14 ? 'bad' : 'warn';
+      setStatus('statusTemp', nivelK, temp < 14 ? '🔴' : '🟡',
+        temp < 14 ? 'Kratky: temperatura crítica — crecimiento casi parado' : 'Kratky: agua fría — vigilar raíces y ritmo');
+      setCard('cardTemp', temp < 14 ? 'alert' : 'warn');
+      showCorreccion('correccionTemp',
+        '<div class="correccion-title">🔥 Kratky: corrección de temperatura</div>' +
+        '<div class="correccion-muted--body-temp">Sin aireador el margen térmico es menor. Intenta estabilizar entre <strong>17–21°C</strong> y acercar a 20°C.</div>'
+      );
+      return;
+    }
+    const nivelK = temp > 24 ? 'bad' : 'warn';
+    setStatus('statusTemp', nivelK, temp > 24 ? '🔴' : '🟡',
+      temp > 24 ? 'Kratky: riesgo alto (bajo O₂ y patógenos)' : 'Kratky: temperatura alta — vigilar muy de cerca');
+    setCard('cardTemp', temp > 24 ? 'alert' : 'warn');
+    showCorreccion('correccionTemp',
+      '<div class="correccion-title">❄️ Kratky: enfriar solución</div>' +
+      '<div class="correccion-muted--body-temp">En Kratky evita superar 22°C de forma sostenida. Sombrea depósito y revisa volumen para mantener cámara de aire.</div>'
+    );
+    return;
+  }
 
   if (temp >= 18 && temp <= 22) {
     setStatus('statusTemp','ok','✅',`Temperatura correcta — oxígeno disuelto óptimo`);
@@ -470,6 +500,31 @@ function evalTemp(temp) {
 
 function evalVol(vol, ec, ph) {
   if (isNaN(vol)) { setStatus('statusVol','empty','',''); setCard('cardVol',''); showCorreccion('correccionVol',''); return; }
+  const cfgK = state.configTorre || {};
+  const esKratky = typeof esDwcKratky === 'function' && esDwcKratky(cfgK);
+  const volObjSafe = getVolumenDepositoMaxLitros(cfgK);
+  if (esKratky && Number.isFinite(volObjSafe) && volObjSafe > 0) {
+    const umbralOk = volObjSafe * 0.85;
+    const umbralWarn = volObjSafe * 0.7;
+    if (vol >= umbralOk) {
+      setStatus('statusVol','ok','✅','Volumen estable para Kratky (cámara de aire segura)');
+      setCard('cardVol','ok');
+      showCorreccion('correccionVol','');
+      return;
+    }
+    const litrosAnadir = Math.max(0, Math.ceil((volObjSafe - vol) * 10) / 10);
+    const nivel = vol < umbralWarn ? 'bad' : 'warn';
+    setStatus('statusVol', nivel, vol < umbralWarn ? '🔴' : '🟡',
+      vol < umbralWarn ? 'Kratky: volumen crítico — reponer agua ya' : 'Kratky: volumen bajando — reponer agua');
+    setCard('cardVol', vol < umbralWarn ? 'alert' : 'warn');
+    showCorreccion('correccionVol',
+      '<div class="correccion-title">💧 Reposición Kratky</div>' +
+      '<div class="correccion-item"><span>Añadir agua</span><span class="correccion-valor">+' + litrosAnadir + ' L</span></div>' +
+      '<div class="correccion-muted correccion-muted--tight">Objetivo seguro actual: ~' + volObjSafe + ' L (mantener 0,5–1 cm bajo base del sustrato).</div>' +
+      '<div class="correccion-muted correccion-muted--loose">Mide EC y pH tras reponer. En Kratky evita sobrellenar el depósito.</div>'
+    );
+    return;
+  }
 
   if (vol >= 16) {
     setStatus('statusVol','ok','✅',`Volumen correcto`);

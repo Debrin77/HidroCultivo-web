@@ -30,6 +30,25 @@ function dwcNormalizeRejillaModo(raw) {
   return v === 'max' ? 'max' : 'objetivo';
 }
 
+function dwcNormalizeModo(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  return v === 'kratky' ? 'kratky' : 'aireado';
+}
+
+function dwcGetModoCultivo(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (c.dwcModo) return dwcNormalizeModo(c.dwcModo);
+  // Compatibilidad con instalaciones antiguas: si no había modo explícito,
+  // usar la presencia de entrada de aire como pista.
+  if (c.dwcEntradaAireManguera === false) return 'kratky';
+  return 'aireado';
+}
+
+function esDwcKratky(cfg) {
+  const c = cfg || state.configTorre || {};
+  return tipoInstalacionNormalizado(c) === 'dwc' && dwcGetModoCultivo(c) === 'kratky';
+}
+
 function dwcGetRejillaModoPreferido(cfg) {
   const c = cfg || state.configTorre || {};
   return dwcNormalizeRejillaModo(c.dwcRejillaModoPreferido);
@@ -1733,6 +1752,24 @@ function refreshDwcSistemaMedidasUI() {
   } catch (e3) {}
 
   if (oxEl) {
+    const modoDwc = dwcGetModoCultivo(cfg);
+    if (modoDwc === 'kratky') {
+      oxEl.style.display = 'block';
+      oxEl.style.padding = '8px 10px';
+      oxEl.style.fontSize = '10px';
+      oxEl.style.lineHeight = '1.45';
+      oxEl.style.fontWeight = '600';
+      oxEl.style.color = '#92400e';
+      oxEl.style.background = '#fffbeb';
+      oxEl.style.border = '1px solid #fde68a';
+      oxEl.style.borderRadius = '10px';
+      oxEl.textContent =
+        'Modo Kratky (sin aireador): controla mucho temperatura y volumen; mantener la cámara de aire (0,5–1 cm bajo la base del sustrato) y evitar >22°C en agua.';
+      try {
+        mountDwcDistanciaLlenadoTiempoReal();
+      } catch (_) {}
+      return;
+    }
     const par = dwcRecomendacionDifusorParaSistemaUI(cfg);
     if (par && par.rec) {
       oxEl.style.display = 'block';
@@ -1885,6 +1922,12 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
     if (elObj && elObj.value) cfg.dwcObjetivoCultivo = dwcNormalizeObjetivoCultivo(elObj.value);
     else cfg.dwcObjetivoCultivo = dwcObjetivoCultivoDesdeRimMm(rim);
   }
+  if (ids.modo) {
+    const elModoCultivo = document.getElementById(ids.modo);
+    cfg.dwcModo = dwcNormalizeModo(elModoCultivo && elModoCultivo.value);
+  } else {
+    cfg.dwcModo = dwcNormalizeModo(cfg.dwcModo);
+  }
   if (ids.rejillaModo) {
     const elModo = document.getElementById(ids.rejillaModo);
     cfg.dwcRejillaModoPreferido = dwcNormalizeRejillaModo(elModo && elModo.value);
@@ -1892,6 +1935,7 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   cfg.dwcCupulas = document.getElementById(ids.cupulas)?.checked === true;
   if (!cfg.dwcCupulas) delete cfg.dwcCupulas;
   cfg.dwcEntradaAireManguera = document.getElementById(ids.aire)?.checked === true;
+  if (cfg.dwcModo === 'kratky') cfg.dwcEntradaAireManguera = false;
   if (!cfg.dwcEntradaAireManguera) delete cfg.dwcEntradaAireManguera;
   if (ids.marco && ids.hueco) {
     const mh = _dwcParseMarcoHuecoMmIds(ids.marco, ids.hueco);
@@ -1960,6 +2004,7 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   setVal(ids.prof, c.dwcDepositoProfCm);
   setVal(ids.rim, c.dwcNetPotRimMm);
   setVal(ids.alt, c.dwcNetPotHeightMm);
+  if (ids.modo) setVal(ids.modo, dwcGetModoCultivo(c));
   if (ids.objetivo) setVal(ids.objetivo, dwcGetObjetivoCultivo(c));
   if (ids.rejillaModo) setVal(ids.rejillaModo, dwcGetRejillaModoPreferido(c));
   if (ids.marco) setVal(ids.marco, c.dwcTapaMarcoPorLadoMm);
@@ -1967,7 +2012,31 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   const cu = document.getElementById(ids.cupulas);
   if (cu) cu.checked = c.dwcCupulas === true;
   const air = document.getElementById(ids.aire);
-  if (air) air.checked = c.dwcEntradaAireManguera === true;
+  if (air) {
+    const mk = dwcGetModoCultivo(c);
+    air.checked = mk !== 'kratky' && c.dwcEntradaAireManguera === true;
+    air.disabled = mk === 'kratky';
+  }
+}
+
+function onDwcModoChanged(formIds) {
+  const ids = formIds || DWC_FORM_IDS_SISTEMA;
+  const sel = document.getElementById(ids.modo);
+  const air = document.getElementById(ids.aire);
+  const mk = dwcNormalizeModo(sel && sel.value);
+  if (air) {
+    if (mk === 'kratky') {
+      air.checked = false;
+      air.disabled = true;
+    } else {
+      air.disabled = false;
+    }
+  }
+  try {
+    if (typeof refreshDwcSistemaMedidasUI === 'function' && ids === DWC_FORM_IDS_SISTEMA) {
+      refreshDwcSistemaMedidasUI();
+    }
+  } catch (_) {}
 }
 
 function aplicarSistemaDwcDesdeFormulario() {

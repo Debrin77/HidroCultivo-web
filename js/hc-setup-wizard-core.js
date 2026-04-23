@@ -23,7 +23,10 @@ function tipoInstalacionNormalizado(cfg) {
 function etiquetaSistemaHidroponicoBreve(cfg) {
   const t = tipoInstalacionNormalizado(cfg || {});
   if (t === 'nft') return 'NFT';
-  if (t === 'dwc') return 'DWC';
+  if (t === 'dwc') {
+    if (typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg || {}) === 'kratky') return 'Kratky';
+    return 'DWC';
+  }
   return 'Torre vertical';
 }
 
@@ -1349,6 +1352,7 @@ const DWC_FORM_IDS_SISTEMA = {
   prof: 'sysDwcProfCm',
   rim: 'sysDwcPotRimMm',
   alt: 'sysDwcPotHmm',
+  modo: 'sysDwcModoCultivo',
   objetivo: 'sysDwcObjetivoCultivo',
   rejillaModo: 'sysDwcRejillaPreferida',
   cupulas: 'sysDwcCupulas',
@@ -1360,6 +1364,7 @@ const DWC_FORM_IDS_SETUP = {
   prof: 'setupDwcProfCm',
   rim: 'setupDwcPotRimMm',
   alt: 'setupDwcPotHmm',
+  modo: 'setupDwcModoCultivo',
   objetivo: 'setupDwcObjetivoCultivo',
   rejillaModo: 'setupDwcRejillaPreferida',
   marco: 'setupDwcTapaMarcoMm',

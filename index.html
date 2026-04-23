@@ -1370,6 +1370,14 @@
             </div>
           </div>
           <div>
+            <label class="form-label torre-dwc-lbl-mono" for="sysDwcModoCultivo">Modo DWC</label>
+            <select id="sysDwcModoCultivo" class="torre-dwc-input" aria-label="Modo DWC"
+              oninput="try{onDwcModoChanged(DWC_FORM_IDS_SISTEMA)}catch(e){}">
+              <option value="aireado">DWC aireado (bomba de aire)</option>
+              <option value="kratky">Kratky (sin aireador)</option>
+            </select>
+          </div>
+          <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcObjetivoCultivo">Objetivo de cultivo</label>
             <select id="sysDwcObjetivoCultivo" class="torre-dwc-input" aria-label="Objetivo de densidad DWC"
               oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
@@ -2448,6 +2456,15 @@
               title="De la tapa al fondo de la cesta"
               class="setup-dwc-input">
           </div>
+        </div>
+        <div>
+          <label class="form-label setup-dwc-label" for="setupDwcModoCultivo">Modo DWC</label>
+          <select id="setupDwcModoCultivo" class="setup-dwc-input"
+            onchange="try{onDwcModoChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"
+            aria-label="Modo DWC del asistente">
+            <option value="aireado">DWC aireado (bomba de aire)</option>
+            <option value="kratky">Kratky (sin aireador)</option>
+          </select>
         </div>
         <div>
           <label class="form-label setup-dwc-label" for="setupDwcObjetivoCultivo">Objetivo de cultivo</label>
@@ -3641,8 +3658,8 @@
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=3"></script>
+  <script src="js/hc-setup-wizard-core.js?v=3"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=4"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=4"></script>
   <script src="js/hc-setup-wizard-pages.js?v=1"></script>
   <script src="js/hc-setup-calc-core.js?v=2"></script>
@@ -3652,8 +3669,8 @@
   <script src="js/hc-setup-historial-delete.js?v=1"></script>
   <script src="js/hc-setup-registro.js?v=4"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=3"></script>
-  <script src="js/hc-setup-mediciones-logic.js?v=4"></script>
-  <script src="js/hc-setup-checklist.js?v=5"></script>
+  <script src="js/hc-setup-mediciones-logic.js?v=5"></script>
+  <script src="js/hc-setup-checklist.js?v=6"></script>
   <script src="js/hc-setup-historial-tabs.js?v=4"></script>
   <script src="js/hc-setup-consejos.js?v=6"></script>
   <script src="js/calendario-logic.js?v=1"></script>

@@ -144,13 +144,15 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
     const clTit = document.getElementById('checklistTitle');
     if (clTit) {
       const tCh = tipoInstalacionNormalizado(state.configTorre || {});
+      const esKratkyTit =
+        tCh === 'dwc' && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(state.configTorre || {}) === 'kratky';
       const titPrimer =
         tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
-        : tCh === 'dwc' ? '🌊 Primer llenado DWC — checklist'
+        : tCh === 'dwc' ? (esKratkyTit ? '🌊 Primer llenado Kratky — checklist' : '🌊 Primer llenado DWC — checklist')
         : '🌿 Primer llenado — torre vertical — checklist';
       const titRecarga =
         tCh === 'nft' ? '🪴 Recarga NFT — checklist'
-        : tCh === 'dwc' ? '🌊 Recarga DWC — checklist'
+        : tCh === 'dwc' ? (esKratkyTit ? '🌊 Recarga Kratky — checklist' : '🌊 Recarga DWC — checklist')
         : '🌿 Recarga — torre vertical — checklist';
       if (clRutaChecklist === 'primer_llenado') {
         clTit.textContent = titPrimer;
@@ -197,6 +199,8 @@ function generarPasosNutriente() {
   const suf    = dosisSufijoNutriente(nut);
   const pasos  = [];
   const esDwcNut = cfg.tipoInstalacion === 'dwc';
+  const esDwcKratky =
+    esDwcNut && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const faPl = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
   const notaArranquePl =
     faPl < 1
@@ -290,12 +294,16 @@ function generarPasosNutriente() {
   pasos.push({
     id:'4.7', seccion:null, paso:'4.7',
     desc: esDwcNut
-      ? ('Encender el <strong>aireador</strong> con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — raíces oxigenadas en el depósito')
+      ? (esDwcKratky
+        ? ('Confirmar cámara de aire y pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — raíces con oxígeno por espacio de aire (Kratky)')
+        : ('Encender el <strong>aireador</strong> con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — raíces oxigenadas en el depósito'))
       : 'Encender bomba con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — seguro para las raíces',
     nota: tieneBuffer
       ? 'No corrijas más el pH hasta medir con calma (recordatorio en 4.8 y registro en paso 6).'
       : (esDwcNut
-        ? 'DWC: el difusor homogeneiza y oxigena; control de nivel y nutrientes en <strong>Mediciones</strong>.'
+        ? (esDwcKratky
+          ? 'Kratky: controlar temperatura y volumen para mantener oxigenación por cámara de aire; seguimiento en <strong>Mediciones</strong>.'
+          : 'DWC: el difusor homogeneiza y oxigena; control de nivel y nutrientes en <strong>Mediciones</strong>.')
         : 'Sistema listo para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.')
   });
 
@@ -333,6 +341,8 @@ function construirTextoChecklistPreliminar() {
   }
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esDwcK =
+    esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const esTorre = !esNft && !esDwc;
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
     p1Partes.join(' + ') + '. Remover bien.' +
@@ -343,7 +353,7 @@ function construirTextoChecklistPreliminar() {
     (usarCalMagEnRecarga() ? ', CalMag' : '') +
     ', ' + stockExtra + ', pH+, agua oxigenada 3%, esponja';
   if (esNft) p2 += ', cepillo suave o tubo flexible para canales, comprobación de pendiente';
-  if (esDwc) p2 += ', repuestos de difusor o piedra porosa, manguera de aire';
+  if (esDwc && !esDwcK) p2 += ', repuestos de difusor o piedra porosa, manguera de aire';
   const ecO = getECOptimaTorre();
   const provMs = Math.min(1.2, Math.max(0.35, ((ecO.min + ecO.max) / 2000) * 0.06));
   return { descP1: desc, descP2: p2, placeholderProv: provMs.toFixed(2) };
@@ -401,7 +411,7 @@ function cerrarOverlayChecklistDatosInstalacion() {
 /**
  * Aplica torre, NFT o DWC mínimos tras el cuestionario previo al checklist (reset / primera recarga sin asistente).
  */
-function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMezclaOpt) {
+function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMezclaOpt, dwcModoOpt) {
   initTorres();
   const aguaOk = agua === 'osmosis' || agua === 'grifo' ? agua : 'destilada';
   const aguaMap = { destilada: 'destilada', osmosis: 'osmosis', grifo: 'grifo' };
@@ -429,6 +439,8 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
     torreObjetivoCultivo: 'final',
   };
 
+  const dwcModo = (typeof dwcNormalizeModo === 'function' ? dwcNormalizeModo(dwcModoOpt) : 'aireado');
+
   if (tipo === 'nft') {
     state.configTorre = Object.assign({}, baseComun, {
       tipoInstalacion: 'nft',
@@ -447,9 +459,11 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
   } else if (tipo === 'dwc') {
     state.configTorre = Object.assign({}, baseComun, {
       tipoInstalacion: 'dwc',
+      dwcModo: dwcModo,
       numNiveles: NUM_NIVELES,
       numCestas: NUM_CESTAS,
     });
+    if (dwcModo === 'kratky') delete state.configTorre.dwcEntradaAireManguera;
     try {
       dwcPersistSnapshotMaxCestasEnCfg(state.configTorre);
     } catch (eDw) {}
@@ -523,6 +537,11 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     escHtmlUi(n.nombre) + '</option>'
   ).join('');
 
+  const dwcModoIni =
+    cfg && cfg.tipoInstalacion === 'dwc' && typeof dwcGetModoCultivo === 'function'
+      ? dwcGetModoCultivo(cfg)
+      : 'aireado';
+
   const overlay = document.createElement('div');
   overlay.id = 'checklistDatosInstalacionOverlay';
   overlay.setAttribute('role', 'dialog');
@@ -549,6 +568,13 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
         '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="dwc"' + (tipoIni === 'dwc' ? ' checked' : '') + '>' +
           '<span class="checklist-dark-type-opt-text">DWC</span></label>' +
+      '</div>' +
+      '<div id="cldDwcModoWrap" style="' + (tipoIni === 'dwc' ? '' : 'display:none;') + '">' +
+        '<label class="checklist-dark-field-label">Modo DWC</label>' +
+        '<select id="cldDwcModo" class="checklist-dark-field-input checklist-dark-select checklist-dark-select--mb12">' +
+          '<option value="aireado"' + (dwcModoIni === 'aireado' ? ' selected' : '') + '>DWC aireado (bomba de aire)</option>' +
+          '<option value="kratky"' + (dwcModoIni === 'kratky' ? ' selected' : '') + '>Kratky (sin aireador)</option>' +
+        '</select>' +
       '</div>' +
 
       '<label class="checklist-dark-field-label">Capacidad máxima del depósito (L)</label>' +
@@ -586,6 +612,7 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     const tipo = (overlay.querySelector('input[name="cldTipoInst"]:checked') || {}).value || 'torre';
     const vol = parseInt(String(document.getElementById('cldVolDeposito').value || '0'), 10);
     const agua = document.getElementById('cldAgua').value || 'destilada';
+    const dwcModo = document.getElementById('cldDwcModo')?.value || 'aireado';
     const nutId = document.getElementById('cldNutriente').value;
     const mezStr = String(document.getElementById('cldVolMezcla')?.value || '').trim();
     const volMez = parseFloat(String(mezStr).replace(',', '.'));
@@ -610,11 +637,18 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       return;
     }
     cerrarOverlayChecklistDatosInstalacion();
-    aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, mezOpt);
+    aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, mezOpt, dwcModo);
     abrirChecklist(esPrimeraVezChecklist);
   };
 
   document.getElementById('cldBtnContinuar').addEventListener('click', continuar);
+  overlay.querySelectorAll('input[name="cldTipoInst"]').forEach(r => {
+    r.addEventListener('change', () => {
+      const tipoSel = (overlay.querySelector('input[name="cldTipoInst"]:checked') || {}).value || 'torre';
+      const wrap = document.getElementById('cldDwcModoWrap');
+      if (wrap) wrap.style.display = tipoSel === 'dwc' ? '' : 'none';
+    });
+  });
   document.getElementById('cldBtnAsistente').addEventListener('click', () => {
     cerrarOverlayChecklistDatosInstalacion();
     try { abrirSetup(); } catch (e) {}
@@ -641,6 +675,8 @@ function getCLPasos() {
   const nNiv = cfg.numNiveles || NUM_NIVELES;
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esDwcK =
+    esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const esTorre = !esNft && !esDwc;
   const checklistTieneCalentador = Array.isArray(cfg.equipamiento) && cfg.equipamiento.includes('calentador');
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
@@ -709,6 +745,14 @@ function getCLPasos() {
         { id: 'clPrimerNutriente', label: 'Nutriente / marca', type: 'select', clase: 'wide',
           opcionesVal: optsNutPrimer,
           _clOnchange: 'onPrimerLlenadoNutrienteDesdeChecklist()' },
+        ...(esDwc ? [{
+          id: 'clPrimerDwcModo', label: 'Modo DWC', type: 'select', clase: 'wide',
+          opcionesVal: [
+            { value: 'aireado', label: 'DWC aireado (bomba de aire)', selected: !esDwcK },
+            { value: 'kratky', label: 'Kratky (sin aireador)', selected: esDwcK },
+          ],
+          _clOnchange: 'onPrimerLlenadoDwcModoDesdeChecklist()'
+        }] : []),
       ],
     },
     { id: 'PC2', seccion: null, paso: 'PC·2',
@@ -725,14 +769,16 @@ function getCLPasos() {
     desc: esNft
       ? ('Sensores o medidores en tu NFT (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea tras el retorno; si el circuito es largo, espera unos minutos a que se estabilice.')
       : esDwc
-        ? ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.')
+        ? (esDwcK
+          ? ('Sensores o medidores en tu Kratky (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea y superficie estable; sin remover en exceso.')
+          : ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.'))
         : ('Sensores o medidores en tu torre vertical (' + hwLista.join(', ') + '): comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. El <strong>registro</strong> de esta recarga lo cierras en el paso <strong>6.4</strong> y lo verás en <strong>Mediciones</strong>.',
   }] : [];
 
   const nftBomb = esNft ? getNftBombaDesdeConfig(cfg) : null;
 
-  const pasosDwcOxigenacion = esDwc
+  const pasosDwcOxigenacion = esDwc && !esDwcK
     ? [
         {
           id: 'D0',
@@ -790,7 +836,15 @@ function getCLPasos() {
             })(),
         },
       ]
-    : [];
+    : (esDwcK
+      ? [{
+          id: 'D0K',
+          seccion: '🌊 Kratky — control de seguridad',
+          paso: 'D·0',
+          desc: 'Sin aireador: prioriza estabilidad térmica y nivel de solución. Mantén siempre cámara de aire entre nutriente y base del sustrato.',
+          nota: 'Objetivo práctico: agua fresca (ideal 17–21°C, evitar >22°C sostenidos) y reposición sin sobrellenar (0,5–1 cm por debajo de base del sustrato).',
+        }]
+      : []);
 
   const pasosTorreObjetivo = esTorre
     ? [{
@@ -1059,7 +1113,9 @@ function getCLPasos() {
     nota: esNft
       ? 'Quita polvo, restos de fabricación o films sueltos. Canales nuevos: enjuagar; una limpieza tipo «recarga» (biofilm, raíces) la harás cuando el sistema ya haya estado en uso.'
       : esDwc
-        ? 'Quita polvo y residuos; enjuaga difusores y líneas de aire nuevas. DWC depende de agua limpia y burbujeo uniforme desde el primer día.'
+        ? (esDwcK
+          ? 'Quita polvo y residuos. En Kratky la limpieza y estabilidad térmica son clave desde el primer día.'
+          : 'Quita polvo y residuos; enjuaga difusores y líneas de aire nuevas. DWC depende de agua limpia y burbujeo uniforme desde el primer día.')
         : 'Quita polvo, grasa o restos industriales. Con tubo/bomba nuevos, un enjuague previo evita residuos en la primera mezcla.' },
   { id:'PL2', seccion:null, paso:'PL·2',
     desc:'Aclarar con agua limpia — mínimo 2 veces',
@@ -1090,15 +1146,19 @@ function getCLPasos() {
     desc: esNft
       ? ('Con la bomba en marcha (24 h): película continua en los ' + nftCh + ' canales; sin tramos secos al inicio ni charcos al final (pendiente ~1–2 % típico). Si anotaste la placa en el checklist, ya tienes el <strong>cumple / no cumple</strong> orientativo.')
       : esDwc
-        ? 'Con el aireador en marcha (24 h): burbujeo uniforme en todo el depósito; sin zonas muertas ni ruido de succión en seco'
+        ? (esDwcK
+          ? 'Kratky: comprobar nivel estable, cámara de aire y ausencia de olores/espuma anómalos en el depósito'
+          : 'Con el aireador en marcha (24 h): burbujeo uniforme en todo el depósito; sin zonas muertas ni ruido de succión en seco')
         : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
-      { id:'clMinSinBomba', label: esDwc ? 'Min sin aireador:' : 'Min sin bomba:', type:'number', placeholder:'40' }
+      { id:'clMinSinBomba', label: esDwc ? (esDwcK ? 'Min sin revisión de nivel:' : 'Min sin aireador:') : 'Min sin bomba:', type:'number', placeholder:'40' }
     ] },
   { id:'5.2', seccion:null, paso:'5.2',
     desc: esDwc
-      ? 'Revisar difusores y caudal de aire (piedras porosas, obstrucciones, fugas en manguera)'
+      ? (esDwcK
+        ? 'Revisar cámara de aire y nivel (0,5–1 cm bajo base del sustrato); no sobrellenar'
+        : 'Revisar difusores y caudal de aire (piedras porosas, obstrucciones, fugas en manguera)')
       : esNft
         ? 'Revisar circuito y racores: película continua y sin fugas en alimentación o retornos'
         : 'Si el depósito lleva piedra o difusor de aire, encenderlo; si solo riegas por bomba, confirma circulación estable por la torre' },
@@ -1109,7 +1169,7 @@ function getCLPasos() {
   }] : []),
   { id:'5.4', seccion:null, paso:'5.4',
     desc: esDwc
-      ? 'Esperar 20 minutos con el aireador en marcha antes de medir'
+      ? (esDwcK ? 'Esperar 20 minutos con nivel estable antes de medir' : 'Esperar 20 minutos con el aireador en marcha antes de medir')
       : esNft
         ? 'Esperar unos minutos con la bomba en marcha hasta homogeneizar la mezcla en depósito y canales antes de medir'
         : 'Esperar ~20 min con bomba (y difusor de aire en depósito si lo usas) en marcha antes de medir',
@@ -1147,7 +1207,9 @@ function getCLPasos() {
     campos:[{
       id:'clEstadoPlantas', label:'Estado:', type:'select',
       opciones: esDwc
-        ? ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar aireador / oxígeno']
+        ? (esDwcK
+          ? ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar nivel / temperatura']
+          : ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar aireador / oxígeno'])
         : ['Turgentes — correcto', 'Ligeramente lacias', 'Muy lacias — revisar bomba / circulación']
     }],
   }]),
@@ -1155,7 +1217,9 @@ function getCLPasos() {
     desc: esNft
       ? 'Anotar en Historial / Mediciones; los próximos días ajusta caudal o pendiente si algún canal se queda corto de película'
       : esDwc
-        ? 'Registrar en Historial / Mediciones; vigilar temperatura del agua, EC y estado del aireador en los días siguientes'
+        ? (esDwcK
+          ? 'Registrar en Historial / Mediciones; vigilar sobre todo temperatura del agua, EC y volumen seguro en días siguientes'
+          : 'Registrar en Historial / Mediciones; vigilar temperatura del agua, EC y estado del aireador en los días siguientes')
         : 'Ejecutar cálculo de riego en la app — verificar que los valores son correctos' },
 ]; }
 
@@ -1267,6 +1331,23 @@ function onPrimerLlenadoNutrienteDesdeChecklist() {
   saveState();
   aplicarConfigTorre();
   try { actualizarBadgesNutriente(); } catch (e) {}
+  renderChecklist();
+  refreshConsejosSiVisible();
+}
+
+function onPrimerLlenadoDwcModoDesdeChecklist() {
+  const sel = document.getElementById('clPrimerDwcModo');
+  const raw = sel && sel.value;
+  if (raw !== 'aireado' && raw !== 'kratky') return;
+  initTorres();
+  if (!state.configTorre) state.configTorre = {};
+  if (state.configTorre.tipoInstalacion !== 'dwc') return;
+  state.configTorre.dwcModo =
+    typeof dwcNormalizeModo === 'function' ? dwcNormalizeModo(raw) : (raw === 'kratky' ? 'kratky' : 'aireado');
+  if (state.configTorre.dwcModo === 'kratky') delete state.configTorre.dwcEntradaAireManguera;
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
   renderChecklist();
   refreshConsejosSiVisible();
 }
@@ -1540,6 +1621,10 @@ async function finalizarChecklist() {
       (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
         ? (state.configTorre.dwcObjetivoCultivo || (typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(state.configTorre) : 'final'))
         : '',
+    dwcModo:
+      (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
+        ? (typeof dwcGetModoCultivo === 'function' ? dwcGetModoCultivo(state.configTorre) : (state.configTorre.dwcModo || 'aireado'))
+        : '',
     dwcRejillaModoPreferido:
       (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
         ? (state.configTorre.dwcRejillaModoPreferido || (typeof dwcGetRejillaModoPreferido === 'function' ? dwcGetRejillaModoPreferido(state.configTorre) : 'objetivo'))
@@ -1559,6 +1644,7 @@ async function finalizarChecklist() {
     colorAgua: recargaData.colorAgua,
     estadoPlantas: recargaData.estadoPlantas,
     dwcObjetivoCultivo: recargaData.dwcObjetivoCultivo || '',
+    dwcModo: recargaData.dwcModo || '',
     dwcRejillaModoPreferido: recargaData.dwcRejillaModoPreferido || '',
     icono: '🔄'
   });
@@ -1592,7 +1678,7 @@ async function finalizarChecklist() {
     nutriente: nutR.nombre,
     observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}` +
       ((state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
-        ? ` · DWC objetivo: ${recargaData.dwcObjetivoCultivo || '-'} · Rejilla: ${recargaData.dwcRejillaModoPreferido || '-'}`
+        ? ` · DWC modo: ${recargaData.dwcModo || '-'} · Objetivo: ${recargaData.dwcObjetivoCultivo || '-'} · Rejilla: ${recargaData.dwcRejillaModoPreferido || '-'}`
         : '') +
       (recargaData.phMenosMl ? ` · pH−: ${recargaData.phMenosMl} ml` : '')
   });
