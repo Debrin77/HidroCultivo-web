@@ -426,13 +426,13 @@
       <div id="configPanel">
 
         <div class="recarga-card config-section-collapsible medir-dwc-block medir-dwc-block--1">
-          <button type="button" class="config-section-collapse-head medir-disclosure-main-head medir-dwc-outer-collapse" id="btnMedirDwcBlock1"
-            onclick="toggleMedirDwcConfigBlock(1)" aria-expanded="true" aria-controls="medirDwcBlock1Body"
+          <button type="button" class="config-section-collapse-head medir-disclosure-main-head medir-dwc-outer-collapse is-collapsed" id="btnMedirDwcBlock1"
+            onclick="toggleMedirDwcConfigBlock(1)" aria-expanded="false" aria-controls="medirDwcBlock1Body"
             aria-label="Tipo de agua, municipio del grifo si aplica y localidad para clima y avisos">
             <span class="config-section-collapse-title" id="labelConfigAgua">💧 Tipo de agua</span>
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
-          <div class="config-section-collapse-body medir-dwc-block-body" id="medirDwcBlock1Body">
+          <div class="config-section-collapse-body medir-dwc-block-body" id="medirDwcBlock1Body" hidden>
         <div class="config-section">
           <p id="medirAguaResumen" class="medir-resumen-text"></p>
           <label class="medir-toggle-label">
@@ -568,13 +568,13 @@
         </div>
 
         <div class="recarga-card config-section-collapsible medir-dwc-block medir-dwc-block--2">
-          <button type="button" class="config-section-collapse-head medir-disclosure-main-head medir-dwc-outer-collapse" id="btnMedirDwcBlock2"
-            onclick="toggleMedirDwcConfigBlock(2)" aria-expanded="true" aria-controls="medirDwcBlock2Body"
+          <button type="button" class="config-section-collapse-head medir-disclosure-main-head medir-dwc-outer-collapse is-collapsed" id="btnMedirDwcBlock2"
+            onclick="toggleMedirDwcConfigBlock(2)" aria-expanded="false" aria-controls="medirDwcBlock2Body"
             aria-label="Ubicación del sistema, luz y sustrato">
             <span class="config-section-collapse-title" id="labelUbicacionLuzMed">💡 Ubicación, luz y sustrato</span>
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
-          <div class="config-section-collapse-body medir-dwc-block-body" id="medirDwcBlock2Body">
+          <div class="config-section-collapse-body medir-dwc-block-body" id="medirDwcBlock2Body" hidden>
         <div class="config-section medir-panel-ubic-luz" id="panelUbicacionLuzMediciones">
           <div class="medir-note-block medir-note-block--ubic-luz">
             Si el sistema está <strong>dentro de casa, armario o con LED</strong>, elige <strong>Interior</strong>: aquí marcas si la luz es <strong>natural</strong> (ventana), <strong>LED</strong>, <strong>mixta</strong>, etc., y las <strong>horas de fotoperíodo</strong>.
@@ -3668,7 +3668,7 @@
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=1"></script>
   <script src="js/hc-setup-registro.js?v=4"></script>
-  <script src="js/hc-setup-agua-sustrato.js?v=3"></script>
+  <script src="js/hc-setup-agua-sustrato.js?v=4"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=5"></script>
   <script src="js/hc-setup-checklist.js?v=6"></script>
   <script src="js/hc-setup-historial-tabs.js?v=4"></script>

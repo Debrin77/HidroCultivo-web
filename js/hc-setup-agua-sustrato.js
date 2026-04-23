@@ -1439,15 +1439,15 @@ function initConfigUI() {
   const b2 = document.getElementById('medirDwcBlock2Body');
   const btn1 = document.getElementById('btnMedirDwcBlock1');
   const btn2 = document.getElementById('btnMedirDwcBlock2');
-  if (b1) b1.hidden = false;
-  if (b2) b2.hidden = false;
+  if (b1) b1.hidden = true;
+  if (b2) b2.hidden = true;
   if (btn1) {
-    btn1.setAttribute('aria-expanded', 'true');
-    btn1.classList.remove('is-collapsed');
+    btn1.setAttribute('aria-expanded', 'false');
+    btn1.classList.add('is-collapsed');
   }
   if (btn2) {
-    btn2.setAttribute('aria-expanded', 'true');
-    btn2.classList.remove('is-collapsed');
+    btn2.setAttribute('aria-expanded', 'false');
+    btn2.classList.add('is-collapsed');
   }
 
   const agua = state.configAgua || 'destilada';
