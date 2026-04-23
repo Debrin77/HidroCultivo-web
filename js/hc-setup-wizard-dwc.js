@@ -78,6 +78,56 @@ function getDwcCapacidadLitrosDesdeConfig(cfg) {
   return Math.round(litros * 10) / 10;
 }
 
+/** Altura estimada del sustrato dentro de la cesta net-pot (mm), según sustrato activo. */
+function getDwcAlturaSustratoEstimadaMm(cfg) {
+  const c = cfg || state.configTorre || {};
+  const hPotRaw = Number(c.dwcNetPotHeightMm);
+  const hPot = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200 ? hPotRaw : 70;
+  const sKey =
+    typeof normalizaSustratoKey === 'function'
+      ? normalizaSustratoKey(c.sustrato || (typeof state !== 'undefined' && state.configSustrato) || 'esponja')
+      : 'esponja';
+  // Fracción típica de llenado de cesta por material (estimación práctica para reserva de seguridad).
+  const ratioBySustrato = {
+    esponja: 0.55,
+    lana: 0.65,
+    espuma: 0.60,
+    coco: 0.72,
+    perlita: 0.68,
+    vermiculita: 0.70,
+    arcilla: 0.62,
+    turba_enraiz: 0.70,
+    mixto: 0.68,
+  };
+  const ratio = Number.isFinite(ratioBySustrato[sKey]) ? ratioBySustrato[sKey] : 0.65;
+  const mm = Math.round(hPot * ratio);
+  return Math.max(10, Math.min(Math.round(hPot - 5), mm));
+}
+
+/**
+ * Volumen máximo de llenado seguro (L) en DWC:
+ * deja la superficie del nutriente 0.5–1.0 cm por debajo de la base del sustrato.
+ */
+function getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg) {
+  const c = cfg || state.configTorre || {};
+  const cap = getDwcCapacidadLitrosDesdeConfig(c);
+  if (!Number.isFinite(cap) || cap <= 0) return null;
+  const P = Number(c.dwcDepositoProfCm);
+  if (!Number.isFinite(P) || P < 5 || P > 200) return null;
+
+  const hPotRaw = Number(c.dwcNetPotHeightMm);
+  const hPotMm = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200 ? hPotRaw : 70;
+  const hSustratoMm = getDwcAlturaSustratoEstimadaMm(c);
+  const baseSustratoDesdeTapaCm = Math.max(0.5, (hPotMm - hSustratoMm) / 10);
+  const margenSegCm = 0.8; // centro del rango 0.5–1.0 cm
+  const alturaAguaSegCm = Math.max(0.5, baseSustratoDesdeTapaCm - margenSegCm);
+  const alturaAguaSegClamped = Math.min(P, alturaAguaSegCm);
+  const litros = cap * (alturaAguaSegClamped / P);
+  const out = Math.round(litros * 10) / 10;
+  if (!Number.isFinite(out) || out <= 0) return null;
+  return out;
+}
+
 /** Mantiene volDeposito alineado con L×A×P cuando el usuario guarda sistema DWC. */
 function dwcSyncVolDepositoDesdeCapacidadEstimada(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
@@ -1651,11 +1701,25 @@ function refreshDwcSistemaMedidasUI() {
   if (volEl) {
     const cap = getDwcCapacidadLitrosFromSistemaInputs();
     if (cap != null && cap > 0) {
+      const cfgDraft = state.configTorre ? { ...state.configTorre } : {};
+      const Ld = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
+      const Wd = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
+      const Pd = _dwcParseOptCm('sysDwcProfCm', 5, 200);
+      const hPotD = _dwcParseOptMm('sysDwcPotHmm', 30, 200);
+      if (Ld != null) cfgDraft.dwcDepositoLargoCm = Ld;
+      if (Wd != null) cfgDraft.dwcDepositoAnchoCm = Wd;
+      if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
+      if (hPotD != null) cfgDraft.dwcNetPotHeightMm = hPotD;
+      const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
+      const hSustratoMm = getDwcAlturaSustratoEstimadaMm(cfgDraft);
       volEl.style.display = 'block';
       volEl.textContent =
         'Volumen geométrico estimado del depósito: ~' +
         cap +
-        ' L (largo × ancho × prof. en cm ÷ 1000). En cultivo el nivel de solución suele quedar por debajo de ese tope: entre el líquido y el sustrato de la cesta debe haber una cámara de aire que suele ampliarse al crecer las raíces; indica «litros de mezcla» por debajo del máximo si no llenas al borde.';
+        ' L (largo × ancho × prof. en cm ÷ 1000). ' +
+        (volSeguro != null
+          ? 'Con el sustrato actual (altura estimada ~' + hSustratoMm + ' mm en cesta), el llenado seguro máximo es ~' + volSeguro + ' L (deja ~0,5–1 cm bajo la base del sustrato).'
+          : 'En cultivo el nivel de solución debe quedar por debajo de la base del sustrato (reserva 0,5–1 cm).');
     } else {
       volEl.style.display = 'none';
       volEl.textContent = '';

@@ -54,6 +54,7 @@ function initApp() {
   initTorres();
   reconciliarSlotTorreActivaAntesDeCargar();
   cargarEstadoTorre(state.torreActiva || 0);
+  applyBootCollapsedUI();
   renderTorre();
   updateTorreStats();
   updateDashboard();
@@ -85,6 +86,35 @@ function initApp() {
   if (typeof window._hcSyncMainTabTabIndex === 'function') window._hcSyncMainTabTabIndex();
   if (typeof initHistorialTabBarA11y === 'function') initHistorialTabBarA11y();
   if (typeof window._hcSyncHistorialTabTabIndex === 'function') window._hcSyncHistorialTabTabIndex();
+}
+
+/**
+ * Arranque: forzar paneles plegados para iniciar con UI limpia.
+ * No altera el comportamiento de los toggles durante la sesión.
+ */
+function applyBootCollapsedUI() {
+  try {
+    if (!state.notifOpciones || typeof state.notifOpciones !== 'object') state.notifOpciones = {};
+    state.notifOpciones.panelInicioColapsado = true;
+  } catch (_) {}
+
+  const cfg = state.configTorre || null;
+  if (!cfg || typeof cfg !== 'object') return;
+
+  if (!cfg.uiMedirCollapse || typeof cfg.uiMedirCollapse !== 'object' || Array.isArray(cfg.uiMedirCollapse)) {
+    cfg.uiMedirCollapse = {};
+  }
+  cfg.uiMedirCollapse.sensoresAjusteFino = false;
+  cfg.uiMedirCollapse.recargaProxima = false;
+  cfg.uiMedirCollapse.luzOrigen = false;
+  cfg.uiMedirCollapse.recargaTotal = false;
+  cfg.uiMedirCollapse.recargaParcial = false;
+  cfg.uiMedirCollapse.interiorGrow = false;
+  cfg.uiMedirCollapse.calentadorRiego = false;
+
+  cfg.uiSistemaNftMontajeColapsado = true;
+  cfg.uiSistemaDwcColapsado = true;
+  cfg.uiSistemaDwcLlenadoColapsado = true;
 }
 function updateClock() {
   const now = new Date();

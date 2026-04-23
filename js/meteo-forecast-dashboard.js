@@ -211,9 +211,16 @@ function updateRecargaBar() {
   notaEl.textContent = nota;
   notaEl.style.color = pct > 85 ? '#dc2626' : '#6b7280';
 
-  // Actualizar depósito visual
+  // Actualizar depósito visual (usa volumen seguro del sistema activo, no fijo 20 L)
   const vol = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : 0;
-  const volPct = vol > 0 ? Math.min(100, (vol / 20) * 100) : 50;
+  const volMaxSafe =
+    typeof getVolumenDepositoMaxLitros === 'function'
+      ? Math.max(0.5, Number(getVolumenDepositoMaxLitros(state.configTorre || {})) || 20)
+      : 20;
+  const volPct = vol > 0 ? Math.min(100, (vol / volMaxSafe) * 100) : 50;
+  const volWarn = volMaxSafe * 0.8;
+  const volBad = volMaxSafe * 0.7;
+  const faltaL = vol > 0 ? Math.max(0, Math.round((volMaxSafe - vol) * 10) / 10) : 0;
   const tankFill = document.getElementById('tankWaterFill');
   const tankLabel = document.getElementById('tankVolLabel');
   if (tankFill) {
@@ -221,12 +228,25 @@ function updateRecargaBar() {
     const yPos = 58 - fillHeight;
     tankFill.setAttribute('y', yPos);
     tankFill.setAttribute('height', fillHeight);
-    const waterColor = vol < 14 ? '#dc2626' : vol < 16 ? '#d97706' : '#3b82f6';
+    const waterColor = vol < volBad ? '#dc2626' : vol < volWarn ? '#d97706' : '#3b82f6';
     tankFill.setAttribute('fill', waterColor);
   }
   if (tankLabel) {
     tankLabel.textContent = vol > 0 ? vol + 'L' : '—L';
-    tankLabel.style.color = vol < 14 ? '#dc2626' : vol < 16 ? '#d97706' : '#1d4ed8';
+    tankLabel.style.color = vol < volBad ? '#dc2626' : vol < volWarn ? '#d97706' : '#1d4ed8';
+  }
+  const volSeguroEl = document.getElementById('recargaVolSeguroHint');
+  if (volSeguroEl) {
+    if (vol > 0 && faltaL > 0.05) {
+      volSeguroEl.style.display = 'block';
+      volSeguroEl.textContent = 'Reposición segura: +' + faltaL + ' L hasta ~' + volMaxSafe + ' L';
+    } else if (vol > 0) {
+      volSeguroEl.style.display = 'block';
+      volSeguroEl.textContent = 'Nivel en zona segura (~' + volMaxSafe + ' L)';
+    } else {
+      volSeguroEl.style.display = 'none';
+      volSeguroEl.textContent = '';
+    }
   }
 
   if (!state.ultimaRecarga) {

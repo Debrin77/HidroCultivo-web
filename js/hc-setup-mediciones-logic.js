@@ -102,6 +102,10 @@ function instalacionEsUbicacionInterior(cfg) {
 /** Capacidad máxima del depósito (L) — tope físico del recipiente. `volDeposito` en config. */
 function getVolumenDepositoMaxLitros(cfg) {
   cfg = cfg || state.configTorre || {};
+  if (cfg.tipoInstalacion === 'dwc' && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
+    const vSafe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
+    if (vSafe != null && vSafe > 0) return Math.min(800, Math.max(1, Math.round(vSafe * 10) / 10));
+  }
   const v = Number(cfg.volDeposito);
   if (Number.isFinite(v) && v > 0) return Math.min(800, Math.max(1, Math.round(v * 10) / 10));
   if (cfg.tipoInstalacion === 'dwc' && typeof getDwcCapacidadLitrosDesdeConfig === 'function') {
