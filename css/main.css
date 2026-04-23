@@ -19,7 +19,8 @@
   --orange:     #c2410c;
   --blue:       #1d4ed8;
   --white:      #0f172a;
-  --muted:      #64748b;
+  /* Texto secundario sobre fondos claros — ~AA 4.5:1 vs #f4f6f8 / #fff */
+  --muted:      #475569;
   --font-sans:  'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-display: 'Syne', var(--font-sans);
   --font-mono:    'Inconsolata', ui-monospace, monospace;
@@ -44,6 +45,15 @@
   --card-shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04), 0 6px 18px rgba(15, 23, 42, 0.05);
   --card-shadow-press: 0 1px 2px rgba(15, 23, 42, 0.03);
   --focus-ring: 0 0 0 2px rgba(29, 78, 216, 0.26);
+  /* Espaciado y radios (coherencia visual; usar en nuevos bloques) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   /* Feedback al pulsar bloques tipo tarjeta (solo mientras :active) */
   --surface-attention-ms: 0.14s;
   --surface-press-y: 1px;
@@ -1918,12 +1928,11 @@ select#editVariedad option {
   font-family: var(--font-mono);
   font-size: 16px;
   padding: 12px 14px;
-  outline: none;
   transition: border-color 0.2s;
   -webkit-appearance: none;
   -webkit-border-radius: 10px;
 }
-.form-input:focus, .form-select:focus { border-color: var(--green); }
+.form-input:focus-visible, .form-select:focus-visible { border-color: var(--green); }
 .form-select option { background: var(--bg2); }
 
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -3311,12 +3320,11 @@ button.torre-summary:focus-visible,
   font-size: 22px;
   font-weight: 600;
   padding: 10px 14px;
-  outline: none;
   transition: border-color 0.2s;
   -webkit-appearance: none;
   min-height: var(--touch-min);
 }
-.param-input:focus { border-color: var(--green); }
+.param-input:focus-visible { border-color: var(--green); }
 .param-unit {
   font-size: 12px;
   color: var(--muted);
@@ -3664,11 +3672,10 @@ button.torre-summary:focus-visible,
   font-family: var(--font-mono);
   font-size: 16px;
   padding: 8px 10px;
-  outline: none;
   -webkit-appearance: none;
   transition: border-color 0.2s;
 }
-.riego-field input:focus, .riego-field select:focus { border-color: var(--green); }
+.riego-field input:focus-visible, .riego-field select:focus-visible { border-color: var(--green); }
 .riego-field select option { background: var(--bg2); }
 .riego-field.full { grid-column: 1 / -1; }
 .riego-torre-hint {
@@ -5797,12 +5804,11 @@ button.checklist-close {
   font-family: var(--font-mono);
   font-size: 15px;
   padding: 6px 10px;
-  outline: none;
   width: 100px;
   transition: border-color 0.2s;
   -webkit-appearance: none;
 }
-.cl-field input:focus, .cl-field select:focus { border-color: var(--green); }
+.cl-field input:focus-visible, .cl-field select:focus-visible { border-color: var(--green); }
 .cl-field input.wide { width: 150px; }
 .cl-field .unit { font-size: 11px; color: var(--muted); }
 .cl-field--inline-check {
@@ -6883,7 +6889,6 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   color: var(--white);
   font-size: 16px;
   padding: 10px 12px;
-  outline: none;
   box-sizing: border-box;
 }
 .medir-municipio-resultados {
@@ -6984,7 +6989,6 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   font-size: 16px;
   padding: 8px 10px;
   width: 110px;
-  outline: none;
 }
 .medir-unit-muted {
   font-size: 13px;
@@ -7083,7 +7087,6 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   color: var(--white);
   font-size: 15px;
   padding: 10px 12px;
-  outline: none;
   box-sizing: border-box;
   margin-bottom: 8px;
 }
@@ -7155,6 +7158,10 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
 .medir-range-green {
   width: 100%;
   accent-color: var(--green);
+}
+.medir-range-green:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 .medir-range-legend {
   display: flex;
@@ -7454,6 +7461,13 @@ button.config-option {
   appearance: none;
   -webkit-appearance: none;
 }
+button.config-option:focus-visible,
+.medir-torre-banner:focus-visible,
+.medir-btn-municipio-grifo:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), 0 0 0 1px rgba(29, 78, 216, 0.22);
+  border-color: rgba(29, 78, 216, 0.45);
+}
 .medir-torre-banner {
   display: flex;
   align-items: center;
@@ -7482,7 +7496,7 @@ button.config-option {
 }
 .medir-torre-banner-kicker {
   font-size: 10px;
-  color: #6b7280;
+  color: var(--muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -9248,6 +9262,11 @@ button.toggle-switch {
   font: inherit;
   color: inherit;
 }
+button.toggle-switch:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 12px;
+}
 .config-warning {
   margin-top: 8px;
   padding: 8px 10px;
@@ -10301,8 +10320,11 @@ button.toggle-switch {
   height: 6px;
   border-radius: 3px;
   background: #e5e7eb;
-  outline: none;
   cursor: pointer;
+}
+.torre-slider:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
 }
 .torre-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -10605,7 +10627,6 @@ button.toggle-switch {
   font-size: 13px;
   font-weight: 700;
   text-align: center;
-  outline: none;
 }
 .setup-cesta-custom-unit {
   font-size: 11px;
@@ -10650,7 +10671,6 @@ button.toggle-switch {
   color: #111827;
   font-size: 15px;
   padding: 12px 14px;
-  outline: none;
   box-sizing: border-box;
 }
 .setup-city-results {

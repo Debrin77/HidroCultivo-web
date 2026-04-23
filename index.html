@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-21-registro-apunte">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-24-a11y-polish">
 </head>
 <body>
 
@@ -491,9 +491,9 @@
 
             <!-- Buscador de municipio -->
             <div class="medir-mb-10">
-              <input type="text" id="inputBuscarMunicipio" placeholder="Municipio (castellano o valencià: Castellón, Castelló…)"
+              <label for="inputBuscarMunicipio" class="medir-field-label">Buscar municipio (calidad del agua del grifo)</label>
+              <input type="text" id="inputBuscarMunicipio" placeholder="Castellón, Castelló…"
                 inputmode="search" autocomplete="address-level2"
-                aria-label="Buscar municipio para datos de calidad del agua"
                 class="medir-input-municipio"
                 oninput="onBuscarMunicipio(this.value)">
               <div id="municipioResultados" class="setup-hidden medir-municipio-resultados"></div>
@@ -515,7 +515,6 @@
               <label for="inputECBaseGrifo" class="medir-label-manual-ec">O introduce la EC manualmente:</label>
               <div class="medir-row-inline">
                 <input type="number" id="inputECBaseGrifo" value="850" inputmode="numeric"
-                  aria-label="Conductividad base del agua del grifo en microsiemens"
                   class="medir-input-ec-base"
                   oninput="actualizarECBase()">
                 <span class="medir-unit-muted">µS/cm</span>
@@ -545,11 +544,11 @@
         <div class="config-section" id="panelLocalidadMeteo">
           <div class="medir-localidad-cab">
             <span class="medir-localidad-cab-icon" aria-hidden="true">📍</span>
-            <span class="medir-localidad-cab-label">Municipio (clima y avisos)</span>
+            <span class="medir-localidad-cab-label" id="labelLocalidadMeteoCab">Municipio (clima y avisos)</span>
           </div>
           <div class="medir-localidad-meteo-row">
             <input type="text" id="inputLocalidadMeteo" placeholder="Escribe el nombre del municipio"
-              aria-label="Municipio de esta instalación (avisos meteorológicos y clima)"
+              aria-labelledby="labelLocalidadMeteoCab"
               autocomplete="address-level2"
               onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
               class="medir-input-localidad-meteo">
@@ -658,10 +657,11 @@
               </button>
             </div>
             <div class="medir-mb-4">
-              <div class="medir-horas-label">
+              <div class="medir-horas-label" id="labelInteriorHorasLuz">
                 Horas de luz efectivas al día: <strong id="interiorHorasLuzVal" class="medir-strong">16 h</strong>
               </div>
               <input type="range" id="interiorHorasLuz" min="12" max="20" step="1" value="16"
+                aria-labelledby="labelInteriorHorasLuz"
                 aria-valuemin="12" aria-valuemax="20"
                 oninput="onInteriorHorasLuzRangeInput()"
                 class="medir-range-green">
@@ -920,11 +920,12 @@
       <!-- EC -->
       <div class="param-card" id="cardEC">
         <div class="param-header">
-          <div class="param-label">⚡ EC — Conductividad eléctrica</div>
+          <div class="param-label" id="labelMedirEC">⚡ EC — Conductividad eléctrica</div>
           <div class="param-range" id="paramRangeEC">1300 – 1400 µS/cm</div>
         </div>
         <div class="param-input-row">
-          <input type="number" class="param-input" id="inputEC" placeholder="1350" aria-label="EC en microsiemens por centímetro"
+          <input type="number" class="param-input" id="inputEC" placeholder="1350"
+            aria-labelledby="labelMedirEC paramRangeEC"
             inputmode="numeric" min="0" max="3000" oninput="evalParam()">
           <div class="param-unit">µS/cm</div>
         </div>
@@ -935,11 +936,12 @@
       <!-- pH -->
       <div class="param-card" id="cardPH">
         <div class="param-header">
-          <div class="param-label">🧪 pH</div>
-          <div class="param-range">5.5 – 6.6 (óptimo 5.7-6.4)</div>
+          <div class="param-label" id="labelMedirPH">🧪 pH</div>
+          <div class="param-range" id="paramRangePH">5.5 – 6.6 (óptimo 5.7-6.4)</div>
         </div>
         <div class="param-input-row">
-          <input type="number" class="param-input" id="inputPH" placeholder="6.0" aria-label="pH de la solución"
+          <input type="number" class="param-input" id="inputPH" placeholder="6.0"
+            aria-labelledby="labelMedirPH paramRangePH"
             inputmode="decimal" step="0.1" min="0" max="14" oninput="evalParam()">
           <div class="param-unit">pH</div>
         </div>
@@ -950,11 +952,12 @@
       <!-- TEMPERATURA AGUA -->
       <div class="param-card" id="cardTemp">
         <div class="param-header">
-          <div class="param-label">🌡️ Temperatura del agua</div>
-          <div class="param-range">18 – 22°C</div>
+          <div class="param-label" id="labelMedirTemp">🌡️ Temperatura del agua</div>
+          <div class="param-range" id="paramRangeTemp">18 – 22°C</div>
         </div>
         <div class="param-input-row">
-          <input type="number" class="param-input" id="inputTemp" placeholder="20" aria-label="Temperatura del agua en grados Celsius"
+          <input type="number" class="param-input" id="inputTemp" placeholder="20"
+            aria-labelledby="labelMedirTemp paramRangeTemp"
             inputmode="decimal" step="0.1" min="0" max="40" oninput="evalParam()">
           <div class="param-unit">°C</div>
         </div>
@@ -965,11 +968,12 @@
       <!-- VOLUMEN -->
       <div class="param-card" id="cardVol">
         <div class="param-header">
-          <div class="param-label">🪣 Volumen del depósito</div>
-          <div class="param-range">> 16 litros</div>
+          <div class="param-label" id="labelMedirVol">🪣 Volumen del depósito</div>
+          <div class="param-range" id="paramRangeVol">&gt; 16 litros</div>
         </div>
         <div class="param-input-row">
-          <input type="number" class="param-input" id="inputVol" placeholder="18" aria-label="Volumen del depósito en litros"
+          <input type="number" class="param-input" id="inputVol" placeholder="18"
+            aria-labelledby="labelMedirVol paramRangeVol"
             inputmode="decimal" step="0.5" min="0" max="20" oninput="evalParam()">
           <div class="param-unit">litros</div>
         </div>
@@ -1036,14 +1040,14 @@
               <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
             </button>
             <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaParcial" hidden>
-              <p class="recarga-subhint">Sirve para que el depósito <strong>no baje de un nivel mínimo</strong>: las plantas beben agua, hay evaporación, y la <strong>bomba</strong> y el <strong>calefactor</strong> deben seguir <strong>sumergidos</strong> — si quedan al aire se pueden estropear.</p>
+              <p class="recarga-subhint" id="recargaParcialLitrosHint">Sirve para que el depósito <strong>no baje de un nivel mínimo</strong>: las plantas beben agua, hay evaporación, y la <strong>bomba</strong> y el <strong>calefactor</strong> deben seguir <strong>sumergidos</strong> — si quedan al aire se pueden estropear.</p>
               <p class="recarga-subhint recarga-subhint--mt6">Rellenas <strong>sin vaciar</strong> el depósito. <strong>No reinicia</strong> el contador de recarga completa.</p>
               <label for="inputReposicionParcialLitros" class="recarga-confirm-label recarga-label-spaced">
                 Litros añadidos (aprox.)
               </label>
               <input type="number" id="inputReposicionParcialLitros" class="form-input recarga-input-parcial-litros"
                 inputmode="decimal" step="0.1" min="0.1" max="2000" placeholder="p. ej. 2"
-                aria-label="Litros de agua o solución añadidos en reposición parcial">
+                aria-describedby="recargaParcialLitrosHint">
               <div class="recarga-confirm-label recarga-label--mb8">¿Qué has echado al depósito?</div>
               <div class="recarga-confirm-actions">
                 <button type="button" class="btn-recarga-confirm" onclick="confirmarReposicionDeposito('solo_agua')"
