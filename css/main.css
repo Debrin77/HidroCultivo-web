@@ -7515,7 +7515,7 @@ button.config-option:focus-visible,
   border-radius: 8px;
   padding: 3px 8px;
 }
-.medir-operativa-row {
+.dash-operativa-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -7524,22 +7524,22 @@ button.config-option:focus-visible,
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
   padding: 10px 12px;
-  margin: -2px 0 10px;
+  margin: 4px 0 10px;
 }
-.medir-operativa-title {
+.dash-operativa-title {
   font-size: 11px;
   font-weight: 700;
   color: #475569;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.medir-operativa-sub {
+.dash-operativa-sub {
   font-size: 13px;
   font-weight: 700;
   color: #15803d;
   margin-top: 1px;
 }
-.medir-operativa-sub.medir-operativa-sub--off {
+.dash-operativa-sub.dash-operativa-sub--off {
   color: #b45309;
 }
 .ultima-medicion-card {

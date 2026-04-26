@@ -358,7 +358,7 @@ function actualizarEstadoOperativaUI() {
   const tag = document.getElementById('medirEstadoOperativaTag');
   if (tag) {
     tag.textContent = on ? 'Operativa' : 'Stand-by / descanso';
-    tag.classList.toggle('medir-operativa-sub--off', !on);
+    tag.classList.toggle('dash-operativa-sub--off', !on);
   }
   const sw = document.getElementById('sistemaOperativaSwitch');
   if (sw) {

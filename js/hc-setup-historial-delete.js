@@ -6,24 +6,40 @@
 function borrarMedicion(fecha, hora, torreId) {
   if (!confirm('¿Borrar esta entrada del historial?')) return;
   initTorres();
+  const hhmm = String(hora || '').slice(0, 5);
+  const matchMed = (m) => {
+    if (!m || m.fecha !== fecha) return false;
+    const mh = String(m.hora || '');
+    return mh === String(hora || '') || mh.slice(0, 5) === hhmm;
+  };
   let slot = state.torres.findIndex(t => t && String(t.id) === String(torreId));
   if (slot < 0) slot = state.torreActiva || 0;
-  const t = state.torres[slot];
+  let t = state.torres[slot];
+  let i = t && Array.isArray(t.mediciones) ? t.mediciones.findIndex(matchMed) : -1;
+  // Fallback robusto: buscar en cualquier instalación si no aparece en el slot esperado.
+  if (i < 0) {
+    for (let s = 0; s < (state.torres || []).length; s++) {
+      const ts = state.torres[s];
+      if (!ts || !Array.isArray(ts.mediciones)) continue;
+      const ix = ts.mediciones.findIndex(matchMed);
+      if (ix >= 0) {
+        slot = s;
+        t = ts;
+        i = ix;
+        break;
+      }
+    }
+  }
   if (!t || !Array.isArray(t.mediciones)) {
     showToast('No se encontró la instalación', true);
     return;
   }
-  const hhmm = String(hora || '').slice(0, 5);
-  const i = t.mediciones.findIndex(m => {
-    if (!m || m.fecha !== fecha) return false;
-    const mh = String(m.hora || '');
-    return mh === String(hora || '') || mh.slice(0, 5) === hhmm;
-  });
   if (i < 0) {
     showToast('No se encontró el dato', true);
     return;
   }
   const row = t.mediciones[i];
+  const torreNombreBorrada = (t && t.nombre ? String(t.nombre).trim() : '') || 'Instalación';
   const tipoReg = (function inferTipoRegBorradoMedicion(r) {
     if (!r) return 'medicion';
     if (r.tipo === 'cosecha') return 'cosecha';
@@ -63,7 +79,7 @@ function borrarMedicion(fecha, hora, torreId) {
   saveState();
   renderHistMediciones();
   if (document.getElementById('tab-inicio')?.classList.contains('active')) updateDashboard();
-  showToast('🗑 Entrada borrada');
+  showToast('🗑 Entrada borrada · ' + torreNombreBorrada);
 }
 
 /** Borrado desde lista agregada del historial (multi-torre). */
