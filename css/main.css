@@ -1087,6 +1087,26 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 #torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram {
   filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.06));
 }
+#torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram text {
+  paint-order: stroke fill;
+  stroke: rgba(248, 250, 252, 0.94);
+  stroke-width: 1.6px;
+  stroke-linejoin: round;
+}
+#torreSVGWrap.torre-svg-canvas svg.nft-diagram--scroll text {
+  paint-order: stroke fill;
+  stroke: rgba(248, 250, 252, 0.94);
+  stroke-width: 1.5px;
+  stroke-linejoin: round;
+}
+#torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram text.diag-label-strong {
+  font-size: clamp(9px, 1.9vw, 13px);
+  font-weight: 800;
+}
+#torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram text.diag-label-soft {
+  font-size: clamp(8px, 1.7vw, 12px);
+  font-weight: 700;
+}
 #torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram {
   width: 100%;
   height: auto;
@@ -1239,6 +1259,12 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   }
   #torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram {
     min-height: min(64vh, 720px);
+  }
+  #torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram text.diag-label-strong {
+    font-size: clamp(10px, 2.8vw, 14px);
+  }
+  #torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram text.diag-label-soft {
+    font-size: clamp(9px, 2.5vw, 12px);
   }
 }
 #torreSVGWrap.torre-svg-canvas .nft-schema-legend text {

@@ -474,7 +474,7 @@ function generarSVGDwc() {
       : '';
 
   const W = 400;
-  const H = 518;
+  const H = 548;
 
   /* Mismo ancho exterior para tapa (cenital) y depósito (frente), alineados. */
   const blockW = Math.min(320, Math.max(228, 28 + C * 30));
@@ -674,17 +674,19 @@ function generarSVGDwc() {
     }
   }
 
-  s += `<text x="${W / 2}" y="${planBottom + 11}" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-weight="600" font-family="Inconsolata,monospace">Tapa (${formaDwcTxt}) = cestas · misma disposición que Lista (fila 1 arriba)</text>`;
+  s += `<text class="diag-label-strong dwc-diag-caption" x="${W / 2}" y="${planBottom + 11}" text-anchor="middle" fill="#94a3b8" font-size="8.2" font-weight="700" font-family="Inconsolata,monospace">Tapa (${formaDwcTxt}) = cestas · misma disposición que Lista (fila 1 arriba)</text>`;
 
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
-  s += `<text x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="#475569" font-size="9.5" font-weight="800" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
+  s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="#475569" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
   s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="5 4"/>`;
-  const badgeY = sepY + 8;
+  // Colocar badges por encima del separador para evitar solape con la
+  // parte superior del depósito en pantallas compactas.
+  const badgeY = sepY - 24;
   s += `<rect x="44" y="${badgeY}" width="140" height="16" rx="8" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>`;
-  s += `<text x="114" y="${badgeY + 11}" text-anchor="middle" fill="#075985" font-size="7.2" font-weight="800" font-family="Inconsolata,monospace">🧺 TAPA: cestas y huecos</text>`;
+  s += `<text class="diag-label-strong dwc-badge-text" x="114" y="${badgeY + 11}" text-anchor="middle" fill="#075985" font-size="7.8" font-weight="900" font-family="Inconsolata,monospace">🧺 TAPA: cestas y huecos</text>`;
   s += `<rect x="${W - 184}" y="${badgeY}" width="140" height="16" rx="8" fill="#ecfccb" stroke="#bef264" stroke-width="1"/>`;
-  s += `<text x="${W - 114}" y="${badgeY + 11}" text-anchor="middle" fill="#3f6212" font-size="7.2" font-weight="800" font-family="Inconsolata,monospace">💧 VOLUMEN: nutrientes (L)</text>`;
+  s += `<text class="diag-label-strong dwc-badge-text" x="${W - 114}" y="${badgeY + 11}" text-anchor="middle" fill="#3f6212" font-size="7.8" font-weight="900" font-family="Inconsolata,monospace">💧 VOLUMEN: nutrientes (L)</text>`;
 
   /* ── Alzado depósito (mismo ancho que tapa) ── */
   const tankFaceInset = 4;
@@ -760,8 +762,8 @@ function generarSVGDwc() {
     ? (recoCultivo.estado === 'ok' ? 'OK' : recoCultivo.estado === 'warn' ? 'ajustar' : 'revisar')
     : '';
   const pieReco = recoCultivo ? ` · cesta ${recoCultivo.perfil.cestaTxt} · ${recoEstado}` : '';
-  s += `<text x="${W / 2}" y="${H - 18}" font-family="Inconsolata,monospace" font-size="6.8" fill="#64748b" text-anchor="middle" font-weight="600">Objetivo ${objLabelBreve} · ${rejTxt}${pieReco}</text>`;
-  s += `<text x="${W / 2}" y="${H - 7}" font-family="Inconsolata,monospace" font-size="6.8" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
+  s += `<text class="diag-label-strong dwc-diag-foot-main" x="${W / 2}" y="${H - 24}" font-family="Inconsolata,monospace" font-size="7.8" fill="#64748b" text-anchor="middle" font-weight="700">Objetivo ${objLabelBreve} · ${rejTxt}${pieReco}</text>`;
+  s += `<text class="diag-label-soft dwc-diag-foot-sub" x="${W / 2}" y="${H - 10}" font-family="Inconsolata,monospace" font-size="7.4" fill="#94a3b8" text-anchor="middle" font-weight="600">${pieTxt}</text>`;
 
   const pad = 14;
   const vbW = W + pad * 2;
@@ -1010,8 +1012,8 @@ function generarSVGTorre() {
   const pieTxt = torreInteraccionModo === 'asignar'
     ? 'Asignar: cultivo arriba → toca cestas (esquema o lista). Flechas al depósito o desliza para el reverso.'
     : 'Editar: cesta en el esquema o en vista lista · Maqueta simplificada, no escala real';
-  s += `<text x="${CX}" y="${SVG_H-6}" font-family="Inconsolata,monospace"
-    font-size="8" fill="#94a3b8" text-anchor="middle" font-weight="500">${pieTxt}</text>`;
+  s += `<text class="diag-label-soft torre-diag-foot" x="${CX}" y="${SVG_H-6}" font-family="Inconsolata,monospace"
+    font-size="8.6" fill="#94a3b8" text-anchor="middle" font-weight="650">${pieTxt}</text>`;
 
   return `<svg class="torre-svg-diagram svg-centered-block" width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}"
     xmlns="http://www.w3.org/2000/svg">${s}</svg>`;
