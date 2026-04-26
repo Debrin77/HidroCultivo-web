@@ -7587,6 +7587,15 @@ button.config-option:focus-visible,
   opacity: 0.35;
   filter: grayscale(0.24);
 }
+#tab-mediciones.is-standby #configPanel,
+#tab-mediciones.is-standby .param-card,
+#tab-mediciones.is-standby #recargaCardMediciones,
+#tab-mediciones.is-standby .guardar-medicion-bar,
+#tab-mediciones.is-standby #inputNotas,
+#tab-sistema.is-standby > :not(.standby-notice):not(.section-title) {
+  opacity: 0.38;
+  filter: grayscale(0.22);
+}
 .is-standby-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;

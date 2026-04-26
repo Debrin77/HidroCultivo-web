@@ -357,6 +357,31 @@ function getMensajeStandbyContinuar() {
   return '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.';
 }
 
+function setStandbyLockDisabled(el, on) {
+  if (!el) return;
+  const canDisable =
+    (el instanceof HTMLButtonElement) ||
+    (el instanceof HTMLInputElement) ||
+    (el instanceof HTMLSelectElement) ||
+    (el instanceof HTMLTextAreaElement);
+  if (!canDisable) return;
+  if (on) {
+    if (!el.disabled) {
+      el.disabled = true;
+      el.dataset.standbyLocked = '1';
+    }
+    el.classList.add('is-standby-disabled');
+    el.setAttribute('aria-disabled', 'true');
+    return;
+  }
+  if (el.dataset.standbyLocked === '1') {
+    el.disabled = false;
+    delete el.dataset.standbyLocked;
+  }
+  el.classList.remove('is-standby-disabled');
+  el.setAttribute('aria-disabled', el.disabled ? 'true' : 'false');
+}
+
 function aplicarEstadoStandbyUI() {
   const on = sistemaEstaOperativa();
   const idsNotices = [
@@ -392,9 +417,20 @@ function aplicarEstadoStandbyUI() {
   ['tileEC', 'tilePH', 'tileTemp', 'tileVol'].forEach(id => {
     const btn = document.getElementById(id);
     if (!(btn instanceof HTMLButtonElement)) return;
-    btn.disabled = !on;
-    btn.classList.toggle('is-standby-disabled', !on);
-    btn.setAttribute('aria-disabled', on ? 'false' : 'true');
+    setStandbyLockDisabled(btn, !on);
+  });
+  const tabMediciones = document.getElementById('tab-mediciones');
+  if (tabMediciones) {
+    tabMediciones.querySelectorAll('input, textarea, select').forEach(el => {
+      setStandbyLockDisabled(el, !on);
+    });
+  }
+  const tabSistema = document.getElementById('tab-sistema');
+  if (tabSistema) {
+    tabSistema.querySelectorAll('button, input, textarea, select').forEach(el => {
+      if (el.id === 'sistemaOperativaSwitch') return;
+      setStandbyLockDisabled(el, !on);
+    });
   });
   const accionesCriticas = [
     '[onclick*="abrirChecklist(false)"]',
