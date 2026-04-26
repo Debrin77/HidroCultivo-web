@@ -413,16 +413,6 @@ function aplicarEstadoStandbyUI() {
   const on = sistemaEstaOperativa();
   const appRoot = document.getElementById('app');
   if (appRoot) appRoot.classList.toggle('is-standby-active', !on);
-  const idsNotices = [
-    'standbyNoticeInicio',
-    'standbyNoticeMediciones',
-    'standbyNoticeSistema',
-    'standbyNoticeRiego',
-  ];
-  idsNotices.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('setup-hidden', on);
-  });
   ['tab-inicio', 'tab-mediciones', 'tab-sistema', 'tab-riego'].forEach(id => {
     const tab = document.getElementById(id);
     if (tab) tab.classList.toggle('is-standby', !on);
