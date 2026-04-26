@@ -189,10 +189,25 @@ function actualizarResumenSetup() {
   let geoDwcRes = '';
   let geoTorreRes = '';
   if (isDwc) {
-    const Ld = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
-    const Wd = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
+    const formaOnb =
+      typeof dwcNormalizeDepositoForma === 'function'
+        ? dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value)
+        : 'prismatico';
     const Pd = _dwcParseOptCm('setupDwcProfCm', 5, 200);
-    if (Ld != null && Wd != null && Pd != null) geoDwcRes += ' · dep. ' + Ld + '×' + Wd + '×' + Pd + ' cm';
+    if (formaOnb === 'cilindrico') {
+      const Dd = _dwcParseOptCm('setupDwcDiametroCm', 5, 300);
+      if (Dd != null && Pd != null) geoDwcRes += ' · dep. Ø' + Dd + '×' + Pd + ' cm';
+    } else if (formaOnb !== 'troncopiramidal') {
+      const Ld = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
+      const Wd = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
+      if (Ld != null && Wd != null && Pd != null) geoDwcRes += ' · dep. ' + Ld + '×' + Wd + '×' + Pd + ' cm';
+    } else {
+      const vmTr =
+        typeof _dwcParseVolManualLitros === 'function'
+          ? _dwcParseVolManualLitros(document.getElementById('setupDwcVolumenManualL')?.value)
+          : null;
+      if (vmTr != null) geoDwcRes += ' · dep. ~' + vmTr + ' L (tronco)';
+    }
     const rimD = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
     const hD = _dwcParseOptMm('setupDwcPotHmm', 30, 200);
     if (rimD != null || hD != null) {

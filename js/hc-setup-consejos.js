@@ -1264,7 +1264,7 @@ function buildConsejosDwc() {
     icono: '🌊',
     titulo: 'DWC en esta app',
     texto:
-      'En <strong>Deep Water Culture</strong> las raíces cuelgan en un depósito con la <strong>misma solución</strong> para todas las plantas. Aquí se modela como cubo con tapa: la rejilla de orificios sigue <strong>filas × cestas</strong> (Torre / Sistema). El diagrama y el riego usan esa cuadrícula; las medidas del depósito sirven sobre todo para <strong>capacidad en litros</strong> y el contexto visual.',
+      'En <strong>Deep Water Culture</strong> las raíces cuelgan en un depósito con la <strong>misma solución</strong> para todas las plantas. La tapa se modela con rejilla <strong>filas × cestas</strong> (prismático o cilíndrico en planta); el diagrama usa esa cuadrícula. Las medidas del depósito sirven para <strong>capacidad en litros</strong>, difusión y el contexto visual.',
     alerta: {
       tipo: 'info',
       txt: 'ℹ️ Misma EC y mismo pH en todo el depósito: mezcla solo cultivos compatibles (véase compatibilidad de cultivos en torre).',
@@ -1274,8 +1274,11 @@ function buildConsejosDwc() {
     icono: '💧',
     titulo: 'Litros y dosis',
     texto:
-      'Con <strong>L, A y P</strong> (profundidad útil) se estima la capacidad bruta. Si indicas <strong>litros de mezcla</strong> por debajo del máximo, checklist y <strong>Consejos → Agua y EC</strong> escalan nutrientes con ese volumen. Si lo dejas vacío, la app usa la capacidad calculada o un valor orientativo interno.',
-    alerta: { tipo: 'ok', txt: '✅ En Sistema y en el asistente verás los litros útiles al completar largo, ancho y profundidad.' },
+      'Según la forma del depósito: <strong>prismático</strong> L×A×P; <strong>cilíndrico</strong> Ø interior × profundidad/altura útil del líquido; <strong>troncopiramidal</strong> litros útiles medidos. Si indicas <strong>litros de mezcla</strong> por debajo del máximo, checklist y <strong>Consejos → Agua y EC</strong> escalan nutrientes con ese volumen. Si lo dejas vacío, la app usa la capacidad calculada o un valor orientativo interno.',
+    alerta: {
+      tipo: 'ok',
+      txt: '✅ En Sistema y asistente verás litros útiles al completar las medidas del depósito (o el volumen manual en tronco).',
+    },
   });
   const densidad = htmlConsejoCard(cat, {
     icono: '🧭',
@@ -1336,7 +1339,7 @@ function buildConsejosDwc() {
     icono: '📐',
     titulo: 'Qué es cada medida en Sistema',
     texto:
-      '<strong>L, A, P</strong> = largo, ancho y profundidad <em>útil</em> del depósito (cm); el <strong>volumen en litros</strong> se muestra en Sistema como L×A×P÷1000. <strong>Diám. cesta</strong> = aro en la tapa (mm); <strong>alt. cesta</strong> hasta las raíces (mm). <strong>Marco</strong> y <strong>hueco</strong> entre cestas se ajustan en el <strong>asistente DWC</strong>; si no los guardaste, el aviso de rejilla en Sistema usa marco 0 y 4 mm. Con eso comprueba si <strong>caben</strong> filas × cestas en la tapa.',
+      '<strong>Prismático:</strong> L, A y P (profundidad/altura <em>útil</em> del líquido, cm) → volumen ≈ L×A×P÷1000. <strong>Cilíndrico:</strong> Ø interior y misma P → volumen ≈ π×(Ø/2)²×P÷1000. <strong>Troncopiramidal:</strong> litros útiles medidos (sin P en el cálculo). <strong>Diám. cesta</strong> = aro en la tapa (mm); <strong>alt. cesta</strong> para el llenado seguro bajo el sustrato. <strong>Marco</strong> y <strong>hueco</strong> entre cestas en el <strong>asistente DWC</strong>; si no los guardaste, el aviso de rejilla usa marco 0 y 4 mm.',
     alerta: { tipo: 'warn', txt: '⚠️ Comprobación orientativa: contrasta con tu tapa real y el diámetro nominal del fabricante.' },
   });
   const extras = htmlConsejoCard(cat, {

@@ -1045,10 +1045,18 @@ function textoResumenSistemaDwcPanel(cfg) {
         ? 'troncopiramidal'
         : 'prismático';
   parts.push(formaTxt);
-  if (L && W && P) {
+  if (forma === 'troncopiramidal') {
+    if (L && W) {
+      parts.push(Math.round(Number(L)) + '×' + Math.round(Number(W)) + ' cm (tapa)');
+    }
+  } else if (L && W && P) {
     if (forma === 'cilindrico') {
-      const d = Math.round((Number(L) + Number(W)) / 2);
-      parts.push('Ø~' + d + ' × ' + Math.round(Number(P)) + ' cm');
+      const dNum =
+        typeof dwcDiametroInteriorCmDesdeLW === 'function'
+          ? dwcDiametroInteriorCmDesdeLW(L, W)
+          : (Math.abs(Number(L) - Number(W)) < 0.05 ? Number(L) : (Number(L) + Number(W)) / 2);
+      const d = dNum != null && Number.isFinite(dNum) ? Math.round(dNum) : Math.round((Number(L) + Number(W)) / 2);
+      parts.push('Ø' + d + ' × ' + Math.round(Number(P)) + ' cm');
     } else {
       parts.push(
         Math.round(Number(L)) + '×' + Math.round(Number(W)) + '×' + Math.round(Number(P)) + ' cm'
@@ -1369,6 +1377,7 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
 const DWC_FORM_IDS_SISTEMA = {
   largo: 'sysDwcLargoCm',
   ancho: 'sysDwcAnchoCm',
+  diametro: 'sysDwcDiametroCm',
   prof: 'sysDwcProfCm',
   forma: 'sysDwcDepositoForma',
   volManual: 'sysDwcVolumenManualL',
@@ -1383,6 +1392,7 @@ const DWC_FORM_IDS_SISTEMA = {
 const DWC_FORM_IDS_SETUP = {
   largo: 'setupDwcLargoCm',
   ancho: 'setupDwcAnchoCm',
+  diametro: 'setupDwcDiametroCm',
   prof: 'setupDwcProfCm',
   forma: 'setupDwcDepositoForma',
   volManual: 'setupDwcVolumenManualL',

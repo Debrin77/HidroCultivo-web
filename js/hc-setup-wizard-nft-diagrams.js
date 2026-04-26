@@ -659,10 +659,32 @@ function renderTorreSistemaResumenTabla(cfg) {
       const suK = normalizaSustratoKey(cfg.sustrato || state.configSustrato || 'esponja');
       const suN = CONFIG_SUSTRATO[suK]?.nombre || suK;
       rows.push(['Sustrato (referencia cestas)', escHtmlUi(suN)]);
+      const formaDw =
+        typeof dwcNormalizeDepositoForma === 'function'
+          ? dwcNormalizeDepositoForma(cfg.dwcDepositoForma)
+          : 'prismatico';
       const l = cfg.dwcDepositoLargoCm;
       const w = cfg.dwcDepositoAnchoCm;
       const p = cfg.dwcDepositoProfCm;
-      if (l != null || w != null || p != null) {
+      if (formaDw === 'cilindrico') {
+        const dCm =
+          typeof dwcDiametroInteriorCmDesdeLW === 'function' ? dwcDiametroInteriorCmDesdeLW(l, w) : null;
+        const dStr = dCm != null ? 'Ø ' + Math.round(dCm * 10) / 10 + ' cm' : '—';
+        const dP = p != null ? p + ' cm' : '—';
+        if (dCm != null || p != null) {
+          rows.push(['Depósito físico (Ø interior × prof. útil)', escHtmlUi(dStr + ' × ' + dP)]);
+        }
+      } else if (formaDw === 'troncopiramidal') {
+        const vm = cfg.dwcDepositoVolManualL;
+        if (vm != null && Number(vm) > 0) {
+          rows.push(['Depósito (volumen útil medido)', escHtmlUi(String(vm) + ' L')]);
+        }
+        if (l != null || w != null) {
+          const dL = l != null ? l + ' cm' : '—';
+          const dW = w != null ? w + ' cm' : '—';
+          rows.push(['Tapa / referencia lateral (cm)', escHtmlUi(dL + ' × ' + dW)]);
+        }
+      } else if (l != null || w != null || p != null) {
         const dL = l != null ? l + ' cm' : '—';
         const dW = w != null ? w + ' cm' : '—';
         const dP = p != null ? p + ' cm' : '—';

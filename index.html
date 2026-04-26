@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-26-standby-polish">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-26-dwc-cilindro-medidas">
 </head>
 <body>
 
@@ -1356,24 +1356,33 @@
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div id="sistemaDwcAyudaBody" class="torre-dwc-inner torre-sistema-panel-body">
-          <div class="torre-dwc-grid-3">
-            <div>
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcLargoCm">L cm</label>
-              <input type="number" id="sysDwcLargoCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Largo depósito cm"
-                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
+          <div class="torre-dwc-grid-3" id="sysDwcMedidasRow">
+            <div id="sysDwcMedidasLAWrap" class="torre-dwc-medidas-span2">
+              <div>
+                <label class="form-label torre-dwc-lbl-mono" for="sysDwcLargoCm">L cm</label>
+                <input type="number" id="sysDwcLargoCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Largo depósito cm"
+                  oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
+              </div>
+              <div>
+                <label class="form-label torre-dwc-lbl-mono" for="sysDwcAnchoCm">A cm</label>
+                <input type="number" id="sysDwcAnchoCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Ancho depósito cm"
+                  oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
+              </div>
             </div>
-            <div>
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcAnchoCm">A cm</label>
-              <input type="number" id="sysDwcAnchoCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Ancho depósito cm"
-                oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
+            <div id="sysDwcMedidasCilWrap" class="torre-dwc-medidas-span2 torre-dwc-medidas-cil-only setup-hidden">
+              <div>
+                <label class="form-label torre-dwc-lbl-mono" for="sysDwcDiametroCm" title="Diámetro interior útil del depósito (donde hay líquido)">Ø int. cm</label>
+                <input type="number" id="sysDwcDiametroCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Diámetro interior depósito cm"
+                  oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
+              </div>
             </div>
-            <div>
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcProfCm">P cm</label>
-              <input type="number" id="sysDwcProfCm" class="torre-dwc-input" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Profundidad útil cm"
+            <div id="sysDwcProfWrap">
+              <label class="form-label torre-dwc-lbl-mono" for="sysDwcProfCm" title="Profundidad o altura útil del líquido (fondo → nivel máximo de solución)">P útil cm</label>
+              <input type="number" id="sysDwcProfCm" class="torre-dwc-input" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Profundidad o altura útil del líquido cm"
                 oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
             </div>
           </div>
-          <p class="torre-nft-p-soft"><strong>Estas medidas son geométricas (tapa y depósito).</strong> El volumen útil para nutrientes se define en litros (manual en troncopiramidal).</p>
+          <p class="torre-nft-p-soft"><strong>Estas medidas son geométricas (tapa y depósito).</strong> Prismático: volumen útil ≈ L×A×P. <strong>Cilíndrico:</strong> Ø interior y P (altura/profundidad útil del líquido). <strong>Troncopiramidal:</strong> solo litros medidos (sin P). El llenado seguro respecto a la cesta/sustrato usa P y la altura de cesta indicadas abajo.</p>
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcDepositoForma">Forma del depósito DWC</label>
             <select id="sysDwcDepositoForma" class="torre-dwc-input" aria-label="Forma del depósito DWC"
@@ -2449,27 +2458,37 @@
         <p class="setup-dwc-help">
           Mismos campos que en <strong>Sistema</strong>. Explicación y <strong>tabla de tamaños de cesta</strong>: <strong>Consejos → DWC</strong>.
         </p>
-        <div class="setup-dwc-grid-3">
-          <div>
-            <label class="form-label setup-dwc-label" for="setupDwcLargoCm">Largo dep. (cm)</label>
-            <input type="number" id="setupDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
-              oninput="onSetupDwcMedidasInput()"
-              class="setup-dwc-input">
+        <div class="setup-dwc-grid-3" id="setupDwcMedidasRow">
+          <div id="setupDwcMedidasLAWrap" class="setup-dwc-medidas-span2">
+            <div>
+              <label class="form-label setup-dwc-label" for="setupDwcLargoCm">Largo dep. (cm)</label>
+              <input type="number" id="setupDwcLargoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                oninput="try{onSetupDwcMedidasInput()}catch(e){}"
+                class="setup-dwc-input">
+            </div>
+            <div>
+              <label class="form-label setup-dwc-label" for="setupDwcAnchoCm">Ancho (cm)</label>
+              <input type="number" id="setupDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                oninput="try{onSetupDwcMedidasInput()}catch(e){}"
+                class="setup-dwc-input">
+            </div>
           </div>
-          <div>
-            <label class="form-label setup-dwc-label" for="setupDwcAnchoCm">Ancho (cm)</label>
-            <input type="number" id="setupDwcAnchoCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
-              oninput="onSetupDwcMedidasInput()"
-              class="setup-dwc-input">
+          <div id="setupDwcMedidasCilWrap" class="setup-dwc-medidas-span2 setup-dwc-medidas-cil-only setup-hidden">
+            <div>
+              <label class="form-label setup-dwc-label" for="setupDwcDiametroCm" title="Diámetro interior útil del depósito">Ø interior (cm)</label>
+              <input type="number" id="setupDwcDiametroCm" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
+                oninput="try{onSetupDwcMedidasInput();actualizarResumenSetup()}catch(e){}"
+                class="setup-dwc-input">
+            </div>
           </div>
-          <div>
-            <label class="form-label setup-dwc-label" for="setupDwcProfCm">Prof. útil (cm)</label>
+          <div id="setupDwcProfWrap">
+            <label class="form-label setup-dwc-label" for="setupDwcProfCm" title="Profundidad o altura útil del líquido">Prof./alt. útil (cm)</label>
             <input type="number" id="setupDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
-              oninput="onSetupDwcMedidasInput()"
+              oninput="try{onSetupDwcMedidasInput()}catch(e){}"
               class="setup-dwc-input">
           </div>
         </div>
-        <p class="setup-dwc-help"><strong>Medidas de tapa y geometría.</strong> El volumen útil para nutrientes se calcula aparte (manual en troncopiramidal).</p>
+        <p class="setup-dwc-help"><strong>Medidas de tapa y geometría.</strong> Prismático: L×A×P. <strong>Cilíndrico:</strong> Ø interior y profundidad/altura útil del líquido. <strong>Troncopiramidal:</strong> litros medidos. El llenado seguro frente a cesta/sustrato usa P y altura de cesta.</p>
         <div>
           <label class="form-label setup-dwc-label" for="setupDwcDepositoForma">Forma del depósito DWC</label>
           <select id="setupDwcDepositoForma" class="setup-dwc-input"
@@ -3704,13 +3723,13 @@
   <script src="js/hc-bootstrap-pin.js?v=3"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=2"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=6"></script>
-  <script src="js/torre-render-build.js?v=2026-04-26-svg-fix3"></script>
+  <script src="js/torre-render-build.js?v=2026-04-26-dwc-lid-cyl-round1"></script>
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=3"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=4"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=4"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=6"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=5"></script>
   <script src="js/hc-setup-wizard-pages.js?v=1"></script>
   <script src="js/hc-setup-calc-core.js?v=2"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
@@ -3720,9 +3739,9 @@
   <script src="js/hc-setup-registro.js?v=4"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=4"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=5"></script>
-  <script src="js/hc-setup-checklist.js?v=7"></script>
+  <script src="js/hc-setup-checklist.js?v=8"></script>
   <script src="js/hc-setup-historial-tabs.js?v=4"></script>
-  <script src="js/hc-setup-consejos.js?v=6"></script>
+  <script src="js/hc-setup-consejos.js?v=8"></script>
   <script src="js/calendario-logic.js?v=1"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
   <script src="js/meteo-forecast-dashboard.js?v=5"></script>
@@ -3730,7 +3749,7 @@
   <script src="js/riego-calculo-calcular.js?v=2"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=3"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=1"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=2"></script>
   <script src="js/app-hc-torres-badges-notifs.js?v=6"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=4"></script>
 </body>

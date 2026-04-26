@@ -8280,6 +8280,15 @@ button.config-option:focus-visible,
   gap: 8px;
   margin-bottom: 8px;
 }
+.torre-dwc-medidas-span2 {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.torre-dwc-medidas-cil-only {
+  grid-template-columns: 1fr;
+}
 .torre-dwc-lbl-mono {
   font-size: 10px;
   font-weight: 800;
@@ -9709,6 +9718,15 @@ button.toggle-switch:focus-visible {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
   margin-bottom: 10px;
+}
+.setup-dwc-medidas-span2 {
+  grid-column: span 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.setup-dwc-medidas-cil-only {
+  grid-template-columns: 1fr;
 }
 .setup-dwc-grid-2 {
   display: grid;

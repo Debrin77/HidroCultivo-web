@@ -436,6 +436,19 @@ function torreSvgEsTorreVerticalGiratoria() {
   return t !== 'nft' && t !== 'dwc';
 }
 
+/** L/A/P del depósito DWC guardados (solo dibujo / proporciones). */
+function dwcSvgDepDimsDesdeCfg(cfg) {
+  const c = cfg || {};
+  const L = Number(c.dwcDepositoLargoCm);
+  const W = Number(c.dwcDepositoAnchoCm);
+  const P = Number(c.dwcDepositoProfCm);
+  return {
+    L: Number.isFinite(L) && L >= 5 ? L : null,
+    W: Number.isFinite(W) && W >= 5 ? W : null,
+    P: Number.isFinite(P) && P >= 5 ? P : null,
+  };
+}
+
 /**
  * DWC: tapa en vista cenital (rejilla + macetas tocables) y debajo alzado frontal
  * del depósito con solución, calentador y aireador si aplica.
@@ -619,12 +632,129 @@ function generarSVGDwc() {
   const tankX = planLeft;
   const rimH = 14;
   const innerPad = 10;
-  const innerX = tankX + innerPad;
-  const innerY = tankStartY + rimH + 4;
-  const innerW = tankW - innerPad * 2;
-  const innerH = tankH - rimH - 8;
-  const waterTopY = innerY + innerH * (1 - volPct);
-  const innerBottom = innerY + innerH;
+  const dep = dwcSvgDepDimsDesdeCfg(cfg);
+  const innerX0 = tankX + innerPad;
+  const innerY0 = tankStartY + rimH + 4;
+  const innerW0 = tankW - innerPad * 2;
+  const innerH0 = tankH - rimH - 8;
+  let clipPathInner = '';
+  let tankFrontalSvg = '';
+  let hx = innerX0 + 22;
+  let stoneX = innerX0 + innerW0 - 32;
+  let innerBottom = innerY0 + innerH0;
+  let waterTopY = innerY0 + innerH0 * (1 - volPct);
+  let waveY = innerY0 + innerH0 * 0.35;
+  const tankFaceInset = 4;
+
+  if (formaDwc === 'cilindrico') {
+    clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
+    waterTopY = innerY0 + innerH0 * (1 - volPct);
+    innerBottom = innerY0 + innerH0;
+    waveY = innerY0 + innerH0 * 0.35;
+    hx = innerX0 + 22;
+    stoneX = innerX0 + innerW0 - 32;
+    tankFrontalSvg =
+      `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>` +
+      `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>` +
+      `<ellipse cx="${W / 2}" cy="${tankStartY + rimH / 2}" rx="${tankW / 2}" ry="${rimH / 2}" fill="none" stroke="#475569" stroke-width="1.2" opacity="0.55"/>` +
+      `<ellipse cx="${W / 2}" cy="${tankStartY + tankH + 4}" rx="${(tankW - tankFaceInset * 2) / 2}" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.35"/>` +
+      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5" fill="rgba(255,255,255,0.35)" stroke="none"/>` +
+      `<g clip-path="url(#dwcTankInnerClip)">` +
+      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${Math.max(0, waterTopY - innerY0).toFixed(1)}" fill="#f0f9ff" opacity="0.5"/>` +
+      `<rect x="${innerX0}" y="${waterTopY.toFixed(1)}" width="${innerW0}" height="${(innerBottom - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
+      (ta
+        ? `<path d="M ${innerX0 + 18} ${waveY} Q ${innerX0 + innerW0 / 2} ${innerY0 + innerH0 * 0.28} ${innerX0 + innerW0 - 22} ${innerY0 + innerH0 * 0.4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.4"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
+        : '') +
+      `</g>` +
+      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.35"/>`;
+  } else if (formaDwc === 'troncopiramidal') {
+    const padT = 8;
+    const yt = tankStartY + rimH + 6;
+    const yb = tankStartY + tankH - 8;
+    const cxm = tankX + tankW / 2;
+    const wt = tankW - 2 * padT;
+    const wb = Math.max(56, wt - 48);
+    const xLt = cxm - wt / 2;
+    const xRt = cxm + wt / 2;
+    const xLb = cxm - wb / 2;
+    const xRb = cxm + wb / 2;
+    innerBottom = yb;
+    const uFill = Math.min(1, Math.max(0, volPct));
+    const ySurf = yb - (yb - yt) * uFill;
+    const uS = Math.max(0, Math.min(1, (ySurf - yt) / Math.max(1e-6, yb - yt)));
+    const xLs = xLt + (xLb - xLt) * uS;
+    const xRs = xRt + (xRb - xRt) * uS;
+    clipPathInner = `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRb},${yb} ${xLb},${yb}"/>`;
+    waterTopY = ySurf;
+    waveY = ySurf + (yb - ySurf) * 0.38;
+    hx = xLb + Math.max(16, (xRb - xLb) * 0.12);
+    stoneX = xRb - Math.max(24, (xRb - xLb) * 0.2);
+    tankFrontalSvg =
+      `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>` +
+      `<polygon points="${xLt},${yt - 1} ${xRt},${yt - 1} ${xRt},${yt} ${xLt},${yt}" fill="#e2e8f0" stroke="#64748b" stroke-width="1.1"/>` +
+      `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRb},${yb} ${xLb},${yb}" fill="url(#dwcTankFace)" stroke="#64748b" stroke-width="1.35"/>` +
+      `<g clip-path="url(#dwcTankInnerClip)">` +
+      `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRs},${ySurf} ${xLs},${ySurf}" fill="#f0f9ff" opacity="0.55"/>` +
+      `<polygon points="${xLs},${ySurf} ${xRs},${ySurf} ${xRb},${yb} ${xLb},${yb}" fill="url(#dwcWaterGrad)"/>` +
+      (ta
+        ? `<path d="M ${xLs + (xRs - xLs) * 0.15} ${waveY} Q ${(xLs + xRs) / 2} ${waveY - 6} ${xRs - (xRs - xLs) * 0.18} ${waveY + 4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.45"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
+        : '') +
+      `</g>` +
+      `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRb},${yb} ${xLb},${yb}" fill="none" stroke="#0ea5e9" stroke-width="1.25" opacity="0.42"/>`;
+  } else {
+    const bodyTop = tankStartY + rimH;
+    const bodyBot = tankStartY + tankH - 2;
+    const dIso = Math.min(36, tankW * 0.11);
+    const isoX = dIso * 0.72;
+    const isoY = dIso * 0.42;
+    const availH = bodyBot - bodyTop - 14;
+    const availW = tankW - 14 - isoX;
+    const Lm = dep.L != null ? dep.L : 55;
+    const Wm = dep.W != null ? dep.W : 40;
+    const Pm = dep.P != null ? dep.P : 38;
+    const isCube = dep.L != null && dep.W != null && Math.abs(dep.L - dep.W) / Math.max(dep.L, dep.W) <= 0.06;
+    let fw;
+    let fh;
+    if (isCube) {
+      const side = Math.min(availW * 0.88, availH * 0.88);
+      fw = side;
+      fh = side;
+    } else {
+      const asp = Pm / Math.max(Lm, 1e-6);
+      fw = availW * 0.86;
+      fh = fw * asp;
+      if (fh > availH * 0.9) {
+        fh = availH * 0.9;
+        fw = fh / asp;
+      }
+    }
+    const fx0 = tankX + 8 + (availW + isoX - fw) / 2;
+    const fy0 = bodyTop + 8 + (availH - fh) / 2;
+    const fx1 = fx0 + fw;
+    const fy1 = fy0 + fh;
+    const xt0 = fx0 + isoX;
+    const yt0 = fy0 - isoY;
+    innerBottom = fy1;
+    waterTopY = fy0 + fh * (1 - volPct);
+    waveY = fy0 + fh * 0.36;
+    hx = fx0 + 22;
+    stoneX = fx0 + fw - 32;
+    clipPathInner = `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4"/>`;
+    tankFrontalSvg =
+      `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>` +
+      `<polygon points="${fx0},${fy0} ${fx1},${fy0} ${fx1 + isoX},${fy0 - isoY} ${xt0},${yt0}" fill="#eef2f7" stroke="#94a3b8" stroke-width="1.1"/>` +
+      `<polygon points="${fx1},${fy0} ${fx1 + isoX},${fy0 - isoY} ${fx1 + isoX},${fy1 - isoY} ${fx1},${fy1}" fill="#d8dee9" stroke="#94a3b8" stroke-width="1.1"/>` +
+      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4" fill="url(#dwcTankFace)" stroke="#64748b" stroke-width="1.25"/>` +
+      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4" fill="rgba(255,255,255,0.22)" stroke="none"/>` +
+      `<g clip-path="url(#dwcTankInnerClip)">` +
+      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${Math.max(0, waterTopY - fy0).toFixed(1)}" fill="#f0f9ff" opacity="0.5"/>` +
+      `<rect x="${fx0}" y="${waterTopY.toFixed(1)}" width="${fw}" height="${(fy1 - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
+      (ta
+        ? `<path d="M ${fx0 + fw * 0.12} ${waveY} Q ${fx0 + fw / 2} ${fy0 + fh * 0.28} ${fx0 + fw * 0.88} ${fy0 + fh * 0.4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.4"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
+        : '') +
+      `</g>` +
+      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.38"/>`;
+  }
 
   let s = '';
   s += `<defs>
@@ -640,22 +770,50 @@ function generarSVGDwc() {
     <linearGradient id="dwcLidTop" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e8eef4"/>
     </linearGradient>
-    <clipPath id="dwcTankInnerClip">
-      <rect x="${innerX}" y="${innerY}" width="${innerW}" height="${innerH}" rx="5"/>
-    </clipPath>
+    <clipPath id="dwcTankInnerClip">${clipPathInner}</clipPath>
+    ${
+      formaDwc === 'cilindrico'
+        ? `<clipPath id="dwcLidPlanClipCyl"><circle cx="${(planLeft + planW / 2).toFixed(2)}" cy="${(planTop + planH / 2).toFixed(2)}" r="${Math.max(12, Math.min(planW, planH) / 2 - 1 - planPad).toFixed(2)}"/></clipPath>`
+        : ''
+    }
   </defs>`;
 
   s += `<rect width="${W}" height="${H}" fill="url(#dwcBgGrad)"/>`;
 
   /* ── Tapa vista cenital ── */
-  s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
-  s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+  const lidCxCyl = planLeft + planW / 2;
+  const lidCyCyl = planTop + planH / 2;
+  const lidROutCyl = Math.min(planW, planH) / 2 - 1;
+  const lidRInCyl = Math.max(12, lidROutCyl - planPad);
+
   if (formaDwc === 'cilindrico') {
-    s += `<ellipse cx="${W / 2}" cy="${planTop + planH / 2}" rx="${planW / 2}" ry="${planH / 2}" fill="none" stroke="#475569" stroke-width="1.2" opacity="0.45"/>`;
-  } else if (formaDwc === 'troncopiramidal') {
-    const topInPlan = 16;
-    s += `<path d="M ${planLeft + topInPlan} ${planTop} L ${planLeft + planW - topInPlan} ${planTop} L ${planLeft + planW} ${planTop + planH} L ${planLeft} ${planTop + planH} Z"
-      fill="none" stroke="#475569" stroke-width="1.2" opacity="0.45"/>`;
+    s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidROutCyl.toFixed(2)}" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
+    s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidRInCyl.toFixed(2)}" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+    s += `<g clip-path="url(#dwcLidPlanClipCyl)">`;
+  } else {
+    s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
+    s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+    if (formaDwc === 'troncopiramidal') {
+      const topInPlan = 18;
+      const botW = planW - 36;
+      const cxP = planLeft + planW / 2;
+      const yT = planTop + 4;
+      const yB = planTop + planH - 4;
+      s += `<path d="M ${cxP - (planW - 2 * topInPlan) / 2} ${yT} L ${cxP + (planW - 2 * topInPlan) / 2} ${yT} L ${cxP + botW / 2} ${yB} L ${cxP - botW / 2} ${yB} Z"
+        fill="none" stroke="#475569" stroke-width="1.25" opacity="0.5"/>`;
+    } else {
+      const isCubePlan = dep.L != null && dep.W != null && Math.abs(dep.L - dep.W) / Math.max(dep.L, dep.W) <= 0.06;
+      if (isCubePlan) {
+        const side = Math.min(planInnerW, planInnerH) * 0.76;
+        const ox = planInnerX + (planInnerW - side) / 2;
+        const oy = planInnerY + (planInnerH - side) / 2;
+        s += `<rect x="${ox.toFixed(1)}" y="${oy.toFixed(1)}" width="${side.toFixed(1)}" height="${side.toFixed(1)}" rx="7" fill="none" stroke="#64748b" stroke-width="1.15" opacity="0.48"/>`;
+      } else if (dep.L != null && dep.W != null) {
+        const sk = Math.min(16, planInnerW * 0.09);
+        s += `<path d="M ${(planInnerX + sk).toFixed(1)} ${planInnerY.toFixed(1)} L ${(planInnerX + planInnerW).toFixed(1)} ${planInnerY.toFixed(1)} L ${(planInnerX + planInnerW - sk * 0.5).toFixed(1)} ${(planInnerY + planInnerH).toFixed(1)} L ${planInnerX.toFixed(1)} ${(planInnerY + planInnerH).toFixed(1)} Z"
+          fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.52"/>`;
+      }
+    }
   }
   for (let gi = 1; gi < C; gi++) {
     const x = planInnerX + gi * cellW;
@@ -673,40 +831,17 @@ function generarSVGDwc() {
       s += macetaSvg(n, c, cx, cy, Rpot, true);
     }
   }
-
+  if (formaDwc === 'cilindrico') {
+    s += `</g>`;
+  }
 
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
   s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="#475569" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
   s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="5 4"/>`;
 
-  /* ── Alzado depósito (mismo ancho que tapa) ── */
-  const tankFaceInset = 4;
-  s += `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>`;
-  s += `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>`;
-  if (formaDwc === 'cilindrico') {
-    s += `<ellipse cx="${W / 2}" cy="${tankStartY + rimH / 2}" rx="${tankW / 2}" ry="${rimH / 2}" fill="none" stroke="#475569" stroke-width="1.2" opacity="0.55"/>`;
-    s += `<ellipse cx="${W / 2}" cy="${tankStartY + tankH + 4}" rx="${(tankW - tankFaceInset * 2) / 2}" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.35"/>`;
-  } else if (formaDwc === 'troncopiramidal') {
-    const topIn = 20;
-    s += `<path d="M ${tankX + topIn} ${tankStartY + rimH} L ${tankX + tankW - topIn} ${tankStartY + rimH} L ${tankX + tankW - 8} ${tankStartY + tankH + 4} L ${tankX + 8} ${tankStartY + tankH + 4} Z"
-      fill="none" stroke="#475569" stroke-width="1.2" opacity="0.55"/>`;
-  }
-  s += `<rect x="${innerX}" y="${innerY}" width="${innerW}" height="${innerH}" rx="5" fill="rgba(255,255,255,0.35)" stroke="none"/>`;
-
-  s += `<g clip-path="url(#dwcTankInnerClip)">`;
-  s += `<rect x="${innerX}" y="${innerY}" width="${innerW}" height="${Math.max(0, waterTopY - innerY).toFixed(1)}" fill="#f0f9ff" opacity="0.5"/>`;
-  s += `<rect x="${innerX}" y="${waterTopY.toFixed(1)}" width="${innerW}" height="${(innerBottom - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
-  if (ta) {
-    s += `<path d="M ${innerX + 18} ${innerY + innerH * 0.35} Q ${innerX + innerW / 2} ${innerY + innerH * 0.28} ${innerX + innerW - 22} ${innerY + innerH * 0.4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.4">
-      <animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/>
-    </path>`;
-  }
-  s += `</g>`;
-  s += `<rect x="${innerX}" y="${innerY}" width="${innerW}" height="${innerH}" rx="5" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.35"/>`;
-
-  const hx = innerX + 22;
-  const stoneX = innerX + innerW - 32;
+  /* ── Alzado depósito (prisma / cubo isométrico, tronco piramidal o cilindro) ── */
+  s += tankFrontalSvg;
   const stoneY = innerBottom - 10;
 
   if (tieneCalentador) {
