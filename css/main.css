@@ -7542,6 +7542,34 @@ button.config-option:focus-visible,
 .dash-operativa-sub.dash-operativa-sub--off {
   color: #b45309;
 }
+.dash-operativa-row.is-standby-active {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.16);
+}
+.global-standby-banner {
+  margin: 8px 12px 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px solid #b45309;
+  background: linear-gradient(120deg, #92400e 0%, #b45309 48%, #f59e0b 100%);
+  color: #fff7ed;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 12px 24px rgba(146, 64, 14, 0.28);
+}
+.global-standby-banner strong {
+  color: #ffffff;
+}
+.global-standby-banner-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
 .standby-notice {
   margin: 6px 0 10px;
   padding: 12px 14px;
@@ -7602,6 +7630,11 @@ button.config-option:focus-visible,
 }
 .is-standby-blocked {
   pointer-events: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .global-standby-banner {
+    transition: none !important;
+  }
 }
 .ultima-medicion-card {
   display: none;

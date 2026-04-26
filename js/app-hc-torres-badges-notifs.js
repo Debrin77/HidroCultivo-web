@@ -411,6 +411,8 @@ function aplicarBloqueosStandbyPorTab(on) {
 
 function aplicarEstadoStandbyUI() {
   const on = sistemaEstaOperativa();
+  const appRoot = document.getElementById('app');
+  if (appRoot) appRoot.classList.toggle('is-standby-active', !on);
   const idsNotices = [
     'standbyNoticeInicio',
     'standbyNoticeMediciones',
@@ -425,6 +427,12 @@ function aplicarEstadoStandbyUI() {
     const tab = document.getElementById(id);
     if (tab) tab.classList.toggle('is-standby', !on);
   });
+  const globalStandby = document.getElementById('globalStandbyBanner');
+  if (globalStandby) {
+    globalStandby.classList.toggle('setup-hidden', on);
+  }
+  const estadoRow = document.querySelector('.dash-operativa-row');
+  if (estadoRow) estadoRow.classList.toggle('is-standby-active', !on);
   const btnGuardar = document.getElementById('btnGuardarMedicion');
   if (btnGuardar) {
     btnGuardar.disabled = !on;
