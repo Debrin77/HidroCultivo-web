@@ -21,7 +21,9 @@ async function calcularRiego(opts = {}) {
     const loader = document.getElementById('riegoLoader');
     if (loader) loader.classList.add('setup-hidden');
     if (opts && opts.manual) {
-      showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+      showToast(typeof getMensajeStandbyContinuar === 'function'
+        ? getMensajeStandbyContinuar()
+        : '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
     }
     return;
   }

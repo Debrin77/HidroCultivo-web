@@ -409,7 +409,9 @@ function leerLitrosReposicionParcial() {
 
 function confirmarReposicionDeposito(modo) {
   if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
-    showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    showToast(typeof getMensajeStandbyContinuar === 'function'
+      ? getMensajeStandbyContinuar()
+      : '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
     return;
   }
   if (modo === 'con_nutrientes') {

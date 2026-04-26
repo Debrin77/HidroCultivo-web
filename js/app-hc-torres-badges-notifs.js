@@ -353,6 +353,10 @@ function sistemaEstaOperativa(cfg) {
   return c.operativa !== false;
 }
 
+function getMensajeStandbyContinuar() {
+  return '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.';
+}
+
 function aplicarEstadoStandbyUI() {
   const on = sistemaEstaOperativa();
   const idsNotices = [

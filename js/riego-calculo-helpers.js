@@ -222,7 +222,9 @@ let esRecarga = false;
 
 function toggleRecarga() {
   if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
-    showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    showToast(typeof getMensajeStandbyContinuar === 'function'
+      ? getMensajeStandbyContinuar()
+      : '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
     return;
   }
   esRecarga = !esRecarga;
