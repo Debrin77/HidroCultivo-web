@@ -197,6 +197,10 @@ function generarPasosNutriente() {
     typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : (nut.pHRango || [5.5, 6.5]);
   const orden  = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A', 'Parte B', 'Parte C'];
   const suf    = dosisSufijoNutriente(nut);
+  const phDownRef =
+    nut && (nut.id === 'campeador' || nut.id === 'campeador_hidro' || nut.id === 'campeador_fruto')
+      ? 'pH− Campeador Down'
+      : 'pH−';
   const pasos  = [];
   const esDwcNut = cfg.tipoInstalacion === 'dwc';
   const esDwcKratky =
@@ -286,8 +290,8 @@ function generarPasosNutriente() {
       ? 'Corregir pH+ solo hasta ~5,0'
       : 'Añadir pH+ hasta pH ' + pHRango[0] + ' — ajuste completo necesario',
     nota: tieneBuffer
-      ? nut.nombre + ' lleva <strong>buffer de pH</strong>: sube solo hasta <strong>pH 5</strong>; en las horas siguientes tenderá al rango normal. Anota los <strong>ml de pH+</strong> usados.'
-      : nut.nombre + ' sin buffer: ajusta al rango ' + pHRango[0] + '–' + pHRango[1] + ' con pH+ poco a poco. Anota los ml.',
+      ? nut.nombre + ' lleva <strong>buffer de pH</strong>: sube solo hasta <strong>pH 5</strong>; en las horas siguientes tenderá al rango normal. Si te pasas, corrige con <strong>' + phDownRef + '</strong>.'
+      : nut.nombre + ' sin buffer: ajusta al rango ' + pHRango[0] + '–' + pHRango[1] + ' con pH+ poco a poco (y usa <strong>' + phDownRef + '</strong> si te excedes). Anota los ml.',
     campos:[{ id:'clPhMasPaso46', label:'ml pH+ añadidos:', type:'number', step:'0.5', placeholder: tieneBuffer ? '3' : '5' }]
   });
 
@@ -349,9 +353,13 @@ function construirTextoChecklistPreliminar() {
     (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '') +
     (esDwc ? ' En DWC, humedece coronas/net cups o el arranque de cada maceta antes del vaciado prolongado.' : '');
   const stockExtra = orden.slice(0, partes).join(', ');
+  const phStockTxt =
+    nut && (nut.id === 'campeador' || nut.id === 'campeador_hidro' || nut.id === 'campeador_fruto')
+      ? 'pH+ y pH− Campeador Down'
+      : 'pH+ y pH−';
   let p2 = 'Verificar stock: agua destilada u ósmosis' +
     (usarCalMagEnRecarga() ? ', CalMag' : '') +
-    ', ' + stockExtra + ', pH+, agua oxigenada 3%, esponja';
+    ', ' + stockExtra + ', ' + phStockTxt + ', agua oxigenada 3%, esponja';
   if (esNft) p2 += ', cepillo suave o tubo flexible para canales, comprobación de pendiente';
   if (esDwc && !esDwcK) p2 += ', repuestos de difusor o piedra porosa, manguera de aire';
   const ecO = getECOptimaTorre();
@@ -1121,6 +1129,9 @@ function getCLPasos() {
     desc:'Aclarar con agua limpia — mínimo 2 veces',
     nota:'Sin olor a oxigenada antes de llenar con agua para el paso 4 (mezcla nutritiva).' },
   ];
+  const usaCampeadorPhDown =
+    nut && (nut.id === 'campeador' || nut.id === 'campeador_hidro' || nut.id === 'campeador_fruto');
+  const etiquetaPhDown = usaCampeadorPhDown ? 'pH− Campeador Down' : 'pH−';
 
   return [
     ...(primerLlenado ? [...pasosConfigPrimerLlenado, ...pasosLimpiezaPrimerLlenado] : pasosCabeceraRecargaCompleta),
@@ -1174,19 +1185,19 @@ function getCLPasos() {
         ? 'Esperar unos minutos con la bomba en marcha hasta homogeneizar la mezcla en depósito y canales antes de medir'
         : 'Esperar ~20 min con bomba (y difusor de aire en depósito si lo usas) en marcha antes de medir',
     nota: nut.pHBuffer
-      ? '20 min homogeneizan la mezcla. Con buffer de pH, las correcciones finas mejor tras unas horas y en <strong>Mediciones</strong> (paso 6 y días siguientes).'
-      : 'Con difusor 20 min bastan para una lectura orientativa; afinar EC/pH después en Mediciones si hace falta.' },
+      ? '20 min homogeneizan la mezcla. Con buffer de pH, las correcciones finas mejor tras unas horas y en <strong>Mediciones</strong> (paso 6 y días siguientes). Si te pasas al subir, corrige con <strong>' + etiquetaPhDown + '</strong>.'
+      : 'Con difusor 20 min bastan para una lectura orientativa; afinar EC/pH después en Mediciones si hace falta (usa <strong>' + etiquetaPhDown + '</strong> si el pH queda alto por exceso de pH+).' },
 
   ...pasosPrev6,
 
   { id:'6.4', seccion: paso6SeccionTitulo || '📊 Paso 6 — Registro', paso:'6.4',
     desc:'Registro en la app — valores de esta recarga / mezcla',
-    nota:'Las lecturas intermedias las haces cuando te encaje; aquí cierras lo que quieres guardar ahora. Puedes seguir corrigiendo EC y pH desde <strong>Mediciones</strong>.',
+    nota:'Las lecturas intermedias las haces cuando te encaje; aquí cierras lo que quieres guardar ahora. Puedes seguir corrigiendo EC y pH desde <strong>Mediciones</strong>. Corrector recomendado: <strong>' + etiquetaPhDown + '</strong>.',
     campos:[
       { id:'clEcFinalReg', label:'EC final:', unit:'µS/cm', type:'number', placeholder: String(ecRecTarget) },
       { id:'clPhFinalReg', label:'pH final:', type:'number', step:'0.1', placeholder: phObj },
       { id:'clPhPlusRegFinal', label:'ml pH+ añadidos en total (opcional):', type:'number', step:'0.1', placeholder:'0' },
-      { id:'clPhMinusRegFinal', label:'ml pH− añadidos en total (opcional):', type:'number', step:'0.1', placeholder:'0' },
+      { id:'clPhMinusRegFinal', label:'ml ' + etiquetaPhDown + ' añadidos (opcional):', type:'number', step:'0.1', placeholder:'0' },
       { id:'clTempAgua', label:'Temp agua:', unit:'°C', type:'number', step:'0.1', placeholder:'20' },
       { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(vol) }
     ] },
