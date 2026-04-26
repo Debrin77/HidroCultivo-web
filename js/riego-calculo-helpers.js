@@ -221,6 +221,10 @@ function actualizarVistaRiegoPorTipoInstalacion() {
 let esRecarga = false;
 
 function toggleRecarga() {
+  if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
+    showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    return;
+  }
   esRecarga = !esRecarga;
   const sw = document.getElementById('recargaSwitch');
   sw.className = 'toggle-switch' + (esRecarga ? ' on' : '');

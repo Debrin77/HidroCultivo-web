@@ -3,6 +3,10 @@
  * Último bloque de la app; carga tras meteo-alarm-app.js. Siguiente: app-hc-setup-onboarding.js.
  */
 async function guardarMedicion() {
+  if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
+    showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    return;
+  }
   const ec    = document.getElementById('inputEC').value.trim();
   const ph    = document.getElementById('inputPH').value.trim();
   const temp  = document.getElementById('inputTemp').value.trim();

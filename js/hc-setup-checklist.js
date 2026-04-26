@@ -1241,6 +1241,10 @@ function getCLTotal() { return getCLPasos().length; }
  * @param {{ saltarPreguntaRuta?: boolean }} [opts] - Tras elegir ruta en el panel post-asistente: no repetir el modal de ruta.
  */
 function abrirChecklist(esPrimeraVez = false, opts) {
+  if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
+    showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    return;
+  }
   clEsPrimeraVez = esPrimeraVez;
   ensureChecklistOverlayLastInBody();
   const saltarPreguntaRuta = !!(opts && opts.saltarPreguntaRuta);

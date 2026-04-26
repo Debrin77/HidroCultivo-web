@@ -17,6 +17,14 @@
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
 async function calcularRiego(opts = {}) {
+  if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
+    const loader = document.getElementById('riegoLoader');
+    if (loader) loader.classList.add('setup-hidden');
+    if (opts && opts.manual) {
+      showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    }
+    return;
+  }
   /** Recalcular a mano o forzar refresco: siempre nueva petición a la API y sin devolver meteo obsoleto si falla la red. */
   const refetchMeteo = !!opts.forceRefresh || !!opts.manual;
   const riegoNPl = document.getElementById('riegoNPlantas');

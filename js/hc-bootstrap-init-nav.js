@@ -337,6 +337,7 @@ function goTab(tab) {
     calcularRiego({ forceRefresh: true });
     window._riegoObsoleto = false;
   }
+  if (typeof aplicarEstadoStandbyUI === 'function') aplicarEstadoStandbyUI();
   if (typeof window._hcSyncMainTabTabIndex === 'function') window._hcSyncMainTabTabIndex();
   try { syncGuiaPrimerosPasosPorPestana(); } catch (_) {}
 }

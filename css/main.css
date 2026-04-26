@@ -7542,6 +7542,41 @@ button.config-option:focus-visible,
 .dash-operativa-sub.dash-operativa-sub--off {
   color: #b45309;
 }
+.standby-notice {
+  margin: 6px 0 10px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  border: 1px solid #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+#tab-inicio.is-standby #dashBloqueAmbienteExterior,
+#tab-inicio.is-standby #dashSistemaInfo,
+#tab-inicio.is-standby .dash-medicion-y-cultivo,
+#tab-inicio.is-standby #quickActionsWrap,
+#tab-inicio.is-standby #dashNotifPrefsCard,
+#tab-mediciones.is-standby #configPanel,
+#tab-mediciones.is-standby .param-card,
+#tab-mediciones.is-standby #recargaCardMediciones,
+#tab-mediciones.is-standby .guardar-medicion-bar,
+#tab-mediciones.is-standby #inputNotas,
+#tab-riego.is-standby #riegoDiaSelectorGroup,
+#tab-riego.is-standby #riegoTorreSoloWrap,
+#tab-riego.is-standby #toldoToggle,
+#tab-riego.is-standby #riegoAvanzadoDetails,
+#tab-riego.is-standby #riegoResultado,
+#tab-riego.is-standby .riego-recalc-wrap,
+#tab-sistema.is-standby > :not(.standby-notice):not(.section-title) {
+  opacity: 0.52;
+  filter: grayscale(0.14);
+}
+.is-standby-disabled {
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+}
 .ultima-medicion-card {
   display: none;
 }

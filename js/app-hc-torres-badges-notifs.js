@@ -353,6 +353,47 @@ function sistemaEstaOperativa(cfg) {
   return c.operativa !== false;
 }
 
+function aplicarEstadoStandbyUI() {
+  const on = sistemaEstaOperativa();
+  const idsNotices = [
+    'standbyNoticeInicio',
+    'standbyNoticeMediciones',
+    'standbyNoticeSistema',
+    'standbyNoticeRiego',
+  ];
+  idsNotices.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('setup-hidden', on);
+  });
+  ['tab-inicio', 'tab-mediciones', 'tab-sistema', 'tab-riego'].forEach(id => {
+    const tab = document.getElementById(id);
+    if (tab) tab.classList.toggle('is-standby', !on);
+  });
+  const btnGuardar = document.getElementById('btnGuardarMedicion');
+  if (btnGuardar) {
+    btnGuardar.disabled = !on;
+    btnGuardar.setAttribute('aria-disabled', on ? 'false' : 'true');
+  }
+  const btnRiego = document.getElementById('btnCalcRiego');
+  if (btnRiego) {
+    btnRiego.disabled = !on;
+    btnRiego.setAttribute('aria-disabled', on ? 'false' : 'true');
+  }
+  const accionesCriticas = [
+    '[onclick*="abrirChecklist(false)"]',
+    '[onclick*="confirmarReposicionDeposito"]',
+    '#recargaSwitch',
+  ];
+  accionesCriticas.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      if (!(el instanceof HTMLButtonElement)) return;
+      el.disabled = !on;
+      el.classList.toggle('is-standby-disabled', !on);
+      el.setAttribute('aria-disabled', on ? 'false' : 'true');
+    });
+  });
+}
+
 function actualizarEstadoOperativaUI() {
   const on = sistemaEstaOperativa();
   const tag = document.getElementById('medirEstadoOperativaTag');
@@ -365,6 +406,7 @@ function actualizarEstadoOperativaUI() {
     sw.classList.toggle('on', on);
     sw.setAttribute('aria-checked', on ? 'true' : 'false');
   }
+  aplicarEstadoStandbyUI();
 }
 
 function toggleSistemaOperativa() {
@@ -380,8 +422,8 @@ function toggleSistemaOperativa() {
     calcularRiego({ forceRefresh: true });
   }
   showToast(state.configTorre.operativa === false
-    ? '⏸ Sistema en stand-by (descanso/limpieza)'
-    : '✅ Sistema marcado como operativa');
+    ? '⏸ Sistema en stand-by / descanso'
+    : '✅ Sistema en modo operativa');
 }
 
 function textoTipoInstalacionTorre(cfg) {

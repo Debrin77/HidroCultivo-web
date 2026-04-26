@@ -147,6 +147,9 @@
           <span class="toggle-knob" aria-hidden="true"></span>
         </button>
       </div>
+      <div id="standbyNoticeInicio" class="standby-notice setup-hidden" role="status" aria-live="polite">
+        <strong>⏸️ Sistema en stand-by / descanso.</strong> Esta pestaña queda en modo consulta.
+      </div>
 
       <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" role="status" aria-live="polite"></div>
 
@@ -405,6 +408,9 @@
       <h1 class="section-title">
         📊 <span class="accent">Mediciones</span> diarias
       </h1>
+      <div id="standbyNoticeMediciones" class="standby-notice setup-hidden" role="status" aria-live="polite">
+        <strong>⏸️ Sistema en stand-by / descanso.</strong> Reactívalo para guardar nuevas mediciones.
+      </div>
 
       <div id="tabContextHintMediciones" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">
@@ -1087,7 +1093,7 @@
 
       <!-- BOTÓN GUARDAR -->
       <div class="guardar-medicion-bar">
-        <button type="button" class="btn btn-primary" onclick="guardarMedicion()">
+        <button type="button" class="btn btn-primary" id="btnGuardarMedicion" onclick="guardarMedicion()">
           💾 Guardar medición
         </button>
       </div>
@@ -1097,6 +1103,9 @@
 
     <!-- TAB 3: TORRE ══════════════════════════════════ -->
     <div class="tab-panel" id="tab-sistema" role="tabpanel" aria-labelledby="btn-sistema" aria-hidden="true">
+      <div id="standbyNoticeSistema" class="standby-notice setup-hidden" role="status" aria-live="polite">
+        <strong>⏸️ Sistema en stand-by / descanso.</strong> Puedes revisar la configuración, pero no operar.
+      </div>
 
       <div id="tabContextHintSistema" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">
@@ -1760,6 +1769,9 @@
     <div class="tab-panel" id="tab-riego" role="tabpanel" aria-labelledby="btn-riego" aria-hidden="true">
 
       <h1 class="section-title" id="riegoSectionTitle">💧 Cálculo de <span class="accent">Riego</span></h1>
+      <div id="standbyNoticeRiego" class="standby-notice setup-hidden" role="status" aria-live="polite">
+        <strong>⏸️ Sistema en stand-by / descanso.</strong> El cálculo de riego está pausado.
+      </div>
 
       <div id="tabContextHintRiego" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">

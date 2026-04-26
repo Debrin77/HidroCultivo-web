@@ -408,6 +408,10 @@ function leerLitrosReposicionParcial() {
 }
 
 function confirmarReposicionDeposito(modo) {
+  if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
+    showToast('⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    return;
+  }
   if (modo === 'con_nutrientes') {
     abrirChecklist(false);
     showToast('📋 Checklist de la instalación activa: vaciado, limpieza y mezcla completa (reinicia el contador al finalizar)');
