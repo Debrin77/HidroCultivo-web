@@ -1031,13 +1031,33 @@ function textoResumenSistemaDwcPanel(cfg) {
   const L = cfg.dwcDepositoLargoCm;
   const W = cfg.dwcDepositoAnchoCm;
   const P = cfg.dwcDepositoProfCm;
+  const forma =
+    typeof dwcNormalizeDepositoForma === 'function'
+      ? dwcNormalizeDepositoForma(cfg.dwcDepositoForma)
+      : (cfg.dwcDepositoForma || 'prismatico');
   const n = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
   const c = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
   const parts = [];
+  const formaTxt =
+    forma === 'cilindrico'
+      ? 'cilíndrico'
+      : forma === 'troncopiramidal'
+        ? 'troncopiramidal'
+        : 'prismático';
+  parts.push(formaTxt);
   if (L && W && P) {
-    parts.push(
-      Math.round(Number(L)) + '×' + Math.round(Number(W)) + '×' + Math.round(Number(P)) + ' cm'
-    );
+    if (forma === 'cilindrico') {
+      const d = Math.round((Number(L) + Number(W)) / 2);
+      parts.push('Ø~' + d + ' × ' + Math.round(Number(P)) + ' cm');
+    } else {
+      parts.push(
+        Math.round(Number(L)) + '×' + Math.round(Number(W)) + '×' + Math.round(Number(P)) + ' cm'
+      );
+    }
+  }
+  if (forma === 'troncopiramidal') {
+    const vm = Number(cfg.dwcDepositoVolManualL);
+    parts.push(Number.isFinite(vm) && vm > 0 ? 'útil ~' + vm + ' L' : 'indica litros útiles');
   }
   if (cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0) {
     parts.push('Ø' + Math.round(Number(cfg.dwcNetPotRimMm)) + ' mm');
@@ -1350,6 +1370,8 @@ const DWC_FORM_IDS_SISTEMA = {
   largo: 'sysDwcLargoCm',
   ancho: 'sysDwcAnchoCm',
   prof: 'sysDwcProfCm',
+  forma: 'sysDwcDepositoForma',
+  volManual: 'sysDwcVolumenManualL',
   rim: 'sysDwcPotRimMm',
   alt: 'sysDwcPotHmm',
   modo: 'sysDwcModoCultivo',
@@ -1362,6 +1384,8 @@ const DWC_FORM_IDS_SETUP = {
   largo: 'setupDwcLargoCm',
   ancho: 'setupDwcAnchoCm',
   prof: 'setupDwcProfCm',
+  forma: 'setupDwcDepositoForma',
+  volManual: 'setupDwcVolumenManualL',
   rim: 'setupDwcPotRimMm',
   alt: 'setupDwcPotHmm',
   modo: 'setupDwcModoCultivo',

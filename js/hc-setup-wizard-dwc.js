@@ -82,17 +82,58 @@ function dwcGetObjetivoSpec(objetivo) {
   };
 }
 
+function dwcNormalizeDepositoForma(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  if (v === 'cilindrico') return 'cilindrico';
+  if (v === 'troncopiramidal') return 'troncopiramidal';
+  return 'prismatico';
+}
+
+function dwcFormaDepositoLabel(forma) {
+  const f = dwcNormalizeDepositoForma(forma);
+  if (f === 'cilindrico') return 'Cilíndrico';
+  if (f === 'troncopiramidal') return 'Troncopiramidal';
+  return 'Prismático';
+}
+
+function dwcRequiereVolumenManual(forma) {
+  return dwcNormalizeDepositoForma(forma) === 'troncopiramidal';
+}
+
+function _dwcParseVolManualLitros(raw) {
+  const v = parseFloat(String(raw == null ? '' : raw).replace(',', '.').trim());
+  if (!Number.isFinite(v) || v < 1 || v > 800) return null;
+  return Math.round(v * 10) / 10;
+}
+
+function getDwcVolumenManualLitrosDesdeConfig(cfg) {
+  return _dwcParseVolManualLitros((cfg || {}).dwcDepositoVolManualL);
+}
+
 /**
- * Capacidad útil del depósito DWC (L) desde config guardada (L×A×P cm), sin leer el DOM.
+ * Capacidad útil del depósito DWC (L) desde config guardada:
+ * - prismático: L×A×P
+ * - cilíndrico: π·(D/2)^2·P (D = media entre largo y ancho)
+ * - troncopiramidal: litros manuales (obligatorio para precisión)
  */
 function getDwcCapacidadLitrosDesdeConfig(cfg) {
   cfg = cfg || {};
+  const forma = dwcNormalizeDepositoForma(cfg.dwcDepositoForma);
+  const volManual = getDwcVolumenManualLitrosDesdeConfig(cfg);
+  if (volManual != null && !dwcRequiereVolumenManual(forma)) return volManual;
+  if (dwcRequiereVolumenManual(forma)) {
+    return volManual;
+  }
   const L = Number(cfg.dwcDepositoLargoCm);
   const W = Number(cfg.dwcDepositoAnchoCm);
   const P = Number(cfg.dwcDepositoProfCm);
   if (!Number.isFinite(L) || !Number.isFinite(W) || !Number.isFinite(P)) return null;
   if (L < 5 || L > 300 || W < 5 || W > 300 || P < 5 || P > 200) return null;
-  const litros = (L * W * P) / 1000;
+  let litros = (L * W * P) / 1000;
+  if (forma === 'cilindrico') {
+    const d = (L + W) / 2;
+    litros = Math.PI * Math.pow(d / 2, 2) * P / 1000;
+  }
   if (!Number.isFinite(litros) || litros <= 0) return null;
   return Math.round(litros * 10) / 10;
 }
@@ -452,22 +493,42 @@ function _dwcParseMarcoHuecoMmIds(marcoId, huecoId) {
 
 /** Litros útiles del depósito DWC si largo×ancho×prof. (cm) están completos en el asistente o Sistema. */
 function getDwcCapacidadLitrosFromSetupInputs() {
+  const forma = dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value);
+  const volManual = _dwcParseVolManualLitros(document.getElementById('setupDwcVolumenManualL')?.value);
+  if (volManual != null && !dwcRequiereVolumenManual(forma)) return volManual;
+  if (dwcRequiereVolumenManual(forma)) {
+    return volManual;
+  }
   const L = _dwcParseOptCm('setupDwcLargoCm', 5, 300);
   const W = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
   const P = _dwcParseOptCm('setupDwcProfCm', 5, 200);
   if (L == null || W == null || P == null) return null;
-  const litros = (L * W * P) / 1000;
+  let litros = (L * W * P) / 1000;
+  if (forma === 'cilindrico') {
+    const d = (L + W) / 2;
+    litros = Math.PI * Math.pow(d / 2, 2) * P / 1000;
+  }
   if (!Number.isFinite(litros) || litros <= 0) return null;
   return Math.round(litros * 10) / 10;
 }
 
 /** Litros útiles del depósito desde campos de la pestaña Sistema (misma fórmula que el asistente). */
 function getDwcCapacidadLitrosFromSistemaInputs() {
+  const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value);
+  const volManual = _dwcParseVolManualLitros(document.getElementById('sysDwcVolumenManualL')?.value);
+  if (volManual != null && !dwcRequiereVolumenManual(forma)) return volManual;
+  if (dwcRequiereVolumenManual(forma)) {
+    return volManual;
+  }
   const L = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
   const W = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
   const P = _dwcParseOptCm('sysDwcProfCm', 5, 200);
   if (L == null || W == null || P == null) return null;
-  const litros = (L * W * P) / 1000;
+  let litros = (L * W * P) / 1000;
+  if (forma === 'cilindrico') {
+    const d = (L + W) / 2;
+    litros = Math.PI * Math.pow(d / 2, 2) * P / 1000;
+  }
   if (!Number.isFinite(litros) || litros <= 0) return null;
   return Math.round(litros * 10) / 10;
 }
@@ -1326,7 +1387,7 @@ function refreshDwcTapHintSetup() {
       ev.marco +
       ' mm/lado, ' +
       ev.hueco +
-      ' mm entre cestas). Objetivo: ' +
+      ' mm entre cestas). Esta medida es de tapa (cestas), no de litros útiles. Objetivo: ' +
       spec.label +
       ' (' +
       spec.ccTxt +
@@ -1698,6 +1759,9 @@ function refreshDwcSistemaMedidasUI() {
   const volEl = document.getElementById('sysDwcVolumenLitrosHint');
   const oxEl = document.getElementById('sysDwcOxigenacionHint');
   const cfg = state.configTorre;
+  try {
+    toggleDwcVolumenManualUI(DWC_FORM_IDS_SISTEMA, cfg);
+  } catch (_) {}
   if (!cfg || cfg.tipoInstalacion !== 'dwc') {
     if (volEl) {
       volEl.style.display = 'none';
@@ -1719,29 +1783,43 @@ function refreshDwcSistemaMedidasUI() {
   }
   if (volEl) {
     const cap = getDwcCapacidadLitrosFromSistemaInputs();
+    const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value || cfg.dwcDepositoForma);
     if (cap != null && cap > 0) {
       const cfgDraft = state.configTorre ? { ...state.configTorre } : {};
       const Ld = _dwcParseOptCm('sysDwcLargoCm', 5, 300);
       const Wd = _dwcParseOptCm('sysDwcAnchoCm', 5, 300);
       const Pd = _dwcParseOptCm('sysDwcProfCm', 5, 200);
+      const vm = _dwcParseVolManualLitros(document.getElementById('sysDwcVolumenManualL')?.value);
       const hPotD = _dwcParseOptMm('sysDwcPotHmm', 30, 200);
+      cfgDraft.dwcDepositoForma = forma;
       if (Ld != null) cfgDraft.dwcDepositoLargoCm = Ld;
       if (Wd != null) cfgDraft.dwcDepositoAnchoCm = Wd;
       if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
+      if (vm != null) cfgDraft.dwcDepositoVolManualL = vm;
       if (hPotD != null) cfgDraft.dwcNetPotHeightMm = hPotD;
       const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
       const hSustratoMm = getDwcAlturaSustratoEstimadaMm(cfgDraft);
       volEl.style.display = 'block';
       volEl.textContent =
-        'Volumen geométrico estimado del depósito: ~' +
-        cap +
-        ' L (largo × ancho × prof. en cm ÷ 1000). ' +
+        (forma === 'troncopiramidal'
+          ? 'Volumen util configurado del deposito: ~' + cap + ' L (manual). '
+          : vm != null
+            ? 'Volumen util configurado del deposito: ~' + cap + ' L (manual, sobrescribe geometria). '
+          : forma === 'cilindrico'
+            ? 'Volumen geometrico estimado del deposito cilindrico: ~' + cap + ' L. '
+            : 'Volumen geometrico estimado del deposito: ~' + cap + ' L (largo × ancho × prof. en cm ÷ 1000). ') +
         (volSeguro != null
           ? 'Con el sustrato actual (altura estimada ~' + hSustratoMm + ' mm en cesta), el llenado seguro máximo es ~' + volSeguro + ' L (deja ~0,5–1 cm bajo la base del sustrato).'
           : 'En cultivo el nivel de solución debe quedar por debajo de la base del sustrato (reserva 0,5–1 cm).');
     } else {
-      volEl.style.display = 'none';
-      volEl.textContent = '';
+      const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value || cfg.dwcDepositoForma);
+      if (forma === 'troncopiramidal') {
+        volEl.style.display = 'block';
+        volEl.textContent = 'Deposito troncopiramidal: indica volumen util real en litros para ajustar nutrientes y limites de llenado.';
+      } else {
+        volEl.style.display = 'none';
+        volEl.textContent = '';
+      }
     }
   }
   try {
@@ -1860,7 +1938,7 @@ function refreshDwcTapHintSistema() {
       ev.marco +
       ' mm/lado, ' +
       ev.hueco +
-      ' mm entre cestas). Orientativo.';
+      ' mm entre cestas). Geometría de tapa; litros útiles se calculan aparte.';
     return;
   }
   el.style.background = '#fffbeb';
@@ -1884,17 +1962,26 @@ function mountDwcCestasGuiaEnPanelConsejos() {
 function onSetupDwcMedidasInput() {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
   try {
+    toggleDwcVolumenManualUI(DWC_FORM_IDS_SETUP, state.configTorre);
+  } catch (_) {}
+  try {
     actualizarResumenSetup();
   } catch (e) {}
   const hint = document.getElementById('setupDwcCapacidadEstimada');
   const cap = getDwcCapacidadLitrosFromSetupInputs();
+  const forma = dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value);
+  const vm = _dwcParseVolManualLitros(document.getElementById('setupDwcVolumenManualL')?.value);
   if (hint) {
     if (cap != null && cap > 0) {
       hint.classList.remove('setup-hidden');
       hint.textContent =
-        'Capacidad bruta estimada: ~' +
-        cap +
-        ' L (largo × ancho × prof. útil en cm ÷ 1000).';
+        forma === 'troncopiramidal'
+          ? 'Volumen util manual: ~' + cap + ' L (troncopiramidal).'
+          : vm != null
+            ? 'Volumen util manual: ~' + cap + ' L (sobrescribe calculo geometrico).'
+          : forma === 'cilindrico'
+            ? 'Capacidad geometrica estimada: ~' + cap + ' L (cilindro con diametro medio y profundidad).'
+            : 'Capacidad geometrica estimada: ~' + cap + ' L (largo × ancho × prof. útil en cm ÷ 1000).';
     } else {
       hint.classList.add('setup-hidden');
       hint.textContent = '';
@@ -1910,8 +1997,14 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   const L = _dwcParseOptCm(ids.largo, 5, 300);
   const W = _dwcParseOptCm(ids.ancho, 5, 300);
   const P = _dwcParseOptCm(ids.prof, 5, 200);
+  const formaEl = ids.forma ? document.getElementById(ids.forma) : null;
+  const forma = dwcNormalizeDepositoForma(formaEl && formaEl.value);
+  const volManual = ids.volManual ? _dwcParseVolManualLitros(document.getElementById(ids.volManual)?.value) : null;
   const rim = _dwcParseOptMm(ids.rim, 25, 120);
   const hPot = _dwcParseOptMm(ids.alt, 30, 200);
+  cfg.dwcDepositoForma = forma;
+  if (volManual != null) cfg.dwcDepositoVolManualL = volManual;
+  else delete cfg.dwcDepositoVolManualL;
   if (L != null) cfg.dwcDepositoLargoCm = L; else delete cfg.dwcDepositoLargoCm;
   if (W != null) cfg.dwcDepositoAnchoCm = W; else delete cfg.dwcDepositoAnchoCm;
   if (P != null) cfg.dwcDepositoProfCm = P; else delete cfg.dwcDepositoProfCm;
@@ -2002,6 +2095,8 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   setVal(ids.largo, c.dwcDepositoLargoCm);
   setVal(ids.ancho, c.dwcDepositoAnchoCm);
   setVal(ids.prof, c.dwcDepositoProfCm);
+  if (ids.forma) setVal(ids.forma, dwcNormalizeDepositoForma(c.dwcDepositoForma));
+  if (ids.volManual) setVal(ids.volManual, c.dwcDepositoVolManualL);
   setVal(ids.rim, c.dwcNetPotRimMm);
   setVal(ids.alt, c.dwcNetPotHeightMm);
   if (ids.modo) setVal(ids.modo, dwcGetModoCultivo(c));
@@ -2017,6 +2112,47 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
     air.checked = mk !== 'kratky' && c.dwcEntradaAireManguera === true;
     air.disabled = mk === 'kratky';
   }
+  try {
+    toggleDwcVolumenManualUI(ids, c);
+  } catch (_) {}
+}
+
+function toggleDwcVolumenManualUI(formIds, cfg) {
+  const ids = formIds || DWC_FORM_IDS_SISTEMA;
+  const forma = dwcNormalizeDepositoForma(
+    document.getElementById(ids.forma)?.value || (cfg || state.configTorre || {}).dwcDepositoForma
+  );
+  const on = dwcRequiereVolumenManual(forma);
+  const isSetup = ids === DWC_FORM_IDS_SETUP;
+  const wrap = document.getElementById(isSetup ? 'setupDwcVolumenManualWrap' : 'sysDwcVolumenManualWrap');
+  const inp = document.getElementById(ids.volManual);
+  const help = document.getElementById(isSetup ? 'setupDwcVolumenManualHint' : 'sysDwcVolumenManualHint');
+  if (wrap) wrap.classList.remove('setup-hidden');
+  if (inp) {
+    inp.required = on;
+    inp.setAttribute('aria-required', on ? 'true' : 'false');
+  }
+  if (help) {
+    help.classList.remove('setup-hidden');
+    help.textContent = on
+      ? 'Obligatorio en troncopiramidal: indica litros utiles reales del deposito (medidos).'
+      : 'Opcional: si conoces litros utiles reales, este valor sobrescribe el calculo geometrico.';
+  }
+}
+
+function onDwcFormaChanged(formIds) {
+  const ids = formIds || DWC_FORM_IDS_SISTEMA;
+  try {
+    toggleDwcVolumenManualUI(ids, state.configTorre);
+  } catch (_) {}
+  try {
+    if (ids === DWC_FORM_IDS_SISTEMA) refreshDwcSistemaMedidasUI();
+    else onSetupDwcMedidasInput();
+  } catch (_) {}
+  try {
+    if (ids === DWC_FORM_IDS_SETUP) refreshDwcTapHintSetup();
+    else refreshDwcTapHintSistema();
+  } catch (_) {}
 }
 
 function onDwcModoChanged(formIds) {

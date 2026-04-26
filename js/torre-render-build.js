@@ -462,6 +462,12 @@ function generarSVGDwc() {
       ? dwcGetRejillaModoPreferido(cfg)
       : (cfg.dwcRejillaModoPreferido === 'max' ? 'max' : 'objetivo');
   const rejTxt = rejModo === 'max' ? 'principal: máxima geométrica' : 'principal: recomendada por objetivo';
+  const formaDwc =
+    typeof dwcNormalizeDepositoForma === 'function'
+      ? dwcNormalizeDepositoForma(cfg.dwcDepositoForma)
+      : (cfg.dwcDepositoForma || 'prismatico');
+  const formaDwcTxt =
+    typeof dwcFormaDepositoLabel === 'function' ? dwcFormaDepositoLabel(formaDwc) : formaDwc;
   const recoCultivo =
     typeof dwcRecomendacionCultivoDesdeConfig === 'function'
       ? dwcRecomendacionCultivoDesdeConfig(cfg)
@@ -644,6 +650,13 @@ function generarSVGDwc() {
   /* ── Tapa vista cenital ── */
   s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
   s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+  if (formaDwc === 'cilindrico') {
+    s += `<ellipse cx="${W / 2}" cy="${planTop + planH / 2}" rx="${planW / 2}" ry="${planH / 2}" fill="none" stroke="#475569" stroke-width="1.2" opacity="0.45"/>`;
+  } else if (formaDwc === 'troncopiramidal') {
+    const topInPlan = 16;
+    s += `<path d="M ${planLeft + topInPlan} ${planTop} L ${planLeft + planW - topInPlan} ${planTop} L ${planLeft + planW} ${planTop + planH} L ${planLeft} ${planTop + planH} Z"
+      fill="none" stroke="#475569" stroke-width="1.2" opacity="0.45"/>`;
+  }
   for (let gi = 1; gi < C; gi++) {
     const x = planInnerX + gi * cellW;
     s += `<line x1="${x.toFixed(1)}" y1="${planInnerY}" x2="${x.toFixed(1)}" y2="${planInnerY + planInnerH}" stroke="#e2e8f0" stroke-width="1"/>`;
@@ -661,7 +674,7 @@ function generarSVGDwc() {
     }
   }
 
-  s += `<text x="${W / 2}" y="${planBottom + 11}" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-weight="600" font-family="Inconsolata,monospace">Misma disposición que Lista (fila 1 arriba)</text>`;
+  s += `<text x="${W / 2}" y="${planBottom + 11}" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-weight="600" font-family="Inconsolata,monospace">Tapa (${formaDwcTxt}) = cestas · misma disposición que Lista (fila 1 arriba)</text>`;
 
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
@@ -672,6 +685,14 @@ function generarSVGDwc() {
   const tankFaceInset = 4;
   s += `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>`;
   s += `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>`;
+  if (formaDwc === 'cilindrico') {
+    s += `<ellipse cx="${W / 2}" cy="${tankStartY + rimH / 2}" rx="${tankW / 2}" ry="${rimH / 2}" fill="none" stroke="#475569" stroke-width="1.2" opacity="0.55"/>`;
+    s += `<ellipse cx="${W / 2}" cy="${tankStartY + tankH + 4}" rx="${(tankW - tankFaceInset * 2) / 2}" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.35"/>`;
+  } else if (formaDwc === 'troncopiramidal') {
+    const topIn = 20;
+    s += `<path d="M ${tankX + topIn} ${tankStartY + rimH} L ${tankX + tankW - topIn} ${tankStartY + rimH} L ${tankX + tankW - 8} ${tankStartY + tankH + 4} L ${tankX + 8} ${tankStartY + tankH + 4} Z"
+      fill="none" stroke="#475569" stroke-width="1.2" opacity="0.55"/>`;
+  }
   s += `<rect x="${innerX}" y="${innerY}" width="${innerW}" height="${innerH}" rx="5" fill="rgba(255,255,255,0.35)" stroke="none"/>`;
 
   s += `<g clip-path="url(#dwcTankInnerClip)">`;
@@ -742,7 +763,7 @@ function generarSVGDwc() {
   const vbH = H + pad * 2;
   return (
     `<svg class="torre-svg-diagram dwc-svg-diagram svg-centered-block" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
-    `<title id="dwcDiagTitle">DWC: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''} Debajo, frente del depósito con solución. Toca una maceta para la ficha.</title>${s}</svg>`
+    `<title id="dwcDiagTitle">DWC ${formaDwcTxt}: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''} Debajo, frente del depósito con solución. Toca una maceta para la ficha.</title>${s}</svg>`
   );
 }
 
