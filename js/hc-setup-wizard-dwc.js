@@ -2155,6 +2155,20 @@ function onDwcFormaChanged(formIds) {
   } catch (_) {}
 }
 
+function dwcValidarVolumenManualSegunForma(cfg, contexto) {
+  const c = cfg || state.configTorre || {};
+  const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
+  if (!dwcRequiereVolumenManual(forma)) return true;
+  const vm = getDwcVolumenManualLitrosDesdeConfig(c);
+  if (vm != null && vm > 0) return true;
+  const msg =
+    contexto === 'setup'
+      ? 'Para deposito troncopiramidal debes indicar el volumen util real (L) antes de continuar.'
+      : 'Para guardar DWC troncopiramidal debes indicar el volumen util real (L).';
+  showToast(msg, true);
+  return false;
+}
+
 function onDwcModoChanged(formIds) {
   const ids = formIds || DWC_FORM_IDS_SISTEMA;
   const sel = document.getElementById(ids.modo);
@@ -2180,6 +2194,7 @@ function aplicarSistemaDwcDesdeFormulario() {
   initTorres();
   const cfg = state.configTorre;
   dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
+  if (!dwcValidarVolumenManualSegunForma(cfg, 'sistema')) return;
   dwcSincronizarTamanoCestaDesdeRim(cfg);
   try {
     dwcPersistSnapshotMaxCestasEnCfg(cfg);

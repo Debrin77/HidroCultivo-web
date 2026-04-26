@@ -642,6 +642,12 @@ function guardarSetupYContinuar() {
   }
   if (isDwc) {
     dwcMergeCamposFormularioEnCfg(state.configTorre, DWC_FORM_IDS_SETUP);
+    if (
+      typeof dwcValidarVolumenManualSegunForma === 'function' &&
+      !dwcValidarVolumenManualSegunForma(state.configTorre, 'setup')
+    ) {
+      return;
+    }
     dwcSincronizarTamanoCestaDesdeRim(state.configTorre);
     try {
       dwcSyncVolDepositoDesdeCapacidadEstimada(state.configTorre);

@@ -680,6 +680,11 @@ function generarSVGDwc() {
   const sepY = planBottom + 30;
   s += `<text x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="#475569" font-size="9.5" font-weight="800" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
   s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="5 4"/>`;
+  const badgeY = sepY + 8;
+  s += `<rect x="44" y="${badgeY}" width="140" height="16" rx="8" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1"/>`;
+  s += `<text x="114" y="${badgeY + 11}" text-anchor="middle" fill="#075985" font-size="7.2" font-weight="800" font-family="Inconsolata,monospace">🧺 TAPA: cestas y huecos</text>`;
+  s += `<rect x="${W - 184}" y="${badgeY}" width="140" height="16" rx="8" fill="#ecfccb" stroke="#bef264" stroke-width="1"/>`;
+  s += `<text x="${W - 114}" y="${badgeY + 11}" text-anchor="middle" fill="#3f6212" font-size="7.2" font-weight="800" font-family="Inconsolata,monospace">💧 VOLUMEN: nutrientes (L)</text>`;
 
   /* ── Alzado depósito (mismo ancho que tapa) ── */
   const tankFaceInset = 4;

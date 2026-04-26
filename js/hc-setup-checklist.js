@@ -732,7 +732,10 @@ function getCLPasos() {
   const pasosConfigPrimerLlenado = [
     { id: 'PC1', seccion: '⚙️ Depósito, agua y nutriente', paso: 'PC·1',
       desc: 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.',
-      nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Sistema</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.',
+      nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Sistema</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.' +
+        (esDwc
+          ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si tu depósito es <strong>troncopiramidal</strong>, usa el volumen útil real medido.'
+          : ''),
       extraHtml:
         '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
         '<p class="cl-tabla-cultivos-hint">Ventana de consulta: ciérrala y sigue con el checklist.</p>',
@@ -838,7 +841,7 @@ function getCLPasos() {
                 spec.ccTxt +
                 ' c-c). Botón principal: <strong>' +
                 modoTxt +
-                '</strong>.' +
+                '</strong>. Rejilla/tapa y litros útiles se validan por separado.' +
                 cestaTxt
               );
             })(),
