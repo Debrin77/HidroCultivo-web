@@ -9295,28 +9295,31 @@ button.config-option:focus-visible,
 .hc-backup-import-span { pointer-events: none; }
 .hc-backup-import-input {
   position: absolute;
+  width: 1px;
+  height: 1px;
   left: 0;
   top: 0;
-  width: 100%;
-  height: 100%;
   opacity: 0;
   cursor: pointer;
-  font-size: 64px;
+  font-size: 0;
+  line-height: 0;
   margin: 0;
   padding: 0;
   border: 0;
-  min-height: 48px;
   background: transparent;
   color: transparent;
   -webkit-text-fill-color: transparent;
-  text-indent: -9999px;
+  text-indent: 0;
   overflow: hidden;
   appearance: none;
   -webkit-appearance: none;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 .hc-backup-import-input::file-selector-button {
-  width: 100%;
-  height: 100%;
+  width: 1px;
+  height: 1px;
   border: 0;
   margin: 0;
   padding: 0;
@@ -9325,8 +9328,8 @@ button.config-option:focus-visible,
   cursor: pointer;
 }
 .hc-backup-import-input::-webkit-file-upload-button {
-  width: 100%;
-  height: 100%;
+  width: 1px;
+  height: 1px;
   border: 0;
   margin: 0;
   padding: 0;
