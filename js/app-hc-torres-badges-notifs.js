@@ -383,6 +383,19 @@ function aplicarEstadoStandbyUI() {
     btnRiego.disabled = !on;
     btnRiego.setAttribute('aria-disabled', on ? 'false' : 'true');
   }
+  const dashSistemaInfo = document.getElementById('dashSistemaInfo');
+  if (dashSistemaInfo) {
+    dashSistemaInfo.classList.toggle('is-standby-blocked', !on);
+    dashSistemaInfo.setAttribute('aria-disabled', on ? 'false' : 'true');
+    dashSistemaInfo.setAttribute('tabindex', on ? '0' : '-1');
+  }
+  ['tileEC', 'tilePH', 'tileTemp', 'tileVol'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!(btn instanceof HTMLButtonElement)) return;
+    btn.disabled = !on;
+    btn.classList.toggle('is-standby-disabled', !on);
+    btn.setAttribute('aria-disabled', on ? 'false' : 'true');
+  });
   const accionesCriticas = [
     '[onclick*="abrirChecklist(false)"]',
     '[onclick*="confirmarReposicionDeposito"]',

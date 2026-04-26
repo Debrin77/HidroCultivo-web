@@ -7544,14 +7544,23 @@ button.config-option:focus-visible,
 }
 .standby-notice {
   margin: 6px 0 10px;
-  padding: 9px 11px;
-  border-radius: 10px;
-  border: 1px solid #f59e0b;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px solid #f59e0b;
   background: #fffbeb;
   color: #92400e;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 24px rgba(245, 158, 11, 0.18);
+}
+.standby-notice-icon {
+  font-size: 22px;
+  line-height: 1;
+  flex: 0 0 auto;
 }
 #tab-inicio.is-standby #dashBloqueAmbienteExterior,
 #tab-inicio.is-standby #dashSistemaInfo,
@@ -7573,9 +7582,17 @@ button.config-option:focus-visible,
   opacity: 0.52;
   filter: grayscale(0.14);
 }
+#tab-inicio.is-standby #dashSistemaInfo,
+#tab-inicio.is-standby .dash-medicion-y-cultivo {
+  opacity: 0.35;
+  filter: grayscale(0.24);
+}
 .is-standby-disabled {
   cursor: not-allowed !important;
   opacity: 0.6 !important;
+}
+.is-standby-blocked {
+  pointer-events: none !important;
 }
 .ultima-medicion-card {
   display: none;
