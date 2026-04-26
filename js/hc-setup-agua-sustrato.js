@@ -1432,6 +1432,7 @@ function toggleMedirDwcConfigBlock(n) {
 
 function initConfigUI() {
   const cfgTorre = state.configTorre || {};
+  if (cfgTorre.operativa == null) cfgTorre.operativa = true;
   const cp = document.getElementById('configPanel');
   if (cp) cp.classList.toggle('config-panel--dwc', cfgTorre.tipoInstalacion === 'dwc');
 
@@ -1513,6 +1514,9 @@ function initConfigUI() {
   }
   if (document.getElementById('tab-mediciones')?.classList.contains('active') && typeof actualizarResumenReposicionParcialUI === 'function') {
     actualizarResumenReposicionParcialUI();
+  }
+  if (typeof actualizarEstadoOperativaUI === 'function') {
+    actualizarEstadoOperativaUI();
   }
 }
 

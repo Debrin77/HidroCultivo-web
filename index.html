@@ -416,6 +416,17 @@
         </div>
         <span class="medir-torre-banner-action">Cambiar ›</span>
       </button>
+      <div class="medir-operativa-row" role="group" aria-label="Estado operativo de la instalación activa">
+        <div>
+          <div class="medir-operativa-title">Estado del sistema</div>
+          <div class="medir-operativa-sub" id="medirEstadoOperativaTag">Operativa</div>
+        </div>
+        <button type="button" class="toggle-switch on" id="sistemaOperativaSwitch" onclick="toggleSistemaOperativa()"
+          role="switch" aria-checked="true"
+          aria-label="Cambiar estado de la instalación entre operativa y stand-by">
+          <span class="toggle-knob" aria-hidden="true"></span>
+        </button>
+      </div>
 
       <div class="card ultima-medicion-card" id="ultimaMedicionCard">
         <div class="card-title">⏱ Última medición</div>

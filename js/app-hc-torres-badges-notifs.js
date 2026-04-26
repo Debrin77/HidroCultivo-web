@@ -348,6 +348,42 @@ function actualizarHeaderTorre() {
   if (btnCrear) btnCrear.style.display = (state.torres.length >= MAX_TORRES) ? 'none' : 'block';
 }
 
+function sistemaEstaOperativa(cfg) {
+  const c = cfg || state.configTorre || {};
+  return c.operativa !== false;
+}
+
+function actualizarEstadoOperativaUI() {
+  const on = sistemaEstaOperativa();
+  const tag = document.getElementById('medirEstadoOperativaTag');
+  if (tag) {
+    tag.textContent = on ? 'Operativa' : 'Stand-by / descanso';
+    tag.classList.toggle('medir-operativa-sub--off', !on);
+  }
+  const sw = document.getElementById('sistemaOperativaSwitch');
+  if (sw) {
+    sw.classList.toggle('on', on);
+    sw.setAttribute('aria-checked', on ? 'true' : 'false');
+  }
+}
+
+function toggleSistemaOperativa() {
+  initTorres();
+  if (!state.configTorre) state.configTorre = {};
+  const on = sistemaEstaOperativa();
+  state.configTorre.operativa = !on;
+  guardarEstadoTorreActual();
+  saveState();
+  actualizarEstadoOperativaUI();
+  actualizarBadgesNutriente();
+  if (document.getElementById('tab-riego')?.classList.contains('active') && typeof calcularRiego === 'function') {
+    calcularRiego({ forceRefresh: true });
+  }
+  showToast(state.configTorre.operativa === false
+    ? '⏸ Sistema en stand-by (descanso/limpieza)'
+    : '✅ Sistema marcado como operativa');
+}
+
 function textoTipoInstalacionTorre(cfg) {
   return typeof etiquetaSistemaHidroponicoBreve === 'function'
     ? etiquetaSistemaHidroponicoBreve(cfg)
@@ -597,7 +633,8 @@ function actualizarBadgesNutriente() {
     const vMax = getVolumenDepositoMaxLitros(cfg);
     const vMez = getVolumenMezclaLitros(cfg);
     const volTxt = vMez < vMax - 0.05 ? vMax + 'L máx · ' + vMez + 'L mezcla' : vMax + 'L';
-    dashTorreInfo.textContent = niv + ' niveles · ' + ces + ' cestas · ' + volTxt + ' · ' + nut.nombre;
+    const estadoTxt = sistemaEstaOperativa(cfg) ? 'operativa' : 'stand-by';
+    dashTorreInfo.textContent = niv + ' niveles · ' + ces + ' cestas · ' + volTxt + ' · ' + nut.nombre + ' · ' + estadoTxt;
   }
 
   // Pestaña Medir — banner torre
@@ -605,6 +642,7 @@ function actualizarBadgesNutriente() {
   const medirTorreNombre = document.getElementById('medirTorreNombre');
   if (medirTorreEmoji)  medirTorreEmoji.textContent  = torre.emoji || '🌿';
   if (medirTorreNombre) medirTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
+  actualizarEstadoOperativaUI();
 
   // Pestaña Sistema — franja nutriente (una sola; antes había tarjeta duplicada debajo)
   const torreBandera = document.getElementById('torreBadgeBandera');

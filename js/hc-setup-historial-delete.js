@@ -13,7 +13,12 @@ function borrarMedicion(fecha, hora, torreId) {
     showToast('No se encontró la instalación', true);
     return;
   }
-  const i = t.mediciones.findIndex(m => m && m.fecha === fecha && m.hora === hora);
+  const hhmm = String(hora || '').slice(0, 5);
+  const i = t.mediciones.findIndex(m => {
+    if (!m || m.fecha !== fecha) return false;
+    const mh = String(m.hora || '');
+    return mh === String(hora || '') || mh.slice(0, 5) === hhmm;
+  });
   if (i < 0) {
     showToast('No se encontró el dato', true);
     return;
@@ -48,6 +53,12 @@ function borrarMedicion(fecha, hora, torreId) {
   if ((state.torreActiva || 0) === slot) {
     state.mediciones = t.mediciones;
     state.ultimaMedicion = ult ? { ...ult } : null;
+  }
+  // Refrescar caché agregada de historial (si no, la fila borrada puede seguir visible).
+  if (typeof recolectarMedicionesTodasInstalaciones === 'function') {
+    histDatos = recolectarMedicionesTodasInstalaciones();
+  } else {
+    histDatos = state.mediciones || [];
   }
   saveState();
   renderHistMediciones();
