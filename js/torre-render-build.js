@@ -674,7 +674,6 @@ function generarSVGDwc() {
     }
   }
 
-  s += `<text class="diag-label-strong dwc-diag-caption" x="${W / 2}" y="${planBottom + 11}" text-anchor="middle" fill="#94a3b8" font-size="8.2" font-weight="700" font-family="Inconsolata,monospace">Tapa (${formaDwcTxt}) = cestas · misma disposición que Lista (fila 1 arriba)</text>`;
 
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
@@ -739,7 +738,7 @@ function generarSVGDwc() {
 
   /* Color por litros de mezcla (no por % del máx.): depósito grande + poca mezcla es válido. */
   const volCol = volEtiqueta < 6 ? '#e11d48' : volEtiqueta < 12 ? '#d97706' : '#0284c7';
-  s += `<text x="${W / 2}" y="${tankStartY + tankH + 22}" font-family="Syne,sans-serif" font-size="14" font-weight="800" fill="${volCol}" text-anchor="middle">${volEtiqueta} L</text>`;
+  s += `<text x="${W / 2}" y="${tankStartY + tankH + 24}" font-family="Syne,sans-serif" font-size="19" font-weight="900" fill="${volCol}" text-anchor="middle">${volEtiqueta} L</text>`;
 
 
   const pad = 14;
@@ -896,15 +895,10 @@ function generarSVGTorre() {
     ${ta ? `<animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>` : ''}
   </ellipse>`;
 
-  // Texto volumen: centrado en el agua visible (antes: aguaY-8 pegaba al techo si el depósito iba lleno)
-  const aguaBottom = aguaY + aguaH + 7;
-  const volTextIdeal = (aguaY + aguaBottom) / 2 + 5;
-  const volTextY = Math.max(
-    DEP_Y + 16,
-    Math.min(DEP_Y + DEP_H - 26, volTextIdeal)
-  );
-  s += `<text x="${CX}" y="${volTextY}" font-family="Syne,sans-serif"
-    font-size="15" font-weight="800" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volActual}L</text>`;
+  // Volumen fuera del depósito para máxima legibilidad (igual criterio que DWC).
+  const volTorreLabel = Math.round(Number(volActual) * 10) / 10;
+  s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
+    font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreLabel} L</text>`;
 
   // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {
