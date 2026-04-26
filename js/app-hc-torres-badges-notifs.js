@@ -370,6 +370,13 @@ function setStandbyLockDisabled(el, on) {
       el.disabled = true;
       el.dataset.standbyLocked = '1';
     }
+    if (
+      (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) &&
+      !el.readOnly
+    ) {
+      el.readOnly = true;
+      el.dataset.standbyReadonly = '1';
+    }
     el.classList.add('is-standby-disabled');
     el.setAttribute('aria-disabled', 'true');
     return;
@@ -378,8 +385,28 @@ function setStandbyLockDisabled(el, on) {
     el.disabled = false;
     delete el.dataset.standbyLocked;
   }
+  if (el.dataset.standbyReadonly === '1') {
+    el.readOnly = false;
+    delete el.dataset.standbyReadonly;
+  }
   el.classList.remove('is-standby-disabled');
   el.setAttribute('aria-disabled', el.disabled ? 'true' : 'false');
+}
+
+function aplicarBloqueosStandbyPorTab(on) {
+  const tabMediciones = document.getElementById('tab-mediciones');
+  if (tabMediciones) {
+    tabMediciones.querySelectorAll('input, textarea, select').forEach(el => {
+      setStandbyLockDisabled(el, !on);
+    });
+  }
+  const tabSistema = document.getElementById('tab-sistema');
+  if (tabSistema) {
+    tabSistema.querySelectorAll('button, input, textarea, select').forEach(el => {
+      if (el.id === 'sistemaOperativaSwitch') return;
+      setStandbyLockDisabled(el, !on);
+    });
+  }
 }
 
 function aplicarEstadoStandbyUI() {
@@ -419,19 +446,14 @@ function aplicarEstadoStandbyUI() {
     if (!(btn instanceof HTMLButtonElement)) return;
     setStandbyLockDisabled(btn, !on);
   });
-  const tabMediciones = document.getElementById('tab-mediciones');
-  if (tabMediciones) {
-    tabMediciones.querySelectorAll('input, textarea, select').forEach(el => {
-      setStandbyLockDisabled(el, !on);
-    });
-  }
-  const tabSistema = document.getElementById('tab-sistema');
-  if (tabSistema) {
-    tabSistema.querySelectorAll('button, input, textarea, select').forEach(el => {
-      if (el.id === 'sistemaOperativaSwitch') return;
-      setStandbyLockDisabled(el, !on);
-    });
+  aplicarBloqueosStandbyPorTab(on);
+  // Reaplicar tras renders diferidos de la pestaña para evitar que otros módulos reactiven campos.
+  requestAnimationFrame(() => {
+    if (!sistemaEstaOperativa()) aplicarBloqueosStandbyPorTab(false);
   });
+  setTimeout(() => {
+    if (!sistemaEstaOperativa()) aplicarBloqueosStandbyPorTab(false);
+  }, 180);
   const accionesCriticas = [
     '[onclick*="abrirChecklist(false)"]',
     '[onclick*="confirmarReposicionDeposito"]',
