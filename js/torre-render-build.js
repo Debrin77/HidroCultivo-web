@@ -786,6 +786,41 @@ function generarSVGDwc() {
   const lidROutCyl = Math.min(planW, planH) / 2 - 1;
   const lidRInCyl = Math.max(12, lidROutCyl - planPad);
 
+  let dwcLidCylNoCabenOverlay = '';
+  if (formaDwc === 'cilindrico') {
+    const rimMm = Number(cfg.dwcNetPotRimMm);
+    const Lcm = Number(cfg.dwcDepositoLargoCm);
+    const Wcm = Number(cfg.dwcDepositoAnchoCm);
+    let marcoMm = 0;
+    let huecoMm = 4;
+    if (cfg.dwcTapaMarcoPorLadoMm != null && Number.isFinite(Number(cfg.dwcTapaMarcoPorLadoMm)) && Number(cfg.dwcTapaMarcoPorLadoMm) >= 0) {
+      marcoMm = Number(cfg.dwcTapaMarcoPorLadoMm);
+    }
+    if (cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0) {
+      huecoMm = Number(cfg.dwcTapaHuecoMm);
+    }
+    if (
+      typeof dwcEvaluarCapestEnTapa === 'function' &&
+      Number.isFinite(rimMm) &&
+      rimMm > 0 &&
+      Number.isFinite(Lcm) &&
+      Number.isFinite(Wcm)
+    ) {
+      const evLid = dwcEvaluarCapestEnTapa(N, C, rimMm, Lcm, Wcm, marcoMm, huecoMm, 'cilindrico');
+      if (evLid.estado === 'no') {
+        const rArm = lidRInCyl * 0.72;
+        const cx = lidCxCyl;
+        const cy = lidCyCyl;
+        dwcLidCylNoCabenOverlay =
+          `<g class="dwc-lid-cyl-no-caben" pointer-events="none" aria-hidden="true">` +
+          `<line x1="${(cx - rArm).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx + rArm).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="#dc2626" stroke-width="3.2" stroke-linecap="round"/>` +
+          `<line x1="${cx.toFixed(1)}" y1="${(cy - rArm).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy + rArm).toFixed(1)}" stroke="#dc2626" stroke-width="3.2" stroke-linecap="round"/>` +
+          `<text x="${cx.toFixed(1)}" y="${(cy + lidRInCyl * 0.28).toFixed(1)}" text-anchor="middle" fill="#991b1b" font-size="9" font-weight="800" font-family="Syne,sans-serif">No caben en tapa</text>` +
+          `</g>`;
+      }
+    }
+  }
+
   if (formaDwc === 'cilindrico') {
     s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidROutCyl.toFixed(2)}" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
     s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidRInCyl.toFixed(2)}" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
@@ -833,6 +868,7 @@ function generarSVGDwc() {
   }
   if (formaDwc === 'cilindrico') {
     s += `</g>`;
+    s += dwcLidCylNoCabenOverlay;
   }
 
   /* Separador cenital → frontal */

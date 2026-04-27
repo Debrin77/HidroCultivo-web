@@ -802,11 +802,35 @@ function dwcGridSpanMm(count, rimDiameterMm, gutterMm) {
 }
 
 /**
+ * Rejilla rectangular de cestas (spanC × spanR mm entre bordes exteriores) centrada en tapa circular:
+ * la esquina más lejana + radio del aro debe caber en el radio útil.
+ */
+function dwcCabeRejillaRectangularEnCirculoUtilMm(spanColsMm, spanRowsMm, rimDiameterMm, radioUtilMm) {
+  if (
+    !Number.isFinite(spanColsMm) ||
+    !Number.isFinite(spanRowsMm) ||
+    !Number.isFinite(rimDiameterMm) ||
+    rimDiameterMm <= 0 ||
+    !Number.isFinite(radioUtilMm) ||
+    radioUtilMm <= 0
+  ) {
+    return false;
+  }
+  const hc = spanColsMm / 2;
+  const hr = spanRowsMm / 2;
+  const dist = Math.sqrt(hc * hc + hr * hr);
+  const rPot = rimDiameterMm / 2;
+  return dist + rPot <= radioUtilMm + 0.35;
+}
+
+/**
  * Comprueba si filas × cestas/fila y Ø cesta caben en largo × ancho de tapa (cualquier orientación).
+ * En **cilíndrico**, la perforación útil es circular (Ø interior del depósito): la rejilla ha de caber en ese círculo.
  * @param {number} [marcoPorLadoMm=0] resta 2× este valor a cada dimensión interior útil (marco no perforado).
  * @param {number} [gutterMm] separación entre cestas; por defecto DWC_TAPA_HUECO_DEFAULT_MM.
+ * @param {string} [formaDeposito] `prismatico` | `cilindrico` | … (opcional; sin valor → prismático).
  */
-function dwcEvaluarCapestEnTapa(filas, cols, rimMm, largoCm, anchoCm, marcoPorLadoMm, gutterMm) {
+function dwcEvaluarCapestEnTapa(filas, cols, rimMm, largoCm, anchoCm, marcoPorLadoMm, gutterMm, formaDeposito) {
   if (rimMm == null || largoCm == null || anchoCm == null) return { estado: 'incompleto' };
   const marco = Number.isFinite(Number(marcoPorLadoMm)) && Number(marcoPorLadoMm) >= 0 ? Number(marcoPorLadoMm) : 0;
   const hueco =
@@ -829,11 +853,52 @@ function dwcEvaluarCapestEnTapa(filas, cols, rimMm, largoCm, anchoCm, marcoPorLa
         ' cm. Reduce el marco o revisa medidas del depósito.',
     };
   }
+  const forma = dwcNormalizeDepositoForma(formaDeposito);
+  if (forma === 'cilindrico') {
+    const dUtilMm = Math.min(Lmm, Wmm);
+    const radioUtil = dUtilMm / 2;
+    const cabeCirc = dwcCabeRejillaRectangularEnCirculoUtilMm(spanC, spanR, rimMm, radioUtil);
+    if (cabeCirc) {
+      return {
+        estado: 'ok',
+        spanC,
+        spanR,
+        Lmm,
+        Wmm,
+        marco,
+        hueco,
+        tapaCircular: true,
+        diamUtilMm: dUtilMm,
+      };
+    }
+    return {
+      estado: 'no',
+      tapaCircular: true,
+      diamUtilMm: dUtilMm,
+      msg:
+        'En tapa circular (~Ø ' +
+        Math.round(dUtilMm) +
+        ' mm útil) no caben ' +
+        cols +
+        '×' +
+        filas +
+        ' cestas de Ø ' +
+        rimMm +
+        ' mm con ' +
+        hueco +
+        ' mm entre ellas (ocupan ~' +
+        Math.round(spanC) +
+        '×' +
+        Math.round(spanR) +
+        ' mm en planta). Reduce filas/cestas por fila, aumenta Ø del depósito o usa cestas más pequeñas; en cubos redondos suele ir bien una cesta grande o pocas pequeñas.',
+    };
+  }
   const fit1 = spanC <= Lmm && spanR <= Wmm;
   const fit2 = spanC <= Wmm && spanR <= Lmm;
-  if (fit1 || fit2) return { estado: 'ok', spanC, spanR, Lmm, Wmm, marco, hueco };
+  if (fit1 || fit2) return { estado: 'ok', spanC, spanR, Lmm, Wmm, marco, hueco, tapaCircular: false };
   return {
     estado: 'no',
+    tapaCircular: false,
     msg:
       'Con ' +
       cols +
@@ -858,7 +923,7 @@ function dwcEvaluarCapestEnTapa(filas, cols, rimMm, largoCm, anchoCm, marcoPorLa
 }
 
 /** Máximo teórico de cestas en tapa (rejilla) con el Ø aro y separación indicados. */
-function dwcMaxCestasTeoricasEnTapa(rimMm, largoCm, anchoCm, marcoPorLadoMm, gutterMm) {
+function dwcMaxCestasTeoricasEnTapa(rimMm, largoCm, anchoCm, marcoPorLadoMm, gutterMm, formaDeposito) {
   const marco = Number.isFinite(Number(marcoPorLadoMm)) && Number(marcoPorLadoMm) >= 0 ? Number(marcoPorLadoMm) : 0;
   const hueco =
     Number.isFinite(Number(gutterMm)) && Number(gutterMm) >= 0 ? Number(gutterMm) : DWC_TAPA_HUECO_DEFAULT_MM;
@@ -870,10 +935,32 @@ function dwcMaxCestasTeoricasEnTapa(rimMm, largoCm, anchoCm, marcoPorLadoMm, gut
   const Wmm = Wcm * 10 - 2 * marco;
   if (Lmm <= 0 || Wmm <= 0) return null;
   const maxAlong = len => Math.floor((len + hueco) / (D + hueco));
+  const forma = dwcNormalizeDepositoForma(formaDeposito);
+  const meta = { rimMm: D, formaDeposito: forma, marco, hueco };
+  if (forma === 'cilindrico') {
+    const dUtilMm = Math.min(Lmm, Wmm);
+    const radioUtil = dUtilMm / 2;
+    const lim = Math.max(1, maxAlong(dUtilMm) + 2);
+    let best = { max: 0, cols: 0, filas: 0, Lmm: dUtilMm, Wmm: dUtilMm, marco, hueco, ...meta };
+    for (let c = 1; c <= lim; c++) {
+      for (let r = 1; r <= lim; r++) {
+        const sc = dwcGridSpanMm(c, D, hueco);
+        const sr = dwcGridSpanMm(r, D, hueco);
+        if (sc == null || sr == null) continue;
+        if (!dwcCabeRejillaRectangularEnCirculoUtilMm(sc, sr, D, radioUtil)) continue;
+        const prod = c * r;
+        if (prod > best.max) {
+          best = { max: prod, cols: c, filas: r, Lmm: dUtilMm, Wmm: dUtilMm, marco, hueco, ...meta };
+        }
+      }
+    }
+    if (best.max < 1) return { max: 0, cols: 0, filas: 0, Lmm: dUtilMm, Wmm: dUtilMm, marco, hueco, ...meta };
+    return best;
+  }
   const cols = maxAlong(Lmm);
   const filas = maxAlong(Wmm);
-  if (cols < 1 || filas < 1) return { max: 0, cols, filas, Lmm, Wmm, marco, hueco };
-  return { max: cols * filas, cols, filas, Lmm, Wmm, marco, hueco };
+  if (cols < 1 || filas < 1) return { max: 0, cols, filas, Lmm, Wmm, marco, hueco, ...meta };
+  return { max: cols * filas, cols, filas, Lmm, Wmm, marco, hueco, ...meta };
 }
 
 function dwcMaxCestasDesdeConfigTorre(cfg) {
@@ -890,7 +977,7 @@ function dwcMaxCestasDesdeConfigTorre(cfg) {
     cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0
       ? Number(cfg.dwcTapaHuecoMm)
       : DWC_TAPA_HUECO_DEFAULT_MM;
-  return dwcMaxCestasTeoricasEnTapa(rim, L, W, marco, hueco);
+  return dwcMaxCestasTeoricasEnTapa(rim, L, W, marco, hueco, cfg.dwcDepositoForma);
 }
 
 /** Guarda en la config el máximo teórico y metadatos (checklist, guardar sistema, etc.). */
@@ -985,8 +1072,6 @@ function dwcCalcRejillaObjetivoDesdeMax(o, objetivoSpec) {
  */
 function dwcCalcRejillaDesdeTotalCestas(o, nDeseado) {
   if (!o || o.max < 1) return null;
-  const F = o.filas;
-  const C = o.cols;
   let nRaw = parseInt(String(nDeseado), 10);
   if (!Number.isFinite(nRaw) || nRaw < 1) nRaw = o.max;
   const nCap = Math.min(nRaw, o.max);
@@ -996,11 +1081,34 @@ function dwcCalcRejillaDesdeTotalCestas(o, nDeseado) {
     return Math.abs(Math.log(r + 1e-9) - Math.log(ratio + 1e-9));
   };
   const candidates = [];
-  for (let nf = 1; nf <= F; nf++) {
-    for (let nc = 1; nc <= C; nc++) {
-      const prod = nf * nc;
-      if (prod > o.max || prod > nCap) continue;
-      candidates.push({ filas: nf, cols: nc, prod });
+  const formaO = dwcNormalizeDepositoForma(o.formaDeposito);
+  if (formaO === 'cilindrico' && Number.isFinite(Number(o.rimMm)) && Number(o.rimMm) > 0) {
+    const D = Number(o.rimMm);
+    const marco = Number(o.marco) || 0;
+    const hueco = Number.isFinite(Number(o.hueco)) && Number(o.hueco) >= 0 ? Number(o.hueco) : DWC_TAPA_HUECO_DEFAULT_MM;
+    const largoCm = (Number(o.Lmm) + 2 * marco) / 10;
+    const anchoCm = (Number(o.Wmm) + 2 * marco) / 10;
+    const dUtilMm = Math.min(Number(o.Lmm), Number(o.Wmm));
+    const maxAlong = len => Math.floor((len + hueco) / (D + hueco));
+    const lim = Math.max(1, maxAlong(dUtilMm) + 2);
+    for (let nf = 1; nf <= lim; nf++) {
+      for (let nc = 1; nc <= lim; nc++) {
+        const prod = nf * nc;
+        if (prod > nCap) continue;
+        const ev = dwcEvaluarCapestEnTapa(nf, nc, D, largoCm, anchoCm, marco, hueco, 'cilindrico');
+        if (ev.estado !== 'ok') continue;
+        candidates.push({ filas: nf, cols: nc, prod });
+      }
+    }
+  } else {
+    const F = o.filas;
+    const C = o.cols;
+    for (let nf = 1; nf <= F; nf++) {
+      for (let nc = 1; nc <= C; nc++) {
+        const prod = nf * nc;
+        if (prod > o.max || prod > nCap) continue;
+        candidates.push({ filas: nf, cols: nc, prod });
+      }
     }
   }
   if (!candidates.length) {
@@ -1184,7 +1292,8 @@ function aplicarDwcRejillaDesdeSetup(modoAplicacion) {
     );
     return;
   }
-  const o = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
+  const formaTap = dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value);
+  const o = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE, formaTap);
   if (!o || o.max < 1) {
     showToast('No se puede calcular la rejilla con esos datos.', true);
     return;
@@ -1268,8 +1377,40 @@ function refreshDwcVoluntariaCabenHint() {
     hintV.textContent = '✗ No caben (máx. ' + o.max + ').';
     hintV.classList.add('torre-dwc-vol-hint--bad');
   } else {
-    hintV.textContent = '✓ Caben.';
-    hintV.classList.add('torre-dwc-vol-hint--ok');
+    const formaV = dwcNormalizeDepositoForma(cfgCalc.dwcDepositoForma);
+    let okVol = true;
+    if (formaV === 'cilindrico') {
+      const r = dwcCalcRejillaDesdeTotalCestas(o, raw);
+      if (r) {
+        const rim = Number(cfgCalc.dwcNetPotRimMm);
+        const L = cfgCalc.dwcDepositoLargoCm;
+        const W = cfgCalc.dwcDepositoAnchoCm;
+        let marcoV = 0;
+        let huecoV = DWC_TAPA_HUECO_DEFAULT_MM;
+        if (
+          cfgCalc.dwcTapaMarcoPorLadoMm != null &&
+          Number.isFinite(Number(cfgCalc.dwcTapaMarcoPorLadoMm)) &&
+          Number(cfgCalc.dwcTapaMarcoPorLadoMm) >= 0
+        ) {
+          marcoV = Number(cfgCalc.dwcTapaMarcoPorLadoMm);
+        }
+        if (cfgCalc.dwcTapaHuecoMm != null && Number.isFinite(Number(cfgCalc.dwcTapaHuecoMm)) && Number(cfgCalc.dwcTapaHuecoMm) >= 0) {
+          huecoV = Number(cfgCalc.dwcTapaHuecoMm);
+        }
+        const evR =
+          Number.isFinite(rim) && rim > 0 && L != null && W != null
+            ? dwcEvaluarCapestEnTapa(r.filas, r.cols, rim, L, W, marcoV, huecoV, 'cilindrico')
+            : { estado: 'incompleto' };
+        if (evR.estado !== 'ok') okVol = false;
+      }
+    }
+    if (!okVol) {
+      hintV.textContent = '✗ Esa cantidad no admite rejilla válida en tapa redonda (reduce total o cambia Ø cesta/hueco).';
+      hintV.classList.add('torre-dwc-vol-hint--bad');
+    } else {
+      hintV.textContent = '✓ Caben.';
+      hintV.classList.add('torre-dwc-vol-hint--ok');
+    }
   }
 }
 
@@ -1405,7 +1546,8 @@ function refreshDwcTapHintSetup() {
   const marcoE = mh.marco != null ? mh.marco : 0;
   const huecoE = mh.hueco != null ? mh.hueco : DWC_TAPA_HUECO_DEFAULT_MM;
   const spec = dwcGetObjetivoSpec(dwcObjetivoDesdeInputId('setupDwcObjetivoCultivo'));
-  const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE);
+  const formaTap = dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value);
+  const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE, formaTap);
   if (ev.estado === 'incompleto') {
     el.classList.add('setup-hidden');
     el.textContent = '';
@@ -1429,20 +1571,35 @@ function refreshDwcTapHintSetup() {
     el.style.background = '#ecfdf5';
     el.style.border = '1.5px solid #86efac';
     el.style.color = '#14532d';
-    el.textContent =
-      '✓ La rejilla cabe en el área útil de la tapa (~' +
-      Math.round(ev.Lmm) +
-      '×' +
-      Math.round(ev.Wmm) +
-      ' mm; marco ' +
-      ev.marco +
-      ' mm/lado, ' +
-      ev.hueco +
-      ' mm entre cestas). Esta medida es de tapa (cestas), no de litros útiles. Objetivo: ' +
-      spec.label +
-      ' (' +
-      spec.ccTxt +
-      ' c-c).';
+    el.textContent = ev.tapaCircular
+      ? '✓ Rejilla ' +
+        cols +
+        '×' +
+        filas +
+        ' cabe en tapa circular (~Ø ' +
+        Math.round(ev.diamUtilMm != null ? ev.diamUtilMm : Math.min(ev.Lmm, ev.Wmm)) +
+        ' mm útil; marco ' +
+        ev.marco +
+        ' mm/lado, ' +
+        ev.hueco +
+        ' mm entre cestas). Objetivo: ' +
+        spec.label +
+        ' (' +
+        spec.ccTxt +
+        ' c-c).'
+      : '✓ La rejilla cabe en el área útil de la tapa (~' +
+        Math.round(ev.Lmm) +
+        '×' +
+        Math.round(ev.Wmm) +
+        ' mm; marco ' +
+        ev.marco +
+        ' mm/lado, ' +
+        ev.hueco +
+        ' mm entre cestas). Esta medida es de tapa (cestas), no de litros útiles. Objetivo: ' +
+        spec.label +
+        ' (' +
+        spec.ccTxt +
+        ' c-c).';
   } else {
     el.style.background = '#fffbeb';
     el.style.border = '1.5px solid #fde68a';
@@ -1453,7 +1610,7 @@ function refreshDwcTapHintSetup() {
   const btnPriS = document.getElementById('btnDwcAplicarRejillaPrincipalSetup');
   const btnSecS = document.getElementById('btnDwcAplicarRejillaSecundariaSetup');
   if (rim != null && L != null && W != null) {
-    const om = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE);
+    const om = dwcMaxCestasTeoricasEnTapa(rim, L, W, marcoE, huecoE, formaTap);
     const modoPri = dwcNormalizeRejillaModo(document.getElementById('setupDwcRejillaPreferida')?.value);
     const rangoObj = dwcRangoCestasOrientativoPorObjetivo(om, spec);
     const ok = om && om.max >= 1;
@@ -1959,7 +2116,8 @@ function refreshDwcTapHintSistema() {
   if (cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0) {
     huecoE = Number(cfg.dwcTapaHuecoMm);
   }
-  const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE);
+  const formaTap = dwcNormalizeDepositoForma(cfg.dwcDepositoForma);
+  const ev = dwcEvaluarCapestEnTapa(filas, cols, rim, L, W, marcoE, huecoE, formaTap);
   if (ev.estado === 'incompleto') {
     el.style.display = 'none';
     el.textContent = '';
@@ -1975,20 +2133,31 @@ function refreshDwcTapHintSistema() {
     el.style.background = '#ecfdf5';
     el.style.border = '1.5px solid #86efac';
     el.style.color = '#14532d';
-    el.textContent =
-      '✓ Rejilla ' +
-      cols +
-      '×' +
-      filas +
-      ' cabe (~' +
-      Math.round(ev.Lmm) +
-      '×' +
-      Math.round(ev.Wmm) +
-      ' mm útil; marco ' +
-      ev.marco +
-      ' mm/lado, ' +
-      ev.hueco +
-      ' mm entre cestas). Geometría de tapa; litros útiles se calculan aparte.';
+    el.textContent = ev.tapaCircular
+      ? '✓ Rejilla ' +
+        cols +
+        '×' +
+        filas +
+        ' cabe en tapa circular (~Ø ' +
+        Math.round(ev.diamUtilMm != null ? ev.diamUtilMm : Math.min(ev.Lmm, ev.Wmm)) +
+        ' mm útil; marco ' +
+        ev.marco +
+        ' mm/lado, ' +
+        ev.hueco +
+        ' mm entre cestas). Geometría de tapa; litros útiles se calculan aparte.'
+      : '✓ Rejilla ' +
+        cols +
+        '×' +
+        filas +
+        ' cabe (~' +
+        Math.round(ev.Lmm) +
+        '×' +
+        Math.round(ev.Wmm) +
+        ' mm útil; marco ' +
+        ev.marco +
+        ' mm/lado, ' +
+        ev.hueco +
+        ' mm entre cestas). Geometría de tapa; litros útiles se calculan aparte.';
     return;
   }
   el.style.background = '#fffbeb';
