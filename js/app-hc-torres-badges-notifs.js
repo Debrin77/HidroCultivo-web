@@ -718,6 +718,49 @@ function actualizarBadgesNutriente() {
   }
   if (rangePH) rangePH.textContent = phMin + ' – ' + phMax;
 
+  const rangeVol = document.getElementById('paramRangeVol');
+  const inputVol = document.getElementById('inputVol');
+  if (rangeVol && typeof getVolumenDepositoMaxLitros === 'function') {
+    const vr = Math.round(Number(getVolumenDepositoMaxLitros(cfg)) * 10) / 10;
+    if (Number.isFinite(vr) && vr > 0) {
+      if (cfg.tipoInstalacion === 'dwc') {
+        let capG = null;
+        if (typeof getDwcCapacidadLitrosDesdeConfig === 'function') {
+          capG = getDwcCapacidadLitrosDesdeConfig(cfg);
+        }
+        let vSafe = null;
+        if (typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
+          vSafe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
+        }
+        if (
+          capG != null &&
+          vSafe != null &&
+          Number.isFinite(capG) &&
+          Number.isFinite(vSafe) &&
+          capG > vSafe + 0.4
+        ) {
+          rangeVol.textContent =
+            '~' +
+            Math.round(vSafe * 10) / 10 +
+            ' L útil seguro (geom. ~' +
+            Math.round(capG * 10) / 10 +
+            ' L)';
+        } else {
+          rangeVol.textContent = '~' + vr + ' L (referencia DWC · bajo sustrato)';
+        }
+      } else {
+        rangeVol.textContent = '≈ ' + vr + ' L (capacidad depósito)';
+      }
+      if (inputVol) {
+        const vm = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : vr;
+        const ph = Number.isFinite(vm) && vm > 0 ? Math.round(vm * 10) / 10 : vr;
+        inputVol.placeholder = String(ph);
+        const capIn = Math.min(800, Math.max(Math.ceil(vr + 2), 20));
+        inputVol.setAttribute('max', String(capIn));
+      }
+    }
+  }
+
   // Dashboard
   const dashNombre  = document.getElementById('dashNutrienteNombre');
   const dashDetalle = document.getElementById('dashNutrienteDetalle');

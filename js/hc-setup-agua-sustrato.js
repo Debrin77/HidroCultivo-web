@@ -1518,6 +1518,9 @@ function initConfigUI() {
   if (typeof actualizarEstadoOperativaUI === 'function') {
     actualizarEstadoOperativaUI();
   }
+  try {
+    if (typeof actualizarBadgesNutriente === 'function') actualizarBadgesNutriente();
+  } catch (_) {}
 }
 
 

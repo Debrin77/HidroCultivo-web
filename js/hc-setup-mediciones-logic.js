@@ -99,7 +99,12 @@ function instalacionEsUbicacionInterior(cfg) {
   return (c.ubicacion || 'exterior') === 'interior';
 }
 
-/** Capacidad máxima del depósito (L) — tope físico del recipiente. `volDeposito` en config. */
+/**
+ * Volumen de referencia (L) para escalados y límites en Medir / checklist:
+ * - Torre y NFT: `volDeposito` (tope del depósito).
+ * - DWC: si se puede calcular, **llenado seguro** bajo la base del sustrato (`getDwcVolumenSeguroMaxLitrosDesdeConfig`);
+ *   si no, `volDeposito` o capacidad geométrica.
+ */
 function getVolumenDepositoMaxLitros(cfg) {
   cfg = cfg || state.configTorre || {};
   if (cfg.tipoInstalacion === 'dwc' && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
@@ -526,15 +531,56 @@ function evalVol(vol, ec, ph) {
     return;
   }
 
-  if (vol >= 16) {
-    setStatus('statusVol','ok','✅',`Volumen correcto`);
-    setCard('cardVol','ok');
-    showCorreccion('correccionVol','');
+  const volRef =
+    Number.isFinite(volObjSafe) && volObjSafe > 0 ? volObjSafe : Math.max(RANGOS.vol.min, VOL_OBJETIVO);
+  const umbralOk = Math.max(4, volRef * 0.93);
+  const umbralCrit = Math.max(2.5, volRef * 0.68);
+  const umbralWarnBajo = Math.max(3, volRef * 0.78);
+  const esDwc = cfgK.tipoInstalacion === 'dwc';
+
+  if (vol > volRef + 0.35) {
+    const exceso = Math.round((vol - volRef) * 10) / 10;
+    setStatus(
+      'statusVol',
+      'warn',
+      '🟡',
+      esDwc
+        ? 'Volumen por encima del llenado seguro orientativo — riesgo de mojar el sustrato'
+        : 'Volumen por encima de la referencia configurada'
+    );
+    setCard('cardVol', 'warn');
+    const extraDwc =
+      esDwc
+        ? '<div class="correccion-muted correccion-muted--tight">En DWC la referencia (~' +
+          volRef +
+          ' L) deja ~0,5–1 cm de aire bajo la base del sustrato; el tope geométrico del depósito puede ser mayor.</div>'
+        : '';
+    showCorreccion(
+      'correccionVol',
+      '<div class="correccion-title">💧 Nivel alto</div>' +
+        '<div class="correccion-item"><span>Sobre referencia útil</span>' +
+        '<span class="correccion-valor">+' +
+        exceso +
+        ' L</span></div>' +
+        extraDwc +
+        '<div class="correccion-muted correccion-muted--loose">Si fue medición real, revisa llenado frente a cestas; si anotas volumen «a ojo», alinea con Sistema.</div>'
+    );
+    return;
+  }
+
+  if (vol >= umbralOk) {
+    const suf =
+      esDwc
+        ? ' (~' + Math.round(volRef * 10) / 10 + ' L ref. bajo sustrato)'
+        : ' (~' + Math.round(volRef * 10) / 10 + ' L depósito)';
+    setStatus('statusVol', 'ok', '✅', 'Volumen correcto' + suf);
+    setCard('cardVol', 'ok');
+    showCorreccion('correccionVol', '');
   } else {
     const nut = getNutrienteTorre();
     const cfg = state.configTorre || {};
     const volObj = getVolumenDepositoMaxLitros(cfg);
-    const litrosAnadir = Math.ceil((volObj - vol) * 10) / 10;
+    const litrosAnadir = Math.max(0.1, Math.round((volObj - vol) * 10) / 10);
     const ref = getRefDosisFabricante(nut.id);
     const calmagMl = usarCalMagEnRecarga() && nut.calmagNecesario
       ? mlCalMagParaAguaBlanda(litrosAnadir)
@@ -545,13 +591,17 @@ function evalVol(vol, ec, ph) {
     const ecActual = isNaN(ec) ? 1350 : ec;
     const anadirNutrientes = ecActual < (nut.ecObjetivo?.[0] || 900);
 
-    const nivel = vol < 12 ? 'bad' : 'warn';
-    setStatus('statusVol', nivel, vol < 12 ? '🔴' : '🟡',
-      vol < 12 ? 'Volumen crítico — reponer urgente' : 'Volumen bajo — reponer depósito');
-    setCard('cardVol', vol < 12 ? 'alert' : 'warn');
+    const nivel = vol < umbralCrit ? 'bad' : 'warn';
+    setStatus('statusVol', nivel, vol < umbralCrit ? '🔴' : '🟡',
+      vol < umbralCrit
+        ? 'Volumen crítico — reponer urgente'
+        : vol < umbralWarnBajo
+          ? 'Volumen bajo — reponer depósito'
+          : 'Volumen algo bajo — valorar reposición');
+    setCard('cardVol', vol < umbralCrit ? 'alert' : 'warn');
 
     let correccionHtml =
-      '<div class="correccion-title">💧 Reposición +' + litrosAnadir + 'L para ' + nut.nombre + '</div>' +
+      '<div class="correccion-title">💧 Reposición +' + litrosAnadir + ' L (hasta ~' + volObj + ' L ref.) — ' + nut.nombre + '</div>' +
       '<div class="correccion-item"><span>Agua destilada</span>' +
         '<span class="correccion-valor">+' + litrosAnadir + ' L</span></div>';
 
