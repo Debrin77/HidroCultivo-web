@@ -23,9 +23,9 @@ function getDashTileClassEc(val) {
   if (val == null || !Number.isFinite(Number(val))) return 'empty';
   const ec = Number(val);
   const cfg = state.configTorre || {};
-  const manualRaw = cfg.checklistEcObjetivoUs;
-  const ecObjExplicito =
-    Number.isFinite(manualRaw) && manualRaw >= 200 && manualRaw <= 6000 ? Math.round(manualRaw) : null;
+  const ecObjExplicito = typeof getEcObjetivoManualUs === 'function'
+    ? getEcObjetivoManualUs(cfg)
+    : (Number.isFinite(cfg.checklistEcObjetivoUs) ? Math.round(cfg.checklistEcObjetivoUs) : null);
   const tol = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
 
   if (ecObjExplicito != null) {
@@ -53,9 +53,8 @@ function getModoInfoDescEfectivo(modoKey) {
   if (!m) return '';
   if (modoKey === 'lechuga') {
     const cfg = state.configTorre || {};
-    const manualRaw = cfg.checklistEcObjetivoUs;
-    if (Number.isFinite(manualRaw) && manualRaw >= 200 && manualRaw <= 6000) {
-      const o = Math.round(manualRaw);
+    const o = typeof getEcObjetivoManualUs === 'function' ? getEcObjetivoManualUs(cfg) : null;
+    if (o != null) {
       const t = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
       return 'EC objetivo ' + o + ' ±' + t + ' µS/cm (checklist)';
     }
@@ -228,9 +227,8 @@ function evalEC(ec, vol) {
   const ecCritica  = Math.round(ecMin * 0.7);
 
   const cfgTorre = state.configTorre || {};
-  const ecManualRaw = cfgTorre.checklistEcObjetivoUs;
-  const ecObjExplicito = Number.isFinite(ecManualRaw) && ecManualRaw >= 200 && ecManualRaw <= 6000
-    ? Math.round(ecManualRaw)
+  const ecObjExplicito = typeof getEcObjetivoManualUs === 'function'
+    ? getEcObjetivoManualUs(cfgTorre)
     : null;
   const tol = EC_MEDICION_TOLERANCIA_OBJETIVO_US;
 
@@ -343,8 +341,9 @@ function evalPH(ph, vol) {
   const factor    = volActual / VOL_OBJETIVO;
 
   // Rangos del nutriente activo
-  const phMin     = nut.pHRango    ? nut.pHRango[0]     : 5.5;
-  const phMax     = nut.pHRango    ? nut.pHRango[1]     : 6.5;
+  const phObj     = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, state.configTorre || {}) : null;
+  const phMin     = phObj && Number.isFinite(phObj[0]) ? phObj[0] : (nut.pHRango ? nut.pHRango[0] : 5.5);
+  const phMax     = phObj && Number.isFinite(phObj[1]) ? phObj[1] : (nut.pHRango ? nut.pHRango[1] : 6.5);
   const phActMin  = nut.pHIntervenir ? nut.pHIntervenir[0] : 5.2;
   const phActMax  = nut.pHIntervenir ? nut.pHIntervenir[1] : 6.8;
   const tieneBuffer = nut.pHBuffer || false;

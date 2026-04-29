@@ -24,41 +24,236 @@ function aplicarAjusteEcObjetivoPorInstalacion(ecRange, cfg) {
   return r;
 }
 
-// EC óptima según cultivos plantados en la torre ACTIVA (no setup)
-function getECOptimaTorre() {
-  const cfg = state.configTorre || {};
-  const numNiveles = cfg.numNiveles || NUM_NIVELES;
-  const rangos = [];
+function getEcPhStrategy(cfg) {
+  const c = cfg || state.configTorre || {};
+  const s = String(c.ecPhEstrategia || '').toLowerCase();
+  return s === 'manual' ? 'manual' : 'auto';
+}
 
+function getEcPhIntensity(cfg) {
+  const c = cfg || state.configTorre || {};
+  const raw = String(c.ecPhIntensidad || '').toLowerCase();
+  if (raw === 'conservador' || raw === 'intensivo') return raw;
+  return 'estandar';
+}
+
+function getEcObjetivoManualUs(cfg) {
+  const c = cfg || state.configTorre || {};
+  const a = Number(c.ecManualObjetivoUs);
+  if (Number.isFinite(a) && a >= 200 && a <= 6000) return Math.round(a);
+  const b = Number(c.checklistEcObjetivoUs);
+  if (Number.isFinite(b) && b >= 200 && b <= 6000) return Math.round(b);
+  return null;
+}
+
+function getPhObjetivoManualRango(cfg, nut) {
+  const c = cfg || state.configTorre || {};
+  const n = nut || getNutrienteTorre();
+  const p0 = n && Array.isArray(n.pHRango) ? n.pHRango : [5.5, 6.5];
+  const mn = Number(c.phManualObjetivoMin);
+  const mx = Number(c.phManualObjetivoMax);
+  if (Number.isFinite(mn) && Number.isFinite(mx) && mn >= 4.8 && mx <= 7.2 && mx >= mn + 0.1) {
+    return [Math.round(mn * 10) / 10, Math.round(mx * 10) / 10];
+  }
+  return [p0[0], p0[1]];
+}
+
+function cultivoFaseDesdeDias(cultivo, diasDesdeSiembra) {
+  const fases = cultivo && cultivo.fases ? cultivo.fases : null;
+  if (!fases || !Number.isFinite(Number(diasDesdeSiembra)) || Number(diasDesdeSiembra) < 0) return null;
+  const orden = ['germinacion', 'plantula', 'vegetativo', 'prefloracion', 'floracion', 'fructificacion'];
+  let acc = 0;
+  for (let i = 0; i < orden.length; i++) {
+    const k = orden[i];
+    const f = fases[k];
+    if (!f) continue;
+    const d = Number(f.dias);
+    if (!Number.isFinite(d) || d <= 0) continue;
+    acc += d;
+    if (Number(diasDesdeSiembra) <= acc) return { key: k, fase: f };
+  }
+  for (let i = orden.length - 1; i >= 0; i--) {
+    const fk = orden[i];
+    if (fases[fk]) return { key: fk, fase: fases[fk] };
+  }
+  return null;
+}
+
+function getAjustesEcPhPorContexto(cfg) {
+  const c = cfg || state.configTorre || {};
+  let ecMult = 1;
+  let phShift = 0;
+  const meteo = state.meteoActual || {};
+  const tempAmb = Number(meteo.temp);
+  const uv = Number.isFinite(Number(meteo.uvMaxHoy)) ? Number(meteo.uvMaxHoy) : Number(meteo.uv);
+  if (Number.isFinite(tempAmb)) {
+    if (tempAmb >= 30) {
+      ecMult *= 1.08;
+      phShift += 0.1;
+    } else if (tempAmb >= 26) {
+      ecMult *= 1.04;
+      phShift += 0.05;
+    } else if (tempAmb <= 12) {
+      ecMult *= 0.92;
+      phShift -= 0.1;
+    } else if (tempAmb <= 16) {
+      ecMult *= 0.96;
+      phShift -= 0.05;
+    }
+  }
+  if ((c.ubicacion || 'exterior') === 'exterior' && Number.isFinite(uv)) {
+    if (uv >= 8) {
+      ecMult *= 1.04;
+      phShift += 0.05;
+    } else if (uv <= 2) {
+      ecMult *= 0.97;
+    }
+  }
+  if ((c.ubicacion || 'exterior') === 'interior') {
+    const horasLuz = Number(c.horasLuz);
+    if (Number.isFinite(horasLuz)) {
+      if (horasLuz >= 17) ecMult *= 1.03;
+      else if (horasLuz <= 12) ecMult *= 0.96;
+    }
+  }
+  const out = {
+    ecMult: Math.max(0.82, Math.min(1.2, ecMult)),
+    phShift: Math.max(-0.2, Math.min(0.2, phShift)),
+  };
+  const intensity = getEcPhIntensity(c);
+  if (intensity === 'conservador') {
+    out.ecMult = Math.max(0.82, Math.min(1.2, out.ecMult * 0.96));
+    out.phShift = out.phShift * 0.7;
+  } else if (intensity === 'intensivo') {
+    out.ecMult = Math.max(0.82, Math.min(1.2, out.ecMult * 1.04));
+    out.phShift = out.phShift * 1.2;
+  }
+  return out;
+}
+
+function getRecomendacionEcPhTorre() {
+  const cfg = state.configTorre || {};
+  const strategy = getEcPhStrategy(cfg);
+  const nut = getNutrienteTorre();
+  if (strategy === 'manual') {
+    const ecM = getEcObjetivoManualUs(cfg);
+    const phM = getPhObjetivoManualRango(cfg, nut);
+    const ecLo = ecM != null ? Math.max(250, ecM - 60) : (nut.ecObjetivo?.[0] || 900);
+    const ecHi = ecM != null ? Math.min(6200, ecM + 60) : (nut.ecObjetivo?.[1] || 1400);
+    return {
+      ec: { min: ecLo, max: ecHi },
+      ph: { min: phM[0], max: phM[1] },
+      faseDominante: 'manual',
+      conFaseReal: false,
+      contexto: { ecMult: 1, phShift: 0 },
+      estrategia: 'manual',
+    };
+  }
+  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const rangosEc = [];
+  const rangosPh = [];
+  const fases = {};
+  let totalConFecha = 0;
   for (let n = 0; n < numNiveles; n++) {
     (state.torre[n] || []).forEach(c => {
       if (!c || !c.variedad) return;
       const cultivo = getCultivoDB(c.variedad);
-      if (cultivo) rangos.push({ min: cultivo.ecMin, max: cultivo.ecMax });
+      if (!cultivo) return;
+      let ecMin = Number(cultivo.ecMin);
+      let ecMax = Number(cultivo.ecMax);
+      let phMin = Number(cultivo.phMin);
+      let phMax = Number(cultivo.phMax);
+      if (c.fecha) {
+        const ms = new Date(c.fecha).getTime();
+        if (Number.isFinite(ms)) {
+          const dias = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+          const fd = cultivoFaseDesdeDias(cultivo, dias);
+          if (fd && fd.fase) {
+            if (Array.isArray(fd.fase.ec) && fd.fase.ec.length >= 2) {
+              ecMin = Number(fd.fase.ec[0]);
+              ecMax = Number(fd.fase.ec[1]);
+            }
+            if (Array.isArray(fd.fase.ph) && fd.fase.ph.length >= 2) {
+              phMin = Number(fd.fase.ph[0]);
+              phMax = Number(fd.fase.ph[1]);
+            }
+            fases[fd.key] = (fases[fd.key] || 0) + 1;
+            totalConFecha++;
+          }
+        }
+      }
+      if (Number.isFinite(ecMin) && Number.isFinite(ecMax)) rangosEc.push({ min: ecMin, max: ecMax });
+      if (Number.isFinite(phMin) && Number.isFinite(phMax)) rangosPh.push({ min: phMin, max: phMax });
     });
   }
 
-  // Sin plantas → usar rango del nutriente
-  if (rangos.length === 0) {
+  let ecRec;
+  if (rangosEc.length === 0) {
     const nut = getNutrienteTorre();
-    const base = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400 };
-    return aplicarAjusteEcObjetivoPorInstalacion(base, cfg);
+    ecRec = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400 };
+  } else {
+    const ecMin = Math.max(...rangosEc.map(r => r.min));
+    const ecMax = Math.min(...rangosEc.map(r => r.max));
+    ecRec = ecMax >= ecMin + 80
+      ? { min: ecMin, max: ecMax }
+      : {
+          min: Math.round(rangosEc.reduce((s, r) => s + r.min, 0) / rangosEc.length),
+          max: Math.round(rangosEc.reduce((s, r) => s + r.max, 0) / rangosEc.length),
+          advertencia: true,
+        };
   }
-
-  // Con plantas → intersección de rangos
-  const ecMin = Math.max(...rangos.map(r => r.min));
-  const ecMax = Math.min(...rangos.map(r => r.max));
-  if (ecMax >= ecMin + 100) {
-    const inter = { min: ecMin, max: ecMax };
-    return aplicarAjusteEcObjetivoPorInstalacion(inter, cfg);
-  }
-
-  // Sin intersección → promedio
-  const avg = {
-    min: Math.round(rangos.reduce((s,r) => s+r.min, 0) / rangos.length),
-    max: Math.round(rangos.reduce((s,r) => s+r.max, 0) / rangos.length)
+  ecRec = aplicarAjusteEcObjetivoPorInstalacion(ecRec, cfg);
+  const ctx = getAjustesEcPhPorContexto(cfg);
+  ecRec = {
+    ...ecRec,
+    min: Math.max(320, Math.round(ecRec.min * ctx.ecMult)),
+    max: Math.max(420, Math.round(ecRec.max * ctx.ecMult)),
   };
-  return aplicarAjusteEcObjetivoPorInstalacion(avg, cfg);
+
+  let phRec;
+  if (rangosPh.length === 0) {
+    const nut = getNutrienteTorre();
+    const b = nut && Array.isArray(nut.pHRango) ? nut.pHRango : [5.5, 6.5];
+    phRec = { min: b[0], max: b[1] };
+  } else {
+    const pMin = Math.max(...rangosPh.map(r => r.min));
+    const pMax = Math.min(...rangosPh.map(r => r.max));
+    phRec = pMax >= pMin + 0.15
+      ? { min: pMin, max: pMax }
+      : {
+          min: Math.round((rangosPh.reduce((s, r) => s + r.min, 0) / rangosPh.length) * 10) / 10,
+          max: Math.round((rangosPh.reduce((s, r) => s + r.max, 0) / rangosPh.length) * 10) / 10,
+          advertencia: true,
+        };
+  }
+  phRec = {
+    ...phRec,
+    min: Math.round((Math.max(4.8, Math.min(6.9, Number(phRec.min) + ctx.phShift)) * 10)) / 10,
+    max: Math.round((Math.max(5.0, Math.min(7.1, Number(phRec.max) + ctx.phShift)) * 10)) / 10,
+  };
+
+  const dom = Object.entries(fases).sort((a, b) => b[1] - a[1])[0];
+  return {
+    ec: ecRec,
+    ph: phRec,
+    faseDominante: dom ? dom[0] : null,
+    conFaseReal: totalConFecha > 0,
+    contexto: ctx,
+    estrategia: 'auto',
+  };
+}
+
+// EC óptima según cultivos plantados en la torre ACTIVA (no setup)
+function getECOptimaTorre() {
+  return getRecomendacionEcPhTorre().ec;
+}
+
+function getPhOptimaTorre(nut, cfg) {
+  const rec = getRecomendacionEcPhTorre();
+  if (rec && rec.ph) return [rec.ph.min, rec.ph.max];
+  const n = nut || getNutrienteTorre();
+  const b = n && Array.isArray(n.pHRango) ? n.pHRango : [5.5, 6.5];
+  return [b[0], b[1]];
 }
 
 /** Días desde el trasplante/germinación en registro: menor valor entre todas las plantas con fecha. */
@@ -94,9 +289,14 @@ function getFactorArranquePlantulaHidro() {
 /** EC meta (µS/cm) para recarga / checklist: manual en torre o intermedio óptimo automático */
 function getRecargaEcMetaMicroS() {
   const cfg = state.configTorre || {};
-  const manual = cfg.checklistEcObjetivoUs;
-  if (Number.isFinite(manual) && manual >= 200 && manual <= 6000) {
-    return Math.round(manual);
+  const strategy = getEcPhStrategy(cfg);
+  if (strategy === 'manual') {
+    const m = getEcObjetivoManualUs(cfg);
+    if (m != null) return m;
+  }
+  const checklistManual = Number(cfg.checklistEcObjetivoUs);
+  if (Number.isFinite(checklistManual) && checklistManual >= 200 && checklistManual <= 6000) {
+    return Math.round(checklistManual);
   }
   const o = getECOptimaTorre();
   let meta = Math.round((o.min + o.max) / 2);

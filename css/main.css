@@ -8948,6 +8948,25 @@ button.config-option:focus-visible,
   margin-top: 3px;
   font-family: var(--font-mono);
 }
+.torre-strip-ecph-modo {
+  display: inline-block;
+  margin-top: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #334155;
+}
+.torre-strip-ecph-modo--auto {
+  background: #ecfeff;
+  border-color: #67e8f9;
+  color: #0e7490;
+}
+.torre-strip-ecph-modo--manual {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #92400e;
+}
 .torre-tabla-variedades {
   margin-top: 4px;
   margin-bottom: 8px;

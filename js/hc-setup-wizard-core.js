@@ -1119,11 +1119,50 @@ function toggleSistemaDwcPanel() {
   applySistemaTipoPanelesColapsablesUI();
 }
 
+function syncSistemaEcPhStrategyUI() {
+  const cfg = state.configTorre || {};
+  const selE = document.getElementById('sysEcPhEstrategia');
+  const selI = document.getElementById('sysEcPhIntensidad');
+  const ecM = document.getElementById('sysEcManualObjetivoUs');
+  const phMin = document.getElementById('sysPhManualObjetivoMin');
+  const phMax = document.getElementById('sysPhManualObjetivoMax');
+  const hint = document.getElementById('sysEcPhStrategyHint');
+  const wrap = document.getElementById('sysEcPhManualWrap');
+  const strategy = typeof getEcPhStrategy === 'function' ? getEcPhStrategy(cfg) : 'auto';
+  const intensity = typeof getEcPhIntensity === 'function' ? getEcPhIntensity(cfg) : 'estandar';
+  if (selE) selE.value = strategy;
+  if (selI) selI.value = intensity;
+  if (ecM) ecM.value = cfg.ecManualObjetivoUs != null ? String(cfg.ecManualObjetivoUs) : '';
+  if (phMin) phMin.value = cfg.phManualObjetivoMin != null ? String(cfg.phManualObjetivoMin) : '';
+  if (phMax) phMax.value = cfg.phManualObjetivoMax != null ? String(cfg.phManualObjetivoMax) : '';
+  if (wrap) wrap.classList.toggle('setup-hidden', strategy !== 'manual');
+  if (hint) {
+    hint.classList.remove('setup-hidden');
+    if (strategy === 'manual') {
+      const ecTxt = cfg.ecManualObjetivoUs != null ? String(Math.round(Number(cfg.ecManualObjetivoUs))) : '—';
+      const p0 = cfg.phManualObjetivoMin != null ? String(cfg.phManualObjetivoMin) : '—';
+      const p1 = cfg.phManualObjetivoMax != null ? String(cfg.phManualObjetivoMax) : '—';
+      hint.textContent = 'Modo manual activo: EC ' + ecTxt + ' µS/cm · pH ' + p0 + '–' + p1 + '.';
+    } else {
+      const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
+      hint.textContent = rec
+        ? 'Modo automático por etapa: EC ' + rec.ec.min + '–' + rec.ec.max + ' µS/cm · pH ' + rec.ph.min + '–' + rec.ph.max + '.'
+        : 'Modo automático por etapa activo.';
+    }
+  }
+}
+
 function sincronizarSistemaNftMontajeUI() {
   const card = document.getElementById('sistemaNftMontajeCard');
   const dwcInfo = document.getElementById('sistemaDwcAyudaCard');
   const torreObj = document.getElementById('sistemaTorreObjetivoCard');
+  const ecphCard = document.getElementById('sistemaEcPhStrategyCard');
   const cfg = state.configTorre;
+  if (ecphCard) {
+    if (cfg) ecphCard.style.display = 'block';
+    else ecphCard.style.display = 'none';
+  }
+  if (cfg) syncSistemaEcPhStrategyUI();
   if (torreObj) {
     if (cfg && cfg.tipoInstalacion === 'torre') {
       torreObj.style.display = 'block';
@@ -1270,6 +1309,53 @@ function aplicarSistemaTorreObjetivoDesdeFormulario() {
   try { renderTorreSistemaResumenTabla(state.configTorre); } catch (_) {}
   try { refreshConsejosSiVisible(); } catch (_) {}
   showToast('Objetivo de torre guardado: ' + (objetivo === 'baby' ? 'Alta densidad / baby leaf' : 'Planta adulta (tamaño completo)'));
+}
+
+function aplicarSistemaEcPhStrategyDesdeFormulario() {
+  if (!state.configTorre) return;
+  const cfg = state.configTorre;
+  const selE = document.getElementById('sysEcPhEstrategia');
+  const selI = document.getElementById('sysEcPhIntensidad');
+  const ecM = document.getElementById('sysEcManualObjetivoUs');
+  const phMin = document.getElementById('sysPhManualObjetivoMin');
+  const phMax = document.getElementById('sysPhManualObjetivoMax');
+  const strategy = String(selE?.value || 'auto') === 'manual' ? 'manual' : 'auto';
+  const intensityRaw = String(selI?.value || 'estandar');
+  const intensity = intensityRaw === 'conservador' || intensityRaw === 'intensivo' ? intensityRaw : 'estandar';
+  cfg.ecPhEstrategia = strategy;
+  cfg.ecPhIntensidad = intensity;
+  if (strategy === 'manual') {
+    const ecN = parseInt(String(ecM?.value || '').trim(), 10);
+    const p0 = parseFloat(String(phMin?.value || '').replace(',', '.'));
+    const p1 = parseFloat(String(phMax?.value || '').replace(',', '.'));
+    if (Number.isFinite(ecN) && ecN >= 200 && ecN <= 6000) {
+      cfg.ecManualObjetivoUs = Math.round(ecN);
+    } else {
+      delete cfg.ecManualObjetivoUs;
+    }
+    if (Number.isFinite(p0) && Number.isFinite(p1) && p0 >= 4.8 && p1 <= 7.2 && p1 >= p0 + 0.1) {
+      cfg.phManualObjetivoMin = Math.round(p0 * 10) / 10;
+      cfg.phManualObjetivoMax = Math.round(p1 * 10) / 10;
+    } else {
+      delete cfg.phManualObjetivoMin;
+      delete cfg.phManualObjetivoMax;
+    }
+  } else {
+    delete cfg.ecManualObjetivoUs;
+    delete cfg.phManualObjetivoMin;
+    delete cfg.phManualObjetivoMax;
+  }
+  guardarEstadoTorreActual();
+  saveState();
+  try { syncSistemaEcPhStrategyUI(); } catch (_) {}
+  try { actualizarBadgesNutriente(); } catch (_) {}
+  try { updateDashboard(); } catch (_) {}
+  try { evalParam(); } catch (_) {}
+  showToast(
+    strategy === 'manual'
+      ? 'Estrategia guardada: EC/pH manuales bajo tu criterio.'
+      : 'Estrategia guardada: EC/pH automáticos por etapa y contexto.'
+  );
 }
 
 /** Desde Sistema: mismo overlay que «configurar», saltando al paso 1 (NFT: canal, tubo Ø, lámina, bomba). */

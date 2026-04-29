@@ -707,16 +707,20 @@ function actualizarBadgesNutriente() {
   const rangeEC = document.getElementById('paramRangeEC');
   const rangePH = document.getElementById('paramRangePH');
   if (rangeEC) {
-    const mEc = cfg.checklistEcObjetivoUs;
-    if (Number.isFinite(mEc) && mEc >= 200 && mEc <= 6000) {
-      const o = Math.round(mEc);
+    const o = typeof getEcObjetivoManualUs === 'function' ? getEcObjetivoManualUs(cfg) : null;
+    if (o != null) {
       rangeEC.textContent =
         'Objetivo ' + o + ' ±' + EC_MEDICION_TOLERANCIA_OBJETIVO_US + ' µS/cm · cultivo ' + ecMin + '–' + ecMax;
     } else {
-      rangeEC.textContent = ecMin + ' – ' + ecMax + ' µS/cm';
+      const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
+      const faseTxt = rec && rec.faseDominante ? ' · fase ' + rec.faseDominante : '';
+      rangeEC.textContent = ecMin + ' – ' + ecMax + ' µS/cm' + faseTxt;
     }
   }
-  if (rangePH) rangePH.textContent = phMin + ' – ' + phMax;
+  if (rangePH) {
+    const phOpt = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [phMin, phMax];
+    rangePH.textContent = phOpt[0] + ' – ' + phOpt[1];
+  }
 
   const rangeVol = document.getElementById('paramRangeVol');
   const inputVol = document.getElementById('inputVol');
@@ -806,13 +810,39 @@ function actualizarBadgesNutriente() {
   const torreBandera = document.getElementById('torreBadgeBandera');
   const torreNomStrip = document.getElementById('torreBadgeStripNombre');
   const torreEC      = document.getElementById('torreBadgeEC');
+  const torreModoEcPh = document.getElementById('torreBadgeEcPhModo');
   if (torreBandera) torreBandera.textContent = nut.bandera || '🧪';
   if (torreNomStrip) torreNomStrip.textContent = nut.nombre;
   if (torreEC) {
     const ecMinT = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
     const ecMaxT = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
+    const phOpt = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [5.5, 6.5];
     torreEC.textContent = 'EC ' + ecMinT + '–' + ecMaxT + ' µS/cm · pH ' +
-      (nut.pHRango ? nut.pHRango[0] + '–' + nut.pHRango[1] : '5.5–6.5');
+      (phOpt[0] + '–' + phOpt[1]);
+  }
+  if (torreModoEcPh) {
+    const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
+    const strategy = typeof getEcPhStrategy === 'function' ? getEcPhStrategy(cfg) : 'auto';
+    const intensity = typeof getEcPhIntensity === 'function' ? getEcPhIntensity(cfg) : 'estandar';
+    const faseMap = {
+      germinacion: 'germinación',
+      plantula: 'plántula',
+      vegetativo: 'vegetativo',
+      prefloracion: 'prefloración',
+      floracion: 'floración',
+      fructificacion: 'fructificación',
+      manual: 'manual',
+    };
+    const faseKey = rec && rec.faseDominante ? rec.faseDominante : (strategy === 'manual' ? 'manual' : 'general');
+    const faseTxt = faseMap[faseKey] || faseKey;
+    torreModoEcPh.classList.remove('torre-strip-ecph-modo--auto', 'torre-strip-ecph-modo--manual');
+    torreModoEcPh.classList.add(strategy === 'manual' ? 'torre-strip-ecph-modo--manual' : 'torre-strip-ecph-modo--auto');
+    torreModoEcPh.textContent =
+      (strategy === 'manual' ? 'MANUAL' : 'AUTO') +
+      ' · fase ' +
+      faseTxt +
+      ' · perfil ' +
+      intensity;
   }
 
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
@@ -996,6 +1026,35 @@ function programarRecordatorios() {
           ''
         );
       }
+    }
+  }
+
+  if (prefs.medicion && typeof getRecomendacionEcPhTorre === 'function') {
+    const rec = getRecomendacionEcPhTorre();
+    if (rec && rec.ec && rec.ph) {
+      if (!state.configTorre) state.configTorre = {};
+      const firma = String(rec.faseDominante || 'general') + '|' + rec.ec.min + '-' + rec.ec.max + '|' + rec.ph.min + '-' + rec.ph.max;
+      const prev = state.configTorre.ecPhRecomendacionFirma || '';
+      if (prev && prev !== firma) {
+        enviarNotificacion(
+          '🧪 Ajuste recomendado EC/pH',
+          'Nueva etapa detectada (' +
+            (rec.faseDominante || 'general') +
+            '). EC ' +
+            rec.ec.min +
+            '–' +
+            rec.ec.max +
+            ' µS/cm · pH ' +
+            rec.ph.min +
+            '–' +
+            rec.ph.max +
+            '.',
+          ''
+        );
+      }
+      state.configTorre.ecPhRecomendacionFirma = firma;
+      guardarEstadoTorreActual();
+      saveState();
     }
   }
 

@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-04-26-dwc-cilindro-medidas">
+  <link rel="stylesheet" href="css/main.css?v=2026-04-29-ecph-modo-colors">
 </head>
 <body>
 
@@ -1164,6 +1164,7 @@
             <div class="torre-strip-meta">
               <div id="torreBadgeStripNombre" class="torre-strip-nombre">—</div>
               <div id="torreBadgeEC" class="torre-strip-ec">EC · pH —</div>
+              <div id="torreBadgeEcPhModo" class="torre-strip-ec torre-strip-ecph-modo">AUTO · fase — · perfil estándar</div>
             </div>
           </div>
           <div class="torre-strip-actions">
@@ -1196,6 +1197,49 @@
         </div>
         <p id="sysTorreObjetivoHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
         <p id="sysTorreObjetivoAjustes" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
+      </div>
+
+      <div id="sistemaEcPhStrategyCard" class="torre-card-elevated">
+        <div class="torre-sistema-panel-kicker">Estrategia EC / pH</div>
+        <p class="torre-nft-p torre-objetivo-torre-p">
+          Puedes trabajar en modo <strong>manual</strong> (bajo tu criterio) o en modo <strong>recomendado por etapa</strong> con ajustes por clima y exposición.
+        </p>
+        <div class="torre-dwc-grid-2">
+          <div>
+            <label class="form-label torre-dwc-lbl-mono" for="sysEcPhEstrategia">Modo de recomendación</label>
+            <select id="sysEcPhEstrategia" class="torre-dwc-input" aria-label="Estrategia EC pH">
+              <option value="auto">Recomendada por etapa (automática)</option>
+              <option value="manual">Manual (responsabilidad del usuario)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label torre-dwc-lbl-mono" for="sysEcPhIntensidad">Perfil de intensidad</label>
+            <select id="sysEcPhIntensidad" class="torre-dwc-input" aria-label="Perfil de intensidad EC pH">
+              <option value="conservador">Conservador</option>
+              <option value="estandar">Estándar</option>
+              <option value="intensivo">Intensivo</option>
+            </select>
+          </div>
+        </div>
+        <div class="torre-dwc-grid-2" id="sysEcPhManualWrap">
+          <div>
+            <label class="form-label torre-dwc-lbl-mono" for="sysEcManualObjetivoUs">EC objetivo manual (µS/cm)</label>
+            <input id="sysEcManualObjetivoUs" class="torre-dwc-input" type="number" min="200" max="6000" step="10" inputmode="numeric">
+          </div>
+          <div>
+            <label class="form-label torre-dwc-lbl-mono" for="sysPhManualObjetivoMin">pH manual (mín–máx)</label>
+            <div class="torre-dwc-grid-2">
+              <input id="sysPhManualObjetivoMin" class="torre-dwc-input" type="number" min="4.8" max="7.1" step="0.1" inputmode="decimal">
+              <input id="sysPhManualObjetivoMax" class="torre-dwc-input" type="number" min="4.9" max="7.2" step="0.1" inputmode="decimal">
+            </div>
+          </div>
+        </div>
+        <div class="torre-objetivo-torre-actions" style="margin-top:8px;">
+          <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaEcPhStrategyDesdeFormulario()">
+            Guardar estrategia EC/pH
+          </button>
+        </div>
+        <p id="sysEcPhStrategyHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
       </div>
 
       <!-- Montaje NFT (Sistema): desplegable con resumen tras aplicar -->
@@ -3727,21 +3771,21 @@
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=3"></script>
+  <script src="js/hc-setup-wizard-core.js?v=4"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=7"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=5"></script>
   <script src="js/hc-setup-wizard-pages.js?v=1"></script>
-  <script src="js/hc-setup-calc-core.js?v=2"></script>
+  <script src="js/hc-setup-calc-core.js?v=3"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=1"></script>
   <script src="js/hc-setup-registro.js?v=4"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=5"></script>
-  <script src="js/hc-setup-mediciones-logic.js?v=6"></script>
+  <script src="js/hc-setup-mediciones-logic.js?v=7"></script>
   <script src="js/hc-setup-checklist.js?v=8"></script>
   <script src="js/hc-setup-historial-tabs.js?v=4"></script>
-  <script src="js/hc-setup-consejos.js?v=8"></script>
+  <script src="js/hc-setup-consejos.js?v=9"></script>
   <script src="js/calendario-logic.js?v=1"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
   <script src="js/meteo-forecast-dashboard.js?v=5"></script>
@@ -3750,7 +3794,7 @@
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=3"></script>
   <script src="js/app-hc-setup-onboarding.js?v=2"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=7"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=9"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=4"></script>
 </body>
 </html>

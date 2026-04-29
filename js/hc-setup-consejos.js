@@ -591,7 +591,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
   const ecUsada = getRecargaEcMetaMicroS();
   const aguaK = cfg.agua || state.configAgua || 'destilada';
   const aguaNom = aguaK === 'grifo' ? 'Grifo' : aguaK === 'osmosis' ? 'Ósmosis' : 'Destilada';
-  const ecManual = cfg.checklistEcObjetivoUs;
+  const ecManual = typeof getEcObjetivoManualUs === 'function' ? getEcObjetivoManualUs(cfg) : cfg.checklistEcObjetivoUs;
   const ecOrigen = (Number.isFinite(ecManual) && ecManual >= 200 && ecManual <= 6000)
     ? 'objetivo manual (checklist paso 6)'
     : 'óptimo automático (cultivos / nutriente activo)';
@@ -905,7 +905,9 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
     volTxt = 'Configura capacidad y litros de mezcla en la pestaña <strong>Sistema</strong>.';
   }
 
-  const manualEc = cfg && cfg.checklistEcObjetivoUs;
+  const manualEc = typeof getEcObjetivoManualUs === 'function'
+    ? getEcObjetivoManualUs(cfg)
+    : (cfg && cfg.checklistEcObjetivoUs);
   const metaFuente =
     Number.isFinite(manualEc) && manualEc >= 200 && manualEc <= 6000
       ? '<span class="consejo-checklist-resumen-note">Meta EC <strong>fijada a mano</strong> en el checklist.</span>'
