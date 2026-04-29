@@ -7573,6 +7573,24 @@ button.config-option:focus-visible,
   background: linear-gradient(135deg, #fff7ed 0%, #fffbeb 100%);
   box-shadow: 0 8px 20px rgba(245, 158, 11, 0.16);
 }
+.dash-consejos-modo-row {
+  margin: 6px 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.dash-consejos-modo-label {
+  font-size: 11px;
+  color: #475569;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.dash-consejos-modo-actions {
+  display: flex;
+  gap: 6px;
+}
 .global-standby-banner {
   margin: 8px 12px 6px;
   padding: 12px 14px;

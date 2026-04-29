@@ -782,6 +782,9 @@ function actualizarBadgesNutriente() {
       dashUbicacion.textContent = '☀️ Exterior';
     }
   }
+  try {
+    if (typeof refreshConsejosModoInicioUI === 'function') refreshConsejosModoInicioUI();
+  } catch (_) {}
 
   // Dashboard inicio — banner torre
   const dashTorreEmoji  = document.getElementById('dashTorreEmoji');

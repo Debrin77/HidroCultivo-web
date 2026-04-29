@@ -151,6 +151,19 @@
           <span class="toggle-knob" aria-hidden="true"></span>
         </button>
       </div>
+      <div class="dash-consejos-modo-row" role="group" aria-label="Nivel de ayuda en consejos">
+        <span class="dash-consejos-modo-label">Nivel de ayuda</span>
+        <div class="dash-consejos-modo-actions">
+          <button type="button" id="inicioConsejosModoPrincipiante" class="consejo-cat-btn"
+            onclick="setConsejosModoUi('principiante')" aria-pressed="true">
+            Principiante
+          </button>
+          <button type="button" id="inicioConsejosModoAvanzado" class="consejo-cat-btn"
+            onclick="setConsejosModoUi('avanzado')" aria-pressed="false">
+            Avanzado
+          </button>
+        </div>
+      </div>
       <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" role="status" aria-live="polite"></div>
 
       <!-- Guía primer día (progresiva; se oculta al completar pasos o al descartar) -->
