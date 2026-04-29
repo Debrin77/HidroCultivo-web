@@ -3307,6 +3307,23 @@
         </div>
       </div>
 
+      <div class="setup-block-title setup-mt-12">🧭 Nivel de ayuda en Consejos</div>
+      <div class="setup-box-warn">
+        Elige si prefieres una vista más simple (principiante) o ver toda la información técnica (avanzado). Podrás cambiarlo después.
+      </div>
+      <div class="setup-grid-2 setup-grid-gap-8 setup-mb-12" role="radiogroup" aria-label="Nivel de ayuda en Consejos">
+        <button type="button" class="equip-card equip-card-pad-12" id="setupConsejosModoPrincipiante" onclick="seleccionarConsejosModoSetup('principiante')">
+          <div class="setup-cesta-icon">🟢</div>
+          <div class="setup-option-title-md">Principiante</div>
+          <div class="setup-option-desc-sm">Más claro, menos pestañas técnicas</div>
+        </button>
+        <button type="button" class="equip-card equip-card-pad-12" id="setupConsejosModoAvanzado" onclick="seleccionarConsejosModoSetup('avanzado')">
+          <div class="setup-cesta-icon">🧠</div>
+          <div class="setup-option-title-md">Avanzado</div>
+          <div class="setup-option-desc-sm">Muestra todas las categorías y detalle técnico</div>
+        </button>
+      </div>
+
       <!-- Ciudad para meteo (si es exterior) -->
       <div id="seccionCiudadUbicacion" class="setup-mt-12">
         <div class="setup-block-title setup-mb-8">📍 Ciudad de esta instalación (meteorología)</div>
@@ -3771,11 +3788,11 @@
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=4"></script>
+  <script src="js/hc-setup-wizard-core.js?v=5"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=7"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=5"></script>
   <script src="js/hc-setup-wizard-pages.js?v=1"></script>
-  <script src="js/hc-setup-calc-core.js?v=3"></script>
+  <script src="js/hc-setup-calc-core.js?v=4"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
@@ -3785,7 +3802,7 @@
   <script src="js/hc-setup-mediciones-logic.js?v=7"></script>
   <script src="js/hc-setup-checklist.js?v=8"></script>
   <script src="js/hc-setup-historial-tabs.js?v=4"></script>
-  <script src="js/hc-setup-consejos.js?v=9"></script>
+  <script src="js/hc-setup-consejos.js?v=17"></script>
   <script src="js/calendario-logic.js?v=1"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
   <script src="js/meteo-forecast-dashboard.js?v=5"></script>
@@ -3793,8 +3810,8 @@
   <script src="js/riego-calculo-calcular.js?v=2"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=3"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=2"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=9"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=3"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=10"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=4"></script>
 </body>
 </html>

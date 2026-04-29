@@ -609,6 +609,7 @@ function abrirSetupNuevaTorre() {
   setupPlantasSeleccionadas = new Set();
   setupNumTorres = 'una'; // no relevante para nueva torre
   setupData.sensoresHardware = { ec: false, ph: false, humedad: false };
+  setupData.consejosModoUi = 'principiante';
 
   setupCoordenadas = { lat: null, lon: null, ciudad: '' };
   setupData.ciudad = null;

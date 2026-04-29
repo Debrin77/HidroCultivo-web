@@ -225,6 +225,20 @@ function renderDiagnostico() {
 }
 
 let consejoCatActiva = 'cultivo';
+const CONSEJOS_CAT_ORDEN_UI = ['cultivo', 'problemas', 'agua', 'clima', 'ecph', 'nft', 'dwc', 'variedades'];
+
+function getConsejosModoUi(cfg) {
+  const c = cfg || state.configTorre || {};
+  return c.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante';
+}
+
+function setConsejosModoUi(modo) {
+  if (!state.configTorre) state.configTorre = {};
+  state.configTorre.consejosModoUi = modo === 'avanzado' ? 'avanzado' : 'principiante';
+  try { guardarEstadoTorreActual(); } catch (_) {}
+  try { saveState(); } catch (_) {}
+  renderConsejos();
+}
 
 /** µS/cm y pH orientativos (bibliografía / manuales de hidroponía) — ajustar por nutriente, agua y fase */
 const REF_CULTIVOS_EC_PH = [
@@ -591,7 +605,9 @@ function buildHtmlTablaPreparacionFabricante18L() {
   const ecUsada = getRecargaEcMetaMicroS();
   const aguaK = cfg.agua || state.configAgua || 'destilada';
   const aguaNom = aguaK === 'grifo' ? 'Grifo' : aguaK === 'osmosis' ? 'Ósmosis' : 'Destilada';
-  const ecManual = typeof getEcObjetivoManualUs === 'function' ? getEcObjetivoManualUs(cfg) : cfg.checklistEcObjetivoUs;
+  const ecManual = typeof getEcObjetivoManualUs === 'function'
+    ? getEcObjetivoManualUs(cfg, { includeChecklistFallback: true })
+    : cfg.checklistEcObjetivoUs;
   const ecOrigen = (Number.isFinite(ecManual) && ecManual >= 200 && ecManual <= 6000)
     ? 'objetivo manual (checklist paso 6)'
     : 'óptimo automático (cultivos / nutriente activo)';
@@ -806,6 +822,9 @@ function refreshConsejosSiVisible() {
 function renderConsejos() {
   const cats = document.getElementById('consejosCats');
   const lista = document.getElementById('consejosLista');
+  const cfg = state.configTorre || {};
+  const tipoInst = cfg.tipoInstalacion || 'torre';
+  const modoUi = getConsejosModoUi(cfg);
   cats.setAttribute('role', 'tablist');
   cats.setAttribute('aria-label', 'Categorías de consejos');
 
@@ -814,7 +833,23 @@ function renderConsejos() {
     cats.addEventListener('keydown', a11yConsejosTablistKeydown);
   }
 
-  cats.innerHTML = Object.entries(CONSEJOS_DATA).map(([key, cat]) => `
+  const ordenadas = CONSEJOS_CAT_ORDEN_UI
+    .filter(key => !!CONSEJOS_DATA[key])
+    .map(key => [key, CONSEJOS_DATA[key]]);
+  const resto = Object.entries(CONSEJOS_DATA).filter(([key]) => !CONSEJOS_CAT_ORDEN_UI.includes(key));
+  let catEntries = ordenadas.concat(resto);
+  if (modoUi !== 'avanzado') {
+    catEntries = catEntries.filter(([key]) => {
+      if (key === 'ecph') return false;
+      if (key === 'nft') return tipoInst === 'nft';
+      if (key === 'dwc') return tipoInst === 'dwc';
+      return true;
+    });
+  }
+  if (!catEntries.some(([k]) => k === consejoCatActiva)) {
+    consejoCatActiva = catEntries.length ? catEntries[0][0] : 'cultivo';
+  }
+  const tabsHtml = catEntries.map(([key, cat]) => `
     <button type="button" class="consejo-cat-btn ${key === consejoCatActiva ? 'active' : ''}"
       role="tab"
       aria-selected="${key === consejoCatActiva ? 'true' : 'false'}"
@@ -825,6 +860,12 @@ function renderConsejos() {
       ${cat.nombre}
     </button>
   `).join('');
+  const modoHtml =
+    '<div class="consejos-modo-row" style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-bottom:8px;">' +
+    '<button type="button" class="consejo-cat-btn ' + (modoUi === 'principiante' ? 'active' : '') + '" style="padding:6px 10px;font-size:11px;" onclick="setConsejosModoUi(\'principiante\')">Modo principiante</button>' +
+    '<button type="button" class="consejo-cat-btn ' + (modoUi === 'avanzado' ? 'active' : '') + '" style="padding:6px 10px;font-size:11px;" onclick="setConsejosModoUi(\'avanzado\')">Modo avanzado</button>' +
+    '</div>';
+  cats.innerHTML = modoHtml + tabsHtml;
 
   lista.setAttribute('role', 'tabpanel');
   lista.setAttribute('aria-labelledby', 'catBtn-' + consejoCatActiva);
@@ -906,7 +947,7 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
   }
 
   const manualEc = typeof getEcObjetivoManualUs === 'function'
-    ? getEcObjetivoManualUs(cfg)
+    ? getEcObjetivoManualUs(cfg, { includeChecklistFallback: true })
     : (cfg && cfg.checklistEcObjetivoUs);
   const metaFuente =
     Number.isFinite(manualEc) && manualEc >= 200 && manualEc <= 6000
@@ -1028,18 +1069,29 @@ function buildConsejosAguaNutrienteDinamico() {
     'Volumen de referencia en la app: ' + volRefHtml + '. Repone con la <strong>misma calidad de agua</strong> que usas en recargas (según tu configuración). ' +
     '<strong>Si la EC sigue en rango</strong> para tus plantas, añade solo agua. ' + bloqueDosis;
 
+  const detalleProtocoloHtml =
+    bloqueChecklist +
+    '<p class="consejo-p consejo-p--tight">Pasos orientativos del fabricante para <strong>' +
+    meteoEscHtml(nut.nombre) +
+    '</strong>. El orden coincide con el checklist de recarga.</p>' +
+    listaProto +
+    (ordenWarn ? '<p class="consejo-orden-warn">' + ordenWarn + '</p>' : '');
+  const detalleProtocoloWrap =
+    typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails(detalleProtocoloHtml, 'Ver checklist y protocolo completo', true)
+      : detalleProtocoloHtml;
+  const resumenProtocolo =
+    '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> para ' +
+    meteoEscHtml(nut.nombre) +
+    ' respeta orden de mezcla, verifica EC objetivo y ajusta pH al rango recomendado.</p>';
+
   return htmlConsejoCard({
     nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)'
   }, {
     icono:'🧪',
     titulo:'Protocolo de nutrientes — ' + meteoEscHtml(nut.nombre),
     texto:
-      bloqueChecklist +
-      '<p class="consejo-p consejo-p--tight">Pasos orientativos del fabricante para <strong>' +
-      meteoEscHtml(nut.nombre) +
-      '</strong>. El orden coincide con el checklist de recarga.</p>' +
-      listaProto +
-      (ordenWarn ? '<p class="consejo-orden-warn">' + ordenWarn + '</p>' : ''),
+      resumenProtocolo + detalleProtocoloWrap,
     alerta:{ tipo:'ok', txt:'✅ ' + calmagOk + ' ' + phOk }
   }) + htmlConsejoCard({
     nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)'
@@ -1140,6 +1192,292 @@ function buildConsejoTablaGerminacionCultivos() {
   });
 }
 
+function consejoFaseCultivoLabel(k) {
+  const m = {
+    germinacion: 'Germinación',
+    plantula: 'Plántula',
+    vegetativo: 'Vegetativo',
+    prefloracion: 'Prefloración',
+    floracion: 'Floración',
+    fructificacion: 'Fructificación',
+    crecimiento: 'Crecimiento',
+    madurez: 'Madurez',
+    cosecha: 'Cosecha',
+    general: 'General',
+  };
+  return m[k] || k;
+}
+
+function consejoPerfilLuzPorCultivo(cultivo) {
+  const c = cultivo || {};
+  if (c.grupo === 'frutos' || c.fructificacion) {
+    return {
+      exterior: {
+        plantula: '0,5–1,5 h de sol suave (mañana) + malla 50–60% al mediodía',
+        vegetativo: '2–4 h de sol directo progresivo + malla 35–50% en horas centrales',
+        floracion: '4–6 h de sol directo; con calor fuerte usar malla 30–40%',
+        fructificacion: '6–8 h de sol directo; prioriza malla 30–40% antes que subir riego a ciegas',
+      },
+      interior: {
+        plantula: 'PPFD 150–250 · 14–16 h · LED a 35–55 cm',
+        vegetativo: 'PPFD 250–450 · 14–18 h · LED a 30–45 cm',
+        floracion: 'PPFD 450–700 · 12–16 h · LED a 25–40 cm',
+        fructificacion: 'PPFD 550–850 · 12–16 h · LED a 25–35 cm',
+      },
+    };
+  }
+  if (c.grupo === 'hierbas') {
+    return {
+      exterior: {
+        plantula: '0,5–1 h de sol suave + malla 50–60% en mediodía',
+        vegetativo: '2–4 h de sol directo progresivo; malla 40–50% si UV alto',
+        floracion: '3–5 h de sol directo con ventilación; malla 35–45% en ola de calor',
+        fructificacion: '3–5 h de sol directo; proteger picos térmicos con malla',
+      },
+      interior: {
+        plantula: 'PPFD 120–220 · 14–16 h · LED a 35–55 cm',
+        vegetativo: 'PPFD 220–420 · 14–18 h · LED a 30–45 cm',
+        floracion: 'PPFD 320–550 · 12–16 h · LED a 25–40 cm',
+        fructificacion: 'PPFD 320–550 · 12–16 h · LED a 25–40 cm',
+      },
+    };
+  }
+  return {
+    exterior: {
+      plantula: '0,5–1 h de sol suave + malla 50–60% en mediodía',
+      vegetativo: '1,5–3 h de sol directo progresivo + malla 40–50%',
+      floracion: '2–4 h de sol directo; malla 35–45% con calor/UV alto',
+      fructificacion: '2–4 h de sol directo; prioriza malla antes que exposición brusca',
+    },
+    interior: {
+      plantula: 'PPFD 120–220 · 14–16 h · LED a 35–55 cm',
+      vegetativo: 'PPFD 200–380 · 14–18 h · LED a 30–45 cm',
+      floracion: 'PPFD 280–500 · 12–16 h · LED a 25–40 cm',
+      fructificacion: 'PPFD 280–500 · 12–16 h · LED a 25–40 cm',
+    },
+  };
+}
+
+function consejoFaseDesdeFicha(cultivo, cesta) {
+  if (!cultivo) return 'general';
+  if (typeof cultivoFaseDesdeDias === 'function' && cesta && cesta.fecha) {
+    const ms = new Date(cesta.fecha).getTime();
+    if (Number.isFinite(ms)) {
+      const dias = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+      const f = cultivoFaseDesdeDias(cultivo, dias);
+      if (f && f.key) return f.key;
+    }
+  }
+  if (cesta && cesta.fecha && typeof getEstado === 'function') {
+    const dias = Math.max(0, Math.floor((Date.now() - new Date(cesta.fecha)) / 86400000));
+    const est = getEstado(cultivo.id || cultivo.nombre, dias);
+    if (est === 'plantula') return 'plantula';
+    if (est === 'crecimiento') return 'vegetativo';
+    if (est === 'madurez' || est === 'cosecha') return cultivo.fructificacion ? 'fructificacion' : 'floracion';
+  }
+  return cultivo.fructificacion ? 'vegetativo' : 'plantula';
+}
+
+function consejoAjusteClimaUbicacion(baseTxt, ubicacion, temp, uv) {
+  let txt = String(baseTxt || '');
+  if (ubicacion === 'exterior') {
+    if (Number.isFinite(temp) && temp >= 32) {
+      txt += ' · ola de calor: malla 60% y evita sol directo 12:00–18:00';
+    } else if (Number.isFinite(temp) && temp >= 28) {
+      txt += ' · calor alto: malla 50% en mediodía';
+    } else if (Number.isFinite(temp) && temp <= 12) {
+      txt += ' · frío: prioriza franja central (11:00–16:00) y evita amanecer';
+    }
+    if (Number.isFinite(uv) && uv >= 8) {
+      txt += ' · UV muy alto: añade malla 50–60%';
+    } else if (Number.isFinite(uv) && uv >= 6) {
+      txt += ' · UV alto: malla 35–50%';
+    }
+    return txt;
+  }
+  if (Number.isFinite(temp) && temp >= 30) {
+    txt += ' · interior cálido: separa LED +5–10 cm y mejora ventilación';
+  } else if (Number.isFinite(temp) && temp <= 16) {
+    txt += ' · interior frío: acerca LED 3–5 cm (sin quemar ápice)';
+  }
+  if (Number.isFinite(uv) && uv >= 7) {
+    txt += ' · si entra sol directo por ventana, usa visillo o malla ligera';
+  }
+  return txt;
+}
+
+function consejoRecomendacionMalla(ubicacion, temp, uv) {
+  if (ubicacion !== 'exterior') {
+    return {
+      titulo: 'Interior',
+      txt: 'En interior no se usa malla como control principal: regula altura LED, fotoperiodo y ventilación. Si entra sol directo por ventana, usa visillo o malla ligera 20–30%.',
+    };
+  }
+  const t = Number(temp);
+  const u = Number(uv);
+  if ((Number.isFinite(t) && t >= 32) || (Number.isFinite(u) && u >= 8)) {
+    return {
+      titulo: 'Exterior — estrés alto',
+      txt: 'Malla recomendada: blanca 50–60% (prioritaria por menor calentamiento) o negra 50% si no hay alternativa. Mantén sombra 12:00–18:00.',
+    };
+  }
+  if ((Number.isFinite(t) && t >= 28) || (Number.isFinite(u) && u >= 6)) {
+    return {
+      titulo: 'Exterior — calor/UV alto',
+      txt: 'Malla recomendada: blanca 35–50% (o negra 40%). Sombrea horas centrales y deja sol suave de mañana.',
+    };
+  }
+  if (Number.isFinite(t) && t <= 14) {
+    return {
+      titulo: 'Exterior — fresco/frío',
+      txt: 'Malla solo puntual: 20–30% si hay viento seco o radiación intensa puntual. Prioriza exposición de 11:00–16:00.',
+    };
+  }
+  return {
+    titulo: 'Exterior — condiciones medias',
+    txt: 'Malla orientativa: 30–40% en aclimatación de plántulas; retirar progresivamente cuando no haya estrés.',
+  };
+}
+
+function consejoMallaQuickTableHtml() {
+  return (
+    '<div class="hc-germ-table-scroll"><table class="hc-germ-table"><thead><tr><th>Escenario</th><th>Malla recomendada</th><th>Acción</th></tr></thead><tbody>' +
+    '<tr><td>UV ≥ 8 o Tª ≥ 32°C</td><td>Blanca 50–60%</td><td>Sombra 12:00–18:00 + ventilación</td></tr>' +
+    '<tr><td>UV 6–7 o Tª 28–31°C</td><td>Blanca 35–50% / Negra 40%</td><td>Sol suave mañana, proteger mediodía</td></tr>' +
+    '<tr><td>UV 3–5 y Tª 18–27°C</td><td>30–40%</td><td>Aclimatación progresiva</td></tr>' +
+    '<tr><td>Tª &lt; 14°C</td><td>20–30% puntual</td><td>Priorizar franja central del día</td></tr>' +
+    '</tbody></table></div>'
+  );
+}
+
+function buildConsejoLuzExposicionCultivo() {
+  const cat = CONSEJOS_DATA.cultivo;
+  const cfg = state.configTorre || {};
+  const ub = cfg.ubicacion || 'exterior';
+  const m = state.meteoActual || {};
+  const temp = Number(m.temp);
+  const uv = Number.isFinite(Number(m.uvMaxHoy)) ? Number(m.uvMaxHoy) : Number(m.uv);
+  const filas = [];
+  const seen = {};
+  const niv = (cfg.numNiveles || (state.torre || []).length || 0);
+  for (let n = 0; n < niv; n++) {
+    (state.torre[n] || []).forEach(c => {
+      if (!c || !c.variedad) return;
+      const cult = getCultivoDB(c.variedad);
+      if (!cult) return;
+      const key = cult.id || cult.nombre;
+      if (seen[key]) return;
+      seen[key] = true;
+      const fase = consejoFaseDesdeFicha(cult, c);
+      const p = consejoPerfilLuzPorCultivo(cult);
+      const extBase = p.exterior[fase] || p.exterior.vegetativo;
+      const intBase = p.interior[fase] || p.interior.vegetativo;
+      const ext = consejoAjusteClimaUbicacion(extBase, 'exterior', temp, uv);
+      const intR = consejoAjusteClimaUbicacion(intBase, 'interior', temp, uv);
+      filas.push({
+        nombre: cultivoNombreLista(cult, c.variedad),
+        fase,
+        ext,
+        intR,
+      });
+    });
+  }
+
+  const climaAviso =
+    Number.isFinite(temp) || Number.isFinite(uv)
+      ? '<p class="consejo-p consejo-p--tight"><strong>Ahora mismo:</strong> ' +
+        (Number.isFinite(temp) ? 'Tª ' + temp + '°C' : 'Tª —') +
+        ' · ' +
+        (Number.isFinite(uv) ? 'UV ' + uv : 'UV —') +
+        '. Con calor o UV alto, prioriza <strong>malla de sombreo</strong> y ventilación antes que exponer más horas de golpe.</p>'
+      : '';
+  const luzCfg = String(cfg.luz || '').trim().toLowerCase();
+  const horasLuzCfg = Number(cfg.horasLuz);
+  const ubicTxt = ub === 'interior'
+    ? 'Interior' + (luzCfg ? ' · luz ' + meteoEscHtml(luzCfg) : '') + (Number.isFinite(horasLuzCfg) ? ' · ' + horasLuzCfg + ' h' : '')
+    : 'Exterior';
+  const ubicacionAviso = '<p class="consejo-p consejo-p--tight"><strong>Ubicación configurada:</strong> ' + ubicTxt + '.</p>';
+  const mallaRec = consejoRecomendacionMalla(ub, temp, uv);
+
+  let tabla = '';
+  if (filas.length) {
+    const rows = filas
+      .map(r =>
+        '<tr><td>' +
+        meteoEscHtml(r.nombre) +
+        '</td><td>' +
+        meteoEscHtml(consejoFaseCultivoLabel(r.fase)) +
+        '</td><td>' +
+        meteoEscHtml(r.ext) +
+        '</td><td>' +
+        meteoEscHtml(r.intR) +
+        '</td></tr>'
+      )
+      .join('');
+    tabla =
+      '<div class="hc-germ-table-scroll"><table class="hc-germ-table"><thead><tr><th>Cultivo</th><th>Fase detectada</th><th>Exterior (aclimatación controlable)</th><th>Interior (LED / apoyo natural)</th></tr></thead><tbody>' +
+      rows +
+      '</tbody></table></div>';
+  } else {
+    tabla =
+      '<p class="consejo-p consejo-p--tight">Asigna variedad y fecha en las fichas para generar la recomendación por fase de cada cultivo.</p>';
+  }
+
+  const planExt =
+    '<ol class="consejo-proto-ol">' +
+    '<li class="consejo-proto-li"><strong>Día 1–2:</strong> sombra luminosa + malla 50–60% en horas centrales.</li>' +
+    '<li class="consejo-proto-li"><strong>Día 3–4:</strong> 30–90 min de sol suave (mañana) + malla al mediodía.</li>' +
+    '<li class="consejo-proto-li"><strong>Día 5–7:</strong> 2–3 h de sol directo progresivo; evita golpe de 12:00–17:00 sin malla.</li>' +
+    '<li class="consejo-proto-li"><strong>Día 8+:</strong> ajusta según cultivo/fase y clima; para frutos, sube exposición poco a poco.</li>' +
+    '</ol>';
+
+  let planInt =
+    '<p class="consejo-p consejo-p--tight">En interior, si no tienes medidor PAR, usa <strong>distancia LED</strong> + respuesta de hoja (sin blanqueo ni estiramiento excesivo). Con ventana o sol lateral, añade LED como <strong>apoyo</strong> para completar fotoperiodo estable.</p>';
+  if (ub === 'interior' && Number.isFinite(horasLuzCfg)) {
+    if (horasLuzCfg < 13) {
+      planInt += '<p class="consejo-p consejo-p--tight">Fotoperiodo actual corto (' + horasLuzCfg + ' h): para crecimiento vegetativo suele funcionar mejor subir a 14–16 h.</p>';
+    } else if (horasLuzCfg > 18) {
+      planInt += '<p class="consejo-p consejo-p--tight">Fotoperiodo alto (' + horasLuzCfg + ' h): vigila estrés y temperatura foliar; en frutos puedes trabajar con 12–16 h por fase.</p>';
+    }
+  }
+
+  const detalleLuzHtml =
+    climaAviso +
+    tabla +
+    '<p class="consejo-p consejo-p--tight"><strong>' +
+    meteoEscHtml(mallaRec.titulo) +
+    ':</strong> ' +
+    meteoEscHtml(mallaRec.txt) +
+    '</p>' +
+    consejoMallaQuickTableHtml() +
+    '<p class="consejo-p consejo-p--tight"><strong>Protocolo exterior de aclimatación:</strong></p>' +
+    planExt +
+    planInt;
+  const detalleLuzWrap =
+    typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails(detalleLuzHtml, 'Ver detalle de luz, malla y aclimatación', true)
+      : detalleLuzHtml;
+  const resumenCorto =
+    ub === 'interior'
+      ? 'Resumen: prioriza <strong>distancia LED + fotoperiodo + ventilación</strong>. Si entra sol directo por ventana, usa visillo o malla ligera.'
+      : 'Resumen: prioriza <strong>malla de sombreo</strong> y progresión de exposición por días; evita cambios bruscos de sol directo.';
+
+  return htmlConsejoCard(cat, {
+    icono: ub === 'interior' ? '💡' : '☀️',
+    titulo: 'Luz y exposición por cultivo y etapa',
+    texto:
+      '<p class="consejo-p">Recomendación práctica con variables controlables por usuario: <strong>malla de sombreo</strong>, ubicación de la planta y <strong>distancia LED</strong> (en vez de “reducir luz X%”).</p>' +
+      ubicacionAviso +
+      '<p class="consejo-p consejo-p--tight">' + resumenCorto + '</p>' +
+      detalleLuzWrap,
+    alerta: {
+      tipo: 'info',
+      txt:
+        'ℹ️ Si aparece estrés (hoja decaída al mediodía, bordes secos o blanqueo), añade malla de sombreo y retrocede un paso 24–48 h.',
+    },
+  });
+}
+
 function buildConsejosNftHidraulica() {
   const cat = CONSEJOS_DATA.nft;
   const cfg = state.configTorre || {};
@@ -1152,16 +1490,23 @@ function buildConsejosNftHidraulica() {
   if (b) {
     const vDepCfg = parseFloat(String(cfg.volDeposito ?? '').replace(',', '.'));
     const vDepAct = Number.isFinite(vDepCfg) && vDepCfg > 0 ? Math.round(vDepCfg) : null;
+    const dynDetalle =
+      (resumenTxt
+        ? '<p class="consejo-p consejo-p--lead">' + escHtmlUi(resumenTxt) + '</p>'
+        : '') +
+      '<p class="consejo-p consejo-p--mb10">Lo importante aquí es si el <strong>depósito</strong> y la <strong>bomba</strong> encajan con un criterio práctico (24 h, película fina, pérdidas típicas). Los números detallados van en el desplegable. Contrasta siempre con la <strong>curva Q–H</strong> del fabricante.</p>' +
+      nftDepositoVeredictoBloqueHtml(b, vDepAct) +
+      nftWrapDetalleTecnicoSummary(nftBombaDetalleTecnicoHtml(b), 'Bomba, caudal y geometría (detalle)');
+    const dynWrap =
+      typeof hcWrapOrigenDetails === 'function'
+        ? hcWrapOrigenDetails(dynDetalle, 'Ver veredicto y cálculo hidráulico completo', true)
+        : dynDetalle;
     dyn = htmlInnerConsejoCard(cat, {
       icono: '⚡',
       titulo: 'Tu instalación NFT — cumplimiento orientativo',
       html:
-        (resumenTxt
-          ? '<p class="consejo-p consejo-p--lead">' + escHtmlUi(resumenTxt) + '</p>'
-          : '') +
-        '<p class="consejo-p consejo-p--mb10">Lo importante aquí es si el <strong>depósito</strong> y la <strong>bomba</strong> encajan con un criterio práctico (24 h, película fina, pérdidas típicas). Los números detallados van en el desplegable. Contrasta siempre con la <strong>curva Q–H</strong> del fabricante.</p>' +
-        nftDepositoVeredictoBloqueHtml(b, vDepAct) +
-        nftWrapDetalleTecnicoSummary(nftBombaDetalleTecnicoHtml(b), 'Bomba, caudal y geometría (detalle)'),
+        '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> valida depósito y bomba frente a tu geometría real antes de afinar riego.</p>' +
+        dynWrap,
     });
   } else {
     dyn = htmlInnerConsejoCard(cat, {
@@ -1171,11 +1516,18 @@ function buildConsejosNftHidraulica() {
         '<p class="consejo-p consejo-p--flush">Elige en <strong>Sistema</strong> instalación <strong>NFT</strong> y completa canal, lámina y longitud en el checklist (N·ref) o en el asistente para ver aquí el criterio orientativo de tu caso.</p>',
     });
   }
+  const formulaDetalle =
+    'Se aproxima el <strong>área</strong> de la lámina en el fondo del canal: en tubo redondo, una <em>cuerda</em> del arco inundado; en perfil rectangular, <strong>ancho útil × altura de lámina</strong>. Con velocidad de película ~0,08–0,12 m/s (según pendiente) se obtiene L/h por canal. La app <strong>combina</strong> este resultado con un modelo empírico y adopta el caudal más exigente. No sustituye medición in situ ni el catálogo de la bomba.';
+  const formulaWrap =
+    typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails(formulaDetalle, 'Ver método de cálculo NFT', true)
+      : formulaDetalle;
   const formula = htmlConsejoCard(cat, {
     icono: '📐',
     titulo: 'Cómo se estima el caudal (orientativo)',
     texto:
-      'Se aproxima el <strong>área</strong> de la lámina en el fondo del canal: en tubo redondo, una <em>cuerda</em> del arco inundado; en perfil rectangular, <strong>ancho útil × altura de lámina</strong>. Con velocidad de película ~0,08–0,12 m/s (según pendiente) se obtiene L/h por canal. La app <strong>combina</strong> este resultado con un modelo empírico y adopta el caudal más exigente. No sustituye medición in situ ni el catálogo de la bomba.',
+      '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> caudal orientativo por geometría + pendiente, siempre verificado con fabricante y observación real.</p>' +
+      formulaWrap,
     alerta: { tipo: 'info', txt: 'ℹ️ Lámina habitual ~2–4 mm (~3 mm); si sube mucho, suele haber exceso de caudal o pendiente insuficiente.' },
   });
   const cultivo = recoNft
@@ -1262,11 +1614,18 @@ function buildConsejosDwc() {
     cfg.tipoInstalacion === 'dwc' && typeof dwcRecomendacionCultivoDesdeConfig === 'function'
       ? dwcRecomendacionCultivoDesdeConfig(cfg)
       : null;
+  const introDetalle =
+    'En <strong>Deep Water Culture</strong> las raíces cuelgan en un depósito con la <strong>misma solución</strong> para todas las plantas. La tapa se modela con rejilla <strong>filas × cestas</strong> (prismático o cilíndrico en planta); el diagrama usa esa cuadrícula. Las medidas del depósito sirven para <strong>capacidad en litros</strong>, difusión y el contexto visual.';
+  const introWrap =
+    typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails(introDetalle, 'Ver explicación completa DWC', true)
+      : introDetalle;
   const intro = htmlConsejoCard(cat, {
     icono: '🌊',
     titulo: 'DWC en esta app',
     texto:
-      'En <strong>Deep Water Culture</strong> las raíces cuelgan en un depósito con la <strong>misma solución</strong> para todas las plantas. La tapa se modela con rejilla <strong>filas × cestas</strong> (prismático o cilíndrico en planta); el diagrama usa esa cuadrícula. Las medidas del depósito sirven para <strong>capacidad en litros</strong>, difusión y el contexto visual.',
+      '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> en DWC todas las plantas comparten el mismo depósito (EC/pH comunes).</p>' +
+      introWrap,
     alerta: {
       tipo: 'info',
       txt: 'ℹ️ Misma EC y mismo pH en todo el depósito: mezcla solo cultivos compatibles (véase compatibilidad de cultivos en torre).',
@@ -1337,11 +1696,18 @@ function buildConsejosDwc() {
     },
   });
   const difusor = buildConsejosDwcDifusorBloque();
+  const medDetalle =
+    '<strong>Prismático:</strong> L, A y P (profundidad/altura <em>útil</em> del líquido, cm) → volumen ≈ L×A×P÷1000. <strong>Cilíndrico:</strong> Ø interior y misma P → volumen ≈ π×(Ø/2)²×P÷1000. <strong>Troncopiramidal:</strong> litros útiles medidos (sin P en el cálculo). <strong>Diám. cesta</strong> = aro en la tapa (mm); <strong>alt. cesta</strong> para el llenado seguro bajo el sustrato. <strong>Marco</strong> y <strong>hueco</strong> entre cestas en el <strong>asistente DWC</strong>; si no los guardaste, el aviso de rejilla usa marco 0 y 4 mm.';
+  const medWrap =
+    typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails(medDetalle, 'Ver guía completa de medidas DWC', true)
+      : medDetalle;
   const med = htmlConsejoCard(cat, {
     icono: '📐',
     titulo: 'Qué es cada medida en Sistema',
     texto:
-      '<strong>Prismático:</strong> L, A y P (profundidad/altura <em>útil</em> del líquido, cm) → volumen ≈ L×A×P÷1000. <strong>Cilíndrico:</strong> Ø interior y misma P → volumen ≈ π×(Ø/2)²×P÷1000. <strong>Troncopiramidal:</strong> litros útiles medidos (sin P en el cálculo). <strong>Diám. cesta</strong> = aro en la tapa (mm); <strong>alt. cesta</strong> para el llenado seguro bajo el sustrato. <strong>Marco</strong> y <strong>hueco</strong> entre cestas en el <strong>asistente DWC</strong>; si no los guardaste, el aviso de rejilla usa marco 0 y 4 mm.',
+      '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> define bien forma, litros útiles y diámetro de cesta; el resto del cálculo depende de eso.</p>' +
+      medWrap,
     alerta: { tipo: 'warn', txt: '⚠️ Comprobación orientativa: contrasta con tu tapa real y el diámetro nominal del fabricante.' },
   });
   const extras = htmlConsejoCard(cat, {
@@ -1388,6 +1754,35 @@ function htmlInnerConsejoCard(cat, c) {
   `;
 }
 
+function buildConsejoProblemasCompacto(cat, c) {
+  const txt = String(c.texto || '');
+  const i = txt.indexOf('.');
+  const resumen = i > 0 ? txt.slice(0, i + 1) : txt;
+  const detalle = i > 0 ? txt.slice(i + 1).trim() : '';
+  const detalleWrap =
+    detalle && typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails('<p class="consejo-p consejo-p--tight">' + detalle + '</p>', 'Ver causas y detalle', true)
+      : (detalle ? '<p class="consejo-p consejo-p--tight">' + detalle + '</p>' : '');
+  return `
+    <div class="consejo-card">
+      <div class="consejo-header">
+        <div class="consejo-icon" style="--consejo-icon-bg:${cat.bg}">
+          ${c.icono}
+        </div>
+        <div>
+          <div class="consejo-titulo">${c.titulo}</div>
+        </div>
+      </div>
+      <div class="consejo-texto"><p class="consejo-p consejo-p--tight"><strong>Acción rápida:</strong> ${resumen}</p>${detalleWrap}</div>
+      ${c.alerta ? `
+        <div class="consejo-alerta ${c.alerta.tipo}">
+          <span>${c.alerta.txt}</span>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
 function renderConsejosLista() {
   const cat = CONSEJOS_DATA[consejoCatActiva];
   const lista = document.getElementById('consejosLista');
@@ -1418,7 +1813,13 @@ function renderConsejosLista() {
     lista.innerHTML =
       cat.consejos.map(c => htmlConsejoCard(cat, c)).join('') +
       buildConsejoObjetivoTorreCultivo() +
-      buildConsejoTablaGerminacionCultivos();
+      buildConsejoTablaGerminacionCultivos() +
+      buildConsejoLuzExposicionCultivo();
+    return;
+  }
+
+  if (consejoCatActiva === 'problemas') {
+    lista.innerHTML = cat.consejos.map(c => buildConsejoProblemasCompacto(cat, c)).join('');
     return;
   }
 

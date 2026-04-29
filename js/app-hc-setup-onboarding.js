@@ -13,6 +13,7 @@ const setupData = {
   ubicacion: 'exterior',
   luz: 'led',
   horasLuz: 16,
+  consejosModoUi: 'principiante',
   ciudad: null,
   lat: null,
   lon: null,
@@ -503,6 +504,7 @@ function syncWizardLuzUI() {
     const ref = String(setupCoordenadas.ciudad || setupData.ciudad || '').trim();
     ci2.value = ref ? ref.split(',')[0].trim() : '';
   }
+  seleccionarConsejosModoSetup(setupData.consejosModoUi || 'principiante');
 }
 
 function seleccionarLuz(tipo) {
@@ -514,6 +516,15 @@ function seleccionarLuz(tipo) {
   });
   const suf = map[tipo] || 'LED';
   document.getElementById('luz' + suf)?.classList.add('selected');
+}
+
+function seleccionarConsejosModoSetup(modo) {
+  const m = modo === 'avanzado' ? 'avanzado' : 'principiante';
+  setupData.consejosModoUi = m;
+  const bp = document.getElementById('setupConsejosModoPrincipiante');
+  const ba = document.getElementById('setupConsejosModoAvanzado');
+  if (bp) bp.classList.toggle('selected', m === 'principiante');
+  if (ba) ba.classList.toggle('selected', m === 'avanzado');
 }
 
 function onBuscarCiudadSetup(val) {
@@ -583,6 +594,7 @@ function aplicarSetupDataATorre() {
   state.configTorre.luz       = setupData.luz || 'led';
   state.configTorre.horasLuz  = Math.max(12, Math.min(20,
     parseInt(String(document.getElementById('sliderHorasLuz')?.value || setupData.horasLuz || 16), 10) || 16));
+  state.configTorre.consejosModoUi = setupData.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante';
   if (setupData.ciudad) {
     state.configTorre.ciudad  = setupData.ciudad;
     state.configTorre.lat     = setupData.lat;

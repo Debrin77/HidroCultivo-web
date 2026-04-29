@@ -37,12 +37,16 @@ function getEcPhIntensity(cfg) {
   return 'estandar';
 }
 
-function getEcObjetivoManualUs(cfg) {
+function getEcObjetivoManualUs(cfg, opts) {
   const c = cfg || state.configTorre || {};
+  const o = opts || {};
+  const includeChecklistFallback = o.includeChecklistFallback === true;
   const a = Number(c.ecManualObjetivoUs);
   if (Number.isFinite(a) && a >= 200 && a <= 6000) return Math.round(a);
-  const b = Number(c.checklistEcObjetivoUs);
-  if (Number.isFinite(b) && b >= 200 && b <= 6000) return Math.round(b);
+  if (includeChecklistFallback) {
+    const b = Number(c.checklistEcObjetivoUs);
+    if (Number.isFinite(b) && b >= 200 && b <= 6000) return Math.round(b);
+  }
   return null;
 }
 
@@ -741,6 +745,7 @@ function guardarSetupYContinuar() {
     lon:          Number.isFinite(lonWizard) ? lonWizard : -0.0495,
     localidadMeteo: usarNuevaEntrada ? (locWizard || '') : (locWizard || prevLocMet || ''),
     sensoresHardware: sensHwGuardar,
+    consejosModoUi: setupData.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante',
     torreObjetivoCultivo:
       ((state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final'),
   };

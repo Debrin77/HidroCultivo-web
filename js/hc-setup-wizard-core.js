@@ -418,6 +418,7 @@ function abrirSetup() {
   setupData.ciudad = setupCoordenadas.ciudad || null;
   setupData.lat = setupCoordenadas.lat;
   setupData.lon = setupCoordenadas.lon;
+  setupData.consejosModoUi = c.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante';
 
   const o = document.getElementById('setupOverlay');
   o.classList.add('open');
