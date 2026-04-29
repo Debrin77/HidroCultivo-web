@@ -153,12 +153,15 @@ function getRecomendacionEcPhTorre() {
       estrategia: 'manual',
     };
   }
-  const numNiveles = cfg.numNiveles || NUM_NIVELES;
+  const nivelesActivos = typeof getNivelesActivos === 'function'
+    ? getNivelesActivos()
+    : Array.from({ length: (cfg.numNiveles || NUM_NIVELES) }, (_, i) => i);
   const rangosEc = [];
   const rangosPh = [];
   const fases = {};
   let totalConFecha = 0;
-  for (let n = 0; n < numNiveles; n++) {
+  for (let i = 0; i < nivelesActivos.length; i++) {
+    const n = nivelesActivos[i];
     (state.torre[n] || []).forEach(c => {
       if (!c || !c.variedad) return;
       const cultivo = getCultivoDB(c.variedad);

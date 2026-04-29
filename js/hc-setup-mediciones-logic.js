@@ -38,9 +38,13 @@ function getDashTileClassEc(val) {
     return 'warn';
   }
 
-  const r = RANGOS.ec;
-  if (ec >= r.min && ec <= r.max) return 'ok';
-  if (ec >= r.warnLow && ec <= r.warnHigh) return 'warn';
+  const ecOpt = typeof getECOptimaTorre === 'function' ? getECOptimaTorre() : null;
+  const ecMin = ecOpt && Number.isFinite(Number(ecOpt.min)) ? Number(ecOpt.min) : RANGOS.ec.min;
+  const ecMax = ecOpt && Number.isFinite(Number(ecOpt.max)) ? Number(ecOpt.max) : RANGOS.ec.max;
+  const ecCritica = Math.round(ecMin * 0.7);
+  if (ec >= ecMin && ec <= ecMax) return 'ok';
+  if (ec < ecMin) return ec < ecCritica ? 'bad' : 'warn';
+  if (ec <= Math.round(ecMax * 1.12)) return 'warn';
   return 'bad';
 }
 
