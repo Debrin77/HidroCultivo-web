@@ -164,52 +164,6 @@
           </button>
         </div>
       </div>
-      <div class="dash-inicio-compacto-row" role="group" aria-label="Vista compacta de inicio">
-        <span class="dash-consejos-modo-label">Inicio compacto</span>
-        <button type="button" class="toggle-switch" id="inicioCompactSwitch" onclick="toggleInicioCompacto()"
-          role="switch" aria-checked="false" aria-label="Activar o desactivar vista compacta de inicio">
-          <span class="toggle-knob" aria-hidden="true"></span>
-        </button>
-      </div>
-      <div class="dash-inicio-compacto-row" role="group" aria-label="Vista ultra compacta de inicio">
-        <span class="dash-consejos-modo-label">Inicio ultra compacto</span>
-        <button type="button" class="toggle-switch" id="inicioUltraCompactSwitch" onclick="toggleInicioUltraCompacto()"
-          role="switch" aria-checked="false" aria-label="Activar o desactivar vista ultra compacta de inicio">
-          <span class="toggle-knob" aria-hidden="true"></span>
-        </button>
-      </div>
-      <div id="dashResumenOperativo" class="dash-resumen-operativo" role="status" aria-live="polite">—</div>
-      <section id="dashDecisionCard" class="dash-decision-card" aria-label="Estado diario y acciones sugeridas">
-        <div class="dash-decision-head">
-          <div id="dashSemaforoBadge" class="dash-semaforo-badge dash-semaforo-badge--empty">Sin datos</div>
-          <div id="dashSemaforoTitulo" class="dash-decision-title">Qué hago ahora</div>
-        </div>
-        <div id="dashSemaforoTexto" class="dash-decision-text">Registra una medición para obtener acciones prácticas.</div>
-        <div class="dash-decision-actions">
-          <button type="button" class="quick-btn" onclick="goTab('mediciones')">📊 Medir ahora</button>
-          <button type="button" class="quick-btn" onclick="goTab('sistema')">🌿 Revisar sistema</button>
-          <button type="button" class="quick-btn" onclick="goTab('consejos')">💡 Ver consejos</button>
-        </div>
-        <ul id="dashQueHagoList" class="dash-que-hago-list"></ul>
-      </section>
-      <details class="dash-tendencias-details" id="dashTendenciasDetails" ontoggle="onDashTendenciasToggle()">
-        <summary>
-          <span class="dash-tendencias-summary-main">Tendencia 7 días (opcional)</span>
-          <span class="dash-tendencias-summary-sub" id="dashTendenciasResumen">Pulsa para ver gráficas rápidas de EC y pH</span>
-        </summary>
-        <div class="dash-tendencias-body">
-          <div class="dash-trend-grid">
-            <div class="dash-trend-card">
-              <div class="dash-trend-title">EC (µS/cm)</div>
-              <div id="dashTrendEc" class="dash-trend-bars"></div>
-            </div>
-            <div class="dash-trend-card">
-              <div class="dash-trend-title">pH</div>
-              <div id="dashTrendPh" class="dash-trend-bars"></div>
-            </div>
-          </div>
-        </div>
-      </details>
       <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" role="status" aria-live="polite"></div>
 
       <!-- Guía primer día (progresiva; se oculta al completar pasos o al descartar) -->
@@ -358,29 +312,29 @@
       <!-- 6. Acciones rápidas: núcleo siempre visible; resto en «Más» hasta tener config + medición -->
       <div class="quick-actions-wrap" id="quickActionsWrap">
         <div class="quick-actions quick-actions--core">
-        <button type="button" class="quick-btn" id="quickBtnMedir" onclick="goTab('mediciones')" aria-label="Nueva medición">
+        <button type="button" class="quick-btn" onclick="goTab('mediciones')" aria-label="Nueva medición">
           <span class="quick-btn-icon" aria-hidden="true">📊</span>
           <span>Nueva medición</span>
         </button>
-        <button type="button" class="quick-btn" id="quickBtnRiego" onclick="goTab('riego')" aria-label="Ver riego">
+        <button type="button" class="quick-btn" onclick="goTab('riego')" aria-label="Ver riego">
           <span class="quick-btn-icon" aria-hidden="true">💧</span>
           <span>Ver riego</span>
         </button>
-        <button type="button" class="quick-btn" id="quickBtnMeteo" onclick="goTab('meteo')" aria-label="Ver meteorología">
+        <button type="button" class="quick-btn" onclick="goTab('meteo')" aria-label="Ver meteorología">
           <span class="quick-btn-icon" aria-hidden="true">🌤️</span>
           <span>Meteorología</span>
         </button>
-        <button type="button" class="quick-btn" id="quickBtnHistorial" onclick="goTab('historial')" aria-label="Ver historial">
+        <button type="button" class="quick-btn" onclick="goTab('historial')" aria-label="Ver historial">
           <span class="quick-btn-icon" aria-hidden="true">📈</span>
           <span>Historial</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-info" id="quickBtnEditarInstalacion" onclick="abrirSetup()"
+        <button type="button" class="quick-btn quick-btn-info" onclick="abrirSetup()"
           aria-label="Editar la instalación activa: abre el asistente con los datos ya guardados"
           title="Edita tipo de sistema, geometría, nutrientes y ubicación de la instalación que está activa. No exige mediciones previas. Para crear otra instalación aparte, en Sistema usa «Nuevo sistema».">
           <span class="quick-btn-icon" aria-hidden="true">⚙️</span>
           <span>Editar instalación</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-warn" id="quickBtnRecarga" onclick="abrirChecklist(false)" aria-label="Abrir checklist de recarga de la instalación activa">
+        <button type="button" class="quick-btn quick-btn-warn" onclick="abrirChecklist(false)" aria-label="Abrir checklist de recarga de la instalación activa">
           <span class="quick-btn-icon" aria-hidden="true">🔄</span>
           <span>Iniciar recarga</span>
         </button>
