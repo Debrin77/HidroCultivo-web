@@ -2379,40 +2379,6 @@
   </div>
 </div>
 
-<!-- ══ TUTORIAL BÁSICO INTERACTIVO ══ -->
-<div class="tutorial-overlay setup-hidden" id="tutorialBasicoOverlay" role="dialog" aria-modal="true" aria-labelledby="tutorialBasicoTitle" aria-hidden="true" onclick="cerrarTutorialBasico(false)">
-  <div class="tutorial-card" onclick="event.stopPropagation()">
-    <div class="tutorial-kicker">Guía visual rápida</div>
-    <h2 id="tutorialBasicoTitle" class="tutorial-title">Tutorial básico</h2>
-    <p id="tutorialBasicoLead" class="tutorial-lead">En 1 minuto: qué mirar y qué tocar para usar la app sin perderte.</p>
-    <div class="tutorial-step-row">
-      <span id="tutorialBasicoPasoNum" class="tutorial-step-pill">Paso 1 de 5</span>
-      <div class="tutorial-step-actions">
-        <button type="button" class="btn btn-ghost tutorial-step-btn" id="tutorialSkipBtn" onclick="tutorialBasicoSkip()">Saltar</button>
-        <button type="button" class="btn btn-ghost tutorial-step-btn" id="tutorialPrevBtn" onclick="tutorialBasicoPrev()">Anterior</button>
-        <button type="button" class="btn btn-secondary tutorial-step-btn" id="tutorialNextBtn" onclick="tutorialBasicoNext()">Siguiente</button>
-      </div>
-    </div>
-    <div class="tutorial-preview-wrap">
-      <div class="tutorial-preview-icon" id="tutorialBasicoIcon" aria-hidden="true">🏁</div>
-      <div class="tutorial-preview-text">
-        <div id="tutorialBasicoStepTitle" class="tutorial-preview-title">Inicio y estado general</div>
-        <div id="tutorialBasicoStepText" class="tutorial-preview-body">Abre Inicio para ver instalación activa, estado y última medición.</div>
-      </div>
-    </div>
-    <div class="tutorial-footer-actions">
-      <label class="tutorial-auto-opt">
-        <input type="checkbox" id="tutorialAutoLaunchChk" onchange="tutorialBasicoToggleAutoLaunch(this.checked)">
-        <span>No mostrar automáticamente al iniciar</span>
-      </label>
-      <button type="button" class="btn btn-ghost" onclick="reiniciarTutorialBasico()">Reiniciar tutorial</button>
-      <button type="button" class="btn btn-secondary" id="tutorialBasicoGoBtn" onclick="tutorialBasicoGoTab()">Ir a Inicio</button>
-      <button type="button" class="btn btn-ghost" onclick="cerrarTutorialBasico(false)">Cerrar</button>
-      <button type="button" class="btn btn-primary" id="tutorialBasicoDoneBtn" onclick="cerrarTutorialBasico(true)">Entendido</button>
-    </div>
-  </div>
-</div>
-
 <!-- ══ ASISTENTE DE CONFIGURACIÓN ══ -->
 <div class="setup-overlay" id="setupOverlay" role="dialog" aria-modal="true" aria-label="Asistente de configuración de instalación">
 
@@ -3829,8 +3795,8 @@
   <script src="js/hc-bootstrap-config.js?v=4"></script>
   <script src="js/hc-bootstrap-state.js?v=5"></script>
   <script src="js/hc-bootstrap-pin.js?v=3"></script>
-  <script src="js/hc-bootstrap-onboarding.js?v=6"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=9"></script>
+  <script src="js/hc-bootstrap-onboarding.js?v=7"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=10"></script>
   <script src="js/torre-render-build.js?v=2026-04-26-dwc-lid-cyl-round2"></script>
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
@@ -3849,7 +3815,7 @@
   <script src="js/hc-setup-mediciones-logic.js?v=7"></script>
   <script src="js/hc-setup-checklist.js?v=8"></script>
   <script src="js/hc-setup-historial-tabs.js?v=4"></script>
-  <script src="js/hc-setup-consejos.js?v=18"></script>
+  <script src="js/hc-setup-consejos.js?v=19"></script>
   <script src="js/calendario-logic.js?v=1"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
   <script src="js/meteo-forecast-dashboard.js?v=5"></script>

@@ -917,23 +917,6 @@ function htmlConsejoCard(cat, c) {
   `;
 }
 
-function buildConsejoTutorialInteractivoCard() {
-  return (
-    '<div class="consejo-card">' +
-      '<div class="consejo-header">' +
-        '<div class="consejo-icon" style="--consejo-icon-bg:#e0f2fe">🧭</div>' +
-        '<div><div class="consejo-titulo">Tutorial básico interactivo</div></div>' +
-      '</div>' +
-      '<div class="consejo-texto">' +
-        'Si quieres repasar cómo usar la app de forma práctica, abre esta guía visual de 1 minuto con pasos básicos.' +
-      '</div>' +
-      '<div class="consejo-actions-row" style="margin-top:8px;">' +
-        '<button type="button" class="btn btn-secondary" onclick="abrirTutorialBasico()">Abrir tutorial</button>' +
-      '</div>' +
-    '</div>'
-  );
-}
-
 /** Bloque visible: mismos criterios que el checklist de recarga para la instalación activa. */
 function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
   const t = typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : 'torre';
@@ -1845,7 +1828,6 @@ function renderConsejosLista() {
 
   if (consejoCatActiva === 'cultivo') {
     lista.innerHTML =
-      buildConsejoTutorialInteractivoCard() +
       cat.consejos.map(c => htmlConsejoCard(cat, c)).join('') +
       buildConsejoObjetivoTorreCultivo() +
       buildConsejoTablaGerminacionCultivos() +
