@@ -312,6 +312,17 @@ function tutorialBasicoToggleAutoLaunch(disableAuto) {
   } catch (_) {}
 }
 
+function reiniciarTutorialBasico() {
+  hcTutorialBasicoPaso = 0;
+  try { localStorage.setItem(HC_TUTORIAL_BASICO_PASO_KEY, '0'); } catch (_) {}
+  try { localStorage.removeItem(HC_TUTORIAL_BASICO_KEY); } catch (_) {}
+  try { localStorage.setItem(HC_TUTORIAL_BASICO_AUTO_KEY, '1'); } catch (_) {}
+  const chk = document.getElementById('tutorialAutoLaunchChk');
+  if (chk) chk.checked = false;
+  renderTutorialBasicoPaso();
+  showToast('Tutorial reiniciado (paso 1 y auto al iniciar activado).');
+}
+
 function tutorialBasicoQuitarResalte() {
   if (hcTutorialHighlightEl) {
     hcTutorialHighlightEl.classList.remove('hc-tutorial-highlight');
