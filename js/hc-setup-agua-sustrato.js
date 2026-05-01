@@ -1088,8 +1088,11 @@ function applyMedirCollapseUI() {
     if (!body || !btn) continue;
     const exp = resolveMedirExpanded(rows[i].key, humAct, hwAny);
     body.hidden = !exp;
+    body.setAttribute('aria-hidden', exp ? 'false' : 'true');
     btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
     btn.classList.toggle('is-collapsed', !exp);
+    const titulo = btn.querySelector('.config-section-collapse-title')?.textContent?.trim() || 'sección';
+    btn.setAttribute('aria-label', (exp ? 'Contraer: ' : 'Expandir: ') + titulo);
   }
 
   const intPanel = document.getElementById('panelConfigInteriorGrow');
@@ -1099,8 +1102,11 @@ function applyMedirCollapseUI() {
     if (body && btn) {
       const exp = resolveMedirExpanded('interiorGrow', humAct, hwAny);
       body.hidden = !exp;
+      body.setAttribute('aria-hidden', exp ? 'false' : 'true');
       btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
       btn.classList.toggle('is-collapsed', !exp);
+      const titulo = btn.querySelector('.config-section-collapse-title')?.textContent?.trim() || 'sección';
+      btn.setAttribute('aria-label', (exp ? 'Contraer: ' : 'Expandir: ') + titulo);
     }
   }
 
@@ -1111,10 +1117,34 @@ function applyMedirCollapseUI() {
     if (body && btn) {
       const exp = resolveMedirExpanded('calentadorRiego', humAct, hwAny);
       body.hidden = !exp;
+      body.setAttribute('aria-hidden', exp ? 'false' : 'true');
       btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
       btn.classList.toggle('is-collapsed', !exp);
+      const titulo = btn.querySelector('.config-section-collapse-title')?.textContent?.trim() || 'sección';
+      btn.setAttribute('aria-label', (exp ? 'Contraer: ' : 'Expandir: ') + titulo);
     }
   }
+}
+
+function getCollapseDomByKey(key) {
+  const map = {
+    sensoresAjusteFino: { body: 'collapseBodySensoresAjusteFino', btn: 'btnCollapseSensoresAjusteFino' },
+    recargaProxima: { body: 'collapseBodyRecargaProxima', btn: 'btnCollapseRecargaProxima' },
+    luzOrigen: { body: 'collapseBodyLuzOrigen', btn: 'btnCollapseLuzOrigen' },
+    recargaTotal: { body: 'collapseBodyRecargaTotal', btn: 'btnCollapseRecargaTotal' },
+    recargaParcial: { body: 'collapseBodyRecargaParcial', btn: 'btnCollapseRecargaParcial' },
+    interiorGrow: { body: 'collapseBodyInteriorGrow', btn: 'btnCollapseInteriorGrow' },
+    calentadorRiego: { body: 'collapseBodyCalentadorRiego', btn: 'btnCollapseCalentadorRiego' },
+  };
+  return map[key] || null;
+}
+
+function focusFirstInCollapseBody(bodyEl) {
+  if (!bodyEl) return;
+  const first = bodyEl.querySelector(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  );
+  if (first && typeof first.focus === 'function') first.focus();
 }
 
 function toggleMedirCollapse(key) {
@@ -1122,10 +1152,20 @@ function toggleMedirCollapse(key) {
   const sh = ensureSensoresHardware();
   const hwAny = !!(sh.ec || sh.ph || sh.humedad);
   const cur = resolveMedirExpanded(key, humAct, hwAny);
-  ensureUIMedirCollapse()[key] = !cur;
+  const next = !cur;
+  ensureUIMedirCollapse()[key] = next;
   guardarEstadoTorreActual();
   saveState();
   applyMedirCollapseUI();
+  const ids = getCollapseDomByKey(key);
+  if (!ids) return;
+  const btn = document.getElementById(ids.btn);
+  const body = document.getElementById(ids.body);
+  if (next && body && !body.hidden) {
+    setTimeout(() => focusFirstInCollapseBody(body), 0);
+    return;
+  }
+  if (!next && btn && typeof btn.focus === 'function') btn.focus();
 }
 
 function cargarSensorSustratoUI() {

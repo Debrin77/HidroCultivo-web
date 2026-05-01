@@ -239,7 +239,7 @@
       <!-- 5. Última medición (resumen) + sistema de cultivo -->
       <section class="dash-medicion-y-cultivo" aria-label="Última medición y cultivo">
         <div class="dash-subtitle dash-subtitle--ultima-medicion">
-          <span id="dashUltimaMedicion">Sin mediciones aún</span>
+          <span id="dashUltimaMedicion" aria-live="polite" aria-atomic="true">Sin mediciones aún</span>
         </div>
         <div class="params-grid">
           <button type="button" class="param-tile empty" id="tileEC" onclick="goTab('mediciones')" aria-label="Ir a mediciones: conductividad eléctrica EC">
@@ -952,11 +952,12 @@
         <div class="param-input-row">
           <input type="number" class="param-input" id="inputEC" placeholder="1350"
             aria-labelledby="labelMedirEC paramRangeEC"
+            aria-describedby="statusEC correccionEC"
             inputmode="numeric" min="0" max="3000" oninput="evalParam()">
           <div class="param-unit">µS/cm</div>
         </div>
-        <div class="param-status empty" id="statusEC"></div>
-        <div class="correccion-box" id="correccionEC"></div>
+        <div class="param-status empty" id="statusEC" role="status" aria-live="polite" aria-atomic="true"></div>
+        <div class="correccion-box" id="correccionEC" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></div>
       </div>
 
       <!-- pH -->
@@ -968,11 +969,12 @@
         <div class="param-input-row">
           <input type="number" class="param-input" id="inputPH" placeholder="6.0"
             aria-labelledby="labelMedirPH paramRangePH"
+            aria-describedby="statusPH correccionPH"
             inputmode="decimal" step="0.1" min="0" max="14" oninput="evalParam()">
           <div class="param-unit">pH</div>
         </div>
-        <div class="param-status empty" id="statusPH"></div>
-        <div class="correccion-box" id="correccionPH"></div>
+        <div class="param-status empty" id="statusPH" role="status" aria-live="polite" aria-atomic="true"></div>
+        <div class="correccion-box" id="correccionPH" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></div>
       </div>
 
       <!-- TEMPERATURA AGUA -->
@@ -984,11 +986,12 @@
         <div class="param-input-row">
           <input type="number" class="param-input" id="inputTemp" placeholder="20"
             aria-labelledby="labelMedirTemp paramRangeTemp"
+            aria-describedby="statusTemp correccionTemp"
             inputmode="decimal" step="0.1" min="0" max="40" oninput="evalParam()">
           <div class="param-unit">°C</div>
         </div>
-        <div class="param-status empty" id="statusTemp"></div>
-        <div class="correccion-box" id="correccionTemp"></div>
+        <div class="param-status empty" id="statusTemp" role="status" aria-live="polite" aria-atomic="true"></div>
+        <div class="correccion-box" id="correccionTemp" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></div>
       </div>
 
       <!-- VOLUMEN -->
@@ -1000,11 +1003,12 @@
         <div class="param-input-row">
           <input type="number" class="param-input" id="inputVol" placeholder="18"
             aria-labelledby="labelMedirVol paramRangeVol"
+            aria-describedby="statusVol correccionVol"
             inputmode="decimal" step="0.5" min="0" max="20" oninput="evalParam()">
           <div class="param-unit">litros</div>
         </div>
-        <div class="param-status empty" id="statusVol"></div>
-        <div class="correccion-box" id="correccionVol"></div>
+        <div class="param-status empty" id="statusVol" role="status" aria-live="polite" aria-atomic="true"></div>
+        <div class="correccion-box" id="correccionVol" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></div>
       </div>
 
       <!-- Barra recarga depósito (junto al volumen medido) — cabecera desplegable -->
@@ -1082,13 +1086,13 @@
                   aria-label="Registrar reposición parcial con agua y nutrientes">🧪 Agua + nutrientes</button>
               </div>
               <div id="resumenReposicionParcialStats" class="recarga-subhint recarga-parcial-stats"
-                role="status" aria-live="polite"></div>
+                role="status" aria-live="polite" aria-atomic="true"></div>
             </div>
           </div>
           <button type="button" class="btn-recarga-confirm ghost recarga-btn-full-mt"
             onclick="posponerRecordatorioRecarga()"
             aria-label="Posponer recordatorio de recarga completa">⏰ Recordar mañana</button>
-          <div id="recargaSnoozeHint" class="recarga-snooze-hint"></div>
+          <div id="recargaSnoozeHint" class="recarga-snooze-hint" role="status" aria-live="polite" aria-atomic="true"></div>
         </div>
         </div>
       </div>

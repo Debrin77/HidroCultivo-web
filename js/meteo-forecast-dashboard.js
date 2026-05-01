@@ -98,6 +98,7 @@ function updateTiles(m) {
       const statusEl = document.getElementById('tile' + id + 'Status');
       if (!tile || !valEl || !statusEl) return;
       tile.className = 'param-tile empty';
+      tile.setAttribute('aria-label', 'Ir a mediciones: ' + id + ' sin datos');
       valEl.className = 'tile-value empty';
       valEl.textContent = '—';
       statusEl.className = 'tile-status empty';
@@ -130,6 +131,9 @@ function updateTiles(m) {
     valEl.textContent = formatMedicionTileValor(p.key, p.val);
     statusEl.className = `tile-status ${tipo}`;
     statusEl.textContent = statusLabels[p.key]?.[tipo] || (tipo === 'empty' ? 'Sin datos' : '');
+    const valTxt = valEl.textContent || '—';
+    const stTxt = statusEl.textContent || 'Sin datos';
+    tile.setAttribute('aria-label', 'Ir a mediciones: ' + p.id + ' ' + valTxt + ', estado ' + stTxt);
   });
 }
 
@@ -396,14 +400,21 @@ function leerLitrosReposicionParcial() {
   const v = parseFloat(raw);
   if (!isFinite(v) || v <= 0) {
     showToast('Indica los litros añadidos (una estimación vale) para guardar la reposición en el registro.', true);
-    if (el) el.focus();
+    if (el) {
+      el.setAttribute('aria-invalid', 'true');
+      el.focus();
+    }
     return null;
   }
   if (v > 2000) {
     showToast('Cantidad fuera de rango (máx. 2000 L por registro). Si vaciaste el depósito, usa recarga completa (checklist).', true);
-    if (el) el.focus();
+    if (el) {
+      el.setAttribute('aria-invalid', 'true');
+      el.focus();
+    }
     return null;
   }
+  if (el) el.removeAttribute('aria-invalid');
   return Math.round(v * 100) / 100;
 }
 

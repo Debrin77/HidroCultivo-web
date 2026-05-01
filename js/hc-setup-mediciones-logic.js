@@ -198,8 +198,32 @@ function evalParam() {
 
 function setStatus(id, tipo, icono, texto) {
   const el = document.getElementById(id);
+  if (!el) return;
+  const inputMap = {
+    statusEC: 'inputEC',
+    statusPH: 'inputPH',
+    statusTemp: 'inputTemp',
+    statusVol: 'inputVol',
+  };
+  const etiquetaMap = {
+    statusEC: 'EC',
+    statusPH: 'pH',
+    statusTemp: 'temperatura',
+    statusVol: 'volumen',
+  };
+  const etiqueta = etiquetaMap[id] || 'parámetro';
   el.className = `param-status ${tipo}`;
   el.innerHTML = `<span>${icono}</span><span>${texto}</span>`;
+  el.setAttribute('role', 'status');
+  el.setAttribute('aria-live', 'polite');
+  el.setAttribute('aria-atomic', 'true');
+  const desc = (texto && String(texto).trim()) ? String(texto).trim() : 'sin datos';
+  el.setAttribute('aria-label', etiqueta + ': ' + desc);
+  const input = document.getElementById(inputMap[id] || '');
+  if (input) {
+    if (tipo === 'bad' || tipo === 'warn') input.setAttribute('aria-invalid', 'true');
+    else input.removeAttribute('aria-invalid');
+  }
 }
 
 function setCard(id, tipo) {
@@ -209,12 +233,15 @@ function setCard(id, tipo) {
 
 function showCorreccion(id, html) {
   const el = document.getElementById(id);
+  if (!el) return;
   if (html) {
     el.classList.add('show');
     el.innerHTML = html;
+    el.removeAttribute('aria-hidden');
   } else {
     el.classList.remove('show');
     el.innerHTML = '';
+    el.setAttribute('aria-hidden', 'true');
   }
 }
 

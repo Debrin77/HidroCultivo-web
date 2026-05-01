@@ -18,6 +18,11 @@ async function guardarMedicion() {
 
   if (!ec && !ph && !temp && !vol) {
     showToast('⚠️ Introduce al menos un valor', true);
+    const firstInput = document.getElementById('inputEC');
+    if (firstInput) {
+      firstInput.focus();
+      firstInput.setAttribute('aria-invalid', 'true');
+    }
     return;
   }
 
@@ -72,7 +77,10 @@ async function guardarMedicion() {
   // Limpiar campos
   ['inputEC','inputPH','inputTemp','inputVol','inputNotas'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.value = '';
+    if (el) {
+      el.value = '';
+      if (id !== 'inputNotas') el.removeAttribute('aria-invalid');
+    }
   });
   ['statusEC','statusPH','statusTemp','statusVol'].forEach(id => {
     const el = document.getElementById(id);

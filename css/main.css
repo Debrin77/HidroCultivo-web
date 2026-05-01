@@ -1939,8 +1939,8 @@ select#editVariedad option {
 .form-group { margin-bottom: 14px; }
 .form-label {
   display: block;
-  font-size: 10px;
-  color: var(--muted);
+  font-size: 11px;
+  color: #cbd5e1;
   letter-spacing: 1px;
   text-transform: uppercase;
   margin-bottom: 6px;
@@ -2370,8 +2370,8 @@ h1.dash-greeting {
   line-height: 1.15;
 }
 .dash-subtitle {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 13px;
+  color: #cbd5e1;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
@@ -2461,8 +2461,8 @@ h1.dash-greeting {
   color: #15803d;
 }
 .dash-torre-info {
-  font-size: 10px;
-  color: #4b5563;
+  font-size: 12px;
+  color: #374151;
   margin-top: 1px;
 }
 .dash-torre-cambiar {
@@ -2511,8 +2511,8 @@ h1.dash-greeting {
   color: #111827;
 }
 .dash-nutriente-detalle {
-  font-size: 10px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #4b5563;
   margin-top: 1px;
 }
 .dash-sistema-actions {
@@ -2521,8 +2521,8 @@ h1.dash-greeting {
   gap: 8px;
 }
 .dash-ubicacion-badge {
-  font-size: 11px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #4b5563;
 }
 .dash-btn-cambiar-nutriente {
   background: #f0fdf4;
@@ -2646,7 +2646,7 @@ button.torre-summary:focus-visible,
 .tile-value.empty { color: #9ca3af; }
 .tile-status {
   font-family: var(--font-ui);
-  font-size: var(--text-2xs);
+  font-size: var(--text-xs);
   font-weight: 600;
   margin-top: 5px;
   padding: 3px 6px;
@@ -2712,9 +2712,9 @@ button.torre-summary:focus-visible,
   min-width: 0;
 }
 .recarga-sistema-line {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--muted);
+  color: #cbd5e1;
   line-height: 1.25;
 }
 .recarga-title {
@@ -2745,9 +2745,9 @@ button.torre-summary:focus-visible,
   padding-right: 0;
 }
 .recarga-instalacion-aviso {
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
-  color: var(--muted);
+  color: #cbd5e1;
   margin: 0 0 10px;
   padding: 8px 10px;
   background: var(--bg3);
@@ -2769,16 +2769,16 @@ button.torre-summary:focus-visible,
   background: var(--green);
 }
 .recarga-nota {
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
-  color: var(--muted);
+  color: #cbd5e1;
 }
 .recarga-urgente-banner {
   display: none;
   margin-top: 10px;
   padding: 10px 12px;
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
   font-weight: 600;
   border: 1.5px solid #fcd34d;
@@ -2952,9 +2952,9 @@ button.torre-summary:focus-visible,
 .recarga-snooze-hint {
   display: none;
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.45;
-  color: var(--muted);
+  color: #cbd5e1;
 }
 .recarga-subtitle {
   font-size: var(--text-lg);
@@ -3326,8 +3326,8 @@ button.torre-summary:focus-visible,
   gap: 6px;
 }
 .param-range {
-  font-size: 11px;
-  color: var(--muted);
+  font-size: 12px;
+  color: #cbd5e1;
   font-family: var(--font-mono);
   font-weight: 600;
 }
@@ -3364,7 +3364,7 @@ button.torre-summary:focus-visible,
   margin-top: 8px;
   padding: 8px 10px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -3425,7 +3425,7 @@ button.torre-summary:focus-visible,
   background: #fef3c7;
   border: 1px solid #d97706;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 14px;
   color: #92400e;
   line-height: 1.6;
   display: none;
@@ -3455,8 +3455,8 @@ button.torre-summary:focus-visible,
 }
 .correccion-item--dim { opacity: 0.7; }
 .correccion-muted {
-  font-size: 11px;
-  color: var(--muted);
+  font-size: 12px;
+  color: #cbd5e1;
   line-height: 1.6;
   margin-top: 8px;
 }
@@ -3473,7 +3473,7 @@ button.torre-summary:focus-visible,
   color: inherit;
 }
 .correccion-buffer-warn {
-  font-size: 11px;
+  font-size: 12px;
   color: #92400e;
   margin-top: 6px;
   line-height: 1.6;
@@ -7303,7 +7303,7 @@ label.cl-field.cl-calmag-option:has(input:checked) span { color: #f0fdf4; font-w
   font-family: var(--font-ui);
   font-size: var(--text-xs);
   font-weight: 500;
-  color: var(--muted);
+  color: #cbd5e1;
   line-height: 1.4;
 }
 .config-section-collapse-head:hover {

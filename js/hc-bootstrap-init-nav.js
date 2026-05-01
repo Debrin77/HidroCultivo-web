@@ -186,12 +186,21 @@ function a11yDetachFocusTrap(rootEl) {
 function a11yDialogOpened(rootEl) {
   if (!rootEl || rootEl.dataset.a11yFocusPushed) return;
   rootEl.dataset.a11yFocusPushed = '1';
+  rootEl.setAttribute('aria-hidden', 'false');
   _a11yDialogFocusReturn.push(document.activeElement);
   a11yAttachFocusTrap(rootEl);
   requestAnimationFrame(() => {
     const list = a11yCollectFocusables(rootEl);
     const node = list[0];
-    if (node) node.focus();
+    if (node) {
+      node.focus();
+      return;
+    }
+    if (!rootEl.hasAttribute('tabindex')) {
+      rootEl.setAttribute('tabindex', '-1');
+      rootEl.dataset.a11yTabindexInjected = '1';
+    }
+    try { rootEl.focus(); } catch (_) {}
   });
 }
 
@@ -199,6 +208,11 @@ function a11yDialogClosed(rootEl) {
   if (!rootEl || !rootEl.dataset.a11yFocusPushed) return;
   a11yDetachFocusTrap(rootEl);
   delete rootEl.dataset.a11yFocusPushed;
+  rootEl.setAttribute('aria-hidden', 'true');
+  if (rootEl.dataset.a11yTabindexInjected === '1') {
+    rootEl.removeAttribute('tabindex');
+    delete rootEl.dataset.a11yTabindexInjected;
+  }
   const prev = _a11yDialogFocusReturn.pop();
   if (prev && typeof prev.focus === 'function') {
     try { prev.focus(); } catch (e) {}

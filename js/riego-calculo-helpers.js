@@ -229,8 +229,15 @@ function toggleRecarga() {
   }
   esRecarga = !esRecarga;
   const sw = document.getElementById('recargaSwitch');
+  if (!sw) return;
   sw.className = 'toggle-switch' + (esRecarga ? ' on' : '');
   sw.setAttribute('aria-checked', esRecarga ? 'true' : 'false');
+  sw.setAttribute(
+    'aria-label',
+    esRecarga
+      ? 'Recarga completa activada: se reiniciará el contador al guardar la medición'
+      : 'Recarga completa desactivada: no se reiniciará el contador al guardar la medición'
+  );
 }
 
 function toggleToldo() {
