@@ -20,6 +20,9 @@ function resetApp() {
     localStorage.removeItem(HC_GUIDE_DISMISS_KEY);
     localStorage.removeItem(HC_ONBOARD_RIEGO_VISIT_KEY);
     localStorage.removeItem(HC_BIENVENIDA_KEY);
+    localStorage.removeItem(HC_TUTORIAL_BASICO_KEY);
+    localStorage.removeItem(HC_TUTORIAL_BASICO_AUTO_KEY);
+    localStorage.removeItem(HC_TUTORIAL_BASICO_PASO_KEY);
     try {
       Object.values(HC_HINT_CTX).forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     } catch (_) {}
