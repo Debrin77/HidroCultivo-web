@@ -156,7 +156,11 @@ async function calcularRiego(opts = {}) {
     const dailyDateStr = (daily.time[idx] != null) ? String(daily.time[idx]).slice(0, 10) : null;
 
     const uvAlineado = riegoUvMaxAlineado(dataUV, dailyDateStr, idx);
-    const uvMax = uvAlineado != null ? uvAlineado : 0;
+    const meteoActual = state.meteoActual || {};
+    const uvFallbackMeteo =
+      Number.isFinite(Number(meteoActual.uvMaxHoy)) ? Number(meteoActual.uvMaxHoy)
+      : (Number.isFinite(Number(meteoActual.uv)) ? Number(meteoActual.uv) : null);
+    const uvMax = uvAlineado != null ? uvAlineado : (uvFallbackMeteo != null ? uvFallbackMeteo : 0);
 
     const times = data.hourly?.time;
     const rhArr = data.hourly?.relative_humidity_2m;
@@ -338,9 +342,12 @@ async function calcularRiego(opts = {}) {
       if (blockTorre) blockTorre.classList.add('setup-hidden');
 
       const precipMmN = Math.round((Number(daily.precipitation_sum?.[idx]) || 0) * 10) / 10;
+      const uvVisibleN = Number.isFinite(Number(uvEfectivo))
+        ? Math.round(Number(uvEfectivo) * 10) / 10
+        : (uvFallbackMeteo != null ? Math.round(Number(uvFallbackMeteo) * 10) / 10 : null);
       const uvClimaStrN = esInterior
         ? '—'
-        : (uvAlineado == null ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
+        : (uvVisibleN == null ? '—' : String(uvVisibleN));
       const lineaClimaN =
         '🌡️ Temperatura: ' + Math.round(tempMin) + '–' + Math.round(tempMax) + ' °C' +
         ' · 💧 Humedad media: ' + humMedia + '%' +
@@ -729,7 +736,10 @@ async function calcularRiego(opts = {}) {
 
     const etiquetaDia = diaRiego === 'manana' ? '📅 Mañana' : '📅 Hoy';
     const precipMm = Math.round((Number(daily.precipitation_sum?.[idx]) || 0) * 10) / 10;
-    const uvClimaStr = esInterior ? '—' : (uvAlineado == null ? '—' : String(Math.round(Number(uvEfectivo) * 10) / 10));
+    const uvVisible = Number.isFinite(Number(uvEfectivo))
+      ? Math.round(Number(uvEfectivo) * 10) / 10
+      : (uvFallbackMeteo != null ? Math.round(Number(uvFallbackMeteo) * 10) / 10 : null);
+    const uvClimaStr = esInterior ? '—' : (uvVisible == null ? '—' : String(uvVisible));
     const lineaClima =
       '🌡️ Temperatura: ' + Math.round(tempMin) + '–' + Math.round(tempMax) + ' °C' +
       ' · 💧 Humedad media: ' + humMedia + '%' +
