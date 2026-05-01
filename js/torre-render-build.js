@@ -1423,7 +1423,7 @@ function abrirTutorialAsignarCultivo(opts) {
   const esNftTut = tTut === 'nft';
   const esDwcTut = tTut === 'dwc';
   const titTut = esNftTut ? '🪴 Asignar cultivo en NFT'
-    : esDwcTut ? '🌊 Asignar cultivo en DWC' : '🌱 Asignar cultivo en torre vertical';
+    : esDwcTut ? '🫧 Asignar cultivo en DWC' : '🌱 Asignar cultivo en torre vertical';
   const subTut = esNftTut
     ? 'Rellena muchos huecos (canales) sin abrir la ficha uno a uno.'
     : esDwcTut

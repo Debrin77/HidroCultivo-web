@@ -850,7 +850,7 @@ function getCLPasos() {
     : (esDwcK
       ? [{
           id: 'D0K',
-          seccion: '🌊 Kratky — control de seguridad',
+          seccion: '🫧 Kratky — control de seguridad',
           paso: 'D·0',
           desc: 'Sin aireador: prioriza estabilidad térmica y nivel de solución. Mantén siempre cámara de aire entre nutriente y base del sustrato.',
           nota: 'Objetivo práctico: agua fresca (ideal 17–21°C, evitar >22°C sostenidos) y reposición sin sobrellenar (0,5–1 cm por debajo de base del sustrato).',
