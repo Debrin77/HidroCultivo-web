@@ -61,7 +61,7 @@ const CONSEJOS_DATA = {
     soloNftDoc: true,
   },
   dwc: {
-    nombre: '🌊 DWC', color: '#0891b2', bg: 'rgba(8,145,178,0.12)',
+    nombre: '🫧 DWC', color: '#0891b2', bg: 'rgba(8,145,178,0.12)',
     consejos: [],
     soloDwcDoc: true,
   },
@@ -1638,7 +1638,7 @@ function buildConsejosDwc() {
       ? hcWrapOrigenDetails(introDetalle, 'Ver explicación completa DWC', true)
       : introDetalle;
   const intro = htmlConsejoCard(cat, {
-    icono: '🌊',
+    icono: '🫧',
     titulo: 'DWC en esta app',
     texto:
       '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> en DWC todas las plantas comparten el mismo depósito (EC/pH comunes).</p>' +

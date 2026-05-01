@@ -148,11 +148,11 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
         tCh === 'dwc' && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(state.configTorre || {}) === 'kratky';
       const titPrimer =
         tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
-        : tCh === 'dwc' ? (esKratkyTit ? '🌊 Primer llenado Kratky — checklist' : '🌊 Primer llenado DWC — checklist')
+        : tCh === 'dwc' ? (esKratkyTit ? '🫧 Primer llenado Kratky — checklist' : '🫧 Primer llenado DWC — checklist')
         : '🌿 Primer llenado — torre vertical — checklist';
       const titRecarga =
         tCh === 'nft' ? '🪴 Recarga NFT — checklist'
-        : tCh === 'dwc' ? (esKratkyTit ? '🌊 Recarga Kratky — checklist' : '🌊 Recarga DWC — checklist')
+        : tCh === 'dwc' ? (esKratkyTit ? '🫧 Recarga Kratky — checklist' : '🫧 Recarga DWC — checklist')
         : '🌿 Recarga — torre vertical — checklist';
       if (clRutaChecklist === 'primer_llenado') {
         clTit.textContent = titPrimer;

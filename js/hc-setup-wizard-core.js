@@ -534,7 +534,7 @@ function refrescarSetupTipoInstalacionUI() {
   const st = document.getElementById('spage1Subtitle');
   if (t1) {
     t1.textContent = isNft ? '🪴 Tu sistema NFT'
-      : setupTipoInstalacion === 'dwc' ? '🌊 Tu DWC' : '🌿 Tu torre vertical';
+      : setupTipoInstalacion === 'dwc' ? '🫧 Tu DWC' : '🌿 Tu torre vertical';
   }
   if (st) {
     st.textContent = isNft

@@ -194,7 +194,7 @@ function actualizarVistaRiegoPorTipoInstalacion() {
         '🪴 Riego <span class="accent">NFT</span> <span class="riego-section-title-sub">· clima de referencia</span>';
     } else if (tipo === 'dwc') {
       titleEl.innerHTML =
-        '🌊 Riego <span class="accent">DWC</span> <span class="riego-section-title-sub">· clima de referencia</span>';
+        '🫧 Riego <span class="accent">DWC</span> <span class="riego-section-title-sub">· clima de referencia</span>';
     } else {
       titleEl.innerHTML = '💧 Cálculo de <span class="accent">Riego</span>';
     }

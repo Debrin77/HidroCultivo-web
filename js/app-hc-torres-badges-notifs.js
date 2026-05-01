@@ -11,7 +11,7 @@ const MAX_TORRES = 10;
 function emojiMigracionPorTipoInstalacion(cfg) {
   if (!cfg || !cfg.tipoInstalacion) return '🌿';
   if (cfg.tipoInstalacion === 'nft') return '🪴';
-  if (cfg.tipoInstalacion === 'dwc') return '🌊';
+  if (cfg.tipoInstalacion === 'dwc') return '🫧';
   return '🌿';
 }
 
@@ -572,7 +572,7 @@ function renderListaTorres() {
       <span class="torre-list-body">
         <span class="torre-list-name">${(t.nombre || '').trim() || 'Instalación'}</span>
         <span class="torre-list-meta">
-          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : cfgT.tipoInstalacion === 'dwc' ? '🌊 DWC · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
+          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : cfgT.tipoInstalacion === 'dwc' ? '🫧 DWC · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
           ${isActiva ? ' · <strong class="torre-list-active-tag">Activa</strong>' : ''}
         </span>
       </span>

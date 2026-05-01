@@ -254,7 +254,7 @@ function actualizarResumenSetup() {
           ? '⚡ NFT: circulación <strong>24 h</strong> · criterio bomba/depósito en el paso de equipo y en checklist (veredicto visible; cifras en «detalle técnico»).<br>'
           : '')
       : isDwc
-        ? '🌊 DWC: <strong>' + niveles + ' filas × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
+        ? '🫧 DWC: <strong>' + niveles + ' filas × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
         : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoTorreRes + '<br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
