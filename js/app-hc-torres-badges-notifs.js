@@ -35,6 +35,7 @@ function initTorres() {
   }
   let idSeq = Date.now();
   let idsReparados = false;
+  let emojisMigrados = false;
   (state.torres || []).forEach(t => {
     if (t.id == null || t.id === '') {
       idSeq += 1;
@@ -47,8 +48,13 @@ function initTorres() {
       if (!Array.isArray(t.fotosSistemaCompleto.fotoKeys)) t.fotosSistemaCompleto.fotoKeys = [];
       if (!Array.isArray(t.fotosSistemaCompleto.fotos)) t.fotosSistemaCompleto.fotos = [];
     }
+    const tipo = tipoInstalacionNormalizado(t && t.config ? t.config : null);
+    if (tipo === 'dwc' && t.emoji === '🌊') {
+      t.emoji = '🫧';
+      emojisMigrados = true;
+    }
   });
-  if (idsReparados) saveState();
+  if (idsReparados || emojisMigrados) saveState();
 }
 
 function getTorreActiva() {
