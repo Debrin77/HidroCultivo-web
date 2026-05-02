@@ -29,13 +29,12 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
  */
 function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
   const EO = equipOpts || {};
+  const cfg = EO.cfgSnapshot || {};
   const interactive = EO.interactive === true;
   const showCalentador = EO.calentador === true;
   const showDifusor = EO.difusor === true;
   const bomb = EO.bombaInfo || null;
-  const userQ = EO.userCaudalLh != null && EO.userCaudalLh > 0 ? Math.round(EO.userCaudalLh) : null;
-  const userW = EO.userPotenciaW != null && EO.userPotenciaW > 0 ? Math.round(EO.userPotenciaW) : null;
-  const dispLayout = nftDisposicionNormalizada(EO.nftDisposicion);
+  const dispLayout = nftDisposicionNormalizada(EO.nftDisposicion != null ? EO.nftDisposicion : cfg.nftDisposicion);
 
   const suf = (svgIdSuffix != null && String(svgIdSuffix).trim() !== '')
     ? String(svgIdSuffix).replace(/[^a-zA-Z0-9_-]/g, '')
@@ -60,7 +59,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   );
   /** Cabecera: espacio mínimo según tamaño de título (serpentín no lleva leyenda Canal/Cesta bajo el subtítulo). */
   const topPad = Math.max(isParedSerp ? 80 : 38, hdrSerpPad.topPadMin);
-  const botTank = 130;
+  const botTank = 162;
   const stairExtra = dispLayout === 'escalera' ? Math.max(0, nCh - 1) * 28 : 0;
   const H = topPad + nCh * rowStep + botTank + stairExtra;
   const cx = W0 / 2;
@@ -71,11 +70,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const padFlow = 14;
   const serpChStroke = dispLayout === 'pared' ? 1.05 : 1.3;
   const tankY = H - botTank + 4;
-  const tankH = 82;
-  const tankW = Math.min(360, Math.round(140 + vol * 0.65));
+  const tankH = 102;
+  const tankW = Math.min(400, Math.round(152 + vol * 0.72));
   const tx = (W0 - tankW) / 2;
-  const waterTop = tankY + 8;
-  const waterH = tankH - 20;
+  const waterTop = tankY + 6;
+  const waterH = tankH - 16;
   const altCmSerp =
     EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0 ? Math.round(Number(EO.nftAlturaBombeoCm)) : null;
   const legHintSerp = { volL: vol, nCanales: nCh, nTubosTotal: nCh, alturaBadgeNTubos: nCh };
@@ -83,8 +82,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const volFsSerp = nftTankVolumeFontSize(vol, legTierSerp);
   const altBadgeSerp = nftAlturaBadgeBesideTank(altCmSerp, tx, tankY, tankW, tankH, W0, legHintSerp);
   const Wsvg = altBadgeSerp.canvasW;
-  const cxTitle = Wsvg / 2;
-  const hdrSerp = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactSerpHeader, withLegend: false });
 
   const yRow = i =>
     topPad + i * rowStep + Math.floor(rowStep / 2) + (dispLayout === 'escalera' ? i * 14 : 0);
@@ -113,11 +110,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const yLast = yRow(nCh - 1);
   const endsRightSerp = (nCh - 1) % 2 === 0;
   const retMargSerp = endsRightSerp ? xR + 14 : xL - 14;
+  const yDuctSerp = tankY + tankH + 10;
+  const ductTowardRiserSerp = xRiser <= tx + tankW * 0.42 ? tx + tankW - 12 : tx + 12;
   flowD += ' L ' + retMargSerp + ' ' + yLast;
-  flowD += ' L ' + retMargSerp + ' ' + (tankY + 24);
-  flowD += ' L ' + (tx + tankW - 6) + ' ' + (tankY + 24);
-  flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
-  flowD += ' L ' + xRiser + ' ' + (tankY + 14);
+  flowD += ' L ' + retMargSerp + ' ' + yDuctSerp;
+  flowD += ' L ' + ductTowardRiserSerp + ' ' + yDuctSerp;
+  flowD += ' L ' + xRiser + ' ' + (tankY + 10);
   flowD += ' L ' + xRiser + ' ' + yPump;
 
   let back = '';
@@ -244,7 +242,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
 
   let tankLayer = '';
   tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
-  tankLayer += '<rect x="' + (tx + 5) + '" y="' + waterTop + '" width="' + (tankW - 10) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
   tankLayer += altBadgeSerp.html;
   /* Depósito: solo volumen + CAL/AIR si el usuario los tiene en equipamiento (el resto de la config va al pie). */
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
@@ -276,23 +274,13 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '<text x="' + ax + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#f0f9ff">AIR</text>';
   }
 
-  let pumpYNext = tankY + tankH + 10;
-  let pumpLines = '';
-  if (bomb) {
-    pumpLines +=
-      '<text x="' + cxTitle + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Circulación 24 h · criterio en panel</text>';
-    pumpYNext += 12;
-  }
-  if (userQ != null || userW != null) {
-    pumpLines +=
-      '<text x="' + cxTitle + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">Placa anotada · ver veredicto en checklist</text>';
-  }
+  const pumpLines = '';
 
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
     channels = '<g pointer-events="none">' + channels + '</g>';
     flowLayer = '<g pointer-events="none">' + flowLayer + '</g>';
-    tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
+    tankLayer = '<g pointer-events="none">' + tankLayer + '</g>';
   }
 
   const layoutFoot =
@@ -334,7 +322,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '">' +
     '<title id="' +
     tid +
-    '">Diagrama NFT en serpentín: recorrido del agua desde el depósito por los tubos y retorno</title>' +
+    '">' +
+    escSvgText(
+      'Diagrama NFT en serpentín: recorrido del agua desde el depósito por los tubos y retorno. ' + foot
+    ) +
+    '</title>' +
     '<defs>' +
     '<linearGradient id="' +
     gidCh +
@@ -355,15 +347,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     plants +
     tankLayer +
     (!interactive ? pumpLines : '') +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    (H - 4) +
-    '" text-anchor="middle" fill="#475569" font-size="' +
-    hdrSerp.footFs +
-    '" font-weight="600">' +
-    foot +
-    '</text>' +
     '</svg>'
   );
 }
