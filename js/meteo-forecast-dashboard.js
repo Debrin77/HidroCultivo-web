@@ -215,16 +215,20 @@ function updateRecargaBar() {
   notaEl.textContent = nota;
   notaEl.style.color = pct > 85 ? '#dc2626' : '#6b7280';
 
-  // Actualizar depósito visual (usa volumen seguro del sistema activo, no fijo 20 L)
+  // Depósito visual: mismo objetivo que Medir — litros de mezcla si los configuraste;
+  // si no, tope seguro / depósito (getVolumenMezclaLitros ya hace ese fallback).
   const vol = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : 0;
-  const volMaxSafe =
-    typeof getVolumenDepositoMaxLitros === 'function'
-      ? Math.max(0.5, Number(getVolumenDepositoMaxLitros(state.configTorre || {})) || 20)
-      : 20;
-  const volPct = vol > 0 ? Math.min(100, (vol / volMaxSafe) * 100) : 50;
-  const volWarn = volMaxSafe * 0.8;
-  const volBad = volMaxSafe * 0.7;
-  const faltaL = vol > 0 ? Math.max(0, Math.round((volMaxSafe - vol) * 10) / 10) : 0;
+  const cfgRec = state.configTorre || {};
+  const volObjetivo =
+    typeof getVolumenMezclaLitros === 'function'
+      ? Math.max(0.5, Number(getVolumenMezclaLitros(cfgRec)) || 20)
+      : (typeof getVolumenDepositoMaxLitros === 'function'
+        ? Math.max(0.5, Number(getVolumenDepositoMaxLitros(cfgRec)) || 20)
+        : 20);
+  const volPct = vol > 0 ? Math.min(100, (vol / volObjetivo) * 100) : 50;
+  const volWarn = volObjetivo * 0.8;
+  const volBad = volObjetivo * 0.7;
+  const faltaL = vol > 0 ? Math.max(0, Math.round((volObjetivo - vol) * 10) / 10) : 0;
   const tankFill = document.getElementById('tankWaterFill');
   const tankLabel = document.getElementById('tankVolLabel');
   if (tankFill) {
@@ -243,10 +247,10 @@ function updateRecargaBar() {
   if (volSeguroEl) {
     if (vol > 0 && faltaL > 0.05) {
       volSeguroEl.style.display = 'block';
-      volSeguroEl.textContent = 'Reposición segura: +' + faltaL + ' L hasta ~' + volMaxSafe + ' L';
+      volSeguroEl.textContent = 'Reposición segura: +' + faltaL + ' L hasta ~' + volObjetivo + ' L';
     } else if (vol > 0) {
       volSeguroEl.style.display = 'block';
-      volSeguroEl.textContent = 'Nivel en zona segura (~' + volMaxSafe + ' L)';
+      volSeguroEl.textContent = 'Nivel en zona segura (~' + volObjetivo + ' L)';
     } else {
       volSeguroEl.style.display = 'none';
       volSeguroEl.textContent = '';

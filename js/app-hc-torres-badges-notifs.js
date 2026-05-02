@@ -15,6 +15,14 @@ function emojiMigracionPorTipoInstalacion(cfg) {
   return '🌿';
 }
 
+function emojiSistemaUiPorTorre(t) {
+  const cfg = t && t.config ? t.config : null;
+  const tipo = tipoInstalacionNormalizado(cfg);
+  if (tipo === 'dwc') return '🫧';
+  if (tipo === 'nft') return '🪴';
+  return (t && t.emoji) || '🌿';
+}
+
 // Inicializar sistema de torres si no existe
 function initTorres() {
   if (!state.torres) {
@@ -348,7 +356,7 @@ function cargarEstadoTorre(idx) {
 function actualizarHeaderTorre() {
   const t = getTorreActiva();
   const btn = document.getElementById('torreActivaNombre');
-  if (btn) btn.textContent = (t.emoji || '🌿') + ' ' + ((t.nombre || '').trim() || 'Instalación');
+  if (btn) btn.textContent = emojiSistemaUiPorTorre(t) + ' ' + ((t.nombre || '').trim() || 'Instalación');
   // Mostrar/ocultar botón añadir según límite
   const btnCrear = document.getElementById('btnCrearTorre');
   if (btnCrear) btnCrear.style.display = (state.torres.length >= MAX_TORRES) ? 'none' : 'block';
@@ -528,7 +536,7 @@ function renderTorreInstalacionPicker() {
   const activa = n ? Math.min(Math.max(0, state.torreActiva || 0), n - 1) : 0;
   const t = n ? torres[activa] : null;
   const nom = t ? (((t.nombre || '').trim()) || ('Instalación ' + (activa + 1))) : '—';
-  const emoji = t ? (t.emoji || '🌿') : '🌿';
+  const emoji = t ? emojiSistemaUiPorTorre(t) : '🌿';
   const tipoTxt = t ? textoTipoInstalacionTorre(t.config) : '—';
   if (elEmoji) elEmoji.textContent = emoji;
   elNom.textContent = nom;
@@ -574,7 +582,7 @@ function renderListaTorres() {
         onclick="cambiarTorreActiva(${i})"
         aria-pressed="${isActiva ? 'true' : 'false'}"
         aria-label="Activar ${String((t.nombre || '').trim() || 'instalación').replace(/"/g, '&quot;')}${isActiva ? ', instalación actual' : ''}">
-      <span class="torre-list-emoji" aria-hidden="true">${t.emoji || '🌿'}</span>
+      <span class="torre-list-emoji" aria-hidden="true">${emojiSistemaUiPorTorre(t)}</span>
       <span class="torre-list-body">
         <span class="torre-list-name">${(t.nombre || '').trim() || 'Instalación'}</span>
         <span class="torre-list-meta">
@@ -797,7 +805,7 @@ function actualizarBadgesNutriente() {
   const dashTorreNombre = document.getElementById('dashTorreNombre');
   const dashTorreInfo   = document.getElementById('dashTorreInfo');
   const torre = getTorreActiva();
-  if (dashTorreEmoji)  dashTorreEmoji.textContent  = torre.emoji || '🌿';
+  if (dashTorreEmoji)  dashTorreEmoji.textContent  = emojiSistemaUiPorTorre(torre);
   if (dashTorreNombre) dashTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
   if (dashTorreInfo) {
     const niv = cfg.numNiveles || 5;
@@ -812,7 +820,7 @@ function actualizarBadgesNutriente() {
   // Pestaña Medir — banner torre
   const medirTorreEmoji  = document.getElementById('medirTorreEmoji');
   const medirTorreNombre = document.getElementById('medirTorreNombre');
-  if (medirTorreEmoji)  medirTorreEmoji.textContent  = torre.emoji || '🌿';
+  if (medirTorreEmoji)  medirTorreEmoji.textContent  = emojiSistemaUiPorTorre(torre);
   if (medirTorreNombre) medirTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
   actualizarEstadoOperativaUI();
 
