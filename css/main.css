@@ -8006,6 +8006,89 @@ button.config-option:focus-visible,
   margin-bottom: 0;
 }
 
+/* Pestaña Sistema: bloques con borde y relieve más definidos (lectura de arriba abajo) */
+#tab-sistema .torre-card-elevated {
+  border: 1.5px solid rgba(15, 23, 42, 0.16);
+  box-shadow:
+    0 3px 14px rgba(15, 23, 42, 0.09),
+    0 0 0 1px rgba(255, 255, 255, 0.75) inset;
+}
+#tab-sistema .torre-tab-resumen-superior .stats-row {
+  background: #fff;
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  border-radius: 14px;
+  padding: 10px 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+}
+#tab-sistema .torre-tab-resumen-superior .stat-box {
+  border: 1.5px solid rgba(15, 23, 42, 0.11);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+#tab-sistema .torre-tab-resumen-superior .torre-nutriente-strip {
+  border: 1.5px solid rgba(15, 23, 42, 0.15);
+  box-shadow: 0 3px 14px rgba(15, 23, 42, 0.08);
+}
+#tab-sistema .torre-tab-resumen-superior .info-banner {
+  border-width: 1.5px;
+  border-color: rgba(21, 128, 61, 0.28);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+}
+#tab-sistema .torre-tab-resumen-superior .aviso-cestas-sin-fecha {
+  border-width: 1.5px;
+  border-color: rgba(180, 83, 9, 0.45);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+}
+#tab-sistema .torre-container {
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  box-shadow:
+    0 4px 22px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.65) inset;
+}
+#tab-sistema .torre-diagram-toolbar,
+#tab-sistema .torre-interaccion-bar {
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.07);
+}
+#tab-sistema .modo-selector {
+  padding: 8px;
+  background: #fff;
+  border: 1.5px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+}
+#tab-sistema #modoInfo.info-banner {
+  border-width: 1.5px;
+  border-color: rgba(21, 128, 61, 0.3);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+}
+#tab-sistema #tablaVariedades.torre-tabla-variedades {
+  padding: 12px;
+  background: #fff;
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.07);
+}
+#tab-sistema .card.compat-panel-card {
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  box-shadow: 0 3px 14px rgba(15, 23, 42, 0.08);
+}
+#tab-sistema .hc-card-slate {
+  border: 1.5px solid rgba(15, 23, 42, 0.16);
+  box-shadow: 0 3px 14px rgba(15, 23, 42, 0.08);
+}
+#tab-sistema .torre-dwc-card {
+  border-width: 2px;
+  border-color: #0891b2;
+  box-shadow: 0 4px 18px rgba(6, 182, 212, 0.14);
+}
+#tab-sistema .tab-context-hint {
+  border-width: 1.5px;
+  border-style: solid;
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+}
+
 /* Torre tab — nombre instalación, NFT sistema, DWC */
 .torre-card-elevated {
   background: #fff;
