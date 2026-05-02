@@ -3076,6 +3076,40 @@ button.torre-summary:focus-visible,
   gap: 10px;
   margin-bottom: 10px;
 }
+.dash-post-setup-camino {
+  margin: 0 0 14px;
+  border-radius: 12px;
+  border: 1px solid #a7f3d0;
+  background: #f0fdf4;
+  padding: 10px 12px;
+}
+.dash-post-setup-camino-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-post-setup-kicker {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #047857;
+}
+.dash-post-setup-txt {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #374151;
+}
+.dash-post-setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.dash-post-setup-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .quick-actions--core,
 .quick-actions--extra {
   margin-bottom: 0;
@@ -6025,6 +6059,16 @@ label.cl-field.cl-calmag-option:has(input:checked) span {
   font-size: 12px;
   color: #6b7280;
   margin-top: 3px;
+}
+.checklist-pregunta-nota-pasos {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
 }
 .checklist-pregunta-nutri {
   display: flex;

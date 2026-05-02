@@ -1108,6 +1108,11 @@ function preguntarIniciarChecklist() {
         '</div>' +
       '</div>' +
 
+      '<div class="checklist-pregunta-nota-pasos">' +
+        'Siguiente paso habitual: en <strong>Sistema</strong> detalla cada cesta (variedad, trasplante, procedencia); ' +
+        'luego el checklist dosifica el depósito. Puedes iniciar el checklist aunque aún falten cestas por rellenar.' +
+      '</div>' +
+
       // Badge nutriente destacado
       '<div class="checklist-pregunta-nutri">' +
         '<span class="checklist-pregunta-nutri-icon">' + (nut.bandera||'🧪') + '</span>' +

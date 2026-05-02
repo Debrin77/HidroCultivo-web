@@ -173,7 +173,7 @@
           <button type="button" class="hc-guia-dismiss" onclick="dismissGuiaPrimerosPasos()"
             aria-label="Ocultar esta guía">✕</button>
         </div>
-        <p class="hc-guia-lead">Sigue este orden para que los datos tengan sentido: primero el <strong>tipo de instalación</strong>, luego una <strong>medición</strong> real, y por último el <strong>riego</strong> como referencia.</p>
+        <p class="hc-guia-lead">Sigue este orden: <strong>tipo de instalación</strong> (asistente), luego en <strong>Sistema</strong> las plantas en cada hueco, el <strong>checklist</strong> para preparar el depósito, una <strong>medición</strong> real y el <strong>riego</strong> como referencia.</p>
         <ol class="hc-guia-steps">
           <li id="guiaPaso1" class="hc-guia-step" data-step="1">
             <span class="hc-guia-step-label">Configura la instalación activa</span>
@@ -363,6 +363,20 @@
           </div>
         </details>
       </div>
+
+      <aside id="dashPostSetupCamino" class="dash-post-setup-camino" role="note" aria-label="Flujo tras configurar la instalación">
+        <div class="dash-post-setup-camino-inner">
+          <span class="dash-post-setup-kicker">Tras configurar el hidro</span>
+          <p class="dash-post-setup-txt">
+            <strong>Sistema</strong>: variedad, fecha de trasplante y procedencia en cada cesta.
+            Luego <strong>checklist de recarga</strong> para dosificar el nutriente en el depósito de esta instalación.
+          </p>
+          <div class="dash-post-setup-actions">
+            <button type="button" class="btn btn-secondary btn-sm dash-post-setup-btn" onclick="goTab('sistema')">Ir a Sistema</button>
+            <button type="button" class="btn btn-primary btn-sm dash-post-setup-btn" onclick="abrirChecklist(false)">Checklist depósito</button>
+          </div>
+        </div>
+      </aside>
 
       <section class="dash-notif-prefs config-section-collapsible" id="dashNotifPrefsCard" aria-labelledby="dashNotifPrefsTitle">
         <button type="button" class="config-section-collapse-head medir-disclosure-main-head dash-notif-prefs-head"
@@ -3810,7 +3824,7 @@
   <script src="js/hc-setup-wizard-dwc.js?v=7"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=6"></script>
   <script src="js/hc-setup-wizard-pages.js?v=4"></script>
-  <script src="js/hc-setup-calc-core.js?v=5"></script>
+  <script src="js/hc-setup-calc-core.js?v=6"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
