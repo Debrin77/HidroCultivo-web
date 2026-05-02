@@ -160,6 +160,7 @@
     nota:'EC aumenta según fase: veg 1500-2000, fruto 2000-3000. Necesita tutores y polinización.',
     fructificacion: true,
     fases: {
+      germinacion:   { ec:[400,700],   ph:[5.8,6.2], dias:12 },
       plantula:     { ec:[800,1200],  ph:[5.8,6.2], dias:14 },
       vegetativo:   { ec:[1500,2000], ph:[5.5,6.3], dias:30 },
       floracion:    { ec:[2000,2500], ph:[5.5,6.3], dias:20 },

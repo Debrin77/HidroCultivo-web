@@ -1154,6 +1154,33 @@ function generarSVGTorre() {
 }
 
 
+/** Referencia de germinación en sustrato (casa), antes del trasplante al hidro — no es el EC del depósito de la torre. */
+function torreTablaLineaSemilleroGerminacionHtml(cultivo) {
+  if (!cultivo || !cultivo.fases || !cultivo.fases.germinacion) return '';
+  const g = cultivo.fases.germinacion;
+  const ec =
+    Array.isArray(g.ec) && g.ec.length >= 2 && Number.isFinite(Number(g.ec[0])) && Number.isFinite(Number(g.ec[1]))
+      ? Math.round(Number(g.ec[0])) + '–' + Math.round(Number(g.ec[1]))
+      : null;
+  const ph =
+    Array.isArray(g.ph) && g.ph.length >= 2 && Number.isFinite(Number(g.ph[0])) && Number.isFinite(Number(g.ph[1]))
+      ? Number(g.ph[0]).toFixed(1) + '–' + Number(g.ph[1]).toFixed(1)
+      : null;
+  const d = Number(g.dias);
+  const dTxt = Number.isFinite(d) && d > 0 ? '~' + Math.round(d) + ' d en sustrato' : '';
+  const parts = [];
+  if (ec) parts.push('EC ' + ec + ' µS/cm');
+  if (ph) parts.push('pH ' + ph);
+  if (dTxt) parts.push(dTxt);
+  if (parts.length === 0) return '';
+  return (
+    '<div class="torre-prog-ec-fase torre-prog-ec-fase--semillero" ' +
+    'title="Germinación en casa (semillero / sustrato húmedo). No uses este EC en el depósito hasta tener plántula y trasplantar al sistema.">' +
+    '<span class="torre-prog-semillero-tag">Semillero</span> ' +
+    escHtmlUi(parts.join(' · ')) +
+    '</div>'
+  );
+}
 
 // ── Tabla resumen de variedades debajo del SVG ───────────────────────────────
 function renderTablaVariedades() {
@@ -1215,7 +1242,7 @@ function renderTablaVariedades() {
   let html = '<div class="torre-prog-wrap">' +
     '<div class="torre-prog-head">' +
     '<span>N·C</span><span>Variedad</span><span>Días</span><span>Estado</span>' +
-    '<span title="Mismo criterio que la pestaña Medir: días desde el trasplante al sistema; germinación en sustrato no cuenta en hidro.">EC (µS/cm)</span>' +
+    '<span title="Hidro: EC según días desde el trasplante al sistema (igual que Medir). Debajo, si el cultivo lo define, referencia Semillero para germinar en casa antes de pasar a plántula en hidro.">EC (µS/cm)</span>' +
     '</div>';
 
   const faseEcEtq = {
@@ -1238,6 +1265,7 @@ function renderTablaVariedades() {
           ? '<div class="torre-prog-ec-fase torre-prog-ec-fase--muted">Sin fase por días · rango general del cultivo</div>'
           : '';
     const cultRow  = getCultivoDB(p.variedad);
+    const semilleroLine = torreTablaLineaSemilleroGerminacionHtml(cultRow);
     const origTxt =
       typeof etiquetaOrigenPlantaBreve === 'function' ? etiquetaOrigenPlantaBreve(p.origenPlanta) : '';
 
@@ -1263,6 +1291,7 @@ function renderTablaVariedades() {
       '<span class="torre-prog-ec">' +
         ecText +
         faseEcLine +
+        semilleroLine +
         '</span>' +
       '</div>';
   });

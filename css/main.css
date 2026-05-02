@@ -10300,7 +10300,7 @@ button.toggle-switch:focus-visible {
 }
 .torre-prog-head {
   display: grid;
-  grid-template-columns: 32px 1fr 52px 70px 76px;
+  grid-template-columns: 32px 1fr 52px 70px 86px;
   background: #f8fafc;
   padding: 6px 10px;
   border-bottom: 1px solid #e5e7eb;
@@ -10312,7 +10312,7 @@ button.toggle-switch:focus-visible {
 }
 .torre-prog-row {
   display: grid;
-  grid-template-columns: 32px 1fr 52px 70px 76px;
+  grid-template-columns: 32px 1fr 52px 70px 86px;
   padding: 7px 10px;
   border-bottom: 1px solid #f3f4f6;
   align-items: start;
@@ -10389,6 +10389,24 @@ button.toggle-switch:focus-visible {
 .torre-prog-ec-fase--muted {
   color: #94a3b8;
   font-weight: 500;
+}
+.torre-prog-ec-fase--semillero {
+  margin-top: 4px;
+  padding: 4px 5px 4px 6px;
+  border-radius: 6px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+  text-align: left;
+}
+.torre-prog-semillero-tag {
+  display: inline-block;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #047857;
+  margin-right: 2px;
 }
 .setup-plantas-grid {
   display: grid;
