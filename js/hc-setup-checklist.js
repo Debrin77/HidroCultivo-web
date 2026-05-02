@@ -104,7 +104,7 @@ function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
         '<strong>Primer llenado</strong>: depósito nuevo o sin haber cultivado aún — te saltamos apagar bomba, vaciado de solución usada y pasos de cosecha. ' +
         'Sí te guiamos en <strong>limpiar el depósito</strong> antes de la primera mezcla.<br><br>' +
         '<strong>Recarga completa</strong>: ya hubo cultivo y solución en el sistema; el recorrido habitual (parar bomba, vaciar, limpiar, cubrir depósito…).</p>' +
-      '<p class="checklist-dark-text checklist-dark-text--note">El checklist aplica a la <strong>instalación activa</strong> (revisa el nombre en Inicio, Mediciones o pestaña Sistema si tienes varias).</p>' +
+      '<p class="checklist-dark-text checklist-dark-text--note">El checklist aplica a la <strong>instalación activa</strong> (revisa el nombre en Inicio, Mediciones o pestaña Sistema si tienes varias). Lo habitual es haber rellenado antes en <strong>Sistema</strong> las <strong>variedades y fechas</strong> en cada cesta: así las dosis al depósito y el EC orientativo encajan con lo implantado.</p>' +
       '<p class="checklist-dark-text checklist-dark-text--note">Tras <strong>finalizar</strong> una recarga en el checklist, la app ya no muestra esta pregunta y abrirá directamente la recarga completa.</p>' +
       '<button type="button" id="clRutaPrimer" class="checklist-dark-btn checklist-dark-btn--teal">' +
         '🌱 Primer llenado del depósito</button>' +
