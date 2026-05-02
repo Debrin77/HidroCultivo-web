@@ -65,6 +65,7 @@ function updateDashboard() {
 
 function getTileClass(param, val) {
   if (param === 'ec' && typeof getDashTileClassEc === 'function') return getDashTileClassEc(val);
+  if (param === 'vol' && typeof getDashTileClassVol === 'function') return getDashTileClassVol(val);
   if (isNaN(val)) return 'empty';
   const r = RANGOS[param];
   if (!r) return 'empty';

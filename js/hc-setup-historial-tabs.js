@@ -246,6 +246,10 @@ function getClaseVal(param, val) {
     const t = getDashTileClassEc(v);
     return t === 'empty' ? '' : t;
   }
+  if (param === 'vol' && typeof getDashTileClassVol === 'function') {
+    const t = getDashTileClassVol(v);
+    return t === 'empty' ? '' : t;
+  }
   const r = RANGOS[param];
   if (!r) return '';
   if (v >= r.min && v <= r.max) return 'ok';

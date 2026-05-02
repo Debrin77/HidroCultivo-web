@@ -49,6 +49,37 @@ function getDashTileClassEc(val) {
 }
 
 /**
+ * Tile Inicio (y gráficos que reutilicen la misma regla): volumen alineado con `evalVol`.
+ * Usa litros de mezcla objetivo (`getVolumenMezclaLitros`) para las bandas bajas; el tope alto sigue siendo el máximo seguro.
+ */
+function getDashTileClassVol(val) {
+  if (val == null || !Number.isFinite(Number(val))) return 'empty';
+  const vol = Number(val);
+  const cfgK = state.configTorre || {};
+  const esKratky = typeof esDwcKratky === 'function' && esDwcKratky(cfgK);
+  const volMax = getVolumenDepositoMaxLitros(cfgK);
+  if (esKratky && Number.isFinite(volMax) && volMax > 0) {
+    const umbralOkK = volMax * 0.85;
+    const umbralWarnK = volMax * 0.7;
+    if (vol >= umbralOkK) return 'ok';
+    if (vol < umbralWarnK) return 'bad';
+    return 'warn';
+  }
+  const volTop =
+    Number.isFinite(volMax) && volMax > 0 ? volMax : Math.max(RANGOS.vol.min, VOL_OBJETIVO);
+  const volTarget =
+    typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfgK) : volTop;
+  const umbralOk = Math.max(4, volTarget * 0.93);
+  const umbralCrit = Math.max(2.5, volTarget * 0.68);
+  const umbralWarnBajo = Math.max(3, volTarget * 0.78);
+  if (vol > volTop + 0.35) return 'warn';
+  if (vol >= umbralOk) return 'ok';
+  if (vol < umbralCrit) return 'bad';
+  if (vol < umbralWarnBajo) return 'warn';
+  return 'warn';
+}
+
+/**
  * Subtítulo del selector de modo (Sistema): en modo lechuga, si hay EC objetivo en checklist,
  * sustituye el rango fijo 1300–1400 por ese objetivo (± `EC_MEDICION_TOLERANCIA_OBJETIVO_US`).
  */
@@ -561,15 +592,17 @@ function evalVol(vol, ec, ph) {
     return;
   }
 
-  const volRef =
+  const volTop =
     Number.isFinite(volObjSafe) && volObjSafe > 0 ? volObjSafe : Math.max(RANGOS.vol.min, VOL_OBJETIVO);
-  const umbralOk = Math.max(4, volRef * 0.93);
-  const umbralCrit = Math.max(2.5, volRef * 0.68);
-  const umbralWarnBajo = Math.max(3, volRef * 0.78);
+  const volTarget =
+    typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfgK) : volTop;
+  const umbralOk = Math.max(4, volTarget * 0.93);
+  const umbralCrit = Math.max(2.5, volTarget * 0.68);
+  const umbralWarnBajo = Math.max(3, volTarget * 0.78);
   const esDwc = cfgK.tipoInstalacion === 'dwc';
 
-  if (vol > volRef + 0.35) {
-    const exceso = Math.round((vol - volRef) * 10) / 10;
+  if (vol > volTop + 0.35) {
+    const exceso = Math.round((vol - volTop) * 10) / 10;
     setStatus(
       'statusVol',
       'warn',
@@ -582,7 +615,7 @@ function evalVol(vol, ec, ph) {
     const extraDwc =
       esDwc
         ? '<div class="correccion-muted correccion-muted--tight">En DWC la referencia (~' +
-          volRef +
+          volTop +
           ' L) deja ~0,5–1 cm de aire bajo la base del sustrato; el tope geométrico del depósito puede ser mayor.</div>'
         : '';
     showCorreccion(
@@ -599,10 +632,11 @@ function evalVol(vol, ec, ph) {
   }
 
   if (vol >= umbralOk) {
+    const refL = Math.round(volTarget * 10) / 10;
     const suf =
       esDwc
-        ? ' (~' + Math.round(volRef * 10) / 10 + ' L ref. bajo sustrato)'
-        : ' (~' + Math.round(volRef * 10) / 10 + ' L depósito)';
+        ? ' (~' + refL + ' L mezcla / ref.)'
+        : ' (~' + refL + ' L depósito)';
     setStatus('statusVol', 'ok', '✅', 'Volumen correcto' + suf);
     setCard('cardVol', 'ok');
     showCorreccion('correccionVol', '');
