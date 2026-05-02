@@ -62,10 +62,19 @@ function getPhObjetivoManualRango(cfg, nut) {
   return [p0[0], p0[1]];
 }
 
-function cultivoFaseDesdeDias(cultivo, diasDesdeSiembra) {
+/**
+ * Fase de cultivo según días transcurridos.
+ * @param {object} opts desdeTrasplante (default true): la fecha en la ficha de torre/NFT es el **trasplante al sistema**;
+ *   no se recorre la fase `germinacion` del catálogo (esa fase es previa al hidro). Solo `origenPlanta === 'germinacion'`
+ *   y `desdeTrasplante === false` incluiría germinación (p. ej. semillero sin trasplantar aún).
+ */
+function cultivoFaseDesdeDias(cultivo, diasDesdeSiembra, opts) {
+  const o = opts || {};
+  const desdeTrasplante = o.desdeTrasplante !== false;
   const fases = cultivo && cultivo.fases ? cultivo.fases : null;
   if (!fases || !Number.isFinite(Number(diasDesdeSiembra)) || Number(diasDesdeSiembra) < 0) return null;
-  const orden = ['germinacion', 'plantula', 'vegetativo', 'prefloracion', 'floracion', 'fructificacion'];
+  const ordenFull = ['germinacion', 'plantula', 'vegetativo', 'prefloracion', 'floracion', 'fructificacion'];
+  const orden = desdeTrasplante ? ordenFull.filter(k => k !== 'germinacion') : ordenFull;
   let acc = 0;
   for (let i = 0; i < orden.length; i++) {
     const k = orden[i];
@@ -81,6 +90,92 @@ function cultivoFaseDesdeDias(cultivo, diasDesdeSiembra) {
     if (fases[fk]) return { key: fk, fase: fases[fk] };
   }
   return null;
+}
+
+/**
+ * EC/pH «crudos» por ficha de cesta (sin cruce entre plantas ni ajuste instalación/contexto).
+ * Misma base que el bucle de getRecomendacionEcPhTorre.
+ */
+function torreSliceEcPhCestaRaw(c, cfg) {
+  cfg = cfg || state.configTorre || {};
+  if (!c || !c.variedad) return null;
+  const cultivo = getCultivoDB(c.variedad);
+  if (!cultivo) return null;
+  let ecMin = Number(cultivo.ecMin);
+  let ecMax = Number(cultivo.ecMax);
+  let phMin = Number(cultivo.phMin);
+  let phMax = Number(cultivo.phMax);
+  let faseKey = null;
+  let conFasePorFecha = false;
+  if (c.fecha) {
+    const ms = new Date(c.fecha).getTime();
+    if (Number.isFinite(ms)) {
+      const dias = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+      const fd = cultivoFaseDesdeDias(cultivo, dias, { desdeTrasplante: true });
+      if (fd && fd.fase) {
+        conFasePorFecha = true;
+        faseKey = fd.key;
+        if (Array.isArray(fd.fase.ec) && fd.fase.ec.length >= 2) {
+          ecMin = Number(fd.fase.ec[0]);
+          ecMax = Number(fd.fase.ec[1]);
+        }
+        if (Array.isArray(fd.fase.ph) && fd.fase.ph.length >= 2) {
+          phMin = Number(fd.fase.ph[0]);
+          phMax = Number(fd.fase.ph[1]);
+        }
+      }
+    }
+  }
+  if (!Number.isFinite(ecMin) || !Number.isFinite(ecMax)) return null;
+  if (!Number.isFinite(phMin) || !Number.isFinite(phMax)) {
+    phMin = 5.5;
+    phMax = 6.5;
+  }
+  return { ec: { min: ecMin, max: ecMax }, ph: { min: phMin, max: phMax }, faseKey, conFasePorFecha };
+}
+
+/** EC/pH orientativos para mostrar en resumen de cesta (ajuste torre/DWC + clima), alineado con Medir. */
+function torreRangoEcPhCestaParaMostrar(c, cfg) {
+  const raw = torreSliceEcPhCestaRaw(c, cfg);
+  if (!raw) return null;
+  const ctx = getAjustesEcPhPorContexto(cfg);
+  let ecRec = aplicarAjusteEcObjetivoPorInstalacion({ min: raw.ec.min, max: raw.ec.max }, cfg);
+  ecRec = {
+    min: Math.max(320, Math.round(ecRec.min * ctx.ecMult)),
+    max: Math.max(420, Math.round(ecRec.max * ctx.ecMult)),
+  };
+  const phRec = {
+    min: Math.round((Math.max(4.8, Math.min(6.9, raw.ph.min + ctx.phShift)) * 10)) / 10,
+    max: Math.round((Math.max(5.0, Math.min(7.1, raw.ph.max + ctx.phShift)) * 10)) / 10,
+  };
+  return {
+    ecMin: ecRec.min,
+    ecMax: ecRec.max,
+    phMin: phRec.min,
+    phMax: phRec.max,
+    faseKey: raw.faseKey,
+    sinFecha: !c.fecha || !raw.conFasePorFecha,
+  };
+}
+
+/** Hay al menos una cesta con variedad (para saber si los rangos EC/pH de cultivo aplican a esta instalación). */
+function torreTieneAlgunaVariedadAsignada() {
+  try {
+    const cfg = state.configTorre || {};
+    const nivelesActivos =
+      typeof getNivelesActivos === 'function'
+        ? getNivelesActivos()
+        : Array.from({ length: cfg.numNiveles || NUM_NIVELES || 0 }, (_, i) => i);
+    for (let i = 0; i < nivelesActivos.length; i++) {
+      const n = nivelesActivos[i];
+      const row = state.torre[n] || [];
+      for (let j = 0; j < row.length; j++) {
+        const c = row[j];
+        if (c && String(c.variedad || '').trim()) return true;
+      }
+    }
+  } catch (_) {}
+  return false;
 }
 
 function getAjustesEcPhPorContexto(cfg) {
@@ -164,33 +259,14 @@ function getRecomendacionEcPhTorre() {
     const n = nivelesActivos[i];
     (state.torre[n] || []).forEach(c => {
       if (!c || !c.variedad) return;
-      const cultivo = getCultivoDB(c.variedad);
-      if (!cultivo) return;
-      let ecMin = Number(cultivo.ecMin);
-      let ecMax = Number(cultivo.ecMax);
-      let phMin = Number(cultivo.phMin);
-      let phMax = Number(cultivo.phMax);
-      if (c.fecha) {
-        const ms = new Date(c.fecha).getTime();
-        if (Number.isFinite(ms)) {
-          const dias = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
-          const fd = cultivoFaseDesdeDias(cultivo, dias);
-          if (fd && fd.fase) {
-            if (Array.isArray(fd.fase.ec) && fd.fase.ec.length >= 2) {
-              ecMin = Number(fd.fase.ec[0]);
-              ecMax = Number(fd.fase.ec[1]);
-            }
-            if (Array.isArray(fd.fase.ph) && fd.fase.ph.length >= 2) {
-              phMin = Number(fd.fase.ph[0]);
-              phMax = Number(fd.fase.ph[1]);
-            }
-            fases[fd.key] = (fases[fd.key] || 0) + 1;
-            totalConFecha++;
-          }
-        }
+      const slice = torreSliceEcPhCestaRaw(c, cfg);
+      if (!slice) return;
+      if (slice.conFasePorFecha && slice.faseKey) {
+        fases[slice.faseKey] = (fases[slice.faseKey] || 0) + 1;
+        totalConFecha++;
       }
-      if (Number.isFinite(ecMin) && Number.isFinite(ecMax)) rangosEc.push({ min: ecMin, max: ecMax });
-      if (Number.isFinite(phMin) && Number.isFinite(phMax)) rangosPh.push({ min: phMin, max: phMax });
+      if (Number.isFinite(slice.ec.min) && Number.isFinite(slice.ec.max)) rangosEc.push({ min: slice.ec.min, max: slice.ec.max });
+      if (Number.isFinite(slice.ph.min) && Number.isFinite(slice.ph.max)) rangosPh.push({ min: slice.ph.min, max: slice.ph.max });
     });
   }
 

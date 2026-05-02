@@ -1183,6 +1183,8 @@ function renderTablaVariedades() {
         : pct >= 70  ? '#d97706'
         : pct >= 30  ? '#16a34a'
         : '#2563eb';
+      const rangoEc =
+        typeof torreRangoEcPhCestaParaMostrar === 'function' ? torreRangoEcPhCestaParaMostrar(c, cfg) : null;
       plantas.push({
         n,
         ci,
@@ -1193,8 +1195,10 @@ function renderTablaVariedades() {
         estado,
         color,
         fecha: c.fecha || '',
-        ecMin: cultivo?.ecMin,
-        ecMax: cultivo?.ecMax,
+        ecMin: rangoEc ? rangoEc.ecMin : cultivo?.ecMin,
+        ecMax: rangoEc ? rangoEc.ecMax : cultivo?.ecMax,
+        ecFaseKey: rangoEc ? rangoEc.faseKey : null,
+        ecSinFecha: rangoEc ? rangoEc.sinFecha : true,
         origenPlanta: c.origenPlanta,
       });
     });
@@ -1210,13 +1214,29 @@ function renderTablaVariedades() {
 
   let html = '<div class="torre-prog-wrap">' +
     '<div class="torre-prog-head">' +
-    '<span>N·C</span><span>Variedad</span><span>Días</span><span>Estado</span><span>EC</span>' +
+    '<span>N·C</span><span>Variedad</span><span>Días</span><span>Estado</span>' +
+    '<span title="Mismo criterio que la pestaña Medir: días desde el trasplante al sistema; germinación en sustrato no cuenta en hidro.">EC (µS/cm)</span>' +
     '</div>';
+
+  const faseEcEtq = {
+    germinacion: 'Germinación',
+    plantula: 'Plántula',
+    vegetativo: 'Vegetativo',
+    prefloracion: 'Prefloración',
+    floracion: 'Floración',
+    fructificacion: 'Fructificación',
+  };
 
   plantas.forEach((p, i) => {
     const rowTone = i % 2 === 0 ? 'torre-prog-row--odd' : 'torre-prog-row--even';
     const diasText = p.dias !== null ? p.dias + '/' + p.diasTotal : '—';
-    const ecText   = p.ecMin ? p.ecMin + '-' + p.ecMax : '—';
+    const ecText = p.ecMin != null && p.ecMax != null ? p.ecMin + '–' + p.ecMax : '—';
+    const faseEcLine =
+      p.ecFaseKey && faseEcEtq[p.ecFaseKey]
+        ? '<div class="torre-prog-ec-fase">' + escHtmlUi(faseEcEtq[p.ecFaseKey]) + '</div>'
+        : p.ecSinFecha && ecText !== '—'
+          ? '<div class="torre-prog-ec-fase torre-prog-ec-fase--muted">Sin fase por días · rango general del cultivo</div>'
+          : '';
     const cultRow  = getCultivoDB(p.variedad);
     const origTxt =
       typeof etiquetaOrigenPlantaBreve === 'function' ? etiquetaOrigenPlantaBreve(p.origenPlanta) : '';
@@ -1240,7 +1260,10 @@ function renderTablaVariedades() {
       '<span class="torre-prog-dias">' + diasText + '</span>' +
       '<span class="torre-prog-estado" style="--tp-est-c:' + barColor + ';--tp-est-bg:' + barColor + '15">' +
         p.estado + '</span>' +
-      '<span class="torre-prog-ec">' + ecText + '</span>' +
+      '<span class="torre-prog-ec">' +
+        ecText +
+        faseEcLine +
+        '</span>' +
       '</div>';
   });
 

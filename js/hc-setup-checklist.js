@@ -874,7 +874,9 @@ function getCLPasos() {
           sp.densidadTxt +
           '</strong> · ' +
           sp.cicloTxt +
-          '. Cambia el objetivo en <strong>Sistema</strong> si buscas otro ritmo de cosecha.'
+          '. Cambia el objetivo en <strong>Sistema</strong> si buscas otro ritmo de cosecha.' +
+          ' Para alinear EC/pH de <strong>Medir</strong> con cada cesta, en Sistema indica <strong>variedad</strong>, ' +
+          '<strong>fecha de trasplante al hidro</strong> (día 0 en el sistema) y <strong>procedencia</strong> (vivero vs germinación propia).'
         );
       })(),
     }]

@@ -723,18 +723,46 @@ function actualizarBadgesNutriente() {
   const rangePH = document.getElementById('paramRangePH');
   if (rangeEC) {
     const o = typeof getEcObjetivoManualUs === 'function' ? getEcObjetivoManualUs(cfg) : null;
+    const strategyEc = typeof getEcPhStrategy === 'function' ? getEcPhStrategy(cfg) : 'auto';
+    const tieneVariedades =
+      typeof torreTieneAlgunaVariedadAsignada === 'function' && torreTieneAlgunaVariedadAsignada();
     if (o != null) {
       rangeEC.textContent =
         'Objetivo ' + o + ' ±' + EC_MEDICION_TOLERANCIA_OBJETIVO_US + ' µS/cm · cultivo ' + ecMin + '–' + ecMax;
+      rangeEC.removeAttribute('title');
+    } else if (!tieneVariedades && strategyEc !== 'manual') {
+      rangeEC.textContent =
+        'Sin variedad en la instalación: asigna cultivo y fecha en Sistema para un EC por fase (o EC manual en checklist).';
+      rangeEC.title =
+        'La fecha de la ficha es el trasplante al hidro; el rango por cultivo y fase se calcula a partir de ahí, igual que en el resumen de cestas.';
     } else {
       const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
-      const faseTxt = rec && rec.faseDominante ? ' · fase ' + rec.faseDominante : '';
+      const faseMapEc = {
+        germinacion: 'germinación',
+        plantula: 'plántula',
+        vegetativo: 'vegetativo',
+        prefloracion: 'prefloración',
+        floracion: 'floración',
+        fructificacion: 'fructificación',
+      };
+      const faseTxt =
+        rec && rec.faseDominante ? ' · fase ' + (faseMapEc[rec.faseDominante] || rec.faseDominante) : '';
       rangeEC.textContent = ecMin + ' – ' + ecMax + ' µS/cm' + faseTxt;
+      rangeEC.removeAttribute('title');
     }
   }
   if (rangePH) {
-    const phOpt = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [phMin, phMax];
-    rangePH.textContent = phOpt[0] + ' – ' + phOpt[1];
+    const strategyPh = typeof getEcPhStrategy === 'function' ? getEcPhStrategy(cfg) : 'auto';
+    const tieneVariedadesPh =
+      typeof torreTieneAlgunaVariedadAsignada === 'function' && torreTieneAlgunaVariedadAsignada();
+    if (!tieneVariedadesPh && strategyPh !== 'manual') {
+      rangePH.textContent = 'Misma lógica que EC: define plantas en Sistema o pH manual en checklist.';
+      rangePH.title = 'Con plantas y fecha, el pH se ajusta al catálogo por fase y al nutriente activo.';
+    } else {
+      const phOpt = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [phMin, phMax];
+      rangePH.textContent = phOpt[0] + ' – ' + phOpt[1];
+      rangePH.removeAttribute('title');
+    }
   }
 
   const rangeVol = document.getElementById('paramRangeVol');
@@ -832,11 +860,11 @@ function actualizarBadgesNutriente() {
   if (torreBandera) torreBandera.textContent = nut.bandera || '🧪';
   if (torreNomStrip) torreNomStrip.textContent = nut.nombre;
   if (torreEC) {
-    const ecMinT = nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
-    const ecMaxT = nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
+    const ecTor = typeof getECOptimaTorre === 'function' ? getECOptimaTorre() : null;
+    const ecMinT = ecTor && Number.isFinite(ecTor.min) ? ecTor.min : nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
+    const ecMaxT = ecTor && Number.isFinite(ecTor.max) ? ecTor.max : nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
     const phOpt = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [5.5, 6.5];
-    torreEC.textContent = 'EC ' + ecMinT + '–' + ecMaxT + ' µS/cm · pH ' +
-      (phOpt[0] + '–' + phOpt[1]);
+    torreEC.textContent = 'EC ' + ecMinT + '–' + ecMaxT + ' µS/cm · pH ' + (phOpt[0] + '–' + phOpt[1]);
   }
   if (torreModoEcPh) {
     const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;

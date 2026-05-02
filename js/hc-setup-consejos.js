@@ -1281,7 +1281,7 @@ function consejoFaseDesdeFicha(cultivo, cesta) {
     const ms = new Date(cesta.fecha).getTime();
     if (Number.isFinite(ms)) {
       const dias = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
-      const f = cultivoFaseDesdeDias(cultivo, dias);
+      const f = cultivoFaseDesdeDias(cultivo, dias, { desdeTrasplante: true });
       if (f && f.key) return f.key;
     }
   }
