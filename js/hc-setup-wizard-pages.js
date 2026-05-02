@@ -90,11 +90,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
 
   /**
-   * Dos columnas ortogonales: salida del depósito horizontal (baja), subida vertical a T1;
-   * retorno en columna paralela más exterior, sin cruzar la subida; entrada al depósito horizontal alta.
+   * Dos columnas en C: alimentación sale abajo del depósito y sube por el eje más EXTERIOR (más a la izquierda);
+   * retorno en el eje más INTERIOR (pegado al sistema) y entra arriba al depósito — xSupplyOut < xReturnIn → sin cruces.
    */
-  const xSupply = Math.max(22, Math.min(xL - 8, tx - 10));
-  const xReturn = Math.max(12, xSupply - 20);
+  const xReturnIn = Math.max(22, Math.min(xL - 4, tx - 12));
+  const xSupplyOut = Math.max(12, xReturnIn - 20);
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const xPump = tx + 14;
   const yOutlet = tankY + tankH - 18;
@@ -105,8 +105,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   flowD += ' L ' + (tx + 6) + ' ' + yPump;
   flowD += ' L ' + (tx + 6) + ' ' + yOutlet;
   flowD += ' L ' + tx + ' ' + yOutlet;
-  flowD += ' L ' + xSupply + ' ' + yOutlet;
-  flowD += ' L ' + xSupply + ' ' + yRow(0);
+  flowD += ' L ' + xSupplyOut + ' ' + yOutlet;
+  flowD += ' L ' + xSupplyOut + ' ' + yRow(0);
   flowD += ' L ' + (xL + padFlow) + ' ' + yRow(0);
   for (let i = 0; i < nCh; i++) {
     const y = yRow(i);
@@ -127,11 +127,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   flowD += ' L ' + retMargSerp + ' ' + yLast;
   if (endsRightSerp) {
     flowD += ' L ' + retMargSerp + ' ' + yDuctRun;
-    flowD += ' L ' + xReturn + ' ' + yDuctRun;
+    flowD += ' L ' + xReturnIn + ' ' + yDuctRun;
   } else {
-    if (retMargSerp !== xReturn) flowD += ' L ' + xReturn + ' ' + yLast;
+    if (retMargSerp !== xReturnIn) flowD += ' L ' + xReturnIn + ' ' + yLast;
   }
-  flowD += ' L ' + xReturn + ' ' + yInlet;
+  flowD += ' L ' + xReturnIn + ' ' + yInlet;
   flowD += ' L ' + (tx + 4) + ' ' + yInlet;
   flowD += ' L ' + (tx + 6) + ' ' + yInlet;
   flowD += ' L ' + (tx + 6) + ' ' + yPump;
@@ -187,7 +187,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const bombaFsSerp = nCh >= 10 ? 9 : 10;
   const bombaYSerp = Math.min(yRow(0) - tubeH - 16, yOutlet - 26);
   flowLayer +=
-    '<text x="' + (xSupply - 3) + '" y="' + bombaYSerp + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' + (xSupplyOut - 3) + '" y="' + bombaYSerp + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
 
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
