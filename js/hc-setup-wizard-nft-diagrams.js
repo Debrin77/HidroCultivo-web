@@ -1144,11 +1144,11 @@ function nftDiagramLegibilityHint(h) {
 function nftTankVolumeFontSize(volL, legTier) {
   const v = Number(volL);
   const vv = Number.isFinite(v) ? v : 20;
-  let fs = 15;
-  if (legTier >= 2) fs = 20;
-  else if (legTier >= 1) fs = 18;
-  if (vv >= 120) fs = Math.max(fs, 21);
-  return Math.min(24, fs);
+  let fs = 18;
+  if (legTier >= 2) fs = 23;
+  else if (legTier >= 1) fs = 21;
+  if (vv >= 120) fs = Math.max(fs, 24);
+  return Math.min(28, fs);
 }
 
 /** Insignia de altura junto al borde derecho del depósito (no tapa tubos); ensancha el viewBox si hace falta. hint opcional: { nCanales, nTubosTotal, volL, alturaBadgeNTubos }. */
@@ -1199,7 +1199,7 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0, hint
     bw +
     '" height="' +
     bh +
-    '" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="2.5"/>' +
+    '" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="3"/>' +
     '<text x="' +
     (bx + bw / 2) +
     '" y="' +
@@ -1211,7 +1211,7 @@ function nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, canvasW0, hint
     (bx + bw / 2) +
     '" y="' +
     ySubLine +
-    '" text-anchor="middle" font-size="' + fsSub + '" font-weight="800" fill="#9a3412" font-family="system-ui,Segoe UI,sans-serif">al 1.º tubo · bombeo</text>' +
+    '" text-anchor="middle" font-size="' + fsSub + '" font-weight="800" fill="#7c2d12" font-family="system-ui,Segoe UI,sans-serif">al 1.º tubo · bombeo</text>' +
     '</g>';
   return { html, canvasW };
 }
@@ -1445,7 +1445,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const maxNtPreMM = Math.max(1, maxTubosPorNivelMesa);
   const colWPreMM = (rowInnerPreMM - Math.max(0, maxNtPreMM - 1) * gapT) / maxNtPreMM;
   const topPad = Math.max(70 + (compactMesa ? 8 : 0), hdrMesa.topPadMin);
-  const botTank = 130;
+  const botTank = 162;
   let tierRowH = Math.max(
     88,
     Math.min(138, Math.floor(520 / Math.max(nTiers, 1)) + huecosN * 5 + (maxTubosPorNivelMesa <= 2 ? 18 : 0))
@@ -1472,11 +1472,11 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const xR = W0 - 40;
   const padFlow = 12;
   const tankY = H - botTank + 4;
-  const tankH = 82;
-  const tankW = Math.min(360, Math.round(140 + vol * 0.65));
+  const tankH = 102;
+  const tankW = Math.min(400, Math.round(152 + vol * 0.72));
   const tx = (W0 - tankW) / 2;
-  const waterTop = tankY + 8;
-  const waterH = tankH - 20;
+  const waterTop = tankY + 6;
+  const waterH = tankH - 16;
   const xRiser = Math.max(26, Math.min(tx + 28, xL - 10));
   const legHintMM = { volL: vol, nCanales: maxTubosPorNivelMesa, nTubosTotal: nTubosMesa, alturaBadgeNTubos: nTubosMesa };
   const legTierMM = nftDiagramLegibilityHint(legHintMM);
@@ -1770,12 +1770,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const lm = Glast ? mmShelf(Glast) : { yC: topPad + tierRowH / 2, x0: xL, x1: xR };
   const retMargMM = flowLastX >= W0 / 2 ? xR + 14 : xL - 14;
   const retYJoin = nTiers > 1 && hydSeq.length ? flowLastY : lm.yC;
+  const yDuctMm = tankY + tankH + 10;
+  const ductTowardRiserXMm = xRiser <= tx + tankW * 0.42 ? tx + tankW - 12 : tx + 12;
   flowD += ' L ' + fqPath(retMargMM) + ' ' + fqPath(retYJoin);
-  flowD += ' L ' + retMargMM + ' ' + (tankY + 24);
-  flowD += ' L ' + (tx + tankW - 6) + ' ' + (tankY + 24);
-  flowD += ' L ' + (tx + tankW * 0.45) + ' ' + (tankY + 12);
-  flowD += ' L ' + xRiser + ' ' + (tankY + 14);
-  flowD += ' L ' + xRiser + ' ' + yPump;
+  flowD += ' L ' + fqPath(retMargMM) + ' ' + fqPath(yDuctMm);
+  flowD += ' L ' + fqPath(ductTowardRiserXMm) + ' ' + fqPath(yDuctMm);
+  flowD += ' L ' + fqPath(xRiser) + ' ' + fqPath(tankY + 10);
+  flowD += ' L ' + fqPath(xRiser) + ' ' + fqPath(yPump);
 
   let back =
     '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -1992,7 +1993,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
 
   let tankLayer = '';
   tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
-  tankLayer += '<rect x="' + (tx + 5) + '" y="' + waterTop + '" width="' + (tankW - 10) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
   tankLayer += altBadgeMM.html;
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
   const volCx = tx + tankW / 2;
@@ -2023,17 +2024,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       '<text x="' + ax + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#f0f9ff">AIR</text>';
   }
 
-  let pumpYNext = tankY + tankH + 10;
   let pumpLines = '';
-  if (bomb) {
-    pumpLines +=
-      '<text x="' + cxTitle + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Circulación 24 h · criterio en panel</text>';
-    pumpYNext += 12;
-  }
-  if (userQ != null || userW != null) {
-    pumpLines +=
-      '<text x="' + cxTitle + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">Placa anotada · ver veredicto en checklist</text>';
-  }
 
   let tierBandsMm = '';
   if (nTiers > 1) {
@@ -2106,14 +2097,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     nTiers > 1
       ? nTiers + ' niveles · tubos por nivel ' + tiersFmt + ' · ' + nTot + ' tubos en total'
       : '1 nivel · ' + (tiersNums[0] != null ? tiersNums[0] : 0) + ' tubos';
-  let foot =
-    'NFT mesa multinivel · ' +
+  const mesaTitleFoot =
     mesaNivelesTxt +
     ' · ' +
     huecosN +
-    ' huecos/tubo · ' +
+    ' huecos/tubo · pendiente ' +
     pend +
-    '% pend.' +
+    '%' +
     (compactMesa ? ' · modo compacto (>20 tubos)' : '') +
     NFT_SVG_FOOT_ORIENT_HINT;
   const mesaSubtit =
@@ -2147,6 +2137,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     tid +
     '">' +
     mesaTitleLong.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+    ' · ' +
+    mesaTitleFoot.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
     ' · Leyenda: canal (perfil), cesta (planta), flujo (línea azul discontinua).' +
     (nTiers > 1 ? ' Franjas sombreadas por nivel.' : '') +
     '</title>' +
@@ -2172,15 +2164,6 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     plants +
     tankLayer +
     (!interactive ? pumpLines : '') +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    (H - 4) +
-    '" text-anchor="middle" fill="#475569" font-size="' +
-    hdrMesa.footFs +
-    '" font-weight="600">' +
-    foot +
-    '</text>' +
     '</svg>'
   );
 }
@@ -2250,7 +2233,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const W0 = Math.max(W0base + Math.max(0, cx - cxMid), minRungSpanUnits + baseHalf + 200);
   const hdrEsc = nftDiagramHeaderTypography(W0, { compact: compactEsc, withLegend: true });
   const topPad = Math.max(92 + (compactEsc ? 10 : 0), hdrEsc.topPadMin);
-  const botTank = 130;
+  const botTank = 162;
   const yApex = topPad + 4;
   let dy =
     car === 1
@@ -2278,11 +2261,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const yEscManifold2 = car === 2 ? ladderTop - 10 : 0;
   const H = ladderBot + 56 + botTank;
   const tankY = H - botTank + 4;
-  const tankH = 82;
-  const tankW = Math.min(360, Math.round(140 + vol * 0.65));
+  const tankH = 100;
+  const tankW = Math.min(400, Math.round(152 + vol * 0.72));
   const tx = (W0 - tankW) / 2;
-  const waterTop = tankY + 8;
-  const waterH = tankH - 20;
+  const waterTop = tankY + 6;
+  const waterH = tankH - 16;
   const xRiser = Math.max(26, Math.min(tx + 28, 40));
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   let tubeH = car === 2 ? Math.min(22, 17 + Math.min(6, huecosN * 0.45)) : Math.min(32, 24 + Math.min(8, huecosN * 0.55));
@@ -2393,6 +2376,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     if (car === 2) {
       const yManifold = yEscManifold2;
       const xTee = cx;
+      const yDuctL = tankY + tankH + 8;
+      const yDuctR = tankY + tankH + 18;
+      const xLip = tx + 22;
+      const xRip = tx + tankW - 22;
       orthoKneeEsc(xRiser, yManifold);
       orthoKneeEsc(xTee, yManifold);
       for (let i = 0; i < nv; i++) {
@@ -2405,9 +2392,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const RlastL = runs[nv - 1];
       const xMargL = 14;
       orthoKneeEsc(xMargL, RlastL.y);
-      orthoKneeEsc(xMargL, tankY + 26);
-      orthoKneeEsc(tx + 16, tankY + 26);
-      orthoKneeEsc(tx + 16, tankY + 14);
+      orthoKneeEsc(xMargL, yDuctL);
+      orthoKneeEsc(xLip, yDuctL);
+      orthoKneeEsc(xLip, tankY + 11);
       flowD += ' M ' + fqPathEsc(xTee) + ' ' + fqPathEsc(yManifold);
       lx = xTee;
       ly = yManifold;
@@ -2421,14 +2408,28 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const RlastR = runs[runs.length - 1];
       const xMargR = Wsvg - 14;
       orthoKneeEsc(xMargR, RlastR.y);
-      orthoKneeEsc(xMargR, tankY + 26);
-      orthoKneeEsc(tx + tankW - 16, tankY + 26);
-      orthoKneeEsc(tx + tankW - 16, tankY + 14);
-      flowD += ' M ' + fqPathEsc(tx + tankW * 0.45) + ' ' + fqPathEsc(tankY + 12);
-      lx = tx + tankW * 0.45;
-      ly = tankY + 12;
-      orthoKneeEsc(xRiser, tankY + 14);
-      orthoKneeEsc(xRiser, yPump);
+      orthoKneeEsc(xMargR, yDuctR);
+      orthoKneeEsc(xRip, yDuctR);
+      orthoKneeEsc(xRip, tankY + 11);
+      flowD +=
+        ' M ' +
+        fqPathEsc(xRip) +
+        ' ' +
+        fqPathEsc(tankY + 11) +
+        ' L ' +
+        fqPathEsc(xLip) +
+        ' ' +
+        fqPathEsc(tankY + 11) +
+        ' L ' +
+        fqPathEsc(xRiser) +
+        ' ' +
+        fqPathEsc(tankY + 12) +
+        ' L ' +
+        fqPathEsc(xRiser) +
+        ' ' +
+        fqPathEsc(yPump);
+      lx = xRiser;
+      ly = yPump;
     } else {
       orthoKneeEsc(xRiser, runs[0].y);
       for (let i = 0; i < runs.length; i++) {
@@ -2441,11 +2442,12 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const Rlast = runs[runs.length - 1];
       const xLastE = Rlast.rtl ? Rlast.xL + padFlow : Rlast.xR - padFlow;
       const xMargEsc = xLastE >= cx ? Wsvg - 16 : 16;
+      const yDuct1 = tankY + tankH + 10;
+      const ductX1 = xRiser <= tx + tankW * 0.42 ? tx + tankW - 12 : tx + 12;
       orthoKneeEsc(xMargEsc, Rlast.y);
-      orthoKneeEsc(xMargEsc, tankY + 26);
-      orthoKneeEsc(tx + tankW - 6, tankY + 26);
-      orthoKneeEsc(tx + tankW * 0.45, tankY + 12);
-      orthoKneeEsc(xRiser, tankY + 14);
+      orthoKneeEsc(xMargEsc, yDuct1);
+      orthoKneeEsc(ductX1, yDuct1);
+      orthoKneeEsc(xRiser, tankY + 10);
       orthoKneeEsc(xRiser, yPump);
     }
   }
@@ -2620,7 +2622,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   let tankLayer = '';
   tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
-  tankLayer += '<rect x="' + (tx + 5) + '" y="' + waterTop + '" width="' + (tankW - 10) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
   tankLayer += altBadgeEsc.html;
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
   const volCxEsc = tx + tankW / 2;
@@ -2651,17 +2653,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '<text x="' + ax + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#f0f9ff">AIR</text>';
   }
 
-  let pumpYNext = tankY + tankH + 10;
   let pumpLines = '';
-  if (bomb) {
-    pumpLines +=
-      '<text x="' + cxTitle + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fef9c3" font-size="8.5" font-weight="700">Circulación 24 h · criterio en panel</text>';
-    pumpYNext += 12;
-  }
-  if (userQ != null || userW != null) {
-    pumpLines +=
-      '<text x="' + cxTitle + '" y="' + pumpYNext + '" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">Placa anotada · ver veredicto en checklist</text>';
-  }
 
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
@@ -2673,10 +2665,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   const nTot = runs.length;
-  let foot =
-    'NFT escalera' +
-    (car === 2 ? ' (A · 2 caras · subida al vértice, T y drenaje por cara)' : '') +
-    ' · ' +
+  const escTitleFoot =
     nv +
     ' peldaños/cara · ' +
     car +
@@ -2684,9 +2673,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     nTot +
     ' tubos · ' +
     huecosN +
-    ' huecos · ' +
+    ' huecos · pendiente ' +
     pend +
-    '% pend.' +
+    '%' +
     (compactEsc ? ' · modo compacto (>20 tubos)' : '') +
     NFT_SVG_FOOT_ORIENT_HINT;
 
@@ -2707,7 +2696,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     (car === 2
       ? 'NFT escalera o estructura A (dos caras): bomba sube al vértice; reparto en T al primer tubo de cada cara; en cada lado el agua cruza cada canal y en el extremo opuesto pasa al peldaño inferior (zigzag) hasta el último tubo; retorno al depósito desde cada cara. '
       : 'NFT escalera o inclinado: bomba al primer peldaño; zigzag entre extremos hasta el último tubo; retorno al depósito. ') +
-    'Leyenda: canal, cesta, flujo (línea azul discontinua).</title>' +
+    escTitleFoot.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+    ' · Leyenda: canal, cesta, flujo (línea azul discontinua).</title>' +
     '<defs>' +
     '<linearGradient id="' +
     gidCh +
@@ -2731,15 +2721,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     channelLabels +
     tankLayer +
     (!interactive ? pumpLines : '') +
-    '<text x="' +
-    cxTitle +
-    '" y="' +
-    (H - 4) +
-    '" text-anchor="middle" fill="#475569" font-size="' +
-    hdrEscDraw.footFs +
-    '" font-weight="600">' +
-    foot +
-    '</text>' +
     '</svg>'
   );
 }
