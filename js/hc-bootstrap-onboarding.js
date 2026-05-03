@@ -9,7 +9,59 @@ const HC_GUIDE_DISMISS_KEY = 'hc_guia_primer_dia_dismiss';
 const HC_ONBOARD_RIEGO_VISIT_KEY = 'hc_onboarding_visit_riego';
 const HC_HINT_CTX = { mediciones: 'hc_hint_ctx_med', sistema: 'hc_hint_ctx_sis', riego: 'hc_hint_ctx_riego' };
 const HC_BIENVENIDA_KEY = 'hc_bienvenida_v2026_1';
+const HC_TAB_BAR_COACH_KEY = 'hc_tab_bar_coach_dismiss_v2';
 const WELCOME_SLIDE_LAST = 3;
+
+let _tabCoachRetryTimer = null;
+
+function _clearTabCoachRetryTimer() {
+  if (_tabCoachRetryTimer) {
+    try { clearTimeout(_tabCoachRetryTimer); } catch (_) {}
+    _tabCoachRetryTimer = null;
+  }
+}
+
+/**
+ * Muestra el coach de la barra de pestañas (fase 2) si no se descartó y no hay bienvenida ni asistente encima.
+ */
+function tryShowTabBarCoachDeferred(attempt) {
+  _tabCoachRetryTimer = null;
+  const max = 28;
+  const n = typeof attempt === 'number' ? attempt : 0;
+  let dismissed = false;
+  try { dismissed = localStorage.getItem(HC_TAB_BAR_COACH_KEY) === '1'; } catch (_) {}
+  if (dismissed) return;
+  if (document.body.classList.contains('hc-welcome-open')) {
+    if (n < max) _tabCoachRetryTimer = setTimeout(() => tryShowTabBarCoachDeferred(n + 1), 420);
+    return;
+  }
+  const so = document.getElementById('setupOverlay');
+  if (so && so.classList.contains('open')) {
+    if (n < max) _tabCoachRetryTimer = setTimeout(() => tryShowTabBarCoachDeferred(n + 1), 420);
+    return;
+  }
+  const el = document.getElementById('hcTabBarCoach');
+  if (!el) return;
+  el.classList.remove('setup-hidden');
+  try { document.body.classList.add('hc-tab-coach-open'); } catch (_) {}
+}
+
+function scheduleTabBarCoach(delayMs) {
+  let dismissed = false;
+  try { dismissed = localStorage.getItem(HC_TAB_BAR_COACH_KEY) === '1'; } catch (_) {}
+  if (dismissed) return;
+  _clearTabCoachRetryTimer();
+  const d = typeof delayMs === 'number' ? delayMs : 900;
+  _tabCoachRetryTimer = setTimeout(() => tryShowTabBarCoachDeferred(0), d);
+}
+
+function dismissTabBarCoach() {
+  try { localStorage.setItem(HC_TAB_BAR_COACH_KEY, '1'); } catch (_) {}
+  _clearTabCoachRetryTimer();
+  const el = document.getElementById('hcTabBarCoach');
+  if (el) el.classList.add('setup-hidden');
+  try { document.body.classList.remove('hc-tab-coach-open'); } catch (_) {}
+}
 
 function welcomeCarouselGo(i) {
   const ov = document.getElementById('welcomeOverlay');
@@ -110,6 +162,7 @@ function mostrarBienvenidaOContinuarArranque() {
   try { visto = localStorage.getItem(HC_BIENVENIDA_KEY) === '1'; } catch (_) {}
   if (visto) {
     lanzarSetupOChecklistSiCorresponde();
+    scheduleTabBarCoach(1100);
     return;
   }
   const ov = document.getElementById('welcomeOverlay');
@@ -138,6 +191,7 @@ function cerrarBienvenidaPrimeraVez() {
   try { document.body.classList.remove('hc-welcome-open'); } catch (_) {}
   try { document.removeEventListener('keydown', _welcomeCarouselOnKeydown); } catch (_) {}
   lanzarSetupOChecklistSiCorresponde();
+  scheduleTabBarCoach(1300);
 }
 
 function dismissGuiaPrimerosPasos() {

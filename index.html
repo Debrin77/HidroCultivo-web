@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-02-onboarding-f1">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-02-onboarding-f2">
 </head>
 <body>
 
@@ -2403,10 +2403,19 @@
       </div>
 
       <!-- Sin datos -->
-      <div id="histSinDatos" class="coming-soon setup-hidden">
-        <div class="coming-soon-icon">📊</div>
+      <div id="histSinDatos" class="coming-soon coming-soon--illustrated setup-hidden">
+        <div class="coming-soon-illustr" aria-hidden="true">
+          <svg viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="coming-soon-illustr-svg">
+            <rect x="14" y="12" width="92" height="56" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+            <path d="M26 32h68M26 44h52M26 56h60" stroke="#e2e8f0" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="88" cy="28" r="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+            <path d="M84 28l3 3 6-7" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M48 72c8-6 18-6 26 0" stroke="#22c55e" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <rect x="38" y="76" width="44" height="10" rx="3" fill="#dcfce7" stroke="#16a34a" stroke-width="1"/>
+          </svg>
+        </div>
         <h3>Sin datos aún</h3>
-        <p>Registra mediciones diarias para<br>ver la evolución de los parámetros</p>
+        <p>Registra mediciones en <strong>Medir</strong> para ver aquí la evolución de EC, pH y el resto de parámetros.</p>
       </div>
 
       <!-- Panel registro -->
@@ -2490,6 +2499,26 @@
       </svg>
     </button>
   </nav>
+
+  <!-- Fase 2: coach barra de pestañas (una vez hasta Entendido) -->
+  <div id="hcTabBarCoach" class="hc-tab-bar-coach setup-hidden" role="region" aria-labelledby="hcTabBarCoachTitle">
+    <div class="hc-tab-bar-coach-inner">
+      <div class="hc-tab-bar-coach-art" aria-hidden="true">
+        <svg viewBox="0 0 200 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="hc-tab-bar-coach-svg">
+          <rect x="4" y="10" width="192" height="34" rx="8" fill="rgba(255,255,255,0.9)" stroke="rgba(34,197,94,0.35)" stroke-width="1.5"/>
+          <rect x="12" y="18" width="22" height="18" rx="4" fill="#dcfce7" stroke="#16a34a" stroke-width="1.2"/>
+          <rect x="42" y="18" width="22" height="18" rx="4" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/>
+          <rect x="72" y="18" width="22" height="18" rx="4" fill="#ecfdf5" stroke="#15803d" stroke-width="1.2"/>
+          <rect x="102" y="18" width="22" height="18" rx="4" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.2"/>
+          <rect x="132" y="18" width="22" height="18" rx="4" fill="#ecfeff" stroke="#0891b2" stroke-width="1.2"/>
+          <path d="M18 4v8M174 4v8" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="3 4"/>
+        </svg>
+      </div>
+      <h2 id="hcTabBarCoachTitle" class="hc-tab-bar-coach-title">Navega por abajo</h2>
+      <p class="hc-tab-bar-coach-text">La barra fija agrupa <strong>Inicio</strong>, <strong>Medir</strong>, <strong>Sistema</strong>, <strong>Riego</strong>, clima, historial y más. Si no ves todos los iconos, <strong>desliza horizontalmente</strong>.</p>
+      <button type="button" class="btn btn-primary hc-tab-bar-coach-btn" onclick="dismissTabBarCoach()">Entendido</button>
+    </div>
+  </div>
 
 </div>
 <!-- FIN APP -->
@@ -3982,13 +4011,13 @@
   <script src="js/hc-bootstrap-config.js?v=4"></script>
   <script src="js/hc-bootstrap-state.js?v=5"></script>
   <script src="js/hc-bootstrap-pin.js?v=3"></script>
-  <script src="js/hc-bootstrap-onboarding.js?v=8"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=12"></script>
+  <script src="js/hc-bootstrap-onboarding.js?v=9"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=13"></script>
   <script src="js/torre-render-build.js?v=2026-05-02-semillero-tabla"></script>
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=5"></script>
+  <script src="js/hc-setup-wizard-core.js?v=6"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=7"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=6"></script>
   <script src="js/hc-setup-wizard-pages.js?v=4"></script>

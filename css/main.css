@@ -692,6 +692,66 @@ button.pin-key {
   border: 1.5px solid var(--bg2);
 }
 
+/* Fase 2: coach barra de pestañas (panel sobre la barra) */
+.hc-tab-bar-coach {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--tab-h) + 8px);
+  z-index: 10150;
+  max-width: min(100vw - 20px, 390px);
+  width: calc(100% - 20px);
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+.hc-tab-bar-coach-inner {
+  background: linear-gradient(160deg, #f0fdf4 0%, #fff 55%, #ecfeff 100%);
+  border: 1px solid rgba(34, 197, 94, 0.32);
+  border-radius: 16px;
+  padding: 12px 14px 12px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18);
+}
+.hc-tab-bar-coach-art {
+  margin: 0 0 8px;
+  text-align: center;
+}
+.hc-tab-bar-coach-svg {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.hc-tab-bar-coach-title {
+  font-family: var(--font-hero);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #14532d;
+  margin: 0 0 6px;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+.hc-tab-bar-coach-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  margin: 0 0 12px;
+  text-align: center;
+}
+.hc-tab-bar-coach-btn {
+  width: 100%;
+  justify-content: center;
+}
+@keyframes hcTabCoachPulse {
+  0%, 100% { box-shadow: 0 -1px 0 rgba(255,255,255,0.65) inset, 0 -4px 24px rgba(15, 23, 42, 0.05); }
+  50% { box-shadow: 0 -1px 0 rgba(255,255,255,0.65) inset, 0 0 0 2px rgba(22, 163, 74, 0.45), 0 -6px 28px rgba(22, 163, 74, 0.12); }
+}
+body.hc-tab-coach-open .tab-bar {
+  animation: hcTabCoachPulse 2.2s ease-in-out infinite;
+  position: relative;
+  z-index: 10155;
+}
+
 /* Toast / snackbar: encima de la barra de pestañas (visible con scroll al final de Medir, etc.) */
 #toast.hc-toast {
   position: fixed;
@@ -12161,6 +12221,19 @@ button.cl-checkbox:focus-visible { outline: 2px solid var(--green); outline-offs
   opacity: 0.5;
 }
 .coming-soon-icon { font-size: 48px; }
+.coming-soon--illustrated {
+  opacity: 1;
+  min-height: 260px;
+}
+.coming-soon-illustr {
+  margin-bottom: 4px;
+}
+.coming-soon-illustr-svg {
+  width: 120px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
 .coming-soon h3 {
   font-family: var(--font-ui);
   font-size: var(--text-lg);

@@ -20,10 +20,16 @@ function resetApp() {
     localStorage.removeItem(HC_GUIDE_DISMISS_KEY);
     localStorage.removeItem(HC_ONBOARD_RIEGO_VISIT_KEY);
     localStorage.removeItem(HC_BIENVENIDA_KEY);
+    try { localStorage.removeItem('hc_tab_bar_coach_dismiss_v2'); } catch (_) {}
     try {
       Object.values(HC_HINT_CTX).forEach(k => { try { localStorage.removeItem(k); } catch (_) {} });
     } catch (_) {}
   } catch(e) {}
+  try {
+    const _tbc = document.getElementById('hcTabBarCoach');
+    if (_tbc) _tbc.classList.add('setup-hidden');
+    document.body.classList.remove('hc-tab-coach-open');
+  } catch (_) {}
 
   // Reiniciar estado
   state = initState();

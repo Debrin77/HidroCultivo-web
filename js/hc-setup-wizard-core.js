@@ -450,6 +450,9 @@ function cerrarSetup() {
   const o = document.getElementById('setupOverlay');
   o.classList.remove('open');
   a11yDialogClosed(o);
+  try {
+    if (typeof scheduleTabBarCoach === 'function') scheduleTabBarCoach(500);
+  } catch (_) {}
 }
 
 function iniciarConfiguracionTorre() {
