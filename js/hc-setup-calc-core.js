@@ -238,6 +238,120 @@ function getFirmaAvisoEcTransicion(rec) {
   return [rec.ec.min, rec.ec.max, rec.faseDominante || '', adv, mult].join('|');
 }
 
+/**
+ * Cada cesta con variedad debe tener fecha de trasplante al hidro (modo EC automático)
+ * para que checklist y metas de recarga usen EC/pH por etapa.
+ */
+function torreTodasLasCestasConVariedadTienenFechaValida() {
+  try {
+    const cfg = state.configTorre || {};
+    const nivelesActivos =
+      typeof getNivelesActivos === 'function'
+        ? getNivelesActivos()
+        : Array.from({ length: cfg.numNiveles || NUM_NIVELES || 0 }, (_, i) => i);
+    for (let i = 0; i < nivelesActivos.length; i++) {
+      const n = nivelesActivos[i];
+      const row = state.torre[n] || [];
+      for (let j = 0; j < row.length; j++) {
+        const c = row[j];
+        if (!c || !String(c.variedad || '').trim()) continue;
+        const ms = c.fecha ? new Date(c.fecha).getTime() : NaN;
+        if (!Number.isFinite(ms)) return false;
+      }
+    }
+  } catch (_) {
+    return false;
+  }
+  return true;
+}
+
+/** Modo EC automático: bloquear checklist hasta tener variedad y fechas en todas las cestas ocupadas. */
+function torreBloqueaChecklistPorFaltaDatosCultivo() {
+  const cfg = state.configTorre || {};
+  if (typeof getEcPhStrategy === 'function' && getEcPhStrategy(cfg) === 'manual') return false;
+  if (typeof torreTieneAlgunaVariedadAsignada !== 'function' || !torreTieneAlgunaVariedadAsignada()) return true;
+  return !torreTodasLasCestasConVariedadTienenFechaValida();
+}
+
+function torreCultivoListoParaDosisEcEtapa() {
+  return !torreBloqueaChecklistPorFaltaDatosCultivo();
+}
+
+/** Bloque HTML: ml orientativos para subir EC hacia la meta de recarga (misma lógica que corrección en Medir). */
+function buildHtmlDosisSubirEcParaAviso(ecNum) {
+  if (!Number.isFinite(ecNum)) return '';
+  const cfg = state.configTorre || {};
+  const nut = getNutrienteTorre();
+  const vol =
+    typeof getVolumenMezclaLitros === 'function' ? Number(getVolumenMezclaLitros(cfg)) : NaN;
+  if (!Number.isFinite(vol) || vol < 0.5) return '';
+  const ecMeta =
+    typeof getRecargaEcMetaMicroS === 'function' ? getRecargaEcMetaMicroS() : NaN;
+  if (!Number.isFinite(ecMeta)) return '';
+  const deficit = Math.max(0, ecMeta - ecNum);
+  if (deficit < 35) return '';
+  if (typeof mlCorreccionEcBaja !== 'function' || typeof ecSubePorMlCorreccion !== 'function') return '';
+  const mlAB = mlCorreccionEcBaja(nut, vol, deficit);
+  if (!mlAB || mlAB < 1) return '';
+  const slopeEc = ecSubePorMlCorreccion(nut, vol);
+  const suf = typeof dosisSufijoNutriente === 'function' ? dosisSufijoNutriente(nut) : ' ml';
+  const orden = nut.orden || ['Parte A', 'Parte B'];
+  const ecEst = Number.isFinite(slopeEc) ? Math.round(ecNum + mlAB * slopeEc) : null;
+  const p = nut.partes || 2;
+  let rows = '';
+  if (p === 1) {
+    rows =
+      '<div class="ec-transicion-dosis-row"><span>' +
+      (orden[0] || 'Nutriente') +
+      '</span><span>+' +
+      mlAB +
+      suf +
+      '</span></div>';
+  } else if (p === 2) {
+    rows =
+      '<div class="ec-transicion-dosis-row"><span>' +
+      (orden[0] || 'A') +
+      '</span><span>+' +
+      mlAB +
+      suf +
+      '</span></div>' +
+      '<div class="ec-transicion-dosis-row"><span>' +
+      (orden[1] || 'B') +
+      '</span><span>+' +
+      mlAB +
+      suf +
+      '</span></div>';
+  } else {
+    for (let i = 0; i < p; i++) {
+      rows +=
+        '<div class="ec-transicion-dosis-row"><span>' +
+        (orden[i] || 'Parte ' + (i + 1)) +
+        '</span><span>+' +
+        mlAB +
+        suf +
+        '</span></div>';
+    }
+  }
+  let out =
+    '<div class="ec-transicion-dosis-box"><div class="ec-transicion-dosis-title">Subida orientativa hacia la meta de mezcla</div>';
+  out +=
+    '<p class="ec-transicion-dosis-meta">Meta alineada con checklist/recarga: <strong>' +
+    ecMeta +
+    ' µS/cm</strong> · volumen de referencia <strong>' +
+    Math.round(vol * 10) / 10 +
+    ' L</strong>. Añade las partes en bloque, homogeneiza y vuelve a medir.</p>';
+  out += rows;
+  if (ecEst != null) {
+    out +=
+      '<p class="ec-transicion-dosis-est">EC estimada tras esta adición: ~' +
+      ecEst +
+      ' µS/cm (orientativo).</p>';
+  }
+  out +=
+    '<p class="ec-transicion-dosis-foot">No sustituye medir; si la mezcla estaba muy baja, sube en pasos y revisa pH.</p></div>';
+  return out;
+}
+
 function buildEcTransicionAvisoHtml() {
   const cfg = state.configTorre || {};
   if (typeof getEcPhStrategy === 'function' && getEcPhStrategy(cfg) !== 'auto') return '';
@@ -260,6 +374,51 @@ function buildEcTransicionAvisoHtml() {
     fructificacion: 'fructificación',
   };
   const faseTxt = rec.faseDominante ? (faseMap[rec.faseDominante] || rec.faseDominante) : 'actual';
+  const homog =
+    rec.variedadUnicaNombre &&
+    !rec.mezclaFasesDistintas &&
+    rec.ecAgregacion !== 'promedio_plantas' &&
+    rec.ecAgregacion !== 'nutriente';
+  const mismoDistintasEtapas =
+    rec.variedadUnicaNombre && (rec.mezclaFasesDistintas || rec.ecAgregacion === 'promedio_plantas');
+  let lead = '';
+  if (homog) {
+    lead =
+      '<p class="ec-transicion-aviso-txt"><strong>EC por debajo de lo recomendado para tu cultivo.</strong> ' +
+      'Instalación con <strong>' +
+      rec.variedadUnicaNombre +
+      '</strong> en fase <strong>' +
+      faseTxt +
+      '</strong>: la última medición es ~' +
+      Math.round(ecNum) +
+      ' µS/cm y el rango orientativo actual es <strong>' +
+      rec.ec.min +
+      '–' +
+      rec.ec.max +
+      ' µS/cm</strong>. Sube concentración hasta entrar en banda; el aviso permanece hasta que la medición lo confirme.</p>';
+  } else if (mismoDistintasEtapas) {
+    lead =
+      '<p class="ec-transicion-aviso-txt"><strong>EC baja respecto al rango unido del sistema.</strong> Misma variedad <strong>' +
+      rec.variedadUnicaNombre +
+      '</strong> pero distintas fechas o etapas por cesta: la última medición ~' +
+      Math.round(ecNum) +
+      ' µS/cm frente a <strong>' +
+      rec.ec.min +
+      '–' +
+      rec.ec.max +
+      ' µS/cm</strong>. Ajusta la mezcla y vuelve a medir.</p>';
+  } else {
+    lead =
+      '<p class="ec-transicion-aviso-txt"><strong>EC por debajo de la etapa recomendada.</strong> Última medición ~' +
+      Math.round(ecNum) +
+      ' µS/cm; para la fase ' +
+      faseTxt +
+      ' conviene estar en torno a <strong>' +
+      rec.ec.min +
+      '–' +
+      rec.ec.max +
+      ' µS/cm</strong>. Sube concentración o dosifica hasta entrar en banda; el aviso se mantiene hasta que la medición lo refleje.</p>';
+  }
   let sub = '';
   if (rec.mezclaFasesDistintas) {
     sub =
@@ -268,20 +427,28 @@ function buildEcTransicionAvisoHtml() {
     sub =
       '<p class="ec-transicion-aviso-sub">Rangos poco compatibles entre plantas: la app promedia el rango actual de cada una.</p>';
   }
-  const main =
-    '<p class="ec-transicion-aviso-txt"><strong>EC por debajo de la etapa recomendada.</strong> Última medición ~' +
-    Math.round(ecNum) +
-    ' µS/cm; para la fase ' +
-    faseTxt +
-    ' conviene estar en torno a <strong>' +
-    rec.ec.min +
-    '–' +
-    rec.ec.max +
-    ' µS/cm</strong>. Sube concentración o dosifica hasta entrar en banda; el aviso se mantiene hasta que la medición lo refleje.</p>';
+  const dosisHtml = buildHtmlDosisSubirEcParaAviso(ecNum);
+  const checklistBloqueado =
+    typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
+    torreBloqueaChecklistPorFaltaDatosCultivo();
+  let checklistHint = '';
+  if (checklistBloqueado) {
+    checklistHint =
+      '<p class="ec-transicion-aviso-sub">Para dosificación guiada con EC automático por etapa, completa <strong>Sistema</strong> (variedad y fecha en cada cesta con cultivo); luego usa el checklist de recarga en Historial.</p>' +
+      '<div class="ec-transicion-aviso-actions">' +
+      '<button type="button" class="btn btn-primary btn-sm" onclick="goTab(\'sistema\')">Ir a Sistema</button></div>';
+  } else {
+    checklistHint =
+      '<div class="ec-transicion-aviso-actions">' +
+      '<button type="button" class="btn btn-secondary btn-sm" onclick="goTab(\'sistema\')">Sistema</button>' +
+      '<button type="button" class="btn btn-primary btn-sm" onclick="intentarAbrirChecklistDesdeInicio(false)">Checklist depósito</button></div>';
+  }
   return (
     '<div class="ec-transicion-aviso-inner">' +
-    main +
+    lead +
     sub +
+    dosisHtml +
+    checklistHint +
     '<button type="button" class="btn btn-secondary btn-sm ec-transicion-aviso-dismiss" onclick="dismissEcTransicionAviso(event)">Ocultar hasta que cambie el rango recomendado</button></div>'
   );
 }
@@ -388,8 +555,11 @@ function getRecomendacionEcPhTorre() {
     const ecHi = ecM != null ? Math.min(6200, ecM + 60) : (nut.ecObjetivo?.[1] || 1400);
     const varUnicaMan = torreVariedadUnicaSiSoloUna();
     let ecMediaFasesCatalogo = null;
+    let variedadUnicaNombre = null;
     if (varUnicaMan && typeof getCultivoDB === 'function') {
-      ecMediaFasesCatalogo = cultivoEcMediaTodasFasesMicros(getCultivoDB(varUnicaMan));
+      const cuMan = getCultivoDB(varUnicaMan);
+      ecMediaFasesCatalogo = cultivoEcMediaTodasFasesMicros(cuMan);
+      if (cuMan) variedadUnicaNombre = cuMan.nombre || varUnicaMan;
     }
     return {
       ec: { min: ecLo, max: ecHi },
@@ -401,6 +571,8 @@ function getRecomendacionEcPhTorre() {
       ecAgregacion: 'manual',
       mezclaFasesDistintas: false,
       ecMediaFasesCatalogo,
+      variedadUnicaId: varUnicaMan || null,
+      variedadUnicaNombre,
     };
   }
   const nivelesActivos = typeof getNivelesActivos === 'function'
@@ -482,8 +654,11 @@ function getRecomendacionEcPhTorre() {
   const mezclaFasesDistintas = Object.keys(fases).length > 1;
   const varUnica = torreVariedadUnicaSiSoloUna();
   let ecMediaFasesCatalogo = null;
+  let variedadUnicaNombre = null;
   if (varUnica && typeof getCultivoDB === 'function') {
-    ecMediaFasesCatalogo = cultivoEcMediaTodasFasesMicros(getCultivoDB(varUnica));
+    const cuU = getCultivoDB(varUnica);
+    ecMediaFasesCatalogo = cultivoEcMediaTodasFasesMicros(cuU);
+    if (cuU) variedadUnicaNombre = cuU.nombre || varUnica;
   }
   return {
     ec: ecRec,
@@ -495,6 +670,8 @@ function getRecomendacionEcPhTorre() {
     ecAgregacion,
     mezclaFasesDistintas,
     ecMediaFasesCatalogo,
+    variedadUnicaId: varUnica || null,
+    variedadUnicaNombre,
   };
 }
 
@@ -1281,8 +1458,9 @@ function preguntarIniciarChecklist() {
       '</div>' +
 
       '<div class="checklist-pregunta-nota-pasos">' +
-        'Siguiente paso habitual: en <strong>Sistema</strong> detalla cada cesta (variedad, trasplante, procedencia); ' +
-        'luego el checklist dosifica el depósito. Puedes iniciar el checklist aunque aún falten cestas por rellenar.' +
+        'Las dosis de abajo usan el volumen de mezcla, el nutriente y el <strong>EC/pH recomendados según la etapa</strong> ' +
+        'registrada en <strong>Sistema</strong> (variedad y fecha de trasplante al hidro en cada cesta con cultivo). ' +
+        'Con modo EC automático, si cambias fechas o plantas, revisa de nuevo antes de dosificar.' +
       '</div>' +
 
       // Badge nutriente destacado

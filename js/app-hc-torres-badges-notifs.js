@@ -467,7 +467,7 @@ function aplicarEstadoStandbyUI() {
     if (!sistemaEstaOperativa()) aplicarBloqueosStandbyPorTab(false);
   }, 180);
   const accionesCriticas = [
-    '[onclick*="abrirChecklist(false)"]',
+    '[onclick*="intentarAbrirChecklistDesdeInicio(false)"]',
     '[onclick*="confirmarReposicionDeposito"]',
     '#recargaSwitch',
   ];

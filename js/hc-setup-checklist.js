@@ -646,7 +646,7 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     }
     cerrarOverlayChecklistDatosInstalacion();
     aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, mezOpt, dwcModo);
-    abrirChecklist(esPrimeraVezChecklist);
+    abrirChecklist(esPrimeraVezChecklist, { omitirRequisitoCultivo: true });
   };
 
   document.getElementById('cldBtnContinuar').addEventListener('click', continuar);
@@ -1241,15 +1241,99 @@ function getCLPasos() {
 
 function getCLTotal() { return getCLPasos().length; }
 
+function intentarAbrirChecklistDesdeInicio(esPrimeraVez) {
+  if (
+    typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
+    torreBloqueaChecklistPorFaltaDatosCultivo()
+  ) {
+    mostrarChecklistBloqueadoCultivoSistema({ desdeWizard: false });
+    return false;
+  }
+  abrirChecklist(!!esPrimeraVez);
+  return true;
+}
+
+/**
+ * Modo EC automático: sin variedad o sin fechas en cestas ocupadas — no abrir checklist con dosis por etapa.
+ */
+function mostrarChecklistBloqueadoCultivoSistema(opts) {
+  const desdeWizard = !!(opts && opts.desdeWizard);
+  const sinVariedades =
+    typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
+  const faltanFechas =
+    !sinVariedades &&
+    typeof torreTodasLasCestasConVariedadTienenFechaValida === 'function' &&
+    !torreTodasLasCestasConVariedadTienenFechaValida();
+  const titulo = sinVariedades
+    ? 'Checklist: primero cultivo en Sistema'
+    : 'Checklist: fechas de trasplante';
+  const par = sinVariedades
+    ? 'Con <strong>EC/pH automáticos</strong>, el checklist usa el rango por <strong>etapa</strong>. ' +
+      'Indica <strong>variedad</strong> en cada cesta con planta y la <strong>fecha de trasplante al hidro</strong>. ' +
+      'Así las dosis y el EC mostrado coinciden con la fase real.'
+    : 'Hay cestas con variedad pero falta la <strong>fecha de trasplante al hidro</strong> en alguna. ' +
+      'Complétalas en Sistema para que EC y pH sigan la etapa de cada planta.';
+  const afterWizard = desdeWizard
+    ? '<p class="checklist-bloqueo-foot">Cuando lo tengas, inicia el checklist desde <strong>Inicio</strong> o <strong>Historial</strong>.</p>'
+    : '';
+  const o = document.createElement('div');
+  o.id = 'checklistBloqueoCultivoOverlay';
+  o.className = 'checklist-pregunta-overlay';
+  o.setAttribute('role', 'dialog');
+  o.setAttribute('aria-modal', 'true');
+  o.setAttribute('aria-label', titulo);
+  o.innerHTML =
+    '<div class="checklist-pregunta-sheet">' +
+    '<div class="checklist-pregunta-handle"></div>' +
+    '<div class="checklist-pregunta-head">' +
+    '<div class="checklist-pregunta-emoji">📋</div>' +
+    '<div><div class="checklist-pregunta-title">' +
+    titulo +
+    '</div></div></div>' +
+    '<p class="checklist-pregunta-nota-pasos">' +
+    par +
+    '</p>' +
+    afterWizard +
+    '<button type="button" id="checklistBloqueoIrSistema" class="checklist-pregunta-btn-main">Ir a Sistema</button>' +
+    '<button type="button" id="checklistBloqueoCerrar" class="checklist-pregunta-btn-later">Cerrar</button>' +
+    '</div>';
+  document.body.appendChild(o);
+  a11yDialogOpened(o);
+  const cerrar = () => {
+    try {
+      a11yDialogClosed(o);
+    } catch (e) {}
+    o.remove();
+  };
+  const btnSis = document.getElementById('checklistBloqueoIrSistema');
+  const btnCer = document.getElementById('checklistBloqueoCerrar');
+  if (btnSis) {
+    btnSis.addEventListener('click', () => {
+      cerrar();
+      if (typeof goTab === 'function') goTab('sistema');
+    });
+  }
+  if (btnCer) btnCer.addEventListener('click', cerrar);
+}
+
 /**
  * @param {boolean} esPrimeraVez - Flujo onboarding / primera recarga en app (cierra checklist con confirmación).
- * @param {{ saltarPreguntaRuta?: boolean }} [opts] - Tras elegir ruta en el panel post-asistente: no repetir el modal de ruta.
+ * @param {{ saltarPreguntaRuta?: boolean; omitirRequisitoCultivo?: boolean }} [opts] - Tras elegir ruta en el panel post-asistente: no repetir el modal de ruta. omitirRequisitoCultivo: tras cuestionario mínimo de instalación (sin plantas aún).
  */
 function abrirChecklist(esPrimeraVez = false, opts) {
   if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
     showToast(typeof getMensajeStandbyContinuar === 'function'
       ? getMensajeStandbyContinuar()
       : '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+    return;
+  }
+  const omitirRequisitoCultivo = !!(opts && opts.omitirRequisitoCultivo);
+  if (
+    !omitirRequisitoCultivo &&
+    typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
+    torreBloqueaChecklistPorFaltaDatosCultivo()
+  ) {
+    mostrarChecklistBloqueadoCultivoSistema({ desdeWizard: false });
     return;
   }
   clEsPrimeraVez = esPrimeraVez;

@@ -435,7 +435,9 @@ function confirmarReposicionDeposito(modo) {
     return;
   }
   if (modo === 'con_nutrientes') {
-    abrirChecklist(false);
+    if (typeof intentarAbrirChecklistDesdeInicio === 'function' && !intentarAbrirChecklistDesdeInicio(false)) {
+      return;
+    }
     showToast('📋 Checklist de la instalación activa: vaciado, limpieza y mezcla completa (reinicia el contador al finalizar)');
     return;
   }
