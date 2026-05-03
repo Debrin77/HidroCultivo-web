@@ -893,6 +893,10 @@ function actualizarBadgesNutriente() {
 
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
 
+  try {
+    if (typeof refreshEcTransicionAvisoAll === 'function') refreshEcTransicionAvisoAll();
+  } catch (_) {}
+
   refreshConsejosSiVisible();
 }
 

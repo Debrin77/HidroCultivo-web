@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-02-sistema-bordes">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-02-ec-transicion">
 </head>
 <body>
 
@@ -378,6 +378,8 @@
         </div>
       </aside>
 
+      <div id="ecTransicionAvisoInicio" class="ec-transicion-aviso setup-hidden" role="status" aria-live="polite"></div>
+
       <section class="dash-notif-prefs config-section-collapsible" id="dashNotifPrefsCard" aria-labelledby="dashNotifPrefsTitle">
         <button type="button" class="config-section-collapse-head medir-disclosure-main-head dash-notif-prefs-head"
           id="btnNotifPrefsInicio" onclick="toggleAvisosTelefonoInicio()"
@@ -441,6 +443,8 @@
           <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('mediciones')" aria-label="Entendido, ocultar aviso">Entendido</button>
         </div>
       </div>
+
+      <div id="ecTransicionAvisoMedir" class="ec-transicion-aviso setup-hidden" role="status" aria-live="polite"></div>
 
       <!-- Instalación y última medición primero (nutriente ya en Inicio; municipio/clima más abajo) -->
       <button type="button" id="medirTorreBanner" class="medir-torre-banner"
@@ -3824,7 +3828,7 @@
   <script src="js/hc-setup-wizard-dwc.js?v=7"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=6"></script>
   <script src="js/hc-setup-wizard-pages.js?v=4"></script>
-  <script src="js/hc-setup-calc-core.js?v=6"></script>
+  <script src="js/hc-setup-calc-core.js?v=7"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
@@ -3837,13 +3841,13 @@
   <script src="js/hc-setup-consejos.js?v=20"></script>
   <script src="js/calendario-logic.js?v=1"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
-  <script src="js/meteo-forecast-dashboard.js?v=6"></script>
+  <script src="js/meteo-forecast-dashboard.js?v=7"></script>
   <script src="js/riego-calculo-helpers.js?v=2"></script>
   <script src="js/riego-calculo-calcular.js?v=2"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=3"></script>
   <script src="js/app-hc-setup-onboarding.js?v=3"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=11"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=12"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=4"></script>
 </body>
 </html>

@@ -40,6 +40,10 @@ async function guardarMedicion() {
   if (state.mediciones.length > 200)
     state.mediciones = state.mediciones.slice(0, 200);
 
+  try {
+    if (typeof intentarLimpiarEcAvisoTrasMedicion === 'function') intentarLimpiarEcAvisoTrasMedicion(ec);
+  } catch (_) {}
+
   // Línea única en el registro unificado (Historial → Registro)
   addRegistro('medicion', { ec, ph, temp, vol, humSustrato: humS, notas, icono: '📊' });
 

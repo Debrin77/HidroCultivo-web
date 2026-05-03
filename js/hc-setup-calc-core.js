@@ -178,6 +178,153 @@ function torreTieneAlgunaVariedadAsignada() {
   return false;
 }
 
+/** IDs de variedad distintos en cestas activas (solo cestas con variedad asignada). */
+function torreVariedadesIdsAsignadas() {
+  const set = new Set();
+  try {
+    const cfg = state.configTorre || {};
+    const nivelesActivos =
+      typeof getNivelesActivos === 'function'
+        ? getNivelesActivos()
+        : Array.from({ length: cfg.numNiveles || NUM_NIVELES || 0 }, (_, i) => i);
+    for (let i = 0; i < nivelesActivos.length; i++) {
+      const n = nivelesActivos[i];
+      (state.torre[n] || []).forEach(c => {
+        if (c && String(c.variedad || '').trim()) set.add(String(c.variedad).trim());
+      });
+    }
+  } catch (_) {}
+  return Array.from(set);
+}
+
+/** Si solo hay una variedad en la instalación, su id; si varias o ninguna, null. */
+function torreVariedadUnicaSiSoloUna() {
+  const ids = torreVariedadesIdsAsignadas();
+  return ids.length === 1 ? ids[0] : null;
+}
+
+/**
+ * Media aritmética de los EC mín/máx por fase en el catálogo (µS/cm), solo como referencia
+ * para un objetivo manual fijo. No sustituye el rango por etapa ni la mezcla en torre.
+ */
+function cultivoEcMediaTodasFasesMicros(cultivo) {
+  if (!cultivo || !cultivo.fases || typeof cultivo.fases !== 'object') return null;
+  const orden = ['germinacion', 'plantula', 'vegetativo', 'prefloracion', 'floracion', 'fructificacion'];
+  const mins = [];
+  const maxs = [];
+  for (let i = 0; i < orden.length; i++) {
+    const f = cultivo.fases[orden[i]];
+    if (!f || !Array.isArray(f.ec) || f.ec.length < 2) continue;
+    const a = Number(f.ec[0]);
+    const b = Number(f.ec[1]);
+    if (Number.isFinite(a) && Number.isFinite(b)) {
+      mins.push(a);
+      maxs.push(b);
+    }
+  }
+  if (mins.length === 0) return null;
+  const minAvg = Math.round(mins.reduce((s, x) => s + x, 0) / mins.length);
+  const maxAvg = Math.round(maxs.reduce((s, x) => s + x, 0) / maxs.length);
+  const midAvg = Math.round((minAvg + maxAvg) / 2);
+  return { minAvg, maxAvg, midAvg, nFases: mins.length };
+}
+
+function getFirmaAvisoEcTransicion(rec) {
+  if (!rec || !rec.ec || rec.estrategia !== 'auto') return '';
+  const adv = rec.ec.advertencia ? '1' : '0';
+  const mult = rec.contexto && Number.isFinite(rec.contexto.ecMult)
+    ? Math.round(rec.contexto.ecMult * 1000)
+    : 1000;
+  return [rec.ec.min, rec.ec.max, rec.faseDominante || '', adv, mult].join('|');
+}
+
+function buildEcTransicionAvisoHtml() {
+  const cfg = state.configTorre || {};
+  if (typeof getEcPhStrategy === 'function' && getEcPhStrategy(cfg) !== 'auto') return '';
+  if (typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada()) return '';
+  const rec = getRecomendacionEcPhTorre();
+  if (!rec || rec.estrategia !== 'auto' || !rec.conFaseReal) return '';
+  const rawEc = state.ultimaMedicion && state.ultimaMedicion.ec != null ? String(state.ultimaMedicion.ec) : '';
+  const ecNum = parseFloat(rawEc.replace(',', '.'));
+  if (!Number.isFinite(ecNum)) return '';
+  const umbral = Number(rec.ec.min) - 70;
+  if (!(ecNum < umbral)) return '';
+  const firma = getFirmaAvisoEcTransicion(rec);
+  if (firma && cfg.ecAvisoEcTransicionDismissedSig === firma) return '';
+  const faseMap = {
+    germinacion: 'germinación',
+    plantula: 'plántula',
+    vegetativo: 'vegetativo',
+    prefloracion: 'prefloración',
+    floracion: 'floración',
+    fructificacion: 'fructificación',
+  };
+  const faseTxt = rec.faseDominante ? (faseMap[rec.faseDominante] || rec.faseDominante) : 'actual';
+  let sub = '';
+  if (rec.mezclaFasesDistintas) {
+    sub =
+      '<p class="ec-transicion-aviso-sub">Varias etapas a la vez en la instalación: el rango mostrado une las necesidades vigentes de cada planta (no existe una «media por fase nominal» única para la mezcla).</p>';
+  } else if (rec.ecAgregacion === 'promedio_plantas') {
+    sub =
+      '<p class="ec-transicion-aviso-sub">Rangos poco compatibles entre plantas: la app promedia el rango actual de cada una.</p>';
+  }
+  const main =
+    '<p class="ec-transicion-aviso-txt"><strong>EC por debajo de la etapa recomendada.</strong> Última medición ~' +
+    Math.round(ecNum) +
+    ' µS/cm; para la fase ' +
+    faseTxt +
+    ' conviene estar en torno a <strong>' +
+    rec.ec.min +
+    '–' +
+    rec.ec.max +
+    ' µS/cm</strong>. Sube concentración o dosifica hasta entrar en banda; el aviso se mantiene hasta que la medición lo refleje.</p>';
+  return (
+    '<div class="ec-transicion-aviso-inner">' +
+    main +
+    sub +
+    '<button type="button" class="btn btn-secondary btn-sm ec-transicion-aviso-dismiss" onclick="dismissEcTransicionAviso(event)">Ocultar hasta que cambie el rango recomendado</button></div>'
+  );
+}
+
+function refreshEcTransicionAvisoAll() {
+  const html = typeof buildEcTransicionAvisoHtml === 'function' ? buildEcTransicionAvisoHtml() : '';
+  ['ecTransicionAvisoInicio', 'ecTransicionAvisoMedir'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const show = Boolean(html);
+    el.classList.toggle('setup-hidden', !show);
+    el.innerHTML = show ? html : '';
+  });
+}
+
+function dismissEcTransicionAviso(ev) {
+  if (ev && ev.preventDefault) ev.preventDefault();
+  const cfg = state.configTorre || {};
+  if (typeof getEcPhStrategy === 'function' && getEcPhStrategy(cfg) !== 'auto') return;
+  const rec = getRecomendacionEcPhTorre();
+  const firma = getFirmaAvisoEcTransicion(rec);
+  if (!firma) return;
+  cfg.ecAvisoEcTransicionDismissedSig = firma;
+  if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
+  if (typeof saveState === 'function') saveState();
+  refreshEcTransicionAvisoAll();
+}
+
+/** Tras guardar medición: si EC entra en banda auto, quita el descarte para no bloquear futuros avisos. */
+function intentarLimpiarEcAvisoTrasMedicion(ecStr) {
+  if (!ecStr || !String(ecStr).trim()) return;
+  const cfg = state.configTorre || {};
+  if (typeof getEcPhStrategy === 'function' && getEcPhStrategy(cfg) !== 'auto') return;
+  const ecNum = parseFloat(String(ecStr).replace(',', '.'));
+  if (!Number.isFinite(ecNum)) return;
+  const rec = getRecomendacionEcPhTorre();
+  if (!rec || !rec.ec || rec.estrategia !== 'auto') return;
+  if (ecNum >= Number(rec.ec.min) && ecNum <= Number(rec.ec.max)) {
+    delete cfg.ecAvisoEcTransicionDismissedSig;
+    if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
+  }
+}
+
 function getAjustesEcPhPorContexto(cfg) {
   const c = cfg || state.configTorre || {};
   let ecMult = 1;
@@ -239,6 +386,11 @@ function getRecomendacionEcPhTorre() {
     const phM = getPhObjetivoManualRango(cfg, nut);
     const ecLo = ecM != null ? Math.max(250, ecM - 60) : (nut.ecObjetivo?.[0] || 900);
     const ecHi = ecM != null ? Math.min(6200, ecM + 60) : (nut.ecObjetivo?.[1] || 1400);
+    const varUnicaMan = torreVariedadUnicaSiSoloUna();
+    let ecMediaFasesCatalogo = null;
+    if (varUnicaMan && typeof getCultivoDB === 'function') {
+      ecMediaFasesCatalogo = cultivoEcMediaTodasFasesMicros(getCultivoDB(varUnicaMan));
+    }
     return {
       ec: { min: ecLo, max: ecHi },
       ph: { min: phM[0], max: phM[1] },
@@ -246,6 +398,9 @@ function getRecomendacionEcPhTorre() {
       conFaseReal: false,
       contexto: { ecMult: 1, phShift: 0 },
       estrategia: 'manual',
+      ecAgregacion: 'manual',
+      mezclaFasesDistintas: false,
+      ecMediaFasesCatalogo,
     };
   }
   const nivelesActivos = typeof getNivelesActivos === 'function'
@@ -316,6 +471,20 @@ function getRecomendacionEcPhTorre() {
   };
 
   const dom = Object.entries(fases).sort((a, b) => b[1] - a[1])[0];
+  const ecAgregacion =
+    rangosEc.length === 0
+      ? 'nutriente'
+      : rangosEc.length === 1
+        ? 'una_planta'
+        : ecRec.advertencia
+          ? 'promedio_plantas'
+          : 'interseccion';
+  const mezclaFasesDistintas = Object.keys(fases).length > 1;
+  const varUnica = torreVariedadUnicaSiSoloUna();
+  let ecMediaFasesCatalogo = null;
+  if (varUnica && typeof getCultivoDB === 'function') {
+    ecMediaFasesCatalogo = cultivoEcMediaTodasFasesMicros(getCultivoDB(varUnica));
+  }
   return {
     ec: ecRec,
     ph: phRec,
@@ -323,6 +492,9 @@ function getRecomendacionEcPhTorre() {
     conFaseReal: totalConFecha > 0,
     contexto: ctx,
     estrategia: 'auto',
+    ecAgregacion,
+    mezclaFasesDistintas,
+    ecMediaFasesCatalogo,
   };
 }
 

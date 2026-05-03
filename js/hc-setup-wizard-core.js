@@ -1128,6 +1128,7 @@ function syncSistemaEcPhStrategyUI() {
   const phMin = document.getElementById('sysPhManualObjetivoMin');
   const phMax = document.getElementById('sysPhManualObjetivoMax');
   const hint = document.getElementById('sysEcPhStrategyHint');
+  const hintMedia = document.getElementById('sysEcManualMediaFasesHint');
   const wrap = document.getElementById('sysEcPhManualWrap');
   const strategy = typeof getEcPhStrategy === 'function' ? getEcPhStrategy(cfg) : 'auto';
   const intensity = typeof getEcPhIntensity === 'function' ? getEcPhIntensity(cfg) : 'estandar';
@@ -1137,6 +1138,8 @@ function syncSistemaEcPhStrategyUI() {
   if (phMin) phMin.value = cfg.phManualObjetivoMin != null ? String(cfg.phManualObjetivoMin) : '';
   if (phMax) phMax.value = cfg.phManualObjetivoMax != null ? String(cfg.phManualObjetivoMax) : '';
   if (wrap) wrap.classList.toggle('setup-hidden', strategy !== 'manual');
+  const rec =
+    typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
   if (hint) {
     hint.classList.remove('setup-hidden');
     if (strategy === 'manual') {
@@ -1145,10 +1148,54 @@ function syncSistemaEcPhStrategyUI() {
       const p1 = cfg.phManualObjetivoMax != null ? String(cfg.phManualObjetivoMax) : '—';
       hint.textContent = 'Modo manual activo: EC ' + ecTxt + ' µS/cm · pH ' + p0 + '–' + p1 + '.';
     } else {
-      const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
-      hint.textContent = rec
+      let t = rec
         ? 'Modo automático por etapa: EC ' + rec.ec.min + '–' + rec.ec.max + ' µS/cm · pH ' + rec.ph.min + '–' + rec.ph.max + '.'
         : 'Modo automático por etapa activo.';
+      if (rec && rec.estrategia === 'auto') {
+        if (rec.mezclaFasesDistintas) {
+          t +=
+            ' Varias etapas a la vez: no hay una media «por fase nominal» única; se unen los rangos vigentes de cada planta (intersección o promedio si no encajan).';
+        } else if (rec.ecAgregacion === 'promedio_plantas') {
+          t += ' Rangos poco compatibles entre plantas: se promedia el rango actual de cada una.';
+        }
+        if (rec.ecMediaFasesCatalogo && rec.ecMediaFasesCatalogo.midAvg != null) {
+          t +=
+            ' Referencia (una sola variedad en la instalación): media aproximada entre fases del catálogo ~' +
+            rec.ecMediaFasesCatalogo.midAvg +
+            ' µS/cm.';
+        }
+      }
+      hint.textContent = t;
+    }
+  }
+  if (hintMedia) {
+    if (strategy === 'manual') {
+      hintMedia.classList.remove('setup-hidden');
+      const nVar =
+        typeof torreVariedadesIdsAsignadas === 'function' ? torreVariedadesIdsAsignadas().length : 0;
+      if (nVar > 1) {
+        hintMedia.textContent =
+          'Varias variedades en la instalación: no hay una media entre fases del catálogo aplicable a todo el depósito; revisa el objetivo manual con cada cultivo o usa modo automático por etapa.';
+      } else if (rec && rec.ecMediaFasesCatalogo && rec.ecMediaFasesCatalogo.midAvg != null) {
+        const m = rec.ecMediaFasesCatalogo;
+        hintMedia.textContent =
+          'Una sola variedad: media aproximada entre fases del catálogo (orientativa) ≈ ' +
+          m.midAvg +
+          ' µS/cm (medias de mínimos ~' +
+          m.minAvg +
+          ', de máximos ~' +
+          m.maxAvg +
+          '). Útil como referencia si quieres un EC manual fijo; el cultivo real sigue variando por etapa.';
+      } else if (nVar === 0) {
+        hintMedia.textContent =
+          'Sin variedades asignadas en Sistema: define plantas y fecha para alinear el manual con el catálogo, o usa solo tu criterio.';
+      } else {
+        hintMedia.textContent =
+          'Esta variedad no define fases EC en el catálogo; usa el rango de la ficha o la tabla de variedades como referencia.';
+      }
+    } else {
+      hintMedia.classList.add('setup-hidden');
+      hintMedia.textContent = '';
     }
   }
 }

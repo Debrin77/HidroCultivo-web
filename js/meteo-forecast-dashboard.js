@@ -61,6 +61,10 @@ function updateDashboard() {
   try {
     if (typeof refreshDashNotificacionesUI === 'function') refreshDashNotificacionesUI();
   } catch (_) {}
+
+  try {
+    if (typeof refreshEcTransicionAvisoAll === 'function') refreshEcTransicionAvisoAll();
+  } catch (_) {}
 }
 
 function getTileClass(param, val) {
