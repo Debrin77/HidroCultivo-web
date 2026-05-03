@@ -708,7 +708,9 @@ function getPhOptimaTorre(nut, cfg) {
   return [b[0], b[1]];
 }
 
-/** Días desde el trasplante/germinación en registro: menor valor entre todas las plantas con fecha. */
+/**
+ * Menor «edad de ciclo» entre plantas con fecha: días en hidro + vivero si aplica (misma base que EC automático y checklist).
+ */
 function getMenorDiasDesdeTrasplanteEnTorreActiva() {
   let best = Infinity;
   try {
@@ -720,7 +722,10 @@ function getMenorDiasDesdeTrasplanteEnTorreActiva() {
         if (!c || !c.variedad || !c.fecha) continue;
         const ms = new Date(c.fecha).getTime();
         if (!Number.isFinite(ms)) continue;
-        const d = Math.floor((Date.now() - ms) / 86400000);
+        const d =
+          typeof getDiasEfectivosCicloBiologico === 'function'
+            ? getDiasEfectivosCicloBiologico(c, getCultivoDB(c.variedad), Date.now())
+            : Math.floor((Date.now() - ms) / 86400000);
         if (d >= 0) best = Math.min(best, d);
       }
     }
@@ -751,11 +756,18 @@ function getRecargaEcMetaMicroS() {
     return Math.round(checklistManual);
   }
   const o = getECOptimaTorre();
-  let meta = Math.round((o.min + o.max) / 2);
+  const ecLo = Number(o.min);
+  const ecHi = Number(o.max);
+  const mid =
+    Number.isFinite(ecLo) && Number.isFinite(ecHi) && ecHi >= ecLo
+      ? Math.round((ecLo + ecHi) / 2)
+      : Math.round(Number(o.min) || 900);
   const fa = getFactorArranquePlantulaHidro();
-  if (fa < 1) {
-    meta = Math.round(meta * fa);
-    meta = Math.max(320, meta);
+  let meta = mid;
+  if (fa < 1 && Number.isFinite(ecLo) && Number.isFinite(ecHi) && ecHi >= ecLo) {
+    // Arranque suave: interpolar entre el suelo del rango recomendado y el punto medio — nunca por debajo de ecLo (cuadra con Medir / Sistema)
+    meta = Math.round(ecLo + (mid - ecLo) * fa);
+    meta = Math.max(Math.round(ecLo), Math.min(Math.round(ecHi), meta));
   }
   return meta;
 }

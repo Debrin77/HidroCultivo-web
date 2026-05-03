@@ -677,7 +677,6 @@ function getCLPasos() {
   const pHR =
     typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : (nut.pHRango || [5.5, 6.5]);
   const phObj = ((pHR[0] + pHR[1]) / 2).toFixed(1);
-  const ecMed = Math.round((ecMin + ecMax) / 2);
   const ecRecTarget = getRecargaEcMetaMicroS();
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
@@ -698,7 +697,7 @@ function getCLPasos() {
   const paso6SeccionTitulo = hwLista.length ? null : '📊 Paso 6 — Registro';
   const paso40campos = [
     { id:'clEcObjetivoRecarga', label:'EC objetivo de esta recarga', type:'number', step:'10',
-      unit:'µS/cm', placeholder:String(ecMed), value:getRecargaEcMetaMicroS(),
+      unit:'µS/cm', placeholder:String(ecRecTarget), value: ecRecTarget,
       clase:'wide',
       _clOnblur:'onChecklistRecargaPrefsChanged()',
       _clOnkeydown:'if(event.key===\'Enter\'){event.preventDefault();this.blur();}' },

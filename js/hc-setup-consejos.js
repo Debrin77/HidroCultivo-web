@@ -969,16 +969,16 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
   const metaFuente =
     Number.isFinite(manualEc) && manualEc >= 200 && manualEc <= 6000
       ? '<span class="consejo-checklist-resumen-note">Meta EC <strong>fijada a mano</strong> en el checklist.</span>'
-      : '<span class="consejo-checklist-resumen-note">Meta EC = punto medio del rango orientativo' +
+      : '<span class="consejo-checklist-resumen-note">Meta EC = centro del rango orientativo' +
         (t === 'torre' || t === 'dwc' ? ' (ajustado por <strong>objetivo de cultivo</strong> en ' + meteoEscHtml(sysBreve) + ')' : '') +
-        '; puede atenuarse si hay <strong>plántulas</strong> recién trasplantadas.</span>';
+        '; en las ~2 primeras semanas en hidro se acerca hacia el <strong>mínimo</strong> del rango, <strong>sin salir</strong> del intervalo mostrado arriba.</span>';
 
   const fa = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
   const plantulaExtra =
     fa < 1 && !(Number.isFinite(manualEc) && manualEc >= 200 && manualEc <= 6000)
-      ? '<p class="consejo-checklist-resumen-foot">Atenuación de arranque en hidro (~' +
+      ? '<p class="consejo-checklist-resumen-foot">Arranque en hidro (~' +
         Math.round((1 - fa) * 100) +
-        '%): las mezclas del checklist van algo más suaves en las primeras ~2 semanas tras el trasplante.</p>'
+        '% hacia el piso del rango): la meta del checklist sigue dentro del mismo rango EC que Medir / Sistema.</p>'
       : '';
 
   const instLine =
