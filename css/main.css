@@ -2192,6 +2192,39 @@ button.aviso-cestas-ir:active {
   color: var(--muted);
   margin: 0 0 12px;
 }
+.hc-guia-visual-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 0 0 12px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+.hc-guia-visual-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #14532d;
+  letter-spacing: 0.02em;
+}
+.hc-guia-visual-item svg {
+  width: 42px;
+  height: auto;
+  display: block;
+}
+.hc-guia-visual-sep {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  user-select: none;
+}
 .hc-guia-steps {
   list-style: none;
   margin: 0;
@@ -2203,13 +2236,38 @@ button.aviso-cestas-ir:active {
 }
 .hc-guia-step {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 40px 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: 8px 10px;
   padding: 10px 10px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(148, 163, 184, 0.22);
+}
+.hc-guia-step-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(240, 253, 244, 0.75);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+.hc-guia-step-icon svg {
+  width: 28px;
+  height: auto;
+  display: block;
+}
+@media (max-width: 380px) {
+  .hc-guia-step {
+    grid-template-columns: 36px 1fr;
+    grid-template-rows: auto auto;
+  }
+  .hc-guia-step-btn {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
 }
 .hc-guia-step--done {
   border-color: rgba(34, 197, 94, 0.45);
@@ -2351,6 +2409,69 @@ button.aviso-cestas-ir:active {
 .welcome-btn {
   width: 100%;
   justify-content: center;
+}
+
+.welcome-carousel {
+  position: relative;
+  min-height: 220px;
+  margin-bottom: 6px;
+}
+.welcome-slide {
+  display: none;
+  text-align: center;
+}
+.welcome-slide.is-active {
+  display: block;
+  animation: fadeIn 0.22s ease-out;
+}
+.welcome-slide-art {
+  margin: 0 auto 10px;
+  max-width: 160px;
+}
+.welcome-slide-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+.welcome-carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+.welcome-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border-radius: 999px;
+  border: none;
+  background: rgba(21, 83, 45, 0.22);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.welcome-dot:hover {
+  background: rgba(21, 83, 45, 0.38);
+}
+.welcome-dot.is-active {
+  background: #15803d;
+  transform: scale(1.15);
+}
+.welcome-carousel-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.welcome-skip-btn {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.welcome-next-btn {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-width: 0;
 }
 
 /* Evita que el contenido de #app se lea bajo el velo de bienvenida */

@@ -9,6 +9,75 @@ const HC_GUIDE_DISMISS_KEY = 'hc_guia_primer_dia_dismiss';
 const HC_ONBOARD_RIEGO_VISIT_KEY = 'hc_onboarding_visit_riego';
 const HC_HINT_CTX = { mediciones: 'hc_hint_ctx_med', sistema: 'hc_hint_ctx_sis', riego: 'hc_hint_ctx_riego' };
 const HC_BIENVENIDA_KEY = 'hc_bienvenida_v2026_1';
+const WELCOME_SLIDE_LAST = 3;
+
+function welcomeCarouselGo(i) {
+  const ov = document.getElementById('welcomeOverlay');
+  if (!ov) return;
+  const n = typeof i === 'number' ? i : parseInt(String(i), 10);
+  const idx = Math.max(0, Math.min(WELCOME_SLIDE_LAST, Number.isFinite(n) ? n : 0));
+  ov.dataset.welcomeSlide = String(idx);
+  ov.querySelectorAll('[data-welcome-slide]').forEach((el) => {
+    const si = parseInt(el.getAttribute('data-welcome-slide'), 10);
+    const on = si === idx;
+    el.classList.toggle('is-active', on);
+    if (on) {
+      el.removeAttribute('hidden');
+      el.setAttribute('aria-hidden', 'false');
+    } else {
+      el.setAttribute('hidden', '');
+      el.setAttribute('aria-hidden', 'true');
+    }
+  });
+  ov.querySelectorAll('[data-welcome-dot]').forEach((d) => {
+    const di = parseInt(d.getAttribute('data-welcome-dot'), 10);
+    const on = di === idx;
+    d.classList.toggle('is-active', on);
+    d.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+  ov.setAttribute('aria-labelledby', 'welcomeSlideHeading' + idx);
+  const nextBtn = document.getElementById('welcomeBtnNext');
+  if (nextBtn) {
+    if (idx >= WELCOME_SLIDE_LAST) {
+      nextBtn.textContent = 'Entendido, empezar';
+      nextBtn.setAttribute('aria-label', 'Entendido, empezar y cerrar bienvenida');
+    } else {
+      nextBtn.textContent = 'Siguiente';
+      nextBtn.setAttribute('aria-label', 'Siguiente diapositiva');
+    }
+  }
+}
+
+function welcomeCarouselNext() {
+  const ov = document.getElementById('welcomeOverlay');
+  const cur = ov ? parseInt(ov.dataset.welcomeSlide || '0', 10) : 0;
+  if (cur >= WELCOME_SLIDE_LAST) cerrarBienvenidaPrimeraVez();
+  else welcomeCarouselGo(cur + 1);
+}
+
+function welcomeCarouselPrev() {
+  const ov = document.getElementById('welcomeOverlay');
+  const cur = ov ? parseInt(ov.dataset.welcomeSlide || '0', 10) : 0;
+  if (cur > 0) welcomeCarouselGo(cur - 1);
+}
+
+function welcomeCarouselSkip() {
+  cerrarBienvenidaPrimeraVez();
+}
+
+function _welcomeCarouselOnKeydown(e) {
+  if (!document.body.classList.contains('hc-welcome-open')) return;
+  if (e.key === 'ArrowRight') {
+    welcomeCarouselNext();
+    e.preventDefault();
+  } else if (e.key === 'ArrowLeft') {
+    welcomeCarouselPrev();
+    e.preventDefault();
+  } else if (e.key === 'Escape') {
+    welcomeCarouselSkip();
+    e.preventDefault();
+  }
+}
 
 function syncGuiaPrimerosPasosPorPestana() {
   const root = document.getElementById('guiaPrimerosPasos');
@@ -48,6 +117,12 @@ function mostrarBienvenidaOContinuarArranque() {
     ov.classList.remove('setup-hidden');
     ov.setAttribute('aria-hidden', 'false');
     try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
+    try { welcomeCarouselGo(0); } catch (_) {}
+    try { document.addEventListener('keydown', _welcomeCarouselOnKeydown); } catch (_) {}
+    try {
+      const nb = document.getElementById('welcomeBtnNext');
+      if (nb && typeof nb.focus === 'function') setTimeout(() => nb.focus(), 50);
+    } catch (_) {}
     return;
   }
   lanzarSetupOChecklistSiCorresponde();
@@ -61,6 +136,7 @@ function cerrarBienvenidaPrimeraVez() {
     ov.setAttribute('aria-hidden', 'true');
   }
   try { document.body.classList.remove('hc-welcome-open'); } catch (_) {}
+  try { document.removeEventListener('keydown', _welcomeCarouselOnKeydown); } catch (_) {}
   lanzarSetupOChecklistSiCorresponde();
 }
 
