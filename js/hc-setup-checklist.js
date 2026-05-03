@@ -1274,8 +1274,8 @@ function mostrarChecklistBloqueadoCultivoSistema(opts) {
     : 'Hay cestas con variedad pero falta la <strong>fecha de trasplante al hidro</strong> en alguna. ' +
       'Complétalas en Sistema para que EC y pH sigan la etapa de cada planta.';
   const afterWizard = desdeWizard
-    ? '<p class="checklist-bloqueo-foot">Cuando lo tengas, inicia el checklist desde <strong>Inicio</strong> o <strong>Historial</strong>.</p>'
-    : '';
+    ? '<p class="checklist-bloqueo-foot">Cuando lo tengas, inicia el checklist desde <strong>Inicio</strong> o el botón <strong>Checklist</strong> en <strong>Historial</strong>.</p>'
+    : '<p class="checklist-bloqueo-foot">El checklist de recarga está en la pestaña <strong>Historial</strong> (botón arriba a la derecha).</p>';
   const o = document.createElement('div');
   o.id = 'checklistBloqueoCultivoOverlay';
   o.className = 'checklist-pregunta-overlay';
@@ -1294,7 +1294,10 @@ function mostrarChecklistBloqueadoCultivoSistema(opts) {
     par +
     '</p>' +
     afterWizard +
+    '<div class="checklist-bloqueo-actions">' +
     '<button type="button" id="checklistBloqueoIrSistema" class="checklist-pregunta-btn-main">Ir a Sistema</button>' +
+    '<button type="button" id="checklistBloqueoIrHistorial" class="btn btn-secondary checklist-bloqueo-btn-hist">Ir a Historial</button>' +
+    '</div>' +
     '<button type="button" id="checklistBloqueoCerrar" class="checklist-pregunta-btn-later">Cerrar</button>' +
     '</div>';
   document.body.appendChild(o);
@@ -1306,11 +1309,18 @@ function mostrarChecklistBloqueadoCultivoSistema(opts) {
     o.remove();
   };
   const btnSis = document.getElementById('checklistBloqueoIrSistema');
+  const btnHist = document.getElementById('checklistBloqueoIrHistorial');
   const btnCer = document.getElementById('checklistBloqueoCerrar');
   if (btnSis) {
     btnSis.addEventListener('click', () => {
       cerrar();
       if (typeof goTab === 'function') goTab('sistema');
+    });
+  }
+  if (btnHist) {
+    btnHist.addEventListener('click', () => {
+      cerrar();
+      if (typeof goTab === 'function') goTab('historial');
     });
   }
   if (btnCer) btnCer.addEventListener('click', cerrar);

@@ -3192,6 +3192,58 @@ button.torre-summary:focus-visible,
   line-height: 1.45;
   color: #374151;
 }
+.checklist-bloqueo-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.checklist-bloqueo-btn-hist {
+  width: 100%;
+  justify-content: center;
+}
+.consejos-manual-flujo {
+  margin: 0 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg2) 92%, transparent);
+  padding: 0 12px 10px;
+}
+.consejos-manual-flujo > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 0 10px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+.consejos-manual-flujo > summary::-webkit-details-marker {
+  display: none;
+}
+.consejos-manual-flujo > summary::after {
+  content: ' ▼';
+  font-size: 11px;
+  color: var(--muted);
+}
+.consejos-manual-flujo[open] > summary::after {
+  content: ' ▲';
+}
+.consejos-manual-ol {
+  margin: 0 0 4px;
+  padding-left: 1.25rem;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.consejos-manual-ol li {
+  margin-bottom: 6px;
+}
+.consejos-manual-foot {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
 .quick-actions--core,
 .quick-actions--extra {
   margin-bottom: 0;
