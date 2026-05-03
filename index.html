@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-02-ayuda-tab">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-02-ayuda-sin-capturas">
 </head>
 <body>
 
@@ -190,7 +190,7 @@
         </ol>
         <p class="hc-guia-nota" id="guiaPrimerosNota">Clima y riego calculado son <strong>orientativos</strong> (modelo meteorológico y supuestos de la instalación); las <strong>mediciones</strong> que registres son las que validan el estado real del agua.</p>
         <p class="hc-guia-ayuda-link">
-          <button type="button" class="btn btn-ghost btn-sm" onclick="goTab('ayuda')">Manual, capturas y FAQ (Ayuda)</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="goTab('ayuda')">Manual y FAQ (Ayuda)</button>
         </p>
       </section>
 
@@ -2210,7 +2210,7 @@
     <div class="tab-panel" id="tab-consejos" role="tabpanel" aria-labelledby="btn-consejos" aria-hidden="true">
 
       <h1 class="section-title">💡 <span class="accent">Consejos</span></h1>
-      <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando. El <strong>manual paso a paso</strong>, huecos para <strong>capturas</strong> y <strong>FAQ</strong> están en la pestaña <button type="button" class="btn btn-ghost btn-sm" onclick="goTab('ayuda')" style="vertical-align:baseline;padding:2px 8px">Ayuda</button>.</p>
+      <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando. El <strong>recorrido recomendado</strong> y las <strong>FAQ</strong> están en la pestaña <button type="button" class="btn btn-ghost btn-sm" onclick="goTab('ayuda')" style="vertical-align:baseline;padding:2px 8px">Ayuda</button>.</p>
 
       <!-- Categorías -->
       <div class="consejos-cats" id="consejosCats"></div>
@@ -2221,17 +2221,15 @@
     </div>
     <!-- FIN TAB CONSEJOS -->
 
-    <!-- TAB AYUDA: manual, capturas, FAQ ═══════════════════ -->
+    <!-- TAB AYUDA: recorrido y FAQ ═════════════════════════ -->
     <div class="tab-panel" id="tab-ayuda" role="tabpanel" aria-labelledby="btn-ayuda" aria-hidden="true">
       <div class="ayuda-page">
         <h1 class="section-title">❔ <span class="accent">Ayuda</span></h1>
         <p class="ayuda-intro">
-          Manual de uso resumido, espacio reservado para <strong>capturas de pantalla</strong> (añades imágenes en el proyecto cuando quieras) y
-          <strong>preguntas frecuentes</strong>. Consulta aquí si la app te parece cargada de opciones: no hace falta usar todo el primer día.
+          <strong>Recorrido recomendado</strong> y <strong>preguntas frecuentes</strong>. Si la app te parece cargada de opciones, aquí tienes el orden habitual; no hace falta usar todo el primer día.
         </p>
         <nav class="ayuda-toc" aria-label="En esta página">
           <a href="#ayuda-recorrido">Recorrido</a>
-          <a href="#ayuda-capturas">Capturas</a>
           <a href="#ayuda-faq">FAQ</a>
         </nav>
 
@@ -2245,36 +2243,6 @@
             <li><strong>Historial → Checklist</strong>: recarga o primer llenado; las dosis usan volumen, nutriente y (en automático) la etapa del cultivo.</li>
             <li><strong>Riego, Calendario, Meteo, Consejos</strong>: refuerzan la rutina cuando ya tienes mediciones reales.</li>
           </ol>
-        </section>
-
-        <section id="ayuda-capturas" class="ayuda-section">
-          <h2>Capturas de pantalla</h2>
-          <p>
-            Los recuadros punteados son <strong>marcadores de posición</strong>. Para mostrar una foto real, guarda un archivo en
-            <code>img/ayuda/</code> con el nombre indicado (por ejemplo <code>01-inicio.webp</code> o <code>.png</code>) y recarga la página:
-            la app detectará el archivo y lo mostrará. Lee <code>img/ayuda/ORIGEN.txt</code> en el repositorio para la lista completa.
-          </p>
-
-          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/01-inicio.webp" data-ayuda-alt="Pestaña Inicio con resumen de la instalación">
-            <figcaption>1 · Inicio — resumen y accesos rápidos</figcaption>
-            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/01-inicio.webp</code></div>
-          </figure>
-          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/02-medir.webp" data-ayuda-alt="Pestaña Medir con campos de medición">
-            <figcaption>2 · Medir — registro de EC, pH, temperatura y volumen</figcaption>
-            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/02-medir.webp</code></div>
-          </figure>
-          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/03-sistema.webp" data-ayuda-alt="Pestaña Sistema con cestas y fechas">
-            <figcaption>3 · Sistema — variedad y fecha de trasplante por cesta</figcaption>
-            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/03-sistema.webp</code></div>
-          </figure>
-          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/04-historial.webp" data-ayuda-alt="Historial con botón Checklist">
-            <figcaption>4 · Historial — checklist de recarga del depósito</figcaption>
-            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/04-historial.webp</code></div>
-          </figure>
-          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/05-checklist.webp" data-ayuda-alt="Pasos del checklist de recarga">
-            <figcaption>5 · Checklist — ejemplo de paso con dosis orientativas</figcaption>
-            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/05-checklist.webp</code></div>
-          </figure>
         </section>
 
         <section id="ayuda-faq" class="ayuda-section ayuda-faq">
@@ -3932,8 +3900,7 @@
   <script src="js/hc-bootstrap-state.js?v=5"></script>
   <script src="js/hc-bootstrap-pin.js?v=3"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=7"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=11"></script>
-  <script src="js/app-hc-ayuda.js?v=1"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=12"></script>
   <script src="js/torre-render-build.js?v=2026-05-02-semillero-tabla"></script>
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>

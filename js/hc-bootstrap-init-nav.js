@@ -343,9 +343,6 @@ function goTab(tab) {
   if (tab === 'consejos') renderConsejos();
   if (tab === 'ayuda') {
     try {
-      if (typeof refreshAyudaCapturasSiExiste === 'function') refreshAyudaCapturasSiExiste();
-    } catch (_) {}
-    try {
       document.getElementById('tab-ayuda')?.scrollTo(0, 0);
     } catch (_) {}
   }
