@@ -320,7 +320,7 @@ function goTab(tab) {
   const activeBtn = document.getElementById('btn-' + tab);
   if (activeBtn) activeBtn.classList.add('active');
   scrollTabBarToActive(activeBtn);
-  ['inicio','mediciones','sistema','calendario','riego','meteo','historial','consejos'].forEach(t => {
+  ['inicio','mediciones','sistema','calendario','riego','meteo','historial','consejos','ayuda'].forEach(t => {
     const b = document.getElementById('btn-' + t);
     if (b) b.setAttribute('aria-selected', t === tab ? 'true' : 'false');
   });
@@ -341,6 +341,14 @@ function goTab(tab) {
   }
   if (tab === 'historial') { histDatos = null; cargarHistorial(); }
   if (tab === 'consejos') renderConsejos();
+  if (tab === 'ayuda') {
+    try {
+      if (typeof refreshAyudaCapturasSiExiste === 'function') refreshAyudaCapturasSiExiste();
+    } catch (_) {}
+    try {
+      document.getElementById('tab-ayuda')?.scrollTo(0, 0);
+    } catch (_) {}
+  }
   if (tab === 'riego') {
     // Sincronizar inputs con la torre activa y calcular
     sincronizarInputsRiego();

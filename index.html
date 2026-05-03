@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Orbitron:wght@700;800;900&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-02-consejos-manual">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-02-ayuda-tab">
 </head>
 <body>
 
@@ -189,6 +189,9 @@
           </li>
         </ol>
         <p class="hc-guia-nota" id="guiaPrimerosNota">Clima y riego calculado son <strong>orientativos</strong> (modelo meteorológico y supuestos de la instalación); las <strong>mediciones</strong> que registres son las que validan el estado real del agua.</p>
+        <p class="hc-guia-ayuda-link">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="goTab('ayuda')">Manual, capturas y FAQ (Ayuda)</button>
+        </p>
       </section>
 
       <!-- Aviso oficial AEMET/MeteoAlarm (flash en Inicio; zona inferida del municipio por geocodificación) -->
@@ -2207,20 +2210,7 @@
     <div class="tab-panel" id="tab-consejos" role="tabpanel" aria-labelledby="btn-consejos" aria-hidden="true">
 
       <h1 class="section-title">💡 <span class="accent">Consejos</span></h1>
-      <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando.</p>
-
-      <details class="consejos-manual-flujo">
-        <summary>Guía rápida: orden habitual de la app</summary>
-        <ol class="consejos-manual-ol">
-          <li><strong>Inicio</strong>: instalación activa, nutriente, última medición y avisos.</li>
-          <li><strong>Configurar</strong> (si aún no lo hiciste): asistente con tipo de sistema, depósito y agua.</li>
-          <li><strong>Sistema</strong>: en cada cesta con planta, variedad y <strong>fecha de trasplante al hidro</strong> (así EC/pH van por etapa con modo automático).</li>
-          <li><strong>Medir</strong>: registra EC, pH, temperatura del agua y volumen con la frecuencia que te marques.</li>
-          <li><strong>Historial → Checklist</strong>: recarga o primer llenado del depósito con dosis alineadas a tu cultivo y volumen.</li>
-          <li><strong>Riego / Calendario / Meteo</strong>: úsalos según tu rutina; mejoran con datos reales de Medir.</li>
-        </ol>
-        <p class="consejos-manual-foot">La app puede parecer densa al principio: no hace falta usar todo el primer día. Esta guía permanece aquí en Consejos para consultarla cuando quieras.</p>
-      </details>
+      <p class="consejos-tab-intro">Orientaciones según tu instalación, tipo de agua y lo que vas registrando. El <strong>manual paso a paso</strong>, huecos para <strong>capturas</strong> y <strong>FAQ</strong> están en la pestaña <button type="button" class="btn btn-ghost btn-sm" onclick="goTab('ayuda')" style="vertical-align:baseline;padding:2px 8px">Ayuda</button>.</p>
 
       <!-- Categorías -->
       <div class="consejos-cats" id="consejosCats"></div>
@@ -2230,6 +2220,110 @@
 
     </div>
     <!-- FIN TAB CONSEJOS -->
+
+    <!-- TAB AYUDA: manual, capturas, FAQ ═══════════════════ -->
+    <div class="tab-panel" id="tab-ayuda" role="tabpanel" aria-labelledby="btn-ayuda" aria-hidden="true">
+      <div class="ayuda-page">
+        <h1 class="section-title">❔ <span class="accent">Ayuda</span></h1>
+        <p class="ayuda-intro">
+          Manual de uso resumido, espacio reservado para <strong>capturas de pantalla</strong> (añades imágenes en el proyecto cuando quieras) y
+          <strong>preguntas frecuentes</strong>. Consulta aquí si la app te parece cargada de opciones: no hace falta usar todo el primer día.
+        </p>
+        <nav class="ayuda-toc" aria-label="En esta página">
+          <a href="#ayuda-recorrido">Recorrido</a>
+          <a href="#ayuda-capturas">Capturas</a>
+          <a href="#ayuda-faq">FAQ</a>
+        </nav>
+
+        <section id="ayuda-recorrido" class="ayuda-section">
+          <h2>Recorrido recomendado</h2>
+          <ol class="ayuda-ol">
+            <li><strong>Inicio</strong>: comprueba instalación activa, nutriente y última medición.</li>
+            <li><strong>Asistente</strong> (icono engranaje o guía del primer día): tipo de sistema, depósito, agua y nutriente si aún no lo configuraste.</li>
+            <li><strong>Sistema</strong>: en cada cesta con planta, variedad y <strong>fecha de trasplante al hidro</strong> (necesario para EC/pH por etapa en modo automático).</li>
+            <li><strong>Medir</strong>: registra EC, pH, temperatura del agua y volumen con la frecuencia que elijas.</li>
+            <li><strong>Historial → Checklist</strong>: recarga o primer llenado; las dosis usan volumen, nutriente y (en automático) la etapa del cultivo.</li>
+            <li><strong>Riego, Calendario, Meteo, Consejos</strong>: refuerzan la rutina cuando ya tienes mediciones reales.</li>
+          </ol>
+        </section>
+
+        <section id="ayuda-capturas" class="ayuda-section">
+          <h2>Capturas de pantalla</h2>
+          <p>
+            Los recuadros punteados son <strong>marcadores de posición</strong>. Para mostrar una foto real, guarda un archivo en
+            <code>img/ayuda/</code> con el nombre indicado (por ejemplo <code>01-inicio.webp</code> o <code>.png</code>) y recarga la página:
+            la app detectará el archivo y lo mostrará. Lee <code>img/ayuda/ORIGEN.txt</code> en el repositorio para la lista completa.
+          </p>
+
+          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/01-inicio.webp" data-ayuda-alt="Pestaña Inicio con resumen de la instalación">
+            <figcaption>1 · Inicio — resumen y accesos rápidos</figcaption>
+            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/01-inicio.webp</code></div>
+          </figure>
+          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/02-medir.webp" data-ayuda-alt="Pestaña Medir con campos de medición">
+            <figcaption>2 · Medir — registro de EC, pH, temperatura y volumen</figcaption>
+            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/02-medir.webp</code></div>
+          </figure>
+          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/03-sistema.webp" data-ayuda-alt="Pestaña Sistema con cestas y fechas">
+            <figcaption>3 · Sistema — variedad y fecha de trasplante por cesta</figcaption>
+            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/03-sistema.webp</code></div>
+          </figure>
+          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/04-historial.webp" data-ayuda-alt="Historial con botón Checklist">
+            <figcaption>4 · Historial — checklist de recarga del depósito</figcaption>
+            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/04-historial.webp</code></div>
+          </figure>
+          <figure class="ayuda-captura" data-ayuda-img="img/ayuda/05-checklist.webp" data-ayuda-alt="Pasos del checklist de recarga">
+            <figcaption>5 · Checklist — ejemplo de paso con dosis orientativas</figcaption>
+            <div class="ayuda-captura-slot"><span>Sitio para captura</span><code>img/ayuda/05-checklist.webp</code></div>
+          </figure>
+        </section>
+
+        <section id="ayuda-faq" class="ayuda-section ayuda-faq">
+          <h2>Preguntas frecuentes</h2>
+
+          <details>
+            <summary>¿Qué pestaña uso primero?</summary>
+            <div class="ayuda-faq-a">Empieza por <strong>Inicio</strong> y, si aún no configuraste el hidro, abre el <strong>asistente</strong> (engranaje o guía del primer día). Después <strong>Sistema</strong> (plantas y fechas) y <strong>Medir</strong> para tener datos reales del agua.</div>
+          </details>
+          <details>
+            <summary>¿Qué es EC y por qué aparece en µS/cm?</summary>
+            <div class="ayuda-faq-a">La EC (conductividad eléctrica) resume la concentración de sales disueltas en el agua de riego. En hidroponía casera se usa mucho <strong>microsiemens por centímetro</strong> (µS/cm). La app compara tu medición con un rango orientativo según cultivo y etapa (o tu objetivo manual).</div>
+          </details>
+          <details>
+            <summary>¿Por qué pide la fecha de trasplante al hidro?</summary>
+            <div class="ayuda-faq-a">Esa fecha ancla la <strong>fase de cultivo</strong> (plántula, vegetativo, floración…) y con ello el rango EC/pH recomendado en modo automático. Es la fecha en que la planta pasó a <em>esta</em> instalación hidropónica, no la siembra en semillero si ya fue antes.</div>
+          </details>
+          <details>
+            <summary>No me deja abrir el checklist</summary>
+            <div class="ayuda-faq-a">Con <strong>EC/pH automáticos</strong> hace falta tener <strong>variedad</strong> en las cestas que uses y <strong>fecha válida</strong> en todas ellas; si falta algo, la app te envía a <strong>Sistema</strong> y te lo explica. Con modo <strong>manual</strong> no aplica ese bloqueo. Tras un cuestionario mínimo de instalación sin plantas, el checklist puede abrirse una vez sin ese requisito.</div>
+          </details>
+          <details>
+            <summary>¿EC manual o automático?</summary>
+            <div class="ayuda-faq-a">En <strong>Sistema → estrategia EC/pH</strong>: <em>Automático</em> usa el catálogo por etapa (y el clima como ajuste suave). <em>Manual</em> fija un EC objetivo tuyo; eres responsable de revisarlo. El checklist y Medir respetan la opción elegida.</div>
+          </details>
+          <details>
+            <summary>Tengo varias instalaciones (torres)</summary>
+            <div class="ayuda-faq-a">Puedes crear varias desde el selector de instalación. Cada una guarda su propia configuración, mediciones y nutriente. Cambia de instalación antes de medir o abrir el checklist si no quieres mezclar datos.</div>
+          </details>
+          <details>
+            <summary>¿Cómo hago copia de seguridad?</summary>
+            <div class="ayuda-faq-a">En <strong>Sistema</strong>, al final, hay exportar / importar estado. Úsalo antes de cambiar de dispositivo o tras una temporada importante.</div>
+          </details>
+          <details>
+            <summary>¿Funciona sin internet?</summary>
+            <div class="ayuda-faq-a">La mayor parte sí (datos locales). La <strong>meteorología</strong> y mapas MeteoAlarm necesitan conexión cuando los consultas. La app puede instalarse como PWA en el móvil.</div>
+          </details>
+          <details>
+            <summary>MeteoAlarm / AEMET me confunden</summary>
+            <div class="ayuda-faq-a">Son avisos <strong>meteorológicos oficiales</strong> por zona (granizo, viento, olas de calor…). No sustituyen a tus mediciones de depósito; solo ayudan a anticipar riesgos si cultivas en exterior.</div>
+          </details>
+          <details>
+            <summary>¿Qué es el modo stand-by / descanso?</summary>
+            <div class="ayuda-faq-a">Pausa acciones como checklist o ciertos botones para no registrar recargas si el sistema está vacío o en descanso. Reactiva <strong>operativa</strong> cuando vuelvas a cultivar.</div>
+          </details>
+        </section>
+      </div>
+    </div>
+    <!-- FIN TAB AYUDA -->
 
     <!-- TAB 7: HISTORIAL ════════════════════════════════ -->
     <div class="tab-panel" id="tab-historial" role="tabpanel" aria-labelledby="btn-historial" aria-hidden="true">
@@ -2349,7 +2443,7 @@
   <!-- FIN CONTENT -->
 
   <!-- TAB BAR -->
-  <nav class="tab-bar" role="tablist" aria-label="Secciones principales: Inicio y día a día · cultivo · agua y clima · registro"
+  <nav class="tab-bar" role="tablist" aria-label="Secciones principales: Inicio y día a día · cultivo · agua y clima · registro · ayuda"
     title="Desliza lateralmente si no ves todas las pestañas">
     <button class="tab-btn active" type="button" role="tab" id="btn-inicio" onclick="goTab('inicio')" aria-label="Ir a Inicio" aria-selected="true" aria-controls="tab-inicio">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2390,6 +2484,12 @@
     <button class="tab-btn" type="button" role="tab" id="btn-consejos" onclick="goTab('consejos')" aria-label="Ir a Consejos" aria-selected="false" aria-controls="tab-consejos">
       <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+      </svg>
+    </button>
+    <button class="tab-btn" type="button" role="tab" id="btn-ayuda" onclick="goTab('ayuda')" aria-label="Ir a Ayuda: manual y FAQ" aria-selected="false" aria-controls="tab-ayuda">
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/>
       </svg>
     </button>
   </nav>
@@ -3832,7 +3932,8 @@
   <script src="js/hc-bootstrap-state.js?v=5"></script>
   <script src="js/hc-bootstrap-pin.js?v=3"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=7"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=10"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=11"></script>
+  <script src="js/app-hc-ayuda.js?v=1"></script>
   <script src="js/torre-render-build.js?v=2026-05-02-semillero-tabla"></script>
   <script src="js/torre-render-main.js?v=2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>

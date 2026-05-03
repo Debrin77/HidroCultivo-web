@@ -3,7 +3,7 @@
  * Depende de goTab(id) definido en el bundle principal.
  */
 (function () {
-  var ORDER = ['inicio', 'mediciones', 'sistema', 'calendario', 'riego', 'meteo', 'historial', 'consejos'];
+  var ORDER = ['inicio', 'mediciones', 'sistema', 'calendario', 'riego', 'meteo', 'historial', 'consejos', 'ayuda'];
 
   function tabButtons() {
     return ORDER.map(function (t) {

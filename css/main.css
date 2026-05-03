@@ -3202,47 +3202,138 @@ button.torre-summary:focus-visible,
   width: 100%;
   justify-content: center;
 }
-.consejos-manual-flujo {
-  margin: 0 0 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--bg2) 92%, transparent);
-  padding: 0 12px 10px;
+
+/* Pestaña Ayuda — manual, huecos para capturas, FAQ */
+.ayuda-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding-bottom: 24px;
 }
-.consejos-manual-flujo > summary {
-  list-style: none;
-  cursor: pointer;
-  padding: 12px 0 10px;
-  font-weight: 700;
+.ayuda-intro {
   font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+.ayuda-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+.ayuda-toc a {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg2) 90%, transparent);
+  color: var(--text);
+  text-decoration: none;
+}
+.ayuda-toc a:hover {
+  border-color: var(--accent, #0d9488);
+}
+.ayuda-section {
+  margin: 0 0 22px;
+  scroll-margin-top: 12px;
+}
+.ayuda-section h2 {
+  font-size: 1.05rem;
+  margin: 0 0 10px;
   color: var(--text);
 }
-.consejos-manual-flujo > summary::-webkit-details-marker {
-  display: none;
+.ayuda-section h3 {
+  font-size: 0.95rem;
+  margin: 16px 0 8px;
+  color: var(--text);
 }
-.consejos-manual-flujo > summary::after {
-  content: ' ▼';
-  font-size: 11px;
-  color: var(--muted);
-}
-.consejos-manual-flujo[open] > summary::after {
-  content: ' ▲';
-}
-.consejos-manual-ol {
-  margin: 0 0 4px;
-  padding-left: 1.25rem;
+.ayuda-section p,
+.ayuda-section li {
   font-size: 13px;
   line-height: 1.55;
   color: var(--text);
 }
-.consejos-manual-ol li {
+.ayuda-ol {
+  margin: 0 0 8px;
+  padding-left: 1.2rem;
+}
+.ayuda-ol li {
   margin-bottom: 6px;
 }
-.consejos-manual-foot {
-  margin: 8px 0 0;
+.ayuda-captura {
+  margin: 12px 0 16px;
+  border: 1px dashed color-mix(in srgb, var(--muted) 45%, var(--border));
+  border-radius: 12px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--bg2) 88%, transparent);
+}
+.ayuda-captura figcaption {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.ayuda-captura-slot {
+  padding: 20px 14px;
+  text-align: center;
   font-size: 12px;
   color: var(--muted);
-  line-height: 1.45;
+  line-height: 1.5;
+}
+.ayuda-captura-slot code {
+  display: block;
+  margin-top: 8px;
+  font-size: 11px;
+  word-break: break-all;
+  color: var(--text);
+}
+.ayuda-captura-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+.ayuda-faq details {
+  margin: 0 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg2) 92%, transparent);
+  padding: 0 12px;
+}
+.ayuda-faq summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 12px 0;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+}
+.ayuda-faq summary::-webkit-details-marker {
+  display: none;
+}
+.ayuda-faq summary::after {
+  content: ' ▼';
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.ayuda-faq details[open] summary::after {
+  content: ' ▲';
+}
+.ayuda-faq .ayuda-faq-a {
+  padding: 0 0 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.hc-guia-ayuda-link {
+  margin: 10px 0 0;
+  text-align: center;
+}
+.hc-guia-ayuda-link .btn {
+  font-size: 12px;
 }
 .quick-actions--core,
 .quick-actions--extra {
