@@ -69,9 +69,14 @@ function generarEventos(fecha) {
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach((c, ci) => {
       if (!c || !c.variedad || !c.fecha) return;
-      const diasTrasplante = Math.round((d - new Date(c.fecha)) / 86400000);
+      const diasEnHidro = Math.round((d - new Date(c.fecha)) / 86400000);
+      const cultCal = typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null;
+      const diasCicloBio =
+        typeof getDiasEfectivosCicloBiologico === 'function'
+          ? getDiasEfectivosCicloBiologico(c, cultCal, d.getTime())
+          : diasEnHidro;
       const diasTotal = DIAS_COSECHA[c.variedad] || 50;
-      const diasParaCosecha = diasTotal - diasTrasplante;
+      const diasParaCosecha = diasTotal - diasCicloBio;
 
       if (diasParaCosecha >= 0 && diasParaCosecha <= 3) {
         eventos.push({
@@ -82,14 +87,14 @@ function generarEventos(fecha) {
         });
       }
 
-      if (diasTrasplante >= 0 && diasTrasplante < DIAS_MUESTRA_PH_TRASPLANTE) {
+      if (diasEnHidro >= 0 && diasEnHidro < DIAS_MUESTRA_PH_TRASPLANTE) {
         const nomC = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
         eventos.push({
           tipo: 'plantula-ph',
           icono: '🧪',
           titulo:
             'Muestra diaria pH — plántula nueva (día ' +
-            (diasTrasplante + 1) +
+            (diasEnHidro + 1) +
             '/' +
             DIAS_MUESTRA_PH_TRASPLANTE +
             ')',

@@ -25,7 +25,14 @@ function calcularRotacion() {
   const edadesPorNivel = nivelesActivos.map(n => {
     const plantas = state.torre[n].filter(c => c.variedad && c.fecha);
     if (plantas.length === 0) return null;
-    const diasMedia = plantas.reduce((sum, c) => sum + getDias(c.fecha), 0) / plantas.length;
+    const diasMedia =
+      plantas.reduce((sum, c) => {
+        const d =
+          typeof getDiasEfectivosCicloBiologico === 'function'
+            ? getDiasEfectivosCicloBiologico(c, getCultivoDB(c.variedad), Date.now())
+            : getDias(c.fecha);
+        return sum + d;
+      }, 0) / plantas.length;
     return { nivel: n, diasMedia, plantas };
   }).filter(Boolean);
 
@@ -153,7 +160,17 @@ function ejecutarRotacion() {
   const edadesPorNivel = nivelesActivos.map(n => {
     const plantas = state.torre[n].filter(c => c.variedad && c.fecha);
     if (plantas.length === 0) return { nivel: n, diasMedia: 0 };
-    return { nivel: n, diasMedia: plantas.reduce((s, c) => s + getDias(c.fecha), 0) / plantas.length };
+    return {
+      nivel: n,
+      diasMedia:
+        plantas.reduce((s, c) => {
+          const d =
+            typeof getDiasEfectivosCicloBiologico === 'function'
+              ? getDiasEfectivosCicloBiologico(c, getCultivoDB(c.variedad), Date.now())
+              : getDias(c.fecha);
+          return s + d;
+        }, 0) / plantas.length,
+    };
   }).sort((a, b) => b.diasMedia - a.diasMedia); // más maduro primero
 
   // El más maduro se cosecha (vaciar)

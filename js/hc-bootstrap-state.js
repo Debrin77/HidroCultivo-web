@@ -82,7 +82,8 @@ function asegurarCamposFilaTorre(row) {
 function hcOrientacionViveroHtml() {
   const inner =
     '<p class="hc-origen-hint-p"><strong>Plántula de vivero</strong>: suele traer algo de sustrato (turba, coco, etc.) en el pan de raíces. ' +
-    'En hidroponía conviene <strong>retirar con cuidado lo suelto</strong> o seguir las indicaciones del vivero; evita meter tierra suelta al circuito.</p>';
+    'En hidroponía conviene <strong>retirar con cuidado lo suelto</strong> o seguir las indicaciones del vivero; evita meter tierra suelta al circuito.</p>' +
+    '<p class="hc-origen-hint-p">La <strong>fecha</strong> sigue siendo el día en que entra al sistema. Con «vivero» marcado, la app suma una <strong>media de días en plug</strong> típica de ese cultivo para alinear <strong>EC/pH automáticos</strong>, riego y avisos de cosecha con una edad biológica aproximada (orientativo).</p>';
   return typeof hcWrapOrigenDetails === 'function'
     ? hcWrapOrigenDetails(inner, 'Plántula de vivero · sustrato y raíces', false)
     : inner;

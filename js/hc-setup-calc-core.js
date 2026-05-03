@@ -63,6 +63,26 @@ function getPhObjetivoManualRango(cfg, nut) {
 }
 
 /**
+ * Días de ciclo biológico aproximados: días en hidro + media en plug de vivero si `origenPlanta === 'vivero'`.
+ * La fecha de la ficha sigue siendo el trasplante al sistema; el offset alinea EC/pH y cosecha con edad real típica.
+ * @param {object} c ficha cesta
+ * @param {object|null} cultivo CULTIVOS_DB o null
+ * @param {number} [refFinMs] instante final (ms); por defecto `Date.now()` (p. ej. día del calendario).
+ */
+function getDiasEfectivosCicloBiologico(c, cultivo, refFinMs) {
+  if (!c || !c.fecha) return 0;
+  const ms = new Date(c.fecha).getTime();
+  if (!Number.isFinite(ms)) return 0;
+  const fin = Number.isFinite(refFinMs) ? refFinMs : Date.now();
+  let dias = Math.max(0, Math.floor((fin - ms) / 86400000));
+  const cu = cultivo || (typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null);
+  if (typeof normalizarOrigenPlanta === 'function' && normalizarOrigenPlanta(c.origenPlanta) === 'vivero') {
+    dias += typeof getDiasPlantonViveroEstimado === 'function' ? getDiasPlantonViveroEstimado(cu) : 0;
+  }
+  return dias;
+}
+
+/**
  * Fase de cultivo según días transcurridos.
  * @param {object} opts desdeTrasplante (default true): la fecha en la ficha de torre/NFT es el **trasplante al sistema**;
  *   no se recorre la fase `germinacion` del catálogo (esa fase es previa al hidro). Solo `origenPlanta === 'germinacion'`
@@ -110,7 +130,7 @@ function torreSliceEcPhCestaRaw(c, cfg) {
   if (c.fecha) {
     const ms = new Date(c.fecha).getTime();
     if (Number.isFinite(ms)) {
-      const dias = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+      const dias = getDiasEfectivosCicloBiologico(c, cultivo, Date.now());
       const fd = cultivoFaseDesdeDias(cultivo, dias, { desdeTrasplante: true });
       if (fd && fd.fase) {
         conFasePorFecha = true;

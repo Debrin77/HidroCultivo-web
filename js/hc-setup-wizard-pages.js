@@ -220,7 +220,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
         editingCesta &&
         editingCesta.nivel === i &&
         editingCesta.cesta === j;
-      const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+      const dias =
+        dat.fecha && typeof torreDiasCicloVisual === 'function'
+          ? torreDiasCicloVisual(dat)
+          : dat.fecha
+            ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000))
+            : null;
       let ariaTxt = 'Canal T' + (i + 1) + ', hueco ' + (j + 1) + ', ' + (dat.variedad ? cultivoNombreLista(cult, dat.variedad) : 'vacío');
       if (dias !== null) ariaTxt += ', día ' + dias;
       ariaTxt += '. Pulsa para ficha o asignar cultivo.';
@@ -528,7 +533,12 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
         const multiKey = i + ',' + j;
         const isMulti = torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
         const isEd = !!(typeof editingCesta !== 'undefined' && editingCesta && editingCesta.nivel === i && editingCesta.cesta === j);
-        const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+        const dias =
+          dat.fecha && typeof torreDiasCicloVisual === 'function'
+            ? torreDiasCicloVisual(dat)
+            : dat.fecha
+              ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000))
+              : null;
         let ariaTxt = 'Canal ' + (i + 1) + ', hueco ' + (j + 1) + ', ' + nomLista;
         if (dias !== null) ariaTxt += ', día ' + dias;
         ariaTxt += '. Pulsa para abrir ficha o asignar cultivo.';

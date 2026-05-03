@@ -732,7 +732,11 @@ function updateTorreStats() {
       if (c.variedad) {
         totalPlantas++;
         if (cestaTieneFechaValida(c.fecha)) {
-          const dias = getDias(c.fecha);
+          const cultM = getCultivoDB(c.variedad);
+          const dias =
+            typeof getDiasEfectivosCicloBiologico === 'function'
+              ? getDiasEfectivosCicloBiologico(c, cultM, Date.now())
+              : getDias(c.fecha);
           totalDias += dias;
           plantasConFecha++;
           if (getEstado(c.variedad, dias) === 'cosecha') cosechas++;

@@ -337,7 +337,11 @@ function calcularEdadAutomatica() {
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach(c => {
       if (cestaCuentaParaRiegoYMetricas(c)) {
-        const dias = getDias(c.fecha);
+        const cult = getCultivoDB(c.variedad);
+        const dias =
+          typeof getDiasEfectivosCicloBiologico === 'function'
+            ? getDiasEfectivosCicloBiologico(c, cult, Date.now())
+            : getDias(c.fecha);
         totalDias += dias;
         totalPlantas++;
         if (dias < edadMinDias) edadMinDias = dias;
@@ -458,8 +462,11 @@ function calcularFactorEdad() {
   nivelesActivos.forEach(n => {
     (state.torre[n] || []).forEach(c => {
       if (!cestaCuentaParaRiegoYMetricas(c)) return;
-      const dias = getDias(c.fecha);
       const cultivo = getCultivoDB(c.variedad);
+      const dias =
+        typeof getDiasEfectivosCicloBiologico === 'function'
+          ? getDiasEfectivosCicloBiologico(c, cultivo, Date.now())
+          : getDias(c.fecha);
       const diasTotal = cultivo?.dias || 45;
       const pct = dias / diasTotal; // 0 = recién trasplantada, 1 = lista para cosechar
       // Factor: plántula(0-20%) → 0.5, crecimiento(20-60%) → 1.0, madurez(60%+) → 1.4

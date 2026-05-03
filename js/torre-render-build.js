@@ -131,9 +131,18 @@ function setTorreVistaModo(modo) {
   renderTorre();
 }
 
+/** Días de ciclo para color / fase / barra: incluye media vivero si la ficha lo indica (misma base que EC automático). */
+function torreDiasCicloVisual(dat) {
+  if (!dat || !dat.fecha) return 0;
+  if (typeof getDiasEfectivosCicloBiologico === 'function') {
+    return getDiasEfectivosCicloBiologico(dat, getCultivoDB(dat.variedad), Date.now());
+  }
+  return Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000));
+}
+
 function torreListaColorCesta(n, c) {
   const dat = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad: '', fecha: '' };
-  const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
+  const dias = dat.fecha ? torreDiasCicloVisual(dat) : 0;
   const est = dat.variedad ? getEstado(dat.variedad, dias) : '';
   if (!dat.variedad) return { border: 'rgba(15,23,42,0.12)', bg: '#f8fafc' };
   if (est === 'plantula') return { border: 'rgba(37,99,235,0.45)', bg: '#eff6ff' };
@@ -164,7 +173,7 @@ function renderTorreLista() {
       const tit = dat.variedad ? String(dat.variedad) : 'Vacía';
       const titLista = cultivoNombreLista(cult, dat.variedad);
       const titEsc = escHtmlUi(dat.variedad ? titLista : tit);
-      const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
+      const dias = dat.fecha ? torreDiasCicloVisual(dat) : null;
       const sub = dias !== null ? dias + ' d' : 'Sin fecha';
       const emoji = !dat.variedad ? '⚪' : (cult ? cultivoEmoji(cult) : '🌱');
       const faseEst = dat.variedad && dias !== null ? getEstado(dat.variedad, dias) : '';
@@ -291,7 +300,7 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
 
   for (let c = 0; c < numCestas; c++) {
     const dat  = (state.torre[n] && state.torre[n][c]) ? state.torre[n][c] : { variedad:'', fecha:'', fotos:[] };
-    const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
+    const dias = dat.fecha ? torreDiasCicloVisual(dat) : 0;
     const est  = dat.variedad ? getEstado(dat.variedad, dias) : '';
     const diasBase = DIAS_COSECHA[dat.variedad] || 50;
     const diasT = typeof torreGetDiasCosechaObjetivo === 'function'
@@ -509,7 +518,7 @@ function generarSVGDwc() {
       state.torre && state.torre[n] && state.torre[n][c]
         ? state.torre[n][c]
         : { variedad: '', fecha: '', fotos: [] };
-    const dias = dat.fecha ? Math.floor((Date.now() - new Date(dat.fecha)) / 86400000) : 0;
+    const dias = dat.fecha ? torreDiasCicloVisual(dat) : 0;
     const est = dat.variedad ? getEstado(dat.variedad, dias) : '';
     const diasBase = DIAS_COSECHA[dat.variedad] || 50;
     const diasT = typeof torreGetDiasCosechaObjetivo === 'function'
@@ -1194,8 +1203,13 @@ function renderTablaVariedades() {
   for (let n = 0; n < numNiveles; n++) {
     (state.torre[n] || []).forEach((c, ci) => {
       if (!c || !c.variedad) return;
-      const dias   = c.fecha ? getDias(c.fecha) : null;
       const cultivo = getCultivoDB(c.variedad);
+      const dias =
+        c.fecha && typeof getDiasEfectivosCicloBiologico === 'function'
+          ? getDiasEfectivosCicloBiologico(c, cultivo, Date.now())
+          : c.fecha
+            ? getDias(c.fecha)
+            : null;
       const diasBase = cultivo?.dias || 45;
       const diasTotal = typeof torreGetDiasCosechaObjetivo === 'function'
         ? torreGetDiasCosechaObjetivo(diasBase, cfg)
@@ -1242,7 +1256,7 @@ function renderTablaVariedades() {
   let html = '<div class="torre-prog-wrap">' +
     '<div class="torre-prog-head">' +
     '<span>N·C</span><span>Variedad</span><span>Días</span><span>Estado</span>' +
-    '<span title="Hidro: EC según días desde el trasplante al sistema (igual que Medir). Debajo, si el cultivo lo define, referencia Semillero para germinar en casa antes de pasar a plántula en hidro.">EC (µS/cm)</span>' +
+    '<span title="EC según edad de ciclo: días en hidro + media en vivero si marcaste «Plántula de vivero» (como en Medir). Debajo, referencia Semillero si aplica.">EC (µS/cm)</span>' +
     '</div>';
 
   const faseEcEtq = {

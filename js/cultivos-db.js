@@ -312,3 +312,41 @@
     nota:'Los más nutritivos. Sabor a nuez. Necesitan oscuridad los 3 primeros días.',
     fructificacion: false },
 ];
+
+/**
+ * Días medios en plug de semillero/vivero (alvéolo) antes del trasplante al hidro (referencia comercial ES).
+ * Solo se suman a los días en sistema si la ficha indica origen «vivero» — la fecha sigue siendo el día de entrada al hidro.
+ */
+const HC_DIAS_VIVERO_ALVEOLAR_POR_GRUPO = {
+  lechugas: 20,
+  hojas: 22,
+  asiaticas: 20,
+  hierbas: 22,
+  frutos: 28,
+  fresas: 28,
+  raices: 18,
+  microgreens: 0,
+};
+const HC_DIAS_VIVERO_ALVEOLAR_POR_ID = {
+  romana: 20, trocadero: 20, maravilla: 22, lolorrosso: 20, hojaroble: 21, batavia: 21, iceberg: 22, mantecosa: 20,
+  rucula: 16, espinaca: 20, acelga: 26, col_rizada: 28, berros: 18, lechuga_agua: 18,
+  mizuna: 18, komatsuna: 19, pak_choi: 22, tatsoi: 20, mostaza: 14,
+  albahaca: 18, menta: 24, perejil: 32, cilantro: 18, oregano: 26, romero: 42, tomillo: 26, lavanda: 40, eneldo: 21, cebollino: 20,
+  tomate: 30, tomate_cherry: 28, tomate_colgar: 30, pimiento: 34, pimiento_picante: 35,
+  pepino: 24, pepino_largo: 24, pepino_corto: 23, pepino_mini: 22, calabacin: 25,
+  fresa: 30, freson: 32,
+  zanahoria: 28, rabano: 12,
+  microgreens_mezcla: 0, girasol_micro: 0,
+};
+
+function getDiasPlantonViveroEstimado(cultivo) {
+  if (!cultivo || !cultivo.id) return 0;
+  const id = cultivo.id;
+  if (id in HC_DIAS_VIVERO_ALVEOLAR_POR_ID) {
+    const v = HC_DIAS_VIVERO_ALVEOLAR_POR_ID[id];
+    return Number.isFinite(v) && v >= 0 ? Math.round(v) : 0;
+  }
+  const g = cultivo.grupo;
+  const d = HC_DIAS_VIVERO_ALVEOLAR_POR_GRUPO[g];
+  return Number.isFinite(d) && d >= 0 ? Math.round(d) : 20;
+}

@@ -151,7 +151,11 @@ function updateDashTorre() {
       if (c.variedad) {
         plantas++;
         if (cestaTieneFechaValida(c.fecha)) {
-          const dias = getDias(c.fecha);
+          const cultD = getCultivoDB(c.variedad);
+          const dias =
+            typeof getDiasEfectivosCicloBiologico === 'function'
+              ? getDiasEfectivosCicloBiologico(c, cultD, Date.now())
+              : getDias(c.fecha);
           totalDias += dias;
           plantasConFecha++;
           const estado = getEstado(c.variedad, dias);

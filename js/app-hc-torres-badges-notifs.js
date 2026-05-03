@@ -734,7 +734,7 @@ function actualizarBadgesNutriente() {
       rangeEC.textContent =
         'Sin variedad en la instalación: asigna cultivo y fecha en Sistema para un EC por fase (o EC manual en checklist).';
       rangeEC.title =
-        'La fecha de la ficha es el trasplante al hidro; el rango por cultivo y fase se calcula a partir de ahí, igual que en el resumen de cestas.';
+        'La fecha de la ficha es el trasplante al hidro. Si marcaste <strong>vivero</strong>, el rango EC/pH y la fase usan también una media de días en plug típica de ese cultivo (como en el resumen de cestas).';
     } else {
       const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
       const faseMapEc = {
@@ -1115,7 +1115,11 @@ function programarRecordatorios() {
     nivelesActivos.forEach(n => {
       (state.torre[n] || []).forEach((c, ci) => {
         if (!c.variedad || !c.fecha) return;
-        const dias = Math.floor((ahora - new Date(c.fecha)) / 86400000);
+        const cultN = getCultivoDB(c.variedad);
+        const dias =
+          typeof getDiasEfectivosCicloBiologico === 'function'
+            ? getDiasEfectivosCicloBiologico(c, cultN, ahora)
+            : Math.floor((ahora - new Date(c.fecha)) / 86400000);
         const diasBase = DIAS_COSECHA[c.variedad] || 50;
         const diasTotal = typeof torreGetDiasCosechaObjetivo === 'function'
           ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})

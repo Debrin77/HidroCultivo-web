@@ -12,7 +12,7 @@ const CONSEJOS_DATA = {
         alerta:{ tipo:'info', txt:'ℹ️ Las plántulas nuevas pueden necesitar 2-3 días para adaptarse al sistema hidropónico si vienen de semillero en tierra.' } },
       { icono:'🏪', titulo:'Origen en ficha: plántula de vivero',
         texto:'Si compras en vivero o garden center, suele venir sustrato (coco, turba, plug de semillero) en el pan de raíces. En hidroponía conviene <strong>retirar con suavidad lo suelto</strong> o seguir las indicaciones del proveedor, para no arrastrar tierra o materia orgánica al depósito. En la ficha elige <strong>Plántula de vivero</strong> y la <strong>fecha en que entra al sistema</strong> (NFT, DWC o torre).',
-        alerta:{ tipo:'info', txt:'ℹ️ El origen es orientativo para ti y para el registro; el contador de días del calendario sigue basado en la fecha de trasplante al sistema.' } },
+        alerta:{ tipo:'info', txt:'ℹ️ Con «vivero» la app suma una <strong>media de días en plug</strong> por cultivo (referencia comercial) a los días en hidro para <strong>EC/pH automáticos</strong>, riego y cosecha. Los recordatorios de <strong>pH diario en plántula nueva</strong> siguen contando solo desde la entrada al sistema (raíz nueva en la solución).' } },
       { icono:'🫘', titulo:'Origen en ficha: germinación propia',
         texto:'Desde semilla en sustrato hidropónico: bandeja a <strong>oscuras</strong> hasta que asome la radícula (suelen ser unos 2–4 días según especie y temperatura), luego <strong>luz de crecimiento</strong> (14–18 h/día, suave al inicio) hasta 2–3 hojas reales y buen desarrollo radicular; entonces <strong>trasplanta al circuito</strong>. En la ficha marca <strong>Germinación propia</strong> y usa como fecha el <strong>día del traslado al sistema</strong> (no el de la siembra), para que el progreso y el riego coincidan con la planta en hidroponía.',
         alerta:{ tipo:'ok', txt:'✅ En modo «Asignar cultivo» verás los mismos pasos al elegir germinación propia; los tiempos exactos dependen de la variedad y del sobre del semillero.' } },
@@ -1280,13 +1280,19 @@ function consejoFaseDesdeFicha(cultivo, cesta) {
   if (typeof cultivoFaseDesdeDias === 'function' && cesta && cesta.fecha) {
     const ms = new Date(cesta.fecha).getTime();
     if (Number.isFinite(ms)) {
-      const dias = Math.max(0, Math.floor((Date.now() - ms) / 86400000));
+      const dias =
+        typeof getDiasEfectivosCicloBiologico === 'function'
+          ? getDiasEfectivosCicloBiologico(cesta, cultivo, Date.now())
+          : Math.max(0, Math.floor((Date.now() - ms) / 86400000));
       const f = cultivoFaseDesdeDias(cultivo, dias, { desdeTrasplante: true });
       if (f && f.key) return f.key;
     }
   }
   if (cesta && cesta.fecha && typeof getEstado === 'function') {
-    const dias = Math.max(0, Math.floor((Date.now() - new Date(cesta.fecha)) / 86400000));
+    const dias =
+      typeof getDiasEfectivosCicloBiologico === 'function'
+        ? getDiasEfectivosCicloBiologico(cesta, cultivo, Date.now())
+        : Math.max(0, Math.floor((Date.now() - new Date(cesta.fecha)) / 86400000));
     const est = getEstado(cultivo.id || cultivo.nombre, dias);
     if (est === 'plantula') return 'plantula';
     if (est === 'crecimiento') return 'vegetativo';
