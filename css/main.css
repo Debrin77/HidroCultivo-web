@@ -740,10 +740,10 @@ button.pin-key {
   flex-shrink: 0;
   transition: transform 0.15s;
 }
-/* Pestañas: Heroicons outline (trazo 1.5, viewBox 24) */
-.tab-btn svg.hc-ico.hc-ico--hi-tab {
-  width: 22px;
-  height: 22px;
+/* Pestañas: Ionicons outline (viewBox 512, trazo proporcional al set) */
+.tab-btn svg.hc-ico.hc-ico--ion-tab {
+  width: 24px;
+  height: 24px;
   color: inherit;
 }
 .tab-btn:active svg { transform: scale(0.88); }

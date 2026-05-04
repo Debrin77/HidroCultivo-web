@@ -9,7 +9,7 @@
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js?v=2026-05-05-heroicons-tabs')
+    navigator.serviceWorker.register('service-worker.js?v=2026-05-05-ionicons-tabs')
       .then(reg => console.log('[HidroCultivo] SW registrado:', reg.scope))
       .catch(err => console.warn('[HidroCultivo] SW error:', err));
   });
