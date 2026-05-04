@@ -97,8 +97,17 @@ function unlockAndInitApp() {
       a11yAttachFocusTrap(pinEl);
     }
     const pinErr = document.getElementById('pinErr');
-    if (pinErr) pinErr.textContent = 'No se pudo abrir la app. Reintenta.';
-    showToast('Error al iniciar tras PIN. Reintentando…', true);
+    let det = '';
+    try {
+      const msg = e && (e.message || String(e));
+      if (msg) det = String(msg).replace(/\s+/g, ' ').trim().slice(0, 140);
+    } catch (_) {}
+    if (pinErr) {
+      pinErr.textContent = det
+        ? 'Error al abrir: ' + det + ' · Reintenta o recarga (Ctrl+F5).'
+        : 'No se pudo abrir la app. Reintenta o recarga forzada.';
+    }
+    showToast('Error al iniciar. Si persiste, borra datos del sitio o reinstala la app.', true);
   }
 }
 
@@ -151,13 +160,14 @@ function pinPress(d) {
 function pinDel() {
   pinEntry = pinEntry.slice(0, -1);
   updatePinDots();
-  document.getElementById('pinErr').textContent = '';
+  const err = document.getElementById('pinErr');
+  if (err) err.textContent = '';
 }
 
 function updatePinDots() {
   for (let i = 0; i < 4; i++) {
     const d = document.getElementById('d' + i);
-    d.className = 'pin-dot' + (i < pinEntry.length ? ' on' : '');
+    if (d) d.className = 'pin-dot' + (i < pinEntry.length ? ' on' : '');
   }
 }
 
@@ -167,9 +177,18 @@ function checkPin() {
     updatePinDots();
     unlockAndInitApp();
   } else {
-    for (let i = 0; i < 4; i++) document.getElementById('d' + i).className = 'pin-dot err';
-    document.getElementById('pinErr').textContent = 'PIN incorrecto';
-    setTimeout(() => { pinEntry = ''; updatePinDots(); document.getElementById('pinErr').textContent = ''; }, 1000);
+    for (let i = 0; i < 4; i++) {
+      const di = document.getElementById('d' + i);
+      if (di) di.className = 'pin-dot err';
+    }
+    const err = document.getElementById('pinErr');
+    if (err) err.textContent = 'PIN incorrecto';
+    setTimeout(() => {
+      pinEntry = '';
+      updatePinDots();
+      const e2 = document.getElementById('pinErr');
+      if (e2) e2.textContent = '';
+    }, 1000);
   }
 }
 

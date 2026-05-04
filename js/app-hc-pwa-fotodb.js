@@ -9,7 +9,7 @@
 // Registrar Service Worker para PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js?v=2026-04-26-svg-fix3')
+    navigator.serviceWorker.register('service-worker.js?v=2026-05-05-mobile-boot')
       .then(reg => console.log('[HidroCultivo] SW registrado:', reg.scope))
       .catch(err => console.warn('[HidroCultivo] SW error:', err));
   });
@@ -92,7 +92,8 @@ window.onload = () => {
 
   // ── Soporte teclado físico para el PIN ────────────────────────────────────
   document.addEventListener('keydown', e => {
-    if (document.getElementById('pinScreen').style.display === 'none') return;
+    const pinScr = document.getElementById('pinScreen');
+    if (!pinScr || pinScr.style.display === 'none') return;
     if (e.key >= '0' && e.key <= '9') pinPress(e.key);
     if (e.key === 'Backspace') pinDel();
   });

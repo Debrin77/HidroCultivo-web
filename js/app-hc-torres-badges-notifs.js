@@ -41,6 +41,22 @@ function initTorres() {
     state.torreActiva = 0; // índice en el array
     saveState();
   }
+  // Guardarraíl: `torres: []` en localStorage rompía el arranque (getTorreActiva → undefined → .nombre).
+  if (!Array.isArray(state.torres) || state.torres.length === 0) {
+    state.torres = [{
+      id: 1,
+      nombre: 'Mi instalación',
+      emoji: emojiMigracionPorTipoInstalacion(state.configTorre),
+      config: state.configTorre || null,
+      torre: state.torre || [],
+      modoActual: modoActual || 'lechuga',
+      mediciones: state.mediciones || [],
+      registro: state.registro || [],
+      fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
+    }];
+    state.torreActiva = 0;
+    saveState();
+  }
   let idSeq = Date.now();
   let idsReparados = false;
   let emojisMigrados = false;
@@ -68,7 +84,18 @@ function initTorres() {
 function getTorreActiva() {
   initTorres();
   const idx = state.torreActiva || 0;
-  return state.torres[idx] || state.torres[0];
+  const t = state.torres[idx] || state.torres[0];
+  if (t) return t;
+  return {
+    id: 1,
+    nombre: 'Instalación',
+    emoji: '🌿',
+    config: state.configTorre || null,
+    torre: state.torre || [],
+    mediciones: [],
+    registro: [],
+    fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
+  };
 }
 
 /**
@@ -356,10 +383,16 @@ function cargarEstadoTorre(idx) {
 function actualizarHeaderTorre() {
   const t = getTorreActiva();
   const btn = document.getElementById('torreActivaNombre');
-  if (btn) btn.textContent = emojiSistemaUiPorTorre(t) + ' ' + ((t.nombre || '').trim() || 'Instalación');
+  if (btn) {
+    const nom = t && typeof t.nombre === 'string' ? t.nombre.trim() : '';
+    btn.textContent = emojiSistemaUiPorTorre(t) + ' ' + (nom || 'Instalación');
+  }
   // Mostrar/ocultar botón añadir según límite
   const btnCrear = document.getElementById('btnCrearTorre');
-  if (btnCrear) btnCrear.style.display = (state.torres.length >= MAX_TORRES) ? 'none' : 'block';
+  if (btnCrear) {
+    const nTorres = Array.isArray(state.torres) ? state.torres.length : 0;
+    btnCrear.style.display = nTorres >= MAX_TORRES ? 'none' : 'block';
+  }
 }
 
 function sistemaEstaOperativa(cfg) {

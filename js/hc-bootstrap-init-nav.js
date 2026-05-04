@@ -123,9 +123,10 @@ function applyBootCollapsedUI() {
   cfg.uiSistemaDwcLlenadoColapsado = true;
 }
 function updateClock() {
+  const el = document.getElementById('headerTime');
+  if (!el) return;
   const now = new Date();
-  document.getElementById('headerTime').textContent =
-    now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  el.textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 }
 
 // ══════════════════════════════════════════════════
