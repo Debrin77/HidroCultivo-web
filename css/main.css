@@ -740,13 +740,11 @@ button.pin-key {
   flex-shrink: 0;
   transition: transform 0.15s;
 }
-/* POC Pixelarticons: relleno en cuadrícula 24px, nitidez al escalar */
-.tab-btn svg.hc-ico.hc-ico--pixel-tab {
-  width: 22px;
-  height: 22px;
+/* Pestañas: Lucide (trazo 2, viewBox 24) alineado con barra */
+.tab-btn svg.hc-ico.hc-ico--lucide-tab {
+  width: 21px;
+  height: 21px;
   color: inherit;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 .tab-btn:active svg { transform: scale(0.88); }
 
