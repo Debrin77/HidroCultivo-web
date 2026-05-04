@@ -764,7 +764,7 @@ function updateTorreStats() {
     } else {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
-        'Capacidad y litros de mezcla: edítalos aquí; checklist y dosis usan los mismos valores. El resumen de plantas y cosecha está en <strong>Inicio</strong>.';
+        'Litros de mezcla usados por el checklist. Resumen de cultivo en <strong>Inicio</strong>.';
     }
   }
 

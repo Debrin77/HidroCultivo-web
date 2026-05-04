@@ -1446,10 +1446,10 @@ function sincronizarTextosPanelInteraccionSistema() {
   }
   if (finHint) {
     finHint.innerHTML = esNft
-      ? 'Cuando termines, pulsa aquí para volver a <strong>Editar ficha</strong> y guardar el NFT (botón <strong>Actualizar NFT</strong> arriba si cambiaste más datos).'
+      ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar NFT</strong> arriba si hace falta.'
       : esDwc
-        ? 'Cuando termines, pulsa aquí para volver a <strong>Editar ficha</strong> y guardar el DWC (botón <strong>Actualizar DWC</strong> arriba si cambiaste más datos).'
-        : 'Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la torre (botón <strong>Actualizar torre</strong> arriba si cambiaste más datos).';
+        ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar DWC</strong> arriba si hace falta.'
+        : 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar torre</strong> arriba si hace falta.';
   }
 }
 
@@ -1465,16 +1465,16 @@ function actualizarTorreAssignAyuda() {
   const esDwc = t === 'dwc';
   if (torreAsignarInstantaneo) {
     el.innerHTML = esNft
-      ? 'Elige cultivo y fecha; luego <strong>cada toque en un hueco del esquema</strong> (o en Lista) lo rellena al momento. Al terminar, pulsa <strong>Finalizar asignación</strong>.'
+      ? 'Cultivo y fecha → <strong>tocar huecos</strong> (o Lista) rellena al momento. Luego <strong>Finalizar asignación</strong>.'
       : esDwc
-        ? 'Elige cultivo y fecha; luego <strong>cada toque en una maceta</strong> del esquema (o en Lista) la rellena al momento. Al terminar, pulsa <strong>Finalizar asignación</strong>.'
-        : 'Elige cultivo y fecha; luego <strong>cada toque</strong> en una cesta visible la rellena al momento. Gira la torre para la cara trasera. Al terminar, pulsa <strong>Finalizar asignación</strong>.';
+        ? 'Cultivo y fecha → <strong>tocar macetas</strong> (o Lista) rellena al momento. Luego <strong>Finalizar asignación</strong>.'
+        : 'Cultivo y fecha → <strong>tocar cestas</strong> visibles (gira la torre si hace falta). Luego <strong>Finalizar asignación</strong>.';
   } else {
     el.innerHTML = esNft
-      ? 'Elige cultivo y fecha; <strong>toca varios huecos</strong> en el esquema o en Lista (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo uno marcado para quitarlo. Luego <strong>Finalizar asignación</strong>.'
+      ? 'Marca varios <strong>huecos</strong> (anillo ámbar) → <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>.'
       : esDwc
-        ? 'Elige cultivo y fecha; <strong>toca varias macetas</strong> en el esquema o en Lista (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Luego <strong>Finalizar asignación</strong>.'
-        : 'Elige cultivo y fecha; <strong>toca</strong> varias cestas (anillo ámbar) y pulsa <strong>Aplicar a selección</strong>. Toca de nuevo una marcada para quitarla. Cuando hayas acabado, pulsa <strong>Finalizar asignación</strong>.';
+        ? 'Marca varias <strong>macetas</strong> (anillo ámbar) → <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>.'
+        : 'Marca <strong>cestas</strong> (anillo ámbar) → <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>.';
   }
 }
 
@@ -1984,26 +1984,18 @@ function actualizarChromePanelEsquemaPorTipo() {
   if (intro) {
     if (esNft) {
       const dN = nftDisposicionNormalizada(cfg.nftDisposicion);
-      const dTxt =
-        dN === 'pared'
-          ? '<strong>pared</strong> (tubos horizontales en zigzag). '
-          : dN === 'escalera'
-            ? '<strong>escalera / inclinado</strong> (peldaños; una o dos caras). '
-            : '<strong>mesa</strong> (paralelos o multinivel). ';
+      const dEt =
+        dN === 'pared' ? 'pared' : dN === 'escalera' ? 'escalera' : 'mesa';
       intro.innerHTML =
-        '<strong>NFT</strong> · disposición ' +
-        dTxt +
-        'Esquema <strong>2D</strong>: recorrido del agua en <strong>azul discontinuo</strong> (animado si «Animaciones suaves» está activo). <strong>Toca un hueco</strong> para la ficha. ' +
-        'Indica <strong>altura al 1.º canal</strong> en asistente o Sistema para la bomba. ' +
-        '<strong>Lista</strong> = acceso lineal (cada fila = un tubo).';
+        '<strong>NFT</strong> · ' +
+        dEt +
+        '. Agua en <strong>azul discontinuo</strong> (si animaciones activas). <strong>Toca hueco</strong> o <strong>Lista</strong>. Altura al 1.º canal: asistente o montaje arriba.';
     } else if (esDwc) {
       intro.innerHTML =
-        '<strong>DWC</strong> · Arriba la <strong>tapa en vista cenital</strong> (rejilla y macetas); abajo el <strong>frente del depósito</strong> con solución, y calentador/aireador si los tienes. ' +
-        'Cada círculo es una maceta (filas × columnas). <strong>Lista</strong> recorre filas y macetas.';
+        '<strong>DWC</strong>: tapa arriba, depósito abajo. <strong>Toca maceta</strong> o usa <strong>Lista</strong>.';
     } else {
       intro.innerHTML =
-        '<strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real). ' +
-        'Flechas junto al depósito o desliza para girar y ver todas las cestas.';
+        '<strong>Torre</strong> (maqueta): <strong>flechas o deslizar</strong> para girar; <strong>Lista</strong> para ver todas las cestas.';
     }
   }
   const leg = document.getElementById('torreDiagramLegend');

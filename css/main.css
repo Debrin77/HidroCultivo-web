@@ -9750,6 +9750,19 @@ button.config-option:focus-visible,
   padding-top: 12px;
   border-top: none;
 }
+
+/* Sistema (NFT/DWC): <details> colapsables — separación respecto a botones y rejillas en móvil */
+.torre-sistema-details-spaced.torre-vol-detalles {
+  margin-bottom: 14px;
+}
+.torre-nft-bomba-wrap .torre-sistema-details-spaced.torre-vol-detalles {
+  margin-top: 8px;
+  margin-bottom: 12px;
+}
+#sistemaDwcAyudaBody > .torre-sistema-details-spaced.torre-vol-detalles {
+  margin-bottom: 16px;
+}
+
 .torre-vol-label {
   font-size: 11px;
   font-weight: 800;

@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-05-theme-diagram-1">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-05-sistema-details-spacing">
 </head>
 <body>
   <script src="js/hc-theme.js?v=1"></script>
@@ -1250,8 +1250,7 @@
     <div class="tab-panel" id="tab-sistema" role="tabpanel" aria-labelledby="btn-sistema" aria-hidden="true">
       <div id="tabContextHintSistema" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">
-          <strong>Sistema</strong> define <strong>qué cultivas y dónde</strong> (cestas, variedades, fechas de trasplante, procedencia). Sin fechas válidas, el riego y los rangos EC/pH usan valores por defecto: revísalo para que coincidan con tu realidad.
-          Lo habitual <strong>después de configurar el montaje</strong> es: ① rellenar aquí los cultivos implantados en cada hueco; ② abrir el <strong>checklist de recarga</strong> (desde Inicio, Medir o Historial) para dosificar nutrientes en el <strong>depósito de esta instalación</strong>.
+          <strong>Sistema</strong>: cultivo y fecha de trasplante en cada hueco. Sin fecha válida, riego y EC/pH son solo orientativos. El checklist de recarga está en <strong>Inicio</strong> o <strong>Medir</strong>.
           <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('sistema')" aria-label="Entendido, ocultar aviso">Entendido</button>
         </div>
       </div>
@@ -1314,9 +1313,6 @@
 
       <div id="sistemaTorreObjetivoCard" class="torre-card-elevated setup-hidden">
         <div class="torre-sistema-panel-kicker">Objetivo en torre vertical</div>
-        <p class="torre-nft-p torre-objetivo-torre-p">
-          Diferencia si buscas <strong>baby leaf</strong> (más densidad, cosecha joven) o <strong>planta adulta</strong> (más espacio por cesta).
-        </p>
         <div class="torre-dwc-grid-2">
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysTorreObjetivoCultivo">Objetivo de cosecha</label>
@@ -1337,9 +1333,6 @@
 
       <div id="sistemaEcPhStrategyCard" class="torre-card-elevated">
         <div class="torre-sistema-panel-kicker">Estrategia EC / pH</div>
-        <p class="torre-nft-p torre-objetivo-torre-p">
-          Puedes trabajar en modo <strong>manual</strong> (bajo tu criterio) o en modo <strong>recomendado por etapa</strong> con ajustes por clima y exposición.
-        </p>
         <div class="torre-dwc-grid-2">
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysEcPhEstrategia">Modo de recomendación</label>
@@ -1389,23 +1382,19 @@
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div id="sistemaNftMontajeBody" class="torre-sistema-panel-body">
-        <p class="torre-nft-p">
-          Disposición, multinivel, escalera/A y pendiente. Los datos coinciden con el <strong>asistente de configuración</strong>; aquí puedes retocarlos y pulsar <strong>Aplicar</strong>.
-        </p>
-        <ol class="torre-nft-ol">
-          <li>Elige <strong>mesa, escalera o pared</strong> y, si aplica, multinivel o caras del A.</li>
-          <li>Ajusta <strong>tubos, huecos y pendiente</strong> (los huecos son el mismo número en cada tubo del dibujo).</li>
-          <li>Indica <strong>cesta (net pot)</strong> abajo o en el asistente; pulsa <strong>Aplicar montaje NFT</strong>. Canal, lámina, Ø tubería de riego y bomba siguen en el asistente.</li>
-        </ol>
-        <p class="torre-nft-p">
-          En <strong>escalera / A</strong>, el esquema NFT asume alimentación al <strong>primer tubo</strong> por cara (T en el vértice si hay dos caras), cascada en <strong>zigzag</strong> entre extremos de cada peldaño y <strong>retorno al depósito</strong> desde el último peldaño, en línea con montajes NFT en pendiente habituales.
-        </p>
-        <p class="torre-nft-p-soft">
-          Si cambiaste el montaje aquí, pulsa <strong>Aplicar</strong> antes de abrir el asistente para que cargue lo último.
-        </p>
-        <p class="torre-nft-p-soft">
-          El <strong>Ø del tubo de cultivo</strong> y el canal siguen en el asistente (canal / lámina / bomba). La <strong>cesta (net pot)</strong> puedes editarla aquí o allí; ambos sitios guardan lo mismo.
-        </p>
+        <p class="torre-nft-p">Mismos datos que el <strong>asistente</strong>; retoca aquí y pulsa <strong>Aplicar montaje NFT</strong>.</p>
+        <details class="torre-vol-detalles torre-sistema-details-spaced">
+          <summary class="torre-vol-detalles-summary">Pasos, flujo en escalera y asistente</summary>
+          <div class="torre-vol-wrap torre-vol-wrap--inner">
+            <ol class="torre-nft-ol">
+              <li><strong>Mesa, escalera o pared</strong> (+ multinivel o dos caras si aplica).</li>
+              <li><strong>Tubos, huecos y pendiente</strong> (mismo n.º de huecos por tubo en el dibujo).</li>
+              <li><strong>Cesta (net pot)</strong> aquí o en asistente → <strong>Aplicar montaje NFT</strong>. Canal, lámina y bomba: botón de abajo.</li>
+            </ol>
+            <p class="torre-nft-p-soft">En <strong>escalera / A</strong> el esquema asume alimentación al <strong>1.º tubo</strong> por cara, zigzag en cada peldaño y retorno al depósito desde el último (montaje en pendiente típico).</p>
+            <p class="torre-nft-p-soft">Tras cambiar aquí, <strong>Aplicar</strong> antes de abrir el asistente para que cargue lo último. Ø de tubo de cultivo y canal solo en asistente; la cesta se puede editar en ambos sitios.</p>
+          </div>
+        </details>
         <button type="button" onclick="abrirAsistenteNftCanalYTuboDesdeSistema()"
           class="torre-nft-btn-dashed">
           Abrir asistente — canal / tubo / bomba
@@ -1483,7 +1472,12 @@
         </div>
         <div class="torre-nft-bomba-wrap torre-nft-row-mb">
           <div class="torre-nft-bomba-kicker">Cestas (net pot)</div>
-          <p class="torre-nft-p-note">Diámetro del <strong>aro</strong> de la cesta en el canal (no el Ø del tubo de cultivo). Ref. habitual <strong>27–50 mm</strong>; cualquier otro Ø en mm vale como personalizado.</p>
+          <details class="torre-vol-detalles torre-sistema-details-spaced">
+            <summary class="torre-vol-detalles-summary">¿Qué medimos aquí?</summary>
+            <div class="torre-vol-wrap torre-vol-wrap--inner">
+              <p class="torre-nft-p-note" style="margin:0">Diámetro del <strong>aro</strong> de la cesta en el canal (no el Ø del tubo de cultivo). Ref. habitual <strong>27–50 mm</strong>; otro valor en mm = personalizado.</p>
+            </div>
+          </details>
           <div class="torre-nft-grid-3">
             <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftPotRim27" onclick="seleccionarSistemaNftPotRimPreset(27)">27</button>
             <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftPotRim38" onclick="seleccionarSistemaNftPotRimPreset(38)">38</button>
@@ -1562,7 +1556,12 @@
                 oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
             </div>
           </div>
-          <p class="torre-nft-p-soft"><strong>Estas medidas son geométricas (tapa y depósito).</strong> Prismático: volumen útil ≈ L×A×P. <strong>Cilíndrico:</strong> Ø interior y P (altura/profundidad útil del líquido). <strong>Troncopiramidal:</strong> solo litros medidos (sin P). El llenado seguro respecto a la cesta/sustrato usa P y la altura de cesta indicadas abajo.</p>
+          <details class="torre-vol-detalles torre-sistema-details-spaced">
+            <summary class="torre-vol-detalles-summary">Cómo calculamos el volumen útil</summary>
+            <div class="torre-vol-wrap torre-vol-wrap--inner">
+              <p class="torre-nft-p-soft" style="margin:0"><strong>Medidas geométricas</strong> (tapa y depósito). Prismático: ≈ L×A×P. Cilíndrico: Ø interior útil y P del líquido. Troncopiramidal: indica litros medidos. El llenado seguro usa P y altura de cesta abajo.</p>
+            </div>
+          </details>
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcDepositoForma">Forma del depósito DWC</label>
             <select id="sysDwcDepositoForma" class="torre-dwc-input" aria-label="Forma del depósito DWC"
@@ -1672,8 +1671,7 @@
       <!-- Esquema / lista y gráfico del sistema (NFT o torre): sin cortar con resumen ni nutriente -->
       <div class="torre-container">
         <div id="torreEsquemaSub" class="torre-esquema-intro">
-          <strong>Esquema simplificado</strong> de tu torre (maqueta, no escala real).
-          Usa las <strong>flechas junto al depósito</strong> en el esquema para girar; también puedes deslizar sobre el dibujo.
+          <strong>Esquema</strong> (orientativo). Torre: flechas o deslizar. NFT/DWC: toca huecos o macetas; <strong>Lista</strong> para recorrer todo.
         </div>
         <div id="torreDiagramToolbar" class="torre-diagram-toolbar">
           <div id="torreDiagramLegend" class="torre-diagram-legend" aria-hidden="true">
@@ -1691,7 +1689,7 @@
             <button type="button" id="btnTorreVistaLista" class="torre-vista-btn"
               onclick="setTorreVistaModo('lista')" aria-pressed="false"
               aria-label="Ver lista de cestas">Lista</button>
-            <label id="torreAnimSuavesLabel" class="torre-anim-label" title="NFT: flecha azul discontinua del agua en movimiento. Torre: gotas y burbujas. Respeta «reducir movimiento» del sistema.">
+            <label id="torreAnimSuavesLabel" class="torre-anim-label" title="Flujo animado en el dibujo (NFT: flecha azul). Se respeta «reducir movimiento» del sistema.">
               <input type="checkbox" id="torreChkAnimSuaves" checked onchange="setTorreAnimSuaves(this.checked)"
                 aria-label="Animaciones suaves en el esquema (flujo NFT, depósito, riego)">
               <span>Animaciones</span>
@@ -1717,7 +1715,7 @@
             <div id="torreEditarAyuda" class="torre-ayuda-txt"></div>
             <button type="button" onclick="abrirTutorialEditarCultivo({ force: true })"
               class="torre-tutorial-btn torre-tutorial-btn--blue">
-              Tutorial · edición de ficha
+              Guía · editar ficha
             </button>
           </div>
           <div id="torreAssignPanel" class="setup-hidden">
@@ -1755,11 +1753,11 @@
               <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-check"/></svg> Finalizar asignación
             </button>
             <div id="torreAssignFinalizarHint" class="torre-finalizar-hint">
-              Cuando hayas terminado de colocar cultivos, pulsa aquí para volver a <strong>Editar ficha</strong> y sincronizar la instalación (igual que «Actualizar instalación»).
+              Vuelve a <strong>Editar ficha</strong> y guarda con <strong>Actualizar</strong> arriba si cambiaste datos.
             </div>
             <button type="button" onclick="abrirTutorialAsignarCultivo({ force: true })"
               class="torre-tutorial-btn torre-tutorial-btn--green">
-              Tutorial · asignación en bloque
+              Guía · asignar en bloque
             </button>
           </div>
         </div>
@@ -1772,9 +1770,9 @@
         <div id="torreListaVista" class="torre-lista-wrap setup-hidden" aria-label="Lista de cestas por nivel"></div>
         <div id="torreSistemaResumenWrap" class="torre-sistema-resumen-wrap" role="region" aria-label="Resumen de la configuración del sistema" hidden></div>
         <div id="torreQuickTip" class="torre-quick-tip setup-hidden" aria-live="polite"></div>
-        <div id="torreSwipeHint" class="torre-swipe-hint">Flechas al lado del depósito o deslizar para girar</div>
+        <div id="torreSwipeHint" class="torre-swipe-hint">Flechas o deslizar para girar la torre</div>
         <div id="torreNftDiagramHint" class="setup-hidden torre-nft-diagram-hint">
-          NFT: línea <strong class="fw-800">azul discontinua</strong> = sentido del agua (con animación suave activada) · toca un <strong class="fw-800">hueco</strong> o usa <strong class="fw-800">Lista</strong>
+          NFT: agua en <strong class="fw-800">azul discontinuo</strong> · toca <strong class="fw-800">hueco</strong> o <strong class="fw-800">Lista</strong>
         </div>
 
         <!-- Depósito y volumen (mezclas / checklist) -->
@@ -1783,7 +1781,7 @@
             <div class="deposito-icon" aria-hidden="true"></div>
             <div class="deposito-info torre-deposito-info">
               <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
-              <p class="torre-vol-ref-hint" id="torreDepositoVolHint">Capacidad y litros de mezcla: edítalos aquí; checklist y dosis usan los mismos valores. El resumen de plantas y cosecha está en <strong>Inicio</strong>.</p>
+              <p class="torre-vol-ref-hint" id="torreDepositoVolHint">Litros de mezcla usados por el checklist. Resumen de cultivo en <strong>Inicio</strong>.</p>
               <details id="torreVolDepDetalles" class="torre-vol-detalles">
                 <summary class="torre-vol-detalles-summary">Cambiar capacidad o litros de mezcla</summary>
                 <div id="torreVolDepWrap" class="torre-vol-wrap torre-vol-wrap--inner">
@@ -4096,8 +4094,8 @@
   <script src="js/hc-bootstrap-onboarding.js?v=9"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=14"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-05-boot-guard"></script>
-  <script src="js/torre-render-main.js?v=3"></script>
+  <script src="js/torre-render-build.js?v=2026-05-05-sistema-copy"></script>
+  <script src="js/torre-render-main.js?v=4"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=6"></script>
