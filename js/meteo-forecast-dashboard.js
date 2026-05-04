@@ -18,7 +18,7 @@ function updateDashboard() {
   const now = new Date();
   const hora = now.getHours();
   const saludo = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
-  document.getElementById('dashGreeting').textContent = `${saludo} 🌿`;
+  document.getElementById('dashGreeting').textContent = saludo;
   document.getElementById('dashFecha').textContent =
     now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -119,10 +119,10 @@ function updateTiles(m) {
   ];
 
   const statusLabels = {
-    ec:   { ok: 'Óptimo', warn: 'Vigilar', bad: '⚠️ Corregir' },
-    ph:   { ok: 'Óptimo', warn: 'Vigilar', bad: '⚠️ Corregir' },
-    temp: { ok: 'Óptimo', warn: 'Vigilar', bad: '⚠️ Verificar' },
-    vol:  { ok: 'Correcto', warn: 'Bajo', bad: '⚠️ Reponer' },
+    ec:   { ok: 'Óptimo', warn: 'Vigilar', bad: 'Corregir' },
+    ph:   { ok: 'Óptimo', warn: 'Vigilar', bad: 'Corregir' },
+    temp: { ok: 'Óptimo', warn: 'Vigilar', bad: 'Verificar' },
+    vol:  { ok: 'Correcto', warn: 'Bajo', bad: 'Reponer' },
   };
 
   params.forEach(p => {
@@ -584,32 +584,35 @@ async function fetchMeteoAlert() {
     const pvs = 0.6108 * Math.pow(1 + temp / 100, 8.827);
     const vpd = Math.round(pvs * (1 - hum / 100) * 100) / 100;
 
-    let tipo, icono, titulo, texto;
+    let tipo, titulo, texto;
 
     if (vpd > 1.6) {
-      tipo = 'bad'; icono = '🔴';
+      tipo = 'bad';
       titulo = 'Ambiente muy seco para las hojas';
       texto = `Temp ${temp}°C · Humedad ${hum}% · UV ${uvTxt} · Viento ${viento} km/h
 Riego de mayor intensidad solar activo. Revisar que las plantas no están lacias.`;
     } else if (vpd > 1.2) {
-      tipo = 'warn'; icono = '🟡';
+      tipo = 'warn';
       titulo = 'Transpiración alta — vigilar riego';
       texto = `Temp ${temp}°C · Humedad ${hum}% · UV ${uvTxt} · Viento ${viento} km/h
 Condiciones de estrés moderado. Verificar riego de mayor intensidad solar.`;
     } else if (vpd < 0.4) {
-      tipo = 'warn'; icono = '💧';
+      tipo = 'warn';
       titulo = 'Humedad ambiental muy alta';
       texto = `Temp ${temp}°C · Humedad ${hum}% · UV ${uvTxt} · Viento ${viento} km/h
 Riesgo de hongos y enfermedades fúngicas. Buena ventilación recomendada.`;
     } else {
-      tipo = 'ok'; icono = '✅';
+      tipo = 'ok';
       titulo = 'Condiciones favorables';
       texto = `Temp ${temp}°C · Humedad ${hum}% · UV ${uvTxt} · Viento ${viento} km/h
 Las plantas están en condiciones ideales de crecimiento.`;
     }
 
     alertEl.className = `meteo-alert ${tipo}`;
-    iconEl.textContent = icono;
+    if (iconEl) {
+      const sym = tipo === 'bad' ? 'hc-i-alert-bad' : tipo === 'warn' ? 'hc-i-alert-warn' : 'hc-i-alert-ok';
+      iconEl.innerHTML = '<svg class="hc-ico hc-ico--meteo" aria-hidden="true" focusable="false"><use href="#' + sym + '"/></svg>';
+    }
     titleEl.textContent = titulo;
     textEl.textContent = texto;
 
@@ -621,7 +624,9 @@ Las plantas están en condiciones ideales de crecimiento.`;
 
   } catch(e) {
     alertEl.className = 'meteo-alert warn';
-    iconEl.textContent = '📡';
+    if (iconEl) {
+      iconEl.innerHTML = '<svg class="hc-ico hc-ico--meteo" aria-hidden="true" focusable="false"><use href="#hc-i-signal"/></svg>';
+    }
     const offline = (typeof navigator !== 'undefined' && navigator.onLine === false);
     titleEl.textContent = offline ? 'Sin conexión meteorológica' : 'Datos meteorológicos no disponibles ahora';
     textEl.textContent = offline

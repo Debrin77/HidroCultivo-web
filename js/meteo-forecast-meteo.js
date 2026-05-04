@@ -38,6 +38,19 @@ function condEmoji(precipProb, tempMax, uv) {
   return '🌤️';
 }
 
+/** Icono SVG en #meteoDetalleEmoji (sprite hc-i-* en index.html). */
+function setMeteoDetalleIconSvg(precipProb, tempMax, uv) {
+  const el = document.getElementById('meteoDetalleEmoji');
+  if (!el) return;
+  let sym = 'hc-i-cloud-sun';
+  if (precipProb > 70) sym = 'hc-i-cloud-rain';
+  else if (precipProb > 40) sym = 'hc-i-cloud-sun';
+  else if (uv > 7) sym = 'hc-i-sun';
+  else if (tempMax < 10) sym = 'hc-i-therm';
+  el.innerHTML =
+    '<svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#' + sym + '"/></svg>';
+}
+
 function condTexto(precipProb, tempMax, uv, viento) {
   if (precipProb > 70) return 'Lluvia probable';
   if (precipProb > 40) return 'Chubascos posibles';
@@ -687,7 +700,6 @@ function seleccionarDia(idx) {
   const viento = Math.round(meteoData.daily.windspeed_10m_max[idx]);
   const uvRaw  = meteoData.daily.uv_index_max?.[idx];
   const uv     = Number.isFinite(Number(uvRaw)) ? Math.round(Number(uvRaw)) : null;
-  const emoji  = condEmoji(prob, tMax, uv ?? -1);
 
   // Humedad media del día seleccionado
   const offset = idx * 24;
@@ -705,7 +717,7 @@ function seleccionarDia(idx) {
   const vpd = Math.round(sumVpd / 24 * 100) / 100;
 
   // Actualizar UI detalle
-  document.getElementById('meteoDetalleEmoji').textContent = emoji;
+  setMeteoDetalleIconSvg(prob, tMax, uv ?? -1);
   document.getElementById('meteoDetalleDia').textContent   = nombre;
   document.getElementById('meteoDetalleCond').textContent  = condTexto(prob, tMax, uv ?? -1, viento);
   document.getElementById('mdTemp').textContent   = `${tMin}-${tMax}`;
