@@ -494,6 +494,7 @@ function generarSVGDwc() {
     typeof dwcRecomendacionCultivoDesdeConfig === 'function'
       ? dwcRecomendacionCultivoDesdeConfig(cfg)
       : '';
+  const Dw = HC_DIAG.dwc;
 
   const W = 400;
   const H = 548;
@@ -882,8 +883,8 @@ function generarSVGDwc() {
 
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
-  s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="#475569" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
-  s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="5 4"/>`;
+  s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="${Dw.title}" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
+  s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="${Dw.sep}" stroke-width="1" stroke-dasharray="5 4"/>`;
 
   /* ── Alzado depósito (prisma / cubo isométrico, tronco piramidal o cilindro) ── */
   s += tankFrontalSvg;
@@ -891,16 +892,16 @@ function generarSVGDwc() {
 
   if (tieneCalentador) {
     const hTop = innerBottom - 52;
-    s += `<rect x="${hx - 5}" y="${hTop}" width="10" height="${innerBottom - hTop - 2}" rx="5" fill="#f97316" stroke="#c2410c" stroke-width="1.1"/>`;
-    s += `<circle cx="${hx}" cy="${hTop - 5}" r="4.5" fill="#fbbf24">${ta ? `<animate attributeName="opacity" values="0.55;1;0.55" dur="1.4s" repeatCount="indefinite"/>` : ''}</circle>`;
-    s += `<text x="${hx}" y="${innerBottom + 11}" font-family="Inconsolata,monospace" font-size="7" fill="#9a3412" text-anchor="middle" font-weight="800">CAL</text>`;
+    s += `<rect x="${hx - 5}" y="${hTop}" width="10" height="${innerBottom - hTop - 2}" rx="5" fill="${Dw.calFill}" stroke="${Dw.calStroke}" stroke-width="1.1"/>`;
+    s += `<circle cx="${hx}" cy="${hTop - 5}" r="4.5" fill="${Dw.calGlow}">${ta ? `<animate attributeName="opacity" values="0.55;1;0.55" dur="1.4s" repeatCount="indefinite"/>` : ''}</circle>`;
+    s += `<text x="${hx}" y="${innerBottom + 11}" font-family="Inconsolata,monospace" font-size="7" fill="${Dw.calText}" text-anchor="middle" font-weight="800">CAL</text>`;
   }
 
   if (tieneDifusor) {
     const tubeTop = tankStartY - 4;
-    s += `<line x1="${stoneX}" y1="${tubeTop}" x2="${stoneX}" y2="${stoneY - 9}" stroke="#64748b" stroke-width="1.8" stroke-dasharray="4 3"/>`;
-    s += `<ellipse cx="${stoneX}" cy="${stoneY}" rx="13" ry="6.5" fill="#9ca3af" stroke="#57534e" stroke-width="1.1"/>`;
-    s += `<text x="${stoneX}" y="${innerBottom + 11}" font-family="Inconsolata,monospace" font-size="7" fill="#475569" text-anchor="middle" font-weight="800">AIRE</text>`;
+    s += `<line x1="${stoneX}" y1="${tubeTop}" x2="${stoneX}" y2="${stoneY - 9}" stroke="${Dw.airLine}" stroke-width="1.8" stroke-dasharray="4 3"/>`;
+    s += `<ellipse cx="${stoneX}" cy="${stoneY}" rx="13" ry="6.5" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="1.1"/>`;
+    s += `<text x="${stoneX}" y="${innerBottom + 11}" font-family="Inconsolata,monospace" font-size="7" fill="${Dw.airLabel}" text-anchor="middle" font-weight="800">AIRE</text>`;
     if (ta) {
       for (let i = 0; i < 8; i++) {
         const dx = (i % 5 - 2) * 4;
@@ -908,7 +909,7 @@ function generarSVGDwc() {
         const dur = (1.05 + i * 0.1).toFixed(2);
         const y0 = stoneY - 4;
         const y1 = waterTopY + 8;
-        s += `<circle cx="${stoneX + dx}" cy="${y0}" r="${1.4 + (i % 2) * 0.6}" fill="#e0f2fe" opacity="0">
+        s += `<circle cx="${stoneX + dx}" cy="${y0}" r="${1.4 + (i % 2) * 0.6}" fill="${Dw.bubble}" opacity="0">
           <animate attributeName="cy" from="${y0}" to="${y1}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
           <animate attributeName="opacity" values="0;0.9;0.9;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
         </circle>`;
@@ -917,7 +918,7 @@ function generarSVGDwc() {
   }
 
   /* Color por litros de mezcla (no por % del máx.): depósito grande + poca mezcla es válido. */
-  const volCol = volEtiqueta < 6 ? '#e11d48' : volEtiqueta < 12 ? '#d97706' : '#0284c7';
+  const volCol = volEtiqueta < 6 ? Dw.volLow : volEtiqueta < 12 ? Dw.volMid : Dw.volOk;
   s += `<text x="${W / 2}" y="${tankStartY + tankH + 24}" font-family="Syne,sans-serif" font-size="19" font-weight="900" fill="${volCol}" text-anchor="middle">${volEtiqueta} L</text>`;
 
 
@@ -967,31 +968,32 @@ function generarSVGTorre() {
   const ta = torreSvgAnimacionesActivas();
 
   let s = '';
+  const Tg = HC_DIAG.torre;
 
-  // ── DEFS (paleta diagrama técnico, baja saturación) ───────────────────────
+  // ── DEFS (paleta unificada hc-diagram-palette.js) ───────────────────────────
   s += `<defs>
     <linearGradient id="ejeGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#86efac"/>
-      <stop offset="100%" stop-color="#22c55e"/>
+      <stop offset="0%" stop-color="${Tg.eje0}"/>
+      <stop offset="100%" stop-color="${Tg.eje1}"/>
     </linearGradient>
     <linearGradient id="torreBodyGrad" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#e8ebf0"/>
-      <stop offset="22%" stop-color="#f8fafc"/>
-      <stop offset="50%" stop-color="#dce1e8"/>
-      <stop offset="78%" stop-color="#f8fafc"/>
-      <stop offset="100%" stop-color="#e8ebf0"/>
+      <stop offset="0%" stop-color="${Tg.body0}"/>
+      <stop offset="22%" stop-color="${Tg.body1}"/>
+      <stop offset="50%" stop-color="${Tg.body2}"/>
+      <stop offset="78%" stop-color="${Tg.body3}"/>
+      <stop offset="100%" stop-color="${Tg.body4}"/>
     </linearGradient>
     <linearGradient id="torreGlowGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#86efac" stop-opacity="0.08"/>
-      <stop offset="100%" stop-color="#86efac" stop-opacity="0"/>
+      <stop offset="0%" stop-color="${Tg.glow0}" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="${Tg.glow0}" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="depAguaGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.82"/>
-      <stop offset="100%" stop-color="#0284c7" stop-opacity="0.92"/>
+      <stop offset="0%" stop-color="${Tg.depAgua0}" stop-opacity="${Tg.depAguaOp0}"/>
+      <stop offset="100%" stop-color="${Tg.depAgua1}" stop-opacity="${Tg.depAguaOp1}"/>
     </linearGradient>
     <linearGradient id="depBodyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f8fafc"/>
-      <stop offset="100%" stop-color="#e2e8f0"/>
+      <stop offset="0%" stop-color="${Tg.depBody0}"/>
+      <stop offset="100%" stop-color="${Tg.depBody1}"/>
     </linearGradient>
     <clipPath id="depClip">
       <rect x="${DEP_X+3}" y="${DEP_Y+3}" width="${DEP_W-6}" height="${DEP_H-6}" rx="10"/>

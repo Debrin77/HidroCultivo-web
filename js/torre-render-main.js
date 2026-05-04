@@ -721,33 +721,6 @@ function getEmoji(estado) {
 
 function updateTorreStats() {
   try { initTorres(); } catch (_) {}
-  let totalPlantas = 0;
-  let totalDias = 0;
-  let plantasConFecha = 0;
-  let cosechas = 0;
-
-  const nivelesActivos = getNivelesActivos();
-  nivelesActivos.forEach(n => {
-    (state.torre[n] || []).forEach(c => {
-      if (c.variedad) {
-        totalPlantas++;
-        if (cestaTieneFechaValida(c.fecha)) {
-          const cultM = getCultivoDB(c.variedad);
-          const dias =
-            typeof getDiasEfectivosCicloBiologico === 'function'
-              ? getDiasEfectivosCicloBiologico(c, cultM, Date.now())
-              : getDias(c.fecha);
-          totalDias += dias;
-          plantasConFecha++;
-          if (getEstado(c.variedad, dias) === 'cosecha') cosechas++;
-        }
-      }
-    });
-  });
-
-  document.getElementById('statPlantas').textContent = totalPlantas;
-  document.getElementById('statDiasMedia').textContent = plantasConFecha > 0 ? Math.round(totalDias / plantasConFecha) : '—';
-  document.getElementById('statCosechas').textContent = cosechas;
 
   // Actualizar depósito y nutriente dinámicamente
   const cfg = state.configTorre || {};
@@ -791,7 +764,7 @@ function updateTorreStats() {
     } else {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
-        'Capacidad y litros de mezcla están en el <strong>resumen del sistema</strong> (arriba), mismo origen que el checklist.';
+        'Capacidad y litros de mezcla: edítalos aquí; checklist y dosis usan los mismos valores. El resumen de plantas y cosecha está en <strong>Inicio</strong>.';
     }
   }
 
@@ -820,6 +793,10 @@ function updateTorreStats() {
 
   actualizarAvisoCestasSinFecha();
   renderTorreInstalacionPicker();
+
+  try {
+    if (typeof updateDashTorre === 'function') updateDashTorre();
+  } catch (_) {}
 }
 
 /** Editar capacidad máxima y litros de mezcla desde la pestaña Torre. */

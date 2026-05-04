@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#15803d" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light">
 <meta name="theme-color" content="#15803d">
 
 <!-- PWA -->
@@ -35,9 +33,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-05-ui-pro-3">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-05-theme-diagram-1">
 </head>
 <body>
+  <script src="js/hc-theme.js?v=1"></script>
 
 <!-- Iconos UI reutilizables (trazo 1.75, currentColor) -->
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
@@ -530,6 +529,13 @@
           <option value="480">Recordar 8 horas</option>
         </select>
         <div class="config-help-text">Se intenta biometría primero; si no está disponible, se usa PIN.</div>
+        <label class="form-label setup-mt-8" for="hcAppearanceSelect">Apariencia</label>
+        <select id="hcAppearanceSelect" class="form-input" onchange="onHcAppearanceChange(this.value)"
+          aria-label="Tema visual de la app">
+          <option value="light">Claro (recomendado)</option>
+          <option value="dark">Oscuro</option>
+        </select>
+        <div class="config-help-text">Por defecto la app usa tema claro. El oscuro es opcional y se guarda en este dispositivo.</div>
         <button type="button" class="btn btn-secondary setup-mt-8" onclick="forzarReautenticacion()">
           Cerrar sesión ahora
         </button>
@@ -1281,22 +1287,8 @@
         </button>
       </div>
 
-      <!-- Métricas, avisos y nutriente antes del montaje y del esquema (lectura de arriba abajo) -->
-      <section class="torre-tab-resumen-superior" aria-label="Resumen de esta instalación">
-        <div class="stats-row">
-          <div class="stat-box">
-            <div class="stat-value" id="statPlantas">0</div>
-            <div class="stat-label">Plantas</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-value stat-value-gold" id="statDiasMedia">—</div>
-            <div class="stat-label">Días media</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-value stat-value-red" id="statCosechas">0</div>
-            <div class="stat-label">Cosechar</div>
-          </div>
-        </div>
+      <!-- Avisos y nutriente antes del montaje y del esquema (plantas/días/cosecha: solo en Inicio) -->
+      <section class="torre-tab-resumen-superior" aria-label="Avisos y nutriente de esta instalación">
         <div id="avisoCestasSinFechaTorre" class="aviso-cestas-sin-fecha setup-hidden" role="status"></div>
         <div id="compatAlert" class="info-banner setup-hidden compat-alert-banner">
           <span class="compat-alert-mark" aria-hidden="true">!</span>
@@ -1791,7 +1783,7 @@
             <div class="deposito-icon" aria-hidden="true"></div>
             <div class="deposito-info torre-deposito-info">
               <div class="deposito-title" id="depositoTitulo">Depósito — cargando...</div>
-              <p class="torre-vol-ref-hint" id="torreDepositoVolHint">Capacidad y litros de mezcla están en el <strong>resumen del sistema</strong> (arriba), mismo origen que el checklist.</p>
+              <p class="torre-vol-ref-hint" id="torreDepositoVolHint">Capacidad y litros de mezcla: edítalos aquí; checklist y dosis usan los mismos valores. El resumen de plantas y cosecha está en <strong>Inicio</strong>.</p>
               <details id="torreVolDepDetalles" class="torre-vol-detalles">
                 <summary class="torre-vol-detalles-summary">Cambiar capacidad o litros de mezcla</summary>
                 <div id="torreVolDepWrap" class="torre-vol-wrap torre-vol-wrap--inner">
@@ -4100,17 +4092,18 @@
   <script src="js/meteo-alarm-parse.js?v=1"></script>
   <script src="js/hc-bootstrap-config.js?v=4"></script>
   <script src="js/hc-bootstrap-state.js?v=6"></script>
-  <script src="js/hc-bootstrap-pin.js?v=3"></script>
+  <script src="js/hc-bootstrap-pin.js?v=4"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=9"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=13"></script>
-  <script src="js/torre-render-build.js?v=2026-05-02-vivero-ec-dias"></script>
+  <script src="js/hc-diagram-palette.js?v=1"></script>
+  <script src="js/torre-render-build.js?v=2026-05-05-diagram-palette"></script>
   <script src="js/torre-render-main.js?v=3"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=6"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=7"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=6"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=4"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-05-palette"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-05-palette"></script>
   <script src="js/hc-setup-calc-core.js?v=10"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>

@@ -1307,7 +1307,9 @@ function nftMesaEscaleraLegendSvg(cx, yLine, gidCh, compact, largeLegend) {
     (xFl + 20) +
     ' ' +
     yLine +
-    '" stroke="#1d4ed8" fill="none" stroke-width="' +
+    '" stroke="' +
+    HC_DIAG.nft.flow +
+    '" fill="none" stroke-width="' +
     flowStroke +
     '" stroke-dasharray="4 3" stroke-linecap="round"/>';
   s +=
@@ -1620,7 +1622,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const padHuecoAlong = 8;
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
+  const flowSt = 'stroke="' + HC_DIAG.nft.flow + '" fill="none" ' + flowDash;
   const fqPath = function (v) {
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
@@ -2146,15 +2148,31 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     '<linearGradient id="' +
     gidCh +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    HC_DIAG.nft.canalGrad0 +
+    '"/><stop offset="100%" stop-color="' +
+    HC_DIAG.nft.canalGrad1 +
+    '"/></linearGradient>' +
     '<linearGradient id="' +
     gidTank +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    HC_DIAG.nft.tankGrad0 +
+    '"/><stop offset="100%" stop-color="' +
+    HC_DIAG.nft.tankGrad1 +
+    '"/></linearGradient>' +
     '<linearGradient id="' +
     gidAqua +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    HC_DIAG.nft.waterGrad0 +
+    '" stop-opacity="' +
+    HC_DIAG.nft.waterOp0 +
+    '"/><stop offset="100%" stop-color="' +
+    HC_DIAG.nft.waterGrad1 +
+    '" stop-opacity="' +
+    HC_DIAG.nft.waterOp1 +
+    '"/></linearGradient>' +
     '</defs>' +
     nftMesaEscaleraLegendSvg(cxTitle, hdrMesa.legendY, gidCh, compactMesa, true) +
     tierBandsMm +
@@ -2330,7 +2348,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
+  const flowSt = 'stroke="' + HC_DIAG.nft.flow + '" fill="none" ' + flowDash;
   const fqPathEsc = function (v) {
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
@@ -2702,15 +2720,31 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     '<linearGradient id="' +
     gidCh +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    HC_DIAG.nft.canalGrad0 +
+    '"/><stop offset="100%" stop-color="' +
+    HC_DIAG.nft.canalGrad1 +
+    '"/></linearGradient>' +
     '<linearGradient id="' +
     gidTank +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    HC_DIAG.nft.tankGrad0 +
+    '"/><stop offset="100%" stop-color="' +
+    HC_DIAG.nft.tankGrad1 +
+    '"/></linearGradient>' +
     '<linearGradient id="' +
     gidAqua +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    HC_DIAG.nft.waterGrad0 +
+    '" stop-opacity="' +
+    HC_DIAG.nft.waterOp0 +
+    '"/><stop offset="100%" stop-color="' +
+    HC_DIAG.nft.waterGrad1 +
+    '" stop-opacity="' +
+    HC_DIAG.nft.waterOp1 +
+    '"/></linearGradient>' +
     '</defs>' +
     nftMesaEscaleraLegendSvg(cxTitle, hdrEscDraw.legendY, gidCh, compactEsc, true) +
     frame +

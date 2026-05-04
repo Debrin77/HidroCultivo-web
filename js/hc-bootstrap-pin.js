@@ -44,6 +44,7 @@ function toggleSeguridadAccesoInicio() {
   const isOpen = !p.classList.contains('setup-hidden');
   b.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   p.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+  if (isOpen && typeof window.syncHcAppearanceUi === 'function') window.syncHcAppearanceUi();
 }
 
 function toggleAvisosTelefonoInicio() {

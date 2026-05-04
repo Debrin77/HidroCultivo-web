@@ -86,8 +86,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const yRow = i =>
     topPad + i * rowStep + Math.floor(rowStep / 2) + (dispLayout === 'escalera' ? i * 14 : 0);
 
+  const P = HC_DIAG.nft;
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
+  const flowSt = 'stroke="' + P.flow + '" fill="none" ' + flowDash;
 
   /**
    * Dos columnas en C: alimentación sale abajo del depósito y sube por el eje más EXTERIOR (más a la izquierda);
@@ -138,7 +139,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   flowD += ' L ' + xPump + ' ' + yPump;
 
   let back = '';
-  back += '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
+  back +=
+    '<path d="' +
+    flowD +
+    '" stroke="' +
+    P.flowGhost +
+    '" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
   const tLabelFsSerpBase = nCh >= 10 ? 12 : nCh >= 6 ? 13 : 14;
@@ -159,7 +165,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       tubeH +
       '" rx="11" fill="url(#' +
       gidCh +
-      ')" stroke="#0369a1" stroke-width="' +
+      ')" stroke="' +
+      P.canalStroke +
+      '" stroke-width="' +
       serpChStroke +
       '"' +
       peNone +
@@ -171,7 +179,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       (yc - 6) +
       '" text-anchor="middle" dominant-baseline="auto" font-size="' +
       tLabelFsSerp +
-      '" class="svg-paint-order-stroke" font-weight="900" fill="#0c4a6e" stroke="#f8fafc" stroke-width="0.45" stroke-opacity="0.9"' +
+      '" class="svg-paint-order-stroke" font-weight="900" fill="' +
+      P.labelHole +
+      '" stroke="' +
+      P.textHalo +
+      '" stroke-width="0.45" stroke-opacity="0.9"' +
       peNone +
       '>T' +
       (i + 1) +
@@ -187,7 +199,15 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const bombaFsSerp = nCh >= 10 ? 9 : 10;
   const bombaYSerp = Math.min(yRow(0) - tubeH - 16, yOutlet - 26);
   flowLayer +=
-    '<text x="' + (xSupplyOut - 3) + '" y="' + bombaYSerp + '" text-anchor="end" font-size="' + bombaFsSerp + '" font-weight="800" fill="#1d4ed8">BOMBA ↑</text>';
+    '<text x="' +
+    (xSupplyOut - 3) +
+    '" y="' +
+    bombaYSerp +
+    '" text-anchor="end" font-size="' +
+    bombaFsSerp +
+    '" font-weight="800" fill="' +
+    P.bombaText +
+    '">BOMBA ↑</text>';
 
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
@@ -211,7 +231,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       let dat = { variedad: '', fecha: '' };
       if (interactive && state.torre[i] && state.torre[i][j]) dat = state.torre[i][j];
       const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
-      const col = interactive ? torreListaColorCesta(i, j) : { bg: '#f8fafc', border: '#94a3b8' };
+      const col = interactive ? torreListaColorCesta(i, j) : { bg: P.plantEmptyBg, border: P.plantEmptyBorder };
       const multiKey = i + ',' + j;
       const isMulti = interactive && torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
       const isEd =
@@ -239,11 +259,27 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="' + (interactive ? '1.35' : '1.1') + '"/>';
       if (isMulti) {
         plants +=
-          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2"/>';
+          '<circle cx="' +
+          gx.toFixed(2) +
+          '" cy="' +
+          gy +
+          '" r="' +
+          (hr + 3.5).toFixed(2) +
+          '" fill="none" stroke="' +
+          P.ringMulti +
+          '" stroke-width="1.2" stroke-dasharray="3 2"/>';
       }
       if (isEd) {
         plants +=
-          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
+          '<circle cx="' +
+          gx.toFixed(2) +
+          '" cy="' +
+          gy +
+          '" r="' +
+          (hr + 3).toFixed(2) +
+          '" fill="none" stroke="' +
+          P.ringEdit +
+          '" stroke-width="1.25"/>';
       }
       plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactSerp);
       plants += nftSvgHuecoNumBelowHole(
@@ -265,37 +301,96 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   }
 
   let tankLayer = '';
-  tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
+  tankLayer +=
+    '<rect x="' +
+    tx +
+    '" y="' +
+    tankY +
+    '" width="' +
+    tankW +
+    '" height="' +
+    tankH +
+    '" rx="12" fill="url(#' +
+    gidTank +
+    ')" stroke="' +
+    P.tankStroke +
+    '" stroke-width="1.3"/>';
   tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
   tankLayer += altBadgeSerp.html;
   /* Depósito: solo volumen + CAL/AIR si el usuario los tiene en equipamiento (el resto de la config va al pie). */
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
   const volCxSerp = tx + tankW / 2;
   tankLayer +=
-    '<text x="' + volCxSerp + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="' + volFsSerp + '" font-weight="900" font-family="system-ui,sans-serif">' +
+    '<text x="' +
+    volCxSerp +
+    '" y="' +
+    volTextY +
+    '" text-anchor="middle" fill="' +
+    P.volWhite +
+    '" font-size="' +
+    volFsSerp +
+    '" font-weight="900" font-family="system-ui,sans-serif">' +
     vol +
     ' L</text>';
   if (showCalentador) {
     const hx = tx + 18;
     tankLayer +=
-      '<rect x="' + (hx - 5) + '" y="' + (tankY + tankH - 36) + '" width="10" height="30" rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.2"/>';
-    tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="#fbbf24"/>';
+      '<rect x="' +
+      (hx - 5) +
+      '" y="' +
+      (tankY + tankH - 36) +
+      '" width="10" height="30" rx="5" fill="' +
+      P.calFill +
+      '" stroke="' +
+      P.calStroke +
+      '" stroke-width="1.2"/>';
+    tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="' + P.calGlow + '"/>';
     tankLayer +=
-      '<text x="' + hx + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#fff7ed">CAL</text>';
+      '<text x="' +
+      hx +
+      '" y="' +
+      (tankY + tankH - 2) +
+      '" text-anchor="middle" font-size="7.5" font-weight="800" fill="' +
+      P.calText +
+      '">CAL</text>';
   }
   if (showDifusor) {
     const ax = tx + tankW - 18;
     const ay = tankY + tankH - 16;
     tankLayer +=
-      '<line x1="' + ax + '" y1="' + (tankY - 2) + '" x2="' + ax + '" y2="' + (ay - 12) + '" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
+      '<line x1="' +
+      ax +
+      '" y1="' +
+      (tankY - 2) +
+      '" x2="' +
+      ax +
+      '" y2="' +
+      (ay - 12) +
+      '" stroke="' +
+      P.airLine +
+      '" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
     tankLayer +=
-      '<ellipse cx="' + ax + '" cy="' + ay + '" rx="13" ry="7" fill="#94a3b8" stroke="#64748b" stroke-width="1.2"/>';
+      '<ellipse cx="' +
+      ax +
+      '" cy="' +
+      ay +
+      '" rx="13" ry="7" fill="' +
+      P.airStoneFill +
+      '" stroke="' +
+      P.airStoneStroke +
+      '" stroke-width="1.2"/>';
     for (let bi = 0; bi < 5; bi++) {
       const bx = ax + (bi % 3 - 1) * 4;
-      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="#bfdbfe" opacity="0.9"/>';
+      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="' + P.bubble + '" opacity="0.9"/>';
     }
     tankLayer +=
-      '<text x="' + ax + '" y="' + (tankY + tankH - 2) + '" text-anchor="middle" font-size="7.5" font-weight="800" fill="#f0f9ff">AIR</text>';
+      '<text x="' +
+      ax +
+      '" y="' +
+      (tankY + tankH - 2) +
+      '" text-anchor="middle" font-size="7.5" font-weight="800" fill="' +
+      P.airText +
+      '">AIR</text>';
   }
 
   const pumpLines = '';
@@ -355,15 +450,31 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '<linearGradient id="' +
     gidCh +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#7dd3fc"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    P.canalGrad0 +
+    '"/><stop offset="100%" stop-color="' +
+    P.canalGrad1 +
+    '"/></linearGradient>' +
     '<linearGradient id="' +
     gidTank +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    P.tankGrad0 +
+    '"/><stop offset="100%" stop-color="' +
+    P.tankGrad1 +
+    '"/></linearGradient>' +
     '<linearGradient id="' +
     gidAqua +
     '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.8"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.95"/></linearGradient>' +
+    '<stop offset="0%" stop-color="' +
+    P.waterGrad0 +
+    '" stop-opacity="' +
+    P.waterOp0 +
+    '"/><stop offset="100%" stop-color="' +
+    P.waterGrad1 +
+    '" stop-opacity="' +
+    P.waterOp1 +
+    '"/></linearGradient>' +
     '</defs>' +
     back +
     channels +
@@ -430,9 +541,10 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   const retEndY = waterTop + 8;
 
   const schFlowAnim = torreSvgAnimacionesActivas();
+  const P = HC_DIAG.nft;
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="#1d4ed8" fill="none" ' + flowDash;
-  const pipeGrey = 'stroke="#64748b" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  const flowSt = 'stroke="' + P.flow + '" fill="none" ' + flowDash;
+  const pipeGrey = 'stroke="' + P.pipeGrey + '" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"';
 
   let back = '';
   const retPath =
@@ -444,41 +556,136 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     (schFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
-  back += '<text x="' + (W0 - 8) + '" y="' + (yBot + 14) + '" text-anchor="end" fill="#0369a1" font-size="8" font-weight="800">Agua retorno</text>';
+  back +=
+    '<text x="' + (W0 - 8) + '" y="' + (yBot + 14) + '" text-anchor="end" fill="' + P.retornoLabel + '" font-size="8" font-weight="800">Agua retorno</text>';
 
   let tankLayer = '';
-  tankLayer += '<rect x="' + tx + '" y="' + tankTop + '" width="' + tankW + '" height="' + tankH + '" rx="10" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.2"/>';
+  tankLayer +=
+    '<rect x="' +
+    tx +
+    '" y="' +
+    tankTop +
+    '" width="' +
+    tankW +
+    '" height="' +
+    tankH +
+    '" rx="10" fill="url(#' +
+    gidTank +
+    ')" stroke="' +
+    P.tankStroke +
+    '" stroke-width="1.2"/>';
   tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + (tankTop + tankH - 8 - waterTop) + '" rx="6" fill="url(#' + gidAqua + ')" opacity="0.88"/>';
   tankLayer += altBadgeSch.html;
-  tankLayer += '<text x="' + volCxSch + '" y="' + (tankMid + 5) + '" text-anchor="middle" fill="#fff" font-size="12" font-weight="900" font-family="system-ui,sans-serif">' + vol + ' L</text>';
-  tankLayer += '<text x="' + volCxSch + '" y="' + (tankTop + tankH + 14) + '" text-anchor="middle" fill="#14532d" font-size="9" font-weight="800">Depósito · recirculación</text>';
+  tankLayer +=
+    '<text x="' +
+    volCxSch +
+    '" y="' +
+    (tankMid + 5) +
+    '" text-anchor="middle" fill="' +
+    P.volWhite +
+    '" font-size="12" font-weight="900" font-family="system-ui,sans-serif">' +
+    vol +
+    ' L</text>';
+  tankLayer +=
+    '<text x="' +
+    volCxSch +
+    '" y="' +
+    (tankTop + tankH + 14) +
+    '" text-anchor="middle" fill="' +
+    P.depositoSub +
+    '" font-size="9" font-weight="800">Depósito · recirculación</text>';
 
   if (showCalentador) {
     const hx = tx + 16;
-    tankLayer += '<rect x="' + (hx - 5) + '" y="' + (tankTop + tankH - 34) + '" width="10" height="28" rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.2"/>';
-    tankLayer += '<circle cx="' + hx + '" cy="' + (tankTop + tankH - 40) + '" r="3.5" fill="#fbbf24"/>';
-    tankLayer += '<text x="' + hx + '" y="' + (tankTop + tankH + 2) + '" text-anchor="middle" font-size="7" font-weight="800" fill="#c2410c">CAL</text>';
+    tankLayer +=
+      '<rect x="' +
+      (hx - 5) +
+      '" y="' +
+      (tankTop + tankH - 34) +
+      '" width="10" height="28" rx="5" fill="' +
+      P.calFill +
+      '" stroke="' +
+      P.calStroke +
+      '" stroke-width="1.2"/>';
+    tankLayer += '<circle cx="' + hx + '" cy="' + (tankTop + tankH - 40) + '" r="3.5" fill="' + P.calGlow + '"/>';
+    tankLayer +=
+      '<text x="' +
+      hx +
+      '" y="' +
+      (tankTop + tankH + 2) +
+      '" text-anchor="middle" font-size="7" font-weight="800" fill="' +
+      P.calTextSch +
+      '">CAL</text>';
   }
   if (showDifusor) {
     const ax = tx + tankW - 20;
     const ay = tankTop + tankH - 14;
-    tankLayer += '<line x1="' + ax + '" y1="' + (tankTop - 4) + '" x2="' + ax + '" y2="' + (ay - 10) + '" stroke="#6b7280" stroke-width="1.4" stroke-dasharray="3 2"/>';
-    tankLayer += '<ellipse cx="' + ax + '" cy="' + ay + '" rx="12" ry="6" fill="#9ca3af" stroke="#6b7280" stroke-width="1.2"/>';
+    tankLayer +=
+      '<line x1="' +
+      ax +
+      '" y1="' +
+      (tankTop - 4) +
+      '" x2="' +
+      ax +
+      '" y2="' +
+      (ay - 10) +
+      '" stroke="' +
+      P.line575 +
+      '" stroke-width="1.4" stroke-dasharray="3 2"/>';
+    tankLayer +=
+      '<ellipse cx="' +
+      ax +
+      '" cy="' +
+      ay +
+      '" rx="12" ry="6" fill="' +
+      P.airStoneSchFill +
+      '" stroke="' +
+      P.line575 +
+      '" stroke-width="1.2"/>';
     for (let bi = 0; bi < 5; bi++) {
       const bx = ax + (bi % 3 - 1) * 4;
-      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 6 - bi * 3) + '" r="1.6" fill="#93c5fd" opacity="0.85"/>';
+      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 6 - bi * 3) + '" r="1.6" fill="' + P.bubbleSch + '" opacity="0.85"/>';
     }
-    tankLayer += '<text x="' + ax + '" y="' + (tankTop + tankH + 2) + '" text-anchor="middle" font-size="7" font-weight="800" fill="#475569">AIR</text>';
+    tankLayer +=
+      '<text x="' +
+      ax +
+      '" y="' +
+      (tankTop + tankH + 2) +
+      '" text-anchor="middle" font-size="7" font-weight="800" fill="' +
+      P.line475 +
+      '">AIR</text>';
   }
 
   let plumbing = '';
-  plumbing += '<circle cx="' + cx + '" cy="' + (tankTop - 10) + '" r="11" fill="#1e293b" stroke="#475569" stroke-width="1"/>';
-  plumbing += '<text x="' + cx + '" y="' + (tankTop - 7) + '" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="900">B</text>';
+  plumbing +=
+    '<circle cx="' +
+    cx +
+    '" cy="' +
+    (tankTop - 10) +
+    '" r="11" fill="' +
+    P.pumpCircleFill +
+    '" stroke="' +
+    P.pumpCircleStroke +
+    '" stroke-width="1"/>';
+  plumbing +=
+    '<text x="' +
+    cx +
+    '" y="' +
+    (tankTop - 7) +
+    '" text-anchor="middle" fill="' +
+    P.pumpLetter +
+    '" font-size="10" font-weight="900">B</text>';
   if (bomb) {
     const txB = cx + 15;
     const y1 = tankTop - 14;
     plumbing +=
-      '<text x="' + txB + '" y="' + y1 + '" text-anchor="start" fill="#1e40af" font-size="7" font-weight="800" font-family="system-ui,sans-serif">' +
+      '<text x="' +
+      txB +
+      '" y="' +
+      y1 +
+      '" text-anchor="start" fill="' +
+      P.ramalText +
+      '" font-size="7" font-weight="800" font-family="system-ui,sans-serif">' +
       'Bomba 24 h · criterio en asistente</text>';
   }
 
@@ -487,9 +694,27 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
   plumbing += '<line x1="' + cx + '" y1="' + riserY1 + '" x2="' + cx + '" y2="' + riserY2 + '" ' + pipeGrey + ' opacity="0.65"/>';
   plumbing += '<line x1="' + cx + '" y1="' + riserY1 + '" x2="' + cx + '" y2="' + riserY2 + '" ' + flowSt + ' stroke-width="2" opacity="0.92"/>';
 
-  plumbing += '<line x1="' + x0 + '" y1="' + yMan + '" x2="' + x1 + '" y2="' + yMan + '" stroke="#064e3b" stroke-width="5.5" stroke-linecap="round"/>';
+  plumbing +=
+    '<line x1="' +
+    x0 +
+    '" y1="' +
+    yMan +
+    '" x2="' +
+    x1 +
+    '" y2="' +
+    yMan +
+    '" stroke="' +
+    P.manifoldPipe +
+    '" stroke-width="5.5" stroke-linecap="round"/>';
   plumbing += '<line x1="' + x0 + '" y1="' + yMan + '" x2="' + x1 + '" y2="' + yMan + '" ' + flowSt + ' stroke-width="1.55" opacity="0.78"/>';
-  plumbing += '<text x="' + cx + '" y="' + (yMan - 8) + '" text-anchor="middle" fill="#0f766e" font-size="8" font-weight="800">Manifold · distribución</text>';
+  plumbing +=
+    '<text x="' +
+    cx +
+    '" y="' +
+    (yMan - 8) +
+    '" text-anchor="middle" fill="' +
+    P.manifoldText +
+    '" font-size="8" font-weight="800">Manifold · distribución</text>';
 
   const chParts = [];
   for (let i = 0; i < nCh; i++) {
@@ -507,10 +732,26 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
 
     const ix = xtl + Math.min(w * 0.2, 12);
     const peNone = interactive ? ' pointer-events="none"' : '';
-    chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" stroke="#475569" stroke-width="1.8" stroke-linecap="round"' + peNone + '/>');
+    chParts.push(
+      '<line x1="' +
+        ix +
+        '" y1="' +
+        yMan +
+        '" x2="' +
+        (xtl + 2) +
+        '" y2="' +
+        (ytl + 5) +
+        '" stroke="' +
+        P.line475 +
+        '" stroke-width="1.8" stroke-linecap="round"' +
+        peNone +
+        '/>'
+    );
     chParts.push('<line x1="' + ix + '" y1="' + yMan + '" x2="' + (xtl + 2) + '" y2="' + (ytl + 5) + '" ' + flowSt + ' stroke-width="1.15" opacity="0.9"' + peNone + '/>');
 
-    chParts.push('<path fill="url(#' + gidFilm + ')" stroke="#064e3b" stroke-width="1.15" opacity="0.97" d="' + dCh + '"' + peNone + '/>');
+    chParts.push(
+      '<path fill="url(#' + gidFilm + ')" stroke="' + P.filmStroke + '" stroke-width="1.15" opacity="0.97" d="' + dCh + '"' + peNone + '/>'
+    );
 
     chParts.push(
       '<path d="M' + (xbl + 3) + ' ' + (ybl + 2) + ' L' + (xbr - 4) + ' ' + (ybr - 4) + '" fill="none" ' + flowSt + ' stroke-width="1.35" opacity="0.88"' + peNone + '/>'
@@ -551,12 +792,28 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
         );
         if (isMulti) {
           chParts.push(
-            '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + (hr + 4).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.25" stroke-dasharray="3 2"/>'
+            '<circle cx="' +
+            px.toFixed(2) +
+            '" cy="' +
+            py.toFixed(2) +
+            '" r="' +
+            (hr + 4).toFixed(2) +
+            '" fill="none" stroke="' +
+            P.ringMulti +
+            '" stroke-width="1.25" stroke-dasharray="3 2"/>'
           );
         }
         if (isEd) {
           chParts.push(
-            '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.35"/>'
+            '<circle cx="' +
+            px.toFixed(2) +
+            '" cy="' +
+            py.toFixed(2) +
+            '" r="' +
+            (hr + 3.5).toFixed(2) +
+            '" fill="none" stroke="' +
+            P.ringEdit +
+            '" stroke-width="1.35"/>'
           );
         }
         chParts.push(
@@ -565,13 +822,41 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
         chParts.push('</g>');
       } else {
         chParts.push(
-          '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + hr.toFixed(2) + '" fill="#fef9c3" stroke="#854d0e" stroke-width="0.5"/>' +
-          '<circle cx="' + px.toFixed(2) + '" cy="' + py.toFixed(2) + '" r="' + Math.max(0.55, hr * 0.42).toFixed(2) + '" fill="#fffbeb" opacity="0.55"/>'
+          '<circle cx="' +
+            px.toFixed(2) +
+            '" cy="' +
+            py.toFixed(2) +
+            '" r="' +
+            hr.toFixed(2) +
+            '" fill="' +
+            P.cultivoFill +
+            '" stroke="' +
+            P.cultivoStroke +
+            '" stroke-width="0.5"/>' +
+            '<circle cx="' +
+            px.toFixed(2) +
+            '" cy="' +
+            py.toFixed(2) +
+            '" r="' +
+            Math.max(0.55, hr * 0.42).toFixed(2) +
+            '" fill="' +
+            P.cultivoInner +
+            '" opacity="0.55"/>'
         );
       }
     }
     chParts.push(
-      '<text x="' + (xtl - 1) + '" y="' + (ytl + 12) + '" text-anchor="end" font-size="7" font-weight="900" fill="#14532d"' + peNone + '>' + (i + 1) + '</text>'
+      '<text x="' +
+        (xtl - 1) +
+        '" y="' +
+        (ytl + 12) +
+        '" text-anchor="end" font-size="7" font-weight="900" fill="' +
+        P.nivelText +
+        '"' +
+        peNone +
+        '>' +
+        (i + 1) +
+        '</text>'
     );
   }
 
@@ -604,21 +889,54 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       '">' +
       '<title id="' + tid + '">NFT: circuito de agua desde el depósito a los canales y retorno; tubos con huecos de plantación</title>' +
       '<defs>' +
-      '<linearGradient id="' + gidFilm + '" x1="0" y1="0" x2="1" y2="1">' +
-      '<stop offset="0%" stop-color="#6ee7b7"/><stop offset="100%" stop-color="#22d3ee"/></linearGradient>' +
-      '<linearGradient id="' + gidTank + '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
-      '<linearGradient id="' + gidAqua + '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.75"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0.9"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidFilm +
+      '" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0%" stop-color="' +
+      P.filmGrad0 +
+      '"/><stop offset="100%" stop-color="' +
+      P.filmGrad1 +
+      '"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidTank +
+      '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' +
+      P.tankGrad0 +
+      '"/><stop offset="100%" stop-color="' +
+      P.tankGrad1 +
+      '"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidAqua +
+      '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' +
+      P.filmWater0 +
+      '" stop-opacity="' +
+      P.filmWaterOp0 +
+      '"/><stop offset="100%" stop-color="' +
+      P.filmWater1 +
+      '" stop-opacity="' +
+      P.filmWaterOp1 +
+      '"/></linearGradient>' +
       '</defs>' +
-      '<text x="' + cxTitle + '" y="22" text-anchor="middle" fill="#14532d" font-size="10.5" font-weight="800" font-family="system-ui,Segoe UI,sans-serif">' +
+      '<text x="' +
+      cxTitle +
+      '" y="22" text-anchor="middle" fill="' +
+      P.schematicTitle +
+      '" font-size="10.5" font-weight="800" font-family="system-ui,Segoe UI,sans-serif">' +
       'Bomba · subida → manifold → canales (pendiente) → retorno al depósito</text>' +
       back +
       tankLayer +
       chParts.join('') +
       plumbing +
-      '<text x="' + cxTitle + '" y="' + (H - 6) + '" text-anchor="middle" fill="#475569" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' +
-      footSub + '</text>' +
+      '<text x="' +
+      cxTitle +
+      '" y="' +
+      (H - 6) +
+      '" text-anchor="middle" fill="' +
+      P.schematicFoot +
+      '" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' +
+      footSub +
+      '</text>' +
       '</svg>'
   );
 }
