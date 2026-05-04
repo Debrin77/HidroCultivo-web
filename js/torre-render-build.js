@@ -494,7 +494,25 @@ function generarSVGDwc() {
     typeof dwcRecomendacionCultivoDesdeConfig === 'function'
       ? dwcRecomendacionCultivoDesdeConfig(cfg)
       : '';
-  const Dw = HC_DIAG.dwc;
+  const Dw =
+    typeof HC_DIAG !== 'undefined' && HC_DIAG.dwc
+      ? HC_DIAG.dwc
+      : {
+          title: '#475569',
+          sep: '#cbd5e1',
+          calFill: '#f97316',
+          calStroke: '#c2410c',
+          calGlow: '#fbbf24',
+          calText: '#9a3412',
+          airLine: '#64748b',
+          airStoneFill: '#9ca3af',
+          airStoneStroke: '#57534e',
+          airLabel: '#475569',
+          bubble: '#e0f2fe',
+          volLow: '#e11d48',
+          volMid: '#d97706',
+          volOk: '#0284c7',
+        };
 
   const W = 400;
   const H = 548;
@@ -968,7 +986,25 @@ function generarSVGTorre() {
   const ta = torreSvgAnimacionesActivas();
 
   let s = '';
-  const Tg = HC_DIAG.torre;
+  const Tg =
+    typeof HC_DIAG !== 'undefined' && HC_DIAG.torre
+      ? HC_DIAG.torre
+      : {
+          eje0: '#86efac',
+          eje1: '#22c55e',
+          body0: '#e8ebf0',
+          body1: '#f8fafc',
+          body2: '#dce1e8',
+          body3: '#f8fafc',
+          body4: '#e8ebf0',
+          glow0: '#86efac',
+          depAgua0: '#7dd3fc',
+          depAgua1: '#0284c7',
+          depAguaOp0: '0.82',
+          depAguaOp1: '0.92',
+          depBody0: '#f8fafc',
+          depBody1: '#e2e8f0',
+        };
 
   // ── DEFS (paleta unificada hc-diagram-palette.js) ───────────────────────────
   s += `<defs>

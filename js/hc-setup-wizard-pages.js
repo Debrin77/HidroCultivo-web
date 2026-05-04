@@ -1,6 +1,9 @@
 ﻿/** buildNftActiveDiagramSvg, preview, páginas del asistente, grid nutrientes. Tras hc-setup-wizard-nft-diagrams.js. */
 /** Elige SVG NFT según config (mesa multinivel, escalera, serpentín mesa/pared). */
 function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
+  if (typeof HC_DIAG === 'undefined' || !HC_DIAG.nft) {
+    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" role="img" aria-label="Error de carga del diagrama"><text x="12" y="40" font-family="system-ui,sans-serif" font-size="13" fill="#b91c1c">Recarga forzada (Ctrl+F5) o borra caché del sitio.</text></svg>';
+  }
   const EO = equipOpts || {};
   const cfg = EO.cfgSnapshot || {};
   const disp = nftDisposicionNormalizada(EO.nftDisposicion != null ? EO.nftDisposicion : cfg.nftDisposicion);

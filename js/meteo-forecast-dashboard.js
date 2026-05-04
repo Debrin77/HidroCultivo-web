@@ -18,19 +18,25 @@ function updateDashboard() {
   const now = new Date();
   const hora = now.getHours();
   const saludo = hora < 12 ? 'Buenos días' : hora < 20 ? 'Buenas tardes' : 'Buenas noches';
-  document.getElementById('dashGreeting').textContent = saludo;
-  document.getElementById('dashFecha').textContent =
-    now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  const greetEl = document.getElementById('dashGreeting');
+  const fechaEl = document.getElementById('dashFecha');
+  if (greetEl) greetEl.textContent = saludo;
+  if (fechaEl) {
+    fechaEl.textContent =
+      now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
 
   // Última medición
   const elUltima = document.getElementById('dashUltimaMedicion');
-  if (state.ultimaMedicion) {
-    const m = state.ultimaMedicion;
-    elUltima.textContent = `Última medición: ${m.fecha} ${m.hora}`;
-    updateTiles(m);
-  } else {
-    elUltima.textContent = 'Sin mediciones aún';
-    updateTiles(null);
+  if (elUltima) {
+    if (state.ultimaMedicion) {
+      const m = state.ultimaMedicion;
+      elUltima.textContent = `Última medición: ${m.fecha} ${m.hora}`;
+      updateTiles(m);
+    } else {
+      elUltima.textContent = 'Sin mediciones aún';
+      updateTiles(null);
+    }
   }
 
   // Torre stats
@@ -130,6 +136,7 @@ function updateTiles(m) {
     const tile = document.getElementById('tile' + p.id);
     const valEl = document.getElementById('tile' + p.id + 'Val');
     const statusEl = document.getElementById('tile' + p.id + 'Status');
+    if (!tile || !valEl || !statusEl) return;
 
     tile.className = `param-tile ${tipo}`;
     valEl.className = `tile-value ${tipo}`;
@@ -143,6 +150,13 @@ function updateTiles(m) {
 }
 
 function updateDashTorre() {
+  const elP = document.getElementById('dashPlantas');
+  const elD = document.getElementById('dashDias');
+  const elC = document.getElementById('dashCosecha');
+  const elX = document.getElementById('dashProxCosecha');
+  if (!elP || !elD || !elC || !elX) return;
+  if (typeof getNivelesActivos !== 'function' || typeof getEstado !== 'function') return;
+
   let plantas = 0, totalDias = 0, plantasConFecha = 0, cosechas = 0, proxDias = 999;
   const nivelesActivos = getNivelesActivos();
 
@@ -168,10 +182,10 @@ function updateDashTorre() {
     });
   });
 
-  document.getElementById('dashPlantas').textContent = plantas;
-  document.getElementById('dashDias').textContent = plantasConFecha > 0 ? Math.round(totalDias / plantasConFecha) : '—';
-  document.getElementById('dashCosecha').textContent = cosechas;
-  document.getElementById('dashProxCosecha').textContent = proxDias < 999 ? proxDias + 'd' : '—';
+  elP.textContent = plantas;
+  elD.textContent = plantasConFecha > 0 ? Math.round(totalDias / plantasConFecha) : '—';
+  elC.textContent = cosechas;
+  elX.textContent = proxDias < 999 ? proxDias + 'd' : '—';
 }
 
 function updateRecargaBar() {
