@@ -8,7 +8,7 @@
  * 2) Toldo: si activo, UV y ET₀ efectivos ↓, ΔT zona planta (VPD día) −2 °C.
  * 3) VPD (Magnus–Tetens) con tª media + ajuste toldo; VPD en franja 11–15 h (ISO local) + pico según UV para mediodía.
  * 4) Demanda relativa riegoIndiceDemanda (VPD, viento, UV, prob. lluvia, ET₀) → ~0.48–1.58; × fase cultivo; × sensor sustrato opcional.
- * 5) Kc medio: media de riegoKcDesdePctYGrupo solo en cestas con cultivo + fecha válida; si ninguna → lechuga ref. y edad de fallback (#riegoEdad oculto).
+ * 5) Kc medio (cultivo + edad): por cada cesta con cultivo y fecha, % de ciclo = días desde trasplante ÷ días totales del **cultivar** (p. ej. lechuga ~45 d vs tomate ~85–95 d); curva Kc tipo FAO simplificada y multiplicador por **grupo** (frutos > lechugas…). Se hace **media aritmética** entre plantas → 5 lechugas a 3 semanas ≠ 3 tomates a 3 semanas (distinto % de ciclo y distinto grupo).
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
  * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Demanda nocturna (torre exterior con Meteoclimatic cercano: factor conservador en ventana local). Minutos ON/OFF: modelo → corredor riegoNocCorredorTablaTorre(T noc, HR, viento tramo) + ajuste esponja/turba → clamp. Exterior: por defecto refresco fijo ~30 s (~04:00); noches muy exigentes usan programa calculado; se omite solo si riegoTorreExteriorOmiteNocturnoPorClima. Interior: demanda ≈ 0,52×demanda día; omitir con riegoNocUmbralesOmitir.

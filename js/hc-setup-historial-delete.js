@@ -3,6 +3,60 @@
 // BORRAR ENTRADAS DEL HISTORIAL
 // ══════════════════════════════════════════════════
 
+/** DD/MM/AAAA estable para comparar fechas de registro aunque vengan con o sin ceros a la izquierda. */
+function normalizarFechaRegistroDdMmYyyy(s) {
+  const p = String(s || '').trim().split('/');
+  if (p.length !== 3) return String(s || '').trim();
+  const d = parseInt(p[0], 10);
+  const m = parseInt(p[1], 10);
+  const y = parseInt(p[2], 10);
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return String(s || '').trim();
+  return [String(d).padStart(2, '0'), String(m).padStart(2, '0'), String(y)].join('/');
+}
+
+/** JSON en atributo data-* (entidades para comillas). */
+function hcEscAttrJson(obj) {
+  return String(JSON.stringify(obj))
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
+}
+
+/** Un solo listener: los botones se recrean en cada renderRegistro(). */
+function ensureRegistroHistorialDeleteDelegation() {
+  const lista = document.getElementById('registroLista');
+  if (!lista || lista.dataset.hcRegDelBound === '1') return;
+  lista.dataset.hcRegDelBound = '1';
+  lista.addEventListener('click', hcRegistroListaDeleteDelegated);
+}
+
+function hcRegistroListaDeleteDelegated(ev) {
+  const t = ev.target;
+  const btn = t && typeof t.closest === 'function' ? t.closest('button[data-hc-reg-del]') : null;
+  if (!btn) return;
+  ev.preventDefault();
+  let payload;
+  try {
+    const raw = btn.getAttribute('data-hc-reg-del');
+    payload = raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    if (typeof showToast === 'function') showToast('No se pudo leer la entrada a borrar', true);
+    return;
+  }
+  if (!payload || typeof payload.slot !== 'number' || payload.slot < 0) return;
+  initTorres();
+  if (!state.torres || payload.slot >= state.torres.length) return;
+  borrarEntradaRegistroDesdeHistorial(
+    payload.slot,
+    String(payload.fecha || ''),
+    String(payload.hora || ''),
+    String(payload.tipo != null && payload.tipo !== '' ? payload.tipo : 'medicion'),
+    false,
+    false,
+    false
+  );
+}
+
 function borrarMedicion(fecha, hora, torreId) {
   if (!confirm('¿Borrar esta entrada del historial?')) return;
   initTorres();
@@ -86,12 +140,22 @@ function borrarMedicion(fecha, hora, torreId) {
 function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipConfirm, suppressToast, silentOnMissing) {
   if (!skipConfirm && !confirm('¿Borrar esta entrada del registro?')) return false;
   initTorres();
-  guardarEstadoTorreActual();
+  /** No llamar guardarEstadoTorreActual() aquí: copia state.registro → slot activo y puede
+   *  machacar torres[slotIdx].registro antes del findIndex si las referencias divergieron. */
   const t = state.torres[slotIdx];
-  if (!t || !Array.isArray(t.registro)) return false;
+  if (!t) {
+    if (!silentOnMissing) showToast('No se encontró la instalación', true);
+    return false;
+  }
+  if (!Array.isArray(t.registro)) t.registro = [];
+  const fechaN = normalizarFechaRegistroDdMmYyyy(fecha);
+  const tipoQ = tipo == null || tipo === '' ? 'medicion' : String(tipo);
   const hhmm = String(hora || '').slice(0, 5);
   const i = t.registro.findIndex(r => {
-    if (!r || r.tipo !== tipo || r.fecha !== fecha) return false;
+    if (!r) return false;
+    const tipoR = r.tipo == null || r.tipo === '' ? 'medicion' : String(r.tipo);
+    if (tipoR !== tipoQ) return false;
+    if (normalizarFechaRegistroDdMmYyyy(r.fecha) !== fechaN) return false;
     const mh = String(r.hora || '');
     return mh === String(hora || '') || mh.slice(0, 5) === hhmm;
   });
@@ -106,10 +170,10 @@ function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipCon
     const k = entry.fotoKey;
     state.fotosSistemaCompleto.fotoKeys = (state.fotosSistemaCompleto.fotoKeys || []).filter(x => x !== k);
     state.fotosSistemaCompleto.fotos = (state.fotosSistemaCompleto.fotos || []).filter(f => !f || f.key !== k);
-    guardarEstadoTorreActual();
   }
   t.registro.splice(i, 1);
   if ((state.torreActiva || 0) === slotIdx) state.registro = t.registro;
+  try { guardarEstadoTorreActual(); } catch (_) {}
   saveState();
   renderRegistro();
   const diarioPanel = document.getElementById('histDiarioPanel');

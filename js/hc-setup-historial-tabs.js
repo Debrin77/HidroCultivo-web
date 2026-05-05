@@ -9,6 +9,9 @@ let histRecargasDatos = [];
 
 function histTab(tab) {
   histTabActiva = tab;
+  if (tab === 'registro' && typeof ensureRegistroHistorialDeleteDelegation === 'function') {
+    ensureRegistroHistorialDeleteDelegation();
+  }
   document.querySelectorAll('.hist-tab').forEach(t => {
     t.classList.remove('active');
     t.setAttribute('aria-selected', 'false');
@@ -147,6 +150,7 @@ function recolectarMedicionesTodasInstalaciones() {
 }
 
 function cargarHistorial() {
+  if (typeof ensureRegistroHistorialDeleteDelegation === 'function') ensureRegistroHistorialDeleteDelegation();
   document.getElementById('histLoader').style.display = 'none';
   document.getElementById('histSinDatos').classList.add('setup-hidden');
   ['histMediciones', 'histRecargas', 'histRegistroPanel', 'histDiarioPanel'].forEach(id => {
@@ -543,6 +547,11 @@ function renderRegistro() {
         detalle = bloques.length ? bloques.join('') : '<span class="registro-note-sub">(sin detalle)</span>';
       }
       const slotIdx = typeof e._slotIdx === 'number' ? e._slotIdx : (state.torreActiva || 0);
+      const tipoDel = e.tipo == null || e.tipo === '' ? 'medicion' : String(e.tipo);
+      const delPayload =
+        typeof hcEscAttrJson === 'function'
+          ? hcEscAttrJson({ slot: slotIdx, fecha: e.fecha || '', hora: e.hora || '', tipo: tipoDel })
+          : '';
       return '<div class="registro-entry-card" style="--reg-bg:' + c.bg + ';--reg-bd:' + c.border + ';--reg-badge:' + c.color + '">' +
         '<div class="registro-entry-head">' +
           '<div class="registro-entry-left">' +
@@ -558,7 +567,7 @@ function renderRegistro() {
                       ? 'Recarga completa'
                       : e.tipo === 'apunte'
                         ? 'Apunte'
-                        : (e.tipo.charAt(0).toUpperCase() + e.tipo.slice(1))) +
+                        : (String(e.tipo || 'medicion').charAt(0).toUpperCase() + String(e.tipo || 'medicion').slice(1))) +
             '</span>' +
             (sis && sis.nombre ?
               '<span class="registro-entry-torre-chip">' +
@@ -566,9 +575,8 @@ function renderRegistro() {
           '</div>' +
           '<div class="registro-entry-right">' +
             '<span class="registro-entry-time">' + (e.hora||'') + '</span>' +
-            '<button type="button" onclick="borrarEntradaRegistroDesdeHistorial(' + slotIdx + ',\'' + escRegistroAttr(e.fecha) + '\',\'' + escRegistroAttr(e.hora) + '\',\'' + escRegistroAttr(e.tipo) + '\')" ' +
-              'class="registro-entry-delete"' +
-              ' title="Borrar entrada">🗑</button>' +
+            '<button type="button" class="registro-entry-delete" data-hc-reg-del="' + delPayload + '" ' +
+              'title="Borrar entrada" aria-label="Borrar entrada">🗑</button>' +
           '</div>' +
         '</div>' +
         '<div class="registro-entry-detail">' + detalle + '</div>' +
