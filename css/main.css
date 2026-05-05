@@ -2711,6 +2711,8 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   font-size: 15px;
   line-height: 1.58;
   color: #334155;
+  text-align: justify;
+  text-justify: inter-word;
 }
 .welcome-value-icon {
   width: 30px;
