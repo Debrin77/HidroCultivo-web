@@ -2883,7 +2883,7 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-kpi {
   background: rgba(15, 23, 42, 0.72);
   border-color: rgba(148, 163, 184, 0.6);
-  color: #dbe6f5;
+  color: #e5edf8;
   box-shadow:
     0 8px 18px rgba(2, 6, 23, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -2905,7 +2905,7 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   color: #f1f5f9;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card p {
-  color: #cbd5e1;
+  color: #d8e3f0;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--green,
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--blue,
@@ -2946,12 +2946,12 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   color: #c7d2fe;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-foot--guide {
-  color: #cbd5e1;
+  color: #d8e3f0;
   background: rgba(15, 23, 42, 0.56);
   border-color: rgba(148, 163, 184, 0.42);
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-no-mas-label {
-  color: #cbd5e1;
+  color: #d8e3f0;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-theme-btn {
   background: rgba(15, 23, 42, 0.85);
@@ -3055,8 +3055,23 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
     gap: 5px;
   }
   .welcome-kpi {
-    font-size: 10.5px;
-    padding: 4px 8px;
+    font-size: 13px;
+    padding: 6px 9px;
+  }
+  .welcome-kpi .hc-ico {
+    width: 14px;
+    height: 14px;
+  }
+  .welcome-kpi strong {
+    font-size: 13px;
+  }
+  .welcome-foot--guide {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .welcome-no-mas-label {
+    font-size: 14px;
+    line-height: 1.5;
   }
 }
 .welcome-brand {
@@ -13330,7 +13345,7 @@ html.hc-theme-dark {
   --bg3: #1a222d;
   --border: rgba(241, 245, 249, 0.07);
   --white: #e7edf5;
-  --muted: #8b9cb3;
+  --muted: #9fb1c8;
   --green-pale: rgba(34, 197, 94, 0.14);
   --card-shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 20px rgba(0, 0, 0, 0.28);
   --card-shadow-press: 0 1px 2px rgba(0, 0, 0, 0.4);
