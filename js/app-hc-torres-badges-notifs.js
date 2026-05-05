@@ -885,45 +885,6 @@ function actualizarBadgesNutriente() {
   if (medirTorreNombre) medirTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
   actualizarEstadoOperativaUI();
 
-  // Pestaña Sistema — franja nutriente (una sola; antes había tarjeta duplicada debajo)
-  const torreBandera = document.getElementById('torreBadgeBandera');
-  const torreNomStrip = document.getElementById('torreBadgeStripNombre');
-  const torreEC      = document.getElementById('torreBadgeEC');
-  const torreModoEcPh = document.getElementById('torreBadgeEcPhModo');
-  if (torreBandera) torreBandera.textContent = nut.bandera || '🧪';
-  if (torreNomStrip) torreNomStrip.textContent = nut.nombre;
-  if (torreEC) {
-    const ecTor = typeof getECOptimaTorre === 'function' ? getECOptimaTorre() : null;
-    const ecMinT = ecTor && Number.isFinite(ecTor.min) ? ecTor.min : nut.ecObjetivo ? nut.ecObjetivo[0] : 900;
-    const ecMaxT = ecTor && Number.isFinite(ecTor.max) ? ecTor.max : nut.ecObjetivo ? nut.ecObjetivo[1] : 1400;
-    const phOpt = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [5.5, 6.5];
-    torreEC.textContent = 'EC ' + ecMinT + '–' + ecMaxT + ' µS/cm · pH ' + (phOpt[0] + '–' + phOpt[1]);
-  }
-  if (torreModoEcPh) {
-    const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
-    const strategy = typeof getEcPhStrategy === 'function' ? getEcPhStrategy(cfg) : 'auto';
-    const intensity = typeof getEcPhIntensity === 'function' ? getEcPhIntensity(cfg) : 'estandar';
-    const faseMap = {
-      germinacion: 'germinación',
-      plantula: 'plántula',
-      vegetativo: 'vegetativo',
-      prefloracion: 'prefloración',
-      floracion: 'floración',
-      fructificacion: 'fructificación',
-      manual: 'manual',
-    };
-    const faseKey = rec && rec.faseDominante ? rec.faseDominante : (strategy === 'manual' ? 'manual' : 'general');
-    const faseTxt = faseMap[faseKey] || faseKey;
-    torreModoEcPh.classList.remove('torre-strip-ecph-modo--auto', 'torre-strip-ecph-modo--manual');
-    torreModoEcPh.classList.add(strategy === 'manual' ? 'torre-strip-ecph-modo--manual' : 'torre-strip-ecph-modo--auto');
-    torreModoEcPh.textContent =
-      (strategy === 'manual' ? 'MANUAL' : 'AUTO') +
-      ' · fase ' +
-      faseTxt +
-      ' · perfil ' +
-      intensity;
-  }
-
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
 
   try {

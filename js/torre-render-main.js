@@ -778,13 +778,6 @@ function updateTorreStats() {
     else volMezIn.value = '';
   }
 
-  // Badge nutriente (franja bajo el esquema: nombre + EC/pH + Cambiar)
-  const bandEl   = document.getElementById('torreBadgeBandera');
-  const nomStrip = document.getElementById('torreBadgeStripNombre');
-  const nb       = nut.nombre || '—';
-  if (bandEl)   bandEl.textContent = nut.bandera || '🧪';
-  if (nomStrip) nomStrip.textContent = nb;
-
   if (esDwcCfg) {
     try {
       refreshDwcSistemaMedidasUI();
