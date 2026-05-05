@@ -195,8 +195,15 @@ function renderTorreLista() {
         else if (oa === 'germinacion') ariaLabel += ', origen germinación propia';
       }
       ariaLabel = ariaLabel.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-      h += '<button type="button" class="torre-lista-cesta-btn" data-n="' + n + '" data-c="' + c + '" ' +
-        'aria-label="' + ariaLabel + '">';
+      const multiKeyLista = n + ',' + c;
+      const multiLista =
+        torreInteraccionModo === 'asignar' && !torreAsignarInstantaneo && torreCestasMultiSel.has(multiKeyLista);
+      const ariaPressedLista =
+        torreInteraccionModo === 'asignar' && !torreAsignarInstantaneo
+          ? ' aria-pressed="' + (multiLista ? 'true' : 'false') + '"'
+          : '';
+      h += '<button type="button" class="torre-lista-cesta-btn' + (multiLista ? ' torre-lista-cesta-btn--multi-sel' : '') + '" data-n="' + n + '" data-c="' + c + '" ' +
+        'aria-label="' + ariaLabel + '"' + ariaPressedLista + '>';
       h += '<span class="torre-lista-cesta-disc"' + fkAttr + ' style="--tl-disc-bc:' + col.border + ';--tl-disc-bg:' + col.bg + '">';
       h += '<span class="torre-lista-cesta-num" aria-hidden="true">' + (c + 1) + '</span>';
       h += '<span class="torre-lista-cesta-emoji" aria-hidden="true">' + emoji + '</span>';
@@ -249,11 +256,11 @@ function torreOnCestaActivada(n, c) {
   ocultarTorreQuickTip();
   if (torreInteraccionModo === 'asignar') {
     const v = document.getElementById('torreAssignVariedad')?.value?.trim();
-    if (!v) {
-      showToast('Elige primero el cultivo en la lista de arriba', true);
-      return;
-    }
     if (torreAsignarInstantaneo) {
+      if (!v) {
+        showToast('Elige primero el cultivo en la lista de arriba', true);
+        return;
+      }
       aplicarCultivoACestaUna(n, c, v);
       saveState();
       renderTorre();
@@ -269,8 +276,15 @@ function torreOnCestaActivada(n, c) {
       );
     } else {
       const k = n + ',' + c;
-      if (torreCestasMultiSel.has(k)) torreCestasMultiSel.delete(k);
-      else torreCestasMultiSel.add(k);
+      if (torreCestasMultiSel.has(k)) {
+        torreCestasMultiSel.delete(k);
+      } else {
+        if (!v) {
+          showToast('Elige primero el cultivo en la lista de arriba', true);
+          return;
+        }
+        torreCestasMultiSel.add(k);
+      }
       actualizarBarraMultiSel();
       mostrarBarraSeleccionCesta(n, c);
       renderTorre();
@@ -1400,16 +1414,17 @@ function actualizarBarraMultiSel() {
   bar.style.display = multiMode ? 'flex' : 'none';
   const esNft = state.configTorre?.tipoInstalacion === 'nft';
   const esDwc = state.configTorre?.tipoInstalacion === 'dwc';
+  const hintQuitar = ' · 2.º toque = quitar';
   cnt.textContent =
     n === 0
       ? (esNft
-        ? 'Toca huecos en el esquema NFT o en Lista (anillo ámbar)'
+        ? 'Toca huecos en el esquema NFT o en Lista (marca ámbar)' + hintQuitar
         : esDwc
-          ? 'Toca macetas en el esquema DWC o en Lista (anillo ámbar)'
-          : 'Toca cestas en la torre vertical o en Lista (anillo ámbar)')
+          ? 'Toca macetas en el esquema DWC o en Lista (marca ámbar)' + hintQuitar
+          : 'Toca cestas en la torre o en Lista (marca ámbar)' + hintQuitar)
       : n === 1
-        ? (esNft ? '1 hueco seleccionado' : esDwc ? '1 maceta seleccionada' : '1 cesta seleccionada')
-        : (esNft ? n + ' huecos seleccionados' : esDwc ? n + ' macetas seleccionadas' : n + ' cestas seleccionadas');
+        ? (esNft ? '1 hueco seleccionado' + hintQuitar : esDwc ? '1 maceta seleccionada' + hintQuitar : '1 cesta seleccionada' + hintQuitar)
+        : (esNft ? n + ' huecos seleccionados' + hintQuitar : esDwc ? n + ' macetas seleccionadas' + hintQuitar : n + ' cestas seleccionadas' + hintQuitar);
   if (btnAplicar) {
     btnAplicar.disabled = n === 0;
     btnAplicar.style.opacity = n === 0 ? '0.55' : '1';
@@ -1471,10 +1486,10 @@ function actualizarTorreAssignAyuda() {
         : 'Cultivo y fecha → <strong>tocar cestas</strong> visibles (gira la torre si hace falta). Luego <strong>Finalizar asignación</strong>.';
   } else {
     el.innerHTML = esNft
-      ? 'Marca varios <strong>huecos</strong> (anillo ámbar) → <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>.'
+      ? 'Marca varios <strong>huecos</strong> (marca ámbar en esquema o lista). <strong>Vuelve a tocar</strong> uno marcado para quitarlo. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
       : esDwc
-        ? 'Marca varias <strong>macetas</strong> (anillo ámbar) → <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>.'
-        : 'Marca <strong>cestas</strong> (anillo ámbar) → <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>.';
+        ? 'Marca varias <strong>macetas</strong> (marca ámbar). <strong>Vuelve a tocar</strong> una marcada para quitarla. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
+        : 'Marca <strong>cestas</strong> (marca ámbar en maqueta o lista). <strong>Vuelve a tocar</strong> una marcada para quitarla. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.';
   }
 }
 
@@ -1544,10 +1559,10 @@ function abrirTutorialAsignarCultivo(opts) {
       ? '<strong class="tut-strong-blue">Las macetas del DWC</strong> aparecen en el esquema y en <strong>Lista</strong>. No hay que girar maqueta como en torre vertical.'
       : '<strong class="tut-strong-blue">Solo cuentan las cestas de cara</strong> (las que ves al frente). <strong>Gira</strong> con el dedo o el botón ⟲ para llegar a las de atrás. Así evitas equivocarte de hueco.';
   const paso3Tut = esNftTut
-    ? '<strong class="tut-strong-amber">Por defecto:</strong> toca varios <strong>huecos</strong> en el dibujo (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Modo rápido:</strong> cada toque asigna un hueco al instante.'
+    ? '<strong class="tut-strong-amber">Por defecto:</strong> toca varios <strong>huecos</strong> (marca ámbar en esquema o Lista). <strong>Otro toque en el mismo hueco</strong> lo quita de la selección. Pulsa <em>Aplicar a selección</em> o <em>Limpiar selección</em>. <strong>Modo rápido:</strong> cada toque asigna un hueco al instante.'
     : esDwcTut
-      ? '<strong class="tut-strong-amber">Por defecto:</strong> toca varias <strong>macetas</strong> (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Modo rápido:</strong> cada toque asigna una maceta al instante.'
-      : '<strong class="tut-strong-amber">Por defecto:</strong> toca varias cestas (anillo ámbar) y pulsa <em>Aplicar a selección</em>. <strong>Marca «Modo rápido»</strong> si prefieres que <strong>cada toque</strong> asigne de inmediato una sola cesta.';
+      ? '<strong class="tut-strong-amber">Por defecto:</strong> toca varias <strong>macetas</strong> (marca ámbar). <strong>Otro toque</strong> en una marcada la quita. Pulsa <em>Aplicar a selección</em> o <em>Limpiar selección</em>. <strong>Modo rápido:</strong> cada toque asigna una maceta al instante.'
+      : '<strong class="tut-strong-amber">Por defecto:</strong> toca varias cestas (marca ámbar en maqueta o Lista). <strong>Otro toque</strong> en una marcada la quita. Pulsa <em>Aplicar a selección</em> o <em>Limpiar selección</em>. <strong>Marca «Modo rápido»</strong> si prefieres que <strong>cada toque</strong> asigne de inmediato una sola cesta.';
   const paso4Tut = esNftTut
     ? 'Para <strong>fotos, notas o vaciar</strong> un hueco, vuelve a <strong>Editar ficha</strong> y tócalo en el esquema o en Lista.'
     : esDwcTut
@@ -1596,10 +1611,10 @@ function abrirTutorialAsignarCultivo(opts) {
     cerrarTutorialAsignarCultivo(chk && chk.checked);
     showToast(
       esNftTut
-        ? '💡 Elige cultivo arriba, marca huecos en el esquema o Lista y pulsa Aplicar a selección'
+        ? '💡 Cultivo arriba → marca huecos (2.º toque quita) → Aplicar a selección'
         : esDwcTut
-          ? '💡 Elige cultivo arriba, marca macetas en el esquema o Lista y pulsa Aplicar a selección'
-          : '💡 Elige cultivo arriba, marca cestas y pulsa Aplicar a selección'
+          ? '💡 Cultivo arriba → marca macetas (2.º toque quita) → Aplicar a selección'
+          : '💡 Cultivo arriba → marca cestas (2.º toque quita) → Aplicar a selección'
     );
   });
   overlay.querySelector('#tutorialAsignarBtnSoloCerrar').addEventListener('click', (e) => {

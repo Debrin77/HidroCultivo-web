@@ -1515,6 +1515,14 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 .torre-lista-cesta-btn:active {
   transform: translateY(0);
 }
+/* Misma lógica que el anillo ámbar del esquema: selección múltiple en «Asignar cultivo» */
+.torre-lista-cesta-btn.torre-lista-cesta-btn--multi-sel {
+  border-color: rgba(245, 158, 11, 0.85);
+  box-shadow:
+    0 0 0 2px rgba(245, 158, 11, 0.35),
+    0 4px 14px rgba(245, 158, 11, 0.12);
+  background: rgba(255, 251, 235, 0.95);
+}
 .torre-lista-cesta-disc {
   position: relative;
   overflow: hidden;
