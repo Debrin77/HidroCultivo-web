@@ -3760,6 +3760,30 @@ button.torre-summary:focus-visible,
 .quick-btn-icon .hc-ico {
   color: var(--muted);
 }
+/* Acciones rápidas Inicio: mismas siluetas que pestañas (Ionicons) + color por función */
+.quick-btn-icon .hc-ico--ion-quick {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.quick-btn[data-quick-icon="mediciones"] .hc-ico--ion-quick { color: #2563eb; }
+.quick-btn[data-quick-icon="riego"] .hc-ico--ion-quick { color: #0891b2; }
+.quick-btn[data-quick-icon="meteo"] .hc-ico--ion-quick { color: #0ea5e9; }
+.quick-btn[data-quick-icon="historial"] .hc-ico--ion-quick { color: #7c3aed; }
+.quick-btn[data-quick-icon="sistema"] .hc-ico--ion-quick { color: #475569; }
+.quick-btn[data-quick-icon="recarga"] .hc-ico--ion-quick { color: #d97706; }
+.quick-btn[data-quick-icon="seguridad"] .hc-ico--ion-quick { color: #4f46e5; }
+.quick-btn[data-quick-icon="alertas"] .hc-ico--ion-quick { color: #2563eb; }
+.quick-btn[data-quick-icon="reset"] .hc-ico--ion-quick { color: #dc2626; }
+html.hc-theme-dark .quick-btn[data-quick-icon="mediciones"] .hc-ico--ion-quick { color: #60a5fa; }
+html.hc-theme-dark .quick-btn[data-quick-icon="riego"] .hc-ico--ion-quick { color: #22d3ee; }
+html.hc-theme-dark .quick-btn[data-quick-icon="meteo"] .hc-ico--ion-quick { color: #38bdf8; }
+html.hc-theme-dark .quick-btn[data-quick-icon="historial"] .hc-ico--ion-quick { color: #a78bfa; }
+html.hc-theme-dark .quick-btn[data-quick-icon="sistema"] .hc-ico--ion-quick { color: #94a3b8; }
+html.hc-theme-dark .quick-btn[data-quick-icon="recarga"] .hc-ico--ion-quick { color: #fbbf24; }
+html.hc-theme-dark .quick-btn[data-quick-icon="seguridad"] .hc-ico--ion-quick { color: #818cf8; }
+html.hc-theme-dark .quick-btn[data-quick-icon="alertas"] .hc-ico--ion-quick { color: #60a5fa; }
+html.hc-theme-dark .quick-btn[data-quick-icon="reset"] .hc-ico--ion-quick { color: #f87171; }
 
 /* Panel Seguridad de acceso (Inicio, debajo de acciones rápidas) */
 .dash-seguridad-panel {
