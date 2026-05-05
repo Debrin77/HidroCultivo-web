@@ -108,8 +108,11 @@ function resetBienvenidaParaPruebas() {
   try {
     const ov = document.getElementById('welcomeOverlay');
     if (ov && !ov.classList.contains('setup-hidden')) return;
-    mostrarBienvenidaOContinuarArranque();
-    if (typeof showToast === 'function') showToast('Guia de bienvenida reabierta');
+    mostrarBienvenidaOContinuarArranque({ forceShow: true });
+    const abierta = ov && !ov.classList.contains('setup-hidden');
+    if (typeof showToast === 'function') {
+      showToast(abierta ? 'Guia de bienvenida reabierta' : 'No se pudo reabrir la bienvenida', !abierta);
+    }
   } catch (_) {
     if (typeof showToast === 'function') showToast('No se pudo reabrir la bienvenida', true);
   }
@@ -191,15 +194,16 @@ function lanzarSetupOChecklistSiCorresponde() {
   // Sigue disponible en Inicio → Iniciar recarga e Historial → Checklist.
 }
 
-function mostrarBienvenidaOContinuarArranque() {
+function mostrarBienvenidaOContinuarArranque(opts) {
+  const forceShow = !!(opts && opts.forceShow);
   let visto = false;
   try { visto = localStorage.getItem(HC_BIENVENIDA_KEY) === '1'; } catch (_) {}
-  if (visto) {
+  if (visto && !forceShow) {
     lanzarSetupOChecklistSiCorresponde();
     scheduleTabBarCoach(1100);
     return;
   }
-  if (hayDatosHidrocultivoRelevantes()) {
+  if (!forceShow && hayDatosHidrocultivoRelevantes()) {
     try { localStorage.setItem(HC_BIENVENIDA_KEY, '1'); } catch (_) {}
     lanzarSetupOChecklistSiCorresponde();
     scheduleTabBarCoach(1100);
