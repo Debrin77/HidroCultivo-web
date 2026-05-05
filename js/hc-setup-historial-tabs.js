@@ -606,6 +606,7 @@ function renderRegistro() {
 
 
 function renderHistMediciones() {
+  if (typeof ensureHistMedicionesDeleteDelegation === 'function') ensureHistMedicionesDeleteDelegation();
   // Aplicar filtro por torre si está activo
   let mediciones = histDatos || state.mediciones || [];
   if (filtroTorreActivo !== null) {
@@ -637,8 +638,11 @@ function renderHistMediciones() {
       <span class="hist-val ${getClaseVal('temp', m.temp)}">${m.temp || '—'}</span>
       <span class="hist-val ${getClaseVal('vol',  m.vol)}">${m.vol  || '—'}</span>
       <span class="hist-action-cell">
-        <button onclick="borrarMedicion(${JSON.stringify(m.fecha)}, ${JSON.stringify(m.hora)}, ${m.torreId == null ? 'null' : JSON.stringify(m.torreId)})"
-          class="hist-btn-delete" aria-label="Borrar esta medición">🗑</button>
+        <button type="button" class="hist-btn-delete js-hist-med-del"
+          data-hc-fecha="${escRegistroAttr(m.fecha || '')}"
+          data-hc-hora="${escRegistroAttr(m.hora || '')}"
+          data-hc-torre-id="${escRegistroAttr(m.torreId == null ? '' : String(m.torreId))}"
+          aria-label="Borrar esta medición">🗑</button>
       </span>
       ${m.notas ? `<span class="hist-val hist-note-line">📝 ${m.notas}</span>` : ''}
     </div>

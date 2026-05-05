@@ -92,6 +92,29 @@ if (typeof window !== 'undefined') {
   window.ensureRegistroListaDeleteDelegation = ensureRegistroListaDeleteDelegation;
 }
 
+/** Delegación para Historial → Mediciones (evita onclick inline frágil en móvil). */
+function ensureHistMedicionesDeleteDelegation() {
+  const tabla = document.getElementById('histTabla');
+  if (!tabla || tabla.dataset.hcHistMedDelBound === '1') return;
+  tabla.dataset.hcHistMedDelBound = '1';
+  tabla.addEventListener('click', function hcHistMedDelEv(ev) {
+    const raw = ev.target;
+    const btn = raw && typeof raw.closest === 'function' ? raw.closest('button.js-hist-med-del') : null;
+    if (!btn || !tabla.contains(btn)) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    const fecha = btn.getAttribute('data-hc-fecha') || '';
+    const hora = btn.getAttribute('data-hc-hora') || '';
+    const torreRaw = btn.getAttribute('data-hc-torre-id');
+    const torreId = torreRaw == null || torreRaw === '' ? null : torreRaw;
+    borrarMedicion(fecha, hora, torreId);
+  });
+}
+
+if (typeof window !== 'undefined') {
+  window.ensureHistMedicionesDeleteDelegation = ensureHistMedicionesDeleteDelegation;
+}
+
 function borrarMedicion(fecha, hora, torreId) {
   if (!confirm('¿Borrar esta entrada del historial?')) return;
   initTorres();
