@@ -2568,7 +2568,35 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-grid { animation-delay:
 body.hc-welcome-open .welcome-card--guide .welcome-foot--guide { animation-delay: 170ms; }
 body.hc-welcome-open .welcome-card--guide .welcome-no-mas-label { animation-delay: 190ms; }
 body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-delay: 210ms; }
+body.hc-welcome-open .welcome-card--guide::before {
+  animation: welcomeGlassSweep 1900ms ease-out 140ms 1 both;
+}
+body.hc-welcome-open .welcome-card--guide .welcome-value-card {
+  opacity: 0;
+  transform: translateY(10px) scale(0.99);
+  animation: welcomeTileIn 320ms ease-out forwards;
+}
+body.hc-welcome-open .welcome-card--guide .welcome-value-card:nth-child(1) { animation-delay: 170ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-value-card:nth-child(2) { animation-delay: 200ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-value-card:nth-child(3) { animation-delay: 230ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-value-card:nth-child(4) { animation-delay: 260ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-value-card:nth-child(5) { animation-delay: 290ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-value-card:nth-child(6) { animation-delay: 320ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-kpi {
+  opacity: 0;
+  transform: translateY(8px) scale(0.98);
+  animation: welcomeKpiIn 300ms cubic-bezier(.2,.8,.2,1) forwards;
+}
+body.hc-welcome-open .welcome-card--guide .welcome-kpi:nth-child(1) { animation-delay: 110ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-kpi:nth-child(2) { animation-delay: 140ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-kpi:nth-child(3) { animation-delay: 170ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-kpi:nth-child(4) { animation-delay: 200ms; }
+body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
+  animation: welcomeIconFloat 3400ms ease-in-out 700ms infinite;
+}
 .welcome-card--guide {
+  position: relative;
+  overflow: hidden;
   max-width: 440px;
   max-height: min(92vh, 720px);
   background:
@@ -2577,6 +2605,14 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
     rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.3);
+}
+.welcome-card--guide::before {
+  content: "";
+  position: absolute;
+  inset: -30% -60%;
+  background: linear-gradient(115deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.38) 50%, rgba(255, 255, 255, 0) 60%);
+  transform: translateX(-38%);
+  pointer-events: none;
 }
 .welcome-eyebrow {
   margin: 0 0 8px;
@@ -2919,6 +2955,35 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
     transform: translateY(0);
   }
 }
+@keyframes welcomeGlassSweep {
+  0% { transform: translateX(-44%); opacity: 0; }
+  18% { opacity: 1; }
+  100% { transform: translateX(44%); opacity: 0; }
+}
+@keyframes welcomeTileIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes welcomeIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@keyframes welcomeKpiIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   body.hc-welcome-open .welcome-overlay,
@@ -2929,6 +2994,9 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
   body.hc-welcome-open .welcome-card--guide .welcome-lead,
   body.hc-welcome-open .welcome-card--guide .welcome-kpis,
   body.hc-welcome-open .welcome-card--guide .welcome-value-grid,
+  body.hc-welcome-open .welcome-card--guide .welcome-value-card,
+  body.hc-welcome-open .welcome-card--guide .welcome-value-icon,
+  body.hc-welcome-open .welcome-card--guide::before,
   body.hc-welcome-open .welcome-card--guide .welcome-foot--guide,
   body.hc-welcome-open .welcome-card--guide .welcome-no-mas-label,
   body.hc-welcome-open .welcome-card--guide .welcome-guide-actions {
