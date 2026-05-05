@@ -103,6 +103,18 @@ function setWelcomeTheme(theme) {
   try { localStorage.setItem(HC_WELCOME_THEME_PREVIEW_KEY, t); } catch (_) {}
 }
 
+function resetBienvenidaParaPruebas() {
+  try { localStorage.removeItem(HC_BIENVENIDA_KEY); } catch (_) {}
+  try {
+    const ov = document.getElementById('welcomeOverlay');
+    if (ov && !ov.classList.contains('setup-hidden')) return;
+    mostrarBienvenidaOContinuarArranque();
+    if (typeof showToast === 'function') showToast('Guia de bienvenida reabierta');
+  } catch (_) {
+    if (typeof showToast === 'function') showToast('No se pudo reabrir la bienvenida', true);
+  }
+}
+
 /**
  * Si ya hay cultivo / mediciones / registro / config guardada, no forzar el carrusel:
  * evita bloquear la app cuando falta la clave en localStorage (cambio de navegador, borrado parcial, etc.).
