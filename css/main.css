@@ -2962,6 +2962,15 @@ button.torre-summary:focus-visible,
 .tile-icon .hc-ico {
   color: var(--muted);
 }
+/* Inicio — última medición: iconos por parámetro (misma paleta que Medir) */
+#tileEC .tile-icon .hc-ico { color: #2563eb; }
+#tilePH .tile-icon .hc-ico { color: #7c3aed; }
+#tileTemp .tile-icon .hc-ico { color: #ea580c; }
+#tileVol .tile-icon .hc-ico { color: #0891b2; }
+html.hc-theme-dark #tileEC .tile-icon .hc-ico { color: #60a5fa; }
+html.hc-theme-dark #tilePH .tile-icon .hc-ico { color: #a78bfa; }
+html.hc-theme-dark #tileTemp .tile-icon .hc-ico { color: #fb923c; }
+html.hc-theme-dark #tileVol .tile-icon .hc-ico { color: #22d3ee; }
 .tile-metric {
   display: flex;
   flex-direction: column;
@@ -3973,6 +3982,15 @@ html.hc-theme-dark .quick-btn[data-quick-icon="reset"] .hc-ico--ion-quick { colo
   flex-shrink: 0;
   color: var(--muted);
 }
+/* Medir — iconos de cabecera por tarjeta */
+#cardEC .param-label .hc-ico { color: #2563eb; }
+#cardPH .param-label .hc-ico { color: #7c3aed; }
+#cardTemp .param-label .hc-ico { color: #ea580c; }
+#cardVol .param-label .hc-ico { color: #0891b2; }
+html.hc-theme-dark #cardEC .param-label .hc-ico { color: #60a5fa; }
+html.hc-theme-dark #cardPH .param-label .hc-ico { color: #a78bfa; }
+html.hc-theme-dark #cardTemp .param-label .hc-ico { color: #fb923c; }
+html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
 .param-range {
   font-size: 12px;
   color: var(--muted);
