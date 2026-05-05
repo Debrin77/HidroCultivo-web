@@ -2529,6 +2529,8 @@ button.aviso-cestas-ir:active {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   pointer-events: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 body.hc-welcome-open .welcome-overlay {
   animation: welcomeOverlayFadeIn 220ms ease-out;
@@ -2713,6 +2715,8 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   color: #334155;
   text-align: justify;
   text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
 }
 .welcome-value-icon {
   width: 30px;
@@ -3010,6 +3014,15 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   }
 }
 @media (max-width: 420px) {
+  .welcome-overlay {
+    align-items: flex-start;
+    padding-top: max(12px, env(safe-area-inset-top, 12px));
+    padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
+  }
+  .welcome-card--guide {
+    max-height: none;
+    width: 100%;
+  }
   .welcome-kpis {
     gap: 5px;
   }
