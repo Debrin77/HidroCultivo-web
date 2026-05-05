@@ -2625,30 +2625,42 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
 .welcome-kpis {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 12px;
 }
 .welcome-kpi {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(100, 116, 139, 0.48);
+  background: rgba(255, 255, 255, 0.86);
   border-radius: 999px;
-  padding: 4px 9px;
+  padding: 5px 10px;
   font-size: 11px;
-  color: #334155;
+  color: #1f2937;
+  box-shadow:
+    0 7px 16px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 .welcome-kpi strong {
   color: #0f766e;
   font-size: 12px;
 }
+.welcome-kpi .hc-ico {
+  width: 13px;
+  height: 13px;
+  color: #0f766e;
+}
 .welcome-value-card {
   border-radius: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.32);
+  border: 1px solid rgba(100, 116, 139, 0.45);
   padding: 11px 12px;
   background: rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 .welcome-value-card h3 {
   margin: 0 0 4px;
@@ -2666,11 +2678,14 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
 .welcome-value-icon {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 7px;
+  font-size: 17px;
+  line-height: 1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 .welcome-value-card--green {
   border-color: #bbf7d0;
@@ -2711,6 +2726,14 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
 .welcome-value-card--amber .welcome-value-icon {
   background: #fef3c7;
   color: #b45309;
+}
+.welcome-value-card--indigo {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+}
+.welcome-value-card--indigo .welcome-value-icon {
+  background: #e0e7ff;
+  color: #4338ca;
 }
 .welcome-guide-steps {
   margin: 0 0 14px;
@@ -2789,11 +2812,17 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
   color: #dbe3ee;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-kpi {
-  background: rgba(15, 23, 42, 0.62);
-  border-color: rgba(148, 163, 184, 0.45);
-  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.6);
+  color: #dbe6f5;
+  box-shadow:
+    0 8px 18px rgba(2, 6, 23, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-kpi strong {
+  color: #5eead4;
+}
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-kpi .hc-ico {
   color: #5eead4;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card {
@@ -2813,7 +2842,8 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--blue,
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--violet,
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--teal,
-#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--amber {
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--amber,
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--indigo {
   background: rgba(15, 23, 42, 0.55);
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--green { border-color: rgba(134, 239, 172, 0.45); }
@@ -2821,6 +2851,7 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--violet { border-color: rgba(196, 181, 253, 0.45); }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--teal { border-color: rgba(94, 234, 212, 0.45); }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--amber { border-color: rgba(253, 230, 138, 0.45); }
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--indigo { border-color: rgba(165, 180, 252, 0.45); }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--green .welcome-value-icon {
   background: rgba(22, 163, 74, 0.2);
   color: #86efac;
@@ -2840,6 +2871,10 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--amber .welcome-value-icon {
   background: rgba(217, 119, 6, 0.22);
   color: #fde68a;
+}
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--indigo .welcome-value-icon {
+  background: rgba(79, 70, 229, 0.22);
+  color: #c7d2fe;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-foot--guide {
   color: #cbd5e1;
@@ -2934,6 +2969,8 @@ body.hc-welcome-open .welcome-card--guide .welcome-guide-actions { animation-del
   line-height: 1.55;
   color: #334155;
   margin: 0 0 14px;
+  text-align: justify;
+  text-justify: inter-word;
 }
 .welcome-list {
   margin: 0 0 14px;
