@@ -566,7 +566,7 @@ function renderRegistro() {
           '</div>' +
           '<div class="registro-entry-right">' +
             '<span class="registro-entry-time">' + (e.hora||'') + '</span>' +
-            '<button onclick="borrarEntradaRegistroDesdeHistorial(' + slotIdx + ',\'' + escRegistroAttr(e.fecha) + '\',\'' + escRegistroAttr(e.hora) + '\',\'' + escRegistroAttr(e.tipo) + '\')\" ' +
+            '<button type="button" onclick="borrarEntradaRegistroDesdeHistorial(' + slotIdx + ',\'' + escRegistroAttr(e.fecha) + '\',\'' + escRegistroAttr(e.hora) + '\',\'' + escRegistroAttr(e.tipo) + '\')" ' +
               'class="registro-entry-delete"' +
               ' title="Borrar entrada">🗑</button>' +
           '</div>' +

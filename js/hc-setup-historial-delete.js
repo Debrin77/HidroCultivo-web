@@ -89,7 +89,12 @@ function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipCon
   guardarEstadoTorreActual();
   const t = state.torres[slotIdx];
   if (!t || !Array.isArray(t.registro)) return false;
-  const i = t.registro.findIndex(r => r && r.tipo === tipo && r.fecha === fecha && r.hora === hora);
+  const hhmm = String(hora || '').slice(0, 5);
+  const i = t.registro.findIndex(r => {
+    if (!r || r.tipo !== tipo || r.fecha !== fecha) return false;
+    const mh = String(r.hora || '');
+    return mh === String(hora || '') || mh.slice(0, 5) === hhmm;
+  });
   if (i < 0) {
     if (!silentOnMissing) showToast('No se encontró la entrada', true);
     return false;
