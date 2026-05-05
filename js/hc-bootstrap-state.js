@@ -44,11 +44,9 @@ function loadState() {
       });
       if (s.modo) modoActual = s.modo;
       normalizarNotifOpcionesEnState(s);
-      console.log('Estado cargado:', s.torre.flat().filter(c => c.variedad).length, 'plantas');
       return s;
     }
   } catch(e) { console.error('Error loading state:', e); }
-  console.log('Estado nuevo inicializado');
   return initState();
 }
 

@@ -186,15 +186,9 @@ function cambiarTorreActiva(idx) {
   if (_bA) { _bA.classList.remove('active'); _bA.setAttribute('aria-pressed', 'false'); }
   if (_pA) _pA.style.display = 'none';
   actualizarBarraMultiSel();
-  // Recalcular plantas para la nueva torre en el input de riego
-  const nCf = contarPlantasTorreConFechaValida();
-  const nV = contarPlantasTorreConVariedad();
-  const riegoNPl = document.getElementById('riegoNPlantas');
-  if (riegoNPl) {
-    if (nCf > 0) riegoNPl.value = String(nCf);
-    else if (nV === 0) riegoNPl.value = '15';
-    else riegoNPl.value = String(Math.max(1, nV));
-  }
+  try {
+    if (typeof sincronizarInputsRiego === 'function') sincronizarInputsRiego();
+  } catch (eRiegoSync) {}
 
   actualizarVistaRiegoPorTipoInstalacion();
 
@@ -275,12 +269,17 @@ function guardarEstadoTorreActual() {
   } catch (e) {
     state.torres[idx].fotosSistemaCompleto = { fotoKeys: [], fotos: [] };
   }
-  // Guardar configuración de riego específica de esta torre
+  // Guardar configuración de riego: no machacar con valores por defecto del HTML si el input va vacío o inválido
+  const prevR = state.torres[idx].riego || {};
+  const nEl = document.getElementById('riegoNPlantas');
+  const eEl = document.getElementById('riegoEdad');
+  const nRaw = nEl && String(nEl.value || '').trim() !== '' ? parseInt(String(nEl.value).trim(), 10) : NaN;
+  const eRaw = eEl && String(eEl.value || '').trim() !== '' ? parseFloat(String(eEl.value).trim().replace(',', '.')) : NaN;
   state.torres[idx].riego = {
-    nPlantas:   parseInt(document.getElementById('riegoNPlantas')?.value) || 15,
-    edadSem:    parseFloat(document.getElementById('riegoEdad')?.value) || 4,
-    toldo:      toldoDesplegado,
-    diaRiego:   diaRiego,
+    nPlantas: Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : (Number.isFinite(prevR.nPlantas) && prevR.nPlantas >= 1 ? prevR.nPlantas : 15),
+    edadSem: Number.isFinite(eRaw) && eRaw > 0 ? eRaw : (Number.isFinite(prevR.edadSem) && prevR.edadSem > 0 ? prevR.edadSem : 4),
+    toldo: toldoDesplegado,
+    diaRiego: diaRiego,
   };
 }
 
@@ -340,12 +339,8 @@ function cargarEstadoTorre(idx) {
       if (typeof asegurarCamposFilaTorre === 'function') asegurarCamposFilaTorre(cell);
     });
   }
-  // Restaurar configuración de riego de esta torre
+  // Restaurar toldo / día de riego; plantas y edad vía sincronizarInputsRiego (torre activa + slot guardado)
   const riegoData = t.riego || {};
-  const riegoNPl = document.getElementById('riegoNPlantas');
-  const riegoEd  = document.getElementById('riegoEdad');
-  if (riegoNPl && riegoData.nPlantas) riegoNPl.value = riegoData.nPlantas;
-  if (riegoEd  && riegoData.edadSem)  riegoEd.value  = riegoData.edadSem;
   const swToldo = document.getElementById('toldoSwitch');
   if (riegoData.toldo !== undefined) {
     toldoDesplegado = riegoData.toldo;
@@ -361,6 +356,9 @@ function cargarEstadoTorre(idx) {
   } else {
     setDiaRiego('hoy');
   }
+  try {
+    if (typeof sincronizarInputsRiego === 'function') sincronizarInputsRiego();
+  } catch (eRiegoSync) {}
   // Aplicar constantes de la config de esta torre
   if (state.configTorre?.sustrato) state.configSustrato = state.configTorre.sustrato;
   aplicarConfigTorre();
@@ -857,10 +855,6 @@ function actualizarBadgesNutriente() {
       dashUbicacion.textContent = '☀️ Exterior';
     }
   }
-  try {
-    if (typeof refreshConsejosModoInicioUI === 'function') refreshConsejosModoInicioUI();
-  } catch (_) {}
-
   // Dashboard inicio — banner torre
   const dashTorreEmoji  = document.getElementById('dashTorreEmoji');
   const dashTorreNombre = document.getElementById('dashTorreNombre');

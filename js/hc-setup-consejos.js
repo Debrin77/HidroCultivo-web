@@ -232,28 +232,11 @@ function getConsejosModoUi(cfg) {
   return c.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante';
 }
 
-function refreshConsejosModoInicioUI() {
-  const m = getConsejosModoUi();
-  const bp = document.getElementById('inicioConsejosModoPrincipiante');
-  const ba = document.getElementById('inicioConsejosModoAvanzado');
-  if (bp) {
-    const on = m === 'principiante';
-    bp.classList.toggle('active', on);
-    bp.setAttribute('aria-pressed', on ? 'true' : 'false');
-  }
-  if (ba) {
-    const on = m === 'avanzado';
-    ba.classList.toggle('active', on);
-    ba.setAttribute('aria-pressed', on ? 'true' : 'false');
-  }
-}
-
 function setConsejosModoUi(modo) {
   if (!state.configTorre) state.configTorre = {};
   state.configTorre.consejosModoUi = modo === 'avanzado' ? 'avanzado' : 'principiante';
   try { guardarEstadoTorreActual(); } catch (_) {}
   try { saveState(); } catch (_) {}
-  try { refreshConsejosModoInicioUI(); } catch (_) {}
   renderConsejos();
 }
 

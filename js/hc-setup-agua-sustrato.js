@@ -715,9 +715,11 @@ function seleccionarMunicipio(nombre, ec, dureza, nota) {
   // Si EC > 600 mostrar advertencia adicional
   const warnEl = document.getElementById('warningGrifo');
   if (ec > 600) {
+    resetWarningGrifoInlineStyles();
     warnEl.classList.add('show');
     warnEl.innerHTML = `⚠️ <strong>${nombre}:</strong> EC ${ec} µS/cm — agua ${dureza.toLowerCase()}. Solo quedan ~${1400 - ec} µS/cm de margen para nutrientes. Se recomienda usar agua destilada u ósmosis.`;
   } else {
+    resetWarningGrifoInlineStyles();
     warnEl.innerHTML = `ℹ️ <strong>${nombre}:</strong> EC ${ec} µS/cm — ${dureza}. ${nota}. Ajusta la dosis de CalMag en consecuencia.`;
     warnEl.classList.add('show');
     warnEl.style.background = '#eff6ff';
@@ -744,6 +746,117 @@ function resetMunicipio() {
   const btn = document.getElementById('btnGeolocalizacion');
   if (btn) { btn.style.display = 'flex'; resetGeoBtn(); }
   cargarLocalidadMeteoUI();
+  if ((state.configAgua || '') === 'grifo') {
+    try {
+      actualizarWarningGrifoSegunEstado();
+    } catch (_) {}
+  }
+}
+
+/** Quita estilos inline del aviso de grifo (p. ej. tras mensaje informativo azul). */
+function resetWarningGrifoInlineStyles() {
+  const warnEl = document.getElementById('warningGrifo');
+  if (!warnEl) return;
+  warnEl.style.removeProperty('background');
+  warnEl.style.removeProperty('border-color');
+  warnEl.style.removeProperty('color');
+}
+
+/** Sin municipio ni EC: mensaje neutro (evita texto fijo de una sola ciudad). */
+function pintarWarningGrifoPendienteDatos() {
+  const warnEl = document.getElementById('warningGrifo');
+  if (!warnEl) return;
+  resetWarningGrifoInlineStyles();
+  warnEl.innerHTML =
+    '<svg class="hc-ico hc-ico--warn hc-ico--warn-inline" aria-hidden="true" focusable="false"><use href="#hc-i-alert-warn"/></svg> ' +
+    '<strong>Agua del grifo:</strong> indica tu <strong>municipio</strong> (abajo) o la <strong>EC medida</strong> de tu grifo para estimar margen respecto a nutrientes. ' +
+    'Sin esos datos la app no puede acertar la dureza de tu red.';
+}
+
+/**
+ * Sincroniza el aviso de grifo con state (tras init, cambio de tipo de agua o reset de municipio).
+ */
+function actualizarWarningGrifoSegunEstado() {
+  if ((state.configAgua || 'destilada') !== 'grifo') return;
+  const warnEl = document.getElementById('warningGrifo');
+  if (!warnEl) return;
+  const nombre = state.configAguaMunicipio;
+  const ecSaved = parseFloat(state.configAguaEC);
+  const ecInp = parseFloat(String(document.getElementById('inputECBaseGrifo')?.value || '').replace(',', '.'));
+  const ec = Number.isFinite(ecSaved) && ecSaved > 0 ? ecSaved : ecInp;
+  const data = nombre && AGUA_MUNICIPIOS[nombre] ? AGUA_MUNICIPIOS[nombre] : null;
+
+  if (nombre && data) {
+    seleccionarMunicipio(nombre, data.ec, data.dureza, data.nota);
+    return;
+  }
+
+  function durezaDeEc(e) {
+    if (!Number.isFinite(e) || e <= 0) return '—';
+    if (e < 300) return 'Blanda';
+    if (e < 500) return 'Media';
+    return 'Muy dura';
+  }
+
+  if (nombre && Number.isFinite(ec) && ec > 0) {
+    const dureza = durezaDeEc(ec);
+    warnEl.classList.add('show');
+    if (ec > 600) {
+      resetWarningGrifoInlineStyles();
+      warnEl.innerHTML =
+        '⚠️ <strong>' +
+        nombre +
+        ':</strong> EC ' +
+        ec +
+        ' µS/cm — agua ' +
+        String(dureza).toLowerCase() +
+        '. Solo quedan ~' +
+        (1400 - ec) +
+        ' µS/cm de margen para nutrientes. Se recomienda usar agua destilada u ósmosis.';
+    } else {
+      resetWarningGrifoInlineStyles();
+      warnEl.innerHTML =
+        'ℹ️ <strong>' +
+        nombre +
+        ':</strong> EC ' +
+        ec +
+        ' µS/cm — ' +
+        dureza +
+        ' (valor guardado o manual). Ajusta la dosis de CalMag en consecuencia.';
+      warnEl.style.background = '#eff6ff';
+      warnEl.style.borderColor = '#93c5fd';
+      warnEl.style.color = '#1e40af';
+    }
+    return;
+  }
+
+  if (Number.isFinite(ec) && ec > 0) {
+    const dureza = durezaDeEc(ec);
+    warnEl.classList.add('show');
+    if (ec > 600) {
+      resetWarningGrifoInlineStyles();
+      warnEl.innerHTML =
+        '⚠️ EC ' +
+        ec +
+        ' µS/cm (grifo) — ' +
+        String(dureza).toLowerCase() +
+        '. Solo quedan ~' +
+        (1400 - ec) +
+        ' µS/cm de margen para nutrientes. Recomendable ósmosis o destilada.';
+    } else {
+      resetWarningGrifoInlineStyles();
+      warnEl.innerHTML =
+        'ℹ️ EC base del grifo: <strong>' +
+        ec +
+        ' µS/cm</strong> (' +
+        dureza +
+        '). Ajusta CalMag según guía; confirma con municipio o medición si no reconoces el valor.';
+    }
+    return;
+  }
+
+  pintarWarningGrifoPendienteDatos();
+  warnEl.classList.add('show');
 }
 
 function setAgua(tipo) {
@@ -763,8 +876,11 @@ function setAgua(tipo) {
   const warnEl = document.getElementById('warningGrifo');
   const ecBaseEl = document.getElementById('ecBaseGrifo');
   if (tipo === 'grifo') {
-    warnEl?.classList.add('show');
     ecBaseEl?.classList.add('show');
+    warnEl?.classList.add('show');
+    try {
+      actualizarWarningGrifoSegunEstado();
+    } catch (_) {}
   } else {
     warnEl?.classList.remove('show');
     ecBaseEl?.classList.remove('show');
@@ -1533,20 +1649,33 @@ function initConfigUI() {
   if (agua === 'grifo') {
     document.getElementById('warningGrifo')?.classList.add('show');
     document.getElementById('ecBaseGrifo')?.classList.add('show');
-    // Restaurar municipio seleccionado
+    const inpMuni = document.getElementById('inputBuscarMunicipio');
     if (state.configAguaMunicipio) {
-      document.getElementById('inputBuscarMunicipio').value = state.configAguaMunicipio;
+      if (inpMuni) inpMuni.value = state.configAguaMunicipio;
       const data = AGUA_MUNICIPIOS[state.configAguaMunicipio];
       if (data) {
-        seleccionarMunicipio(state.configAguaMunicipio, data.ec, data.dureza, data.nota);
-        // Ocultar botón geo si ya hay municipio guardado
         const btn = document.getElementById('btnGeolocalizacion');
         if (btn) btn.style.display = 'none';
+        seleccionarMunicipio(state.configAguaMunicipio, data.ec, data.dureza, data.nota);
+      } else {
+        if (state.configAguaEC) {
+          const ecBF = document.getElementById('inputECBaseGrifo');
+          if (ecBF) ecBF.value = state.configAguaEC;
+          CONFIG_AGUA.grifo.ecBase = state.configAguaEC;
+        }
+        try {
+          actualizarWarningGrifoSegunEstado();
+        } catch (_) {}
       }
-    }
-    if (state.configAguaEC) {
-      document.getElementById('inputECBaseGrifo').value = state.configAguaEC;
-      CONFIG_AGUA.grifo.ecBase = state.configAguaEC;
+    } else {
+      if (state.configAguaEC) {
+        const ecBF = document.getElementById('inputECBaseGrifo');
+        if (ecBF) ecBF.value = state.configAguaEC;
+        CONFIG_AGUA.grifo.ecBase = state.configAguaEC;
+      }
+      try {
+        actualizarWarningGrifoSegunEstado();
+      } catch (_) {}
     }
   }
   if (document.getElementById('tab-mediciones')?.classList.contains('active') && typeof updateRecargaBar === 'function') {
