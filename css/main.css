@@ -51,6 +51,8 @@
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
+  /* Inicio y bloques tipo tarjeta: separación vertical homogénea entre secciones */
+  --dash-section-gap: var(--space-4);
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -2734,14 +2736,14 @@ h1.dash-greeting {
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--white);
-  margin: 14px 0 8px 0;
+  margin: var(--dash-section-gap) 0 var(--space-2) 0;
   letter-spacing: 0.02em;
   line-height: 1.35;
   padding-left: 10px;
   border-left: 3px solid var(--green);
 }
 .dash-medicion-y-cultivo {
-  margin-top: 4px;
+  margin-top: var(--dash-section-gap);
 }
 .dash-subtitle--ultima-medicion {
   margin-bottom: 10px;
@@ -2821,7 +2823,7 @@ h1.dash-greeting {
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
   padding: 10px 14px;
-  margin-bottom: 10px;
+  margin-bottom: var(--dash-section-gap);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition:
@@ -2912,7 +2914,7 @@ button.torre-summary:focus-visible,
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: var(--dash-section-gap);
 }
 .param-tile {
   display: flex;
@@ -3018,7 +3020,7 @@ button.torre-summary:focus-visible,
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: var(--dash-section-gap);
   padding: 10px 12px;
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -3155,7 +3157,7 @@ button.torre-summary:focus-visible,
 /* Aviso oficial MeteoAlarm en Inicio (flash suave) */
 .meteo-flash-aviso {
   display: block;
-  margin: 0 0 14px;
+  margin: 0 0 var(--dash-section-gap);
   border-radius: 12px;
   overflow: hidden;
   border: 1.5px solid rgba(234, 179, 8, 0.9);
@@ -3344,7 +3346,7 @@ button.torre-summary:focus-visible,
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 14px;
-  margin-bottom: 10px;
+  margin-bottom: var(--dash-section-gap);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   box-shadow: var(--card-shadow-soft);
@@ -3391,7 +3393,7 @@ button.torre-summary:focus-visible,
 .meteo-alert {
   border-radius: 14px;
   padding: 12px 14px;
-  margin-bottom: 10px;
+  margin-bottom: var(--dash-section-gap);
   display: flex;
   gap: 10px;
   align-items: flex-start;
@@ -3431,11 +3433,12 @@ button.torre-summary:focus-visible,
 .quick-actions-wrap {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: var(--space-3);
+  margin-top: var(--dash-section-gap);
+  margin-bottom: var(--dash-section-gap);
 }
 .dash-post-setup-camino {
-  margin: 0 0 14px;
+  margin: 0 0 var(--dash-section-gap);
   border-radius: 12px;
   border: 1px solid #a7f3d0;
   background: #f0fdf4;
@@ -3471,7 +3474,7 @@ button.torre-summary:focus-visible,
 
 /* Aviso persistente: EC por debajo del rango recomendado (modo auto, con trasplante/fecha) */
 .ec-transicion-aviso {
-  margin: 0 0 14px;
+  margin: 0 0 var(--dash-section-gap);
   border-radius: 12px;
   border: 1px solid #f59e0b;
   background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
@@ -3810,8 +3813,8 @@ html.hc-theme-dark .quick-btn[data-quick-icon="reset"] .hc-ico--ion-quick { colo
 
 /* Panel Seguridad de acceso (Inicio, debajo de acciones rápidas) */
 .dash-seguridad-panel {
-  margin-top: 4px;
-  margin-bottom: 12px;
+  margin-top: var(--dash-section-gap);
+  margin-bottom: var(--dash-section-gap);
   padding: 14px 14px 16px;
   border-radius: 12px;
   border: 1px solid var(--border);
@@ -3831,8 +3834,8 @@ html.hc-theme-dark .quick-btn[data-quick-icon="reset"] .hc-ico--ion-quick { colo
 
 /* Panel opciones de notificación cultivo (Inicio) */
 .dash-notif-prefs {
-  margin-top: 10px;
-  margin-bottom: 12px;
+  margin-top: var(--dash-section-gap);
+  margin-bottom: var(--dash-section-gap);
   padding: 0;
   border-radius: 12px;
   border: 1px solid rgba(37, 99, 235, 0.22);
