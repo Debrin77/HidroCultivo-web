@@ -5,56 +5,67 @@
 
 /** DD/MM/AAAA estable para comparar fechas de registro aunque vengan con o sin ceros a la izquierda. */
 function normalizarFechaRegistroDdMmYyyy(s) {
-  const p = String(s || '').trim().split('/');
-  if (p.length !== 3) return String(s || '').trim();
+  const raw = String(s ?? '').trim();
+  if (!raw) return '';
+  const iso = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (iso) {
+    const y = parseInt(iso[1], 10);
+    const m = parseInt(iso[2], 10);
+    const d = parseInt(iso[3], 10);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return raw;
+    return [String(d).padStart(2, '0'), String(m).padStart(2, '0'), String(y)].join('/');
+  }
+  const p = raw.split('/');
+  if (p.length !== 3) return raw;
   const d = parseInt(p[0], 10);
   const m = parseInt(p[1], 10);
   const y = parseInt(p[2], 10);
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return String(s || '').trim();
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return raw;
   return [String(d).padStart(2, '0'), String(m).padStart(2, '0'), String(y)].join('/');
 }
 
-/** JSON en atributo data-* (entidades para comillas). */
-function hcEscAttrJson(obj) {
-  return String(JSON.stringify(obj))
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/</g, '&lt;');
+function horasCoincidenRegistro(hA, hB) {
+  const a = String(hA ?? '').trim();
+  const b = String(hB ?? '').trim();
+  if (a === b) return true;
+  return a.slice(0, 5) === b.slice(0, 5);
 }
 
-/** Un solo listener: los botones se recrean en cada renderRegistro(). */
-function ensureRegistroHistorialDeleteDelegation() {
-  const lista = document.getElementById('registroLista');
-  if (!lista || lista.dataset.hcRegDelBound === '1') return;
-  lista.dataset.hcRegDelBound = '1';
-  lista.addEventListener('click', hcRegistroListaDeleteDelegated);
-}
-
-function hcRegistroListaDeleteDelegated(ev) {
-  const t = ev.target;
-  const btn = t && typeof t.closest === 'function' ? t.closest('button[data-hc-reg-del]') : null;
+/**
+ * Borrado desde el botón papelera (Historial → Registro).
+ * Usa onclick en el propio botón para que `this` sea siempre el botón
+ * (un clic en el emoji puede dar event.target = nodo texto sin .closest()).
+ */
+function borrarRegistroHistorialDesdeBtn(btn) {
   if (!btn) return;
-  ev.preventDefault();
-  let payload;
-  try {
-    const raw = btn.getAttribute('data-hc-reg-del');
-    payload = raw ? JSON.parse(raw) : null;
-  } catch (err) {
-    if (typeof showToast === 'function') showToast('No se pudo leer la entrada a borrar', true);
+  const slot = parseInt(String(btn.getAttribute('data-hc-slot') ?? ''), 10);
+  if (!Number.isFinite(slot) || slot < 0) return;
+  const fecha = btn.getAttribute('data-hc-fecha') || '';
+  const hora = btn.getAttribute('data-hc-hora') || '';
+  const tipo = btn.getAttribute('data-hc-tipo') || 'medicion';
+  initTorres();
+  if (!state.torres || slot >= state.torres.length) {
+    if (typeof showToast === 'function') showToast('No se encontró la instalación', true);
     return;
   }
-  if (!payload || typeof payload.slot !== 'number' || payload.slot < 0) return;
-  initTorres();
-  if (!state.torres || payload.slot >= state.torres.length) return;
-  borrarEntradaRegistroDesdeHistorial(
-    payload.slot,
-    String(payload.fecha || ''),
-    String(payload.hora || ''),
-    String(payload.tipo != null && payload.tipo !== '' ? payload.tipo : 'medicion'),
-    false,
-    false,
-    false
-  );
+  borrarEntradaRegistroDesdeHistorial(slot, fecha, hora, tipo, false, false, false);
+}
+
+/** Tras renderRegistro: listeners nativos (evita depender del ámbito global de onclick). */
+function bindRegistroListaBotonesBorrar(container) {
+  if (!container) return;
+  container.querySelectorAll('button.registro-entry-delete').forEach((btn) => {
+    btn.addEventListener('click', function hcRegistroDeleteClick(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      borrarRegistroHistorialDesdeBtn(this);
+    });
+  });
+}
+
+if (typeof window !== 'undefined') {
+  window.borrarRegistroHistorialDesdeBtn = borrarRegistroHistorialDesdeBtn;
+  window.bindRegistroListaBotonesBorrar = bindRegistroListaBotonesBorrar;
 }
 
 function borrarMedicion(fecha, hora, torreId) {
@@ -147,17 +158,35 @@ function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipCon
     if (!silentOnMissing) showToast('No se encontró la instalación', true);
     return false;
   }
-  if (!Array.isArray(t.registro)) t.registro = [];
+  /**
+   * Instalación única: alinear `state.registro` y `state.torres[slot].registro` (la UI usa uno
+   * y el findIndex el otro; si solo uno tiene filas, unificamos referencias sin machacar con []).
+   */
+  if ((state.torreActiva || 0) === slotIdx) {
+    const g = Array.isArray(state.registro) ? state.registro : [];
+    const s = Array.isArray(t.registro) ? t.registro : [];
+    if (g.length > 0) {
+      t.registro = g;
+    } else if (s.length > 0) {
+      state.registro = s;
+      t.registro = s;
+    } else {
+      t.registro = [];
+      if (!Array.isArray(state.registro)) state.registro = t.registro;
+    }
+  } else if (!Array.isArray(t.registro)) {
+    t.registro = [];
+  }
   const fechaN = normalizarFechaRegistroDdMmYyyy(fecha);
+  const fechaRaw = String(fecha || '').trim();
   const tipoQ = tipo == null || tipo === '' ? 'medicion' : String(tipo);
-  const hhmm = String(hora || '').slice(0, 5);
   const i = t.registro.findIndex(r => {
     if (!r) return false;
     const tipoR = r.tipo == null || r.tipo === '' ? 'medicion' : String(r.tipo);
     if (tipoR !== tipoQ) return false;
-    if (normalizarFechaRegistroDdMmYyyy(r.fecha) !== fechaN) return false;
-    const mh = String(r.hora || '');
-    return mh === String(hora || '') || mh.slice(0, 5) === hhmm;
+    const rfN = normalizarFechaRegistroDdMmYyyy(r.fecha);
+    if (rfN !== fechaN && String(r.fecha || '').trim() !== fechaRaw) return false;
+    return horasCoincidenRegistro(r.hora, hora);
   });
   if (i < 0) {
     if (!silentOnMissing) showToast('No se encontró la entrada', true);

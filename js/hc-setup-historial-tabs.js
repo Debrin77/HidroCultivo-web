@@ -9,9 +9,6 @@ let histRecargasDatos = [];
 
 function histTab(tab) {
   histTabActiva = tab;
-  if (tab === 'registro' && typeof ensureRegistroHistorialDeleteDelegation === 'function') {
-    ensureRegistroHistorialDeleteDelegation();
-  }
   document.querySelectorAll('.hist-tab').forEach(t => {
     t.classList.remove('active');
     t.setAttribute('aria-selected', 'false');
@@ -78,7 +75,14 @@ function recolectarRegistroTodasInstalaciones() {
     const ta = getTorreActiva();
     const tid = ta && ta.id != null ? ta.id : (state.torreActiva || 0);
     const slotIdx = state.torreActiva || 0;
-    return (state.registro || []).map(e => ({
+    let rows = state.registro;
+    const slotReg = state.torres && state.torres[slotIdx] && Array.isArray(state.torres[slotIdx].registro)
+      ? state.torres[slotIdx].registro
+      : null;
+    if ((!rows || rows.length === 0) && slotReg && slotReg.length) {
+      rows = slotReg;
+    }
+    return (rows || []).map(e => ({
       ...e,
       torreId: e.torreId != null ? e.torreId : tid,
       _slotIdx: slotIdx,
@@ -150,7 +154,6 @@ function recolectarMedicionesTodasInstalaciones() {
 }
 
 function cargarHistorial() {
-  if (typeof ensureRegistroHistorialDeleteDelegation === 'function') ensureRegistroHistorialDeleteDelegation();
   document.getElementById('histLoader').style.display = 'none';
   document.getElementById('histSinDatos').classList.add('setup-hidden');
   ['histMediciones', 'histRecargas', 'histRegistroPanel', 'histDiarioPanel'].forEach(id => {
@@ -548,10 +551,6 @@ function renderRegistro() {
       }
       const slotIdx = typeof e._slotIdx === 'number' ? e._slotIdx : (state.torreActiva || 0);
       const tipoDel = e.tipo == null || e.tipo === '' ? 'medicion' : String(e.tipo);
-      const delPayload =
-        typeof hcEscAttrJson === 'function'
-          ? hcEscAttrJson({ slot: slotIdx, fecha: e.fecha || '', hora: e.hora || '', tipo: tipoDel })
-          : '';
       return '<div class="registro-entry-card" style="--reg-bg:' + c.bg + ';--reg-bd:' + c.border + ';--reg-badge:' + c.color + '">' +
         '<div class="registro-entry-head">' +
           '<div class="registro-entry-left">' +
@@ -575,7 +574,11 @@ function renderRegistro() {
           '</div>' +
           '<div class="registro-entry-right">' +
             '<span class="registro-entry-time">' + (e.hora||'') + '</span>' +
-            '<button type="button" class="registro-entry-delete" data-hc-reg-del="' + delPayload + '" ' +
+            '<button type="button" class="registro-entry-delete" ' +
+              'data-hc-slot="' + slotIdx + '" ' +
+              'data-hc-fecha="' + escRegistroAttr(e.fecha || '') + '" ' +
+              'data-hc-hora="' + escRegistroAttr(e.hora || '') + '" ' +
+              'data-hc-tipo="' + escRegistroAttr(tipoDel) + '" ' +
               'title="Borrar entrada" aria-label="Borrar entrada">🗑</button>' +
           '</div>' +
         '</div>' +
@@ -588,6 +591,7 @@ function renderRegistro() {
       cols + '</div>';
   }).join('');
   void hydrateRegistroFotoThumbs(lista);
+  if (typeof bindRegistroListaBotonesBorrar === 'function') bindRegistroListaBotonesBorrar(lista);
 }
 
 
