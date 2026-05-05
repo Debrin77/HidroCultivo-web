@@ -165,25 +165,6 @@ function nftGetObjetivoSpec(objetivo) {
   };
 }
 
-function textoAjustesObjetivoTorreSistema(cfg, objetivo) {
-  const c = cfg || state.configTorre || {};
-  const adj = torreGetObjetivoAjustes(c, objetivo);
-  const ecPct = Math.round((adj.ecMult - 1) * 100);
-  const diasPct = Math.round((adj.diasMult - 1) * 100);
-  const ecTxt = (ecPct >= 0 ? '+' : '') + ecPct + '%';
-  const pHTxt = (adj.phShift >= 0 ? '+' : '') + (Math.round(adj.phShift * 10) / 10);
-  const diasTxt = (diasPct >= 0 ? '+' : '') + diasPct + '%';
-  return (
-    'Perfil activo: EC ' +
-    ecTxt +
-    ' · pH ' +
-    pHTxt +
-    ' · ciclo ' +
-    diasTxt +
-    ' vs estándar. Ajuste orientativo para torre.'
-  );
-}
-
 /** Etiquetas de nivel y plaza según tipo de instalación (índices 1-based en texto). */
 function labelsUbicacionInstalacion(tipoInstal) {
   const t = tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'torre' ? tipoInstal : 'torre';
@@ -1219,17 +1200,6 @@ function sincronizarSistemaNftMontajeUI() {
       torreObj.style.display = 'block';
       const sel = document.getElementById('sysTorreObjetivoCultivo');
       if (sel) sel.value = torreGetObjetivoCultivo(cfg);
-      const hint = document.getElementById('sysTorreObjetivoHint');
-      if (hint) {
-        const sp = torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg));
-        hint.classList.remove('setup-hidden');
-        hint.textContent = 'Referencia: ' + sp.densidadTxt + ' · ' + sp.cicloTxt + '.';
-      }
-      const adj = document.getElementById('sysTorreObjetivoAjustes');
-      if (adj) {
-        adj.classList.remove('setup-hidden');
-        adj.textContent = textoAjustesObjetivoTorreSistema(cfg, torreGetObjetivoCultivo(cfg));
-      }
     } else {
       torreObj.style.display = 'none';
     }
@@ -1350,11 +1320,6 @@ function aplicarSistemaTorreObjetivoDesdeFormulario() {
   const sel = document.getElementById('sysTorreObjetivoCultivo');
   const objetivo = torreNormalizeObjetivoCultivo(sel && sel.value);
   state.configTorre.torreObjetivoCultivo = objetivo;
-  const adj = document.getElementById('sysTorreObjetivoAjustes');
-  if (adj) {
-    adj.classList.remove('setup-hidden');
-    adj.textContent = textoAjustesObjetivoTorreSistema(state.configTorre, objetivo);
-  }
   guardarEstadoTorreActual();
   saveState();
   try { renderTorreSistemaResumenTabla(state.configTorre); } catch (_) {}
