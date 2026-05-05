@@ -103,6 +103,18 @@ function setWelcomeTheme(theme) {
   try { localStorage.setItem(HC_WELCOME_THEME_PREVIEW_KEY, t); } catch (_) {}
 }
 
+function applyWelcomeScrollLock(open) {
+  try {
+    const v = open ? 'auto' : '';
+    document.documentElement.style.overflowY = v;
+    document.documentElement.style.overscrollBehaviorY = open ? 'auto' : '';
+    document.documentElement.style.touchAction = open ? 'pan-y' : '';
+    document.body.style.overflowY = v;
+    document.body.style.overscrollBehaviorY = open ? 'auto' : '';
+    document.body.style.touchAction = open ? 'pan-y' : '';
+  } catch (_) {}
+}
+
 function resetBienvenidaParaPruebas() {
   try { localStorage.removeItem(HC_BIENVENIDA_KEY); } catch (_) {}
   try {
@@ -125,6 +137,7 @@ function resetBienvenidaParaPruebas() {
       setWelcomeTheme('light');
     }
     try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
+    applyWelcomeScrollLock(true);
     try { document.addEventListener('keydown', _welcomeGuideOnKeydown); } catch (_) {}
     try {
       const nb = document.getElementById('welcomeBtnEmpezar');
@@ -235,6 +248,7 @@ function mostrarBienvenidaOContinuarArranque(opts) {
     ov.classList.remove('setup-hidden');
     ov.setAttribute('aria-hidden', 'false');
     try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
+    applyWelcomeScrollLock(true);
     try {
       const tSaved = localStorage.getItem(HC_WELCOME_THEME_PREVIEW_KEY);
       setWelcomeTheme(tSaved === 'dark' ? 'dark' : 'light');
@@ -266,6 +280,7 @@ function cerrarBienvenidaPrimeraVez(opts) {
     ov.setAttribute('aria-hidden', 'true');
   }
   try { document.body.classList.remove('hc-welcome-open'); } catch (_) {}
+  applyWelcomeScrollLock(false);
   try { document.removeEventListener('keydown', _welcomeGuideOnKeydown); } catch (_) {}
   if (!opts || !opts.skipLanzarSetup) {
     lanzarSetupOChecklistSiCorresponde();
