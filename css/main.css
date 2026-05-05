@@ -272,6 +272,7 @@ body {
 /* Durante la bienvenida permitimos scroll vertical del documento/overlay en móvil. */
 body.hc-welcome-open {
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior-y: auto;
 }
 
@@ -2535,7 +2536,9 @@ button.aviso-cestas-ir:active {
   -webkit-backdrop-filter: blur(10px);
   pointer-events: auto;
   overflow-y: auto;
+  overflow-x: hidden;
   overscroll-behavior: contain;
+  overscroll-behavior-x: none;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
 }
@@ -2617,7 +2620,7 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
 }
 @media (max-width: 420px) {
   .welcome-card--guide {
-    overflow: visible;
+    overflow: hidden;
   }
 }
 .welcome-card--guide::before {
@@ -3028,12 +3031,15 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
 @media (max-width: 420px) {
   .welcome-overlay {
     align-items: flex-start;
+    justify-content: center;
     padding-top: max(12px, env(safe-area-inset-top, 12px));
     padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
   }
   .welcome-card--guide {
     max-height: none;
     width: 100%;
+    margin-left: auto;
+    margin-right: auto;
   }
   .welcome-kpis {
     gap: 5px;

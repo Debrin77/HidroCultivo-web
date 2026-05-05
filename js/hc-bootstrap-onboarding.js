@@ -106,11 +106,16 @@ function setWelcomeTheme(theme) {
 function applyWelcomeScrollLock(open) {
   try {
     const v = open ? 'auto' : '';
+    const x = open ? 'hidden' : '';
     document.documentElement.style.overflowY = v;
+    document.documentElement.style.overflowX = x;
     document.documentElement.style.overscrollBehaviorY = open ? 'auto' : '';
+    document.documentElement.style.overscrollBehaviorX = open ? 'none' : '';
     document.documentElement.style.touchAction = open ? 'pan-y' : '';
     document.body.style.overflowY = v;
+    document.body.style.overflowX = x;
     document.body.style.overscrollBehaviorY = open ? 'auto' : '';
+    document.body.style.overscrollBehaviorX = open ? 'none' : '';
     document.body.style.touchAction = open ? 'pan-y' : '';
   } catch (_) {}
 }
