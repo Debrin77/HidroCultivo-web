@@ -107,6 +107,9 @@ function applyWelcomeScrollLock(open) {
   try {
     const v = open ? 'auto' : '';
     const x = open ? 'hidden' : '';
+    try {
+      document.documentElement.classList.toggle('hc-welcome-open', !!open);
+    } catch (_) {}
     document.documentElement.style.overflowY = v;
     document.documentElement.style.overflowX = x;
     document.documentElement.style.overscrollBehaviorY = open ? 'auto' : '';

@@ -274,7 +274,10 @@ body {
 body.hc-welcome-open {
   overflow-y: auto;
   overflow-x: hidden;
+  max-width: 100vw;
   overscroll-behavior-y: auto;
+  overscroll-behavior-x: none;
+  touch-action: pan-y;
 }
 
 /* ══ SPLASH SCREEN ══ */
@@ -2538,10 +2541,16 @@ button.aviso-cestas-ir:active {
   pointer-events: auto;
   overflow-y: auto;
   overflow-x: hidden;
+  max-width: 100vw;
   overscroll-behavior: contain;
   overscroll-behavior-x: none;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
+}
+html.hc-welcome-open,
+body.hc-welcome-open,
+body.hc-welcome-open .welcome-overlay {
+  overflow-x: clip !important;
 }
 body.hc-welcome-open .welcome-overlay {
   animation: welcomeOverlayFadeIn 220ms ease-out;
@@ -2693,7 +2702,7 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   background: rgba(255, 255, 255, 0.86);
   border-radius: 999px;
   padding: 5px 10px;
-  font-size: 13px;
+  font-size: 14px;
   color: #1f2937;
   box-shadow:
     0 7px 16px rgba(15, 23, 42, 0.12),
@@ -2701,7 +2710,7 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
 }
 .welcome-kpi strong {
   color: #0f766e;
-  font-size: 13px;
+  font-size: 14px;
 }
 .welcome-kpi .hc-ico {
   width: 15px;
