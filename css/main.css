@@ -762,12 +762,35 @@ button.pin-key {
   border-left: 1px solid rgba(148, 163, 184, 0.38);
 }
 
-/* Acento de pestaña activa = marca (verde); coherencia “producto” */
+/* Acento de pestaña activa = marca (verde en cromo); icono con tinte propio (coherente con acciones rápidas) */
 .tab-btn.active {
   color: var(--green);
 }
+.tab-btn.active svg.hc-ico--ion-tab {
+  color: var(--green);
+}
+.tab-btn.active#btn-mediciones svg.hc-ico--ion-tab { color: #2563eb; }
+.tab-btn.active#btn-sistema svg.hc-ico--ion-tab { color: #475569; }
+.tab-btn.active#btn-calendario svg.hc-ico--ion-tab { color: #ea580c; }
+.tab-btn.active#btn-riego svg.hc-ico--ion-tab { color: #0891b2; }
+.tab-btn.active#btn-meteo svg.hc-ico--ion-tab { color: #0ea5e9; }
+.tab-btn.active#btn-historial svg.hc-ico--ion-tab { color: #7c3aed; }
+.tab-btn.active#btn-consejos svg.hc-ico--ion-tab { color: #0d9488; }
+.tab-btn.active#btn-ayuda svg.hc-ico--ion-tab { color: #64748b; }
+html.hc-theme-dark .tab-btn.active svg.hc-ico--ion-tab { color: var(--green); }
+html.hc-theme-dark .tab-btn.active#btn-mediciones svg.hc-ico--ion-tab { color: #60a5fa; }
+html.hc-theme-dark .tab-btn.active#btn-sistema svg.hc-ico--ion-tab { color: #94a3b8; }
+html.hc-theme-dark .tab-btn.active#btn-calendario svg.hc-ico--ion-tab { color: #fb923c; }
+html.hc-theme-dark .tab-btn.active#btn-riego svg.hc-ico--ion-tab { color: #22d3ee; }
+html.hc-theme-dark .tab-btn.active#btn-meteo svg.hc-ico--ion-tab { color: #38bdf8; }
+html.hc-theme-dark .tab-btn.active#btn-historial svg.hc-ico--ion-tab { color: #a78bfa; }
+html.hc-theme-dark .tab-btn.active#btn-consejos svg.hc-ico--ion-tab { color: #2dd4bf; }
+html.hc-theme-dark .tab-btn.active#btn-ayuda svg.hc-ico--ion-tab { color: #94a3b8; }
 .tab-btn.active svg {
-  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--green) 45%, transparent));
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.12));
+}
+html.hc-theme-dark .tab-btn.active svg {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.45));
 }
 .tab-btn.active::before {
   content: '';
