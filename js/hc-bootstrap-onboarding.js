@@ -107,9 +107,30 @@ function resetBienvenidaParaPruebas() {
   try { localStorage.removeItem(HC_BIENVENIDA_KEY); } catch (_) {}
   try {
     const ov = document.getElementById('welcomeOverlay');
-    if (ov && !ov.classList.contains('setup-hidden')) return;
-    mostrarBienvenidaOContinuarArranque({ forceShow: true });
-    const abierta = ov && !ov.classList.contains('setup-hidden');
+    if (!ov) {
+      if (typeof showToast === 'function') showToast('No se encontró la bienvenida', true);
+      return;
+    }
+    if (!ov.classList.contains('setup-hidden')) {
+      if (typeof showToast === 'function') showToast('La bienvenida ya está abierta');
+      return;
+    }
+    // Apertura forzada para pruebas en móvil: evita bloqueos por reglas de "ya hay datos".
+    ov.classList.remove('setup-hidden');
+    ov.setAttribute('aria-hidden', 'false');
+    try {
+      const tSaved = localStorage.getItem(HC_WELCOME_THEME_PREVIEW_KEY);
+      setWelcomeTheme(tSaved === 'dark' ? 'dark' : 'light');
+    } catch (_) {
+      setWelcomeTheme('light');
+    }
+    try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
+    try { document.addEventListener('keydown', _welcomeGuideOnKeydown); } catch (_) {}
+    try {
+      const nb = document.getElementById('welcomeBtnEmpezar');
+      if (nb && typeof nb.focus === 'function') setTimeout(() => nb.focus(), 50);
+    } catch (_) {}
+    const abierta = !ov.classList.contains('setup-hidden');
     if (typeof showToast === 'function') {
       showToast(abierta ? 'Guia de bienvenida reabierta' : 'No se pudo reabrir la bienvenida', !abierta);
     }
