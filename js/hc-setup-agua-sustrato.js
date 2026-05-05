@@ -1295,7 +1295,7 @@ function refreshUbicacionInstalacionUI() {
     const icon = document.createElement('span');
     icon.className = 'riego-localidad-icon';
     icon.setAttribute('aria-hidden', 'true');
-    icon.textContent = '📍 ';
+    icon.innerHTML = '<svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false" aria-hidden="true"><use href="#hc-i-pin-mapa"/></svg> ';
     const body = document.createElement('span');
     body.textContent = txt ? txt : 'Sin municipio — indícalo en Medir';
     if (!txt) body.classList.add('riego-localidad-line--vacío');

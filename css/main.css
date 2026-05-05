@@ -112,6 +112,13 @@
 .hc-ico--muted {
   color: var(--muted);
 }
+/* Ubicación del sistema / meteorología: pin relleno rojo (lectura habitual tipo mapas) */
+.hc-ico--ubicacion-mapa {
+  color: #e53835;
+}
+html.hc-theme-dark .hc-ico--ubicacion-mapa {
+  color: #ff5c52;
+}
 .hc-ico--banner {
   width: 20px;
   height: 20px;
@@ -4338,7 +4345,7 @@ button.torre-summary:focus-visible,
 }
 .riego-localidad-line {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   flex-wrap: wrap;
   gap: 4px;
   font-size: 13px;
@@ -4353,6 +4360,13 @@ button.torre-summary:focus-visible,
 }
 .riego-localidad-icon {
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+.riego-localidad-icon .hc-ico {
+  width: 16px;
+  height: 16px;
 }
 
 /* Riego — día/mañana, opciones avanzadas, paneles NFT/DWC, tarjetas programa */
@@ -4826,6 +4840,12 @@ button.torre-summary:focus-visible,
   height: 14px;
   flex-shrink: 0;
   color: var(--muted);
+}
+.hc-ico--caption.hc-ico--ubicacion-mapa {
+  color: #e53835;
+}
+html.hc-theme-dark .hc-ico--caption.hc-ico--ubicacion-mapa {
+  color: #ff5c52;
 }
 .mediodia-header-ico {
   display: flex;

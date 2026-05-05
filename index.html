@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-05-ionicons-tabs">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-05-pin-ubicacion-rojo">
 </head>
 <body>
   <script src="js/hc-theme.js?v=1"></script>
@@ -45,6 +45,7 @@
     <symbol id="hc-i-pause" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" d="M9 7v10M15 7v10"/></symbol>
     <symbol id="hc-i-leaf" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M11 20A7 7 0 0 1 9.8 6.1C15 5 20 10 20 15a7 7 0 0 1-9 5zm0 0c0-4-1-7-4-10"/></symbol>
     <symbol id="hc-i-pin" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M12 21s7-6.43 7-11a7 7 0 1 0-14 0c0 4.57 7 11 7 11z"/><circle cx="12" cy="10" r="2.25" fill="none" stroke="currentColor" stroke-width="1.75"/></symbol>
+    <symbol id="hc-i-pin-mapa" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s7-6.43 7-11a7 7 0 1 0-14 0c0 4.57 7 11 7 11z"/><circle cx="12" cy="10" r="3" fill="#fff"/></symbol>
     <symbol id="hc-i-flask" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M10 2h4v3l4 10v2a3 3 0 0 1-3 3H9a3 3 0 0 1-3-3v-2l4-10V2"/><path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M9 14h6"/></symbol>
     <symbol id="hc-i-bolt" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M13 2 3 14h8l-1 8 10-12h-8l1-8z"/></symbol>
     <symbol id="hc-i-therm" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" d="M10 14V4a2 2 0 1 1 4 0v10a4 4 0 1 1-4 0z"/><circle cx="12" cy="18" r="1.5" fill="currentColor"/></symbol>
@@ -118,6 +119,10 @@
     <symbol id="hc-i-ion-stats-chart" viewBox="0 0 512 512"><rect x="64" y="320" width="48" height="160" rx="8" ry="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="288" y="224" width="48" height="256" rx="8" ry="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="400" y="112" width="48" height="368" rx="8" ry="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="176" y="32" width="48" height="448" rx="8" ry="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></symbol>
     <symbol id="hc-i-ion-information-circle" viewBox="0 0 512 512"><path d="M248 64C146.39 64 64 146.39 64 248s82.39 184 184 184 184-82.39 184-184S349.61 64 248 64z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M220 220h32v116"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M208 340h88"/><path d="M248 130a26 26 0 1026 26 26 26 0 00-26-26z" fill="currentColor"/></symbol>
     <symbol id="hc-i-ion-help-circle" viewBox="0 0 512 512"><path d="M256 80a176 176 0 10176 176A176 176 0 00256 80z" fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="32"/><path d="M200 202.29s.84-17.5 19.57-32.57C230.68 160.77 244 158.18 256 158c10.93-.14 20.69 1.67 26.53 4.45 10 4.76 29.47 16.38 29.47 41.09 0 26-17 37.81-36.37 50.8S251 281.43 251 296" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="28"/><circle cx="250" cy="348" r="20" fill="currentColor"/></symbol>
+    <symbol id="hc-i-ion-refresh" viewBox="0 0 512 512"><path d="M320 146s24.36-12-64-12a160 160 0 10160 160" fill="none" stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32"/><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M256 58l80 80-80 80"/></symbol>
+    <symbol id="hc-i-ion-lock-closed" viewBox="0 0 512 512"><path d="M336 208v-95a80 80 0 00-160 0v95" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><rect x="96" y="208" width="320" height="272" rx="48" ry="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></symbol>
+    <symbol id="hc-i-ion-notifications" viewBox="0 0 512 512"><path d="M427.68 351.43C402 320 383.87 304 383.87 217.35 383.87 138 343.35 109.73 310 96c-4.43-1.82-8.6-6-9.95-10.55C294.2 65.54 277.8 48 256 48s-38.21 17.55-44 37.47c-1.35 4.6-5.52 8.71-9.95 10.53-33.39 13.75-73.87 41.92-73.87 121.35C128.13 304 110 320 84.32 351.43 73.68 364.45 83 384 101.61 384h308.88c18.51 0 27.77-19.61 17.19-32.57zM320 384v16a64 64 0 01-128 0v-16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></symbol>
+    <symbol id="hc-i-ion-trash" viewBox="0 0 512 512"><path d="M112 112l20 320c.95 18.49 14.4 32 32 32h184c17.67 0 30.87-13.51 32-32l20-320" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="32" d="M80 112h352"/><path d="M192 112V72h0a23.93 23.93 0 0124-24h80a23.93 23.93 0 0124 24h0v40M256 176v224M184 176l8 224M328 176l-8 224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="32"/></symbol>
   </defs>
 </svg>
 
@@ -323,7 +328,7 @@
 
       <p class="dash-block-label" id="dashUbicacionLabel">Ubicación del sistema</p>
       <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite" aria-labelledby="dashUbicacionLabel">
-        <span class="dash-localidad-clima-icon" aria-hidden="true"><svg class="hc-ico hc-ico--muted" focusable="false"><use href="#hc-i-pin"/></svg></span>
+        <span class="dash-localidad-clima-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false"><use href="#hc-i-pin-mapa"/></svg></span>
         <span id="dashLocalidadClimaText" class="dash-localidad-clima-text">—</span>
       </div>
       </div>
@@ -428,52 +433,52 @@
       <!-- 6. Acciones rápidas: núcleo siempre visible; resto en «Más» hasta tener config + medición -->
       <div class="quick-actions-wrap" id="quickActionsWrap">
         <div class="quick-actions quick-actions--core">
-        <button type="button" class="quick-btn" onclick="goTab('mediciones')" aria-label="Nueva medición">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-chart"/></svg></span>
+        <button type="button" class="quick-btn" data-quick-icon="mediciones" onclick="goTab('mediciones')" aria-label="Nueva medición">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-pulse"/></svg></span>
           <span>Nueva medición</span>
         </button>
-        <button type="button" class="quick-btn" onclick="goTab('riego')" aria-label="Ver riego">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-droplet"/></svg></span>
+        <button type="button" class="quick-btn" data-quick-icon="riego" onclick="goTab('riego')" aria-label="Ver riego">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-water"/></svg></span>
           <span>Ver riego</span>
         </button>
-        <button type="button" class="quick-btn" onclick="goTab('meteo')" aria-label="Ver meteorología">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-cloud-sun"/></svg></span>
+        <button type="button" class="quick-btn" data-quick-icon="meteo" onclick="goTab('meteo')" aria-label="Ver meteorología">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-cloudy"/></svg></span>
           <span>Meteorología</span>
         </button>
-        <button type="button" class="quick-btn" onclick="goTab('historial')" aria-label="Ver historial">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-trend"/></svg></span>
+        <button type="button" class="quick-btn" data-quick-icon="historial" onclick="goTab('historial')" aria-label="Ver historial">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-stats-chart"/></svg></span>
           <span>Historial</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-info" onclick="abrirSetup()"
+        <button type="button" class="quick-btn quick-btn-info" data-quick-icon="sistema" onclick="abrirSetup()"
           aria-label="Editar la instalación activa: abre el asistente con los datos ya guardados"
           title="Edita tipo de sistema, geometría, nutrientes y ubicación de la instalación que está activa. No exige mediciones previas. Para crear otra instalación aparte, en Sistema usa «Nuevo sistema».">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-cog"/></svg></span>
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-settings"/></svg></span>
           <span>Editar instalación</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-warn" onclick="intentarAbrirChecklistDesdeInicio(false)" aria-label="Abrir checklist de recarga de la instalación activa">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-refresh"/></svg></span>
+        <button type="button" class="quick-btn quick-btn-warn" data-quick-icon="recarga" onclick="intentarAbrirChecklistDesdeInicio(false)" aria-label="Abrir checklist de recarga de la instalación activa">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-refresh"/></svg></span>
           <span>Iniciar recarga</span>
         </button>
         </div>
         <details class="quick-actions-more" id="quickActionsMore">
           <summary class="quick-actions-more-summary" id="quickActionsMoreSummary">Más opciones (seguridad, alertas…)</summary>
           <div class="quick-actions quick-actions--extra">
-        <button type="button" class="quick-btn quick-btn-info" id="btnSeguridadAccesoInicio"
+        <button type="button" class="quick-btn quick-btn-info" data-quick-icon="seguridad" id="btnSeguridadAccesoInicio"
           onclick="toggleSeguridadAccesoInicio()" aria-expanded="false"
           aria-controls="panelSeguridadAccesoInicio" aria-label="Abrir opciones de seguridad de acceso">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-lock"/></svg></span>
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-lock-closed"/></svg></span>
           <span>Seguridad de acceso</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-info quick-btn-hidden" id="btnActivarNotif"
+        <button type="button" class="quick-btn quick-btn-info quick-btn-hidden" data-quick-icon="alertas" id="btnActivarNotif"
           onclick="activarNotificacionesDesdeInicio(event)"
           aria-label="Activar notificaciones y alertas meteorológicas"
           title="Permite avisos en el dispositivo: MeteoAlarm/AEMET en tu zona. Recarga, medición y cosecha son opcionales (casillas en Inicio, debajo de acciones rápidas)."
           >
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bell"/></svg></span>
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-notifications"/></svg></span>
           <span>Activar alertas</span>
         </button>
-        <button type="button" class="quick-btn quick-btn-danger" onclick="resetApp()" aria-label="Borrar todos los datos del sistema">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-trash"/></svg></span>
+        <button type="button" class="quick-btn quick-btn-danger" data-quick-icon="reset" onclick="resetApp()" aria-label="Borrar todos los datos del sistema">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-trash"/></svg></span>
           <span class="quick-btn-danger-text">Reset sistema</span>
         </button>
           </div>
@@ -644,7 +649,7 @@
             <!-- Botón geolocalización -->
             <button type="button" id="btnGeolocalizacion" onclick="detectarMunicipio()"
               class="medir-geo-btn">
-              <span class="medir-geo-btn-ico" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-pin"/></svg></span><span>Detectar mi municipio automáticamente</span>
+              <span class="medir-geo-btn-ico" aria-hidden="true"><svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false"><use href="#hc-i-pin-mapa"/></svg></span><span>Detectar mi municipio automáticamente</span>
             </button>
 
             <!-- Estado geolocalización -->
@@ -711,7 +716,7 @@
 
         <div class="config-section" id="panelLocalidadMeteo">
           <div class="medir-localidad-cab">
-            <span class="medir-localidad-cab-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-pin"/></svg></span>
+            <span class="medir-localidad-cab-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false"><use href="#hc-i-pin-mapa"/></svg></span>
             <span class="medir-localidad-cab-label" id="labelLocalidadMeteoCab">Municipio (clima y avisos)</span>
           </div>
           <div class="medir-localidad-meteo-row">
@@ -2249,7 +2254,7 @@
     <div class="tab-panel" id="tab-meteo" role="tabpanel" aria-labelledby="btn-meteo" aria-hidden="true">
 
       <h1 class="section-title section-title--with-ico"><svg class="hc-ico hc-ico--section" aria-hidden="true" focusable="false"><use href="#hc-i-cloud-sun"/></svg><span><span class="accent">Meteorología</span></span></h1>
-      <div class="meteo-ubic-caption"><svg class="hc-ico hc-ico--caption" aria-hidden="true" focusable="false"><use href="#hc-i-pin"/></svg> Ubicación actual: <strong id="meteoUbicacionActual">—</strong></div>
+      <div class="meteo-ubic-caption"><svg class="hc-ico hc-ico--caption hc-ico--ubicacion-mapa" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg> Ubicación actual: <strong id="meteoUbicacionActual">—</strong></div>
 
       <div id="meteoMeteoclimaticBox" class="meteo-meteoclimatic-box setup-hidden" role="region" aria-label="Datos de estación cercana Meteoclimatic">
         <div id="meteoMeteoclimaticInner" class="meteo-meteoclimatic-inner"></div>
@@ -3532,7 +3537,7 @@
       <div class="setup-subtitle">Esto afecta al cálculo de riego, alertas de temperatura y necesidades de luz.</div>
 
       <!-- Interior / Exterior -->
-      <div class="setup-block-title"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-pin"/></svg> ¿Dónde estará tu sistema?</div>
+      <div class="setup-block-title"><svg class="hc-ico hc-ico--ubicacion-mapa" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg> ¿Dónde estará tu sistema?</div>
       <div class="setup-grid-2 setup-grid-gap-10 setup-mb-16">
         <button type="button" class="equip-card equip-card-pad-14" id="locExterior" onclick="seleccionarUbicacion('exterior')">
           <div class="setup-loc-icon"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-sun"/></svg></div>
@@ -3623,7 +3628,7 @@
 
       <!-- Ciudad para meteo (si es exterior) -->
       <div id="seccionCiudadUbicacion" class="setup-mt-12">
-        <div class="setup-block-title setup-mb-8"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-pin"/></svg> Ciudad de esta instalación (meteorología)</div>
+        <div class="setup-block-title setup-mb-8"><svg class="hc-ico hc-ico--ubicacion-mapa" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg> Ciudad de esta instalación (meteorología)</div>
         <p class="setup-note-ubic-torre">Cada sistema puede estar en un sitio distinto: aquí defines el clima y coordenadas <strong>solo para la instalación</strong> que estás configurando. Cambia de instalación en Inicio/Sistema y podrás tener otro municipio.</p>
         <input type="text" id="setupCiudad2" placeholder="Ciudad para meteo (nombre en castellano o valencià)"
           aria-label="Ciudad para datos meteorológicos"
@@ -4099,7 +4104,7 @@
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=1"></script>
   <script src="js/hc-setup-registro.js?v=4"></script>
-  <script src="js/hc-setup-agua-sustrato.js?v=5"></script>
+  <script src="js/hc-setup-agua-sustrato.js?v=6"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=8"></script>
   <script src="js/hc-setup-checklist.js?v=13"></script>
   <script src="js/hc-setup-historial-tabs.js?v=5"></script>
@@ -4113,6 +4118,6 @@
   <script src="js/app-hc-medicion-toast.js?v=3"></script>
   <script src="js/app-hc-setup-onboarding.js?v=3"></script>
   <script src="js/app-hc-torres-badges-notifs.js?v=15"></script>
-  <script src="js/app-hc-pwa-fotodb.js?v=9"></script>
+  <script src="js/app-hc-pwa-fotodb.js?v=10"></script>
 </body>
 </html>
