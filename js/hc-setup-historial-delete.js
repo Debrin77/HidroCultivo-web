@@ -31,6 +31,27 @@ function horasCoincidenRegistro(hA, hB) {
   return a.slice(0, 5) === b.slice(0, 5);
 }
 
+function normalizarTipoRegistroBorrado(t) {
+  const s = String(t ?? '').trim().toLowerCase();
+  if (!s) return 'medicion';
+  return s;
+}
+
+function buscarIndiceRegistroEnTorre(registroArr, fecha, hora, tipoQ) {
+  if (!Array.isArray(registroArr)) return -1;
+  const fechaN = normalizarFechaRegistroDdMmYyyy(fecha);
+  const fechaRaw = String(fecha || '').trim();
+  const tipoNorm = normalizarTipoRegistroBorrado(tipoQ);
+  return registroArr.findIndex(r => {
+    if (!r) return false;
+    const tipoR = normalizarTipoRegistroBorrado(r.tipo);
+    if (tipoR !== tipoNorm) return false;
+    const rfN = normalizarFechaRegistroDdMmYyyy(r.fecha);
+    if (rfN !== fechaN && String(r.fecha || '').trim() !== fechaRaw) return false;
+    return horasCoincidenRegistro(r.hora, hora);
+  });
+}
+
 /**
  * Borrado desde el botón papelera (Historial → Registro).
  * Usa onclick en el propio botón para que `this` sea siempre el botón
@@ -51,21 +72,24 @@ function borrarRegistroHistorialDesdeBtn(btn) {
   borrarEntradaRegistroDesdeHistorial(slot, fecha, hora, tipo, false, false, false);
 }
 
-/** Tras renderRegistro: listeners nativos (evita depender del ámbito global de onclick). */
-function bindRegistroListaBotonesBorrar(container) {
-  if (!container) return;
-  container.querySelectorAll('button.registro-entry-delete').forEach((btn) => {
-    btn.addEventListener('click', function hcRegistroDeleteClick(ev) {
-      ev.preventDefault();
-      ev.stopPropagation();
-      borrarRegistroHistorialDesdeBtn(this);
-    });
+/** Un solo listener en #registroLista: sobrevive a innerHTML y encuentra el botón con closest (emoji / SVG). */
+function ensureRegistroListaDeleteDelegation() {
+  const lista = document.getElementById('registroLista');
+  if (!lista || lista.dataset.hcRegDelBound === '1') return;
+  lista.dataset.hcRegDelBound = '1';
+  lista.addEventListener('click', function hcRegistroListaDelEv(ev) {
+    const raw = ev.target;
+    const btn = raw && typeof raw.closest === 'function' ? raw.closest('button.registro-entry-delete') : null;
+    if (!btn || !lista.contains(btn)) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    borrarRegistroHistorialDesdeBtn(btn);
   });
 }
 
 if (typeof window !== 'undefined') {
   window.borrarRegistroHistorialDesdeBtn = borrarRegistroHistorialDesdeBtn;
-  window.bindRegistroListaBotonesBorrar = bindRegistroListaBotonesBorrar;
+  window.ensureRegistroListaDeleteDelegation = ensureRegistroListaDeleteDelegation;
 }
 
 function borrarMedicion(fecha, hora, torreId) {
@@ -151,9 +175,8 @@ function borrarMedicion(fecha, hora, torreId) {
 function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipConfirm, suppressToast, silentOnMissing) {
   if (!skipConfirm && !confirm('¿Borrar esta entrada del registro?')) return false;
   initTorres();
-  /** No llamar guardarEstadoTorreActual() aquí: copia state.registro → slot activo y puede
-   *  machacar torres[slotIdx].registro antes del findIndex si las referencias divergieron. */
-  const t = state.torres[slotIdx];
+  /** No llamar guardarEstadoTorreActual() antes del findIndex: copia state.registro → slot activo. */
+  let t = state.torres[slotIdx];
   if (!t) {
     if (!silentOnMissing) showToast('No se encontró la instalación', true);
     return false;
@@ -177,17 +200,24 @@ function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipCon
   } else if (!Array.isArray(t.registro)) {
     t.registro = [];
   }
-  const fechaN = normalizarFechaRegistroDdMmYyyy(fecha);
-  const fechaRaw = String(fecha || '').trim();
   const tipoQ = tipo == null || tipo === '' ? 'medicion' : String(tipo);
-  const i = t.registro.findIndex(r => {
-    if (!r) return false;
-    const tipoR = r.tipo == null || r.tipo === '' ? 'medicion' : String(r.tipo);
-    if (tipoR !== tipoQ) return false;
-    const rfN = normalizarFechaRegistroDdMmYyyy(r.fecha);
-    if (rfN !== fechaN && String(r.fecha || '').trim() !== fechaRaw) return false;
-    return horasCoincidenRegistro(r.hora, hora);
-  });
+  let slotUsed = slotIdx;
+  let i = buscarIndiceRegistroEnTorre(t.registro, fecha, hora, tipoQ);
+  if (i < 0 && Array.isArray(state.torres)) {
+    for (let s = 0; s < state.torres.length; s++) {
+      if (s === slotIdx) continue;
+      const t2 = state.torres[s];
+      if (!t2) continue;
+      if (!Array.isArray(t2.registro)) continue;
+      const j = buscarIndiceRegistroEnTorre(t2.registro, fecha, hora, tipoQ);
+      if (j >= 0) {
+        t = t2;
+        slotUsed = s;
+        i = j;
+        break;
+      }
+    }
+  }
   if (i < 0) {
     if (!silentOnMissing) showToast('No se encontró la entrada', true);
     return false;
@@ -201,7 +231,7 @@ function borrarEntradaRegistroDesdeHistorial(slotIdx, fecha, hora, tipo, skipCon
     state.fotosSistemaCompleto.fotos = (state.fotosSistemaCompleto.fotos || []).filter(f => !f || f.key !== k);
   }
   t.registro.splice(i, 1);
-  if ((state.torreActiva || 0) === slotIdx) state.registro = t.registro;
+  if ((state.torreActiva || 0) === slotUsed) state.registro = t.registro;
   try { guardarEstadoTorreActual(); } catch (_) {}
   saveState();
   renderRegistro();

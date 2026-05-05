@@ -9,6 +9,8 @@ let histRecargasDatos = [];
 
 function histTab(tab) {
   histTabActiva = tab;
+  const sinDatosEl = document.getElementById('histSinDatos');
+  if (sinDatosEl) sinDatosEl.classList.add('setup-hidden');
   document.querySelectorAll('.hist-tab').forEach(t => {
     t.classList.remove('active');
     t.setAttribute('aria-selected', 'false');
@@ -38,6 +40,14 @@ function histTab(tab) {
   if (tab === 'mediciones') {
     const el = document.getElementById('histMediciones');
     if (el) { el.classList.remove('setup-hidden'); el.setAttribute('aria-hidden', 'false'); }
+    try {
+      const nMed = typeof recolectarMedicionesTodasInstalaciones === 'function'
+        ? recolectarMedicionesTodasInstalaciones().length
+        : 0;
+      if (nMed === 0 && sinDatosEl) sinDatosEl.classList.remove('setup-hidden');
+    } catch (_) {
+      if (sinDatosEl) sinDatosEl.classList.remove('setup-hidden');
+    }
   } else if (tab === 'recargas') {
     const el = document.getElementById('histRecargas');
     if (el) { el.classList.remove('setup-hidden'); el.setAttribute('aria-hidden', 'false'); }
@@ -409,6 +419,7 @@ async function hydrateRegistroFotoThumbs(container) {
 }
 
 function renderRegistro() {
+  if (typeof ensureRegistroListaDeleteDelegation === 'function') ensureRegistroListaDeleteDelegation();
   const lista   = document.getElementById('registroLista');
   const entries = recolectarRegistroTodasInstalaciones().filter(coincideFiltroTorre).slice(0, 100);
   const nMeds   = recolectarMedicionesTodasInstalaciones().length;
@@ -591,7 +602,6 @@ function renderRegistro() {
       cols + '</div>';
   }).join('');
   void hydrateRegistroFotoThumbs(lista);
-  if (typeof bindRegistroListaBotonesBorrar === 'function') bindRegistroListaBotonesBorrar(lista);
 }
 
 

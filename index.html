@@ -2558,74 +2558,30 @@
 </div>
 <!-- FIN APP -->
 
-<!-- ══ BIENVENIDA (primera vez) — carrusel corto ══ -->
+<!-- ══ BIENVENIDA (primera vez) — guía rápida en una pantalla ══ -->
 <div class="welcome-overlay setup-hidden" id="welcomeOverlay" role="dialog" aria-modal="true"
-  aria-labelledby="welcomeSlideHeading0" aria-roledescription="carrusel de bienvenida" aria-hidden="true">
-  <div class="welcome-card">
+  aria-labelledby="welcomeGuideTitle" aria-hidden="true">
+  <div class="welcome-card welcome-card--guide">
     <div class="welcome-brand" aria-hidden="true">
       <span class="t-hydro">HIDRO</span><span class="t-caru">Cultivo</span>
     </div>
-    <div class="welcome-carousel" id="welcomeCarousel">
-      <div class="welcome-slide is-active" id="welcomeSlidePanel0" data-welcome-slide="0" role="group" aria-roledescription="diapositiva"
-        aria-label="1 de 4">
-        <div class="welcome-slide-art" aria-hidden="true">
-          <svg class="welcome-slide-svg" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="44" y="24" width="32" height="96" rx="4" fill="#bbf7d0" stroke="#15803d" stroke-width="2"/>
-            <ellipse cx="60" cy="18" rx="22" ry="8" fill="#86efac" stroke="#15803d" stroke-width="1.5"/>
-            <circle cx="52" cy="48" r="7" fill="#22c55e"/><circle cx="68" cy="48" r="7" fill="#22c55e"/>
-            <circle cx="52" cy="72" r="7" fill="#16a34a"/><circle cx="68" cy="72" r="7" fill="#16a34a"/>
-            <circle cx="60" cy="96" r="7" fill="#15803d"/>
-            <path d="M60 118v14M52 126h16" stroke="#0d9488" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <h2 id="welcomeSlideHeading0" class="welcome-title">Tu cultivo en orden</h2>
-        <p class="welcome-lead">Esta app te ayuda a <strong>organizar tu hidroponía</strong>: torre, NFT o DWC, plantas por hueco, mediciones, clima y registro en un solo flujo.</p>
-      </div>
-      <div class="welcome-slide" id="welcomeSlidePanel1" data-welcome-slide="1" role="group" aria-roledescription="diapositiva" aria-label="2 de 4" hidden>
-        <div class="welcome-slide-art" aria-hidden="true">
-          <svg class="welcome-slide-svg" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <rect x="28" y="36" width="64" height="78" rx="8" fill="#ecfeff" stroke="#0d9488" stroke-width="2"/>
-            <path d="M44 58h32M44 72h24M44 86h28" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
-            <path d="M60 20c-8 12-8 28 0 40" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="60" cy="18" r="5" fill="#38bdf8" stroke="#0284c7" stroke-width="1.5"/>
-          </svg>
-        </div>
-        <h2 id="welcomeSlideHeading1" class="welcome-title">Mediciones: datos reales</h2>
-        <p class="welcome-lead">Lo que registres en <strong>Medir</strong> (EC, pH…) son <strong>lecturas reales</strong> de tu depósito; son la referencia para ajustar nutriente y riego.</p>
-      </div>
-      <div class="welcome-slide" id="welcomeSlidePanel2" data-welcome-slide="2" role="group" aria-roledescription="diapositiva" aria-label="3 de 4" hidden>
-        <div class="welcome-slide-art" aria-hidden="true">
-          <svg class="welcome-slide-svg" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="78" cy="38" r="18" fill="#fde68a" stroke="#ca8a04" stroke-width="1.5"/>
-            <path d="M32 52c0-18 16-32 36-32 10 0 18 4 24 10" stroke="#94a3b8" stroke-width="2" fill="#e2e8f0" opacity=".9"/>
-            <path d="M28 70h64M36 88h48M40 106h40" stroke="#cbd5e1" stroke-width="2" stroke-linecap="round"/>
-            <path d="M48 118c6-10 18-10 24 0" stroke="#22c55e" stroke-width="2" fill="none"/>
-          </svg>
-        </div>
-        <h2 id="welcomeSlideHeading2" class="welcome-title">Clima y riego orientativos</h2>
-        <p class="welcome-lead"><strong>Clima y previsiones</strong> vienen de modelos (p. ej. Open‑Meteo): son <strong>aproximados</strong>. El <strong>riego sugerido</strong> orienta según sustrato y meteorología; no sustituye observar tus plantas.</p>
-      </div>
-      <div class="welcome-slide" id="welcomeSlidePanel3" data-welcome-slide="3" role="group" aria-roledescription="diapositiva" aria-label="4 de 4" hidden>
-        <div class="welcome-slide-art" aria-hidden="true">
-          <svg class="welcome-slide-svg" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <circle cx="60" cy="62" r="36" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
-            <path d="M42 64l12 12 24-28" stroke="#15803d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M40 108h40" stroke="#0f766e" stroke-width="2" stroke-linecap="round" opacity=".5"/>
-          </svg>
-        </div>
-        <h2 id="welcomeSlideHeading3" class="welcome-title">Prioriza el criterio</h2>
-        <p class="welcome-lead">Si algo no cuadra, prioriza tus <strong>mediciones</strong> y el criterio en el invernadero, el balcón, la terraza o el interior.</p>
-      </div>
-    </div>
-    <div class="welcome-carousel-dots" role="group" aria-label="Progreso de la bienvenida" id="welcomeCarouselDots">
-      <button type="button" class="welcome-dot is-active" aria-pressed="true" aria-controls="welcomeSlidePanel0" id="welcomeDot0" data-welcome-dot="0" onclick="welcomeCarouselGo(0)" aria-label="Ir a diapositiva 1"></button>
-      <button type="button" class="welcome-dot" aria-pressed="false" aria-controls="welcomeSlidePanel1" id="welcomeDot1" data-welcome-dot="1" onclick="welcomeCarouselGo(1)" aria-label="Ir a diapositiva 2"></button>
-      <button type="button" class="welcome-dot" aria-pressed="false" aria-controls="welcomeSlidePanel2" id="welcomeDot2" data-welcome-dot="2" onclick="welcomeCarouselGo(2)" aria-label="Ir a diapositiva 3"></button>
-      <button type="button" class="welcome-dot" aria-pressed="false" aria-controls="welcomeSlidePanel3" id="welcomeDot3" data-welcome-dot="3" onclick="welcomeCarouselGo(3)" aria-label="Ir a diapositiva 4"></button>
-    </div>
-    <div class="welcome-carousel-actions">
-      <button type="button" class="btn btn-ghost welcome-skip-btn" id="welcomeBtnSkip" onclick="welcomeCarouselSkip()">Saltar</button>
-      <button type="button" class="btn btn-primary welcome-next-btn" id="welcomeBtnNext" onclick="welcomeCarouselNext()">Siguiente</button>
+    <h2 id="welcomeGuideTitle" class="welcome-title">Empieza en pocos pasos</h2>
+    <p class="welcome-lead">La app enlaza <strong>tu instalación</strong>, <strong>mediciones</strong>, <strong>historial</strong> y <strong>riego</strong>. Nada sustituye mirar el depósito y las plantas.</p>
+    <ol class="welcome-guide-steps">
+      <li><strong>Configura</strong> el sistema y los cultivos — desde <strong>Inicio</strong> o el asistente de abajo.</li>
+      <li><strong>Medir</strong> — guarda EC, pH y volumen con fecha y hora reales.</li>
+      <li><strong>Historial → Registro</strong> — mediciones, recargas, apuntes y fotos en una línea de tiempo. La papelera borra solo esa fila.</li>
+      <li><strong>Riego y clima</strong> — orientación según sustrato y tiempo; contrasta siempre con tus lecturas.</li>
+    </ol>
+    <p class="welcome-foot welcome-foot--guide">El manual completo está en la pestaña <strong>Ayuda</strong>.</p>
+    <label class="welcome-no-mas-label" for="welcomeChkNoMas">
+      <input type="checkbox" id="welcomeChkNoMas" checked>
+      <span>No volver a mostrar esta guía al abrir la app</span>
+    </label>
+    <div class="welcome-guide-actions">
+      <button type="button" class="btn btn-ghost welcome-skip-btn" id="welcomeBtnSkip" onclick="welcomeCarouselSkip()">Cerrar</button>
+      <button type="button" class="btn btn-secondary" id="welcomeBtnSetup" onclick="welcomeAbrirSetup()">Asistente de configuración</button>
+      <button type="button" class="btn btn-primary welcome-next-btn" id="welcomeBtnEmpezar" onclick="welcomeEmpezar()">Empezar en Inicio</button>
     </div>
   </div>
 </div>
@@ -4056,7 +4012,7 @@
   <script src="js/hc-bootstrap-config.js?v=4"></script>
   <script src="js/hc-bootstrap-state.js?v=7"></script>
   <script src="js/hc-bootstrap-pin.js?v=5"></script>
-  <script src="js/hc-bootstrap-onboarding.js?v=9"></script>
+  <script src="js/hc-bootstrap-onboarding.js?v=11"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=14"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
   <script src="js/torre-render-build.js?v=2026-05-05-lista-multisel"></script>
@@ -4071,12 +4027,12 @@
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
-  <script src="js/hc-setup-historial-delete.js?v=5"></script>
+  <script src="js/hc-setup-historial-delete.js?v=6"></script>
   <script src="js/hc-setup-registro.js?v=4"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=7"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=8"></script>
   <script src="js/hc-setup-checklist.js?v=13"></script>
-  <script src="js/hc-setup-historial-tabs.js?v=9"></script>
+  <script src="js/hc-setup-historial-tabs.js?v=10"></script>
   <script src="js/hc-setup-consejos.js?v=23"></script>
   <script src="js/calendario-logic.js?v=2"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
