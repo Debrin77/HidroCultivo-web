@@ -269,6 +269,11 @@ body {
   -webkit-touch-callout: none;
   -webkit-font-smoothing: antialiased;
 }
+/* Durante la bienvenida permitimos scroll vertical del documento/overlay en móvil. */
+body.hc-welcome-open {
+  overflow-y: auto;
+  overscroll-behavior-y: auto;
+}
 
 /* ══ SPLASH SCREEN ══ */
 .splash {
@@ -2531,6 +2536,8 @@ button.aviso-cestas-ir:active {
   pointer-events: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 body.hc-welcome-open .welcome-overlay {
   animation: welcomeOverlayFadeIn 220ms ease-out;
@@ -2607,6 +2614,11 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
     rgba(255, 255, 255, 0.94);
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 30px 70px rgba(2, 6, 23, 0.3);
+}
+@media (max-width: 420px) {
+  .welcome-card--guide {
+    overflow: visible;
+  }
 }
 .welcome-card--guide::before {
   content: "";
