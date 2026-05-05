@@ -36,7 +36,7 @@
   <link rel="stylesheet" href="css/main.css?v=2026-05-05-torre-lista-multisel">
 </head>
 <body>
-  <script src="js/hc-theme.js?v=1"></script>
+  <script src="js/hc-theme.js?v=2"></script>
 
 <!-- Iconos UI reutilizables (trazo 1.75, currentColor) -->
 <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true" focusable="false">
@@ -208,7 +208,7 @@
       <!-- 1. Saludo y fecha -->
       <div class="dash-greeting-row">
         <h1 class="dash-greeting" id="dashGreeting">Buenos días</h1>
-        <svg class="hc-ico hc-ico--greeting" aria-hidden="true" focusable="false"><use href="#hc-i-leaf"/></svg>
+        <svg class="hc-ico hc-ico--greeting" aria-hidden="true" focusable="false"><use href="#hc-i-sprout"/></svg>
       </div>
       <div class="dash-subtitle dash-subtitle--fecha">
         <span id="dashFecha">—</span>
@@ -534,10 +534,11 @@
         <label class="form-label setup-mt-8" for="hcAppearanceSelect">Apariencia</label>
         <select id="hcAppearanceSelect" class="form-input" onchange="onHcAppearanceChange(this.value)"
           aria-label="Tema visual de la app">
-          <option value="light">Claro (recomendado)</option>
+          <option value="auto">Auto (sistema)</option>
+          <option value="light">Claro</option>
           <option value="dark">Oscuro</option>
         </select>
-        <div class="config-help-text">Por defecto la app usa tema claro. El oscuro es opcional y se guarda en este dispositivo.</div>
+        <div class="config-help-text">Auto sigue el tema del sistema. También puedes forzar claro u oscuro en este dispositivo.</div>
         <button type="button" class="btn btn-secondary setup-mt-8" onclick="forzarReautenticacion()">
           Cerrar sesión ahora
         </button>

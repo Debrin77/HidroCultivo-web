@@ -1,26 +1,42 @@
 /**
- * Apariencia: claro por defecto; oscuro solo si el usuario lo elige (localStorage hcAppearance).
- * No se usa prefers-color-scheme para no forzar tema según el SO.
+ * Apariencia: modo claro/oscuro/auto (sistema) persistido en localStorage (hcAppearance).
  */
 (function () {
   var KEY = 'hcAppearance';
+  var _mql = null;
 
   function readStored() {
     try {
       var v = localStorage.getItem(KEY);
-      return v === 'dark' ? 'dark' : 'light';
+      if (v === 'dark' || v === 'light' || v === 'auto') return v;
+      return 'auto';
     } catch (e) {
-      return 'light';
+      return 'auto';
     }
   }
 
-  function apply(theme) {
-    var dark = theme === 'dark';
+  function getSystemPrefersDark() {
+    try {
+      return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function resolveTheme(mode) {
+    if (mode === 'dark') return 'dark';
+    if (mode === 'light') return 'light';
+    return getSystemPrefersDark() ? 'dark' : 'light';
+  }
+
+  function applyMode(mode) {
+    var resolved = resolveTheme(mode);
+    var dark = resolved === 'dark';
     document.documentElement.classList.toggle('hc-theme-dark', dark);
     var cs = document.querySelector('meta[name="color-scheme"]');
     if (cs) cs.setAttribute('content', dark ? 'dark' : 'light');
     try {
-      localStorage.setItem(KEY, dark ? 'dark' : 'light');
+      localStorage.setItem(KEY, mode);
     } catch (e) {}
   }
 
@@ -28,13 +44,14 @@
     return readStored();
   };
 
-  window.setHcAppearance = function (theme) {
-    apply(theme === 'dark' ? 'dark' : 'light');
+  window.setHcAppearance = function (mode) {
+    var safe = (mode === 'dark' || mode === 'light' || mode === 'auto') ? mode : 'auto';
+    applyMode(safe);
     syncHcAppearanceUi();
   };
 
   window.onHcAppearanceChange = function (value) {
-    setHcAppearance(value === 'dark' ? 'dark' : 'light');
+    setHcAppearance(value);
   };
 
   function syncHcAppearanceUi() {
@@ -43,6 +60,19 @@
   }
   window.syncHcAppearanceUi = syncHcAppearanceUi;
 
+  function bindSystemSchemeListener() {
+    try {
+      if (!window.matchMedia) return;
+      _mql = window.matchMedia('(prefers-color-scheme: dark)');
+      var onChange = function () {
+        if (readStored() === 'auto') applyMode('auto');
+      };
+      if (typeof _mql.addEventListener === 'function') _mql.addEventListener('change', onChange);
+      else if (typeof _mql.addListener === 'function') _mql.addListener(onChange);
+    } catch (e) {}
+  }
+
   document.addEventListener('DOMContentLoaded', syncHcAppearanceUi);
-  apply(readStored());
+  bindSystemSchemeListener();
+  applyMode(readStored());
 })();
