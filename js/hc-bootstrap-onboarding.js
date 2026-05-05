@@ -10,6 +10,7 @@ const HC_ONBOARD_RIEGO_VISIT_KEY = 'hc_onboarding_visit_riego';
 const HC_HINT_CTX = { mediciones: 'hc_hint_ctx_med', sistema: 'hc_hint_ctx_sis', riego: 'hc_hint_ctx_riego' };
 const HC_BIENVENIDA_KEY = 'hc_bienvenida_v2026_2';
 const HC_TAB_BAR_COACH_KEY = 'hc_tab_bar_coach_dismiss_v2';
+const HC_WELCOME_THEME_PREVIEW_KEY = 'hc_welcome_theme_preview';
 
 let _tabCoachRetryTimer = null;
 
@@ -80,6 +81,26 @@ function welcomeAbrirSetup() {
       if (typeof abrirSetup === 'function') abrirSetup();
     }, 450);
   } catch (_) {}
+}
+
+function setWelcomeTheme(theme) {
+  const ov = document.getElementById('welcomeOverlay');
+  if (!ov) return;
+  const t = theme === 'dark' ? 'dark' : 'light';
+  ov.setAttribute('data-welcome-theme', t);
+  const lightBtn = document.getElementById('welcomeThemeBtnLight');
+  const darkBtn = document.getElementById('welcomeThemeBtnDark');
+  if (lightBtn) {
+    const on = t === 'light';
+    lightBtn.classList.toggle('is-active', on);
+    lightBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  if (darkBtn) {
+    const on = t === 'dark';
+    darkBtn.classList.toggle('is-active', on);
+    darkBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+  try { localStorage.setItem(HC_WELCOME_THEME_PREVIEW_KEY, t); } catch (_) {}
 }
 
 /**
@@ -177,6 +198,12 @@ function mostrarBienvenidaOContinuarArranque() {
     ov.classList.remove('setup-hidden');
     ov.setAttribute('aria-hidden', 'false');
     try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
+    try {
+      const tSaved = localStorage.getItem(HC_WELCOME_THEME_PREVIEW_KEY);
+      setWelcomeTheme(tSaved === 'dark' ? 'dark' : 'light');
+    } catch (_) {
+      setWelcomeTheme('light');
+    }
     try { document.addEventListener('keydown', _welcomeGuideOnKeydown); } catch (_) {}
     try {
       const nb = document.getElementById('welcomeBtnEmpezar');

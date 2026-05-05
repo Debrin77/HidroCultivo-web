@@ -2565,15 +2565,38 @@
     <div class="welcome-brand" aria-hidden="true">
       <span class="t-hydro">HIDRO</span><span class="t-caru">Cultivo</span>
     </div>
-    <h2 id="welcomeGuideTitle" class="welcome-title">Empieza en pocos pasos</h2>
-    <p class="welcome-lead">La app enlaza <strong>tu instalación</strong>, <strong>mediciones</strong>, <strong>historial</strong> y <strong>riego</strong>. Nada sustituye mirar el depósito y las plantas.</p>
-    <ol class="welcome-guide-steps">
-      <li><strong>Configura</strong> el sistema y los cultivos — desde <strong>Inicio</strong> o el asistente de abajo.</li>
-      <li><strong>Medir</strong> — guarda EC, pH y volumen con fecha y hora reales.</li>
-      <li><strong>Historial → Registro</strong> — mediciones, recargas, apuntes y fotos en una línea de tiempo. La papelera borra solo esa fila.</li>
-      <li><strong>Riego y clima</strong> — orientación según sustrato y tiempo; contrasta siempre con tus lecturas.</li>
-    </ol>
-    <p class="welcome-foot welcome-foot--guide">El manual completo está en la pestaña <strong>Ayuda</strong>.</p>
+    <p class="welcome-eyebrow">Planifica · Mide · Ajusta</p>
+    <div class="welcome-theme-switch" role="group" aria-label="Aspecto de la guía">
+      <button type="button" class="welcome-theme-btn is-active" id="welcomeThemeBtnLight"
+        onclick="setWelcomeTheme('light')" aria-pressed="true">Claro</button>
+      <button type="button" class="welcome-theme-btn" id="welcomeThemeBtnDark"
+        onclick="setWelcomeTheme('dark')" aria-pressed="false">Dark</button>
+    </div>
+    <h2 id="welcomeGuideTitle" class="welcome-title">Controla tu cultivo sin perderte</h2>
+    <p class="welcome-lead">HIDROCultivo te ayuda a tomar decisiones con orden: <strong>configuras</strong> tu sistema, <strong>guardas datos reales</strong> y ves todo en una línea de tiempo clara.</p>
+    <div class="welcome-kpis" aria-label="Resumen de utilidad">
+      <span class="welcome-kpi"><strong>1</strong> panel para todo</span>
+      <span class="welcome-kpi"><strong>3</strong> pasos clave diarios</span>
+      <span class="welcome-kpi"><strong>0</strong> datos sueltos</span>
+    </div>
+    <div class="welcome-value-grid" role="list" aria-label="Qué puedes hacer con la app">
+      <article class="welcome-value-card welcome-value-card--green" role="listitem">
+        <div class="welcome-value-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-settings"/></svg></div>
+        <h3>Configura bien desde el inicio</h3>
+        <p>Torre, NFT o DWC con una base consistente para no improvisar después.</p>
+      </article>
+      <article class="welcome-value-card welcome-value-card--blue" role="listitem">
+        <div class="welcome-value-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-pulse"/></svg></div>
+        <h3>Registra mediciones reales</h3>
+        <p>EC, pH, temperatura y volumen con fecha y hora para comparar evolución.</p>
+      </article>
+      <article class="welcome-value-card welcome-value-card--violet" role="listitem">
+        <div class="welcome-value-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-clipboard"/></svg></div>
+        <h3>Historial útil para decidir</h3>
+        <p>Mediciones, recargas, apuntes y fotos en una sola vista para ajustar mejor.</p>
+      </article>
+    </div>
+    <p class="welcome-foot welcome-foot--guide"><strong>Importante:</strong> clima y riego son orientativos; prioriza siempre tus mediciones y observación directa de las plantas.</p>
     <label class="welcome-no-mas-label" for="welcomeChkNoMas">
       <input type="checkbox" id="welcomeChkNoMas" checked>
       <span>No volver a mostrar esta guía al abrir la app</span>
