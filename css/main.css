@@ -5602,21 +5602,72 @@ html.hc-theme-dark .quick-btn[data-quick-icon="toolspro"] .hc-ico--ion-quick { c
 html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #a78bfa; }
 .medir-pro-tools{ grid-area: tools; }
 .medir-assistant-cta-wrap{
-  margin: 10px 0 14px;
+  margin: 12px 0 10px;
   display: flex;
   justify-content: center;
 }
 .medir-assistant-cta{
   width: 100%;
-  min-height: 58px;
+  min-height: 70px;
   border-radius: 16px;
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: .01em;
   justify-content: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(167,139,250,.55);
+  background:
+    radial-gradient(120px 80px at 12% 20%, rgba(216,180,254,.34), transparent 70%),
+    linear-gradient(135deg, #6d28d9 0%, #7c3aed 44%, #2563eb 100%);
+  color: #f8fafc;
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.14),
-    0 12px 22px rgba(124,58,237,.2);
+    inset 0 1px 0 rgba(255,255,255,.2),
+    0 12px 22px rgba(124,58,237,.34),
+    0 0 0 1px rgba(167,139,250,.22);
+  transition: transform .18s ease, box-shadow .2s ease, filter .2s ease;
+  animation: medirAssistantPulse 3.2s ease-in-out infinite;
+}
+.medir-assistant-cta:hover{
+  transform: translateY(-1px);
+  filter: saturate(1.06) brightness(1.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 16px 28px rgba(124,58,237,.42),
+    0 0 0 1px rgba(167,139,250,.32);
+}
+.medir-assistant-cta:focus-visible{
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 16px 28px rgba(124,58,237,.42),
+    0 0 0 3px rgba(103,232,249,.28);
+}
+.medir-assistant-cta .quick-btn-icon{
+  width: 28px;
+  height: 28px;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 999px;
+}
+.medir-assistant-cta .quick-btn-icon .hc-ico{
+  width: 20px;
+  height: 20px;
+  color: #ede9fe;
+}
+@keyframes medirAssistantPulse{
+  0%, 100%{
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.2),
+      0 12px 22px rgba(124,58,237,.34),
+      0 0 0 1px rgba(167,139,250,.22);
+  }
+  50%{
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.24),
+      0 18px 30px rgba(124,58,237,.46),
+      0 0 0 1px rgba(167,139,250,.3);
+  }
 }
 .medir-manual-details{
   margin-top: 4px;
