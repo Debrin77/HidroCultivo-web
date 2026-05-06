@@ -3584,6 +3584,26 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   background: #ccfbf1;
   color: #0f766e;
 }
+.welcome-value-card--assistant{
+  border-color: #c4b5fd;
+  background:
+    radial-gradient(120px 70px at 88% 14%, rgba(124,58,237,.12), transparent 72%),
+    #f5f3ff;
+}
+.welcome-value-card--assistant .welcome-value-icon{
+  background: #ddd6fe;
+  color: #5b21b6;
+}
+.welcome-value-card--protools{
+  border-color: #a5f3fc;
+  background:
+    radial-gradient(120px 70px at 12% 14%, rgba(14,165,233,.12), transparent 72%),
+    #ecfeff;
+}
+.welcome-value-card--protools .welcome-value-icon{
+  background: #cffafe;
+  color: #0c4a6e;
+}
 .welcome-value-card--amber {
   border-color: #fde68a;
   background: #fffbeb;
@@ -3733,6 +3753,22 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--teal .welcome-value-icon {
   background: rgba(13, 148, 136, 0.22);
   color: #99f6e4;
+}
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--assistant{
+  border-color: rgba(167,139,250,.55);
+  background: rgba(76,29,149,.26);
+}
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--assistant .welcome-value-icon{
+  background: rgba(109,40,217,.28);
+  color: #ddd6fe;
+}
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--protools{
+  border-color: rgba(103,232,249,.55);
+  background: rgba(8,145,178,.22);
+}
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--protools .welcome-value-icon{
+  background: rgba(14,165,233,.26);
+  color: #bae6fd;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--amber .welcome-value-icon {
   background: rgba(217, 119, 6, 0.22);
