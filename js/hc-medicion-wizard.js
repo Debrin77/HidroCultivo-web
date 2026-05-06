@@ -371,10 +371,22 @@
     } catch (_) {}
 
     if (!chips.length) {
+      row.setAttribute('data-cols', '1');
       row.innerHTML = '<span class="wiz-cultivo-chip is-empty">🌿 Sin cultivos definidos</span>';
       return;
     }
-    row.innerHTML = chips.slice(0, 4).map((txt) => '<span class="wiz-cultivo-chip">' + txt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>').join('');
+    const list = chips.slice(0, 12);
+    const n = list.length;
+    let cols = 2;
+    if (n === 1) cols = 1;
+    else if (n === 2) cols = 2;
+    else if (n === 3) cols = 3;
+    else if (n === 4) cols = 2;
+    else if (n <= 6) cols = 3;
+    else if (n <= 8) cols = 4;
+    else cols = 3;
+    row.setAttribute('data-cols', String(cols));
+    row.innerHTML = list.map((txt) => '<span class="wiz-cultivo-chip">' + txt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>').join('');
   }
 
   function open() {

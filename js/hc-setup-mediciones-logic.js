@@ -216,10 +216,15 @@ function calcularDescAB(parte) {
 }
 
 function evalParam() {
-  const ec   = parseFloat(document.getElementById('inputEC').value);
-  const ph   = parseFloat(document.getElementById('inputPH').value);
-  const temp = parseFloat(document.getElementById('inputTemp').value);
-  const vol  = parseFloat(document.getElementById('inputVol').value);
+  const iEc = document.getElementById('inputEC');
+  const iPh = document.getElementById('inputPH');
+  const iT = document.getElementById('inputTemp');
+  const iV = document.getElementById('inputVol');
+  if (!iEc || !iPh || !iT || !iV) return;
+  const ec   = parseFloat(iEc.value);
+  const ph   = parseFloat(iPh.value);
+  const temp = parseFloat(iT.value);
+  const vol  = parseFloat(iV.value);
 
   evalEC(ec, vol);
   evalPH(ph, vol);
@@ -259,6 +264,7 @@ function setStatus(id, tipo, icono, texto) {
 
 function setCard(id, tipo) {
   const el = document.getElementById(id);
+  if (!el) return;
   el.className = `param-card ${tipo}`;
 }
 

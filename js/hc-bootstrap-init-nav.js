@@ -110,7 +110,6 @@ function applyBootCollapsedUI() {
   if (!cfg.uiMedirCollapse || typeof cfg.uiMedirCollapse !== 'object' || Array.isArray(cfg.uiMedirCollapse)) {
     cfg.uiMedirCollapse = {};
   }
-  cfg.uiMedirCollapse.sensoresAjusteFino = false;
   cfg.uiMedirCollapse.recargaProxima = false;
   cfg.uiMedirCollapse.luzOrigen = false;
   cfg.uiMedirCollapse.recargaTotal = false;

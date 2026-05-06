@@ -364,8 +364,7 @@ function cargarEstadoTorre(idx) {
   aplicarConfigTorre();
   cargarUbicacionMedicionesUI();
   cargarInteriorGrowUI();
-  cargarSensorSustratoUI();
-  cargarSensoresHardwareUI();
+  if (typeof applyMedirCollapseUI === 'function') applyMedirCollapseUI();
   cargarLocalidadMeteoUI();
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
   syncRiegoAvanzadoUI();

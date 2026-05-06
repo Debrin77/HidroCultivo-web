@@ -194,17 +194,22 @@ function cargarHistorial() {
 
 function renderFiltroTorres() {
   const wrap = document.getElementById('filtroTorreWrapGlobal');
-  const btns = document.getElementById('filtroTorreBtnsGlobal');
-  if (!wrap || !btns || !state.torres || state.torres.length <= 1) {
+  const rowTodas = document.getElementById('filtroTorreBtnTodas');
+  const rowInst = document.getElementById('filtroTorreBtnsInstalaciones');
+  if (!wrap || !rowTodas || !rowInst || !state.torres || state.torres.length <= 1) {
     if (wrap) wrap.style.display = 'none';
     return;
   }
   wrap.style.display = 'block';
-  const todas = [{ id: null, nombre: 'Todas las instalaciones', emoji: '📊' }, ...state.torres];
-  btns.innerHTML = todas.map(t =>
-    '<button onclick="setFiltroTorre(' + JSON.stringify(t.id) + ')" ' +
+  const tAll = { id: null, nombre: 'Todas las instalaciones', emoji: '📊' };
+  rowTodas.innerHTML =
+    '<button type="button" onclick="setFiltroTorre(' + JSON.stringify(tAll.id) + ')" ' +
+    'class="hist-torre-filter-btn hist-torre-filter-btn--todas' + (filtroTorreActivo === null ? ' active' : '') + '">' +
+    (tAll.emoji || '📊') + ' ' + tAll.nombre + '</button>';
+  rowInst.innerHTML = state.torres.map(t =>
+    '<button type="button" onclick="setFiltroTorre(' + JSON.stringify(t.id) + ')" ' +
     'class="hist-torre-filter-btn' + (filtroTorreActivo === t.id ? ' active' : '') + '">' +
-    (t.emoji||'🌿') + ' ' + t.nombre + '</button>'
+    (t.emoji || '🌿') + ' ' + t.nombre + '</button>'
   ).join('');
 }
 

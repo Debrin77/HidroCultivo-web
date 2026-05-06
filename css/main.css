@@ -2190,11 +2190,15 @@ select#editVariedad option {
   color: #f8fafc;
 }
 .wiz-cultivos-row{
-  display:flex;
-  flex-wrap:wrap;
+  display:grid;
   gap:6px;
   margin-top: 8px;
+  width: 100%;
 }
+.wiz-cultivos-row[data-cols="1"]{ grid-template-columns: minmax(0, 1fr); }
+.wiz-cultivos-row[data-cols="2"]{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wiz-cultivos-row[data-cols="3"]{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wiz-cultivos-row[data-cols="4"]{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .wiz-cultivo-chip{
   border-radius: 999px;
   padding: 3px 9px;
@@ -2204,9 +2208,19 @@ select#editVariedad option {
   background: rgba(15,23,42,.34);
   border: 1px solid rgba(148,163,184,.32);
   backdrop-filter: blur(4px);
+  min-width: 0;
+  text-align: center;
+  justify-self: stretch;
+  box-sizing: border-box;
 }
 .wiz-cultivo-chip.is-empty{
   color: #d1d5db;
+}
+@media (max-width: 380px) {
+  .medir-wizard-modal .wiz-cultivos-row[data-cols="3"],
+  .medir-wizard-modal .wiz-cultivos-row[data-cols="4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .wiz-hero-chips{
   display:flex;
@@ -5766,17 +5780,6 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
       0 0 0 1px rgba(167,139,250,.3);
   }
 }
-.medir-manual-details{
-  margin-top: 4px;
-  margin-bottom: 12px;
-}
-.medir-manual-details[open]{
-  border-color: color-mix(in srgb, var(--border) 80%, #38bdf8 20%);
-}
-.medir-manual-body .param-card:last-child{
-  margin-bottom: 0;
-}
-
 /* ══ RIEGO ══ */
 .riego-avanzado-details {
   background: var(--bg2);
@@ -7906,6 +7909,10 @@ button.dia-card {
 .hist-tabla-col-actions { padding: 0; }
 .hist-torre-filter-wrap {
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
 }
 #filtroTorreWrapGlobal {
   position: sticky;
@@ -7913,14 +7920,21 @@ button.dia-card {
   z-index: 30;
   background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(3px);
-  padding: 6px 0 8px;
+  padding: 8px 0 10px;
   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
 }
-.hist-torre-filter-btns {
+.hist-torre-filter-row--todas {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.hist-torre-filter-row--instalaciones {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
   align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 .hist-torre-filter-btn {
   padding: 5px 10px;
@@ -7932,10 +7946,30 @@ button.dia-card {
   background: #fff;
   color: #374151;
 }
+.hist-torre-filter-btn--todas {
+  font-size: 13px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  max-width: min(100%, 340px);
+  text-align: center;
+}
 .hist-torre-filter-btn.active {
   border-color: #16a34a;
   background: #f0fdf4;
   color: #15803d;
+}
+html.hc-theme-dark .hist-torre-filter-btn {
+  border-color: color-mix(in srgb, var(--border) 85%, #4ade80 15%);
+  background: color-mix(in srgb, var(--bg2) 88%, #14532d 12%);
+  color: var(--text);
+}
+html.hc-theme-dark .hist-torre-filter-btn.active {
+  border-color: #4ade80;
+  background: rgba(22, 163, 74, 0.22);
+  color: #bbf7d0;
+}
+html.hc-theme-dark .hist-torre-filter-btn--todas {
+  font-size: 14px;
 }
 
 /* ══ CHECKLIST INTEGRADO ══ */

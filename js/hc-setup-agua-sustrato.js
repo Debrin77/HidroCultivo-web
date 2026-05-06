@@ -945,7 +945,6 @@ function setSustrato(tipo) {
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
-  cargarSensorSustratoUI();
   syncRiegoAvanzadoUI();
   syncMedirSustratoResumen();
   if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
@@ -1152,19 +1151,8 @@ function ensureUIMedirCollapse() {
   return u;
 }
 
-function resolveMedirExpanded(key, humActivo, hwAny) {
+function resolveMedirExpanded(key) {
   const ui = ensureUIMedirCollapse();
-  if (key === 'sensoresAjusteFino') {
-    if (ui.sensoresAjusteFino !== undefined) return !!ui.sensoresAjusteFino;
-    const legH = ui.humedadFino;
-    const legW = ui.sensoresHw;
-    if (legH !== undefined || legW !== undefined) {
-      const hOpen = legH !== undefined ? !!legH : !!humActivo;
-      const wOpen = legW !== undefined ? !!legW : !!hwAny;
-      return hOpen || wOpen;
-    }
-    return !!humActivo || !!hwAny;
-  }
   if (key === 'recargaTotal') {
     return ui.recargaTotal !== undefined ? !!ui.recargaTotal : false;
   }
@@ -1187,12 +1175,7 @@ function resolveMedirExpanded(key, humActivo, hwAny) {
 }
 
 function applyMedirCollapseUI() {
-  const humAct = !!ensureSensorHumedadSustrato().activo;
-  const sh = ensureSensoresHardware();
-  const hwAny = !!(sh.ec || sh.ph || sh.humedad);
-
   const rows = [
-    { body: 'collapseBodySensoresAjusteFino', btn: 'btnCollapseSensoresAjusteFino', key: 'sensoresAjusteFino' },
     { body: 'collapseBodyRecargaProxima', btn: 'btnCollapseRecargaProxima', key: 'recargaProxima' },
     { body: 'collapseBodyLuzOrigen', btn: 'btnCollapseLuzOrigen', key: 'luzOrigen' },
     { body: 'collapseBodyRecargaTotal', btn: 'btnCollapseRecargaTotal', key: 'recargaTotal' },
@@ -1202,7 +1185,7 @@ function applyMedirCollapseUI() {
     const body = document.getElementById(rows[i].body);
     const btn = document.getElementById(rows[i].btn);
     if (!body || !btn) continue;
-    const exp = resolveMedirExpanded(rows[i].key, humAct, hwAny);
+    const exp = resolveMedirExpanded(rows[i].key);
     body.hidden = !exp;
     body.setAttribute('aria-hidden', exp ? 'false' : 'true');
     btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
@@ -1216,7 +1199,7 @@ function applyMedirCollapseUI() {
     const body = document.getElementById('collapseBodyInteriorGrow');
     const btn = document.getElementById('btnCollapseInteriorGrow');
     if (body && btn) {
-      const exp = resolveMedirExpanded('interiorGrow', humAct, hwAny);
+      const exp = resolveMedirExpanded('interiorGrow');
       body.hidden = !exp;
       body.setAttribute('aria-hidden', exp ? 'false' : 'true');
       btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
@@ -1231,7 +1214,7 @@ function applyMedirCollapseUI() {
     const body = document.getElementById('collapseBodyCalentadorRiego');
     const btn = document.getElementById('btnCollapseCalentadorRiego');
     if (body && btn) {
-      const exp = resolveMedirExpanded('calentadorRiego', humAct, hwAny);
+      const exp = resolveMedirExpanded('calentadorRiego');
       body.hidden = !exp;
       body.setAttribute('aria-hidden', exp ? 'false' : 'true');
       btn.setAttribute('aria-expanded', exp ? 'true' : 'false');
@@ -1244,7 +1227,6 @@ function applyMedirCollapseUI() {
 
 function getCollapseDomByKey(key) {
   const map = {
-    sensoresAjusteFino: { body: 'collapseBodySensoresAjusteFino', btn: 'btnCollapseSensoresAjusteFino' },
     recargaProxima: { body: 'collapseBodyRecargaProxima', btn: 'btnCollapseRecargaProxima' },
     luzOrigen: { body: 'collapseBodyLuzOrigen', btn: 'btnCollapseLuzOrigen' },
     recargaTotal: { body: 'collapseBodyRecargaTotal', btn: 'btnCollapseRecargaTotal' },
@@ -1264,10 +1246,7 @@ function focusFirstInCollapseBody(bodyEl) {
 }
 
 function toggleMedirCollapse(key) {
-  const humAct = !!ensureSensorHumedadSustrato().activo;
-  const sh = ensureSensoresHardware();
-  const hwAny = !!(sh.ec || sh.ph || sh.humedad);
-  const cur = resolveMedirExpanded(key, humAct, hwAny);
+  const cur = resolveMedirExpanded(key);
   const next = !cur;
   ensureUIMedirCollapse()[key] = next;
   guardarEstadoTorreActual();
@@ -1284,45 +1263,6 @@ function toggleMedirCollapse(key) {
   if (!next && btn && typeof btn.focus === 'function') btn.focus();
 }
 
-function cargarSensorSustratoUI() {
-  const sh = ensureSensorHumedadSustrato();
-  const def = riegoSustratoPerfil()?.objetivoHumedadDefault ?? 58;
-  const cb = document.getElementById('sensorSustratoActivo');
-  const inL = document.getElementById('sensorSustratoLectura');
-  const inO = document.getElementById('sensorSustratoObj');
-  if (cb) cb.checked = !!sh.activo;
-  if (inL) inL.value = sh.lecturaPct != null && sh.lecturaPct !== '' ? sh.lecturaPct : '';
-  if (inO) {
-    inO.value = sh.objetivoPct != null && sh.objetivoPct !== '' && !isNaN(parseFloat(sh.objetivoPct))
-      ? sh.objetivoPct
-      : def;
-  }
-  applyMedirCollapseUI();
-}
-
-function persistSensorSustrato() {
-  if (!state.configTorre) state.configTorre = {};
-  const sh = ensureSensorHumedadSustrato();
-  const prevActivo = !!sh.activo;
-  sh.activo = !!document.getElementById('sensorSustratoActivo')?.checked;
-  const raw = document.getElementById('sensorSustratoLectura')?.value;
-  sh.lecturaPct = raw === '' || raw == null ? null : parseFloat(raw);
-  const oRaw = document.getElementById('sensorSustratoObj')?.value;
-  const def = riegoSustratoPerfil()?.objetivoHumedadDefault ?? 58;
-  sh.objetivoPct = oRaw === '' || oRaw == null ? null : parseFloat(oRaw);
-  if (sh.objetivoPct == null || isNaN(sh.objetivoPct)) sh.objetivoPct = def;
-  delete state.configTorre.sensorHumedadEsponja;
-  const ui = ensureUIMedirCollapse();
-  const shw = ensureSensoresHardware();
-  const hwAny = !!(shw.ec || shw.ph || shw.humedad);
-  if (!prevActivo && sh.activo) ui.sensoresAjusteFino = true;
-  if (prevActivo && !sh.activo && !hwAny) ui.sensoresAjusteFino = false;
-  guardarEstadoTorreActual();
-  saveState();
-  applyMedirCollapseUI();
-  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
-}
-
 function ensureSensoresHardware() {
   if (!state.configTorre) state.configTorre = {};
   let s = state.configTorre.sensoresHardware;
@@ -1334,42 +1274,6 @@ function ensureSensoresHardware() {
   if (typeof s.ph !== 'boolean') s.ph = !!s.ph;
   if (typeof s.humedad !== 'boolean') s.humedad = !!s.humedad;
   return s;
-}
-
-function actualizarVisibilidadAyudaSensores() {
-  const s = ensureSensoresHardware();
-  const any = !!(s.ec || s.ph || s.humedad);
-  const box = document.getElementById('panelSensoresIntegracionAyuda');
-  if (box) box.style.display = any ? 'block' : 'none';
-}
-
-function cargarSensoresHardwareUI() {
-  const s = ensureSensoresHardware();
-  const e = document.getElementById('sensorHwEC');
-  const p = document.getElementById('sensorHwPH');
-  const h = document.getElementById('sensorHwHum');
-  if (e) e.checked = !!s.ec;
-  if (p) p.checked = !!s.ph;
-  if (h) h.checked = !!s.humedad;
-  actualizarVisibilidadAyudaSensores();
-  applyMedirCollapseUI();
-}
-
-function persistSensoresHardware() {
-  const s = ensureSensoresHardware();
-  const prevAny = !!(s.ec || s.ph || s.humedad);
-  s.ec = !!document.getElementById('sensorHwEC')?.checked;
-  s.ph = !!document.getElementById('sensorHwPH')?.checked;
-  s.humedad = !!document.getElementById('sensorHwHum')?.checked;
-  const nowAny = !!(s.ec || s.ph || s.humedad);
-  const ui = ensureUIMedirCollapse();
-  const humAct = !!ensureSensorHumedadSustrato().activo;
-  if (!prevAny && nowAny) ui.sensoresAjusteFino = true;
-  if (prevAny && !nowAny && !humAct) ui.sensoresAjusteFino = false;
-  guardarEstadoTorreActual();
-  saveState();
-  actualizarVisibilidadAyudaSensores();
-  applyMedirCollapseUI();
 }
 
 function persistLocalidadMeteo() {
@@ -1626,8 +1530,6 @@ function initConfigUI() {
     el.classList.toggle('selected', sel);
     el.setAttribute('aria-checked', sel ? 'true' : 'false');
   });
-  cargarSensorSustratoUI();
-  cargarSensoresHardwareUI();
   cargarLocalidadMeteoUI();
   cargarUbicacionMedicionesUI();
   actualizarVisibilidadPanelInteriorGrow();
