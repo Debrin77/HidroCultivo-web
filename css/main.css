@@ -5664,11 +5664,23 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
   text-align: center;
   min-height: 56px;
   font-size: 19px;
-  font-weight: 750;
+  font-weight: 800;
+  position: relative;
+  padding-left: 44px;
+  padding-right: 14px;
 }
 .medir-pro-tools > span:not(.quick-btn-icon){
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   text-align: center;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.medir-pro-tools .quick-btn-icon{
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 @keyframes medirAssistantPulse{
   0%, 100%{
