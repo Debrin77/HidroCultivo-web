@@ -272,6 +272,56 @@
     else st.textContent = 'Corregir';
   }
 
+  function renderCultivosEnSistema() {
+    const row = el('wizCultivosRow');
+    if (!row) return;
+    const cfg = (typeof state !== 'undefined' && state && state.configTorre) ? state.configTorre : {};
+    const torre = (typeof state !== 'undefined' && state && Array.isArray(state.torre)) ? state.torre : [];
+    const set = new Set();
+    const chips = [];
+
+    // 1) Prioridad: cultivos seleccionados explícitamente en la instalación activa (setup)
+    try {
+      const iniciales = Array.isArray(cfg.cultivosIniciales) ? cfg.cultivosIniciales : [];
+      iniciales.forEach((vRaw) => {
+        const v = String(vRaw || '').trim();
+        if (!v || set.has(v)) return;
+        set.add(v);
+        let nombre = v;
+        try {
+          if (typeof getCultivoDB === 'function' && typeof cultivoNombreLista === 'function') {
+            nombre = cultivoNombreLista(getCultivoDB(v), v) || v;
+          }
+        } catch (_) {}
+        chips.push('🌱 ' + nombre);
+      });
+    } catch (_) {}
+
+    // 2) Fallback: variedades realmente ocupadas en cestas de la instalación activa
+    try {
+      torre.forEach((nivel) => {
+        (Array.isArray(nivel) ? nivel : []).forEach((c) => {
+          const v = String(c?.variedad || '').trim();
+          if (!v || set.has(v)) return;
+          set.add(v);
+          let nombre = v;
+          try {
+            if (typeof getCultivoDB === 'function' && typeof cultivoNombreLista === 'function') {
+              nombre = cultivoNombreLista(getCultivoDB(v), v) || v;
+            }
+          } catch (_) {}
+          chips.push('🌱 ' + nombre);
+        });
+      });
+    } catch (_) {}
+
+    if (!chips.length) {
+      row.innerHTML = '<span class="wiz-cultivo-chip is-empty">🌿 Sin cultivos definidos</span>';
+      return;
+    }
+    row.innerHTML = chips.slice(0, 4).map((txt) => '<span class="wiz-cultivo-chip">' + txt.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</span>').join('');
+  }
+
   function open() {
     const m = el('modalWizardMedicion');
     if (!m) return;
@@ -286,6 +336,7 @@
       if (src && dst && !String(dst.value || '').trim()) dst.value = String(src.value || '');
     } catch (_) {}
     try { renderSystemHint(); } catch (_) {}
+    try { renderCultivosEnSistema(); } catch (_) {}
     try { renderActionNow(null); } catch (_) {}
     try { syncAdjustmentFields(); } catch (_) {}
     try { renderInsights(); } catch (_) {}
