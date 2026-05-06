@@ -1241,6 +1241,10 @@
 
       <!-- BOTÓN GUARDAR -->
       <div class="guardar-medicion-bar">
+        <button type="button" class="btn btn-secondary" onclick="abrirWizardMedicion()"
+          aria-haspopup="dialog" aria-controls="modalWizardMedicion">
+          <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg> Medición guiada
+        </button>
         <button type="button" class="btn btn-primary" id="btnGuardarMedicion" onclick="guardarMedicion()">
           <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-save"/></svg> Guardar medición
         </button>
@@ -3790,6 +3794,100 @@
   </div>
 </div>
 
+<!-- Modal: wizard de medición (Medir) -->
+<div class="modal-overlay" id="modalWizardMedicion" onclick="cerrarWizardMedicion(event)"
+  role="dialog" aria-modal="true" aria-labelledby="wizardMedTitle" aria-hidden="true">
+  <div class="modal medir-wizard-modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="wizardMedTitle">
+      <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg>
+      Medición guiada
+    </div>
+
+    <div class="medir-wizard-steps" aria-label="Pasos del wizard">
+      <span class="medir-wizard-step is-active" id="wizDot1" aria-hidden="true"></span>
+      <span class="medir-wizard-step" id="wizDot2" aria-hidden="true"></span>
+      <span class="medir-wizard-step" id="wizDot3" aria-hidden="true"></span>
+    </div>
+
+    <!-- Paso 1 -->
+    <section class="medir-wizard-page" id="wizPage1">
+      <p class="medir-wizard-lead">Registra los valores reales del depósito. Con uno basta; mejor cuantos más, más contexto.</p>
+      <div class="medir-wizard-grid">
+        <div>
+          <label class="form-label" for="wizEC">EC (µS/cm)</label>
+          <input id="wizEC" class="form-input" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="1350">
+        </div>
+        <div>
+          <label class="form-label" for="wizPH">pH</label>
+          <input id="wizPH" class="form-input" type="number" inputmode="decimal" min="0" max="14" step="0.1" placeholder="6.0">
+        </div>
+        <div>
+          <label class="form-label" for="wizTemp">Temp (°C)</label>
+          <input id="wizTemp" class="form-input" type="number" inputmode="decimal" min="0" max="50" step="0.1" placeholder="20">
+        </div>
+        <div>
+          <label class="form-label" for="wizVol">Vol (L)</label>
+          <input id="wizVol" class="form-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1" placeholder="18">
+        </div>
+      </div>
+    </section>
+
+    <!-- Paso 2 -->
+    <section class="medir-wizard-page setup-hidden" id="wizPage2">
+      <p class="medir-wizard-lead">¿Has hecho algún ajuste justo antes o después de medir? (Se añadirá al Registro.)</p>
+
+      <label class="dash-notif-toggle-row medir-wizard-toggle">
+        <input type="checkbox" id="wizRecargaCompleta">
+        <span><strong>Recarga completa</strong> (reiniciar contador)</span>
+      </label>
+
+      <div class="medir-wizard-split">
+        <label class="dash-notif-toggle-row medir-wizard-toggle">
+          <input type="checkbox" id="wizReposicionAguaChk">
+          <span>Reposición parcial: <strong>solo agua</strong></span>
+        </label>
+        <input id="wizReposicionAguaL" class="form-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1"
+          placeholder="Litros añadidos (aprox.)">
+      </div>
+
+      <div class="medir-wizard-split">
+        <label class="dash-notif-toggle-row medir-wizard-toggle">
+          <input type="checkbox" id="wizAjustePhChk">
+          <span>Ajuste de pH</span>
+        </label>
+        <div class="medir-wizard-grid-2">
+          <input id="wizPhMasMl" class="form-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH+ ml">
+          <input id="wizPhMenosMl" class="form-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH− ml">
+        </div>
+      </div>
+
+      <div class="medir-wizard-split">
+        <label class="dash-notif-toggle-row medir-wizard-toggle">
+          <input type="checkbox" id="wizNutrientesChk">
+          <span>Añadí nutrientes</span>
+        </label>
+        <input id="wizNutrientesTxt" class="form-input" type="text" maxlength="120" placeholder="Ej. +2ml A+B, CalMag…">
+      </div>
+    </section>
+
+    <!-- Paso 3 -->
+    <section class="medir-wizard-page setup-hidden" id="wizPage3">
+      <p class="medir-wizard-lead">Opcional: deja una nota. Al finalizar se guardará la medición y el registro de ajustes (si marcaste alguno).</p>
+      <label class="form-label" for="wizNotas">Notas</label>
+      <textarea id="wizNotas" class="form-input medir-wizard-notes" rows="3" maxlength="400"
+        placeholder="Observaciones, incidencias, olor, algas, raíces…"></textarea>
+      <div class="medir-wizard-review" id="wizReview" role="status" aria-live="polite"></div>
+    </section>
+
+    <div class="medir-wizard-actions">
+      <button type="button" class="btn btn-ghost" onclick="cerrarWizardMedicion()">Cancelar</button>
+      <button type="button" class="btn btn-secondary" id="wizBackBtn" onclick="wizardMedPrev()" disabled>Atrás</button>
+      <button type="button" class="btn btn-primary" id="wizNextBtn" onclick="wizardMedNext()">Siguiente</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL FUENTES AGUA ══ -->
 <div class="modal-overlay" id="modalAgua" onclick="cerrarModalAgua(event)" role="dialog" aria-modal="true" aria-label="Fuentes de calidad del agua">
   <div class="modal">
@@ -4077,6 +4175,7 @@
   <script src="js/hc-setup-registro.js?v=4"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=7"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=8"></script>
+  <script src="js/hc-medicion-wizard.js?v=1"></script>
   <script src="js/hc-setup-checklist.js?v=13"></script>
   <script src="js/hc-setup-historial-tabs.js?v=11"></script>
   <script src="js/hc-setup-consejos.js?v=23"></script>
