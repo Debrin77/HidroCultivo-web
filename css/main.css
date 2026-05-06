@@ -5387,6 +5387,14 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   padding: 16px 0 8px;
   margin-top: 4px;
 }
+.medir-pro-btn{
+  min-height: 46px;
+  border-radius: 12px;
+}
+.quick-btn[data-quick-icon="toolspro"] .hc-ico--ion-quick { color: #0ea5e9; }
+.quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #7c3aed; }
+html.hc-theme-dark .quick-btn[data-quick-icon="toolspro"] .hc-ico--ion-quick { color: #38bdf8; }
+html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #a78bfa; }
 
 /* ══ RIEGO ══ */
 .riego-avanzado-details {

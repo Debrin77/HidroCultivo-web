@@ -186,14 +186,16 @@
     const txtA = (na ? na.nombre : 'activo') + ': ~' + fmt(mla, 1) + ' ml/parte';
     const txtS = (ns ? ns.nombre : 'seleccionado') + ': ~' + fmt(mls, 1) + ' ml/parte';
     const diff = Number.isFinite(mla) && Number.isFinite(mls) ? Math.abs(mls - mla) : NaN;
-    const better = Number.isFinite(mla) && Number.isFinite(mls)
-      ? (mls < mla ? 'Menor dosis con seleccionado (~' + fmt(diff, 1) + ' ml/parte menos).' : (mls > mla ? 'Menor dosis con activo (~' + fmt(diff, 1) + ' ml/parte menos).' : 'Dosis similar entre ambos.'))
-      : '';
+    const selBetter = Number.isFinite(mla) && Number.isFinite(mls) && mls < mla;
+    const actBetter = Number.isFinite(mla) && Number.isFinite(mls) && mla < mls;
+    const same = Number.isFinite(mla) && Number.isFinite(mls) && Math.abs(mla - mls) < 0.05;
+    const ahorroTxt = Number.isFinite(diff) ? ('Ahorro estimado: ' + fmt(diff, 1) + ' ml/parte.') : '';
+    const better = same
+      ? 'Dosis similar entre ambos.'
+      : (selBetter ? ('Recomendado: seleccionado. ' + ahorroTxt) : (actBetter ? ('Recomendado: activo. ' + ahorroTxt) : ''));
     out.textContent = txtA + ' | ' + txtS + (better ? ' ' + better : '');
 
     if (box) {
-      const selBetter = Number.isFinite(mla) && Number.isFinite(mls) && mls < mla;
-      const actBetter = Number.isFinite(mla) && Number.isFinite(mls) && mla < mls;
       box.classList.remove('setup-hidden');
       box.innerHTML =
         '<div class="tools-pro-compare-card ' + (actBetter ? 'is-better' : '') + '">' +

@@ -1241,13 +1241,15 @@
 
       <!-- BOTÓN GUARDAR -->
       <div class="guardar-medicion-bar">
-        <button type="button" class="btn btn-ghost" onclick="abrirHerramientasPro()"
+        <button type="button" class="quick-btn quick-btn-info medir-pro-btn" data-quick-icon="toolspro" onclick="abrirHerramientasPro()"
           aria-haspopup="dialog" aria-controls="modalHerramientasPro">
-          <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg> Herramientas pro
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-sparkle"/></svg></span>
+          <span>Herramientas pro</span>
         </button>
-        <button type="button" class="btn btn-secondary" onclick="abrirWizardMedicion()"
+        <button type="button" class="quick-btn quick-btn-info medir-pro-btn" data-quick-icon="asistentepro" onclick="abrirWizardMedicion()"
           aria-haspopup="dialog" aria-controls="modalWizardMedicion">
-          <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg> Asistente pro
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-sparkle"/></svg></span>
+          <span>Asistente pro</span>
         </button>
         <button type="button" class="btn btn-primary" id="btnGuardarMedicion" onclick="guardarMedicion()">
           <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-save"/></svg> Guardar medición
@@ -4363,7 +4365,7 @@
   <script src="js/hc-setup-agua-sustrato.js?v=7"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=8"></script>
   <script src="js/hc-medicion-wizard.js?v=2"></script>
-  <script src="js/hc-tools-pro.js?v=4"></script>
+  <script src="js/hc-tools-pro.js?v=6"></script>
   <script src="js/hc-setup-checklist.js?v=13"></script>
   <script src="js/hc-setup-historial-tabs.js?v=12"></script>
   <script src="js/hc-setup-consejos.js?v=23"></script>
