@@ -3805,9 +3805,10 @@
   role="dialog" aria-modal="true" aria-labelledby="wizardMedTitle" aria-hidden="true">
   <div class="modal medir-wizard-modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="wizardMedTitle">
+    <div class="modal-title modal-title--with-close" id="wizardMedTitle">
       <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg>
-      Medición guiada
+      <span class="modal-title-text">Medición guiada</span>
+      <button type="button" class="modal-close-btn" aria-label="Cerrar Medición guiada" onclick="cerrarWizardMedicion()">X</button>
     </div>
     <div class="wiz-hero" aria-hidden="true">
       <div class="wiz-hero-glow"></div>
@@ -3998,9 +3999,10 @@
   role="dialog" aria-modal="true" aria-labelledby="toolsProTitle" aria-hidden="true">
   <div class="modal tools-pro-modal" onclick="event.stopPropagation()">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="toolsProTitle">
+    <div class="modal-title modal-title--with-close" id="toolsProTitle">
       <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg>
-      Herramientas pro
+      <span class="modal-title-text">Herramientas pro</span>
+      <button type="button" class="modal-close-btn" aria-label="Cerrar Herramientas pro" onclick="cerrarHerramientasPro()">X</button>
     </div>
     <p class="tools-pro-lead">Calculadoras rápidas conectadas a tu instalación activa. Resultado útil en segundos.</p>
 

@@ -2106,6 +2106,39 @@ select#editVariedad option {
   flex-shrink: 0;
   opacity: 0.95;
 }
+.modal-title--with-close{
+  gap: 8px;
+}
+.modal-title-text{
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.modal-close-btn{
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  background: color-mix(in srgb, var(--bg3) 84%, transparent);
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease, background-color .16s ease;
+}
+.modal-close-btn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(148,163,184,.58);
+}
+.modal-close-btn:focus-visible{
+  outline: none;
+  border-color: #67e8f9;
+  box-shadow: 0 0 0 2px rgba(103,232,249,.2);
+}
 
 /* ══ Wizard Medición (modal) ══ */
 .medir-wizard-modal {
