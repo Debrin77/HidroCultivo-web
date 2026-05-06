@@ -3859,20 +3859,24 @@
 
       <div class="medir-wizard-insights" id="wizInsights" role="status" aria-live="polite"></div>
       <div class="medir-wizard-grid">
-        <div>
+        <div class="wiz-field wiz-field--ec">
           <label class="form-label" for="wizEC">EC (µS/cm)</label>
+          <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bolt"/></svg></span>
           <input id="wizEC" class="form-input" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="1350">
         </div>
-        <div>
+        <div class="wiz-field wiz-field--ph">
           <label class="form-label" for="wizPH">pH</label>
+          <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
           <input id="wizPH" class="form-input" type="number" inputmode="decimal" min="0" max="14" step="0.1" placeholder="6.0">
         </div>
-        <div>
+        <div class="wiz-field wiz-field--temp">
           <label class="form-label" for="wizTemp">Temp (°C)</label>
+          <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-therm"/></svg></span>
           <input id="wizTemp" class="form-input" type="number" inputmode="decimal" min="0" max="50" step="0.1" placeholder="20">
         </div>
-        <div>
+        <div class="wiz-field wiz-field--vol">
           <label class="form-label" for="wizVol">Vol (L)</label>
+          <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bucket"/></svg></span>
           <input id="wizVol" class="form-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1" placeholder="18">
         </div>
       </div>
