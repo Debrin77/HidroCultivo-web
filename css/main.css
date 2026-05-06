@@ -5628,6 +5628,10 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
   transition: transform .18s ease, box-shadow .2s ease, filter .2s ease;
   animation: medirAssistantPulse 3.2s ease-in-out infinite;
 }
+.medir-assistant-cta > span:not(.quick-btn-icon){
+  flex: 0 1 auto;
+  text-align: center;
+}
 .medir-assistant-cta:hover{
   transform: translateY(-1px);
   filter: saturate(1.06) brightness(1.04);
@@ -5654,6 +5658,17 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
   width: 20px;
   height: 20px;
   color: #ede9fe;
+}
+.medir-pro-tools{
+  justify-content: center;
+  text-align: center;
+  min-height: 54px;
+  font-size: 18px;
+  font-weight: 750;
+}
+.medir-pro-tools > span:not(.quick-btn-icon){
+  flex: 0 1 auto;
+  text-align: center;
 }
 @keyframes medirAssistantPulse{
   0%, 100%{
