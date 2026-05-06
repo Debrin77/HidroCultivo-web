@@ -49,12 +49,28 @@
 
   function parseRangeFromText(raw) {
     const s = txt(raw).replace(/,/g, '.');
-    const nums = s.match(/-?\d+(?:\.\d+)?/g);
-    if (!nums || nums.length < 2) return null;
-    const a = Number(nums[0]);
-    const b = Number(nums[1]);
-    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
-    return { min: Math.min(a, b), max: Math.max(a, b) };
+
+    // Caso principal: rango "A - B" o "A – B" (la fuente visual de Medir).
+    const mRange = s.match(/(\d+(?:\.\d+)?)\s*[–-]\s*(\d+(?:\.\d+)?)/);
+    if (mRange) {
+      const a = Number(mRange[1]);
+      const b = Number(mRange[2]);
+      if (Number.isFinite(a) && Number.isFinite(b)) {
+        return { min: Math.min(a, b), max: Math.max(a, b) };
+      }
+    }
+
+    // Fallback para formatos tipo "Objetivo 1700 ±100".
+    const mTol = s.match(/(\d+(?:\.\d+)?)\s*±\s*(\d+(?:\.\d+)?)/);
+    if (mTol) {
+      const c = Number(mTol[1]);
+      const tol = Number(mTol[2]);
+      if (Number.isFinite(c) && Number.isFinite(tol)) {
+        return { min: c - tol, max: c + tol };
+      }
+    }
+
+    return null;
   }
 
   function getManualRangeText(id) {
@@ -369,6 +385,10 @@
     if (typeof a11yDialogOpened === 'function') a11yDialogOpened(m);
     busy = false;
     // precargar notas desde Medir (si el usuario ya escribió)
+    try {
+      if (typeof actualizarBadgesNutriente === 'function') actualizarBadgesNutriente();
+      if (typeof evalParam === 'function') evalParam();
+    } catch (_) {}
     try {
       const src = el('inputNotas');
       const dst = el('wizNotas');
