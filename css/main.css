@@ -2696,6 +2696,35 @@ select#editVariedad option {
   line-height: 1.45;
   padding: 10px 12px;
 }
+.tools-pro-result-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:6px;
+}
+.tools-pro-result-title{
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:#bae6fd;
+}
+.tools-pro-result-pill{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  border:1px solid rgba(56,189,248,.45);
+  background:rgba(56,189,248,.14);
+  color:#e0f2fe;
+  font-size:11px;
+  font-weight:700;
+  padding:3px 9px;
+  white-space:nowrap;
+}
+.tools-pro-result-body{
+  color:var(--white);
+}
 .tools-pro-compare{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -2724,6 +2753,32 @@ select#editVariedad option {
 .tools-pro-compare-card strong{
   font-size: 14px;
   color: var(--white);
+  display:block;
+  margin-bottom:8px;
+}
+.tools-pro-kpi-row{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+}
+.tools-pro-kpi{
+  border:1px solid rgba(148,163,184,.26);
+  border-radius:10px;
+  background:rgba(15,23,42,.18);
+  padding:8px 9px;
+}
+.tools-pro-kpi span{
+  display:block;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  color:var(--muted);
+  margin-bottom:3px;
+}
+.tools-pro-kpi b{
+  font-size:16px;
+  line-height:1;
+  color:#f8fafc;
 }
 .tools-pro-compare-card.is-better{
   border-color: rgba(34,197,94,.5);
@@ -2762,6 +2817,7 @@ select#editVariedad option {
 @media (max-width: 420px){
   .tools-pro-row{ grid-template-columns: 1fr; }
   .tools-pro-compare{ grid-template-columns: 1fr; }
+  .tools-pro-result-head{ flex-wrap:wrap; }
 }
 
 @media (max-width: 420px) {
@@ -5453,13 +5509,15 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
 .u-text-gold { color: var(--gold); }
 
 .guardar-medicion-bar {
-  position: sticky;
-  bottom: 0;
-  background: linear-gradient(180deg, transparent, var(--bg) 40%);
-  padding: 16px 0 8px;
-  margin-top: 4px;
+  position: static;
+  background: none;
+  padding: 12px 0 8px;
+  margin-top: 8px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "tools wizard"
+    "save save";
   gap: 10px;
   align-items: stretch;
 }
@@ -5477,6 +5535,9 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
 .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #7c3aed; }
 html.hc-theme-dark .quick-btn[data-quick-icon="toolspro"] .hc-ico--ion-quick { color: #38bdf8; }
 html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #a78bfa; }
+.medir-pro-tools{ grid-area: tools; }
+.medir-pro-wizard{ grid-area: wizard; }
+.medir-save-main{ grid-area: save; width: 100%; }
 
 /* ══ RIEGO ══ */
 .riego-avanzado-details {

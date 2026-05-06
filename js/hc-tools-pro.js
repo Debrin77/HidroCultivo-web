@@ -12,6 +12,14 @@
     if (!Number.isFinite(n)) return '—';
     return (Math.round(n * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
   }
+  function esc(v) {
+    return String(v || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
 
   function open() {
     const m = el('modalHerramientasPro');
@@ -165,12 +173,19 @@
       if (box) { box.classList.add('setup-hidden'); box.innerHTML = ''; }
       return;
     }
+    const ecBaseRaw = num('toolDilEcBase');
     const ecBase = Number.isFinite(ecBaseRaw) && ecBaseRaw >= 0 ? ecBaseRaw : 0;
     const ecNetObjetivo = Math.max(0, ecO - ecBase);
     const idA = String(el('toolNutrienteA')?.value || '');
     const idB = String(el('toolNutrienteB')?.value || '');
     const na = getNutById(idA) || (typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null);
     const ns = getNutById(idB) || na;
+    if (!na || !ns) {
+      out.textContent = 'No hay nutrientes disponibles para comparar.';
+      if (box) { box.classList.add('setup-hidden'); box.innerHTML = ''; }
+      if (altBtn) altBtn.style.display = 'none';
+      return;
+    }
     const da = calcDoseBreakdown(0, ecNetObjetivo, vol, na);
     const ds = calcDoseBreakdown(0, ecNetObjetivo, vol, ns);
     const mla = da.porParte;
@@ -185,7 +200,13 @@
     const better = same
       ? 'Dosis similar entre ambos.'
       : (selBetter ? ('Recomendado: seleccionado. ' + ahorroTxt) : (actBetter ? ('Recomendado: activo. ' + ahorroTxt) : ''));
-    out.textContent = txtA + ' | ' + txtS + (better ? ' ' + better : '');
+    const recomendacion = same ? 'Empate técnico' : (selBetter ? 'Usar seleccionado' : 'Mantener activo');
+    out.innerHTML =
+      '<div class="tools-pro-result-head">' +
+        '<span class="tools-pro-result-title">Comparativa lista</span>' +
+        '<span class="tools-pro-result-pill">' + esc(recomendacion) + '</span>' +
+      '</div>' +
+      '<div class="tools-pro-result-body">' + esc(better || (txtA + ' | ' + txtS)) + '</div>';
 
     if (box) {
       box.classList.remove('setup-hidden');
@@ -193,14 +214,20 @@
         '<div class="tools-pro-compare-card ' + (actBetter ? 'is-better' : '') + '">' +
           '<h5>Activo</h5>' +
           (actBetter ? '<span class="tools-pro-badge-best">Mejor opción</span>' : '') +
-          '<strong>' + (na ? na.nombre : 'Activo') + '</strong><br>' +
-          '<span>~' + fmt(mla, 1) + ' ml/parte · total ~' + fmt(da.total, 1) + ' ml</span>' +
+          '<strong>' + esc(na ? na.nombre : 'Activo') + '</strong>' +
+          '<div class="tools-pro-kpi-row">' +
+            '<div class="tools-pro-kpi"><span>ml/parte</span><b>' + fmt(mla, 1) + '</b></div>' +
+            '<div class="tools-pro-kpi"><span>total ml</span><b>' + fmt(da.total, 1) + '</b></div>' +
+          '</div>' +
         '</div>' +
         '<div class="tools-pro-compare-card ' + (selBetter ? 'is-better' : '') + '">' +
           '<h5>Seleccionado</h5>' +
           (selBetter ? '<span class="tools-pro-badge-best">Mejor opción</span>' : '') +
-          '<strong>' + (ns ? ns.nombre : 'Seleccionado') + '</strong><br>' +
-          '<span>~' + fmt(mls, 1) + ' ml/parte · total ~' + fmt(ds.total, 1) + ' ml</span>' +
+          '<strong>' + esc(ns ? ns.nombre : 'Seleccionado') + '</strong>' +
+          '<div class="tools-pro-kpi-row">' +
+            '<div class="tools-pro-kpi"><span>ml/parte</span><b>' + fmt(mls, 1) + '</b></div>' +
+            '<div class="tools-pro-kpi"><span>total ml</span><b>' + fmt(ds.total, 1) + '</b></div>' +
+          '</div>' +
         '</div>';
       _altNutId = selBetter ? String(ns?.id || '') : '';
     }
