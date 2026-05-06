@@ -3624,23 +3624,27 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   background: #ccfbf1;
   color: #0f766e;
 }
-.welcome-value-card--assistant{
-  border-color: #c4b5fd;
-  background:
-    radial-gradient(120px 70px at 88% 14%, rgba(124,58,237,.12), transparent 72%),
-    #f5f3ff;
+.welcome-value-card--assistant {
+  border-color: #a78bfa;
+  border-width: 1.5px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
-.welcome-value-card--assistant .welcome-value-icon{
+.welcome-value-card--assistant .welcome-value-icon {
   background: #ddd6fe;
   color: #5b21b6;
 }
-.welcome-value-card--protools{
-  border-color: #a5f3fc;
-  background:
-    radial-gradient(120px 70px at 12% 14%, rgba(14,165,233,.12), transparent 72%),
-    #ecfeff;
+.welcome-value-card--protools {
+  border-color: #22d3ee;
+  border-width: 1.5px;
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
-.welcome-value-card--protools .welcome-value-icon{
+.welcome-value-card--protools .welcome-value-icon {
   background: #cffafe;
   color: #0c4a6e;
 }
@@ -3676,14 +3680,17 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
 }
 .welcome-foot--guide {
   margin: 0 0 12px;
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 16px;
+  line-height: 1.65;
   color: #475569;
-  text-align: left;
+  text-align: justify;
+  text-justify: inter-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
   background: rgba(255, 255, 255, 0.55);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 10px;
-  padding: 8px 10px;
+  padding: 13px 16px;
 }
 .welcome-guide-actions {
   display: flex;
@@ -3794,20 +3801,28 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
   background: rgba(13, 148, 136, 0.22);
   color: #99f6e4;
 }
-#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--assistant{
-  border-color: rgba(167,139,250,.55);
-  background: rgba(76,29,149,.26);
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--assistant {
+  border-color: rgba(167, 139, 250, 0.65);
+  border-width: 1.5px;
+  background: rgba(15, 23, 42, 0.52);
+  box-shadow:
+    0 12px 26px rgba(2, 6, 23, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
-#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--assistant .welcome-value-icon{
-  background: rgba(109,40,217,.28);
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--assistant .welcome-value-icon {
+  background: rgba(109, 40, 217, 0.28);
   color: #ddd6fe;
 }
-#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--protools{
-  border-color: rgba(103,232,249,.55);
-  background: rgba(8,145,178,.22);
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--protools {
+  border-color: rgba(103, 232, 249, 0.65);
+  border-width: 1.5px;
+  background: rgba(15, 23, 42, 0.52);
+  box-shadow:
+    0 12px 26px rgba(2, 6, 23, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
-#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--protools .welcome-value-icon{
-  background: rgba(14,165,233,.26);
+#welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--protools .welcome-value-icon {
+  background: rgba(14, 165, 233, 0.26);
   color: #bae6fd;
 }
 #welcomeOverlay[data-welcome-theme="dark"] .welcome-value-card--amber .welcome-value-icon {
@@ -3939,8 +3954,9 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
     font-size: 13px;
   }
   .welcome-foot--guide {
-    font-size: 13px;
-    line-height: 1.55;
+    font-size: 16px;
+    line-height: 1.65;
+    padding: 12px 14px;
   }
   .welcome-no-mas-label {
     font-size: 14px;
@@ -9288,7 +9304,7 @@ html.hc-theme-dark .consejo-text-toggle {
 }
 .consejo-ecph-table {
   width: 100%;
-  min-width: 280px;
+  min-width: 340px;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -9379,7 +9395,9 @@ html.hc-theme-dark .consejo-text-toggle {
   font-size: 13px;
   line-height: 1.45;
 }
-.consejo-dosis18-miTorre .consejo-dosis18-table { min-width: 0; }
+.consejo-dosis18-miTorre .consejo-dosis18-table {
+  min-width: 620px;
+}
 
 /* ══ CONFIGURACIÓN AGUA / SUSTRATO ══ */
 .config-section {
@@ -11248,16 +11266,17 @@ button.config-option:focus-visible,
 /* Desplegable técnico unificado (NFT, guías origen, tablas en Consejos) */
 .hc-details-tech {
   margin: 10px 0 0;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
   background: #fafafa;
-  overflow: hidden;
+  overflow: visible;
+  max-width: 100%;
 }
 .hc-details-tech-sum {
   list-style: none;
   cursor: pointer;
-  padding: 10px 12px;
-  font-size: 11px;
+  padding: 12px 14px;
+  font-size: 13px;
   font-weight: 700;
   color: #475569;
   display: flex;
@@ -11292,10 +11311,15 @@ button.config-option:focus-visible,
   transform: rotate(0deg);
 }
 .hc-details-tech-body {
-  padding: 0 12px 12px;
-  font-size: 10px;
-  line-height: 1.55;
+  padding: 4px 8px 16px;
+  font-size: 13px;
+  line-height: 1.6;
   color: #334155;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 .hc-details-tech--origen {
   border-color: rgba(37, 99, 235, 0.22);
@@ -11310,9 +11334,35 @@ button.config-option:focus-visible,
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
 }
 .hc-details-tech--origen .hc-details-tech-body {
-  font-size: 11px;
-  line-height: 1.45;
+  font-size: 13px;
+  line-height: 1.6;
   border-top: 1px solid rgba(37, 99, 235, 0.12);
+}
+#consejosLista .hc-details-tech-body .hc-germ-table-scroll {
+  margin-left: 0;
+  margin-right: 0;
+}
+#consejosLista .hc-details-tech-body table {
+  max-width: none;
+}
+html.hc-theme-dark .hc-details-tech {
+  background: color-mix(in srgb, var(--bg3) 88%, transparent);
+  border-color: var(--border);
+}
+html.hc-theme-dark .hc-details-tech-sum {
+  color: var(--text);
+}
+html.hc-theme-dark .hc-details-tech-sum::after {
+  background: var(--bg2);
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  color: var(--text);
+}
+html.hc-theme-dark .hc-details-tech-body {
+  color: var(--muted);
+  border-top-color: var(--border);
+}
+html.hc-theme-dark .hc-details-tech--origen .hc-details-tech-body {
+  border-top-color: color-mix(in srgb, var(--border) 70%, rgba(59, 130, 246, 0.25));
 }
 /* Ayuda torre/modal: solo el details → un solo marco */
 .hc-origen-hint-box:has(> .hc-details-tech:only-child) {
@@ -11351,20 +11401,22 @@ button.config-option:focus-visible,
 }
 .hc-germ-table-scroll {
   overflow-x: auto;
+  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
-  margin: 8px 0;
-  max-height: 70vh;
+  margin: 10px 0 12px;
+  max-height: none;
+  width: 100%;
 }
 .hc-germ-table {
   width: 100%;
-  min-width: 520px;
+  min-width: 560px;
   border-collapse: collapse;
-  font-size: 10px;
+  font-size: 12px;
 }
 .hc-germ-table th,
 .hc-germ-table td {
   border: 1px solid #e2e8f0;
-  padding: 6px 5px;
+  padding: 9px 8px;
   vertical-align: top;
   text-align: left;
 }
@@ -11372,6 +11424,15 @@ button.config-option:focus-visible,
   background: #f1f5f9;
   font-weight: 700;
   color: #334155;
+  font-size: 12px;
+}
+html.hc-theme-dark .hc-germ-table th,
+html.hc-theme-dark .hc-germ-table td {
+  border-color: var(--border);
+}
+html.hc-theme-dark .hc-germ-table th {
+  background: color-mix(in srgb, var(--bg3) 92%, transparent);
+  color: var(--text);
 }
 .consejo-germ-intro,
 .consejo-germ-foot {

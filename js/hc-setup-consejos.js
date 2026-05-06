@@ -897,6 +897,21 @@ function consejoPlainTextLen(html) {
     .length;
 }
 
+/** Tablas / desplegables: no aplicar line-clamp al bloque (rompe la consulta al expandir). */
+function consejoTextoHasRichBlocks(html) {
+  const s = String(html || '');
+  return (
+    /<table\b/i.test(s) ||
+    /<details\b/i.test(s) ||
+    /hc-details-tech/i.test(s) ||
+    /hc-germ-table/i.test(s) ||
+    /consejo-dosis18-wrap/i.test(s) ||
+    /consejo-ecph-wrap/i.test(s) ||
+    /consejo-ecph-table/i.test(s) ||
+    /consejo-dosis18-table/i.test(s)
+  );
+}
+
 function toggleConsejoExpand(btn) {
   const card = btn && btn.closest ? btn.closest('.consejo-card') : null;
   if (!card || !card.classList.contains('consejo-card--expandable')) return;
@@ -911,7 +926,9 @@ function toggleConsejoExpand(btn) {
 window.toggleConsejoExpand = toggleConsejoExpand;
 
 function htmlConsejoCard(cat, c) {
-  const expandable = consejoPlainTextLen(c.texto) > CONSEJO_TEXTO_PREVIEW_CHARS;
+  const expandable =
+    consejoPlainTextLen(c.texto) > CONSEJO_TEXTO_PREVIEW_CHARS &&
+    !consejoTextoHasRichBlocks(c.texto);
   const cardMod = expandable ? ' consejo-card--expandable' : '';
   const textCls = expandable ? 'consejo-texto consejo-texto--collapsible' : 'consejo-texto';
   const toggle = expandable
@@ -1783,7 +1800,9 @@ function buildConsejosDwc() {
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */
 function htmlInnerConsejoCard(cat, c) {
-  const expandable = consejoPlainTextLen(c.html) > CONSEJO_TEXTO_PREVIEW_CHARS;
+  const expandable =
+    consejoPlainTextLen(c.html) > CONSEJO_TEXTO_PREVIEW_CHARS &&
+    !consejoTextoHasRichBlocks(c.html);
   const cardMod = expandable ? ' consejo-card--expandable' : '';
   const textCls = expandable ? 'consejo-texto consejo-texto--collapsible' : 'consejo-texto';
   const toggle = expandable
