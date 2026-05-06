@@ -7,6 +7,7 @@
   let busy = false;
 
   function el(id) { return document.getElementById(id); }
+  function txt(v) { return String(v == null ? '' : v); }
 
   function setDots() {
     ['wizDot1', 'wizDot2', 'wizDot3'].forEach((id, idx) => {
@@ -39,6 +40,172 @@
     } catch (_) {}
   }
 
+  function numFromAny(raw) {
+    const s = txt(raw).trim().replace(',', '.');
+    if (!s) return '';
+    const n = Number(s);
+    return Number.isFinite(n) ? String(n) : '';
+  }
+
+  function getTargets() {
+    const cfg = (typeof state !== 'undefined' && state && state.configTorre) ? state.configTorre : {};
+    const out = {
+      ecMin: 1300,
+      ecMax: 1400,
+      phMin: 5.5,
+      phMax: 6.5,
+      tempMin: 18,
+      tempMax: 22,
+      volTarget: 18
+    };
+    try {
+      const ecObj = typeof getEcObjetivoManualUs === 'function' ? getEcObjetivoManualUs(cfg) : null;
+      if (Number.isFinite(ecObj)) {
+        out.ecMin = Math.round(ecObj - 50);
+        out.ecMax = Math.round(ecObj + 50);
+      } else if (typeof getECOptimaTorre === 'function') {
+        const ec = getECOptimaTorre();
+        if (ec && Number.isFinite(Number(ec.min)) && Number.isFinite(Number(ec.max))) {
+          out.ecMin = Number(ec.min);
+          out.ecMax = Number(ec.max);
+        }
+      }
+    } catch (_) {}
+    try {
+      if (typeof getPhOptimaTorre === 'function') {
+        const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+        const ph = getPhOptimaTorre(nut, cfg);
+        if (Array.isArray(ph) && Number.isFinite(Number(ph[0])) && Number.isFinite(Number(ph[1]))) {
+          out.phMin = Number(ph[0]);
+          out.phMax = Number(ph[1]);
+        }
+      }
+    } catch (_) {}
+    try {
+      if (typeof getVolumenMezclaLitros === 'function') {
+        const v = Number(getVolumenMezclaLitros(cfg));
+        if (Number.isFinite(v) && v > 0) out.volTarget = v;
+      }
+    } catch (_) {}
+    return out;
+  }
+
+  function htmlToText(html) {
+    const s = txt(html || '');
+    return s
+      .replace(/<br\s*\/?>/gi, ' · ')
+      .replace(/<\/div>/gi, ' · ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function getManualCorrectionsSnapshot(ecRaw, phRaw, tempRaw, volRaw) {
+    if (typeof evalEC !== 'function' || typeof evalPH !== 'function' || typeof evalTemp !== 'function' || typeof evalVol !== 'function') {
+      return null;
+    }
+    const ec = Number.isFinite(Number(ecRaw)) ? Number(ecRaw) : NaN;
+    const ph = Number.isFinite(Number(phRaw)) ? Number(phRaw) : NaN;
+    const temp = Number.isFinite(Number(tempRaw)) ? Number(tempRaw) : NaN;
+    const vol = Number.isFinite(Number(volRaw)) ? Number(volRaw) : NaN;
+
+    const snap = {
+      status: {},
+      correccionHtml: {
+        correccionEC: '',
+        correccionPH: '',
+        correccionTemp: '',
+        correccionVol: ''
+      }
+    };
+
+    const oldSetStatus = (typeof setStatus === 'function') ? setStatus : null;
+    const oldSetCard = (typeof setCard === 'function') ? setCard : null;
+    const oldShowCorreccion = (typeof showCorreccion === 'function') ? showCorreccion : null;
+
+    try {
+      // Capturar salida del motor de corrección real (Medir) sin tocar el DOM del wizard.
+      window.setStatus = function (id, tipo, icono, texto) {
+        snap.status[id] = { tipo, icono, texto };
+      };
+      window.setCard = function () {};
+      window.showCorreccion = function (id, html) {
+        if (id && Object.prototype.hasOwnProperty.call(snap.correccionHtml, id)) {
+          snap.correccionHtml[id] = html || '';
+        }
+      };
+
+      evalEC(ec, vol);
+      evalPH(ph, vol);
+      evalTemp(temp);
+      evalVol(vol, ec, ph);
+    } catch (_) {
+      // si algo falla, devolvemos null y caemos al plan B
+      return null;
+    } finally {
+      if (oldSetStatus) window.setStatus = oldSetStatus;
+      else try { delete window.setStatus; } catch (_) {}
+      if (oldSetCard) window.setCard = oldSetCard;
+      else try { delete window.setCard; } catch (_) {}
+      if (oldShowCorreccion) window.showCorreccion = oldShowCorreccion;
+      else try { delete window.showCorreccion; } catch (_) {}
+    }
+
+    return snap;
+  }
+
+  function getCorrections() {
+    const t = getTargets();
+    const ec = valNum('wizEC');
+    const ph = valNum('wizPH');
+    const temp = valNum('wizTemp');
+    const vol = valNum('wizVol');
+
+    const manual = getManualCorrectionsSnapshot(
+      ec ? Number(ec) : NaN,
+      ph ? Number(ph) : NaN,
+      temp ? Number(temp) : NaN,
+      vol ? Number(vol) : NaN
+    );
+
+    if (manual) {
+      const blocks = [
+        manual.correccionHtml.correccionEC,
+        manual.correccionHtml.correccionPH,
+        manual.correccionHtml.correccionTemp,
+        manual.correccionHtml.correccionVol
+      ].filter(Boolean);
+      const items = blocks.map(htmlToText).filter(Boolean);
+      return { items, targets: t, manualBlocksHtml: blocks };
+    }
+
+    // Plan B: recomendaciones simples (por si la lógica de Medir no está cargada)
+    const items = [];
+    const ecN = Number(ec || NaN);
+    const phN = Number(ph || NaN);
+    const tempN = Number(temp || NaN);
+    const volN = Number(vol || NaN);
+    if (Number.isFinite(ecN)) {
+      if (ecN < t.ecMin) items.push('EC baja (' + ecN + '): sube concentración de nutrientes en pequeños pasos y re-mide (meta ' + t.ecMin + '–' + t.ecMax + ').');
+      else if (ecN > t.ecMax) items.push('EC alta (' + ecN + '): diluye la mezcla para volver a ' + t.ecMin + '–' + t.ecMax + '.');
+    }
+    if (Number.isFinite(phN)) {
+      if (phN < t.phMin) items.push('pH bajo (' + phN + '): corrige con pH+ en dosis pequeñas hasta ' + t.phMin + '–' + t.phMax + '.');
+      else if (phN > t.phMax) items.push('pH alto (' + phN + '): corrige con pH- en dosis pequeñas hasta ' + t.phMin + '–' + t.phMax + '.');
+    }
+    if (Number.isFinite(tempN)) {
+      if (tempN < t.tempMin) items.push('Temperatura baja (' + tempN + '°C): intenta acercar el depósito a ' + t.tempMin + '–' + t.tempMax + '°C.');
+      if (tempN > t.tempMax) items.push('Temperatura alta (' + tempN + '°C): enfría/aisla depósito y mejora oxigenación.');
+    }
+    if (Number.isFinite(volN)) {
+      const low = Math.max(0.5, t.volTarget * 0.85);
+      const high = t.volTarget * 1.1;
+      if (volN < low) items.push('Volumen bajo (' + volN + ' L): repón hasta cerca de ' + t.volTarget + ' L para estabilizar EC/pH.');
+      if (volN > high) items.push('Volumen alto (' + volN + ' L): revisa sobrellenado para mantener margen de seguridad.');
+    }
+    return { items, targets: t, manualBlocksHtml: [] };
+  }
+
   function open() {
     const m = el('modalWizardMedicion');
     if (!m) return;
@@ -52,6 +219,8 @@
       const dst = el('wizNotas');
       if (src && dst && !String(dst.value || '').trim()) dst.value = String(src.value || '');
     } catch (_) {}
+    try { syncAdjustmentFields(); } catch (_) {}
+    try { renderInsights(); } catch (_) {}
     showStep(1);
   }
 
@@ -69,6 +238,137 @@
     if (!raw) return '';
     const n = Number(raw);
     return Number.isFinite(n) ? String(n) : '';
+  }
+
+  function getLastMed() {
+    try {
+      // Se guarda desde app-hc-medicion-toast.js; en este proyecto suele existir state.ultimaMedicion
+      const u = (typeof state !== 'undefined' && state && state.ultimaMedicion) ? state.ultimaMedicion : null;
+      if (!u || typeof u !== 'object') return null;
+      return {
+        ec: numFromAny(u.ec),
+        ph: numFromAny(u.ph),
+        temp: numFromAny(u.temp),
+        vol: numFromAny(u.vol)
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function setVal(id, v) {
+    const e = el(id);
+    if (!e) return;
+    e.value = txt(v);
+  }
+
+  function clearStep1() {
+    ['wizQuick','wizEC','wizPH','wizTemp','wizVol'].forEach((id) => setVal(id, ''));
+    renderInsights();
+  }
+
+  function useLast() {
+    const u = getLastMed();
+    if (!u) {
+      if (typeof showToast === 'function') showToast('No hay una última medición para precargar', true);
+      return;
+    }
+    // Solo rellenar los vacíos (no pisar lo que el usuario ya escribió)
+    const map = { wizEC: u.ec, wizPH: u.ph, wizTemp: u.temp, wizVol: u.vol };
+    Object.keys(map).forEach((id) => {
+      const cur = txt(el(id)?.value || '').trim();
+      if (!cur && map[id]) setVal(id, map[id]);
+    });
+    renderInsights();
+  }
+
+  function parseQuick() {
+    const raw = txt(el('wizQuick')?.value || '').trim();
+    if (!raw) return;
+    // Acepta: "EC 1350 pH 6.0 T 20 V 18" o "1350 6.0 20 18" (en orden EC pH T V)
+    const norm = raw
+      .replace(/µS\/cm/gi, ' ')
+      .replace(/[=;,]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const grab = (re) => {
+      const m = norm.match(re);
+      return m ? numFromAny(m[1]) : '';
+    };
+
+    const ec = grab(/\b(?:ec|ecs|conductividad)\s*([0-9]+(?:[.,][0-9]+)?)\b/i);
+    const ph = grab(/\bph\s*([0-9]+(?:[.,][0-9]+)?)\b/i);
+    const temp = grab(/\b(?:t|temp|temperatura)\s*([0-9]+(?:[.,][0-9]+)?)\b/i);
+    const vol = grab(/\b(?:v|vol|volumen|litros|l)\s*([0-9]+(?:[.,][0-9]+)?)\b/i);
+
+    // Fallback: 4 números en orden
+    if (!ec && !ph && !temp && !vol) {
+      const nums = norm.match(/[0-9]+(?:[.,][0-9]+)?/g) || [];
+      if (nums[0]) setVal('wizEC', numFromAny(nums[0]));
+      if (nums[1]) setVal('wizPH', numFromAny(nums[1]));
+      if (nums[2]) setVal('wizTemp', numFromAny(nums[2]));
+      if (nums[3]) setVal('wizVol', numFromAny(nums[3]));
+      renderInsights();
+      return;
+    }
+
+    if (ec) setVal('wizEC', ec);
+    if (ph) setVal('wizPH', ph);
+    if (temp) setVal('wizTemp', temp);
+    if (vol) setVal('wizVol', vol);
+    renderInsights();
+  }
+
+  function badge(kind, label, value) {
+    const v = txt(value).trim();
+    const cls = kind === 'ok' ? 'is-ok' : kind === 'warn' ? 'is-warn' : 'is-muted';
+    return `<span class="wiz-badge ${cls}"><strong>${label}</strong>${v ? ` <span class="wiz-badge-val">${v}</span>` : ''}</span>`;
+  }
+
+  function renderInsights() {
+    const box = el('wizInsights');
+    if (!box) return;
+    const ec = valNum('wizEC');
+    const ph = valNum('wizPH');
+    const temp = valNum('wizTemp');
+    const vol = valNum('wizVol');
+
+    const t = getTargets();
+    const parts = [];
+    if (ec) {
+      const n = Number(ec);
+      const ok = n >= t.ecMin && n <= t.ecMax;
+      parts.push(badge(ok ? 'ok' : 'warn', 'EC', n > 0 ? ec : ''));
+    } else parts.push(badge('muted', 'EC', '—'));
+
+    if (ph) {
+      const n = Number(ph);
+      const ok = n >= t.phMin && n <= t.phMax;
+      parts.push(badge(ok ? 'ok' : 'warn', 'pH', ph));
+    } else parts.push(badge('muted', 'pH', '—'));
+
+    if (temp) {
+      const n = Number(temp);
+      const ok = n >= t.tempMin && n <= t.tempMax;
+      parts.push(badge(ok ? 'ok' : 'warn', 'Temp', temp + '°C'));
+    } else parts.push(badge('muted', 'Temp', '—'));
+
+    if (vol) {
+      const n = Number(vol);
+      const low = Math.max(0.5, t.volTarget * 0.85);
+      const high = t.volTarget * 1.1;
+      const ok = n >= low && n <= high;
+      parts.push(badge(ok ? 'ok' : 'warn', 'Vol', vol + ' L'));
+    } else parts.push(badge('muted', 'Vol', '—'));
+
+    const diag = getCorrections();
+    const corr = diag.items.length
+      ? (diag.manualBlocksHtml && diag.manualBlocksHtml.length
+        ? `<div class="wiz-corrections">${diag.manualBlocksHtml.map((h) => `<div class="wiz-correccion-block">${h}</div>`).join('')}</div>`
+        : `<div class="wiz-corrections">${diag.items.map((x) => `<p>⚠️ ${x}</p>`).join('')}</div>`)
+      : '<div class="wiz-corrections wiz-corrections--ok"><p>✅ Todo en rango recomendado para esta instalación.</p></div>';
+    box.innerHTML = `<div class="wiz-badges">${parts.join('')}</div>${corr}`;
   }
 
   function buildReview() {
@@ -99,9 +399,32 @@
 
     const parts = [];
     parts.push(`<strong>Medición</strong>: EC ${ec || '—'} · pH ${ph || '—'} · °C ${temp || '—'} · L ${vol || '—'}`);
+    const diag = getCorrections();
+    if (diag.items.length) {
+      if (diag.manualBlocksHtml && diag.manualBlocksHtml.length) {
+        parts.push('<strong>Correcciones sugeridas</strong>:<br>' + diag.manualBlocksHtml.join('<br>'));
+      } else {
+        parts.push('<strong>Correcciones sugeridas</strong>:<br>• ' + diag.items.join('<br>• '));
+      }
+    }
     if (ajustes.length) parts.push('<strong>Ajustes</strong>: ' + ajustes.join(' · '));
     if (notas) parts.push('<strong>Nota</strong>: ' + notas.replace(/</g, '&lt;').replace(/>/g, '&gt;'));
     return parts.join('<br>');
+  }
+
+  function syncAdjustmentFields() {
+    const map = [
+      ['wizReposicionAguaChk', 'wizReposicionFields'],
+      ['wizAjustePhChk', 'wizPhFields'],
+      ['wizNutrientesChk', 'wizNutrientesFields']
+    ];
+    map.forEach(([chkId, wrapId]) => {
+      const chk = el(chkId);
+      const wrap = el(wrapId);
+      if (!wrap) return;
+      const on = !!chk?.checked;
+      wrap.classList.toggle('setup-hidden', !on);
+    });
   }
 
   async function commit() {
@@ -111,6 +434,7 @@
     const temp = valNum('wizTemp');
     const vol = valNum('wizVol');
     const notas = String(el('wizNotas')?.value || '').trim();
+    const diag = getCorrections();
 
     if (!ec && !ph && !temp && !vol) {
       if (typeof showToast === 'function') showToast('⚠️ Introduce al menos un valor', true);
@@ -151,6 +475,12 @@
     // Ajustes extra en registro (además de la medición ya registrada)
     try {
       if (typeof addRegistro === 'function') {
+        if (diag && Array.isArray(diag.items) && diag.items.length) {
+          addRegistro('apunte', {
+            icono: '🧭',
+            apunteTexto: 'Correcciones sugeridas (no automáticas): ' + diag.items.join(' | ')
+          }, true);
+        }
         if (el('wizReposicionAguaChk')?.checked) {
           const L = valNum('wizReposicionAguaL');
           if (L) {
@@ -197,6 +527,9 @@
 
   window.abrirWizardMedicion = open;
   window.cerrarWizardMedicion = close;
+  window.wizardMedQuickParse = parseQuick;
+  window.wizardMedUseLast = useLast;
+  window.wizardMedClearStep1 = clearStep1;
   window.wizardMedNext = function () {
     if (busy) return;
     if (step === 1) showStep(2);
@@ -213,5 +546,17 @@
     if (step === 2) showStep(1);
     else if (step === 3) showStep(2);
   };
+
+  // Live feedback
+  try {
+    ['wizEC','wizPH','wizTemp','wizVol'].forEach((id) => {
+      const e = el(id);
+      if (e) e.addEventListener('input', renderInsights, { passive: true });
+    });
+    ['wizRecargaCompleta','wizReposicionAguaChk','wizAjustePhChk','wizNutrientesChk'].forEach((id) => {
+      const e = el(id);
+      if (e) e.addEventListener('change', syncAdjustmentFields, { passive: true });
+    });
+  } catch (_) {}
 })();
 

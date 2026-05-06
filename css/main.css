@@ -2109,6 +2109,89 @@ select#editVariedad option {
 
 /* ══ Wizard Medición (modal) ══ */
 .medir-wizard-modal { max-width: 430px; }
+.medir-wizard-quick-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin: 10px 0 12px;
+}
+.medir-wizard-quick-actions .btn{
+  width:auto;
+  padding: 10px 12px;
+  border-radius: 12px;
+  min-height: 40px;
+  font-size: 0.95rem;
+}
+.medir-wizard-insights{
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  background:
+    radial-gradient(120px 80px at 20% 20%, rgba(34, 197, 94, 0.14), transparent 60%),
+    color-mix(in srgb, var(--bg3) 86%, transparent);
+}
+.wiz-badges{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.wiz-corrections{
+  margin-top: 10px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  padding-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+.wiz-corrections p{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--white);
+}
+.wiz-corrections--ok p{
+  color: #22c55e;
+}
+.wiz-correccion-block{
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--bg3) 84%, transparent);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.wiz-correccion-block .correccion-title{
+  margin-top: 0;
+}
+.wiz-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: rgba(148,163,184,0.12);
+  color: var(--white);
+  font-size: 13px;
+  line-height: 1;
+}
+.wiz-badge strong{
+  font-family: var(--font-ui);
+  letter-spacing: .02em;
+}
+.wiz-badge-val{
+  font-family: var(--font-mono);
+  opacity: 0.95;
+}
+.wiz-badge.is-ok{
+  border-color: rgba(34,197,94,0.32);
+  background: rgba(34,197,94,0.14);
+}
+.wiz-badge.is-warn{
+  border-color: rgba(245,158,11,0.32);
+  background: rgba(245,158,11,0.14);
+}
+.wiz-badge.is-muted{
+  opacity: 0.85;
+}
 .medir-wizard-steps {
   display: flex;
   justify-content: center;

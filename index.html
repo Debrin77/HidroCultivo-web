@@ -1243,7 +1243,7 @@
       <div class="guardar-medicion-bar">
         <button type="button" class="btn btn-secondary" onclick="abrirWizardMedicion()"
           aria-haspopup="dialog" aria-controls="modalWizardMedicion">
-          <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg> Medición guiada
+          <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg> Asistente pro
         </button>
         <button type="button" class="btn btn-primary" id="btnGuardarMedicion" onclick="guardarMedicion()">
           <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-save"/></svg> Guardar medición
@@ -3812,7 +3812,18 @@
 
     <!-- Paso 1 -->
     <section class="medir-wizard-page" id="wizPage1">
-      <p class="medir-wizard-lead">Registra los valores reales del depósito. Con uno basta; mejor cuantos más, más contexto.</p>
+      <p class="medir-wizard-lead">Pega la lectura del medidor o rellena campos. Te marcamos estado (OK/aviso) y dejamos el registro limpio.</p>
+
+      <label class="form-label" for="wizQuick">Entrada rápida (pegar)</label>
+      <input id="wizQuick" class="form-input" type="text" inputmode="text" autocomplete="off"
+        placeholder="Ej: EC 1350 pH 6.0 T 20 V 18">
+      <div class="medir-wizard-quick-actions">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="wizardMedQuickParse()">Aplicar</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="wizardMedUseLast()">Usar última</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="wizardMedClearStep1()">Limpiar</button>
+      </div>
+
+      <div class="medir-wizard-insights" id="wizInsights" role="status" aria-live="polite"></div>
       <div class="medir-wizard-grid">
         <div>
           <label class="form-label" for="wizEC">EC (µS/cm)</label>
@@ -3847,8 +3858,10 @@
           <input type="checkbox" id="wizReposicionAguaChk">
           <span>Reposición parcial: <strong>solo agua</strong></span>
         </label>
-        <input id="wizReposicionAguaL" class="form-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1"
-          placeholder="Litros añadidos (aprox.)">
+        <div id="wizReposicionFields" class="setup-hidden">
+          <input id="wizReposicionAguaL" class="form-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1"
+            placeholder="Litros añadidos (aprox.)">
+        </div>
       </div>
 
       <div class="medir-wizard-split">
@@ -3856,7 +3869,7 @@
           <input type="checkbox" id="wizAjustePhChk">
           <span>Ajuste de pH</span>
         </label>
-        <div class="medir-wizard-grid-2">
+        <div id="wizPhFields" class="medir-wizard-grid-2 setup-hidden">
           <input id="wizPhMasMl" class="form-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH+ ml">
           <input id="wizPhMenosMl" class="form-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH− ml">
         </div>
@@ -3867,7 +3880,9 @@
           <input type="checkbox" id="wizNutrientesChk">
           <span>Añadí nutrientes</span>
         </label>
-        <input id="wizNutrientesTxt" class="form-input" type="text" maxlength="120" placeholder="Ej. +2ml A+B, CalMag…">
+        <div id="wizNutrientesFields" class="setup-hidden">
+          <input id="wizNutrientesTxt" class="form-input" type="text" maxlength="120" placeholder="Ej. +2ml A+B, CalMag…">
+        </div>
       </div>
     </section>
 
