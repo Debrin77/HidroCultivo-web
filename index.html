@@ -1241,6 +1241,10 @@
 
       <!-- BOTÓN GUARDAR -->
       <div class="guardar-medicion-bar">
+        <button type="button" class="btn btn-ghost" onclick="abrirHerramientasPro()"
+          aria-haspopup="dialog" aria-controls="modalHerramientasPro">
+          <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg> Herramientas pro
+        </button>
         <button type="button" class="btn btn-secondary" onclick="abrirWizardMedicion()"
           aria-haspopup="dialog" aria-controls="modalWizardMedicion">
           <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg> Asistente pro
@@ -3987,6 +3991,90 @@
   </div>
 </div>
 
+<!-- Modal: Herramientas Pro -->
+<div class="modal-overlay" id="modalHerramientasPro" onclick="cerrarHerramientasPro(event)"
+  role="dialog" aria-modal="true" aria-labelledby="toolsProTitle" aria-hidden="true">
+  <div class="modal tools-pro-modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="toolsProTitle">
+      <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg>
+      Herramientas pro
+    </div>
+    <p class="tools-pro-lead">Calculadoras rápidas conectadas a tu instalación activa. Resultado útil en segundos.</p>
+
+    <div class="tools-pro-grid">
+      <section class="tools-pro-card">
+        <h4>⚡ Conversor EC</h4>
+        <div class="tools-pro-row">
+          <input id="toolEcUs" class="form-input" type="number" inputmode="decimal" placeholder="µS/cm">
+          <input id="toolEcMs" class="form-input" type="number" inputmode="decimal" placeholder="mS/cm">
+        </div>
+        <div class="tools-pro-actions">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProEcConvertFromUs()">µS → mS</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProEcConvertFromMs()">mS → µS</button>
+        </div>
+      </section>
+
+      <section class="tools-pro-card">
+        <h4>💧 Dilución EC alta</h4>
+        <div class="tools-pro-row">
+          <input id="toolDilEcActual" class="form-input" type="number" inputmode="decimal" placeholder="EC actual (µS/cm)">
+          <input id="toolDilEcObjetivo" class="form-input" type="number" inputmode="decimal" placeholder="EC objetivo (µS/cm)">
+        </div>
+        <div class="tools-pro-row">
+          <select id="toolNutrienteSel" class="form-input" aria-label="Nutriente para cálculo de corrección"></select>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="toolsProCompareNutrients()">Comparar</button>
+        </div>
+        <div id="toolNutCompareCards" class="tools-pro-compare setup-hidden"></div>
+        <div class="tools-pro-row">
+          <input id="toolDilVol" class="form-input" type="number" inputmode="decimal" placeholder="Volumen actual (L)">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="toolsProUseCurrent()">Usar actual</button>
+        </div>
+        <div id="toolDilResult" class="tools-pro-result">—</div>
+        <div class="tools-pro-actions">
+          <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCalcDilution()">Calcular</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProApplyToWizard('dilution')">Aplicar al asistente</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="toolUseAltBtn" onclick="toolsProApplyToWizard('dilution_alt')">Usar alternativa</button>
+        </div>
+      </section>
+
+      <section class="tools-pro-card">
+        <h4>🧪 Ajuste pH</h4>
+        <div class="tools-pro-row">
+          <input id="toolPhActual" class="form-input" type="number" inputmode="decimal" placeholder="pH actual">
+          <input id="toolPhObjetivo" class="form-input" type="number" inputmode="decimal" placeholder="pH objetivo">
+        </div>
+        <div class="tools-pro-row">
+          <input id="toolPhVol" class="form-input" type="number" inputmode="decimal" placeholder="Volumen (L)">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="toolsProUseCurrent()">Usar actual</button>
+        </div>
+        <div id="toolPhResult" class="tools-pro-result">—</div>
+        <div class="tools-pro-actions">
+          <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCalcPh()">Calcular</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProApplyToWizard('ph')">Aplicar al asistente</button>
+        </div>
+      </section>
+
+      <section class="tools-pro-card">
+        <h4>🪣 Reposición volumen</h4>
+        <div class="tools-pro-row">
+          <input id="toolVolActual" class="form-input" type="number" inputmode="decimal" placeholder="Volumen actual (L)">
+          <input id="toolVolObjetivo" class="form-input" type="number" inputmode="decimal" placeholder="Objetivo (L)">
+        </div>
+        <div id="toolVolResult" class="tools-pro-result">—</div>
+        <div class="tools-pro-actions">
+          <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCalcVol()">Calcular</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProApplyToWizard('vol')">Aplicar al asistente</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="tools-pro-footer">
+      <button type="button" class="btn btn-ghost" onclick="cerrarHerramientasPro()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MODAL FUENTES AGUA ══ -->
 <div class="modal-overlay" id="modalAgua" onclick="cerrarModalAgua(event)" role="dialog" aria-modal="true" aria-label="Fuentes de calidad del agua">
   <div class="modal">
@@ -4275,6 +4363,7 @@
   <script src="js/hc-setup-agua-sustrato.js?v=7"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=8"></script>
   <script src="js/hc-medicion-wizard.js?v=2"></script>
+  <script src="js/hc-tools-pro.js?v=4"></script>
   <script src="js/hc-setup-checklist.js?v=13"></script>
   <script src="js/hc-setup-historial-tabs.js?v=12"></script>
   <script src="js/hc-setup-consejos.js?v=23"></script>
