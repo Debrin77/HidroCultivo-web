@@ -72,9 +72,6 @@ function updateDashboard() {
     if (typeof refreshEcTransicionAvisoAll === 'function') refreshEcTransicionAvisoAll();
   } catch (_) {}
 
-  try {
-    updateWeeklyStatus();
-  } catch (_) {}
 }
 
 function getRecentMedicionesForWeekly(limit) {
@@ -111,102 +108,6 @@ function getWeeklyOutCount(entries) {
   return out;
 }
 
-function updateWeeklyStatus() {
-  const chip = document.getElementById('dashWeeklyChip');
-  const summary = document.getElementById('dashWeeklySummary');
-  const trends = document.getElementById('dashWeeklyTrends');
-  const actionBtn = document.getElementById('dashWeeklyActionBtn');
-  const wrap = document.getElementById('dashWeeklyStatus');
-  const toggleBtn = document.getElementById('dashWeeklyToggleBtn');
-  if (!chip || !summary || !trends || !actionBtn) return;
-
-  const med = getRecentMedicionesForWeekly(8);
-  if (!med.length) {
-    chip.textContent = 'Sin datos';
-    chip.className = 'dash-weekly-chip is-empty';
-    summary.textContent = 'Añade mediciones para ver estabilidad y tendencias.';
-    trends.innerHTML = '';
-    actionBtn.textContent = 'Ir a medir';
-    actionBtn.setAttribute('onclick', "goTab('mediciones')");
-    applyWeeklyCompactState();
-    return;
-  }
-
-  const ecVals = med.map((m) => parseFloat(m.ec)).filter((n) => Number.isFinite(n));
-  const phVals = med.map((m) => parseFloat(m.ph)).filter((n) => Number.isFinite(n));
-  const tempVals = med.map((m) => parseFloat(m.temp)).filter((n) => Number.isFinite(n));
-
-  const ecTrend = getTrendDirection(ecVals);
-  const phTrend = getTrendDirection(phVals);
-  const tempTrend = getTrendDirection(tempVals);
-  const outCount = getWeeklyOutCount(med);
-
-  const trendTxt = (id, dir) => {
-    if (dir === 'up') return id + ' ↑';
-    if (dir === 'down') return id + ' ↓';
-    return id + ' →';
-  };
-  trends.innerHTML =
-    '<span class="dash-weekly-trend-pill">' + trendTxt('EC', ecTrend) + '</span>' +
-    '<span class="dash-weekly-trend-pill">' + trendTxt('pH', phTrend) + '</span>' +
-    '<span class="dash-weekly-trend-pill">' + trendTxt('Temp', tempTrend) + '</span>';
-
-  // Recomendación priorizada
-  let recommendation = 'Mantén la rutina de medición: sistema estable.';
-  let actionLabel = 'Ver historial';
-  let actionOnclick = "goTab('historial')";
-  let stateCls = 'is-ok';
-  let chipTxt = 'Estable';
-
-  if (outCount >= 3 || ecTrend === 'up' || phTrend === 'up') {
-    chipTxt = 'Atención';
-    stateCls = 'is-warn';
-    recommendation = 'Se detecta deriva esta semana. Prioriza medir y corregir antes de la siguiente recarga.';
-    actionLabel = 'Abrir Medir';
-    actionOnclick = "goTab('mediciones')";
-  }
-  if (outCount >= 6) {
-    chipTxt = 'Corregir hoy';
-    stateCls = 'is-bad';
-    recommendation = 'Hay varios parámetros fuera de rango en la semana. Ejecuta corrección guiada hoy.';
-    actionLabel = 'Asistente pro';
-    actionOnclick = "goTab('mediciones'); setTimeout(function(){ if(typeof abrirWizardMedicion==='function') abrirWizardMedicion(); }, 120);";
-  }
-
-  chip.textContent = chipTxt;
-  chip.className = 'dash-weekly-chip ' + stateCls;
-  summary.textContent = recommendation;
-  actionBtn.textContent = actionLabel;
-  actionBtn.setAttribute('onclick', actionOnclick);
-  applyWeeklyCompactState();
-
-  function applyWeeklyCompactState() {
-    if (!wrap || !toggleBtn) return;
-    const isMobile = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia('(max-width: 680px)').matches
-      : false;
-    if (!isMobile) {
-      wrap.classList.remove('is-compact', 'is-expanded');
-      toggleBtn.classList.remove('setup-hidden');
-      toggleBtn.textContent = 'Ver';
-      toggleBtn.setAttribute('aria-expanded', 'true');
-      return;
-    }
-    const expanded = !!window._dashWeeklyExpanded;
-    wrap.classList.add('is-compact');
-    wrap.classList.toggle('is-expanded', expanded);
-    toggleBtn.classList.remove('setup-hidden');
-    toggleBtn.textContent = expanded ? 'Ocultar' : 'Ver';
-    toggleBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-  }
-}
-
-function toggleWeeklyStatusCompact() {
-  try {
-    window._dashWeeklyExpanded = !window._dashWeeklyExpanded;
-  } catch (_) {}
-  try { updateWeeklyStatus(); } catch (_) {}
-}
 
 function getTileClass(param, val) {
   if (param === 'ec' && typeof getDashTileClassEc === 'function') return getDashTileClassEc(val);
