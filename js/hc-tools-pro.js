@@ -192,11 +192,13 @@
       box.innerHTML =
         '<div class="tools-pro-compare-card ' + (actBetter ? 'is-better' : '') + '">' +
           '<h5>Activo</h5>' +
+          (actBetter ? '<span class="tools-pro-badge-best">Mejor opción</span>' : '') +
           '<strong>' + (na ? na.nombre : 'Activo') + '</strong><br>' +
           '<span>~' + fmt(mla, 1) + ' ml/parte · total ~' + fmt(da.total, 1) + ' ml</span>' +
         '</div>' +
         '<div class="tools-pro-compare-card ' + (selBetter ? 'is-better' : '') + '">' +
           '<h5>Seleccionado</h5>' +
+          (selBetter ? '<span class="tools-pro-badge-best">Mejor opción</span>' : '') +
           '<strong>' + (ns ? ns.nombre : 'Seleccionado') + '</strong><br>' +
           '<span>~' + fmt(mls, 1) + ' ml/parte · total ~' + fmt(ds.total, 1) + ' ml</span>' +
         '</div>';
