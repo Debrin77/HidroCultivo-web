@@ -1138,7 +1138,7 @@ function buildConsejosAguaNutrienteDinamico() {
     (ordenWarn ? '<p class="consejo-orden-warn">' + ordenWarn + '</p>' : '');
   const detalleProtocoloWrap =
     typeof hcWrapOrigenDetails === 'function'
-      ? hcWrapOrigenDetails(detalleProtocoloHtml, 'Ver checklist y protocolo completo', true)
+      ? hcWrapOrigenDetails(detalleProtocoloHtml, 'Ver checklist y protocolo completo', false)
       : detalleProtocoloHtml;
   const resumenProtocolo =
     '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> para ' +
@@ -1521,7 +1521,7 @@ function buildConsejoLuzExposicionCultivo() {
     planInt;
   const detalleLuzWrap =
     typeof hcWrapOrigenDetails === 'function'
-      ? hcWrapOrigenDetails(detalleLuzHtml, 'Ver detalle de luz, malla y aclimatación', true)
+      ? hcWrapOrigenDetails(detalleLuzHtml, 'Ver detalle de luz, malla y aclimatación', false)
       : detalleLuzHtml;
   const resumenCorto =
     ub === 'interior'
@@ -1565,7 +1565,7 @@ function buildConsejosNftHidraulica() {
       nftWrapDetalleTecnicoSummary(nftBombaDetalleTecnicoHtml(b), 'Bomba, caudal y geometría (detalle)');
     const dynWrap =
       typeof hcWrapOrigenDetails === 'function'
-        ? hcWrapOrigenDetails(dynDetalle, 'Ver veredicto y cálculo hidráulico completo', true)
+        ? hcWrapOrigenDetails(dynDetalle, 'Ver veredicto y cálculo hidráulico completo', false)
         : dynDetalle;
     dyn = htmlInnerConsejoCard(cat, {
       icono: '⚡',
@@ -1586,7 +1586,7 @@ function buildConsejosNftHidraulica() {
     'Se aproxima el <strong>área</strong> de la lámina en el fondo del canal: en tubo redondo, una <em>cuerda</em> del arco inundado; en perfil rectangular, <strong>ancho útil × altura de lámina</strong>. Con velocidad de película ~0,08–0,12 m/s (según pendiente) se obtiene L/h por canal. La app <strong>combina</strong> este resultado con un modelo empírico y adopta el caudal más exigente. No sustituye medición in situ ni el catálogo de la bomba.';
   const formulaWrap =
     typeof hcWrapOrigenDetails === 'function'
-      ? hcWrapOrigenDetails(formulaDetalle, 'Ver método de cálculo NFT', true)
+      ? hcWrapOrigenDetails(formulaDetalle, 'Ver método de cálculo NFT', false)
       : formulaDetalle;
   const formula = htmlConsejoCard(cat, {
     icono: '📐',
@@ -1684,7 +1684,7 @@ function buildConsejosDwc() {
     'En <strong>Deep Water Culture</strong> las raíces cuelgan en un depósito con la <strong>misma solución</strong> para todas las plantas. La tapa se modela con rejilla <strong>filas × cestas</strong> (prismático o cilíndrico en planta); el diagrama usa esa cuadrícula. Las medidas del depósito sirven para <strong>capacidad en litros</strong>, difusión y el contexto visual.';
   const introWrap =
     typeof hcWrapOrigenDetails === 'function'
-      ? hcWrapOrigenDetails(introDetalle, 'Ver explicación completa DWC', true)
+      ? hcWrapOrigenDetails(introDetalle, 'Ver explicación completa DWC', false)
       : introDetalle;
   const intro = htmlConsejoCard(cat, {
     icono: '🫧',
@@ -1766,7 +1766,7 @@ function buildConsejosDwc() {
     '<strong>Prismático:</strong> L, A y P (profundidad/altura <em>útil</em> del líquido, cm) → volumen ≈ L×A×P÷1000. <strong>Cilíndrico:</strong> Ø interior y misma P → volumen ≈ π×(Ø/2)²×P÷1000. <strong>Troncopiramidal:</strong> litros útiles medidos (sin P en el cálculo). <strong>Diám. cesta</strong> = aro en la tapa (mm); <strong>alt. cesta</strong> para el llenado seguro bajo el sustrato. <strong>Marco</strong> y <strong>hueco</strong> entre cestas en el <strong>asistente DWC</strong>; si no los guardaste, el aviso de rejilla usa marco 0 y 4 mm.';
   const medWrap =
     typeof hcWrapOrigenDetails === 'function'
-      ? hcWrapOrigenDetails(medDetalle, 'Ver guía completa de medidas DWC', true)
+      ? hcWrapOrigenDetails(medDetalle, 'Ver guía completa de medidas DWC', false)
       : medDetalle;
   const med = htmlConsejoCard(cat, {
     icono: '📐',
@@ -1841,7 +1841,7 @@ function buildConsejoProblemasCompacto(cat, c) {
   const detalle = i > 0 ? txt.slice(i + 1).trim() : '';
   const detalleWrap =
     detalle && typeof hcWrapOrigenDetails === 'function'
-      ? hcWrapOrigenDetails('<p class="consejo-p consejo-p--tight">' + detalle + '</p>', 'Ver causas y detalle', true)
+      ? hcWrapOrigenDetails('<p class="consejo-p consejo-p--tight">' + detalle + '</p>', 'Ver causas y detalle', false)
       : (detalle ? '<p class="consejo-p consejo-p--tight">' + detalle + '</p>' : '');
   return `
     <div class="consejo-card">
@@ -1863,29 +1863,52 @@ function buildConsejoProblemasCompacto(cat, c) {
   `;
 }
 
+/** Tras pintar la lista: todo &lt;details&gt; cerrado y tarjetas «Ver más» colapsadas (entrada a pestaña / cambio de categoría). */
+function plegarTodosDesplegablesConsejosLista(lista) {
+  if (!lista) return;
+  lista.querySelectorAll('details').forEach(function (d) {
+    d.open = false;
+  });
+  lista.querySelectorAll('.consejo-card--expandable.is-text-expanded').forEach(function (card) {
+    card.classList.remove('is-text-expanded');
+    const btn = card.querySelector('.consejo-text-toggle');
+    if (!btn) return;
+    btn.setAttribute('aria-expanded', 'false');
+    const lab = btn.querySelector('.consejo-text-toggle-label');
+    const ico = btn.querySelector('.consejo-text-toggle-ico');
+    if (lab) lab.textContent = 'Ver más';
+    if (ico) ico.textContent = '▼';
+  });
+}
+
 function renderConsejosLista() {
   const cat = CONSEJOS_DATA[consejoCatActiva];
   const lista = document.getElementById('consejosLista');
+  if (!lista || !cat) return;
 
   if (cat.soloTabla) {
     lista.innerHTML = buildHtmlTablaEcPh() + buildHtmlTablaPreparacionFabricante18L() + buildHtmlTablaConsejosPersonal();
+    plegarTodosDesplegablesConsejosLista(lista);
     return;
   }
 
   if (consejoCatActiva === 'nft') {
     lista.innerHTML = buildConsejosNftHidraulica();
+    plegarTodosDesplegablesConsejosLista(lista);
     return;
   }
 
   if (consejoCatActiva === 'dwc') {
     lista.innerHTML = buildConsejosDwc();
     mountDwcCestasGuiaEnPanelConsejos();
+    plegarTodosDesplegablesConsejosLista(lista);
     return;
   }
 
   if (consejoCatActiva === 'agua') {
     const [cEc, cColor] = cat.consejos;
     lista.innerHTML = htmlConsejoCard(cat, cEc) + buildConsejosAguaNutrienteDinamico() + htmlConsejoCard(cat, cColor);
+    plegarTodosDesplegablesConsejosLista(lista);
     return;
   }
 
@@ -1895,15 +1918,18 @@ function renderConsejosLista() {
       buildConsejoObjetivoTorreCultivo() +
       buildConsejoTablaGerminacionCultivos() +
       buildConsejoLuzExposicionCultivo();
+    plegarTodosDesplegablesConsejosLista(lista);
     return;
   }
 
   if (consejoCatActiva === 'problemas') {
     lista.innerHTML = cat.consejos.map(c => buildConsejoProblemasCompacto(cat, c)).join('');
+    plegarTodosDesplegablesConsejosLista(lista);
     return;
   }
 
   lista.innerHTML = cat.consejos.map(c => htmlConsejoCard(cat, c)).join('');
+  plegarTodosDesplegablesConsejosLista(lista);
 }
 
 
