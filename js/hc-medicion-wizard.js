@@ -47,6 +47,29 @@
     return Number.isFinite(n) ? String(n) : '';
   }
 
+  function parseRangeFromText(raw) {
+    const s = txt(raw).replace(/,/g, '.');
+    const nums = s.match(/-?\d+(?:\.\d+)?/g);
+    if (!nums || nums.length < 2) return null;
+    const a = Number(nums[0]);
+    const b = Number(nums[1]);
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+    return { min: Math.min(a, b), max: Math.max(a, b) };
+  }
+
+  function getManualRangeText(id) {
+    return txt(el(id)?.textContent || '').trim();
+  }
+
+  function syncWizardRangeLabels(t) {
+    const ecText = getManualRangeText('paramRangeEC');
+    const phText = getManualRangeText('paramRangePH');
+    const ecOpt = el('wizEcOptRange');
+    const phOpt = el('wizPhOptRange');
+    if (ecOpt) ecOpt.textContent = ecText ? ('Recomendado ' + ecText) : ('Recomendado ' + t.ecMin + ' - ' + t.ecMax + ' µS/cm');
+    if (phOpt) phOpt.textContent = phText ? ('Recomendado ' + phText) : ('Recomendado ' + t.phMin + ' - ' + t.phMax);
+  }
+
   function getTargets() {
     const cfg = (typeof state !== 'undefined' && state && state.configTorre) ? state.configTorre : {};
     const out = {
@@ -85,6 +108,22 @@
       if (typeof getVolumenMezclaLitros === 'function') {
         const v = Number(getVolumenMezclaLitros(cfg));
         if (Number.isFinite(v) && v > 0) out.volTarget = v;
+      }
+    } catch (_) {}
+
+    // Prioridad final: usar exactamente los rangos mostrados en entrada manual de Medir.
+    try {
+      const ecFromManual = parseRangeFromText(getManualRangeText('paramRangeEC'));
+      if (ecFromManual) {
+        out.ecMin = ecFromManual.min;
+        out.ecMax = ecFromManual.max;
+      }
+    } catch (_) {}
+    try {
+      const phFromManual = parseRangeFromText(getManualRangeText('paramRangePH'));
+      if (phFromManual) {
+        out.phMin = phFromManual.min;
+        out.phMax = phFromManual.max;
       }
     } catch (_) {}
     return out;
@@ -341,6 +380,7 @@
     try { syncAdjustmentFields(); } catch (_) {}
     try { renderInsights(); } catch (_) {}
     try { renderHero(); } catch (_) {}
+    try { syncWizardRangeLabels(getTargets()); } catch (_) {}
     showStep(1);
   }
 
@@ -455,6 +495,7 @@
     const vol = valNum('wizVol');
 
     const t = getTargets();
+    try { syncWizardRangeLabels(t); } catch (_) {}
     const parts = [];
     if (ec) {
       const n = Number(ec);

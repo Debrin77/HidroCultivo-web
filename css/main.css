@@ -2671,6 +2671,36 @@ select#editVariedad option {
     linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)),
     color-mix(in srgb, var(--bg3) 84%, transparent);
 }
+.tools-pro-card--led{
+  border-color: rgba(250,204,21,.45);
+  background:
+    radial-gradient(140px 90px at 10% 8%, rgba(250,204,21,.12), transparent 70%),
+    radial-gradient(120px 90px at 92% 16%, rgba(245,158,11,.13), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)),
+    color-mix(in srgb, var(--bg3) 84%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 12px 28px rgba(245,158,11,.18);
+}
+.tools-pro-led-head{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin: -2px 0 10px;
+}
+.tools-pro-led-chip{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  border:1px solid rgba(250,204,21,.5);
+  background:rgba(250,204,21,.14);
+  color:#fef3c7;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  padding:3px 8px;
+}
 .tools-pro-card h4{
   margin: 0 0 10px;
   font-size: 14px;
@@ -2757,6 +2787,12 @@ select#editVariedad option {
 }
 .tools-pro-result-body{
   color:var(--white);
+}
+.tools-pro-led-grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:8px;
+  margin-bottom:8px;
 }
 .tools-pro-compare{
   display:grid;
@@ -2850,6 +2886,7 @@ select#editVariedad option {
 @media (max-width: 420px){
   .tools-pro-row{ grid-template-columns: 1fr; }
   .tools-pro-compare{ grid-template-columns: 1fr; }
+  .tools-pro-led-grid{ grid-template-columns: 1fr; }
   .tools-pro-result-head{ flex-wrap:wrap; }
 }
 

@@ -259,6 +259,63 @@
     }
   }
 
+  function calcLed() {
+    const etapa = String(el('toolLedEtapa')?.value || 'semilla');
+    const tipo = String(el('toolLedTipo')?.value || 'panel');
+    const wmax = num('toolLedWmax');
+    const area = num('toolLedArea');
+    const out = el('toolLedResult');
+    if (!out) return;
+    if (!Number.isFinite(wmax) || wmax <= 0) {
+      out.textContent = 'Introduce la potencia maxima de tu luminaria LED.';
+      return;
+    }
+
+    const baseByStage = {
+      semilla: { distMin: 40, distMax: 55, powerPct: 28, hours: '16 h', ppfd: '90-140' },
+      emergencia: { distMin: 35, distMax: 45, powerPct: 38, hours: '16-18 h', ppfd: '120-180' },
+      plantula_temprana: { distMin: 30, distMax: 38, powerPct: 50, hours: '16-18 h', ppfd: '170-230' },
+      plantula_avanzada: { distMin: 24, distMax: 32, powerPct: 62, hours: '14-16 h', ppfd: '220-320' }
+    };
+    const typeAdj = {
+      barra: { dist: -2, pct: -4 },
+      panel: { dist: 0, pct: 0 },
+      foco: { dist: 5, pct: -8 },
+      quantum: { dist: 3, pct: -10 }
+    };
+    const stage = baseByStage[etapa] || baseByStage.semilla;
+    const tAdj = typeAdj[tipo] || typeAdj.panel;
+    let pct = Math.max(18, Math.min(90, stage.powerPct + tAdj.pct));
+    let distMin = Math.max(16, stage.distMin + tAdj.dist);
+    let distMax = Math.max(distMin + 4, stage.distMax + tAdj.dist);
+
+    if (Number.isFinite(area) && area > 0) {
+      const densidad = wmax / area;
+      if (densidad > 280) { pct = Math.max(18, pct - 8); distMin += 4; distMax += 5; }
+      else if (densidad < 120) { pct = Math.min(90, pct + 6); distMin = Math.max(14, distMin - 2); distMax = Math.max(distMin + 4, distMax - 2); }
+    }
+
+    const wattsWork = wmax * (pct / 100);
+    const etapaLabel = {
+      semilla: 'Semilla',
+      emergencia: 'Emergencia',
+      plantula_temprana: 'Plantula temprana',
+      plantula_avanzada: 'Plantula avanzada'
+    }[etapa] || 'Semilla';
+    out.innerHTML =
+      '<div class="tools-pro-result-head">' +
+        '<span class="tools-pro-result-title">Plan de luz LED</span>' +
+        '<span class="tools-pro-result-pill">' + esc(etapaLabel) + '</span>' +
+      '</div>' +
+      '<div class="tools-pro-led-grid">' +
+        '<div class="tools-pro-kpi"><span>Altura</span><b>' + fmt(distMin, 0) + '-' + fmt(distMax, 0) + ' cm</b></div>' +
+        '<div class="tools-pro-kpi"><span>Potencia</span><b>' + fmt(pct, 0) + '%</b></div>' +
+        '<div class="tools-pro-kpi"><span>W estimados</span><b>' + fmt(wattsWork, 0) + ' W</b></div>' +
+        '<div class="tools-pro-kpi"><span>Fotoperiodo</span><b>' + esc(stage.hours) + '</b></div>' +
+      '</div>' +
+      '<div class="tools-pro-result-body">Objetivo PPFD orientativo: ' + esc(stage.ppfd) + ' umol/m2/s. Ajusta en pasos de 5% cada 24 h.</div>';
+  }
+
   function useCurrent() { prefll(); }
 
   function applyToWizard(type) {
@@ -297,6 +354,7 @@
   window.toolsProEcConvertFromMs = ecFromMs;
   window.toolsProCalcDilution = calcDilution;
   window.toolsProCalcPh = calcPh;
+  window.toolsProCalcLed = calcLed;
   window.toolsProApplyToWizard = applyToWizard;
   window.toolsProCompareNutrients = compareNutrients;
 })();

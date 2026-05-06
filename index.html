@@ -3865,7 +3865,7 @@
           <div class="wiz-field-scale">
             <div class="wiz-field-scale-track"><span class="wiz-field-scale-fill"></span></div>
             <div class="wiz-field-scale-meta"><span>0</span><span>2500</span></div>
-            <div class="wiz-field-scale-opt">Óptimo 1200 - 2400 µS/cm</div>
+            <div class="wiz-field-scale-opt" id="wizEcOptRange">Óptimo 1200 - 2400 µS/cm</div>
           </div>
         </div>
         <div class="wiz-field wiz-field--ph">
@@ -3883,7 +3883,7 @@
           <div class="wiz-field-scale">
             <div class="wiz-field-scale-track"><span class="wiz-field-scale-fill"></span></div>
             <div class="wiz-field-scale-meta"><span>0</span><span>14</span></div>
-            <div class="wiz-field-scale-opt">Óptimo 5.5 - 6.5</div>
+            <div class="wiz-field-scale-opt" id="wizPhOptRange">Óptimo 5.5 - 6.5</div>
           </div>
         </div>
         <div class="wiz-field wiz-field--temp">
@@ -4055,6 +4055,36 @@
         <div class="tools-pro-actions">
           <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCalcPh()">Calcular</button>
           <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProApplyToWizard('ph')">Aplicar al asistente</button>
+        </div>
+      </section>
+
+      <section class="tools-pro-card tools-pro-card--led">
+        <h4>💡 Luz LED (germinación)</h4>
+        <div class="tools-pro-led-head">
+          <span class="tools-pro-led-chip">Semillero</span>
+          <span class="tools-pro-led-chip">Ajuste progresivo</span>
+        </div>
+        <div class="tools-pro-row">
+          <select id="toolLedEtapa" class="form-input" aria-label="Etapa de germinación">
+            <option value="semilla">Semilla (sin brote)</option>
+            <option value="emergencia">Emergencia (cotiledones)</option>
+            <option value="plantula_temprana">Plántula temprana</option>
+            <option value="plantula_avanzada">Plántula avanzada</option>
+          </select>
+          <select id="toolLedTipo" class="form-input" aria-label="Tipo de luz LED">
+            <option value="barra">Barra LED / lineal</option>
+            <option value="panel">Panel LED</option>
+            <option value="foco">Foco LED puntual</option>
+            <option value="quantum">Quantum board</option>
+          </select>
+        </div>
+        <div class="tools-pro-row">
+          <input id="toolLedWmax" class="form-input" type="number" inputmode="decimal" placeholder="Potencia máx. luminaria (W)">
+          <input id="toolLedArea" class="form-input" type="number" inputmode="decimal" placeholder="Área cubierta (m², opcional)">
+        </div>
+        <div id="toolLedResult" class="tools-pro-result">Selecciona etapa y potencia para obtener altura, potencia y fotoperiodo recomendados.</div>
+        <div class="tools-pro-actions">
+          <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCalcLed()">Calcular LED</button>
         </div>
       </section>
 
