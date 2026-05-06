@@ -5608,6 +5608,16 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
 .medir-pro-tools{ grid-area: tools; }
 .medir-pro-wizard{ grid-area: wizard; }
 .medir-save-main{ grid-area: save; width: 100%; }
+.medir-manual-details{
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+.medir-manual-details[open]{
+  border-color: color-mix(in srgb, var(--border) 80%, #38bdf8 20%);
+}
+.medir-manual-body .param-card:last-child{
+  margin-bottom: 0;
+}
 
 /* ══ RIEGO ══ */
 .riego-avanzado-details {

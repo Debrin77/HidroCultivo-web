@@ -1078,6 +1078,15 @@
 
       </div>
 
+      <details class="medir-manual-details riego-avanzado-details">
+        <summary>
+          <span class="riego-avanzado-summary-main">
+            <svg class="hc-ico hc-ico--summary" aria-hidden="true" focusable="false"><use href="#hc-i-wrench"/></svg>
+            <span>Modo avanzado (manual)</span>
+          </span>
+          <span class="riego-avanzado-summary-sub">Opcional: introduce valores directamente si no quieres usar el asistente.</span>
+        </summary>
+        <div class="riego-avanzado-details-body medir-manual-body">
       <!-- EC -->
       <div class="param-card" id="cardEC">
         <div class="param-header">
@@ -1145,6 +1154,8 @@
         <div class="param-status empty" id="statusVol" role="status" aria-live="polite" aria-atomic="true"></div>
         <div class="correccion-box" id="correccionVol" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></div>
       </div>
+      </div>
+      </details>
 
       <!-- Barra recarga depósito (junto al volumen medido) — cabecera desplegable -->
       <div class="recarga-card recarga-card--mt-4" id="recargaCardMediciones">
@@ -1249,7 +1260,7 @@
         <button type="button" class="quick-btn quick-btn-info medir-pro-btn medir-pro-wizard" data-quick-icon="asistentepro" onclick="abrirWizardMedicion()"
           aria-haspopup="dialog" aria-controls="modalWizardMedicion">
           <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-sparkle"/></svg></span>
-          <span>Asistente pro</span>
+          <span>Asistente de mediciones</span>
         </button>
         <button type="button" class="btn btn-primary medir-save-main" id="btnGuardarMedicion" onclick="guardarMedicion()">
           <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-save"/></svg> Guardar medición
@@ -3807,8 +3818,8 @@
     <div class="modal-handle"></div>
     <div class="modal-title modal-title--with-close" id="wizardMedTitle">
       <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-sparkle"/></svg>
-      <span class="modal-title-text">Medición guiada</span>
-      <button type="button" class="modal-close-btn" aria-label="Cerrar Medición guiada" onclick="cerrarWizardMedicion()">X</button>
+      <span class="modal-title-text">Asistente de mediciones</span>
+      <button type="button" class="modal-close-btn" aria-label="Cerrar Asistente de mediciones" onclick="cerrarWizardMedicion()">X</button>
     </div>
     <div class="wiz-hero" aria-hidden="true">
       <div class="wiz-hero-glow"></div>

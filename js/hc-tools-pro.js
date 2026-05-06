@@ -344,7 +344,7 @@
       if (el('wizAjustePhChk')) el('wizAjustePhChk').checked = true;
     }
     close();
-    if (typeof showToast === 'function') showToast('✅ Datos aplicados al Asistente pro');
+    if (typeof showToast === 'function') showToast('✅ Datos aplicados al Asistente de mediciones');
   }
 
   window.abrirHerramientasPro = open;
