@@ -5584,10 +5584,8 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   padding: 12px 0 8px;
   margin-top: 8px;
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-areas:
-    "tools wizard"
-    "save save";
+  grid-template-columns: 1fr;
+  grid-template-areas: "tools";
   gap: 10px;
   align-items: stretch;
 }
@@ -5598,16 +5596,28 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   justify-content: center;
   align-items: center;
 }
-.guardar-medicion-bar #btnGuardarMedicion{
-  min-height: 46px;
-}
 .quick-btn[data-quick-icon="toolspro"] .hc-ico--ion-quick { color: #0ea5e9; }
 .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #7c3aed; }
 html.hc-theme-dark .quick-btn[data-quick-icon="toolspro"] .hc-ico--ion-quick { color: #38bdf8; }
 html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #a78bfa; }
 .medir-pro-tools{ grid-area: tools; }
-.medir-pro-wizard{ grid-area: wizard; }
-.medir-save-main{ grid-area: save; width: 100%; }
+.medir-assistant-cta-wrap{
+  margin: 10px 0 14px;
+  display: flex;
+  justify-content: center;
+}
+.medir-assistant-cta{
+  width: 100%;
+  min-height: 58px;
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: .01em;
+  justify-content: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 12px 22px rgba(124,58,237,.2);
+}
 .medir-manual-details{
   margin-top: 4px;
   margin-bottom: 12px;

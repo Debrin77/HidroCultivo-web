@@ -582,6 +582,13 @@
         <div class="card-title"><svg class="hc-ico hc-ico--title" aria-hidden="true" focusable="false"><use href="#hc-i-clock"/></svg> Última medición</div>
         <div id="ultimaMedicionInfo" class="ultima-medicion-info"></div>
       </div>
+      <div class="medir-assistant-cta-wrap">
+        <button type="button" class="quick-btn quick-btn-info medir-assistant-cta" data-quick-icon="asistentepro" onclick="abrirWizardMedicion()"
+          aria-haspopup="dialog" aria-controls="modalWizardMedicion" aria-label="Abrir Asistente de mediciones">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-sparkle"/></svg></span>
+          <span>Asistente de mediciones</span>
+        </button>
+      </div>
 
       <!-- Configuración agua y sustrato -->
       <div id="configPanel">
@@ -1256,14 +1263,6 @@
           aria-haspopup="dialog" aria-controls="modalHerramientasPro">
           <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-sparkle"/></svg></span>
           <span>Herramientas pro</span>
-        </button>
-        <button type="button" class="quick-btn quick-btn-info medir-pro-btn medir-pro-wizard" data-quick-icon="asistentepro" onclick="abrirWizardMedicion()"
-          aria-haspopup="dialog" aria-controls="modalWizardMedicion">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-sparkle"/></svg></span>
-          <span>Asistente de mediciones</span>
-        </button>
-        <button type="button" class="btn btn-primary medir-save-main" id="btnGuardarMedicion" onclick="guardarMedicion()">
-          <svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-save"/></svg> Guardar medición
         </button>
       </div>
 
