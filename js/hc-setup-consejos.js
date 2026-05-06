@@ -820,8 +820,10 @@ function refreshConsejosSiVisible() {
 }
 
 function renderConsejos() {
+  const modoRow = document.getElementById('consejosModoRow');
   const cats = document.getElementById('consejosCats');
   const lista = document.getElementById('consejosLista');
+  if (!cats || !lista) return;
   const cfg = state.configTorre || {};
   const tipoInst = cfg.tipoInstalacion || 'torre';
   const modoUi = getConsejosModoUi(cfg);
@@ -861,11 +863,16 @@ function renderConsejos() {
     </button>
   `).join('');
   const modoHtml =
-    '<div class="consejos-modo-row" style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-bottom:8px;">' +
-    '<button type="button" class="consejo-cat-btn ' + (modoUi === 'principiante' ? 'active' : '') + '" style="padding:6px 10px;font-size:11px;" onclick="setConsejosModoUi(\'principiante\')">Modo principiante</button>' +
-    '<button type="button" class="consejo-cat-btn ' + (modoUi === 'avanzado' ? 'active' : '') + '" style="padding:6px 10px;font-size:11px;" onclick="setConsejosModoUi(\'avanzado\')">Modo avanzado</button>' +
+    '<div class="consejos-modo-segment" role="radiogroup" aria-label="Nivel de detalle">' +
+    '<button type="button" role="radio" aria-checked="' + (modoUi === 'principiante' ? 'true' : 'false') + '" ' +
+    'class="consejos-modo-btn' + (modoUi === 'principiante' ? ' is-active' : '') + '" ' +
+    'onclick="setConsejosModoUi(\'principiante\')">Principiante</button>' +
+    '<button type="button" role="radio" aria-checked="' + (modoUi === 'avanzado' ? 'true' : 'false') + '" ' +
+    'class="consejos-modo-btn' + (modoUi === 'avanzado' ? ' is-active' : '') + '" ' +
+    'onclick="setConsejosModoUi(\'avanzado\')">Avanzado</button>' +
     '</div>';
-  cats.innerHTML = modoHtml + tabsHtml;
+  if (modoRow) modoRow.innerHTML = modoHtml;
+  cats.innerHTML = tabsHtml;
 
   lista.setAttribute('role', 'tabpanel');
   lista.setAttribute('aria-labelledby', 'catBtn-' + consejoCatActiva);
@@ -879,9 +886,42 @@ function selConsejoCat(key) {
   document.getElementById('consejosLista').scrollTop = 0;
 }
 
+const CONSEJO_TEXTO_PREVIEW_CHARS = 220;
+
+function consejoPlainTextLen(html) {
+  if (!html) return 0;
+  return String(html)
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .length;
+}
+
+function toggleConsejoExpand(btn) {
+  const card = btn && btn.closest ? btn.closest('.consejo-card') : null;
+  if (!card || !card.classList.contains('consejo-card--expandable')) return;
+  const open = card.classList.toggle('is-text-expanded');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  const lab = btn.querySelector('.consejo-text-toggle-label');
+  const ico = btn.querySelector('.consejo-text-toggle-ico');
+  if (lab) lab.textContent = open ? 'Ver menos' : 'Ver más';
+  if (ico) ico.textContent = open ? '▲' : '▼';
+}
+
+window.toggleConsejoExpand = toggleConsejoExpand;
+
 function htmlConsejoCard(cat, c) {
+  const expandable = consejoPlainTextLen(c.texto) > CONSEJO_TEXTO_PREVIEW_CHARS;
+  const cardMod = expandable ? ' consejo-card--expandable' : '';
+  const textCls = expandable ? 'consejo-texto consejo-texto--collapsible' : 'consejo-texto';
+  const toggle = expandable
+    ? '<button type="button" class="consejo-text-toggle" onclick="toggleConsejoExpand(this)" aria-expanded="false">' +
+      '<span class="consejo-text-toggle-label">Ver más</span>' +
+      '<span class="consejo-text-toggle-ico" aria-hidden="true">▼</span>' +
+      '</button>'
+    : '';
   return `
-    <div class="consejo-card">
+    <div class="consejo-card${cardMod}">
       <div class="consejo-header">
         <div class="consejo-icon" style="--consejo-icon-bg:${cat.bg}">
           ${c.icono}
@@ -890,7 +930,10 @@ function htmlConsejoCard(cat, c) {
           <div class="consejo-titulo">${c.titulo}</div>
         </div>
       </div>
-      <div class="consejo-texto">${c.texto}</div>
+      <div class="consejo-body-stack">
+        <div class="${textCls}">${c.texto}</div>
+        ${toggle}
+      </div>
       ${c.alerta ? `
         <div class="consejo-alerta ${c.alerta.tipo}">
           <span>${c.alerta.txt}</span>
@@ -1740,8 +1783,17 @@ function buildConsejosDwc() {
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */
 function htmlInnerConsejoCard(cat, c) {
+  const expandable = consejoPlainTextLen(c.html) > CONSEJO_TEXTO_PREVIEW_CHARS;
+  const cardMod = expandable ? ' consejo-card--expandable' : '';
+  const textCls = expandable ? 'consejo-texto consejo-texto--collapsible' : 'consejo-texto';
+  const toggle = expandable
+    ? '<button type="button" class="consejo-text-toggle" onclick="toggleConsejoExpand(this)" aria-expanded="false">' +
+      '<span class="consejo-text-toggle-label">Ver más</span>' +
+      '<span class="consejo-text-toggle-ico" aria-hidden="true">▼</span>' +
+      '</button>'
+    : '';
   return `
-    <div class="consejo-card">
+    <div class="consejo-card${cardMod}">
       <div class="consejo-header">
         <div class="consejo-icon" style="--consejo-icon-bg:${cat.bg}">
           ${c.icono}
@@ -1750,7 +1802,10 @@ function htmlInnerConsejoCard(cat, c) {
           <div class="consejo-titulo">${c.titulo}</div>
         </div>
       </div>
-      <div class="consejo-texto">${c.html}</div>
+      <div class="consejo-body-stack">
+        <div class="${textCls}">${c.html}</div>
+        ${toggle}
+      </div>
       ${c.alerta ? `
         <div class="consejo-alerta ${c.alerta.tipo}">
           <span>${c.alerta.txt}</span>
