@@ -13379,6 +13379,38 @@ html.hc-theme-dark .hc-help-muted {
 html.hc-theme-dark .hc-code-tiny {
   font-size: 12px;
 }
+
+/* Última pasada WCAG (dark): subir microtextos 8–10px a mínimos legibles. */
+html.hc-theme-dark .dia-nombre {
+  font-size: 12px;
+}
+html.hc-theme-dark .dia-lluvia {
+  font-size: 11px;
+}
+html.hc-theme-dark .chart-date {
+  font-size: 11px;
+}
+html.hc-theme-dark .hist-torre-chip {
+  font-size: 11px;
+  color: #bbf7d0;
+  background: rgba(22, 163, 74, 0.16);
+  border-color: rgba(74, 222, 128, 0.38);
+}
+html.hc-theme-dark .hist-note-line {
+  font-size: 12px;
+}
+html.hc-theme-dark .hist-recarga-cell-lab {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+html.hc-theme-dark .hist-recarga-cell-unit {
+  font-size: 11px;
+}
+html.hc-theme-dark .riego-clima-mc-pub,
+html.hc-theme-dark .riego-clima-mc-ajuste-sub,
+html.hc-theme-dark .torre-dwc-max-cestas-hint {
+  font-size: 12px;
+}
 html.hc-theme-dark .dash-sistema-info[role="button"] {
   background: var(--bg2);
   border-color: var(--border);
@@ -13425,4 +13457,36 @@ html.hc-theme-dark .dash-torre-nombre {
 html.hc-theme-dark .dash-torre-cambiar {
   background: rgba(22, 163, 74, 0.2);
   color: #bbf7d0;
+}
+/* Texto auxiliar y énfasis: mantener contraste en dark (evitar grises oscuros heredados). */
+html.hc-theme-dark .form-label {
+  font-size: 12px;
+  color: #d6e2f0;
+}
+html.hc-theme-dark .hc-guia-nota,
+html.hc-theme-dark .spc-desc,
+html.hc-theme-dark .setup-ec-fuente,
+html.hc-theme-dark .nut-quick-detail {
+  font-size: 12px;
+  color: var(--muted);
+}
+html.hc-theme-dark .nut-quick-name {
+  color: var(--white);
+}
+html.hc-theme-dark .tab-context-hint-inner strong,
+html.hc-theme-dark .medir-help-box strong,
+html.hc-theme-dark .medir-toggle-label strong,
+html.hc-theme-dark .riego-horario-recomendado strong,
+html.hc-theme-dark .riego-hint-sm strong,
+html.hc-theme-dark .riego-mezcla-foot strong,
+html.hc-theme-dark .correccion-muted strong,
+html.hc-theme-dark .correccion-muted--body strong,
+html.hc-theme-dark .meteo-ubic-caption strong,
+html.hc-theme-dark .meteo-alert-text strong,
+html.hc-theme-dark .config-help-text strong,
+html.hc-theme-dark .hc-help-muted strong,
+html.hc-theme-dark .repos-resumen-muted strong,
+html.hc-theme-dark .nft-detalle-foot-muted strong,
+html.hc-theme-dark .torre-nft-p-note strong {
+  color: #e7edf5;
 }
