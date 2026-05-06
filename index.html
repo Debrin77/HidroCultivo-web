@@ -3829,6 +3829,10 @@
 
     <!-- Paso 1 -->
     <section class="medir-wizard-page" id="wizPage1">
+      <div class="wiz-section-head">
+        <span class="wiz-step-kicker">SNAPSHOT</span>
+        <h3 class="wiz-step-title">Captura y diagnóstico instantáneo</h3>
+      </div>
       <p class="medir-wizard-lead">Pega la lectura del medidor o rellena campos. Te marcamos estado (OK/aviso) y dejamos el registro limpio.</p>
       <div id="wizSystemHint" class="medir-wizard-system-hint" role="note"></div>
 
@@ -3864,15 +3868,19 @@
 
     <!-- Paso 2 -->
     <section class="medir-wizard-page setup-hidden" id="wizPage2">
+      <div class="wiz-section-head">
+        <span class="wiz-step-kicker">PLAYBOOK</span>
+        <h3 class="wiz-step-title">Qué acciones aplicaste</h3>
+      </div>
       <p class="medir-wizard-lead">¿Has hecho algún ajuste justo antes o después de medir? (Se añadirá al Registro.)</p>
 
-      <label class="dash-notif-toggle-row medir-wizard-toggle">
+      <label class="dash-notif-toggle-row medir-wizard-toggle medir-wizard-choice">
         <input type="checkbox" id="wizRecargaCompleta">
         <span><strong>Recarga completa</strong> (reiniciar contador)</span>
       </label>
 
       <div class="medir-wizard-split">
-        <label class="dash-notif-toggle-row medir-wizard-toggle">
+        <label class="dash-notif-toggle-row medir-wizard-toggle medir-wizard-choice">
           <input type="checkbox" id="wizReposicionAguaChk">
           <span>Reposición parcial: <strong>solo agua</strong></span>
         </label>
@@ -3883,7 +3891,7 @@
       </div>
 
       <div class="medir-wizard-split">
-        <label class="dash-notif-toggle-row medir-wizard-toggle">
+        <label class="dash-notif-toggle-row medir-wizard-toggle medir-wizard-choice">
           <input type="checkbox" id="wizAjustePhChk">
           <span>Ajuste de pH</span>
         </label>
@@ -3894,7 +3902,7 @@
       </div>
 
       <div class="medir-wizard-split">
-        <label class="dash-notif-toggle-row medir-wizard-toggle">
+        <label class="dash-notif-toggle-row medir-wizard-toggle medir-wizard-choice">
           <input type="checkbox" id="wizNutrientesChk">
           <span>Añadí nutrientes</span>
         </label>
@@ -3906,6 +3914,10 @@
 
     <!-- Paso 3 -->
     <section class="medir-wizard-page setup-hidden" id="wizPage3">
+      <div class="wiz-section-head">
+        <span class="wiz-step-kicker">COMMIT</span>
+        <h3 class="wiz-step-title">Guarda con trazabilidad completa</h3>
+      </div>
       <p class="medir-wizard-lead">Opcional: deja una nota. Al finalizar se guardará la medición y el registro de ajustes (si marcaste alguno).</p>
       <div class="medir-wizard-action-now" id="wizActionNow" role="status" aria-live="polite"></div>
       <label class="form-label" for="wizNotas">Notas</label>
