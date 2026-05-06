@@ -3849,7 +3849,7 @@
       <div id="wizSystemHint" class="medir-wizard-system-hint" role="note"></div>
 
       <label class="form-label" for="wizQuick">Entrada rápida (pegar)</label>
-      <input id="wizQuick" class="form-input" type="text" inputmode="text" autocomplete="off"
+      <input id="wizQuick" class="form-input wiz-input wiz-input--quick" type="text" inputmode="text" autocomplete="off"
         placeholder="Ej: EC 1350 pH 6.0 T 20 V 18">
       <div class="medir-wizard-quick-actions">
         <button type="button" class="btn btn-secondary btn-sm" onclick="wizardMedQuickParse()">Aplicar</button>
@@ -3867,7 +3867,7 @@
             </label>
             <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bolt"/></svg></span>
           </div>
-          <input id="wizEC" class="form-input" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="1350">
+          <input id="wizEC" class="form-input wiz-input" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="1350">
         </div>
         <div class="wiz-field wiz-field--ph">
           <div class="wiz-field-head">
@@ -3877,7 +3877,7 @@
             </label>
             <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
           </div>
-          <input id="wizPH" class="form-input" type="number" inputmode="decimal" min="0" max="14" step="0.1" placeholder="6.0">
+          <input id="wizPH" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="14" step="0.1" placeholder="6.0">
         </div>
         <div class="wiz-field wiz-field--temp">
           <div class="wiz-field-head">
@@ -3887,7 +3887,7 @@
             </label>
             <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-therm"/></svg></span>
           </div>
-          <input id="wizTemp" class="form-input" type="number" inputmode="decimal" min="0" max="50" step="0.1" placeholder="20">
+          <input id="wizTemp" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="50" step="0.1" placeholder="20">
         </div>
         <div class="wiz-field wiz-field--vol">
           <div class="wiz-field-head">
@@ -3897,7 +3897,7 @@
             </label>
             <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bucket"/></svg></span>
           </div>
-          <input id="wizVol" class="form-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1" placeholder="18">
+          <input id="wizVol" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1" placeholder="18">
         </div>
       </div>
     </section>
@@ -3921,7 +3921,7 @@
           <span>Reposición parcial: <strong>solo agua</strong></span>
         </label>
         <div id="wizReposicionFields" class="setup-hidden">
-          <input id="wizReposicionAguaL" class="form-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1"
+          <input id="wizReposicionAguaL" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1"
             placeholder="Litros añadidos (aprox.)">
         </div>
       </div>
@@ -3932,8 +3932,8 @@
           <span>Ajuste de pH</span>
         </label>
         <div id="wizPhFields" class="medir-wizard-grid-2 setup-hidden">
-          <input id="wizPhMasMl" class="form-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH+ ml">
-          <input id="wizPhMenosMl" class="form-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH− ml">
+          <input id="wizPhMasMl" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH+ ml">
+          <input id="wizPhMenosMl" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="999" step="0.1" placeholder="pH− ml">
         </div>
       </div>
 
@@ -3943,7 +3943,7 @@
           <span>Añadí nutrientes</span>
         </label>
         <div id="wizNutrientesFields" class="setup-hidden">
-          <input id="wizNutrientesTxt" class="form-input" type="text" maxlength="120" placeholder="Ej. +2ml A+B, CalMag…">
+          <input id="wizNutrientesTxt" class="form-input wiz-input" type="text" maxlength="120" placeholder="Ej. +2ml A+B, CalMag…">
         </div>
       </div>
     </section>
@@ -3957,7 +3957,7 @@
       <p class="medir-wizard-lead">Opcional: deja una nota. Al finalizar se guardará la medición y el registro de ajustes (si marcaste alguno).</p>
       <div class="medir-wizard-action-now" id="wizActionNow" role="status" aria-live="polite"></div>
       <label class="form-label" for="wizNotas">Notas</label>
-      <textarea id="wizNotas" class="form-input medir-wizard-notes" rows="3" maxlength="400"
+      <textarea id="wizNotas" class="form-input wiz-input medir-wizard-notes" rows="3" maxlength="400"
         placeholder="Observaciones, incidencias, olor, algas, raíces…"></textarea>
       <div class="medir-wizard-review" id="wizReview" role="status" aria-live="polite"></div>
     </section>
