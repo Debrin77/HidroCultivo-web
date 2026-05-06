@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-06-wizard-refresh-1">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-06-wizard-reference-2">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -3861,44 +3861,76 @@
       <div class="medir-wizard-insights" id="wizInsights" role="status" aria-live="polite"></div>
       <div class="medir-wizard-grid">
         <div class="wiz-field wiz-field--ec">
-          <div class="wiz-field-head">
+          <div class="wiz-field-top">
             <label class="form-label wiz-field-label" for="wizEC">
               <span class="wiz-field-label-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bolt"/></svg></span>
-              <span>EC (µS/cm)</span>
+              <span>EC</span>
             </label>
-            <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bolt"/></svg></span>
+            <span class="wiz-field-mini-btn" aria-hidden="true">−</span>
           </div>
-          <input id="wizEC" class="form-input wiz-input" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="1350">
+          <div class="wiz-field-input-row">
+            <input id="wizEC" class="form-input wiz-input" type="number" inputmode="numeric" min="0" max="9999" step="1" placeholder="1.5">
+            <span class="wiz-field-unit">mS</span>
+          </div>
+          <div class="wiz-field-scale">
+            <div class="wiz-field-scale-track"><span class="wiz-field-scale-fill"></span></div>
+            <div class="wiz-field-scale-meta"><span>0</span><span>5</span></div>
+            <div class="wiz-field-scale-opt">Óptimo 1.2 - 2.4 mS/cm</div>
+          </div>
         </div>
         <div class="wiz-field wiz-field--ph">
-          <div class="wiz-field-head">
+          <div class="wiz-field-top">
             <label class="form-label wiz-field-label" for="wizPH">
               <span class="wiz-field-label-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
               <span>pH</span>
             </label>
-            <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
+            <span class="wiz-field-mini-btn" aria-hidden="true">−</span>
           </div>
-          <input id="wizPH" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="14" step="0.1" placeholder="6.0">
+          <div class="wiz-field-input-row">
+            <input id="wizPH" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="14" step="0.1" placeholder="6.0">
+            <span class="wiz-field-unit">pH</span>
+          </div>
+          <div class="wiz-field-scale">
+            <div class="wiz-field-scale-track"><span class="wiz-field-scale-fill"></span></div>
+            <div class="wiz-field-scale-meta"><span>0</span><span>14</span></div>
+            <div class="wiz-field-scale-opt">Óptimo 5.5 - 6.5</div>
+          </div>
         </div>
         <div class="wiz-field wiz-field--temp">
-          <div class="wiz-field-head">
+          <div class="wiz-field-top">
             <label class="form-label wiz-field-label" for="wizTemp">
               <span class="wiz-field-label-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-therm"/></svg></span>
               <span>Temp (°C)</span>
             </label>
-            <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-therm"/></svg></span>
+            <span class="wiz-field-mini-btn" aria-hidden="true">−</span>
           </div>
-          <input id="wizTemp" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="50" step="0.1" placeholder="20">
+          <div class="wiz-field-input-row">
+            <input id="wizTemp" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="50" step="0.1" placeholder="22">
+            <span class="wiz-field-unit">°C</span>
+          </div>
+          <div class="wiz-field-scale">
+            <div class="wiz-field-scale-track"><span class="wiz-field-scale-fill"></span></div>
+            <div class="wiz-field-scale-meta"><span>0°</span><span>40°</span></div>
+            <div class="wiz-field-scale-opt">Óptimo 18 - 26 °C</div>
+          </div>
         </div>
         <div class="wiz-field wiz-field--vol">
-          <div class="wiz-field-head">
+          <div class="wiz-field-top">
             <label class="form-label wiz-field-label" for="wizVol">
               <span class="wiz-field-label-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bucket"/></svg></span>
               <span>Vol (L)</span>
             </label>
-            <span class="wiz-field-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bucket"/></svg></span>
+            <span class="wiz-field-mini-btn" aria-hidden="true">−</span>
           </div>
-          <input id="wizVol" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1" placeholder="18">
+          <div class="wiz-field-input-row">
+            <input id="wizVol" class="form-input wiz-input" type="number" inputmode="decimal" min="0" max="2000" step="0.1" placeholder="4.0">
+            <span class="wiz-field-unit">L</span>
+          </div>
+          <div class="wiz-field-scale">
+            <div class="wiz-field-scale-track"><span class="wiz-field-scale-fill"></span></div>
+            <div class="wiz-field-scale-meta"><span>0</span><span>20L</span></div>
+            <div class="wiz-field-scale-opt">Fill Min - Fill Max</div>
+          </div>
         </div>
       </div>
     </section>
