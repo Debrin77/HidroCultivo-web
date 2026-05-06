@@ -66,8 +66,8 @@
     const phText = getManualRangeText('paramRangePH');
     const ecOpt = el('wizEcOptRange');
     const phOpt = el('wizPhOptRange');
-    if (ecOpt) ecOpt.textContent = ecText ? ('Recomendado ' + ecText) : ('Recomendado ' + t.ecMin + ' - ' + t.ecMax + ' µS/cm');
-    if (phOpt) phOpt.textContent = phText ? ('Recomendado ' + phText) : ('Recomendado ' + t.phMin + ' - ' + t.phMax);
+    if (ecOpt) ecOpt.textContent = ecText || ('Óptimo ' + t.ecMin + ' - ' + t.ecMax + ' µS/cm');
+    if (phOpt) phOpt.textContent = phText || ('Óptimo ' + t.phMin + ' - ' + t.phMax);
   }
 
   function getTargets() {
