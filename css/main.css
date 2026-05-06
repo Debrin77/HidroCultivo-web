@@ -2627,10 +2627,26 @@ select#editVariedad option {
   background: color-mix(in srgb, var(--bg3) 86%, transparent);
   padding: 10px;
 }
+.tools-pro-card--ec{
+  border-color: rgba(56,189,248,.45);
+  background:
+    radial-gradient(140px 90px at 8% 10%, rgba(56,189,248,.12), transparent 70%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)),
+    color-mix(in srgb, var(--bg3) 84%, transparent);
+}
 .tools-pro-card h4{
   margin: 0 0 8px;
   font-size: 13px;
   color: var(--white);
+}
+.tools-pro-inline-note{
+  border: 1px dashed color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 9px 10px;
 }
 .tools-pro-row{
   display:grid;
@@ -2682,6 +2698,9 @@ select#editVariedad option {
 .tools-pro-compare-card.is-better{
   border-color: rgba(34,197,94,.45);
   background: rgba(34,197,94,.12);
+}
+.tools-pro-compare--premium .tools-pro-compare-card{
+  box-shadow: 0 6px 14px rgba(15,23,42,.08);
 }
 #toolUseAltBtn{ display: none; }
 .tools-pro-footer{
@@ -5386,10 +5405,20 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   background: linear-gradient(180deg, transparent, var(--bg) 40%);
   padding: 16px 0 8px;
   margin-top: 4px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  align-items: stretch;
 }
 .medir-pro-btn{
   min-height: 46px;
   border-radius: 12px;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+.guardar-medicion-bar #btnGuardarMedicion{
+  min-height: 46px;
 }
 .quick-btn[data-quick-icon="toolspro"] .hc-ico--ion-quick { color: #0ea5e9; }
 .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick { color: #7c3aed; }

@@ -4017,26 +4017,25 @@
         </div>
       </section>
 
-      <section class="tools-pro-card">
-        <h4>💧 Dilución EC alta</h4>
+      <section class="tools-pro-card tools-pro-card--ec">
+        <h4>💧 Calculadora EC objetivo</h4>
         <div class="tools-pro-row">
-          <input id="toolDilEcActual" class="form-input" type="number" inputmode="decimal" placeholder="EC actual (µS/cm)">
-          <input id="toolDilEcObjetivo" class="form-input" type="number" inputmode="decimal" placeholder="EC objetivo (µS/cm)">
+          <input id="toolDilEcObjetivo" class="form-input" type="number" inputmode="decimal" placeholder="EC final objetivo (µS/cm)">
+          <input id="toolDilVol" class="form-input" type="number" inputmode="decimal" placeholder="Volumen depósito (L)">
         </div>
         <div class="tools-pro-row">
-          <select id="toolNutrienteSel" class="form-input" aria-label="Nutriente para cálculo de corrección"></select>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="toolsProCompareNutrients()">Comparar</button>
+          <input id="toolDilEcBase" class="form-input" type="number" inputmode="decimal" placeholder="EC base agua (µS/cm, opcional)">
+          <div class="tools-pro-inline-note">Si no indicas EC base, se asume 0 µS/cm.</div>
         </div>
-        <div id="toolNutCompareCards" class="tools-pro-compare setup-hidden"></div>
         <div class="tools-pro-row">
-          <input id="toolDilVol" class="form-input" type="number" inputmode="decimal" placeholder="Volumen actual (L)">
-          <button type="button" class="btn btn-ghost btn-sm" onclick="toolsProUseCurrent()">Usar actual</button>
+          <select id="toolNutrienteA" class="form-input" aria-label="Nutriente A para comparación"></select>
+          <select id="toolNutrienteB" class="form-input" aria-label="Nutriente B para comparación"></select>
         </div>
-        <div id="toolDilResult" class="tools-pro-result">—</div>
+        <div id="toolNutCompareCards" class="tools-pro-compare tools-pro-compare--premium setup-hidden"></div>
+        <div id="toolDilResult" class="tools-pro-result">Introduce objetivo, volumen y dos nutrientes para comparar dosis.</div>
         <div class="tools-pro-actions">
-          <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCalcDilution()">Calcular</button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProApplyToWizard('dilution')">Aplicar al asistente</button>
-          <button type="button" class="btn btn-secondary btn-sm" id="toolUseAltBtn" onclick="toolsProApplyToWizard('dilution_alt')">Usar alternativa</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCompareNutrients()">Calcular comparación</button>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProUseCurrent()">Usar actual</button>
         </div>
       </section>
 
@@ -4057,18 +4056,6 @@
         </div>
       </section>
 
-      <section class="tools-pro-card">
-        <h4>🪣 Reposición volumen</h4>
-        <div class="tools-pro-row">
-          <input id="toolVolActual" class="form-input" type="number" inputmode="decimal" placeholder="Volumen actual (L)">
-          <input id="toolVolObjetivo" class="form-input" type="number" inputmode="decimal" placeholder="Objetivo (L)">
-        </div>
-        <div id="toolVolResult" class="tools-pro-result">—</div>
-        <div class="tools-pro-actions">
-          <button type="button" class="btn btn-primary btn-sm" onclick="toolsProCalcVol()">Calcular</button>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="toolsProApplyToWizard('vol')">Aplicar al asistente</button>
-        </div>
-      </section>
     </div>
 
     <div class="tools-pro-footer">
@@ -4365,7 +4352,7 @@
   <script src="js/hc-setup-agua-sustrato.js?v=7"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=8"></script>
   <script src="js/hc-medicion-wizard.js?v=2"></script>
-  <script src="js/hc-tools-pro.js?v=6"></script>
+  <script src="js/hc-tools-pro.js?v=8"></script>
   <script src="js/hc-setup-checklist.js?v=13"></script>
   <script src="js/hc-setup-historial-tabs.js?v=12"></script>
   <script src="js/hc-setup-consejos.js?v=23"></script>
