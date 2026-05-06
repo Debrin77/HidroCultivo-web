@@ -5608,9 +5608,9 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
 }
 .medir-assistant-cta{
   width: 100%;
-  min-height: 70px;
+  min-height: 72px;
   border-radius: 16px;
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: .01em;
   justify-content: center;
@@ -5662,8 +5662,8 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
 .medir-pro-tools{
   justify-content: center;
   text-align: center;
-  min-height: 54px;
-  font-size: 18px;
+  min-height: 56px;
+  font-size: 19px;
   font-weight: 750;
 }
 .medir-pro-tools > span:not(.quick-btn-icon){
