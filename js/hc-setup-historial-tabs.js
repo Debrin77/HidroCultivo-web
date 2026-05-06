@@ -536,6 +536,31 @@ function renderRegistro() {
         }
       } else if (e.tipo === 'apunte') {
         const bloques = [];
+        const esSugerencia = e.apunteTipo === 'sugerencia_correccion';
+        const estadoSug = String(e.sugerenciaEstado || 'sugerido').toLowerCase();
+        if (esSugerencia) {
+          const slotSug = typeof e._slotIdx === 'number' ? e._slotIdx : (state.torreActiva || 0);
+          const titleSug = escRegistroHtml(e.sugerenciaTitulo || 'Correcciones sugeridas');
+          const chipTxt = estadoSug === 'aplicado' ? '✅ Aplicado' : '🧭 Sugerido';
+          bloques.push(
+            '<div class="registro-sugerencia-head">' +
+              '<span class="registro-sugerencia-chip ' + (estadoSug === 'aplicado' ? 'is-aplicado' : 'is-sugerido') + '">' + chipTxt + '</span>' +
+              '<strong class="registro-sugerencia-title">' + titleSug + '</strong>' +
+            '</div>'
+          );
+          if (estadoSug !== 'aplicado') {
+            bloques.push(
+              '<button type="button" class="registro-sugerencia-apply js-reg-sug-apply" ' +
+                'data-hc-slot="' + slotSug + '" ' +
+                'data-hc-fecha="' + escRegistroAttr(e.fecha || '') + '" ' +
+                'data-hc-hora="' + escRegistroAttr(e.hora || '') + '" ' +
+                'data-hc-sug-id="' + escRegistroAttr(e.sugerenciaId || '') + '" ' +
+                'aria-label="Marcar sugerencia como aplicada">' +
+                'Marcar como aplicada' +
+              '</button>'
+            );
+          }
+        }
         if (e.apunteTexto) {
           bloques.push(
             '<div class="registro-apunte-txt">' +

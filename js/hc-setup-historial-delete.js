@@ -79,6 +79,13 @@ function ensureRegistroListaDeleteDelegation() {
   lista.dataset.hcRegDelBound = '1';
   lista.addEventListener('click', function hcRegistroListaDelEv(ev) {
     const raw = ev.target;
+    const applyBtn = raw && typeof raw.closest === 'function' ? raw.closest('button.js-reg-sug-apply') : null;
+    if (applyBtn && lista.contains(applyBtn)) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      marcarSugerenciaRegistroAplicadaDesdeBtn(applyBtn);
+      return;
+    }
     const btn = raw && typeof raw.closest === 'function' ? raw.closest('button.registro-entry-delete') : null;
     if (!btn || !lista.contains(btn)) return;
     ev.preventDefault();
@@ -87,9 +94,60 @@ function ensureRegistroListaDeleteDelegation() {
   });
 }
 
+function marcarSugerenciaRegistroAplicadaDesdeBtn(btn) {
+  if (!btn) return;
+  initTorres();
+  const slot = parseInt(String(btn.getAttribute('data-hc-slot') ?? ''), 10);
+  const fecha = String(btn.getAttribute('data-hc-fecha') || '');
+  const hora = String(btn.getAttribute('data-hc-hora') || '');
+  const sugId = String(btn.getAttribute('data-hc-sug-id') || '');
+  const slotBase = Number.isFinite(slot) && slot >= 0 ? slot : (state.torreActiva || 0);
+
+  const isMatch = (r) => {
+    if (!r || r.tipo !== 'apunte' || r.apunteTipo !== 'sugerencia_correccion') return false;
+    if (sugId && String(r.sugerenciaId || '') === sugId) return true;
+    const mismaFecha = normalizarFechaRegistroDdMmYyyy(r.fecha) === normalizarFechaRegistroDdMmYyyy(fecha);
+    const mismaHora = horasCoincidenRegistro(r.hora, hora);
+    return mismaFecha && mismaHora;
+  };
+
+  let t = state.torres[slotBase];
+  let i = t && Array.isArray(t.registro) ? t.registro.findIndex(isMatch) : -1;
+  let slotUsed = slotBase;
+  if (i < 0) {
+    for (let s = 0; s < (state.torres || []).length; s++) {
+      const ts = state.torres[s];
+      if (!ts || !Array.isArray(ts.registro)) continue;
+      const ix = ts.registro.findIndex(isMatch);
+      if (ix >= 0) {
+        t = ts;
+        i = ix;
+        slotUsed = s;
+        break;
+      }
+    }
+  }
+  if (!t || i < 0) {
+    if (typeof showToast === 'function') showToast('No se encontró la sugerencia', true);
+    return;
+  }
+  const r = t.registro[i];
+  r.sugerenciaEstado = 'aplicado';
+  const prev = String(r.apunteTexto || '');
+  if (prev.indexOf('✅ Aplicada') === -1) {
+    r.apunteTexto = '✅ Aplicada · ' + prev;
+  }
+  if ((state.torreActiva || 0) === slotUsed) state.registro = t.registro;
+  try { guardarEstadoTorreActual(); } catch (_) {}
+  saveState();
+  renderRegistro();
+  if (typeof showToast === 'function') showToast('✅ Sugerencia marcada como aplicada');
+}
+
 if (typeof window !== 'undefined') {
   window.borrarRegistroHistorialDesdeBtn = borrarRegistroHistorialDesdeBtn;
   window.ensureRegistroListaDeleteDelegation = ensureRegistroListaDeleteDelegation;
+  window.marcarSugerenciaRegistroAplicadaDesdeBtn = marcarSugerenciaRegistroAplicadaDesdeBtn;
 }
 
 /** Delegación para Historial → Mediciones (evita onclick inline frágil en móvil). */

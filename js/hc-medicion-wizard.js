@@ -206,6 +206,55 @@
     return { items, targets: t, manualBlocksHtml: [] };
   }
 
+  function getActionNow(diag) {
+    const items = (diag && Array.isArray(diag.items)) ? diag.items.filter(Boolean) : [];
+    if (!items.length) return null;
+    const txt0 = String(items[0] || '');
+    const p = txt0.toLowerCase();
+    let title = 'Acción recomendada ahora';
+    if (p.indexOf('ph') >= 0) title = 'Ajusta pH primero';
+    else if (p.indexOf('ec') >= 0 || p.indexOf('dilución') >= 0 || p.indexOf('diluir') >= 0) title = 'Ajusta EC primero';
+    else if (p.indexOf('temperatura') >= 0 || p.indexOf('enfriar') >= 0) title = 'Corrige temperatura';
+    else if (p.indexOf('volumen') >= 0 || p.indexOf('repón') >= 0) title = 'Corrige volumen';
+    return { title, text: txt0 };
+  }
+
+  function renderActionNow(diag) {
+    const box = el('wizActionNow');
+    if (!box) return;
+    const action = getActionNow(diag || getCorrections());
+    if (!action) {
+      box.classList.add('setup-hidden');
+      box.innerHTML = '';
+      return;
+    }
+    box.classList.remove('setup-hidden');
+    box.innerHTML =
+      '<div class="wiz-action-now-card">' +
+        '<div class="wiz-action-now-kicker">🎯 ' + action.title + '</div>' +
+        '<div class="wiz-action-now-body">' + action.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+      '</div>';
+  }
+
+  function renderSystemHint() {
+    const box = el('wizSystemHint');
+    if (!box) return;
+    const cfg = (typeof state !== 'undefined' && state && state.configTorre) ? state.configTorre : {};
+    const tipo = String((cfg && cfg.tipoInstalacion) || 'torre').toLowerCase();
+    if (tipo === 'dwc') {
+      const esKratky = typeof esDwcKratky === 'function' && esDwcKratky(cfg);
+      box.textContent = esKratky
+        ? 'DWC Kratky: prioriza temperatura y volumen. Evita sobrellenar para mantener cámara de aire.'
+        : 'DWC aireado: prioriza temperatura y pH estables; una deriva rápida suele pedir corrección hoy.';
+      return;
+    }
+    if (tipo === 'nft') {
+      box.textContent = 'NFT: además de EC/pH, vigila caudal y retorno continuo. Si sube mucho EC, suele tocar diluir.';
+      return;
+    }
+    box.textContent = 'Torre vertical: prioriza estabilidad EC/pH y nivel mínimo seguro para bomba y reparto uniforme.';
+  }
+
   function open() {
     const m = el('modalWizardMedicion');
     if (!m) return;
@@ -219,6 +268,8 @@
       const dst = el('wizNotas');
       if (src && dst && !String(dst.value || '').trim()) dst.value = String(src.value || '');
     } catch (_) {}
+    try { renderSystemHint(); } catch (_) {}
+    try { renderActionNow(null); } catch (_) {}
     try { syncAdjustmentFields(); } catch (_) {}
     try { renderInsights(); } catch (_) {}
     showStep(1);
@@ -400,6 +451,7 @@
     const parts = [];
     parts.push(`<strong>Medición</strong>: EC ${ec || '—'} · pH ${ph || '—'} · °C ${temp || '—'} · L ${vol || '—'}`);
     const diag = getCorrections();
+    renderActionNow(diag);
     if (diag.items.length) {
       if (diag.manualBlocksHtml && diag.manualBlocksHtml.length) {
         parts.push('<strong>Correcciones sugeridas</strong>:<br>' + diag.manualBlocksHtml.join('<br>'));
@@ -476,8 +528,14 @@
     try {
       if (typeof addRegistro === 'function') {
         if (diag && Array.isArray(diag.items) && diag.items.length) {
+          const sugId = 'wizsug_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+          const action = getActionNow(diag);
           addRegistro('apunte', {
             icono: '🧭',
+            apunteTipo: 'sugerencia_correccion',
+            sugerenciaId: sugId,
+            sugerenciaEstado: 'sugerido',
+            sugerenciaTitulo: action ? action.title : 'Correcciones sugeridas',
             apunteTexto: 'Correcciones sugeridas (no automáticas): ' + diag.items.join(' | ')
           }, true);
         }
