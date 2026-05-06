@@ -255,6 +255,23 @@
     box.textContent = 'Torre vertical: prioriza estabilidad EC/pH y nivel mínimo seguro para bomba y reparto uniforme.';
   }
 
+  function renderHero(diag) {
+    const st = el('wizHeroStatus');
+    const mode = el('wizHeroMode');
+    const score = el('wizHeroScore');
+    if (!st || !mode || !score) return;
+    const cfg = (typeof state !== 'undefined' && state && state.configTorre) ? state.configTorre : {};
+    const tipo = String((cfg && cfg.tipoInstalacion) || 'torre').toUpperCase();
+    mode.textContent = tipo;
+
+    const d = diag || getCorrections();
+    const n = Array.isArray(d?.items) ? d.items.length : 0;
+    score.textContent = n + (n === 1 ? ' alerta' : ' alertas');
+    if (!n) st.textContent = 'Estable';
+    else if (n <= 2) st.textContent = 'Vigilar';
+    else st.textContent = 'Corregir';
+  }
+
   function open() {
     const m = el('modalWizardMedicion');
     if (!m) return;
@@ -272,6 +289,7 @@
     try { renderActionNow(null); } catch (_) {}
     try { syncAdjustmentFields(); } catch (_) {}
     try { renderInsights(); } catch (_) {}
+    try { renderHero(); } catch (_) {}
     showStep(1);
   }
 
@@ -414,6 +432,7 @@
     } else parts.push(badge('muted', 'Vol', '—'));
 
     const diag = getCorrections();
+    try { renderHero(diag); } catch (_) {}
     const corr = diag.items.length
       ? (diag.manualBlocksHtml && diag.manualBlocksHtml.length
         ? `<div class="wiz-corrections">${diag.manualBlocksHtml.map((h) => `<div class="wiz-correccion-block">${h}</div>`).join('')}</div>`
