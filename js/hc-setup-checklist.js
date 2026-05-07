@@ -1289,9 +1289,11 @@ function intentarAbrirChecklistDesdeInicio(esPrimeraVez) {
 
 /**
  * Modo EC automático: sin variedad o sin fechas en cestas ocupadas — no abrir checklist con dosis por etapa.
+ * @param {{ desdeWizard?: boolean; desdePostSetupRail?: boolean }} [opts] - desdePostSetupRail: tras el asistente, con el panel «Continuar al checklist» en Sistema.
  */
 function mostrarChecklistBloqueadoCultivoSistema(opts) {
   const desdeWizard = !!(opts && opts.desdeWizard);
+  const desdePostSetupRail = !!(opts && opts.desdePostSetupRail);
   const sinVariedades =
     typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
   const faltanFechas =
@@ -1307,9 +1309,14 @@ function mostrarChecklistBloqueadoCultivoSistema(opts) {
       'Así las dosis y el EC mostrado coinciden con la fase real.'
     : 'Hay cestas con variedad pero falta la <strong>fecha de trasplante al hidro</strong> en alguna. ' +
       'Complétalas en Sistema para que EC y pH sigan la etapa de cada planta.';
-  const afterWizard = desdeWizard
-    ? '<p class="checklist-bloqueo-foot">Cuando lo tengas, inicia el checklist desde <strong>Inicio</strong> o el botón <strong>Checklist</strong> en <strong>Historial</strong>.</p>'
-    : '<p class="checklist-bloqueo-foot">El checklist de recarga está en la pestaña <strong>Historial</strong> (botón arriba a la derecha).</p>';
+  const afterWizard = desdePostSetupRail
+    ? '<p class="checklist-bloqueo-foot">Cierra este aviso, termina las fichas en el esquema y pulsa otra vez <strong>Continuar al checklist</strong> en el panel inferior (sigue en <strong>Sistema</strong>).</p>'
+    : desdeWizard
+      ? '<p class="checklist-bloqueo-foot">Cuando lo tengas, inicia el checklist desde <strong>Inicio</strong> o el botón <strong>Checklist</strong> en <strong>Historial</strong>.</p>'
+      : '<p class="checklist-bloqueo-foot">El checklist de recarga está en la pestaña <strong>Historial</strong> (botón arriba a la derecha).</p>';
+  const btnHistorialHtml = desdePostSetupRail
+    ? ''
+    : '<button type="button" id="checklistBloqueoIrHistorial" class="btn btn-secondary checklist-bloqueo-btn-hist">Ir a Historial</button>';
   const o = document.createElement('div');
   o.id = 'checklistBloqueoCultivoOverlay';
   o.className = 'checklist-pregunta-overlay';
@@ -1330,7 +1337,7 @@ function mostrarChecklistBloqueadoCultivoSistema(opts) {
     afterWizard +
     '<div class="checklist-bloqueo-actions">' +
     '<button type="button" id="checklistBloqueoIrSistema" class="checklist-pregunta-btn-main">Ir a Sistema</button>' +
-    '<button type="button" id="checklistBloqueoIrHistorial" class="btn btn-secondary checklist-bloqueo-btn-hist">Ir a Historial</button>' +
+    btnHistorialHtml +
     '</div>' +
     '<button type="button" id="checklistBloqueoCerrar" class="checklist-pregunta-btn-later">Cerrar</button>' +
     '</div>';

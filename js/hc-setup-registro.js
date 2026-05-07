@@ -192,6 +192,9 @@ function saveCesta() {
   renderTorre();
   updateTorreStats();
   closeModal();
+  try {
+    if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+  } catch (_) {}
 }
 
 function clearCesta() {
@@ -202,6 +205,9 @@ function clearCesta() {
   renderTorre();
   updateTorreStats();
   closeModal();
+  try {
+    if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+  } catch (_) {}
 }
 
 

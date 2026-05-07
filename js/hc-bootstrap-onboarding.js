@@ -75,6 +75,9 @@ function welcomeEmpezar() {
 }
 
 function welcomeAbrirSetup() {
+  try {
+    window._hcDeferredSetupTrasCoachTabs = false;
+  } catch (_) {}
   cerrarBienvenidaPrimeraVez({ skipLanzarSetup: true });
   try {
     setTimeout(() => {
@@ -226,6 +229,14 @@ function _welcomeGuideOnKeydown(e) {
   }
 }
 
+function tabBarCoachYaDescartado() {
+  try {
+    return localStorage.getItem(HC_TAB_BAR_COACH_KEY) === '1';
+  } catch (_) {
+    return true;
+  }
+}
+
 function lanzarSetupOChecklistSiCorresponde() {
   const cfg = state.configTorre;
   const plantilla = !!(cfg && cfg.hcPlantillaAutogenerada);
@@ -234,11 +245,18 @@ function lanzarSetupOChecklistSiCorresponde() {
     state.torre[n] && state.torre[n].some(c => c.variedad)
   );
   const esPrimeraVez = !hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
-  if (esPrimeraVez) {
-    setTimeout(() => abrirSetup(), 450);
+  if (!esPrimeraVez) return;
+  // Tras la bienvenida: primero el coach de la barra («Entendido»); luego el asistente (como «Editar instalación»).
+  if (tabBarCoachYaDescartado()) {
+    setTimeout(() => {
+      if (typeof abrirSetup === 'function') abrirSetup();
+    }, 450);
+  } else {
+    try {
+      window._hcDeferredSetupTrasCoachTabs = true;
+    } catch (_) {}
   }
-  // No abrir el checklist automáticamente en cada arranque (molestaba y el modal podía quedar bajo otros velos).
-  // Sigue disponible en Inicio → Iniciar recarga e Historial → Checklist.
+  // No abrir el checklist automáticamente en cada arranque.
 }
 
 function mostrarBienvenidaOContinuarArranque(opts) {
@@ -335,5 +353,149 @@ function actualizarQuickActionsNoviceMode() {
   const exp = !!(state && state.configTorre && state.ultimaMedicion);
   wrap.classList.toggle('quick-actions-wrap--experienced', exp);
   more.open = exp;
+}
+
+// ══════════════════════════════════════════════════
+// Tras el asistente: Sistema (cultivos) → oferta de checklist
+// ══════════════════════════════════════════════════
+
+function ensurePostSetupChecklistRail() {
+  let el = document.getElementById('hcPostSetupChecklistRail');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'hcPostSetupChecklistRail';
+  el.className = 'hc-post-setup-rail setup-hidden';
+  el.setAttribute('role', 'region');
+  el.setAttribute('aria-label', 'Siguiente paso: cultivos y checklist');
+  el.innerHTML =
+    '<div class="hc-post-setup-rail-inner">' +
+      '<div class="hc-post-setup-rail-title">Siguiente: cultivos en el esquema</div>' +
+      '<p class="hc-post-setup-rail-text" id="hcPostSetupRailText">' +
+        'Toca cada cesta y completa variedad, <strong>fecha de trasplante al hidro</strong> y procedencia. ' +
+        'Luego podrás abrir el checklist de recarga con dosis alineadas a tus plantas.' +
+      '</p>' +
+      '<p class="hc-post-setup-rail-status setup-hidden" id="hcPostSetupRailStatus" role="status"></p>' +
+      '<div class="hc-post-setup-rail-actions">' +
+        '<button type="button" class="btn btn-primary hc-post-setup-rail-btn-main" id="hcPostSetupBtnChecklist">' +
+          'Continuar al checklist' +
+        '</button>' +
+        '<button type="button" class="btn btn-ghost hc-post-setup-rail-btn-later" id="hcPostSetupBtnLater">' +
+          'Más tarde' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(el);
+  const b1 = document.getElementById('hcPostSetupBtnChecklist');
+  const b2 = document.getElementById('hcPostSetupBtnLater');
+  if (b1) b1.addEventListener('click', () => hcAccionChecklistPostSetupDesdeSistema());
+  if (b2) b2.addEventListener('click', () => hcPostSetupChecklistMasTarde());
+  return el;
+}
+
+function actualizarPostSetupChecklistRail() {
+  const el = document.getElementById('hcPostSetupChecklistRail');
+  if (!state || !state.hcPostSetupChecklistPendiente) {
+    if (el) el.classList.add('setup-hidden');
+    return;
+  }
+  if (typeof currentTab !== 'undefined' && currentTab !== 'sistema') {
+    if (el) el.classList.add('setup-hidden');
+    return;
+  }
+  ensurePostSetupChecklistRail();
+  const rail = document.getElementById('hcPostSetupChecklistRail');
+  if (!rail) return;
+  rail.classList.remove('setup-hidden');
+  const st = document.getElementById('hcPostSetupRailStatus');
+  const bloqueado =
+    typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
+    torreBloqueaChecklistPorFaltaDatosCultivo();
+  if (st) {
+    if (bloqueado) {
+      const sinNinguna =
+        typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
+      st.textContent = sinNinguna
+        ? 'Añade al menos un cultivo en una cesta, con fecha, para continuar (modo EC automático).'
+        : 'Revisa las cestas con cultivo: falta fecha u origen según lo que marques en cada ficha.';
+      st.classList.remove('setup-hidden');
+    } else {
+      st.textContent = '';
+      st.classList.add('setup-hidden');
+    }
+  }
+  const btn = document.getElementById('hcPostSetupBtnChecklist');
+  if (btn) {
+    btn.disabled = !!bloqueado;
+    btn.setAttribute('aria-disabled', bloqueado ? 'true' : 'false');
+  }
+}
+
+function hcNotificarCambioCultivoSistema() {
+  try {
+    if (state && state.hcPostSetupChecklistPendiente && typeof actualizarPostSetupChecklistRail === 'function') {
+      actualizarPostSetupChecklistRail();
+    }
+  } catch (_) {}
+}
+
+function hcPostSetupChecklistMasTarde() {
+  try {
+    delete state.hcPostSetupChecklistPendiente;
+    if (typeof saveState === 'function') saveState();
+  } catch (_) {}
+  actualizarPostSetupChecklistRail();
+  if (typeof showToast === 'function') {
+    showToast('Cuando quieras: Inicio → recarga o Historial → checklist');
+  }
+}
+
+function hcAccionChecklistPostSetupDesdeSistema() {
+  if (typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada()) {
+    if (typeof showToast === 'function') {
+      showToast('Indica al menos un cultivo en el esquema antes del checklist.', true);
+    }
+    actualizarPostSetupChecklistRail();
+    return;
+  }
+  if (
+    typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
+    torreBloqueaChecklistPorFaltaDatosCultivo()
+  ) {
+    if (typeof mostrarChecklistBloqueadoCultivoSistema === 'function') {
+      mostrarChecklistBloqueadoCultivoSistema({ desdeWizard: true, desdePostSetupRail: true });
+    } else if (typeof showToast === 'function') {
+      showToast('Completa variedad y fecha en las cestas con planta (Sistema).', true);
+    }
+    actualizarPostSetupChecklistRail();
+    return;
+  }
+  try {
+    delete state.hcPostSetupChecklistPendiente;
+    if (typeof saveState === 'function') saveState();
+  } catch (_) {}
+  actualizarPostSetupChecklistRail();
+  try {
+    if (typeof goTab === 'function') goTab('inicio');
+  } catch (_) {}
+  setTimeout(() => {
+    try {
+      if (typeof preguntarIniciarChecklist === 'function') preguntarIniciarChecklist();
+    } catch (e) {
+      console.error(e);
+    }
+  }, 280);
+}
+
+function iniciarFlujoSistemaAntesChecklistPostSetup() {
+  try {
+    if (typeof goTab === 'function') goTab('sistema');
+  } catch (_) {}
+  setTimeout(() => {
+    ensurePostSetupChecklistRail();
+    actualizarPostSetupChecklistRail();
+  }, 120);
+  if (typeof showToast === 'function') {
+    showToast('Coloca cultivos en el esquema (variedad, fecha, procedencia). Luego: checklist de recarga.');
+  }
 }
 

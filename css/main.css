@@ -891,6 +891,64 @@ html.hc-theme-dark .tab-btn.active svg {
   width: 100%;
   justify-content: center;
 }
+
+/* Tras el asistente: recordatorio checklist (solo pestaña Sistema) */
+.hc-post-setup-rail {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--tab-h) + 8px);
+  z-index: 10140;
+  max-width: min(100vw - 20px, 400px);
+  width: calc(100% - 20px);
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+.hc-post-setup-rail-inner {
+  background: linear-gradient(160deg, #eff6ff 0%, #fff 50%, #f0fdf4 100%);
+  border: 1px solid rgba(37, 99, 235, 0.28);
+  border-radius: 16px;
+  padding: 12px 14px 12px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.16);
+}
+.hc-post-setup-rail-title {
+  font-family: var(--font-hero);
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #1e3a8a;
+  margin: 0 0 6px;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+.hc-post-setup-rail-text {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #475569;
+  margin: 0 0 10px;
+  text-align: center;
+}
+.hc-post-setup-rail-status {
+  font-size: 11px;
+  line-height: 1.45;
+  color: #b45309;
+  margin: 0 0 10px;
+  text-align: center;
+}
+.hc-post-setup-rail-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hc-post-setup-rail-btn-main {
+  width: 100%;
+  justify-content: center;
+}
+.hc-post-setup-rail-btn-later {
+  width: 100%;
+  justify-content: center;
+  font-size: 13px;
+}
+
 @keyframes hcTabCoachPulse {
   0%, 100% { box-shadow: 0 -1px 0 rgba(255,255,255,0.65) inset, 0 -4px 24px rgba(15, 23, 42, 0.05); }
   50% { box-shadow: 0 -1px 0 rgba(255,255,255,0.65) inset, 0 0 0 2px rgba(22, 163, 74, 0.45), 0 -6px 28px rgba(22, 163, 74, 0.12); }

@@ -35,6 +35,9 @@ function resetApp() {
   state = initState();
   modoActual = 'lechuga';
   clEsPrimeraVez = true;
+  try {
+    delete state.hcPostSetupChecklistPendiente;
+  } catch (_) {}
 
   // Actualizar UI
   renderTorre();
@@ -81,6 +84,13 @@ function initApp() {
 
   // Primera vez: bienvenida (una sola) y luego asistente o checklist si aplica
   setTimeout(() => mostrarBienvenidaOContinuarArranque(), 520);
+  setTimeout(() => {
+    try {
+      if (state && state.hcPostSetupChecklistPendiente && typeof actualizarPostSetupChecklistRail === 'function') {
+        actualizarPostSetupChecklistRail();
+      }
+    } catch (_) {}
+  }, 1400);
   // Migrar fotos antiguas de localStorage a IndexedDB (solo la primera vez)
   abrirFotoDB().then(() => migrarFotosAIDB()).catch(e => console.warn('Migración IDB:', e));
 
@@ -363,6 +373,9 @@ function goTab(tab) {
   }
   if (typeof aplicarEstadoStandbyUI === 'function') aplicarEstadoStandbyUI();
   if (typeof window._hcSyncMainTabTabIndex === 'function') window._hcSyncMainTabTabIndex();
+  try {
+    if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
+  } catch (_) {}
 }
 
 function irMedirMunicipioClima() {

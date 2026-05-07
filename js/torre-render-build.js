@@ -2017,6 +2017,9 @@ function finalizarAsignacionCultivos() {
   const tFin = tipoInstalacionNormalizado(state.configTorre);
   const pieFin = tFin === 'nft' ? 'huecos NFT' : tFin === 'dwc' ? 'macetas DWC' : 'cestas';
   showToast('✅ Asignación finalizada · modo edición (' + pieFin + ')');
+  try {
+    if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+  } catch (_) {}
 }
 
 /** Leyendas y botones del bloque esquema: torre vertical ≠ NFT (sin mezclar). */

@@ -1397,6 +1397,10 @@ function guardarSetupYContinuar() {
     }
   }
 
+  try {
+    state.hcPostSetupChecklistPendiente = true;
+  } catch (_) {}
+
   saveState();
   aplicarConfigTorre();
   actualizarHeaderTorre();
@@ -1405,8 +1409,12 @@ function guardarSetupYContinuar() {
   updateTorreStats();
   updateDashboard();
 
-  // Mostrar panel checklist PRIMERO, luego cerrar setup
-  preguntarIniciarChecklist();
+  // Tras configurar: pestaña Sistema para cultivos; el checklist se ofrece cuando el usuario confirme.
+  if (typeof iniciarFlujoSistemaAntesChecklistPostSetup === 'function') {
+    iniciarFlujoSistemaAntesChecklistPostSetup();
+  } else {
+    preguntarIniciarChecklist();
+  }
   setTimeout(() => cerrarSetup(), 50);
 }
 
@@ -1572,6 +1580,13 @@ function preguntarIniciarChecklist() {
   window._tipoChecklist = 'primer_uso';
 
   document.getElementById('btnIniciarChecklist').addEventListener('click', () => {
+    try {
+      delete state.hcPostSetupChecklistPendiente;
+      if (typeof saveState === 'function') saveState();
+    } catch (_) {}
+    try {
+      if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
+    } catch (_) {}
     a11yDialogClosed(overlay);
     overlay.remove();
     const t = window._tipoChecklist;
@@ -1579,6 +1594,13 @@ function preguntarIniciarChecklist() {
     abrirChecklist(false, { saltarPreguntaRuta: true });
   });
   document.getElementById('btnChecklistDespues').addEventListener('click', () => {
+    try {
+      delete state.hcPostSetupChecklistPendiente;
+      if (typeof saveState === 'function') saveState();
+    } catch (_) {}
+    try {
+      if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
+    } catch (_) {}
     a11yDialogClosed(overlay);
     overlay.remove();
     showToast('✅ ' + nombreTorre + ' lista · Checklist en pestaña Historial cuando quieras');
@@ -1617,8 +1639,6 @@ function aplicarConfigTorre() {
       tipoInstalacion: 'torre',
       numNiveles: NUM_NIVELES,
       numCestas:  NUM_CESTAS,
-      volDeposito: 18,
-      nutriente: 'canna_aqua',
       agua: state.configAgua || 'destilada',
       checklistInstalacionConfirmada: false,
       torreObjetivoCultivo: 'final',
