@@ -61,6 +61,18 @@ function dismissTabBarCoach() {
   const el = document.getElementById('hcTabBarCoach');
   if (el) el.classList.add('setup-hidden');
   try { document.body.classList.remove('hc-tab-coach-open'); } catch (_) {}
+  let deferred = false;
+  try {
+    deferred = window._hcDeferredSetupTrasCoachTabs === true;
+  } catch (_) {}
+  if (deferred) {
+    try {
+      window._hcDeferredSetupTrasCoachTabs = false;
+    } catch (_) {}
+    setTimeout(() => {
+      if (typeof abrirSetup === 'function') abrirSetup();
+    }, 450);
+  }
 }
 
 function welcomeCarouselSkip() {
