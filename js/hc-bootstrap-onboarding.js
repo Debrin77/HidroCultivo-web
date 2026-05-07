@@ -76,11 +76,13 @@ function dismissTabBarCoach() {
   const el = document.getElementById('hcTabBarCoach');
   if (el) el.classList.add('setup-hidden');
   try { document.body.classList.remove('hc-tab-coach-open'); } catch (_) {}
-  if (hcEsPrimeraVezAsistenteInstalacion()) {
-    setTimeout(() => {
-      if (typeof abrirSetup === 'function') abrirSetup();
-    }, 450);
-  }
+  setTimeout(() => {
+    try {
+      const so = document.getElementById('setupOverlay');
+      if (so && so.classList.contains('open')) return;
+    } catch (_) {}
+    if (typeof abrirSetup === 'function') abrirSetup();
+  }, 450);
 }
 
 function welcomeCarouselSkip() {
