@@ -7296,8 +7296,8 @@ button.dia-card {
   background: #f0fdf4;
   color: #15803d;
   font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
