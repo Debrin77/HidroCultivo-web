@@ -772,11 +772,7 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
       alertas.push({ tipo:'warn', icon:'⚡', txt:`EC ${ecActual} µS/cm — baja. Las plantas pueden mostrar clorosis (hojas amarillas). Añadir nutrientes.` });
   }
 
-  // ── 🌱 PLÁNTULAS NUEVAS — pH inestable ──────────────────────────────────────
-  if (hayPlantulasNuevas()) {
-    alertas.push({ tipo:'warn', icon:'🌱',
-      txt:'Plántulas nuevas en sistema (<5 días) — pH puede subir 1-2 unidades por actividad radicular. Normal. Mide cada 6-8h y corrige con pH- si supera 7.0. Se estabilizará en 3-5 días.' });
-  }
+  // (Aviso de plántulas nuevas: está en Consejos para no duplicar en Meteorología)
 
   // ── 🌊 VPD ────────────────────────────────────────────────────────────────
   if (vpd > 1.6)
