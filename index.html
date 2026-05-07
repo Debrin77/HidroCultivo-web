@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-07-welcome-carousel-premium">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-07-inicio-sistema-botones-reorg">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -366,37 +366,9 @@
 
       <!-- 6. Acciones rápidas: núcleo siempre visible; resto en «Más» hasta tener config + medición -->
       <div class="quick-actions-wrap" id="quickActionsWrap">
-        <div class="quick-actions quick-actions--core">
-        <button type="button" class="quick-btn" data-quick-icon="mediciones" onclick="goTab('mediciones')" aria-label="Nueva medición">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-pulse"/></svg></span>
-          <span>Nueva medición</span>
-        </button>
-        <button type="button" class="quick-btn" data-quick-icon="riego" onclick="goTab('riego')" aria-label="Ver riego">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-water"/></svg></span>
-          <span>Ver riego</span>
-        </button>
-        <button type="button" class="quick-btn" data-quick-icon="meteo" onclick="goTab('meteo')" aria-label="Ver meteorología">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-cloudy"/></svg></span>
-          <span>Meteorología</span>
-        </button>
-        <button type="button" class="quick-btn" data-quick-icon="historial" onclick="goTab('historial')" aria-label="Ver historial">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-stats-chart"/></svg></span>
-          <span>Historial</span>
-        </button>
-        <button type="button" class="quick-btn quick-btn-info" data-quick-icon="sistema" onclick="abrirSetup()"
-          aria-label="Editar la instalación activa: abre el asistente con los datos ya guardados"
-          title="Edita tipo de sistema, geometría, nutrientes y ubicación de la instalación que está activa. No exige mediciones previas. Para crear otra instalación aparte, en Sistema usa «Nuevo sistema».">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-settings"/></svg></span>
-          <span>Editar instalación</span>
-        </button>
-        <button type="button" class="quick-btn quick-btn-warn" data-quick-icon="recarga" onclick="intentarAbrirChecklistDesdeInicio(false)" aria-label="Abrir checklist de recarga de la instalación activa">
-          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-refresh"/></svg></span>
-          <span>Iniciar recarga</span>
-        </button>
-        </div>
         <details class="quick-actions-more" id="quickActionsMore">
           <summary class="quick-actions-more-summary" id="quickActionsMoreSummary">Más opciones (seguridad, alertas…)</summary>
-          <div class="quick-actions quick-actions--extra">
+          <div class="quick-actions quick-actions--extra quick-actions--stacked">
         <button type="button" class="quick-btn quick-btn-info" data-quick-icon="seguridad" id="btnSeguridadAccesoInicio"
           onclick="toggleSeguridadAccesoInicio()" aria-expanded="false"
           aria-controls="panelSeguridadAccesoInicio" aria-label="Abrir opciones de seguridad de acceso">
@@ -1638,6 +1610,12 @@
           aria-label="Esquema de la instalación. Torre vertical: girar con flechas o deslizar; NFT y DWC: tocar huecos o macetas.">
           <div class="torre-loading-placeholder">Cargando esquema…</div>
         </div>
+        <button type="button" class="quick-btn quick-btn-info sistema-editar-instalacion-btn" data-quick-icon="sistema" onclick="abrirSetup()"
+          aria-label="Editar la instalación activa: abre el asistente con los datos ya guardados"
+          title="Edita tipo de sistema, geometría, nutrientes y ubicación de la instalación que está activa. No exige mediciones previas. Para crear otra instalación aparte, en Sistema usa «Nuevo sistema».">
+          <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-settings"/></svg></span>
+          <span>Editar instalación</span>
+        </button>
         <div id="torreListaVista" class="torre-lista-wrap setup-hidden" aria-label="Lista de cestas por nivel"></div>
         <div id="torreSistemaResumenWrap" class="torre-sistema-resumen-wrap" role="region" aria-label="Resumen de la configuración del sistema" hidden></div>
         <div id="torreQuickTip" class="torre-quick-tip setup-hidden" aria-live="polite"></div>

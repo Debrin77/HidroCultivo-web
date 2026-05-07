@@ -5281,6 +5281,9 @@ html.hc-theme-dark #tileVol .tile-icon .hc-ico { color: #22d3ee; }
 .quick-actions--extra {
   padding: 0 10px 10px;
 }
+.quick-actions--stacked {
+  grid-template-columns: 1fr;
+}
 .quick-actions-wrap--experienced .quick-actions--extra {
   padding: 0;
 }
@@ -5311,6 +5314,9 @@ html.hc-theme-dark #tileVol .tile-icon .hc-ico { color: #22d3ee; }
   flex: 1;
   min-width: 0;
   line-height: 1.25;
+}
+.quick-actions--stacked .quick-btn > span:not(.quick-btn-icon) {
+  text-align: center;
 }
 .quick-btn:active {
   background: var(--bg3);
@@ -5376,6 +5382,15 @@ html.hc-theme-dark .quick-btn[data-quick-icon="reset"] .hc-ico--ion-quick { colo
 }
 .dash-seguridad-panel-hint {
   margin-bottom: 0;
+}
+
+.sistema-editar-instalacion-btn {
+  width: 100%;
+  margin: 10px 0 8px;
+  justify-content: center;
+}
+.sistema-editar-instalacion-btn > span:not(.quick-btn-icon) {
+  text-align: center;
 }
 
 /* Panel opciones de notificación cultivo (Inicio) */
