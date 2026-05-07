@@ -132,6 +132,9 @@ function sincronizarUltimaMedicionYRecargaDesdeTorreActiva() {
 // Actualizar todos los datos de la torre activa
 function actualizarTorreActual() {
   if (state.configTorre) {
+    try {
+      delete state.configTorre.hcPlantillaAutogenerada;
+    } catch (_) {}
     state.configTorre.checklistInstalacionConfirmada = true;
     if (state.configTorre.tipoInstalacion === 'dwc') {
       try {

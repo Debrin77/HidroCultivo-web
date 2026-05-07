@@ -333,7 +333,6 @@ function goTab(tab) {
   currentTab = tab;
   try {
     actualizarTabContextHints(tab);
-    if (tab === 'riego') marcarVisitaRiegoOnboarding();
   } catch (_) {}
   if (tab === 'mediciones') { cargarUltimaMedicion(); initConfigUI(); }
   if (tab === 'inicio') updateDashboard();
@@ -364,7 +363,6 @@ function goTab(tab) {
   }
   if (typeof aplicarEstadoStandbyUI === 'function') aplicarEstadoStandbyUI();
   if (typeof window._hcSyncMainTabTabIndex === 'function') window._hcSyncMainTabTabIndex();
-  try { syncGuiaPrimerosPasosPorPestana(); } catch (_) {}
 }
 
 function irMedirMunicipioClima() {

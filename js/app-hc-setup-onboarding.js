@@ -608,5 +608,8 @@ function aplicarSetupDataATorre() {
   // Actualizar también el tipo de agua en la config principal
   const aguaMap = { destilada:'destilada', osmosis:'osmosis', grifo:'grifo' };
   if (aguaMap[setupData.agua]) setAgua(aguaMap[setupData.agua]);
+  try {
+    delete state.configTorre.hcPlantillaAutogenerada;
+  } catch (_) {}
 }
 

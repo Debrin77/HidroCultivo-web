@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-06-welcome-importante-16px">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-06-plantilla-ubicacion-medir">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -246,63 +246,10 @@
       </div>
       <div id="avisoCestasSinFechaInicio" class="aviso-cestas-sin-fecha" role="status" aria-live="polite"></div>
 
-      <!-- Guía primer día (progresiva; se oculta al completar pasos o al descartar) -->
-      <section id="guiaPrimerosPasos" class="hc-guia-primeros setup-hidden" aria-labelledby="guiaPrimerosTitulo">
-        <div class="hc-guia-head">
-          <h2 id="guiaPrimerosTitulo" class="hc-guia-title">Tu primer día</h2>
-          <button type="button" class="hc-guia-dismiss" onclick="dismissGuiaPrimerosPasos()"
-            aria-label="Ocultar esta guía"><svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-x"/></svg></button>
-        </div>
-        <div class="hc-guia-visual-strip" aria-hidden="true">
-          <div class="hc-guia-visual-item" title="Asistente de instalación">
-            <svg viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 6v8M14 14h20" stroke="#15803d" stroke-width="2" stroke-linecap="round"/><rect x="10" y="18" width="28" height="32" rx="3" fill="#bbf7d0" stroke="#15803d" stroke-width="1.5"/><circle cx="18" cy="28" r="3" fill="#22c55e"/><circle cx="30" cy="28" r="3" fill="#22c55e"/><circle cx="24" cy="38" r="3" fill="#16a34a"/></svg>
-            <span>Instalación</span>
-          </div>
-          <div class="hc-guia-visual-sep" aria-hidden="true">→</div>
-          <div class="hc-guia-visual-item" title="Medición EC / pH">
-            <svg viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="12" y="10" width="24" height="36" rx="4" fill="#ecfeff" stroke="#0d9488" stroke-width="1.5"/><path d="M18 22h12M18 28h10M18 34h12" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/><path d="M24 4v8" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/><circle cx="24" cy="4" r="3" fill="#38bdf8"/></svg>
-            <span>Medir</span>
-          </div>
-          <div class="hc-guia-visual-sep" aria-hidden="true">→</div>
-          <div class="hc-guia-visual-item" title="Riego de referencia">
-            <svg viewBox="0 0 48 56" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M24 8c-10 14-16 24-16 32a16 16 0 1032 0c0-8-6-18-16-32z" fill="#dbeafe" stroke="#2563eb" stroke-width="1.3"/><ellipse cx="24" cy="38" rx="6" ry="3" fill="#60a5fa" opacity=".5"/></svg>
-            <span>Riego</span>
-          </div>
-        </div>
-        <p class="hc-guia-lead">Sigue este orden: <strong>tipo de instalación</strong> (asistente), luego en <strong>Sistema</strong> las plantas en cada hueco, el <strong>checklist</strong> para preparar el depósito, una <strong>medición</strong> real y el <strong>riego</strong> como referencia.</p>
-        <ol class="hc-guia-steps">
-          <li id="guiaPaso1" class="hc-guia-step" data-step="1">
-            <span class="hc-guia-step-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="8" width="20" height="26" rx="2" fill="#bbf7d0" stroke="#15803d" stroke-width="1.5"/><ellipse cx="20" cy="7" rx="8" ry="3" fill="#86efac" stroke="#15803d"/><circle cx="16" cy="18" r="3" fill="#22c55e"/><circle cx="24" cy="18" r="3" fill="#22c55e"/><path d="M20 28v6" stroke="#0d9488" stroke-width="1.8" stroke-linecap="round"/></svg>
-            </span>
-            <span class="hc-guia-step-label">Configura la instalación activa</span>
-            <button type="button" class="btn btn-primary hc-guia-step-btn" id="guiaBtnPaso1" onclick="abrirSetup()">Abrir asistente</button>
-          </li>
-          <li id="guiaPaso2" class="hc-guia-step" data-step="2">
-            <span class="hc-guia-step-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="10" width="24" height="22" rx="3" fill="#ecfeff" stroke="#0d9488" stroke-width="1.3"/><path d="M14 18h12M14 23h9" stroke="#94a3b8" stroke-width="1.2" stroke-linecap="round"/><path d="M20 4v7" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><circle cx="20" cy="3.5" r="2.5" fill="#38bdf8"/></svg>
-            </span>
-            <span class="hc-guia-step-label">Registra tu primera medición</span>
-            <button type="button" class="btn btn-secondary hc-guia-step-btn" id="guiaBtnPaso2" onclick="goTab('mediciones')">Ir a Medir</button>
-          </li>
-          <li id="guiaPaso3" class="hc-guia-step" data-step="3">
-            <span class="hc-guia-step-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6c-8 11-14 19-14 26a14 14 0 1028 0c0-7-6-15-14-26z" fill="#dbeafe" stroke="#2563eb" stroke-width="1.2"/></svg>
-            </span>
-            <span class="hc-guia-step-label">Revisa el riego sugerido (referencia)</span>
-            <button type="button" class="btn btn-secondary hc-guia-step-btn" id="guiaBtnPaso3" onclick="goTab('riego')">Ir a Riego</button>
-          </li>
-        </ol>
-        <p class="hc-guia-nota" id="guiaPrimerosNota">Clima y riego calculado son <strong>orientativos</strong> (modelo meteorológico y supuestos de la instalación); las <strong>mediciones</strong> que registres son las que validan el estado real del agua.</p>
-        <p class="hc-guia-ayuda-link">
-          <button type="button" class="btn btn-ghost btn-sm" onclick="goTab('ayuda')">Manual y FAQ (Ayuda)</button>
-        </p>
-      </section>
-
       <!-- Aviso oficial AEMET/MeteoAlarm (flash en Inicio; zona inferida del municipio por geocodificación) -->
       <div id="meteoFlashAviso" class="meteo-flash-aviso setup-hidden" role="alert" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Ambiente meteorológico y localidad: solo si la instalación está en exterior (Medir → ubicación) -->
+      <!-- Ambiente meteorológico y localidad: solo si la instalación está en exterior (Medir: bloque superior «Municipio» o asistente) -->
       <div id="dashBloqueAmbienteExterior" class="dash-bloque-ambiente-exterior">
       <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
         <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
@@ -563,7 +510,7 @@
 
       <div id="ecTransicionAvisoMedir" class="ec-transicion-aviso setup-hidden" role="status" aria-live="polite"></div>
 
-      <!-- Instalación y última medición primero (nutriente ya en Inicio; municipio/clima más abajo) -->
+      <!-- Instalación activa; debajo el municipio para clima (misma sección que antes en la parte inferior del formulario) -->
       <button type="button" id="medirTorreBanner" class="medir-torre-banner"
         onclick="abrirSelectorTorres()"
         aria-label="Cambiar instalación en la que se registra la medición">
@@ -577,6 +524,30 @@
         </div>
         <span class="medir-torre-banner-action">Cambiar ›</span>
       </button>
+
+      <div class="config-section medir-localidad-top" id="panelLocalidadMeteo">
+        <div class="medir-localidad-cab">
+          <span class="medir-localidad-cab-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false"><use href="#hc-i-pin-mapa"/></svg></span>
+          <span class="medir-localidad-cab-label" id="labelLocalidadMeteoCab">Municipio (clima y avisos)</span>
+        </div>
+        <p class="medir-localidad-lead">Si el sistema está en <strong>exterior</strong>, escribe tu pueblo para previsiones y avisos. También lo puedes definir en el <strong>asistente</strong> (engranaje).</p>
+        <div class="medir-localidad-meteo-row">
+          <input type="text" id="inputLocalidadMeteo" placeholder="Ej. Madrid, Valencia, Castelló de la Plana…"
+            aria-labelledby="labelLocalidadMeteoCab"
+            autocomplete="address-level2"
+            onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
+            class="medir-input-localidad-meteo">
+          <button type="button" id="btnMunicipioGrifoAMeteo" onclick="usarMunicipioGrifoParaMeteo()"
+            class="medir-btn-municipio-grifo setup-hidden"
+            title="Rellenar con el municipio ya elegido para agua del grifo"
+            aria-label="Rellenar el municipio de avisos con el mismo que usaste para agua del grifo">
+            <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-droplet"/></svg>
+          </button>
+        </div>
+        <div class="medir-footer-note setup-hidden">
+          Fuente activa: <strong id="configMeteoFuenteActiva">Open-Meteo</strong>. La app usa respaldo automático gratuito (met.no + UV free) y caché local si hay incidencias.
+        </div>
+      </div>
 
       <div class="card ultima-medicion-card" id="ultimaMedicionCard">
         <div class="card-title"><svg class="hc-ico hc-ico--title" aria-hidden="true" focusable="false"><use href="#hc-i-clock"/></svg> Última medición</div>
@@ -715,30 +686,7 @@
           </div>
           </div>
         </div>
-
-        <div class="config-section" id="panelLocalidadMeteo">
-          <div class="medir-localidad-cab">
-            <span class="medir-localidad-cab-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false"><use href="#hc-i-pin-mapa"/></svg></span>
-            <span class="medir-localidad-cab-label" id="labelLocalidadMeteoCab">Municipio (clima y avisos)</span>
-          </div>
-          <div class="medir-localidad-meteo-row">
-            <input type="text" id="inputLocalidadMeteo" placeholder="Escribe el nombre del municipio"
-              aria-labelledby="labelLocalidadMeteoCab"
-              autocomplete="address-level2"
-              onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
-              class="medir-input-localidad-meteo">
-            <button type="button" id="btnMunicipioGrifoAMeteo" onclick="usarMunicipioGrifoParaMeteo()"
-              class="medir-btn-municipio-grifo setup-hidden"
-              title="Rellenar con el municipio ya elegido para agua del grifo"
-              aria-label="Rellenar el municipio de avisos con el mismo que usaste para agua del grifo">
-              <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-droplet"/></svg>
-            </button>
-          </div>
-          <div class="medir-footer-note setup-hidden">
-            Fuente activa: <strong id="configMeteoFuenteActiva">Open-Meteo</strong>. La app usa respaldo automático gratuito (met.no + UV free) y caché local si hay incidencias.
-          </div>
         </div>
-          </div>
         </div>
 
         <div class="recarga-card config-section-collapsible medir-dwc-block medir-dwc-block--2">
@@ -4330,8 +4278,8 @@
   <script src="js/hc-bootstrap-config.js?v=4"></script>
   <script src="js/hc-bootstrap-state.js?v=7"></script>
   <script src="js/hc-bootstrap-pin.js?v=5"></script>
-  <script src="js/hc-bootstrap-onboarding.js?v=18"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=14"></script>
+  <script src="js/hc-bootstrap-onboarding.js?v=20"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=15"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
   <script src="js/torre-render-build.js?v=2026-05-05-lista-multisel"></script>
   <script src="js/torre-render-main.js?v=5"></script>
@@ -4341,13 +4289,13 @@
   <script src="js/hc-setup-wizard-dwc.js?v=7"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-05-palette"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-05-boot-guard"></script>
-  <script src="js/hc-setup-calc-core.js?v=10"></script>
+  <script src="js/hc-setup-calc-core.js?v=11"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=8"></script>
   <script src="js/hc-setup-registro.js?v=4"></script>
-  <script src="js/hc-setup-agua-sustrato.js?v=8"></script>
+  <script src="js/hc-setup-agua-sustrato.js?v=9"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=9"></script>
   <script src="js/hc-medicion-wizard.js?v=4"></script>
   <script src="js/hc-tools-pro.js?v=9"></script>
@@ -4356,13 +4304,13 @@
   <script src="js/hc-setup-consejos.js?v=26"></script>
   <script src="js/calendario-logic.js?v=2"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
-  <script src="js/meteo-forecast-dashboard.js?v=11"></script>
+  <script src="js/meteo-forecast-dashboard.js?v=12"></script>
   <script src="js/riego-calculo-helpers.js?v=3"></script>
   <script src="js/riego-calculo-calcular.js?v=3"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=3"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=3"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=17"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=4"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=18"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=12"></script>
 </body>
 </html>

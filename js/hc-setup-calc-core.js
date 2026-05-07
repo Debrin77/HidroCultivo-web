@@ -1604,7 +1604,8 @@ function getNivelesActivos() {
 }
 
 function aplicarConfigTorre() {
-  // Si no hay config, usar defaults para que la torre funcione
+  // Si no hay config, plantilla mínima solo para cálculos de rejilla/volumen (sin ciudad GPS ficticia).
+  // `hcPlantillaAutogenerada` evita tratar el sistema como “ya configurado” (bienvenida / asistente) hasta que el usuario guarde o complete el asistente.
   if (!state.configTorre) {
     state.configTorre = {
       tipoInstalacion: 'torre',
@@ -1615,9 +1616,7 @@ function aplicarConfigTorre() {
       agua: state.configAgua || 'destilada',
       checklistInstalacionConfirmada: false,
       torreObjetivoCultivo: 'final',
-      lat: 39.9864,
-      lon: -0.0495,
-      ciudad: 'Castelló de la Plana',
+      hcPlantillaAutogenerada: true,
     };
   }
   if (!state.configTorre.tipoInstalacion) state.configTorre.tipoInstalacion = 'torre';

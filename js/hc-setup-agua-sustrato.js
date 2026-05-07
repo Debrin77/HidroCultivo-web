@@ -1280,6 +1280,11 @@ function persistLocalidadMeteo() {
   if (!state.configTorre) state.configTorre = {};
   const v = (document.getElementById('inputLocalidadMeteo')?.value || '').trim();
   state.configTorre.localidadMeteo = v;
+  if (v) {
+    try {
+      delete state.configTorre.hcPlantillaAutogenerada;
+    } catch (_) {}
+  }
   invalidateMeteoNomiCache();
   guardarEstadoTorreActual();
   saveState();
@@ -1304,7 +1309,9 @@ function refreshUbicacionInstalacionUI() {
   const dash = document.getElementById('dashLocalidadClimaText');
   const wrap = document.getElementById('dashLocalidadClimaWrap');
   if (dash) {
-    dash.textContent = txt || 'Sin municipio — indícalo en Medir';
+    dash.textContent =
+      txt ||
+      'Sin municipio para clima — en Medir, arriba del todo: «Municipio (clima y avisos)», o en el asistente (engranaje)';
     dash.classList.toggle('dash-localidad-clima-text--vacío', !txt);
   }
   if (wrap) wrap.classList.toggle('dash-localidad-clima-wrap--vacío', !txt);
@@ -1317,7 +1324,9 @@ function refreshUbicacionInstalacionUI() {
     icon.setAttribute('aria-hidden', 'true');
     icon.innerHTML = '<svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false" aria-hidden="true"><use href="#hc-i-pin-mapa"/></svg> ';
     const body = document.createElement('span');
-    body.textContent = txt ? txt : 'Sin municipio — indícalo en Medir';
+    body.textContent = txt
+      ? txt
+      : 'Sin municipio — en Medir, bloque superior «Municipio (clima y avisos)», o asistente';
     if (!txt) body.classList.add('riego-localidad-line--vacío');
     riego.appendChild(icon);
     riego.appendChild(body);

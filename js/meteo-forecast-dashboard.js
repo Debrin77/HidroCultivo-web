@@ -58,7 +58,6 @@ function updateDashboard() {
   try { refreshUbicacionInstalacionUI(); } catch (_) {}
 
   try {
-    actualizarGuiaPrimerosPasos();
     actualizarQuickActionsNoviceMode();
   } catch (_) {}
 
