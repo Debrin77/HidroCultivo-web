@@ -2634,6 +2634,21 @@ select#editVariedad option {
     inset 0 0 0 1px rgba(59,130,246,.2),
     0 4px 12px rgba(59,130,246,.12);
 }
+
+/* Paso 2 (playbook): los inputs NO deben heredar el tamaño XXL del paso 1 */
+.medir-wizard-modal #wizPage2 .wiz-input{
+  font-size: 16px !important;
+  line-height: 1.2 !important;
+  padding: 9px 0 !important;
+  font-weight: 600 !important;
+}
+.medir-wizard-modal #wizPage2 .wiz-input::placeholder{
+  opacity: .75;
+}
+.medir-wizard-modal #wizPage2 #wizNutrientesTxt.wiz-input{
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
 /* Notas paso 3: debe vencer .medir-wizard-modal .wiz-input (border:0 !important) */
 .medir-wizard-modal .medir-wizard-notes.wiz-input,
 .medir-wizard-modal textarea#wizNotas.medir-wizard-notes{
@@ -5572,6 +5587,23 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   .torre-objetivo-torre-actions {
     align-items: stretch;
   }
+}
+
+/* Sistema → Objetivo en torre vertical: mejor legibilidad (1 columna, centrado) */
+#sistemaTorreObjetivoCard .torre-dwc-grid-2{
+  grid-template-columns: 1fr;
+}
+#sistemaTorreObjetivoCard #sysTorreObjetivoCultivo.torre-dwc-input{
+  text-align: center;
+  text-align-last: center;
+}
+#sistemaTorreObjetivoCard .torre-objetivo-torre-actions{
+  align-items: stretch;
+}
+#sistemaTorreObjetivoCard .torre-dwc-save-btn{
+  width: 100%;
+  text-align: center;
+  justify-content: center;
 }
 
 .correccion-box {
