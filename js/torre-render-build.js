@@ -267,6 +267,9 @@ function torreOnCestaActivada(n, c) {
       updateTorreStats();
       calcularRotacion();
       setTimeout(renderCompatGrid, 50);
+      try {
+        if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+      } catch (_) {}
       const cult = getCultivoDB(v);
       mostrarBarraSeleccionCesta(n, c);
       const esNft = state.configTorre?.tipoInstalacion === 'nft';
@@ -1981,6 +1984,9 @@ function aplicarCultivoSeleccionMultiple() {
   updateTorreStats();
   calcularRotacion();
   setTimeout(renderCompatGrid, 50);
+  try {
+    if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+  } catch (_) {}
   actualizarBarraMultiSel();
   const tA = tipoInstalacionNormalizado(state.configTorre);
   const uHueco = tA === 'nft' ? ' hueco' : tA === 'dwc' ? ' maceta' : ' cesta';

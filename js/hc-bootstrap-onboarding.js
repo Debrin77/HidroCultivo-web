@@ -55,20 +55,28 @@ function scheduleTabBarCoach(delayMs) {
   _tabCoachRetryTimer = setTimeout(() => tryShowTabBarCoachDeferred(0), d);
 }
 
+/** Primera instalación: aún no hay config guardada (solo plantilla), sin historial de mezcla/medición ni plantas en esquema. */
+function hcEsPrimeraVezAsistenteInstalacion() {
+  try {
+    const cfg = state.configTorre;
+    const plantilla = !!(cfg && cfg.hcPlantillaAutogenerada);
+    const hayConfig = !!(cfg && !plantilla);
+    const hayPlantas =
+      typeof getNivelesActivos === 'function' &&
+      getNivelesActivos().some(n => state.torre[n] && state.torre[n].some(c => c && c.variedad));
+    return !hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
+  } catch (_) {
+    return false;
+  }
+}
+
 function dismissTabBarCoach() {
   try { localStorage.setItem(HC_TAB_BAR_COACH_KEY, '1'); } catch (_) {}
   _clearTabCoachRetryTimer();
   const el = document.getElementById('hcTabBarCoach');
   if (el) el.classList.add('setup-hidden');
   try { document.body.classList.remove('hc-tab-coach-open'); } catch (_) {}
-  let deferred = false;
-  try {
-    deferred = window._hcDeferredSetupTrasCoachTabs === true;
-  } catch (_) {}
-  if (deferred) {
-    try {
-      window._hcDeferredSetupTrasCoachTabs = false;
-    } catch (_) {}
+  if (hcEsPrimeraVezAsistenteInstalacion()) {
     setTimeout(() => {
       if (typeof abrirSetup === 'function') abrirSetup();
     }, 450);
@@ -87,9 +95,6 @@ function welcomeEmpezar() {
 }
 
 function welcomeAbrirSetup() {
-  try {
-    window._hcDeferredSetupTrasCoachTabs = false;
-  } catch (_) {}
   cerrarBienvenidaPrimeraVez({ skipLanzarSetup: true });
   try {
     setTimeout(() => {
@@ -250,23 +255,12 @@ function tabBarCoachYaDescartado() {
 }
 
 function lanzarSetupOChecklistSiCorresponde() {
-  const cfg = state.configTorre;
-  const plantilla = !!(cfg && cfg.hcPlantillaAutogenerada);
-  const hayConfig = !!(cfg && !plantilla);
-  const hayPlantas = getNivelesActivos().some(n =>
-    state.torre[n] && state.torre[n].some(c => c.variedad)
-  );
-  const esPrimeraVez = !hayConfig && !state.ultimaRecarga && !state.ultimaMedicion && !hayPlantas;
-  if (!esPrimeraVez) return;
-  // Tras la bienvenida: primero el coach de la barra («Entendido»); luego el asistente (como «Editar instalación»).
+  if (!hcEsPrimeraVezAsistenteInstalacion()) return;
+  // Tras la bienvenida: primero el coach de la barra («Entendido»); al cerrarlo se abre el asistente (ver dismissTabBarCoach).
   if (tabBarCoachYaDescartado()) {
     setTimeout(() => {
       if (typeof abrirSetup === 'function') abrirSetup();
     }, 450);
-  } else {
-    try {
-      window._hcDeferredSetupTrasCoachTabs = true;
-    } catch (_) {}
   }
   // No abrir el checklist automáticamente en cada arranque.
 }
@@ -442,15 +436,68 @@ function actualizarPostSetupChecklistRail() {
   }
 }
 
+/** Solo en EC/pH automático: en manual el checklist no depende de fichas y se abre desde el rail. */
+function _hcAutoChecklistTrasCultivosPostSetupActivo() {
+  try {
+    const cfg = state.configTorre || {};
+    if (typeof getEcPhStrategy === 'function' && getEcPhStrategy(cfg) === 'manual') return false;
+  } catch (_) {}
+  return true;
+}
+
 function hcNotificarCambioCultivoSistema() {
   try {
-    if (state && state.hcPostSetupChecklistPendiente && typeof actualizarPostSetupChecklistRail === 'function') {
-      actualizarPostSetupChecklistRail();
+    if (!state || !state.hcPostSetupChecklistPendiente) {
+      try {
+        delete window._hcPostSetupAutoCkBloqueadoPrev;
+      } catch (_) {}
+      if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
+      return;
     }
+    const bloqueado =
+      typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
+      torreBloqueaChecklistPorFaltaDatosCultivo();
+    let prev;
+    try {
+      prev = window._hcPostSetupAutoCkBloqueadoPrev;
+    } catch (_) {
+      prev = undefined;
+    }
+    const transicion =
+      prev === true && !bloqueado && _hcAutoChecklistTrasCultivosPostSetupActivo();
+    try {
+      window._hcPostSetupAutoCkBloqueadoPrev = bloqueado;
+    } catch (_) {}
+    if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
+    if (transicion) hcEjecutarChecklistPostSetupTrasCultivosListos();
   } catch (_) {}
 }
 
+function hcEjecutarChecklistPostSetupTrasCultivosListos() {
+  try {
+    delete window._hcPostSetupAutoCkBloqueadoPrev;
+  } catch (_) {}
+  try {
+    delete state.hcPostSetupChecklistPendiente;
+    if (typeof saveState === 'function') saveState();
+  } catch (_) {}
+  actualizarPostSetupChecklistRail();
+  try {
+    if (typeof goTab === 'function') goTab('inicio');
+  } catch (_) {}
+  setTimeout(() => {
+    try {
+      if (typeof preguntarIniciarChecklist === 'function') preguntarIniciarChecklist();
+    } catch (e) {
+      console.error(e);
+    }
+  }, 280);
+}
+
 function hcPostSetupChecklistMasTarde() {
+  try {
+    delete window._hcPostSetupAutoCkBloqueadoPrev;
+  } catch (_) {}
   try {
     delete state.hcPostSetupChecklistPendiente;
     if (typeof saveState === 'function') saveState();
@@ -481,21 +528,24 @@ function hcAccionChecklistPostSetupDesdeSistema() {
     actualizarPostSetupChecklistRail();
     return;
   }
+  hcEjecutarChecklistPostSetupTrasCultivosListos();
+}
+
+function hcAbrirPrimeraFichaCultivoTrasWizard() {
   try {
-    delete state.hcPostSetupChecklistPendiente;
-    if (typeof saveState === 'function') saveState();
-  } catch (_) {}
-  actualizarPostSetupChecklistRail();
-  try {
-    if (typeof goTab === 'function') goTab('inicio');
-  } catch (_) {}
-  setTimeout(() => {
-    try {
-      if (typeof preguntarIniciarChecklist === 'function') preguntarIniciarChecklist();
-    } catch (e) {
-      console.error(e);
+    if (!state || !state.hcPostSetupChecklistPendiente) return;
+    const so = document.getElementById('setupOverlay');
+    if (so && so.classList.contains('open')) return;
+    if (typeof getNivelesActivos !== 'function' || typeof openModal !== 'function') return;
+    const niveles = getNivelesActivos();
+    for (let i = 0; i < niveles.length; i++) {
+      const n = niveles[i];
+      const row = state.torre[n];
+      if (!row || !row.length) continue;
+      openModal(n, 0);
+      return;
     }
-  }, 280);
+  } catch (_) {}
 }
 
 function iniciarFlujoSistemaAntesChecklistPostSetup() {
@@ -506,8 +556,13 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
     ensurePostSetupChecklistRail();
     actualizarPostSetupChecklistRail();
   }, 120);
+  setTimeout(() => {
+    hcAbrirPrimeraFichaCultivoTrasWizard();
+  }, 520);
   if (typeof showToast === 'function') {
-    showToast('Coloca cultivos en el esquema (variedad, fecha, procedencia). Luego: checklist de recarga.');
+    showToast(
+      'Completa cada cesta: variedad, fecha de trasplante y procedencia. Se abre la primera ficha; al terminar, el checklist de recarga.'
+    );
   }
 }
 

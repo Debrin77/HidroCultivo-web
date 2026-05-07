@@ -1400,6 +1400,15 @@ function guardarSetupYContinuar() {
   try {
     state.hcPostSetupChecklistPendiente = true;
   } catch (_) {}
+  try {
+    window._hcPostSetupAutoCkBloqueadoPrev =
+      typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
+      torreBloqueaChecklistPorFaltaDatosCultivo();
+  } catch (_) {
+    try {
+      window._hcPostSetupAutoCkBloqueadoPrev = true;
+    } catch (_) {}
+  }
 
   saveState();
   aplicarConfigTorre();

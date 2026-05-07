@@ -38,6 +38,9 @@ function resetApp() {
   try {
     delete state.hcPostSetupChecklistPendiente;
   } catch (_) {}
+  try {
+    delete window._hcPostSetupAutoCkBloqueadoPrev;
+  } catch (_) {}
 
   // Actualizar UI
   renderTorre();
