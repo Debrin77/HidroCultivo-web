@@ -5392,12 +5392,9 @@ html.hc-theme-dark .quick-btn[data-quick-icon="reset"] .hc-ico--ion-quick { colo
   margin-bottom: 0;
 }
 
-.sistema-editar-instalacion-btn {
+.hc-btn-backup-restore-full {
   width: 100%;
-  margin: 10px 0 8px;
   justify-content: center;
-}
-.sistema-editar-instalacion-btn > span:not(.quick-btn-icon) {
   text-align: center;
 }
 
@@ -10090,6 +10087,13 @@ html.hc-theme-dark .consejo-text-toggle {
   font-weight: 500;
   color: #cbd5e1;
   line-height: 1.4;
+}
+/* Medir → Recargas: subtítulo en cabecera colapsada con contraste legible */
+#tab-mediciones .recarga-card .config-section-collapse-subtitle {
+  color: #475569;
+}
+html.hc-theme-dark #tab-mediciones .recarga-card .config-section-collapse-subtitle {
+  color: #cbd5e1;
 }
 .config-section-collapse-head:hover {
   background: rgba(255,255,255,0.05);
