@@ -749,8 +749,8 @@ function actualizarBadgesNutriente() {
   const ecOptimaCultivos = getECOptimaTorre();
   const ecMin = ecOptimaCultivos.min;
   const ecMax = ecOptimaCultivos.max;
-  const phMin = nut.pHRango   ? nut.pHRango[0]    : 5.5;
-  const phMax = nut.pHRango   ? nut.pHRango[1]    : 6.5;
+  const phMin = nut && nut.pHRango ? nut.pHRango[0] : 5.5;
+  const phMax = nut && nut.pHRango ? nut.pHRango[1] : 6.5;
 
   const rangeEC = document.getElementById('paramRangeEC');
   const rangePH = document.getElementById('paramRangePH');
@@ -792,7 +792,8 @@ function actualizarBadgesNutriente() {
       rangePH.textContent = 'Misma lógica que EC: define plantas en Sistema o pH manual en checklist.';
       rangePH.title = 'Con plantas y fecha, el pH se ajusta al catálogo por fase y al nutriente activo.';
     } else {
-      const phOpt = typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [phMin, phMax];
+      const phOpt =
+        nut && typeof getPhOptimaTorre === 'function' ? getPhOptimaTorre(nut, cfg) : [phMin, phMax];
       rangePH.textContent = phOpt[0] + ' – ' + phOpt[1];
       rangePH.removeAttribute('title');
     }
@@ -801,7 +802,8 @@ function actualizarBadgesNutriente() {
   const rangeVol = document.getElementById('paramRangeVol');
   const inputVol = document.getElementById('inputVol');
   if (rangeVol && typeof getVolumenDepositoMaxLitros === 'function') {
-    const vr = Math.round(Number(getVolumenDepositoMaxLitros(cfg)) * 10) / 10;
+    const vrRaw = getVolumenDepositoMaxLitros(cfg);
+    const vr = Math.round(Number(vrRaw) * 10) / 10;
     if (Number.isFinite(vr) && vr > 0) {
       if (cfg.tipoInstalacion === 'dwc') {
         let capG = null;
@@ -838,6 +840,13 @@ function actualizarBadgesNutriente() {
         const capIn = Math.min(800, Math.max(Math.ceil(vr + 2), 20));
         inputVol.setAttribute('max', String(capIn));
       }
+    } else if (cfg.hcPlantillaAutogenerada) {
+      rangeVol.textContent = 'Indica capacidad del depósito en Torre o asistente';
+      rangeVol.removeAttribute('title');
+      if (inputVol) {
+        inputVol.placeholder = '—';
+        inputVol.removeAttribute('max');
+      }
     }
   }
 
@@ -845,8 +854,8 @@ function actualizarBadgesNutriente() {
   const dashNombre  = document.getElementById('dashNutrienteNombre');
   const dashDetalle = document.getElementById('dashNutrienteDetalle');
   const dashUbicacion = document.getElementById('dashUbicacionBadge');
-  if (dashNombre)  dashNombre.textContent  = nut.nombre;
-  if (dashDetalle) dashDetalle.textContent = nut.detalle;
+  if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
+  if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Sistema o Medir';
   if (dashUbicacion) {
     const ub = cfg.ubicacion || 'exterior';
     if (ub === 'interior') {
@@ -869,9 +878,15 @@ function actualizarBadgesNutriente() {
     const ces = cfg.numCestas  || 5;
     const vMax = getVolumenDepositoMaxLitros(cfg);
     const vMez = getVolumenMezclaLitros(cfg);
-    const volTxt = vMez < vMax - 0.05 ? vMax + 'L máx · ' + vMez + 'L mezcla' : vMax + 'L';
+    const volTxt =
+      vMax != null && Number.isFinite(vMax) && vMax > 0
+        ? vMez != null && Number.isFinite(vMez) && vMez < vMax - 0.05
+          ? vMax + 'L máx · ' + vMez + 'L mezcla'
+          : vMax + 'L'
+        : 'L depósito por indicar';
+    const nutTxt = nut ? nut.nombre : 'nutriente por elegir';
     const estadoTxt = sistemaEstaOperativa(cfg) ? 'operativa' : 'stand-by';
-    dashTorreInfo.textContent = niv + ' niveles · ' + ces + ' cestas · ' + volTxt + ' · ' + nut.nombre + ' · ' + estadoTxt;
+    dashTorreInfo.textContent = niv + ' niveles · ' + ces + ' cestas · ' + volTxt + ' · ' + nutTxt + ' · ' + estadoTxt;
   }
 
   // Pestaña Medir — banner torre
@@ -899,7 +914,8 @@ function cambiarNutriente() {
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-label', 'Nutriente de esta torre');
 
-  const nutActual = getNutrienteTorre().id;
+  const nutCur = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+  const nutActual = (nutCur && nutCur.id) || '';
 
   overlay.innerHTML = '<div class="nut-quick-sheet">' +
     '<div class="nut-quick-handle"></div>' +
@@ -962,7 +978,11 @@ function seleccionarNutrienteRapido(id) {
   updateDashboard();
   updateTorreStats();
   const nut = getNutrienteTorre();
-  showToast('Nutriente activo: ' + nut.nombre + ' · dosis y checklist actualizados');
+  showToast(
+    nut
+      ? 'Nutriente activo: ' + nut.nombre + ' · dosis y checklist actualizados'
+      : 'Nutriente guardado'
+  );
 }
 
 // ══════════════════════════════════════════════════

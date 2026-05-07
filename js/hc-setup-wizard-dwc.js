@@ -577,6 +577,7 @@ function getDwcLitrosOxigenacionReferencia(cfg) {
   const vMax = getVolumenDepositoMaxLitros(cfg);
   const vMez = getVolumenMezclaLitros(cfg);
   if (!Number.isFinite(vMax) || vMax <= 0) return null;
+  if (!Number.isFinite(vMez) || vMez <= 0) return null;
   const vol = vMez < vMax - 0.05 ? vMez : vMax;
   return {
     vol: Math.round(vol * 10) / 10,

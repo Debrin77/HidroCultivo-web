@@ -484,9 +484,17 @@ function generarSVGDwc() {
   const volMax = getVolumenDepositoMaxLitros(cfg);
   const volTrabajo = getVolumenMezclaLitros(cfg);
   /** Litros mostrados: siempre el volumen de mezcla / trabajo (≤ máx.), no la última medición ni un % fijo del máx. */
-  const volEtiqueta = Math.round(volTrabajo * 10) / 10;
+  const volEtiqueta =
+    volTrabajo != null && Number.isFinite(volTrabajo) ? Math.round(volTrabajo * 10) / 10 : '—';
   /** Nivel del agua en el dibujo: fracción útil mezcla / capacidad física del depósito. */
-  const volPct = Math.min(1, Math.max(0, volTrabajo / Math.max(1, volMax)));
+  const volPct =
+    volMax != null &&
+    volTrabajo != null &&
+    Number.isFinite(volMax) &&
+    Number.isFinite(volTrabajo) &&
+    volMax > 0
+      ? Math.min(1, Math.max(0, volTrabajo / Math.max(1, volMax)))
+      : 0;
   const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
   const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
   const objSpec =
@@ -950,8 +958,17 @@ function generarSVGDwc() {
   }
 
   /* Color por litros de mezcla (no por % del máx.): depósito grande + poca mezcla es válido. */
-  const volCol = volEtiqueta < 6 ? Dw.volLow : volEtiqueta < 12 ? Dw.volMid : Dw.volOk;
-  s += `<text x="${W / 2}" y="${tankStartY + tankH + 24}" font-family="Syne,sans-serif" font-size="19" font-weight="900" fill="${volCol}" text-anchor="middle">${volEtiqueta} L</text>`;
+  const volCol =
+    typeof volEtiqueta === 'number' && Number.isFinite(volEtiqueta)
+      ? volEtiqueta < 6
+        ? Dw.volLow
+        : volEtiqueta < 12
+          ? Dw.volMid
+          : Dw.volOk
+      : '#64748b';
+  const volTxtDwc =
+    typeof volEtiqueta === 'number' && Number.isFinite(volEtiqueta) ? volEtiqueta + ' L' : '—';
+  s += `<text x="${W / 2}" y="${tankStartY + tankH + 24}" font-family="Syne,sans-serif" font-size="19" font-weight="900" fill="${volCol}" text-anchor="middle">${volTxtDwc}</text>`;
 
 
   const pad = 14;
@@ -992,9 +1009,19 @@ function generarSVGTorre() {
   const DEP_X  = (SVG_W - DEP_W) / 2;
 
   // Volumen actual del depósito
-  const volConfig  = getVolumenDepositoMaxLitros(cfg);
-  const volActual  = state.ultimaMedicion?.vol ? parseFloat(state.ultimaMedicion.vol) : volConfig * 0.8;
-  const volPct     = Math.min(1, Math.max(0, volActual / volConfig));
+  const volConfigRaw = getVolumenDepositoMaxLitros(cfg);
+  const volConfig =
+    volConfigRaw != null && Number.isFinite(volConfigRaw) && volConfigRaw > 0 ? volConfigRaw : null;
+  const volActual =
+    state.ultimaMedicion?.vol && Number.isFinite(parseFloat(state.ultimaMedicion.vol))
+      ? parseFloat(state.ultimaMedicion.vol)
+      : volConfig != null
+        ? volConfig * 0.8
+        : null;
+  const volPct =
+    volConfig != null && volActual != null && volConfig > 0
+      ? Math.min(1, Math.max(0, volActual / volConfig))
+      : 0;
   const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
   const tieneCalentador= state.configTorre?.equipamiento?.includes('calentador') ?? true;
   const ta = torreSvgAnimacionesActivas();
@@ -1128,9 +1155,11 @@ function generarSVGTorre() {
   </ellipse>`;
 
   // Volumen fuera del depósito para máxima legibilidad (igual criterio que DWC).
-  const volTorreLabel = Math.round(Number(volActual) * 10) / 10;
+  const volTorreLitros =
+    volActual != null && Number.isFinite(Number(volActual)) ? Math.round(Number(volActual) * 10) / 10 : null;
+  const volTorreTexto = volTorreLitros != null ? volTorreLitros + ' L' : '—';
   s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
-    font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreLabel} L</text>`;
+    font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreTexto}</text>`;
 
   // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {

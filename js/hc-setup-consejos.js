@@ -502,8 +502,10 @@ function mlAbonoParteDinamica(nut, partIndex, volLitros, ecMetaMicroS, ctx) {
 
 function calcularMlParteNutriente(partIndex) {
   const nut = getNutrienteTorre();
+  if (!nut) return 0;
   const cfg = state.configTorre || {};
   const volObj = getVolumenMezclaLitros(cfg);
+  if (volObj == null || !Number.isFinite(volObj) || volObj <= 0) return 0;
   const aguaGrifo = (cfg.agua || state.configAgua || 'destilada') === 'grifo';
   return mlAbonoParteDinamica(nut, partIndex, volObj, getRecargaEcMetaMicroS(), {
     modoSoft: !aguaGrifo,
@@ -597,11 +599,17 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
 function buildHtmlTablaPreparacionFabricante18L() {
   const cfg = state.configTorre || {};
   const Vraw = getVolumenMezclaLitros(cfg);
+  if (Vraw == null || !Number.isFinite(Vraw) || Vraw <= 0) {
+    return (
+      '<p class="consejo-dosis18-vacio">Indica litros de depósito o mezcla y el nutriente en <strong>Torre</strong> o <strong>Sistema</strong> para ver esta tabla con tus litros reales.</p>'
+    );
+  }
   const V = Math.round(Vraw * 10) / 10;
   const vCap = getVolumenDepositoMaxLitros(cfg);
-  const capNota = V < vCap - 0.05
-    ? ' Capacidad máx. del depósito: <strong>' + vCap + ' L</strong> (esta tabla usa <strong>' + V + ' L</strong> de mezcla).'
-    : '';
+  const capNota =
+    vCap != null && Number.isFinite(vCap) && vCap > 0 && V < vCap - 0.05
+      ? ' Capacidad máx. del depósito: <strong>' + vCap + ' L</strong> (esta tabla usa <strong>' + V + ' L</strong> de mezcla).'
+      : '';
   const ecUsada = getRecargaEcMetaMicroS();
   const aguaK = cfg.agua || state.configAgua || 'destilada';
   const aguaNom = aguaK === 'grifo' ? 'Grifo' : aguaK === 'osmosis' ? 'Ósmosis' : 'Destilada';
@@ -617,6 +625,11 @@ function buildHtmlTablaPreparacionFabricante18L() {
     : `Tipo de agua (instalación activa / Mediciones): <strong>${aguaNom}</strong>. CalMag en esas columnas: <strong>${prefCM ? 'sí' : 'no'}</strong> (pref. checklist).`;
 
   const nutActivo = getNutrienteTorre();
+  if (!nutActivo) {
+    return (
+      '<p class="consejo-dosis18-vacio">Elige un nutriente en <strong>Sistema</strong> o <strong>Medir</strong> para mostrar dosis orientativas del fabricante.</p>'
+    );
+  }
   const ref = getRefDosisFabricante(nutActivo.id);
   const cSoft = buildLineasCeldaDosis(ref, nutActivo, V, 'soft');
   const cGrifo = buildLineasCeldaDosis(ref, nutActivo, V, 'grifo');
@@ -716,12 +729,17 @@ function abrirModalConsejosTablaPersonal(volSugerido) {
   const vs = parseFloat(volSugerido);
   if (vIn) {
     const defL = getVolumenMezclaLitros(cfg);
-    vIn.value = (!isNaN(vs) && vs > 0) ? String(vs) : String(defL);
+    vIn.value =
+      !isNaN(vs) && vs > 0
+        ? String(vs)
+        : defL != null && Number.isFinite(defL) && defL > 0
+          ? String(defL)
+          : '';
   }
   if (sel) {
     try {
       const nut = getNutrienteTorre();
-      sel.value = nut.id;
+      sel.value = nut && nut.id ? nut.id : (NUTRIENTES_DB[0] && NUTRIENTES_DB[0].id) || '';
     } catch (e) {
       sel.selectedIndex = 0;
     }
@@ -991,15 +1009,22 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
   const ecOpt = typeof getECOptimaTorre === 'function' ? getECOptimaTorre() : { min: 900, max: 1400 };
   const ecMeta = typeof getRecargaEcMetaMicroS === 'function' ? getRecargaEcMetaMicroS() : 1100;
   const pHR =
-    typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : nut && nut.pHRango ? nut.pHRango : [5.5, 6.5];
+    nut && typeof torreGetPhRangoObjetivo === 'function'
+      ? torreGetPhRangoObjetivo(nut, cfg)
+      : nut && nut.pHRango
+        ? nut.pHRango
+        : [5.5, 6.5];
   const phTxt = meteoEscHtml(String(pHR[0])) + ' – ' + meteoEscHtml(String(pHR[1]));
 
   const volMax = typeof getVolumenDepositoMaxLitros === 'function' ? getVolumenDepositoMaxLitros(cfg) : 0;
   const volObj = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : 0;
   let volTxt = '';
-  if (volObj > 0) {
+  if (volObj != null && Number.isFinite(volObj) && volObj > 0) {
     volTxt =
-      volMax > 0 && volObj < volMax - 0.05
+      volMax != null &&
+      Number.isFinite(volMax) &&
+      volMax > 0 &&
+      volObj < volMax - 0.05
         ? '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong> de mezcla (depósito hasta <strong>' + meteoEscHtml(String(volMax)) + ' L</strong>)'
         : '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong>';
   } else {
@@ -1066,6 +1091,14 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
 function buildConsejosAguaNutrienteDinamico() {
   const nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
+  if (!nut) {
+    return htmlConsejoCard({ nombre: '💧 Agua y EC', color: '#1d4ed8', bg: 'rgba(37,99,235,0.1)' }, {
+      icono: '🧪',
+      titulo: 'Nutriente y depósito',
+      texto:
+        '<p class="consejo-p">Para ver protocolo, dosis y rangos concretos, elige una <strong>marca de nutriente</strong> en Sistema o Medir e indica los <strong>litros del depósito</strong> en Torre o en el asistente.</p>',
+    });
+  }
   const volMax = getVolumenDepositoMaxLitros(cfg);
   const volObj = getVolumenMezclaLitros(cfg);
   const ecOpt = getECOptimaTorre();
@@ -1099,7 +1132,7 @@ function buildConsejosAguaNutrienteDinamico() {
 
   const mlCM = calcularMlCalMag();
   const ref = getRefDosisFabricante(nut.id);
-  const cmPL = volObj > 0 ? mlCM / volObj : 0;
+  const cmPL = volObj != null && Number.isFinite(volObj) && volObj > 0 ? mlCM / volObj : 0;
   const rnd = x => Math.round(x * 100) / 100;
 
   const partesRepos = [];
@@ -1122,9 +1155,18 @@ function buildConsejosAguaNutrienteDinamico() {
       partesRepos.map(p => meteoEscHtml(p)).join(' + ') + '. Remueve, espera unos minutos con difusor o bomba y mide de nuevo EC y pH.'
     : 'Si la EC ha bajado, usa la misma proporción que en tu última recarga completa o el checklist de la app.';
 
-  const volRefHtml = volObj < volMax - 0.05
-    ? 'mezcla de <strong>' + volObj + ' L</strong> (depósito hasta <strong>' + volMax + ' L</strong>)'
-    : '<strong>' + volObj + ' L</strong>';
+  const volRefHtml =
+    volObj != null &&
+    volMax != null &&
+    Number.isFinite(volObj) &&
+    Number.isFinite(volMax) &&
+    volObj > 0 &&
+    volMax > 0 &&
+    volObj < volMax - 0.05
+      ? 'mezcla de <strong>' + volObj + ' L</strong> (depósito hasta <strong>' + volMax + ' L</strong>)'
+      : volObj != null && Number.isFinite(volObj) && volObj > 0
+        ? '<strong>' + volObj + ' L</strong>'
+        : 'indica litros en Torre o Sistema';
   const textoRepos =
     'Volumen de referencia en la app: ' + volRefHtml + '. Repone con la <strong>misma calidad de agua</strong> que usas en recargas (según tu configuración). ' +
     '<strong>Si la EC sigue en rango</strong> para tus plantas, añade solo agua. ' + bloqueDosis;

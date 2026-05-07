@@ -10,11 +10,15 @@
 function getNutrienteTorre() {
   const cfg = state.configTorre || {};
   const tIdx = state.torreActiva || 0;
-  // Leer nutriente de la torre activa primero, luego configTorre
-  const id = (state.torres && state.torres[tIdx] && state.torres[tIdx].config)
-    ? (state.torres[tIdx].config.nutriente || cfg.nutriente || 'canna_aqua')
-    : (cfg.nutriente || 'canna_aqua');
-  return NUTRIENTES_DB.find(n => n.id === id) || NUTRIENTES_DB[0];
+  const tCfg = state.torres && state.torres[tIdx] && state.torres[tIdx].config;
+  const raw = tCfg ? (tCfg.nutriente || cfg.nutriente) : cfg.nutriente;
+  const idNorm = raw && String(raw).trim() ? String(raw).trim() : null;
+  if (!idNorm) {
+    if (cfg.hcPlantillaAutogenerada) return null;
+    const fb = 'canna_aqua';
+    return NUTRIENTES_DB.find(n => n.id === fb) || NUTRIENTES_DB[0];
+  }
+  return NUTRIENTES_DB.find(n => n.id === idNorm) || NUTRIENTES_DB[0];
 }
 
 function aplicarAjusteEcObjetivoPorInstalacion(ecRange, cfg) {
@@ -302,6 +306,7 @@ function buildHtmlDosisSubirEcParaAviso(ecNum) {
   if (!Number.isFinite(ecNum)) return '';
   const cfg = state.configTorre || {};
   const nut = getNutrienteTorre();
+  if (!nut) return '';
   const vol =
     typeof getVolumenMezclaLitros === 'function' ? Number(getVolumenMezclaLitros(cfg)) : NaN;
   if (!Number.isFinite(vol) || vol < 0.5) return '';
@@ -1413,6 +1418,7 @@ function preguntarIniciarChecklist() {
   const nombreTorre = (torre?.nombre || '').trim() || 'Instalación';
   const volMax     = getVolumenDepositoMaxLitros(cfg);
   const vol        = getVolumenMezclaLitros(cfg);
+  if (!nut || vol == null || !Number.isFinite(vol) || vol <= 0) return;
   const ecObj      = getECOptimaTorre();
   const faArr      = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
   const ecMetaRec  = typeof getRecargaEcMetaMicroS === 'function' ? getRecargaEcMetaMicroS() : Math.round((ecObj.min + ecObj.max) / 2);
@@ -1633,12 +1639,14 @@ function aplicarConfigTorre() {
   // Actualizar constantes dinámicas — NUM_NIVELES y NUM_CESTAS ahora son variables
   window.NUM_NIVELES_ACTIVO = cfg.numNiveles;
   window.NUM_CESTAS_ACTIVO  = cfg.numCestas;
-  window.VOL_OBJETIVO_ACTIVO = getVolumenMezclaLitros(cfg);
+  const vMezAct = getVolumenMezclaLitros(cfg);
+  window.VOL_OBJETIVO_ACTIVO =
+    vMezAct != null && Number.isFinite(vMezAct) && vMezAct > 0 ? vMezAct : VOL_OBJETIVO;
 
   // Constantes de cálculo según nutriente activo (no solo cfg.nutriente por si quedó desincronizado)
   const nut = getNutrienteTorre();
   if (nut) {
-    const vAct = getVolumenMezclaLitros(cfg);
+    const vAct = vMezAct != null && Number.isFinite(vMezAct) && vMezAct > 0 ? vMezAct : VOL_OBJETIVO;
     window.EC_POR_ML_AB_ACTIVO = ecSubePorMlCorreccion(nut, vAct);
   }
   actualizarVisibilidadPanelInteriorGrow();

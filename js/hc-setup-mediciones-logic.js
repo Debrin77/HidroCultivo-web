@@ -69,6 +69,7 @@ function getDashTileClassVol(val) {
     Number.isFinite(volMax) && volMax > 0 ? volMax : Math.max(RANGOS.vol.min, VOL_OBJETIVO);
   const volTarget =
     typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfgK) : volTop;
+  if (!Number.isFinite(volTarget) || volTarget <= 0) return 'empty';
   const umbralOk = Math.max(4, volTarget * 0.93);
   const umbralCrit = Math.max(2.5, volTarget * 0.68);
   const umbralWarnBajo = Math.max(3, volTarget * 0.78);
@@ -133,6 +134,16 @@ function instalacionEsUbicacionInterior(cfg) {
   return (c.ubicacion || 'exterior') === 'interior';
 }
 
+/** Plantilla nueva: sin litros de depósito en config (torre/NFT); no inventar 18 L en UI ni en `getVolumen*`. */
+function instalacionPlantillaSinCapacidadDepositoUsuario(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (!c.hcPlantillaAutogenerada) return false;
+  const tipo = c.tipoInstalacion || 'torre';
+  if (tipo === 'dwc') return false;
+  const v = Number(c.volDeposito);
+  return !(Number.isFinite(v) && v > 0);
+}
+
 /**
  * Volumen de referencia (L) para escalados y límites en Medir / checklist:
  * - Torre y NFT: `volDeposito` (tope del depósito).
@@ -151,6 +162,7 @@ function getVolumenDepositoMaxLitros(cfg) {
     const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
     if (cap != null && cap > 0) return Math.min(800, Math.max(1, Math.round(cap * 10) / 10));
   }
+  if (instalacionPlantillaSinCapacidadDepositoUsuario(cfg)) return null;
   return VOL_OBJETIVO;
 }
 
@@ -161,6 +173,7 @@ function getVolumenDepositoMaxLitros(cfg) {
 function getVolumenMezclaLitros(cfg) {
   cfg = cfg || state.configTorre || {};
   const maxL = getVolumenDepositoMaxLitros(cfg);
+  if (maxL == null || !Number.isFinite(maxL) || maxL <= 0) return null;
   const mez = Number(cfg.volMezclaLitros);
   if (Number.isFinite(mez) && mez > 0) {
     const m = Math.round(mez * 10) / 10;
@@ -191,7 +204,7 @@ function mlCalMagParaAguaBlanda(volLitros) {
 function calcularMlCalMag() {
   if (!usarCalMagEnRecarga()) return 0;
   const nut = getNutrienteTorre();
-  if (!nut.calmagNecesario) return 0;
+  if (!nut || !nut.calmagNecesario) return 0;
   const cfg = state.configTorre || {};
   const volObj = getVolumenMezclaLitros(cfg);
   let ml = mlCalMagParaAguaBlanda(volObj);
@@ -204,6 +217,7 @@ function calcularMlCalMag() {
 
 function calcularDescAB(parte) {
   const nut = getNutrienteTorre();
+  if (!nut) return '';
   const orden = nut.orden || ['Parte A', 'Parte B'];
   const suf = dosisSufijoNutriente(nut);
   if (nut.partes === 3) {
@@ -287,6 +301,12 @@ function evalEC(ec, vol) {
 
   const nut = getNutrienteTorre();
   const volActual  = isNaN(vol) ? getVolumenMezclaLitros(state.configTorre) : vol;
+  if (!nut || volActual == null || !Number.isFinite(volActual) || volActual <= 0) {
+    setStatus('statusEC', 'empty', '', 'Configura nutriente y litros de depósito/mezcla en Torre o Sistema.');
+    setCard('cardEC', '');
+    showCorreccion('correccionEC', '');
+    return;
+  }
   // EC óptima según cultivos presentes (si no hay plantas, usa el nutriente)
   const ecOptima   = getECOptimaTorre();
   const ecMin      = ecOptima.min;
@@ -406,6 +426,12 @@ function evalPH(ph, vol) {
 
   const nut       = getNutrienteTorre();
   const volActual = isNaN(vol) ? getVolumenMezclaLitros(state.configTorre) : vol;
+  if (!nut || volActual == null || !Number.isFinite(volActual) || volActual <= 0) {
+    setStatus('statusPH', 'empty', '', '');
+    setCard('cardPH', '');
+    showCorreccion('correccionPH', '');
+    return;
+  }
   const factor    = volActual / VOL_OBJETIVO;
 
   // Rangos del nutriente activo
@@ -598,10 +624,27 @@ function evalVol(vol, ec, ph) {
     return;
   }
 
+  if (!Number.isFinite(volObjSafe) || volObjSafe <= 0) {
+    setStatus('statusVol', 'empty', '', '');
+    setCard('cardVol', '');
+    showCorreccion(
+      'correccionVol',
+      '<div class="correccion-title">Capacidad del depósito</div>' +
+        '<div class="correccion-muted">Indica los litros en la pestaña <strong>Torre</strong> o en el asistente para comparar con tu medición.</div>'
+    );
+    return;
+  }
+
   const volTop =
     Number.isFinite(volObjSafe) && volObjSafe > 0 ? volObjSafe : Math.max(RANGOS.vol.min, VOL_OBJETIVO);
   const volTarget =
     typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfgK) : volTop;
+  if (!Number.isFinite(volTarget) || volTarget <= 0) {
+    setStatus('statusVol', 'empty', '', '');
+    setCard('cardVol', '');
+    showCorreccion('correccionVol', '');
+    return;
+  }
   const umbralOk = Math.max(4, volTarget * 0.93);
   const umbralCrit = Math.max(2.5, volTarget * 0.68);
   const umbralWarnBajo = Math.max(3, volTarget * 0.78);

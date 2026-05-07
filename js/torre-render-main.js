@@ -22,7 +22,9 @@ function renderTorre() {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
     const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
     const pend = cfg.nftPendientePct ?? 2;
-    const vol = getVolumenDepositoMaxLitros(cfg);
+    const volRaw = getVolumenDepositoMaxLitros(cfg);
+    const vol =
+      volRaw != null && Number.isFinite(volRaw) && volRaw > 0 ? volRaw : (typeof VOL_OBJETIVO !== 'undefined' ? VOL_OBJETIVO : 18);
     const eqArr = cfg.equipamiento;
     const bombMain = getNftBombaDesdeConfig(cfg);
     const altShow =
@@ -585,10 +587,16 @@ function renderCompatGrid() {
   // ── EC del nutriente activo ──────────────────────────────────────────────
   html +=
     '<div class="compat-nut-box">' +
-      '<div class="compat-nut-title">⚡ Nutriente activo: ' + nut.nombre + '</div>' +
+      '<div class="compat-nut-title">⚡ Nutriente activo: ' +
+      (nut ? nut.nombre : 'sin elegir') +
+      '</div>' +
       '<div class="compat-nut-text">' +
-        'EC: ' + (nut.ecObjetivo ? nut.ecObjetivo[0]+'–'+nut.ecObjetivo[1] : '900–1400') + ' µS/cm · ' +
-        'pH: ' + (nut.pHRango ? nut.pHRango[0]+'–'+nut.pHRango[1] : '5.5–6.5') +
+      (nut
+        ? 'EC: ' +
+          (nut.ecObjetivo ? nut.ecObjetivo[0] + '–' + nut.ecObjetivo[1] : '900–1400') +
+          ' µS/cm · pH: ' +
+          (nut.pHRango ? nut.pHRango[0] + '–' + nut.pHRango[1] : '5.5–6.5')
+        : 'Elige nutriente en <strong>Sistema</strong> o <strong>Medir</strong> para ver rangos orientativos.') +
       '</div>' +
     '</div>';
 
@@ -770,12 +778,25 @@ function updateTorreStats() {
 
   const volDepIn = document.getElementById('torreVolDepositoL');
   if (volDepIn && document.activeElement !== volDepIn) {
-    volDepIn.value = String(Math.max(5, Math.min(100, Math.round(volMax))));
+    if (volMax != null && Number.isFinite(volMax) && volMax > 0) {
+      volDepIn.value = String(Math.max(5, Math.min(100, Math.round(volMax))));
+    } else {
+      volDepIn.value = '';
+    }
   }
   const volMezIn = document.getElementById('torreVolMezclaL');
   if (volMezIn && document.activeElement !== volMezIn) {
-    if (volMez < volMax - 0.05) volMezIn.value = String(volMez);
-    else volMezIn.value = '';
+    if (
+      volMez != null &&
+      volMax != null &&
+      Number.isFinite(volMez) &&
+      Number.isFinite(volMax) &&
+      volMez < volMax - 0.05
+    ) {
+      volMezIn.value = String(volMez);
+    } else {
+      volMezIn.value = '';
+    }
   }
 
   if (esDwcCfg) {

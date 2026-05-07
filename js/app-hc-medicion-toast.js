@@ -64,8 +64,8 @@ async function guardarMedicion() {
       torreEmoji: getTorreActiva().emoji || '🌿',
       calmagMl: '',
       vegaAMl: String(calcularMlParteNutriente(0)),
-      vegaBMl: _nr.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
-      vegaCMl: _nr.partes >= 3 ? String(calcularMlParteNutriente(2)) : '',
+      vegaBMl: _nr && _nr.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
+      vegaCMl: _nr && _nr.partes >= 3 ? String(calcularMlParteNutriente(2)) : '',
       phMasMl: '', phMenosMl: '', notas
     });
   }

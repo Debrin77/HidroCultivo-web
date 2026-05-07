@@ -469,7 +469,12 @@ function nftTextoResumenInstalacion(cfg) {
     extraDisp += ' · ' + hyd.escaleraNiveles + '×' + hyd.escaleraCaras + ' cara(s)';
   }
   const vMez = getVolumenMezclaLitros(cfg);
-  const volTxt = vMez < vol - 0.05 ? vol + ' L (mezcla ' + vMez + ' L)' : vol + ' L';
+  const volTxt =
+    vol != null && Number.isFinite(vol) && vol > 0
+      ? vMez != null && Number.isFinite(vMez) && vMez < vol - 0.05
+        ? vol + ' L (mezcla ' + vMez + ' L)'
+        : vol + ' L'
+      : 'L por indicar';
   let s = nombre + ' — ' + ch + ' tubos × ' + hx + ' huecos — ' + volTxt + ' · ' + dispTxt + extraDisp + ' · pend. ~' + pend + '%';
   s += ' · objetivo ' + objSpec.label;
   if (altEff > 0) s += ' · ↑~' + altEff + ' cm';
@@ -578,7 +583,9 @@ function renderTorreSistemaResumenTabla(cfg) {
     rows.push(['Pendiente', '~' + pend + ' %']);
     rows.push([
       'Depósito (cap. máx)',
-      String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
+      vol != null && Number.isFinite(vol) && vol > 0
+        ? String(vol) + ' L' + (vMez != null && Number.isFinite(vMez) && vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : '')
+        : 'Indica litros en Torre o asistente',
     ]);
     rows.push(['Canal de cultivo', escHtmlUi(canalTxt + ' · long. ' + longM)]);
     const reco = nftRecomendacionCultivoDesdeConfig(cfg);
@@ -638,7 +645,9 @@ function renderTorreSistemaResumenTabla(cfg) {
     }
     rows.push([
       'Depósito (cap. máx)',
-      String(vol) + ' L' + (vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
+      vol != null && Number.isFinite(vol) && vol > 0
+        ? String(vol) + ' L' + (vMez != null && Number.isFinite(vMez) && vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : '')
+        : 'Indica litros en Torre o asistente',
     ]);
     if (esDwcTab) {
       rows.push([

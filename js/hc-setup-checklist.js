@@ -183,6 +183,7 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
 // Definición de pasos del checklist
 function generarPasosNutriente() {
   const nut    = getNutrienteTorre();
+  if (!nut) return [];
   const cfg    = state.configTorre || {};
   const refNut = getRefDosisFabricante(nut.id);
   const vol    = getVolumenMezclaLitros(cfg);
@@ -523,15 +524,26 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     typeof litrosDepositoParaChecklist === 'function'
       ? litrosDepositoParaChecklist(cfg)
       : (Number.isFinite(Number(cfg.volDeposito)) && Number(cfg.volDeposito) > 0 ? Number(cfg.volDeposito) : null);
+  const plantillaIni = !!cfg.hcPlantillaAutogenerada;
   const volIni =
     volDesdeCfg != null && Number.isFinite(volDesdeCfg) && volDesdeCfg > 0
       ? Math.round(volDesdeCfg)
-      : 20;
+      : plantillaIni
+        ? ''
+        : 20;
   const capRef =
-    volDesdeCfg != null && Number.isFinite(volDesdeCfg) && volDesdeCfg > 0 ? volDesdeCfg : volIni;
+    volDesdeCfg != null && Number.isFinite(volDesdeCfg) && volDesdeCfg > 0
+      ? volDesdeCfg
+      : plantillaIni
+        ? null
+        : 20;
   const vmIniRaw = Number(cfg.volMezclaLitros);
   const mezIni =
-    Number.isFinite(vmIniRaw) && vmIniRaw > 0 && vmIniRaw < capRef - 0.02
+    capRef != null &&
+    Number.isFinite(capRef) &&
+    Number.isFinite(vmIniRaw) &&
+    vmIniRaw > 0 &&
+    vmIniRaw < capRef - 0.02
       ? String(Math.round(vmIniRaw * 10) / 10)
       : '';
   const tipoIni =
@@ -539,11 +551,21 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     : cfg.tipoInstalacion === 'dwc' ? 'dwc'
     : 'torre';
   const aguaIni = cfg.agua || state.configAgua || 'destilada';
-  const nutIni = (cfg.nutriente && NUTRIENTES_DB.some(n => n.id === cfg.nutriente) ? cfg.nutriente : (getNutrienteTorre().id || 'canna_aqua'));
-  const optsNut = NUTRIENTES_DB.map(n =>
-    '<option value="' + String(n.id).replace(/"/g, '') + '"' + (n.id === nutIni ? ' selected' : '') + '>' +
-    escHtmlUi(n.nombre) + '</option>'
-  ).join('');
+  const nutObjIni = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+  const nutIni =
+    cfg.nutriente && NUTRIENTES_DB.some(n => n.id === cfg.nutriente)
+      ? cfg.nutriente
+      : nutObjIni && nutObjIni.id
+        ? nutObjIni.id
+        : '';
+  const optsNut =
+    '<option value=""' +
+    (!nutIni ? ' selected' : '') +
+    ' disabled>Elige nutriente…</option>' +
+    NUTRIENTES_DB.map(n =>
+      '<option value="' + String(n.id).replace(/"/g, '') + '"' + (n.id === nutIni ? ' selected' : '') + '>' +
+        escHtmlUi(n.nombre) + '</option>'
+    ).join('');
 
   const dwcModoIni =
     cfg && cfg.tipoInstalacion === 'dwc' && typeof dwcGetModoCultivo === 'function'
@@ -586,7 +608,8 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       '</div>' +
 
       '<label class="checklist-dark-field-label">Capacidad máxima del depósito (L)</label>' +
-      '<input id="cldVolDeposito" type="number" inputmode="numeric" min="1" max="600" step="1" value="' + volIni + '"' +
+      '<input id="cldVolDeposito" type="number" inputmode="numeric" min="1" max="600" step="1"' +
+        (volIni === '' ? ' placeholder="p. ej. 18"' : ' value="' + volIni + '"') +
         ' class="checklist-dark-field-input checklist-dark-field-input--mb8">' +
       '<label class="checklist-dark-field-label">Litros de mezcla (opcional)</label>' +
       '<input id="cldVolMezcla" type="number" inputmode="decimal" min="0.5" max="600" step="0.1" placeholder="Vacío = hasta el máximo" value="' + mezIni.replace(/"/g, '') + '"' +
@@ -674,6 +697,18 @@ function getCLPasos() {
   const ecMin = ecOpt.min;
   const ecMax = ecOpt.max;
   const nut = getNutrienteTorre();
+  if (!nut || vol == null || !Number.isFinite(vol) || vol <= 0) {
+    return [
+      {
+        id: 'CL-CFG',
+        seccion: '⚙️ Datos pendientes',
+        paso: '·',
+        desc:
+          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Sistema</strong> o el formulario que aparece al abrir el checklist.',
+        nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
+      },
+    ];
+  }
   const pHR =
     typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : (nut.pHRango || [5.5, 6.5]);
   const phObj = ((pHR[0] + pHR[1]) / 2).toFixed(1);
@@ -1788,7 +1823,7 @@ async function finalizarChecklist() {
     tempAgua,
     calmagMl: gCL('clCalmagMl'),
     vegaAMl: String(calcularMlParteNutriente(0)),
-    vegaBMl: getNutrienteTorre().partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
+    vegaBMl: nutR && nutR.partes >= 2 ? String(calcularMlParteNutriente(1)) : '',
     phMasMl: phMasTot ? String(phMasTot) : '',
     nutriente: nutR.nombre,
     observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}` +
