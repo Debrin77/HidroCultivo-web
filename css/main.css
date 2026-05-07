@@ -3601,6 +3601,66 @@ body.hc-welcome-open .welcome-card--guide .welcome-value-icon {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Bienvenida: tarjetas en carrusel horizontal (evita scroll vertical para verlas todas) */
+@media (max-width: 740px) {
+  .welcome-value-grid{
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 4px 2px 12px;
+    margin: 0 0 14px;
+  }
+  .welcome-value-grid::-webkit-scrollbar{ height: 8px; }
+  .welcome-value-grid::-webkit-scrollbar-thumb{
+    background: rgba(100,116,139,.25);
+    border-radius: 999px;
+  }
+  .welcome-value-grid > .welcome-value-card{
+    flex: 0 0 min(92%, 420px);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .welcome-value-dots{
+    display: flex;
+    justify-content: center;
+    margin: 2px 0 12px;
+  }
+}
+
+.welcome-value-card--cta{
+  border-color: rgba(34,197,94,.55);
+  background:
+    radial-gradient(160px 110px at 20% 18%, rgba(34,197,94,.22), transparent 65%),
+    radial-gradient(160px 110px at 85% 22%, rgba(59,130,246,.18), transparent 70%),
+    rgba(240, 253, 244, 0.92);
+}
+.welcome-value-card--cta .welcome-value-icon{
+  background: rgba(34,197,94,.18);
+  color: #15803d;
+}
+.welcome-cta-btn{
+  width: 100%;
+  margin-top: 10px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 800;
+}
+.welcome-cta-foot{
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(51,65,85,.9);
+  text-align: center;
+}
+
+/* Dots del carrusel de valor (solo móvil) */
+.welcome-value-dots{
+  display: none;
+}
 .welcome-kpis {
   display: flex;
   flex-wrap: wrap;

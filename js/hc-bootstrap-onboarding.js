@@ -21,6 +21,78 @@ function _clearTabCoachRetryTimer() {
   }
 }
 
+function initWelcomeValueCarousel() {
+  const ov = document.getElementById('welcomeOverlay');
+  if (!ov) return;
+  const grid = ov.querySelector('.welcome-value-grid');
+  const dotsWrap = document.getElementById('welcomeValueDots');
+  if (!grid || !dotsWrap) return;
+
+  const cards = Array.from(grid.querySelectorAll('.welcome-value-card'));
+  if (cards.length <= 1) {
+    dotsWrap.innerHTML = '';
+    return;
+  }
+
+  // Crear dots (idempotente)
+  if (dotsWrap.children.length !== cards.length) {
+    dotsWrap.innerHTML = '';
+    cards.forEach((_, idx) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'welcome-dot' + (idx === 0 ? ' is-active' : '');
+      b.setAttribute('aria-label', 'Tarjeta ' + (idx + 1) + ' de ' + cards.length);
+      b.setAttribute('aria-selected', idx === 0 ? 'true' : 'false');
+      b.setAttribute('role', 'tab');
+      b.tabIndex = idx === 0 ? 0 : -1;
+      b.addEventListener('click', () => {
+        try {
+          cards[idx].scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' });
+        } catch (_) {
+          try { grid.scrollLeft = cards[idx].offsetLeft; } catch (_) {}
+        }
+      });
+      dotsWrap.appendChild(b);
+    });
+  }
+
+  let raf = 0;
+  const update = () => {
+    raf = 0;
+    try {
+      const gRect = grid.getBoundingClientRect();
+      const mid = gRect.left + gRect.width / 2;
+      let bestI = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < cards.length; i++) {
+        const r = cards[i].getBoundingClientRect();
+        const cMid = r.left + r.width / 2;
+        const d = Math.abs(cMid - mid);
+        if (d < bestD) { bestD = d; bestI = i; }
+      }
+      const dots = Array.from(dotsWrap.children);
+      dots.forEach((dEl, i) => {
+        const on = i === bestI;
+        dEl.classList.toggle('is-active', on);
+        dEl.setAttribute('aria-selected', on ? 'true' : 'false');
+        dEl.tabIndex = on ? 0 : -1;
+      });
+    } catch (_) {}
+  };
+
+  const onScroll = () => {
+    if (raf) return;
+    raf = requestAnimationFrame(update);
+  };
+
+  if (!grid._hcWelcomeDotsBound) {
+    grid._hcWelcomeDotsBound = true;
+    grid.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', () => { try { update(); } catch (_) {} }, { passive: true });
+  }
+  setTimeout(() => { try { update(); } catch (_) {} }, 80);
+}
+
 /**
  * Muestra el coach de la barra de pestañas (fase 2) si no se descartó y no hay bienvenida ni asistente encima.
  */
@@ -168,6 +240,7 @@ function resetBienvenidaParaPruebas() {
     }
     try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
     applyWelcomeScrollLock(true);
+    try { initWelcomeValueCarousel(); } catch (_) {}
     try { document.addEventListener('keydown', _welcomeGuideOnKeydown); } catch (_) {}
     try {
       const nb = document.getElementById('welcomeBtnEmpezar');
@@ -288,6 +361,7 @@ function mostrarBienvenidaOContinuarArranque(opts) {
     ov.setAttribute('aria-hidden', 'false');
     try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
     applyWelcomeScrollLock(true);
+    try { initWelcomeValueCarousel(); } catch (_) {}
     try {
       const tSaved = localStorage.getItem(HC_WELCOME_THEME_PREVIEW_KEY);
       setWelcomeTheme(tSaved === 'dark' ? 'dark' : 'light');

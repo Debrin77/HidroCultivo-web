@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-07-hist-tabs-grid-meteo-plantulas">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-07-welcome-carousel-premium">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -2542,7 +2542,18 @@
         <h3>Meteorología local</h3>
         <p>Contexto climático por ubicación para anticipar y ajustar con criterio.</p>
       </article>
+      <article class="welcome-value-card welcome-value-card--cta" role="listitem" aria-label="Empezar sistema hidropónico">
+        <div class="welcome-value-icon" aria-hidden="true">🚀</div>
+        <h3>Empezar sistema hidropónico</h3>
+        <p>Configura tu primera instalación en modo guiado y deja el sistema listo para el checklist.</p>
+        <button type="button" class="btn btn-primary welcome-cta-btn" onclick="welcomeAbrirSetup()"
+          aria-label="Empezar sistema hidropónico: abrir asistente de configuración">
+          Empezar ahora
+        </button>
+        <div class="welcome-cta-foot">Desliza para repasar · Último paso: acción</div>
+      </article>
     </div>
+    <div class="welcome-carousel-dots welcome-value-dots" id="welcomeValueDots" aria-label="Páginas de la guía" role="tablist"></div>
     <p class="welcome-foot welcome-foot--guide"><strong>Importante:</strong> clima y riego son apoyo de decisión; la referencia final siempre son tus mediciones y observación directa del cultivo.</p>
     <label class="welcome-no-mas-label" for="welcomeChkNoMas">
       <input type="checkbox" id="welcomeChkNoMas" checked>
@@ -4278,7 +4289,7 @@
   <script src="js/hc-bootstrap-config.js?v=4"></script>
   <script src="js/hc-bootstrap-state.js?v=7"></script>
   <script src="js/hc-bootstrap-pin.js?v=5"></script>
-  <script src="js/hc-bootstrap-onboarding.js?v=25"></script>
+  <script src="js/hc-bootstrap-onboarding.js?v=26"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=17"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
   <script src="js/torre-render-build.js?v=2026-05-06-auto-checklist-cultivo"></script>
