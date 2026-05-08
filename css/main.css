@@ -4353,6 +4353,7 @@ h1.dash-greeting {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
+  position: relative;
   width: 100%;
   box-sizing: border-box;
   font: inherit;
@@ -4378,11 +4379,12 @@ h1.dash-greeting {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  padding-right: 120px;
 }
 .dash-sistema-top {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
 }
 .dash-sistema-meta {
@@ -4421,6 +4423,18 @@ h1.dash-greeting {
   border-color: #bbf7d0;
   background: #f0fdf4;
 }
+.dash-nutriente-tag--estado.is-match {
+  border-color: #86efac;
+  background: #dcfce7;
+}
+.dash-nutriente-tag--estado.is-mismatch {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+.dash-nutriente-tag--estado.is-mismatch .dash-nutriente-estado,
+.dash-nutriente-tag--estado.is-mismatch .dash-nutriente-recomendado {
+  color: #991b1b;
+}
 .dash-nutriente-tag--razon {
   border-color: rgba(245, 158, 11, 0.35);
   background: rgba(245, 158, 11, 0.08);
@@ -4457,10 +4471,16 @@ h1.dash-greeting {
   width: 100%;
 }
 .dash-ubicacion-badge {
-  font-size: 13px;
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 14px;
   font-weight: 700;
   color: #374151;
-  align-self: flex-start;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 3px 9px;
 }
 .dash-btn-cambiar-nutriente {
   background: #f0fdf4;

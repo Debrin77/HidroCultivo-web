@@ -275,6 +275,7 @@
         aria-label="Ir a mediciones: nutriente, sistema y ubicación"
         onclick="goTab('mediciones')"
         onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">
+        <div id="dashUbicacionBadge" class="dash-ubicacion-badge"></div>
         <div class="dash-sistema-top">
           <div class="dash-sistema-main">
             <span class="dash-sistema-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
@@ -283,7 +284,6 @@
               <div id="dashNutrienteDetalle" class="dash-nutriente-detalle">—</div>
             </div>
           </div>
-          <div id="dashUbicacionBadge" class="dash-ubicacion-badge"></div>
         </div>
         <div class="dash-sistema-actions">
           <button type="button" onclick="event.stopPropagation();cambiarNutriente()"
@@ -294,7 +294,7 @@
         </div>
         <div class="dash-sistema-meta">
           <div>
-            <div class="dash-nutriente-tag dash-nutriente-tag--estado" role="status" aria-live="polite">
+            <div id="dashNutrienteTagEstado" class="dash-nutriente-tag dash-nutriente-tag--estado" role="status" aria-live="polite">
               <div id="dashNutrienteEstado" class="dash-nutriente-estado">Actual: —</div>
               <div id="dashNutrienteRecomendado" class="dash-nutriente-recomendado">Recomendado ahora: —</div>
             </div>

@@ -854,6 +854,7 @@ function actualizarBadgesNutriente() {
   const dashNombre  = document.getElementById('dashNutrienteNombre');
   const dashDetalle = document.getElementById('dashNutrienteDetalle');
   const dashEstado = document.getElementById('dashNutrienteEstado');
+  const dashTagEstado = document.getElementById('dashNutrienteTagEstado');
   const dashRecomendado = document.getElementById('dashNutrienteRecomendado');
   const dashFuente = document.getElementById('dashNutrienteFuente');
   const dashRazon = document.getElementById('dashNutrienteRazon');
@@ -908,6 +909,12 @@ function actualizarBadgesNutriente() {
 
     if (dashEstado) dashEstado.textContent = 'Actual: ' + usoTxt;
     if (dashRecomendado) dashRecomendado.textContent = 'Recomendado ahora: ' + recomendado + recomendadoSub;
+    if (dashTagEstado) {
+      dashTagEstado.classList.remove('is-match', 'is-mismatch');
+      if ((usoRaw === 'veg' || usoRaw === 'bloom') && (recomendado === 'VEG' || recomendado === 'BLOOM')) {
+        dashTagEstado.classList.add(usoRaw.toUpperCase() === recomendado ? 'is-match' : 'is-mismatch');
+      }
+    }
     if (dashFuente) dashFuente.textContent = fuente;
     if (dashRazon) dashRazon.textContent = motivo;
   }
