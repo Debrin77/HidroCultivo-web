@@ -1563,6 +1563,17 @@ function renderChecklist() {
   let html = '';
   let seccionActual = '';
 
+  // Aviso contextual: cultivos de fruto en floración/fruto con nutriente "veg"
+  try {
+    const msg =
+      typeof hcGetAvisoCambioNutrientePorFase === 'function'
+        ? hcGetAvisoCambioNutrientePorFase('checklist')
+        : null;
+    if (msg) {
+      html += '<div class="cl-phase-warn" role="status" aria-live="polite">' + escHtmlUi(msg) + '</div>';
+    }
+  } catch (_) {}
+
   getCLPasos().forEach(p => {
     if (p.seccion && p.seccion !== seccionActual) {
       seccionActual = p.seccion;

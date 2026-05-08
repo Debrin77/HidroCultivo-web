@@ -853,9 +853,45 @@ function actualizarBadgesNutriente() {
   // Dashboard
   const dashNombre  = document.getElementById('dashNutrienteNombre');
   const dashDetalle = document.getElementById('dashNutrienteDetalle');
+  const dashEstado = document.getElementById('dashNutrienteEstado');
+  const dashRecomendado = document.getElementById('dashNutrienteRecomendado');
+  const dashAviso   = document.getElementById('dashNutrienteAviso');
   const dashUbicacion = document.getElementById('dashUbicacionBadge');
   if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
   if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Sistema o Medir';
+  if (dashEstado || dashRecomendado) {
+    const usoRaw =
+      nut && typeof hcNutrienteFaseUso === 'function'
+        ? hcNutrienteFaseUso(nut)
+        : 'unknown';
+    const usoMap = { veg: 'VEG', bloom: 'BLOOM', both: 'BOTH', unknown: '—' };
+    const usoTxt = usoMap[usoRaw] || '—';
+
+    const hayFruto =
+      typeof torreTieneAlgunaPlantaDeFrutoActiva === 'function'
+        ? torreTieneAlgunaPlantaDeFrutoActiva()
+        : false;
+    const recomendado = hayFruto ? 'BLOOM' : 'VEG';
+    const recomendadoSub = hayFruto
+      ? ' (fruto: prefloración/floración/fructificación)'
+      : ' (hoja/vegetativo)';
+
+    if (dashEstado) dashEstado.textContent = 'Actual: ' + usoTxt;
+    if (dashRecomendado) dashRecomendado.textContent = 'Recomendado ahora: ' + recomendado + recomendadoSub;
+  }
+  if (dashAviso) {
+    const msg =
+      typeof hcGetAvisoCambioNutrientePorFase === 'function'
+        ? hcGetAvisoCambioNutrientePorFase('inicio')
+        : null;
+    if (msg) {
+      dashAviso.textContent = msg;
+      dashAviso.classList.remove('setup-hidden');
+    } else {
+      dashAviso.textContent = '';
+      dashAviso.classList.add('setup-hidden');
+    }
+  }
   if (dashUbicacion) {
     const ub = cfg.ubicacion || 'exterior';
     if (ub === 'interior') {

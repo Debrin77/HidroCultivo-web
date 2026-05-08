@@ -713,6 +713,124 @@ function getPhOptimaTorre(nut, cfg) {
   return [b[0], b[1]];
 }
 
+// ══════════════════════════════════════════════════
+// AVISO: nutriente veg vs floración (cultivos de fruto)
+// ══════════════════════════════════════════════════
+
+function torreTieneAlgunaPlantaDeFrutoActiva() {
+  try {
+    const tor = state.torre || [];
+    for (let n = 0; n < tor.length; n++) {
+      const row = tor[n] || [];
+      for (let i = 0; i < row.length; i++) {
+        const c = row[i];
+        if (!c || !c.variedad) continue;
+        const cu = typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null;
+        if (cu && cu.fructificacion) return true;
+      }
+    }
+  } catch (_) {}
+  return false;
+}
+
+function hcNutrienteFaseUso(nut) {
+  if (!nut) return 'unknown';
+  if (nut.faseUso === 'veg' || nut.faseUso === 'bloom' || nut.faseUso === 'both') return nut.faseUso;
+  const nom = String(nut.nombre || '').toLowerCase();
+  if (/flores|bloom|fruto|floraci|fructi|engorde|madur/.test(nom)) return 'bloom';
+  if (/vega|grow|crecimiento|hoja|veg\b/.test(nom)) return 'veg';
+  return 'both';
+}
+
+function hcNutrienteAlternativaFloracionId(nutId) {
+  const map = {
+    canna_aqua: 'canna_aqua_flores',
+    canna_hydro_vega: 'canna_hydro_flores',
+    campeador: 'campeador_fruto',
+    vitalink_hydro_max: 'vitalink_hydro_max_bloom',
+    green_planet_hydro_fuel: 'green_planet_hydro_fuel_bloom',
+    ionic_grow_hydro: 'ionic_hydro_bloom',
+    hesi_hidro: 'hesi_hydro_bloom',
+    biobizz_bio_grow: 'biobizz_bio_bloom',
+    fox_farm_grow_big: 'fox_farm_tiger_bloom',
+  };
+  return map[String(nutId || '')] || null;
+}
+
+function hcNutrienteAlternativaVegetativaId(nutId) {
+  const map = {
+    canna_aqua_flores: 'canna_aqua',
+    canna_hydro_flores: 'canna_hydro_vega',
+    campeador_fruto: 'campeador',
+    vitalink_hydro_max_bloom: 'vitalink_hydro_max',
+    green_planet_hydro_fuel_bloom: 'green_planet_hydro_fuel',
+    ionic_hydro_bloom: 'ionic_grow_hydro',
+    hesi_hydro_bloom: 'hesi_hidro',
+    biobizz_bio_bloom: 'biobizz_bio_grow',
+    fox_farm_tiger_bloom: 'fox_farm_grow_big',
+  };
+  return map[String(nutId || '')] || null;
+}
+
+/**
+ * Devuelve un aviso (texto) si hay cultivo de fruto y el nutriente activo es "veg" pero la fase está en floración/fruto
+ * (o no hay fechas pero conviene recordar el cambio al abrir checklist/medir).
+ */
+function hcGetAvisoCambioNutrientePorFase(contexto) {
+  const cfg = state.configTorre || {};
+  const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+  if (!nut) return null;
+
+  const uso = hcNutrienteFaseUso(nut);
+  const hayFruto = torreTieneAlgunaPlantaDeFrutoActiva();
+  if (!hayFruto && uso !== 'bloom') return null;
+  if (hayFruto && uso !== 'veg') return null;
+
+  // Caso inverso: cultivo sin fruto con nutriente de floración/fruto.
+  if (!hayFruto && uso === 'bloom') {
+    const altVegId = hcNutrienteAlternativaVegetativaId(nut.id);
+    const altVegNut = altVegId && typeof NUTRIENTES_DB !== 'undefined'
+      ? (NUTRIENTES_DB.find(n => n && n.id === altVegId) || null)
+      : null;
+    const altVegTxt = altVegNut ? (' → ' + altVegNut.nombre) : (altVegId ? (' → ' + altVegId) : '');
+    return '🌿 Recomendación: en cultivos de hoja/vegetativos, este nutriente de floración/fruto (' +
+      (nut.nombre || 'Bloom') +
+      ') no es el más adecuado como base. Mejor usar un nutriente vegetativo/de hoja' + altVegTxt +
+      '. Si vas a cambiar, aprovecha la próxima recarga.';
+  }
+
+  const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
+  const fase = rec && rec.faseDominante ? String(rec.faseDominante) : null;
+  const conFaseReal = !!(rec && rec.conFaseReal);
+  const faseFlor = fase === 'prefloracion' || fase === 'floracion' || fase === 'fructificacion';
+
+  const altId = hcNutrienteAlternativaFloracionId(nut.id);
+  const altNut = altId && typeof NUTRIENTES_DB !== 'undefined'
+    ? (NUTRIENTES_DB.find(n => n && n.id === altId) || null)
+    : null;
+  const altTxt = altNut ? (' → ' + altNut.nombre) : (altId ? (' → ' + altId) : '');
+
+  if (conFaseReal && faseFlor) {
+    const faseMap = { prefloracion: 'prefloración', floracion: 'floración', fructificacion: 'fructificación' };
+    const faseTxt = faseMap[fase] || fase;
+    const lead = (contexto === 'checklist' ? '⚠️ IMPRESCINDIBLE: ' : '');
+    const agua = cfg.agua || state.configAgua || 'destilada';
+    const calmagTxt =
+      (agua !== 'grifo' && typeof usarPreferenciaCalMagRecargaGlobal === 'function' && usarPreferenciaCalMagRecargaGlobal())
+        ? ' Si usas agua destilada/ósmosis, mantén CalMag también en floración: preacondiciona el agua base hasta ~0,4 mS/cm (≈400 µS/cm) antes de añadir nutrientes para evitar carencias de Ca/Mg.'
+        : '';
+    // En esta fase el nutriente de floración/fruto es crítico para rendimiento y calidad.
+    return lead + 'Cultivo de fruto en ' + faseTxt +
+      ': estás con nutriente de crecimiento (' + (nut.nombre || 'Vega') + '). ' +
+      'Cambia a un nutriente de floración/fruto' + altTxt + ' aprovechando esta recarga.' + calmagTxt;
+  }
+
+  // Antes de floración: en Inicio no molestamos; en checklist sí lo recordamos como planificación.
+  if (contexto === 'inicio') return null;
+  return '🍅 Cultivo de fruto: opción 1) usar nutriente de floración/fruto desde el trasplante; opción 2) empezar con crecimiento y, al entrar en prefloración/floración, cambiar a uno de floración/fruto (idealmente misma marca' +
+    altTxt + ') aprovechando una recarga.';
+}
+
 /**
  * Menor «edad de ciclo» entre plantas con fecha: días en hidro + vivero si aplica (misma base que EC automático y checklist).
  */
