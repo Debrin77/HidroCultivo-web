@@ -12802,6 +12802,36 @@ button.toggle-switch:focus-visible {
   gap: 8px;
   margin-top: 8px;
 }
+/* RDWC: subir legibilidad sin afectar otros bloques */
+#setupRdwcDetalleWrap .setup-dwc-title {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+#setupRdwcDetalleWrap .setup-dwc-help {
+  font-size: 12px;
+  line-height: 1.5;
+}
+#setupRdwcDetalleWrap .setup-dwc-label {
+  font-size: 12px;
+  font-weight: 800;
+}
+#sistemaRdwcBloque .torre-nft-p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+#sistemaRdwcBloque .torre-dwc-lbl-mono {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+#sistemaRdwcBloque .rdwc-compat-text {
+  font-size: 12px;
+  line-height: 1.5;
+}
+#sistemaRdwcBloque .rdwc-compat-btn,
+#setupRdwcDetalleWrap .rdwc-compat-btn {
+  font-size: 12px;
+  padding: 7px 10px;
+}
 .setup-dwc-grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

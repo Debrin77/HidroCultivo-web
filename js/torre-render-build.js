@@ -993,64 +993,87 @@ function generarSVGRdwc() {
   const rows = Math.max(1, Math.min(4, parseInt(String(cfg.rdwcRows || 1), 10) || 1));
   const sites = Math.max(2, Math.min(64, parseInt(String(cfg.rdwcSites || 4), 10) || 4));
   const cols = Math.max(1, Math.ceil(sites / rows));
-  const w = 400;
-  const h = 540;
-  const left = 30;
-  const top = 70;
-  const blockW = 280;
-  const blockH = 240;
+  const w = 420;
+  const h = 560;
+  const left = 84;
+  const top = 84;
+  const blockW = 300;
+  const blockH = 250;
   const cw = blockW / Math.max(1, cols);
   const ch = blockH / Math.max(1, rows);
-  const rPot = Math.max(10, Math.min(19, Math.min(cw, ch) * 0.28));
-  const tankX = 78;
-  const tankY = 350;
-  const tankW = 244;
-  const tankH = 110;
+  const rPot = Math.max(11, Math.min(20, Math.min(cw, ch) * 0.29));
+  const tankX = 12;
+  const tankY = 166;
+  const tankW = 64;
+  const tankH = 124;
+  const supY = top - 20;
+  const retY = top + blockH + 20;
   const volMax = getVolumenDepositoMaxLitros(cfg);
   const volMez = getVolumenMezclaLitros(cfg);
   const pct = Number.isFinite(volMax) && Number.isFinite(volMez) && volMax > 0
     ? Math.max(0, Math.min(1, volMez / volMax))
     : 0.6;
-  const waterY = tankY + tankH - Math.round(tankH * pct);
+  const waterY = tankY + tankH - Math.round(tankH * pct) - 6;
   let s = `<svg viewBox="0 0 ${w} ${h}" class="torre-svg" role="img" aria-label="RDWC: módulos conectados con recirculación y depósito de control">`;
   s += `<defs>
     <linearGradient id="rdwcWater" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#7dd3fc"/>
-      <stop offset="100%" stop-color="#0ea5e9"/>
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="100%" stop-color="#2563eb"/>
     </linearGradient>
+    <linearGradient id="rdwcTankBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+    <marker id="rdwcFlowOut" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L8,4.5 L0,9 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="rdwcFlowIn" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+      <path d="M0,0 L8,4.5 L0,9 Z" fill="#2563eb"/>
+    </marker>
   </defs>`;
-  s += `<text x="${w / 2}" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937">RDWC · Recirculación continua</text>`;
-  s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>`;
-  s += `<text x="${left + 8}" y="${top - 8}" font-size="11" fill="#475569">Módulos de cultivo conectados</text>`;
+  s += `<text x="${w / 2}" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937">RDWC · Recirculating Deep Water Culture</text>`;
+  s += `<text x="${w / 2}" y="46" text-anchor="middle" font-size="11" fill="#64748b">Impulsión (verde) + Retorno (azul) en circuito cerrado</text>`;
+  s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="16" fill="#f8fafc" stroke="#cbd5e1"/>`;
+
+  // Buses principales (como en esquemas técnicos RDWC): superior = impulsión, inferior = retorno
+  s += `<line x1="${left + 14}" y1="${supY}" x2="${left + blockW - 14}" y2="${supY}" stroke="#16a34a" stroke-width="4" stroke-linecap="round" marker-end="url(#rdwcFlowOut)"/>`;
+  s += `<line x1="${left + blockW - 14}" y1="${retY}" x2="${left + 14}" y2="${retY}" stroke="#2563eb" stroke-width="4" stroke-linecap="round" marker-end="url(#rdwcFlowIn)"/>`;
+
   for (let rn = 0; rn < rows; rn++) {
     const y = top + (rn + 0.5) * ch;
-    s += `<line x1="${left + 10}" y1="${y}" x2="${left + blockW - 10}" y2="${y}" stroke="#60a5fa" stroke-width="2.2" stroke-dasharray="5 4"/>`;
     for (let c = 0; c < cols; c++) {
       const idx = rn * cols + c;
       if (idx >= sites) continue;
       const x = left + (c + 0.5) * cw;
       const dat = state.torre && state.torre[rn] && state.torre[rn][c] ? state.torre[rn][c] : null;
       const has = !!(dat && dat.variedad);
-      const fill = has ? '#dcfce7' : '#eef2ff';
-      const stroke = has ? '#15803d' : '#6366f1';
+      const fill = has ? '#dbeafe' : '#eff6ff';
+      const stroke = has ? '#0f172a' : '#334155';
+      // conexión vertical desde impulsión al módulo y del módulo a retorno
+      s += `<line x1="${x}" y1="${supY}" x2="${x}" y2="${y - rPot - 3}" stroke="#16a34a" stroke-width="2.2" marker-end="url(#rdwcFlowOut)"/>`;
+      s += `<line x1="${x}" y1="${y + rPot + 3}" x2="${x}" y2="${retY}" stroke="#2563eb" stroke-width="2.2" marker-end="url(#rdwcFlowIn)"/>`;
       s += `<g data-n="${rn}" data-c="${c}" class="hc-cesta hc-cesta--interactive" role="button" tabindex="0" aria-label="Módulo fila ${rn + 1} sitio ${c + 1}">`;
-      s += `<circle cx="${x}" cy="${y}" r="${rPot}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
-      s += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="10" font-weight="700" fill="#334155">${c + 1}</text>`;
+      s += `<rect x="${(x - rPot).toFixed(1)}" y="${(y - rPot).toFixed(1)}" width="${(rPot * 2).toFixed(1)}" height="${(rPot * 2).toFixed(1)}" rx="${(rPot * 0.24).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2.4"/>`;
+      s += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="10" font-weight="800" fill="#1e293b">${idx + 1}</text>`;
       s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.6).toFixed(1)}" fill="transparent" class="hc-cesta-hit" pointer-events="all"/>`;
       s += `</g>`;
     }
   }
-  s += `<path d="M ${left + blockW - 6} ${top + blockH + 8} L ${left + blockW - 6} ${tankY - 12} L ${tankX + tankW - 10} ${tankY - 12}"
-      stroke="#0ea5e9" stroke-width="3" fill="none"/>`;
-  s += `<path d="M ${tankX + 10} ${tankY - 24} L ${left + 8} ${tankY - 24} L ${left + 8} ${top + 12}"
-      stroke="#38bdf8" stroke-width="3" fill="none" stroke-dasharray="7 5"/>`;
-  s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="12" fill="#e2e8f0" stroke="#64748b"/>`;
-  s += `<rect x="${tankX + 6}" y="${waterY}" width="${tankW - 12}" height="${tankY + tankH - waterY - 6}" rx="8" fill="url(#rdwcWater)" opacity="0.88"/>`;
-  s += `<text x="${w / 2}" y="${tankY - 34}" text-anchor="middle" font-size="11" fill="#0369a1">Retorno</text>`;
-  s += `<text x="${w / 2}" y="${tankY - 16}" text-anchor="middle" font-size="11" fill="#0284c7">Impulsión</text>`;
-  s += `<text x="${w / 2}" y="${tankY + 20}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Depósito de control</text>`;
-  s += `<text x="${w / 2}" y="${tankY + 38}" text-anchor="middle" font-size="11" fill="#475569">Volumen trabajo: ${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L' : '—'}</text>`;
-  s += `<text x="${w / 2}" y="${tankY + 56}" text-anchor="middle" font-size="11" fill="#475569">Recirculación: ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire: ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
+  // Depósito de control y conexiones con colectores
+  s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="12" fill="url(#rdwcTankBody)" stroke="#475569" stroke-width="1.5"/>`;
+  s += `<rect x="${tankX + 5}" y="${waterY}" width="${tankW - 10}" height="${tankY + tankH - waterY - 5}" rx="8" fill="url(#rdwcWater)" opacity="0.9"/>`;
+  s += `<line x1="${tankX + tankW}" y1="${supY}" x2="${left + 8}" y2="${supY}" stroke="#16a34a" stroke-width="4" marker-end="url(#rdwcFlowOut)"/>`;
+  s += `<line x1="${left + 8}" y1="${retY}" x2="${tankX + tankW}" y2="${retY}" stroke="#2563eb" stroke-width="4" marker-end="url(#rdwcFlowIn)"/>`;
+  s += `<line x1="${tankX + tankW}" y1="${supY}" x2="${tankX + tankW}" y2="${tankY + 28}" stroke="#16a34a" stroke-width="4"/>`;
+  s += `<line x1="${tankX + tankW}" y1="${retY}" x2="${tankX + tankW}" y2="${tankY + tankH - 24}" stroke="#2563eb" stroke-width="4"/>`;
+
+  s += `<text x="${tankX + tankW / 2}" y="${tankY - 12}" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Reservoir</text>`;
+  s += `<text x="${tankX + tankW / 2}" y="${tankY + tankH + 16}" text-anchor="middle" font-size="10.5" fill="#475569">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'} </text>`;
+  s += `<text x="${w - 12}" y="${h - 54}" text-anchor="end" font-size="11" fill="#16a34a">Impulsión (outflow)</text>`;
+  s += `<line x1="${w - 122}" y1="${h - 58}" x2="${w - 20}" y2="${h - 58}" stroke="#16a34a" stroke-width="3.4" marker-end="url(#rdwcFlowOut)"/>`;
+  s += `<text x="${w - 12}" y="${h - 30}" text-anchor="end" font-size="11" fill="#2563eb">Retorno (return)</text>`;
+  s += `<line x1="${w - 122}" y1="${h - 34}" x2="${w - 20}" y2="${h - 34}" stroke="#2563eb" stroke-width="3.4" marker-end="url(#rdwcFlowIn)"/>`;
+  s += `<text x="${w / 2}" y="${h - 12}" text-anchor="middle" font-size="10.5" fill="#64748b">Recirculación ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
   s += `</svg>`;
   return s;
 }
