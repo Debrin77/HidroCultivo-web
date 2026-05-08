@@ -855,38 +855,61 @@ function actualizarBadgesNutriente() {
   const dashDetalle = document.getElementById('dashNutrienteDetalle');
   const dashEstado = document.getElementById('dashNutrienteEstado');
   const dashRecomendado = document.getElementById('dashNutrienteRecomendado');
+  const dashFuente = document.getElementById('dashNutrienteFuente');
+  const dashRazon = document.getElementById('dashNutrienteRazon');
   const dashAviso   = document.getElementById('dashNutrienteAviso');
   const dashAvisoGlobal = document.getElementById('dashCambioNutrienteAviso');
   const dashUbicacion = document.getElementById('dashUbicacionBadge');
   if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
   if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Sistema o Medir';
-  if (dashEstado || dashRecomendado) {
+  if (dashEstado || dashRecomendado || dashRazon || dashFuente) {
     const usoRaw =
       nut && typeof hcNutrienteFaseUso === 'function'
         ? hcNutrienteFaseUso(nut)
         : 'unknown';
     const usoMap = { veg: 'VEG', bloom: 'BLOOM', both: 'BOTH', unknown: '—' };
     const usoTxt = usoMap[usoRaw] || '—';
-
-    const hayFruto =
-      typeof torreTieneAlgunaPlantaDeFrutoActiva === 'function'
-        ? torreTieneAlgunaPlantaDeFrutoActiva()
-        : false;
-    const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
-    const fase = rec && rec.faseDominante ? String(rec.faseDominante) : '';
-    const conFaseReal = !!(rec && rec.conFaseReal);
-    const faseFlor = fase === 'prefloracion' || fase === 'floracion' || fase === 'fructificacion';
-    const recomendado = hayFruto
-      ? ((conFaseReal && faseFlor) ? 'BLOOM' : 'VEG')
-      : 'VEG';
-    const recomendadoSub = hayFruto
-      ? ((conFaseReal && faseFlor)
-          ? ' (fruto en fase floral)'
-          : ' (fruto aún en vegetativo)')
-      : ' (hoja/vegetativo)';
+    const ctx = typeof hcGetRecomendacionNutrienteContexto === 'function'
+      ? hcGetRecomendacionNutrienteContexto()
+      : null;
+    const recomendado = ctx ? (ctx.recomendado === 'bloom' ? 'BLOOM' : 'VEG') : 'VEG';
+    const recomendadoSub = ctx
+      ? (ctx.hayFruto
+          ? (ctx.recomendado === 'bloom' ? ' (fruto en fase floral)' : ' (fruto aún en vegetativo)')
+          : ' (hoja/vegetativo)')
+      : '';
+    const faseMap = {
+      germinacion: 'germinación',
+      plantula: 'plántula',
+      vegetativo: 'vegetativo',
+      prefloracion: 'prefloración',
+      floracion: 'floración',
+      fructificacion: 'fructificación',
+      manual: 'manual',
+    };
+    let motivo = 'Motivo: sin datos suficientes aún.';
+    let fuente = 'Fuente: estimación general';
+    if (ctx) {
+      if (!ctx.hayFruto) {
+        motivo = 'Motivo: no hay cultivos de fruto activos en esta instalación.';
+        fuente = 'Fuente: cultivo activo (sin fruto)';
+      } else if (ctx.conFaseReal && ctx.fase) {
+        const faseTxt = faseMap[ctx.fase] || ctx.fase;
+        motivo = 'Motivo: fase detectada ' + faseTxt + '.';
+        fuente = 'Fuente: fase automática por fechas';
+      } else {
+        motivo = 'Motivo: hay fruto activo, pero aún sin fase real por fechas.';
+        fuente = 'Fuente: estimación (faltan fechas)';
+      }
+      if (ctx.fechaCambioTxt) {
+        motivo += ' Cambio sugerido desde: ' + ctx.fechaCambioTxt + '.';
+      }
+    }
 
     if (dashEstado) dashEstado.textContent = 'Actual: ' + usoTxt;
     if (dashRecomendado) dashRecomendado.textContent = 'Recomendado ahora: ' + recomendado + recomendadoSub;
+    if (dashFuente) dashFuente.textContent = fuente;
+    if (dashRazon) dashRazon.textContent = motivo;
   }
   if (dashAviso) {
     const msg =

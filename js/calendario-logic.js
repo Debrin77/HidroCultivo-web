@@ -19,32 +19,11 @@ const DIAS_MUESTRA_PH_TRASPLANTE = 5;
 
 function getFechaSugeridaCambioNutriente() {
   try {
-    const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
-    if (!nut || typeof hcNutrienteFaseUso !== 'function') return null;
-    // Solo tiene sentido sugerir "cambio a bloom" si el actual es vegetativo.
-    if (hcNutrienteFaseUso(nut) !== 'veg') return null;
-    if (typeof torreTieneAlgunaPlantaDeFrutoActiva === 'function' && !torreTieneAlgunaPlantaDeFrutoActiva()) return null;
-
-    let msMin = null;
-    const nivelesActivos = typeof getNivelesActivos === 'function' ? getNivelesActivos() : [];
-    nivelesActivos.forEach(n => {
-      (state.torre[n] || []).forEach(c => {
-        if (!c || !c.variedad || !c.fecha) return;
-        const cultivo = typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null;
-        if (!cultivo || !cultivo.fructificacion || !cultivo.fases) return;
-        const t0 = new Date(c.fecha).getTime();
-        if (!Number.isFinite(t0)) return;
-        const f = cultivo.fases || {};
-        const dPlant = Number(f.plantula && f.plantula.dias) || 0;
-        const dVeg = Number(f.vegetativo && f.vegetativo.dias) || 0;
-        // Umbral de entrada a fase floral (prefloración si existe, si no floración).
-        const dCambio = Math.max(0, dPlant + dVeg);
-        const msCambio = t0 + dCambio * 86400000;
-        if (msMin == null || msCambio < msMin) msMin = msCambio;
-      });
-    });
-    if (msMin == null) return null;
-    const d = new Date(msMin);
+    const ms = typeof hcGetFechaSugeridaCambioVegABloomMs === 'function'
+      ? hcGetFechaSugeridaCambioVegABloomMs()
+      : null;
+    if (!Number.isFinite(ms)) return null;
+    const d = new Date(ms);
     d.setHours(0, 0, 0, 0);
     return d;
   } catch (_) {

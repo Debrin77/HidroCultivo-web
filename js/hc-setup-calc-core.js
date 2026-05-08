@@ -772,6 +772,65 @@ function hcNutrienteAlternativaVegetativaId(nutId) {
   return map[String(nutId || '')] || null;
 }
 
+function hcFmtFechaDMY(ms) {
+  if (!Number.isFinite(ms)) return '';
+  const d = new Date(ms);
+  if (!Number.isFinite(d.getTime())) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = d.getFullYear();
+  return dd + '/' + mm + '/' + yy;
+}
+
+function hcGetFechaSugeridaCambioVegABloomMs() {
+  try {
+    const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+    if (!nut || hcNutrienteFaseUso(nut) !== 'veg') return null;
+    if (!torreTieneAlgunaPlantaDeFrutoActiva()) return null;
+    let msMin = null;
+    const nivelesActivos = typeof getNivelesActivos === 'function' ? getNivelesActivos() : [];
+    nivelesActivos.forEach(n => {
+      (state.torre[n] || []).forEach(c => {
+        if (!c || !c.variedad || !c.fecha) return;
+        const cultivo = typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null;
+        if (!cultivo || !cultivo.fructificacion || !cultivo.fases) return;
+        const t0 = new Date(c.fecha).getTime();
+        if (!Number.isFinite(t0)) return;
+        const f = cultivo.fases || {};
+        const dPlant = Number(f.plantula && f.plantula.dias) || 0;
+        const dVeg = Number(f.vegetativo && f.vegetativo.dias) || 0;
+        const msCambio = t0 + Math.max(0, dPlant + dVeg) * 86400000;
+        if (msMin == null || msCambio < msMin) msMin = msCambio;
+      });
+    });
+    return msMin;
+  } catch (_) {
+    return null;
+  }
+}
+
+function hcGetRecomendacionNutrienteContexto() {
+  const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+  const uso = hcNutrienteFaseUso(nut);
+  const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
+  const fase = rec && rec.faseDominante ? String(rec.faseDominante) : '';
+  const conFaseReal = !!(rec && rec.conFaseReal);
+  const faseFlor = fase === 'prefloracion' || fase === 'floracion' || fase === 'fructificacion';
+  const hayFruto = torreTieneAlgunaPlantaDeFrutoActiva();
+  const recomendado = hayFruto ? ((conFaseReal && faseFlor) ? 'bloom' : 'veg') : 'veg';
+  const fechaCambioMs = hcGetFechaSugeridaCambioVegABloomMs();
+  return {
+    actual: uso,
+    recomendado,
+    hayFruto,
+    fase,
+    conFaseReal,
+    faseFlor,
+    fechaCambioMs,
+    fechaCambioTxt: hcFmtFechaDMY(fechaCambioMs),
+  };
+}
+
 /**
  * Devuelve un aviso (texto) si hay cultivo de fruto y el nutriente activo es "veg" pero la fase está en floración/fruto
  * (o no hay fechas pero conviene recordar el cambio al abrir checklist/medir).
