@@ -712,6 +712,11 @@ function renderHistRecargas() {
             <div class="hist-recarga-date">${r.fecha} · ${r.hora}</div>
             <div class="hist-recarga-nutriente">${sis.emoji || '🌿'} ${sis.nombre}</div>
             ${r.nutrienteNombre ? '<div class="hist-recarga-nutriente">🧪 ' + r.nutrienteNombre + '</div>' : ''}
+            ${(r.cambioNutriente === 'sí' || (r.nutrientePrevioNombre && r.nutrienteNombre))
+              ? ('<div class="hist-recarga-nutriente">🔁 Cambio nutriente: ' +
+                (r.nutrientePrevioNombre || 'anterior') + ' → ' + (r.nutrienteNombre || 'nuevo') +
+                '</div>')
+              : ''}
           </div>
           <div class="hist-action-cell">
             ${r.ecFinal ? '<div class="hist-recarga-ec">' + r.ecFinal + '<span class="hist-recarga-ec-unit"> µS</span></div>' : ''}

@@ -19,13 +19,20 @@ const DIAS_MUESTRA_PH_TRASPLANTE = 5;
 
 function getFechaSugeridaCambioNutriente() {
   try {
-    const ms = typeof hcGetFechaSugeridaCambioVegABloomMs === 'function'
+    const ctxNut = typeof hcGetRecomendacionNutrienteContexto === 'function'
+      ? hcGetRecomendacionNutrienteContexto()
+      : null;
+    const msCtx = ctxNut && Number.isFinite(Number(ctxNut.fechaCambioMs))
+      ? Number(ctxNut.fechaCambioMs)
+      : null;
+    const msFn = typeof hcGetFechaSugeridaCambioVegABloomMs === 'function'
       ? hcGetFechaSugeridaCambioVegABloomMs()
       : null;
+    const ms = Number.isFinite(msCtx) ? msCtx : msFn;
     if (!Number.isFinite(ms)) return null;
-    const d = new Date(ms);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    const d0 = new Date(ms);
+    // Fecha local estable (sin sesgos de zona horaria en medianoche UTC).
+    return new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), 0, 0, 0, 0);
   } catch (_) {
     return null;
   }

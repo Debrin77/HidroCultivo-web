@@ -747,6 +747,31 @@ function getCLPasos() {
       _clOnchange:'onChecklistRecargaPrefsChanged()',
     });
   }
+  const infoCambioNutriente = getChecklistCambioNutrienteInfo();
+  if (infoCambioNutriente) {
+    paso40campos.push({
+      id: 'clCambioNutrienteActivado',
+      type: 'checkbox',
+      checked: infoCambioNutriente.enabled,
+      labelClass: 'cl-calmag-option',
+      label:
+        '<strong class="cl-calmag-headline">Cambio a nutriente de floración/fruto</strong>' +
+        'Si lo marcas, esta recarga recalcula dosis con el nutriente BLOOM seleccionado.',
+      _clOnchange: 'onChecklistCambioNutrienteToggle()',
+    });
+    paso40campos.push({
+      id: 'clCambioNutrienteId',
+      label: 'Nutriente BLOOM para esta recarga',
+      type: 'select',
+      clase: 'wide',
+      opcionesVal: infoCambioNutriente.bloomOpts.map(o => ({
+        value: o.value,
+        label: o.label,
+        selected: o.value === infoCambioNutriente.selectedId,
+      })),
+      _clOnchange: 'onChecklistCambioNutrienteSelect()',
+    });
+  }
 
   const aguaPrimer = cfg.agua || state.configAgua || 'destilada';
   const vMaxRawPrimer = Number(cfg.volDeposito);
@@ -1406,12 +1431,89 @@ function abrirChecklist(esPrimeraVez = false, opts) {
 }
 
 function cerrarChecklist() {
+  try { revertirCambioNutrienteChecklistSiNoFinalizado(); } catch (_) {}
   if (clEsPrimeraVez) {
     if (!confirm('⚠️ Si cierras sin completar el checklist, la instalación activa puede quedar sin registrar bien el primer llenado o la recarga. ¿Salir de todas formas?')) return;
   }
   const co = document.getElementById('checklistOverlay');
   co.classList.remove('open');
   a11yDialogClosed(co);
+}
+
+function getChecklistCambioNutrienteInfo() {
+  try {
+    const cfg = state.configTorre || {};
+    const ctx = typeof hcGetRecomendacionNutrienteContexto === 'function'
+      ? hcGetRecomendacionNutrienteContexto()
+      : null;
+    if (!ctx || !ctx.hayFruto || ctx.actual !== 'veg') return null;
+    const actual = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+    if (!actual) return null;
+    const altId = typeof hcNutrienteAlternativaFloracionId === 'function'
+      ? hcNutrienteAlternativaFloracionId(actual.id)
+      : null;
+    const altNut = altId ? (NUTRIENTES_DB.find(n => n && n.id === altId) || null) : null;
+    const selectedId = String(cfg.checklistCambioNutrienteId || (altNut ? altNut.id : '') || '');
+    const enabled = cfg.checklistCambioNutrienteActivado === true;
+    const prevId = String(cfg.checklistCambioNutrientePrevioId || actual.id || '');
+    const bloomOpts = NUTRIENTES_DB
+      .filter(n => n && (typeof hcNutrienteFaseUso === 'function' ? hcNutrienteFaseUso(n) === 'bloom' : true))
+      .map(n => ({ value: n.id, label: n.nombre }));
+    return { actual, selectedId, enabled, prevId, bloomOpts };
+  } catch (_) {
+    return null;
+  }
+}
+
+function onChecklistCambioNutrienteToggle() {
+  if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  const info = getChecklistCambioNutrienteInfo();
+  if (!info) return;
+  const chk = document.getElementById('clCambioNutrienteActivado');
+  const enabled = !!(chk && chk.checked);
+  if (!cfg.checklistCambioNutrientePrevioId) cfg.checklistCambioNutrientePrevioId = info.prevId;
+  if (!cfg.checklistCambioNutrienteId) cfg.checklistCambioNutrienteId = info.selectedId;
+  cfg.checklistCambioNutrienteActivado = enabled;
+  if (enabled) {
+    const id = String(cfg.checklistCambioNutrienteId || '');
+    if (id && NUTRIENTES_DB.some(n => n && n.id === id)) cfg.nutriente = id;
+  } else if (cfg.checklistCambioNutrientePrevioId) {
+    cfg.nutriente = cfg.checklistCambioNutrientePrevioId;
+  }
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try { actualizarBadgesNutriente(); } catch (_) {}
+  renderChecklist();
+}
+
+function onChecklistCambioNutrienteSelect() {
+  if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  const sel = document.getElementById('clCambioNutrienteId');
+  const id = sel && sel.value ? String(sel.value) : '';
+  if (!id || !NUTRIENTES_DB.some(n => n && n.id === id)) return;
+  cfg.checklistCambioNutrienteId = id;
+  if (cfg.checklistCambioNutrienteActivado === true) cfg.nutriente = id;
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try { actualizarBadgesNutriente(); } catch (_) {}
+  renderChecklist();
+}
+
+function revertirCambioNutrienteChecklistSiNoFinalizado() {
+  const cfg = state.configTorre || {};
+  if (!cfg.checklistCambioNutrienteActivado || !cfg.checklistCambioNutrientePrevioId) return;
+  cfg.nutriente = cfg.checklistCambioNutrientePrevioId;
+  delete cfg.checklistCambioNutrienteActivado;
+  delete cfg.checklistCambioNutrienteId;
+  delete cfg.checklistCambioNutrientePrevioId;
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try { actualizarBadgesNutriente(); } catch (_) {}
 }
 
 function onChecklistRecargaPrefsChanged() {
@@ -1758,6 +1860,15 @@ async function finalizarChecklist() {
   const pMinusFin = parseFloat(gCL('clPhMinusRegFinal'));
   const phPlusExtra = Number.isFinite(pPlusFin) ? pPlusFin : 0;
   const phMasTot = pMas46 + phPlusExtra;
+  const cfgFin = state.configTorre || {};
+  const cambioNutrienteAplicado =
+    cfgFin.checklistCambioNutrienteActivado === true &&
+    cfgFin.checklistCambioNutrientePrevioId &&
+    cfgFin.nutriente &&
+    String(cfgFin.checklistCambioNutrientePrevioId) !== String(cfgFin.nutriente);
+  const nutPrev = cambioNutrienteAplicado
+    ? (NUTRIENTES_DB.find(n => n && n.id === String(cfgFin.checklistCambioNutrientePrevioId)) || null)
+    : null;
   const recargaData = {
     fecha, hora,
     torreId: getTorreActiva().id != null ? getTorreActiva().id : (state.torreActiva || 0),
@@ -1765,6 +1876,8 @@ async function finalizarChecklist() {
     torreEmoji: getTorreActiva().emoji || '🌿',
     nutrienteId: nutR.id,
     nutrienteNombre: nutR.nombre,
+    nutrientePrevioId: cambioNutrienteAplicado ? String(cfgFin.checklistCambioNutrientePrevioId) : '',
+    nutrientePrevioNombre: cambioNutrienteAplicado ? (nutPrev ? nutPrev.nombre : String(cfgFin.checklistCambioNutrientePrevioId)) : '',
     // Parámetros agua
     ecInicial:    gCL('clEcInicial')   || '0',
     ecCalMag:     gCL('clEcCalMag')    || '',
@@ -1797,7 +1910,9 @@ async function finalizarChecklist() {
       (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
         ? (state.configTorre.dwcRejillaModoPreferido || (typeof dwcGetRejillaModoPreferido === 'function' ? dwcGetRejillaModoPreferido(state.configTorre) : 'objetivo'))
         : '',
-    notas:        'Recarga completa del depósito',
+    notas:        cambioNutrienteAplicado
+      ? ('Recarga completa del depósito · Cambio nutriente: ' + (nutPrev ? nutPrev.nombre : 'anterior') + ' → ' + nutR.nombre)
+      : 'Recarga completa del depósito',
   };
   state.recargasLocal.unshift(recargaData);
   if (state.recargasLocal.length > 20) state.recargasLocal = state.recargasLocal.slice(0,20);
@@ -1811,6 +1926,9 @@ async function finalizarChecklist() {
     phMenosMl: recargaData.phMenosMl || '',
     colorAgua: recargaData.colorAgua,
     estadoPlantas: recargaData.estadoPlantas,
+    cambioNutriente: cambioNutrienteAplicado ? 'sí' : '',
+    nutrientePrevio: recargaData.nutrientePrevioNombre || '',
+    nutrienteNuevo: nutR.nombre || '',
     dwcObjetivoCultivo: recargaData.dwcObjetivoCultivo || '',
     dwcModo: recargaData.dwcModo || '',
     dwcRejillaModoPreferido: recargaData.dwcRejillaModoPreferido || '',
@@ -1823,7 +1941,9 @@ async function finalizarChecklist() {
     fecha, hora, ec: String(ecFinalNum), ph: phFinal,
     temp: tempAgua, vol: volFinal,
     humSustrato: prevHum != null && String(prevHum).trim() !== '' ? prevHum : '',
-    notas: 'Recarga completa'
+    notas: cambioNutrienteAplicado
+      ? ('Recarga completa · Cambio nutriente: ' + (recargaData.nutrientePrevioNombre || 'anterior') + ' → ' + (nutR.nombre || 'nuevo'))
+      : 'Recarga completa'
   });
 
   limpiarClChecklistAvanceActual();
@@ -1848,6 +1968,9 @@ async function finalizarChecklist() {
       ((state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
         ? ` · DWC modo: ${recargaData.dwcModo || '-'} · Objetivo: ${recargaData.dwcObjetivoCultivo || '-'} · Rejilla: ${recargaData.dwcRejillaModoPreferido || '-'}`
         : '') +
+      (cambioNutrienteAplicado
+        ? ` · Cambio nutriente: ${(recargaData.nutrientePrevioNombre || '-')} -> ${(nutR.nombre || '-')}`
+        : '') +
       (recargaData.phMenosMl ? ` · pH−: ${recargaData.phMenosMl} ml` : '')
   });
   await hcPostSheets({
@@ -1857,9 +1980,15 @@ async function finalizarChecklist() {
     ph: phFinal,
     temp: tempAgua,
     volumen: volFinal,
-    notas: 'Recarga completa del depósito',
+    notas: cambioNutrienteAplicado
+      ? ('Recarga completa del depósito · Cambio nutriente: ' + (recargaData.nutrientePrevioNombre || '-') + ' -> ' + (nutR.nombre || '-'))
+      : 'Recarga completa del depósito',
     alertas: ''
   });
+
+  delete cfgFin.checklistCambioNutrienteActivado;
+  delete cfgFin.checklistCambioNutrienteId;
+  delete cfgFin.checklistCambioNutrientePrevioId;
 
   const co = document.getElementById('checklistOverlay');
   co.classList.remove('open');
