@@ -278,10 +278,37 @@ function renderCalendario() {
     }
   }
 
-  // Marca de calendario: fecha sugerida para cambio de nutriente (si aplica)
+  // Marca de calendario: cambio de nutriente (fecha objetivo + ventana activa)
   const fechaCambioNut = getFechaSugeridaCambioNutriente();
-  if (fechaCambioNut && fechaCambioNut.getMonth() === mes && fechaCambioNut.getFullYear() === año) {
-    addEvento(fechaCambioNut.getDate(), 'nutriente', '#7c3aed', '🧪 Cambio sugerido a nutriente de floración/fruto');
+  const ctxNut = typeof hcGetRecomendacionNutrienteContexto === 'function'
+    ? hcGetRecomendacionNutrienteContexto()
+    : null;
+  if (ctxNut && ctxNut.hayFruto && ctxNut.actual === 'veg' && fechaCambioNut) {
+    // Día objetivo exacto
+    if (fechaCambioNut.getMonth() === mes && fechaCambioNut.getFullYear() === año) {
+      addEvento(
+        fechaCambioNut.getDate(),
+        'nutriente',
+        '#7c3aed',
+        '🧪 Cambio sugerido a nutriente de floración/fruto'
+      );
+    }
+
+    // También marcar "hoy" cuando estamos en ventana próxima/retrasada para que sea visible en la vista mensual
+    const hoy0 = new Date();
+    hoy0.setHours(0, 0, 0, 0);
+    const objetivo0 = new Date(fechaCambioNut);
+    objetivo0.setHours(0, 0, 0, 0);
+    const diffHoy = Math.round((hoy0 - objetivo0) / 86400000);
+    if (diffHoy >= -10 && diffHoy <= 14 && hoy0.getMonth() === mes && hoy0.getFullYear() === año) {
+      const etiquetaHoy =
+        diffHoy > 0
+          ? '⚠️ Cambio de nutriente retrasado'
+          : diffHoy === 0
+            ? '🧪 Cambio de nutriente recomendado hoy'
+            : '🧪 Cambio de nutriente próximo';
+      addEvento(hoy0.getDate(), 'nutriente', '#7c3aed', etiquetaHoy);
+    }
   }
 
   // Limpieza — cada 30 días
