@@ -1238,8 +1238,8 @@ function guardarSetupYContinuar() {
       document.getElementById('setupNombreInstalacionInput')?.focus();
       return;
     }
-    if (setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc') {
-      showToast('Elige Torre, NFT o DWC en el primer paso del asistente', true);
+    if (setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc' && setupTipoInstalacion !== 'rdwc') {
+      showToast('Elige Torre, NFT, DWC o RDWC en el primer paso del asistente', true);
       setupPagina = 0;
       renderSetupPage();
       return;
@@ -1248,6 +1248,7 @@ function guardarSetupYContinuar() {
 
   const isNft = setupTipoInstalacion === 'nft';
   const isDwc = setupTipoInstalacion === 'dwc';
+  const isRdwc = setupTipoInstalacion === 'rdwc';
   let niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
   let cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5, 10);
   let nftNvSlider = 4;
@@ -1278,8 +1279,15 @@ function guardarSetupYContinuar() {
       vol = Math.min(800, Math.max(1, Math.round(dwcCapG)));
     }
   }
+  if (isRdwc) {
+    if (typeof applySetupRdwcDesdeFormulario === 'function') applySetupRdwcDesdeFormulario();
+    const cR = state.configTorre || {};
+    niveles = Math.max(1, Math.min(4, Math.round(Number(cR.rdwcRows || 1))));
+    cestas = Math.max(1, Math.ceil(Number(cR.rdwcSites || 4) / niveles));
+    vol = Math.max(1, Math.round(Number(cR.rdwcControlVolL || 40)));
+  }
 
-  const tipoNuevoPrevio = isNft ? 'nft' : isDwc ? 'dwc' : 'torre';
+  const tipoNuevoPrevio = isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : 'torre';
 
   initTorres();
   const idxSlotGuardar = state.torreActiva || 0;
@@ -1299,7 +1307,7 @@ function guardarSetupYContinuar() {
       );
       return;
     }
-    const etiquetas = { torre: 'torre vertical', nft: 'NFT', dwc: 'DWC' };
+    const etiquetas = { torre: 'torre vertical', nft: 'NFT', dwc: 'DWC', rdwc: 'RDWC' };
     const nomAnt = etiquetas[tipoEnSlotAntes] || tipoEnSlotAntes;
     const nomNuevo = etiquetas[tipoNuevoPrevio] || tipoNuevoPrevio;
     if (
@@ -1317,7 +1325,7 @@ function guardarSetupYContinuar() {
       return;
     }
     crearNuevaPorCambioTipo = true;
-    const pref = tipoNuevoPrevio === 'dwc' ? 'DWC' : tipoNuevoPrevio === 'nft' ? 'NFT' : 'Torre';
+    const pref = tipoNuevoPrevio === 'dwc' ? 'DWC' : tipoNuevoPrevio === 'nft' ? 'NFT' : tipoNuevoPrevio === 'rdwc' ? 'RDWC' : 'Torre';
     setupNombreNuevaTorre = pref + ' ' + (state.torres.length + 1);
   }
 
@@ -1364,7 +1372,7 @@ function guardarSetupYContinuar() {
   setupData.horasLuz = horasLuzGuardar;
 
   state.configTorre = {
-    tipoInstalacion: isNft ? 'nft' : isDwc ? 'dwc' : 'torre',
+    tipoInstalacion: isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : 'torre',
     tipoTorre:    'custom',
     numNiveles:   niveles,
     numCestas:    cestas,
@@ -1390,6 +1398,18 @@ function guardarSetupYContinuar() {
     consejosModoUi: setupData.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante',
     torreObjetivoCultivo:
       ((state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final'),
+    ...(isRdwc
+      ? {
+          rdwcSites: Math.max(2, Math.min(64, parseInt(String(document.getElementById('setupRdwcSites')?.value || '4'), 10) || 4)),
+          rdwcRows: Math.max(1, Math.min(4, parseInt(String(document.getElementById('setupRdwcRows')?.value || '1'), 10) || 1)),
+          rdwcBucketVolL: Math.max(5, Math.min(200, parseFloat(String(document.getElementById('setupRdwcBucketVolL')?.value || '20').replace(',', '.')) || 20)),
+          rdwcControlVolL: Math.max(10, Math.min(800, parseFloat(String(document.getElementById('setupRdwcControlVolL')?.value || '40').replace(',', '.')) || 40)),
+          rdwcRecirculationLh: Math.max(200, Math.min(12000, parseFloat(String(document.getElementById('setupRdwcRecirculationLh')?.value || '1200').replace(',', '.')) || 1200)),
+          rdwcAirLpm: Math.max(1, Math.min(300, parseFloat(String(document.getElementById('setupRdwcAirLpm')?.value || '20').replace(',', '.')) || 20)),
+          rdwcNetPotMm: Math.max(40, Math.min(200, parseInt(String(document.getElementById('setupRdwcNetPotMm')?.value || '125'), 10) || 125)),
+          rdwcCenterSpacingCm: Math.max(20, Math.min(150, parseFloat(String(document.getElementById('setupRdwcCenterSpacingCm')?.value || '45').replace(',', '.')) || 45)),
+        }
+      : {}),
   };
   const ccSetup = parseFloat(String(document.getElementById('setupCalentadorConsignaC')?.value || '').replace(',', '.'));
   if (setupEquipamiento.has('calentador') && Number.isFinite(ccSetup) && ccSetup >= 10 && ccSetup <= 35) {
@@ -1499,6 +1519,16 @@ function guardarSetupYContinuar() {
     try {
       dwcSyncVolDepositoDesdeCapacidadEstimada(state.configTorre);
     } catch (eSync) {}
+  }
+  if (isRdwc) {
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(state.configTorre);
+    state.configTorre.numNiveles = Math.max(1, Math.min(4, Math.round(Number(state.configTorre.rdwcRows || 1))));
+    state.configTorre.numCestas = Math.max(1, Math.ceil(Number(state.configTorre.rdwcSites || 4) / state.configTorre.numNiveles));
+    state.configTorre.volDeposito = Math.max(1, Math.round(Number(state.configTorre.rdwcControlVolL || vol)));
+    if (!Array.isArray(state.configTorre.equipamiento)) state.configTorre.equipamiento = [];
+    ['bomba', 'difusor'].forEach(eq => {
+      if (!state.configTorre.equipamiento.includes(eq)) state.configTorre.equipamiento.push(eq);
+    });
   }
   const volEfectivo =
     isDwc && Number(state.configTorre.volDeposito) > 0
@@ -1834,6 +1864,7 @@ function aplicarConfigTorre() {
   if (!state.configTorre.tipoInstalacion) state.configTorre.tipoInstalacion = 'torre';
   if (!state.configTorre.torreObjetivoCultivo) state.configTorre.torreObjetivoCultivo = 'final';
   const cfg = state.configTorre;
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
 
   // Sincronizar nutriente global con la torre activa (cada torre puede tener el mar suyo)
   const tIdx = state.torreActiva || 0;

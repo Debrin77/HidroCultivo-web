@@ -9,25 +9,266 @@
 
 let setupPagina = 0;
 let setupTipoTorre = 'custom';
-/** 'torre' | 'nft' | 'dwc' | '' (nueva instalación: hay que elegir en paso 0) */
+/** 'torre' | 'nft' | 'dwc' | 'rdwc' | '' (nueva instalación: hay que elegir en paso 0) */
 let setupTipoInstalacion = 'torre';
 
 /** Normaliza tipo de instalación guardado en config. */
 function tipoInstalacionNormalizado(cfg) {
   const t = cfg && cfg.tipoInstalacion;
-  if (t === 'nft' || t === 'dwc' || t === 'torre') return t;
+  if (t === 'nft' || t === 'dwc' || t === 'rdwc' || t === 'torre') return t;
   return 'torre';
 }
 
-/** Etiqueta corta para avisos (recarga, calendario, notificaciones): Torre vertical | NFT | DWC */
+/** Etiqueta corta para avisos (recarga, calendario, notificaciones). */
 function etiquetaSistemaHidroponicoBreve(cfg) {
   const t = tipoInstalacionNormalizado(cfg || {});
   if (t === 'nft') return 'NFT';
+  if (t === 'rdwc') return 'RDWC';
   if (t === 'dwc') {
     if (typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg || {}) === 'kratky') return 'Kratky';
     return 'DWC';
   }
   return 'Torre vertical';
+}
+
+/**
+ * RDWC v1 — defaults y saneado mínimo de esquema.
+ * Se invoca desde el núcleo para estabilizar configuraciones antiguas o incompletas.
+ */
+function rdwcEnsureConfigDefaults(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return c;
+  if (!Number.isFinite(Number(c.rdwcSites)) || Number(c.rdwcSites) < 2) c.rdwcSites = 4;
+  if (!Number.isFinite(Number(c.rdwcRows)) || Number(c.rdwcRows) < 1) c.rdwcRows = 1;
+  if (!Number.isFinite(Number(c.rdwcBucketVolL)) || Number(c.rdwcBucketVolL) < 5) c.rdwcBucketVolL = 20;
+  if (!Number.isFinite(Number(c.rdwcControlVolL)) || Number(c.rdwcControlVolL) < 10) c.rdwcControlVolL = 40;
+  if (!Number.isFinite(Number(c.rdwcNetPotMm)) || Number(c.rdwcNetPotMm) < 40) c.rdwcNetPotMm = 125;
+  if (!Number.isFinite(Number(c.rdwcCenterSpacingCm)) || Number(c.rdwcCenterSpacingCm) < 20) c.rdwcCenterSpacingCm = 45;
+  if (!Number.isFinite(Number(c.rdwcRecirculationLh)) || Number(c.rdwcRecirculationLh) < 200) c.rdwcRecirculationLh = 1200;
+  if (!Number.isFinite(Number(c.rdwcAirLpm)) || Number(c.rdwcAirLpm) < 1) c.rdwcAirLpm = 20;
+  if (!Number.isFinite(Number(c.rdwcTempObjetivoC))) c.rdwcTempObjetivoC = 19;
+  if (!Number.isFinite(Number(c.rdwcTempWarnHighC))) c.rdwcTempWarnHighC = 22;
+  if (!Number.isFinite(Number(c.rdwcTempWarnLowC))) c.rdwcTempWarnLowC = 17;
+  if (c.rdwcFlowMode !== 'continuous') c.rdwcFlowMode = 'continuous';
+  if (c.rdwcTopFeedEnabled !== true) c.rdwcTopFeedEnabled = false;
+  if (c.rdwcReturnMode !== 'gravity' && c.rdwcReturnMode !== 'forced') c.rdwcReturnMode = 'gravity';
+  if (c.rdwcLayout !== 'line' && c.rdwcLayout !== 'double_row' && c.rdwcLayout !== 'u_shape') c.rdwcLayout = 'line';
+  return c;
+}
+
+function rdwcCompatChipHtml(estado) {
+  const k = estado === 'ok' || estado === 'warn' || estado === 'bad' ? estado : 'warn';
+  const txt = k === 'ok' ? 'OK' : k === 'warn' ? 'Ajustar' : 'No recomendado';
+  return '<span class="cultivo-status-chip cultivo-status-chip--' + k + '">' + txt + '</span>';
+}
+
+function rdwcEvaluarCompatConfig(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  const sites = Math.max(2, Number(c.rdwcSites) || 4);
+  const rows = Math.max(1, Number(c.rdwcRows) || 1);
+  const bucketVol = Math.max(5, Number(c.rdwcBucketVolL) || 20);
+  const netPot = Math.max(40, Number(c.rdwcNetPotMm) || 125);
+  const spacing = Math.max(20, Number(c.rdwcCenterSpacingCm) || 45);
+  const perRow = Math.max(1, Math.ceil(sites / rows));
+
+  let potEstado = 'warn';
+  if (netPot >= 100 && netPot <= 160) potEstado = 'ok';
+  else if ((netPot >= 75 && netPot < 100) || (netPot > 160 && netPot <= 180)) potEstado = 'warn';
+  else potEstado = 'bad';
+
+  let bucketEstado = 'warn';
+  if (bucketVol >= 15 && bucketVol <= 35) bucketEstado = 'ok';
+  else if ((bucketVol >= 10 && bucketVol < 15) || (bucketVol > 35 && bucketVol <= 45)) bucketEstado = 'warn';
+  else bucketEstado = 'bad';
+
+  let spacingEstado = 'warn';
+  if (spacing >= 35 && spacing <= 60) spacingEstado = 'ok';
+  else if ((spacing >= 30 && spacing < 35) || (spacing > 60 && spacing <= 75)) spacingEstado = 'warn';
+  else spacingEstado = 'bad';
+
+  let layoutEstado = 'ok';
+  if (rows >= 3 && perRow >= 6) layoutEstado = 'warn';
+  if (rows >= 4 && perRow >= 8) layoutEstado = 'bad';
+
+  const prioridad = { ok: 0, warn: 1, bad: 2 };
+  const globalEstado = [potEstado, bucketEstado, spacingEstado, layoutEstado].reduce(
+    (acc, s) => (prioridad[s] > prioridad[acc] ? s : acc),
+    'ok'
+  );
+
+  return {
+    globalEstado,
+    potEstado,
+    bucketEstado,
+    spacingEstado,
+    layoutEstado,
+    spacingRecoCm: '35-60 cm',
+    netPotRecoMm: '100-160 mm',
+    bucketRecoL: '15-35 L',
+  };
+}
+
+function rdwcCompatTextoResumen(comp) {
+  if (!comp) return '';
+  const accion =
+    comp.globalEstado === 'ok'
+      ? 'Configuración equilibrada para operación general.'
+      : comp.globalEstado === 'warn'
+        ? 'Ajusta uno o más parámetros para mejorar estabilidad de raíces y mantenimiento.'
+        : 'Ajuste recomendado antes de cerrar configuración para evitar estrés radicular.';
+  return (
+    'Compatibilidad RDWC ' +
+    rdwcCompatChipHtml(comp.globalEstado) +
+    ' · Cesta ' +
+    rdwcCompatChipHtml(comp.potEstado) +
+    ' · Cubo ' +
+    rdwcCompatChipHtml(comp.bucketEstado) +
+    ' · Separación ' +
+    rdwcCompatChipHtml(comp.spacingEstado) +
+    ' · Distribución ' +
+    rdwcCompatChipHtml(comp.layoutEstado) +
+    '. Referencia: cesta ' +
+    comp.netPotRecoMm +
+    ', cubo ' +
+    comp.bucketRecoL +
+    ', separación ' +
+    comp.spacingRecoCm +
+    '. ' +
+    accion
+  );
+}
+
+function renderRdwcCompatStatus(cfg, elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const comp = rdwcEvaluarCompatConfig(cfg || state.configTorre || {});
+  if (!comp) {
+    el.innerHTML = '';
+    return;
+  }
+  const btnHtml =
+    elId === 'sysRdwcCompatStatus'
+      ? '<button type="button" class="rdwc-compat-btn" onclick="aplicarRdwcRecomendacionBaseSistema()">Aplicar recomendación base</button>'
+      : '<button type="button" class="rdwc-compat-btn" onclick="aplicarRdwcRecomendacionBaseSetup()">Aplicar recomendación base</button>';
+  el.innerHTML =
+    '<span class="rdwc-compat-text">' +
+    rdwcCompatTextoResumen(comp) +
+    '</span>' +
+    btnHtml;
+}
+
+function bindRdwcCompatLive(scope) {
+  const ids =
+    scope === 'sys'
+      ? [
+          'sysRdwcSites',
+          'sysRdwcRows',
+          'sysRdwcBucketVolL',
+          'sysRdwcControlVolL',
+          'sysRdwcRecirculationLh',
+          'sysRdwcAirLpm',
+          'sysRdwcNetPotMm',
+          'sysRdwcCenterSpacingCm',
+          'sysRdwcTempObjetivoC',
+          'sysRdwcLayout',
+        ]
+      : [
+          'setupRdwcSites',
+          'setupRdwcRows',
+          'setupRdwcBucketVolL',
+          'setupRdwcControlVolL',
+          'setupRdwcRecirculationLh',
+          'setupRdwcAirLpm',
+          'setupRdwcNetPotMm',
+          'setupRdwcCenterSpacingCm',
+        ];
+  const render = () => {
+    const c = state.configTorre || {};
+    if (scope === 'sys') {
+      const g = (id, fb) => {
+        const el = document.getElementById(id);
+        const n = parseFloat(String((el && el.value) || '').replace(',', '.'));
+        return Number.isFinite(n) ? n : fb;
+      };
+      const lay = document.getElementById('sysRdwcLayout');
+      const c2 = { ...c, tipoInstalacion: 'rdwc' };
+      c2.rdwcSites = g('sysRdwcSites', c.rdwcSites || 4);
+      c2.rdwcRows = g('sysRdwcRows', c.rdwcRows || 1);
+      c2.rdwcBucketVolL = g('sysRdwcBucketVolL', c.rdwcBucketVolL || 20);
+      c2.rdwcControlVolL = g('sysRdwcControlVolL', c.rdwcControlVolL || 40);
+      c2.rdwcRecirculationLh = g('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
+      c2.rdwcAirLpm = g('sysRdwcAirLpm', c.rdwcAirLpm || 20);
+      c2.rdwcNetPotMm = g('sysRdwcNetPotMm', c.rdwcNetPotMm || 125);
+      c2.rdwcCenterSpacingCm = g('sysRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
+      c2.rdwcTempObjetivoC = g('sysRdwcTempObjetivoC', c.rdwcTempObjetivoC || 19);
+      c2.rdwcLayout = lay && lay.value ? lay.value : c.rdwcLayout || 'line';
+      renderRdwcCompatStatus(c2, 'sysRdwcCompatStatus');
+    } else {
+      const g = (id, fb) => {
+        const el = document.getElementById(id);
+        const n = parseFloat(String((el && el.value) || '').replace(',', '.'));
+        return Number.isFinite(n) ? n : fb;
+      };
+      const c2 = { ...c, tipoInstalacion: 'rdwc' };
+      c2.rdwcSites = g('setupRdwcSites', c.rdwcSites || 4);
+      c2.rdwcRows = g('setupRdwcRows', c.rdwcRows || 1);
+      c2.rdwcBucketVolL = g('setupRdwcBucketVolL', c.rdwcBucketVolL || 20);
+      c2.rdwcControlVolL = g('setupRdwcControlVolL', c.rdwcControlVolL || 40);
+      c2.rdwcRecirculationLh = g('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
+      c2.rdwcAirLpm = g('setupRdwcAirLpm', c.rdwcAirLpm || 20);
+      c2.rdwcNetPotMm = g('setupRdwcNetPotMm', c.rdwcNetPotMm || 125);
+      c2.rdwcCenterSpacingCm = g('setupRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
+      renderRdwcCompatStatus(c2, 'setupRdwcCompatStatus');
+    }
+  };
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.rdwcCompatBound === '1') return;
+    el.dataset.rdwcCompatBound = '1';
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+}
+
+function aplicarRdwcRecomendacionBaseSistema() {
+  const c = state.configTorre || (state.configTorre = {});
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return;
+  const sites = Math.max(2, Math.round(Number(c.rdwcSites || 4)));
+  const recirc = Math.max(1200, Math.round(sites * 220));
+  const air = Math.max(10, Math.round(sites * 2.5));
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(v);
+  };
+  setVal('sysRdwcBucketVolL', 20);
+  setVal('sysRdwcNetPotMm', 125);
+  setVal('sysRdwcCenterSpacingCm', 45);
+  setVal('sysRdwcRecirculationLh', recirc);
+  setVal('sysRdwcAirLpm', air);
+  setVal('sysRdwcTempObjetivoC', 19);
+  aplicarSistemaRdwcDesdeFormulario();
+  showToast('RDWC: recomendación base aplicada');
+}
+
+function aplicarRdwcRecomendacionBaseSetup() {
+  const c = state.configTorre || (state.configTorre = {});
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return;
+  const sites = Math.max(2, Math.round(Number(c.rdwcSites || 4)));
+  const recirc = Math.max(1200, Math.round(sites * 220));
+  const air = Math.max(10, Math.round(sites * 2.5));
+  const setVal = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(v);
+  };
+  setVal('setupRdwcBucketVolL', 20);
+  setVal('setupRdwcNetPotMm', 125);
+  setVal('setupRdwcCenterSpacingCm', 45);
+  setVal('setupRdwcRecirculationLh', recirc);
+  setVal('setupRdwcAirLpm', air);
+  applySetupRdwcDesdeFormulario();
+  try { renderSetupPage(); } catch (_) {}
+  showToast('RDWC (setup): recomendación base aplicada');
 }
 
 function torreNormalizeObjetivoCultivo(raw) {
@@ -167,10 +408,10 @@ function nftGetObjetivoSpec(objetivo) {
 
 /** Etiquetas de nivel y plaza según tipo de instalación (índices 1-based en texto). */
 function labelsUbicacionInstalacion(tipoInstal) {
-  const t = tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'torre' ? tipoInstal : 'torre';
+  const t = (tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'rdwc' || tipoInstal === 'torre') ? tipoInstal : 'torre';
   return {
-    lblPlaza: t === 'nft' ? 'hueco' : t === 'dwc' ? 'maceta' : 'cesta',
-    lblNivel: t === 'nft' ? 'Canal' : 'Nivel',
+    lblPlaza: t === 'nft' ? 'hueco' : t === 'dwc' ? 'maceta' : t === 'rdwc' ? 'cubo' : 'cesta',
+    lblNivel: t === 'nft' ? 'Canal' : t === 'rdwc' ? 'Fila' : 'Nivel',
   };
 }
 
@@ -187,7 +428,7 @@ function formatoUbicacionEnRegistro(tipoInstal, nivel1Based, plaza1Based) {
 /** Tipo de instalación para mostrar una entrada antigua: snapshot; si no, config de la torre del registro; si no, activa. */
 function tipoInstalParaEntradaRegistro(e) {
   const s = e && e.tipoInstalSnap;
-  if (s === 'nft' || s === 'dwc' || s === 'torre') return s;
+  if (s === 'nft' || s === 'dwc' || s === 'rdwc' || s === 'torre') return s;
   const tid = e && e.torreId;
   if (tid != null && Array.isArray(state.torres)) {
     const tr = state.torres.find(t => t.id === tid);
@@ -291,6 +532,9 @@ function abrirSetup() {
   const c = state.configTorre || {};
   syncSetupEquipamientoDesdeConfig(c);
   setupTipoInstalacion = tipoInstalacionNormalizado(c);
+  if (setupTipoInstalacion === 'rdwc') {
+    try { syncSetupRdwcFieldsDesdeConfig(c); } catch (_) {}
+  }
   const snc = document.getElementById('sliderNftCanales');
   const snh = document.getElementById('sliderNftHuecos');
   const snp = document.getElementById('sliderNftPendiente');
@@ -437,8 +681,8 @@ function cerrarSetup() {
 }
 
 function iniciarConfiguracionTorre() {
-  if (setupEsNuevaTorre && setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc') {
-    showToast('Elige Torre, NFT o DWC antes de continuar', true);
+  if (setupEsNuevaTorre && setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc' && setupTipoInstalacion !== 'rdwc') {
+    showToast('Elige Torre, NFT, DWC o RDWC antes de continuar', true);
     return;
   }
   setupTipoTorre = 'custom';
@@ -449,6 +693,7 @@ function iniciarConfiguracionTorre() {
 function seleccionarTipoInstalacionSetup(tipo) {
   if (tipo === 'nft') setupTipoInstalacion = 'nft';
   else if (tipo === 'dwc') setupTipoInstalacion = 'dwc';
+  else if (tipo === 'rdwc') setupTipoInstalacion = 'rdwc';
   else setupTipoInstalacion = 'torre';
   refrescarSetupTipoInstalacionUI();
 }
@@ -457,7 +702,8 @@ function refrescarSetupTipoInstalacionUI() {
   const torreCard = document.getElementById('setupCardTipoTorre');
   const nftCard = document.getElementById('setupCardTipoNft');
   const dwcCard = document.getElementById('setupCardTipoDwc');
-  [torreCard, nftCard, dwcCard].forEach(card => {
+  const rdwcCard = document.getElementById('setupCardTipoRdwc');
+  [torreCard, nftCard, dwcCard, rdwcCard].forEach(card => {
     if (!card) return;
     card.classList.remove('selected');
     card.setAttribute('aria-pressed', 'false');
@@ -471,11 +717,15 @@ function refrescarSetupTipoInstalacionUI() {
   } else if (setupTipoInstalacion === 'dwc' && dwcCard) {
     dwcCard.classList.add('selected');
     dwcCard.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'rdwc' && rdwcCard) {
+    rdwcCard.classList.add('selected');
+    rdwcCard.setAttribute('aria-pressed', 'true');
   }
   const inlTorre = document.getElementById('setupInlineTipoTorre');
   const inlNft = document.getElementById('setupInlineTipoNft');
   const inlDwc = document.getElementById('setupInlineTipoDwc');
-  [inlTorre, inlNft, inlDwc].forEach(btn => {
+  const inlRdwc = document.getElementById('setupInlineTipoRdwc');
+  [inlTorre, inlNft, inlDwc, inlRdwc].forEach(btn => {
     if (!btn) return;
     btn.classList.remove('selected');
     btn.setAttribute('aria-pressed', 'false');
@@ -489,11 +739,14 @@ function refrescarSetupTipoInstalacionUI() {
   } else if (setupTipoInstalacion === 'dwc' && inlDwc) {
     inlDwc.classList.add('selected');
     inlDwc.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'rdwc' && inlRdwc) {
+    inlRdwc.classList.add('selected');
+    inlRdwc.setAttribute('aria-pressed', 'true');
   }
   const dn = document.getElementById('setupTorreDimNivel');
   const dc = document.getElementById('setupTorreDimCesta');
   if (dn && dc) {
-    if (setupTipoInstalacion === 'dwc') {
+    if (setupTipoInstalacion === 'dwc' || setupTipoInstalacion === 'rdwc') {
       dn.textContent = 'Filas en la tapa';
       dc.textContent = 'Cestas por fila';
     } else {
@@ -502,7 +755,7 @@ function refrescarSetupTipoInstalacionUI() {
     }
   }
   const cestaBlk = document.getElementById('setupBloqueTamanoCestas');
-  if (cestaBlk) cestaBlk.style.display = setupTipoInstalacion === 'dwc' ? 'none' : '';
+  if (cestaBlk) cestaBlk.style.display = (setupTipoInstalacion === 'dwc' || setupTipoInstalacion === 'rdwc') ? 'none' : '';
   if (setupPagina !== 1) {
     try {
       refreshDwcTapHintSetup();
@@ -510,27 +763,39 @@ function refrescarSetupTipoInstalacionUI() {
     return;
   }
   const isNft = setupTipoInstalacion === 'nft';
+  const isRdwc = setupTipoInstalacion === 'rdwc';
   const tw = document.getElementById('setupTorreBuilderWrap');
   const nw = document.getElementById('setupNftBuilderWrap');
-  if (tw) tw.style.display = isNft ? 'none' : 'block';
+  if (tw) tw.style.display = (isNft || isRdwc) ? 'none' : 'block';
   if (nw) nw.classList.toggle('setup-hidden', !isNft);
   const t1 = document.getElementById('spage1Title');
   const st = document.getElementById('spage1Subtitle');
   if (t1) {
     t1.textContent = isNft ? '🪴 Tu sistema NFT'
-      : setupTipoInstalacion === 'dwc' ? '🫧 Tu DWC' : '🌿 Tu torre vertical';
+      : setupTipoInstalacion === 'dwc' ? '🫧 Tu DWC'
+      : isRdwc ? '🧿 Tu RDWC'
+      : '🌿 Tu torre vertical';
   }
   if (st) {
     st.textContent = isNft
       ? 'Canales en paralelo, huecos por canal y pendiente. La rejilla usa un nivel por canal.'
       : setupTipoInstalacion === 'dwc'
         ? 'Cubo con tapa: filas × cestas = orificios; litros = solución. Abajo: medidas del depósito, diámetro y altura de cesta, cúpulas y aire (también en Sistema).'
+        : isRdwc
+          ? 'RDWC: módulos conectados y recirculación continua. Ajusta sitios, volúmenes y aireación.'
         : 'Configura las dimensiones de tu sistema hidropónico vertical';
   }
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
-  if (dwcWizard) dwcWizard.classList.toggle('setup-hidden', setupTipoInstalacion !== 'dwc');
+  if (dwcWizard) dwcWizard.classList.toggle('setup-hidden', !(setupTipoInstalacion === 'dwc' || isRdwc));
+  const rdwcWizard = document.getElementById('setupRdwcDetalleWrap');
+  if (rdwcWizard) rdwcWizard.classList.toggle('setup-hidden', !isRdwc);
+  const dwcSoloWizard = document.getElementById('setupDwcSoloBloque');
+  if (dwcSoloWizard) dwcSoloWizard.classList.toggle('setup-hidden', isRdwc);
+  if (isRdwc) {
+    try { syncSetupRdwcFieldsDesdeConfig(state.configTorre || {}); } catch (_) {}
+  }
   const capMaxWrap = document.getElementById('setupVolCapacidadMaxWrap');
-  if (capMaxWrap) capMaxWrap.style.display = setupTipoInstalacion === 'dwc' ? 'none' : '';
+  if (capMaxWrap) capMaxWrap.style.display = (setupTipoInstalacion === 'dwc' || isRdwc) ? 'none' : '';
   const dwcCapHint = document.getElementById('setupDwcCapacidadEstimada');
   if (dwcCapHint && setupTipoInstalacion !== 'dwc') {
     dwcCapHint.classList.add('setup-hidden');
@@ -1064,6 +1329,17 @@ function textoResumenSistemaDwcPanel(cfg) {
   return line;
 }
 
+function textoResumenSistemaRdwcPanel(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'rdwc') return '';
+  const s = Math.max(2, parseInt(String(cfg.rdwcSites || 4), 10) || 4);
+  const r = Math.max(1, parseInt(String(cfg.rdwcRows || 1), 10) || 1);
+  const b = Math.max(5, Math.round(Number(cfg.rdwcBucketVolL || 20)));
+  const v = Math.max(10, Math.round(Number(cfg.rdwcControlVolL || 40)));
+  const q = Math.max(200, Math.round(Number(cfg.rdwcRecirculationLh || 1200)));
+  const air = Math.max(1, Math.round(Number(cfg.rdwcAirLpm || 20)));
+  return s + ' sitios · ' + r + ' fila(s) · cubo ' + b + ' L · depósito ' + v + ' L · recirc ' + q + ' L/h · aire ' + air + ' L/min';
+}
+
 function applySistemaTipoPanelesColapsablesUI() {
   const cfg = state.configTorre;
   const nftCard = document.getElementById('sistemaNftMontajeCard');
@@ -1080,8 +1356,8 @@ function applySistemaTipoPanelesColapsablesUI() {
   const dwcBtn = document.getElementById('btnToggleSistemaDwc');
   const dwcBody = document.getElementById('sistemaDwcAyudaBody');
   const dwcRes = document.getElementById('sistemaDwcResumen');
-  if (dwcCard && dwcBtn && dwcBody && cfg && cfg.tipoInstalacion === 'dwc' && dwcCard.style.display === 'block') {
-    if (dwcRes) dwcRes.textContent = textoResumenSistemaDwcPanel(cfg);
+  if (dwcCard && dwcBtn && dwcBody && cfg && (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc') && dwcCard.style.display === 'block') {
+    if (dwcRes) dwcRes.textContent = cfg.tipoInstalacion === 'rdwc' ? textoResumenSistemaRdwcPanel(cfg) : textoResumenSistemaDwcPanel(cfg);
     const colD = cfg.uiSistemaDwcColapsado === true;
     dwcBody.hidden = colD;
     dwcBtn.setAttribute('aria-expanded', colD ? 'false' : 'true');
@@ -1097,7 +1373,10 @@ function toggleSistemaNftMontajePanel() {
 }
 
 function toggleSistemaDwcPanel() {
-  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') return;
+  if (
+    !state.configTorre ||
+    (state.configTorre.tipoInstalacion !== 'dwc' && state.configTorre.tipoInstalacion !== 'rdwc')
+  ) return;
   state.configTorre.uiSistemaDwcColapsado = !state.configTorre.uiSistemaDwcColapsado;
   guardarEstadoTorreActual();
   saveState();
@@ -1184,6 +1463,107 @@ function syncSistemaEcPhStrategyUI() {
   }
 }
 
+function syncSistemaRdwcDesdeConfig(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  const map = {
+    sysRdwcSites: c.rdwcSites,
+    sysRdwcRows: c.rdwcRows,
+    sysRdwcBucketVolL: c.rdwcBucketVolL,
+    sysRdwcControlVolL: c.rdwcControlVolL,
+    sysRdwcRecirculationLh: c.rdwcRecirculationLh,
+    sysRdwcAirLpm: c.rdwcAirLpm,
+    sysRdwcNetPotMm: c.rdwcNetPotMm,
+    sysRdwcCenterSpacingCm: c.rdwcCenterSpacingCm,
+    sysRdwcTempObjetivoC: c.rdwcTempObjetivoC,
+  };
+  Object.keys(map).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = map[id] != null ? String(map[id]) : '';
+  });
+  const l = document.getElementById('sysRdwcLayout');
+  if (l) l.value = c.rdwcLayout || 'line';
+  bindRdwcCompatLive('sys');
+  renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
+}
+
+function applySetupRdwcDesdeFormulario() {
+  const c = state.configTorre || (state.configTorre = {});
+  c.tipoInstalacion = 'rdwc';
+  const gNum = (id, fb) => {
+    const el = document.getElementById(id);
+    const n = parseFloat(String(el && el.value || '').replace(',', '.'));
+    return Number.isFinite(n) ? n : fb;
+  };
+  c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum('setupRdwcSites', c.rdwcSites || 4))));
+  c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum('setupRdwcRows', c.rdwcRows || 1))));
+  c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum('setupRdwcBucketVolL', c.rdwcBucketVolL || 20)));
+  c.rdwcControlVolL = Math.max(10, Math.min(800, gNum('setupRdwcControlVolL', c.rdwcControlVolL || 40)));
+  c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
+  c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('setupRdwcAirLpm', c.rdwcAirLpm || 20)));
+  c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum('setupRdwcNetPotMm', c.rdwcNetPotMm || 125))));
+  c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum('setupRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
+  c.numNiveles = c.rdwcRows;
+  c.numCestas = Math.max(1, Math.ceil(c.rdwcSites / c.rdwcRows));
+  c.volDeposito = Math.round(c.rdwcControlVolL);
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  renderRdwcCompatStatus(c, 'setupRdwcCompatStatus');
+}
+
+function syncSetupRdwcFieldsDesdeConfig(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  const map = {
+    setupRdwcSites: c.rdwcSites,
+    setupRdwcRows: c.rdwcRows,
+    setupRdwcBucketVolL: c.rdwcBucketVolL,
+    setupRdwcControlVolL: c.rdwcControlVolL,
+    setupRdwcRecirculationLh: c.rdwcRecirculationLh,
+    setupRdwcAirLpm: c.rdwcAirLpm,
+    setupRdwcNetPotMm: c.rdwcNetPotMm,
+    setupRdwcCenterSpacingCm: c.rdwcCenterSpacingCm,
+  };
+  Object.keys(map).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = map[id] != null ? String(map[id]) : '';
+  });
+  bindRdwcCompatLive('setup');
+  renderRdwcCompatStatus(c, 'setupRdwcCompatStatus');
+}
+
+function aplicarSistemaRdwcDesdeFormulario() {
+  const c = state.configTorre || (state.configTorre = {});
+  c.tipoInstalacion = 'rdwc';
+  const gNum = (id, fb) => {
+    const el = document.getElementById(id);
+    const n = parseFloat(String(el && el.value || '').replace(',', '.'));
+    return Number.isFinite(n) ? n : fb;
+  };
+  c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum('sysRdwcSites', c.rdwcSites || 4))));
+  c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum('sysRdwcRows', c.rdwcRows || 1))));
+  c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum('sysRdwcBucketVolL', c.rdwcBucketVolL || 20)));
+  c.rdwcControlVolL = Math.max(10, Math.min(800, gNum('sysRdwcControlVolL', c.rdwcControlVolL || 40)));
+  c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
+  c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('sysRdwcAirLpm', c.rdwcAirLpm || 20)));
+  c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum('sysRdwcNetPotMm', c.rdwcNetPotMm || 125))));
+  c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum('sysRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
+  c.rdwcTempObjetivoC = Math.max(10, Math.min(30, gNum('sysRdwcTempObjetivoC', c.rdwcTempObjetivoC || 19)));
+  const lay = document.getElementById('sysRdwcLayout');
+  c.rdwcLayout = lay && lay.value ? lay.value : (c.rdwcLayout || 'line');
+  c.numNiveles = c.rdwcRows;
+  c.numCestas = Math.max(1, Math.ceil(c.rdwcSites / c.rdwcRows));
+  c.volDeposito = Math.round(c.rdwcControlVolL);
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try { actualizarHeaderTorre(); } catch (_) {}
+  try { actualizarBadgesNutriente(); } catch (_) {}
+  try { updateDashboard(); } catch (_) {}
+  renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
+  showToast('✅ Datos RDWC guardados');
+}
+
 function sincronizarSistemaNftMontajeUI() {
   const card = document.getElementById('sistemaNftMontajeCard');
   const dwcInfo = document.getElementById('sistemaDwcAyudaCard');
@@ -1205,12 +1585,29 @@ function sincronizarSistemaNftMontajeUI() {
     }
   }
   if (dwcInfo) {
-    if (cfg && cfg.tipoInstalacion === 'dwc') {
+    if (cfg && (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc')) {
       dwcInfo.style.display = 'block';
-      syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
-      try {
-        refreshDwcSistemaMedidasUI();
-      } catch (eDwcHint) {}
+      const rdwcBloque = document.getElementById('sistemaRdwcBloque');
+      const dwcBodyHost = document.getElementById('sistemaDwcAyudaBody');
+      if (cfg.tipoInstalacion === 'rdwc') {
+        if (rdwcBloque) rdwcBloque.classList.remove('setup-hidden');
+        if (dwcBodyHost) {
+          Array.from(dwcBodyHost.children).forEach(ch => {
+            if (rdwcBloque && ch === rdwcBloque) return;
+            ch.classList.add('setup-hidden');
+          });
+        }
+        syncSistemaRdwcDesdeConfig(cfg);
+      } else {
+        if (rdwcBloque) rdwcBloque.classList.add('setup-hidden');
+        if (dwcBodyHost) {
+          Array.from(dwcBodyHost.children).forEach(ch => ch.classList.remove('setup-hidden'));
+        }
+        syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
+        try {
+          refreshDwcSistemaMedidasUI();
+        } catch (eDwcHint) {}
+      }
     } else {
       dwcInfo.style.display = 'none';
     }

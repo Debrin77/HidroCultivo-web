@@ -459,7 +459,7 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
 /** Torre vertical con giro 3D; NFT y DWC usan diagramas propios. */
 function torreSvgEsTorreVerticalGiratoria() {
   const t = state.configTorre?.tipoInstalacion;
-  return t !== 'nft' && t !== 'dwc';
+  return t !== 'nft' && t !== 'dwc' && t !== 'rdwc';
 }
 
 /** L/A/P del depósito DWC guardados (solo dibujo / proporciones). */
@@ -983,6 +983,78 @@ function generarSVGDwc() {
   );
 }
 
+/**
+ * RDWC: vista simplificada de módulos conectados + depósito de control.
+ * Incluye cestas tocables (clase hc-cesta) para reutilizar ficha/lista.
+ */
+function generarSVGRdwc() {
+  const cfg = state.configTorre || {};
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
+  const rows = Math.max(1, Math.min(4, parseInt(String(cfg.rdwcRows || 1), 10) || 1));
+  const sites = Math.max(2, Math.min(64, parseInt(String(cfg.rdwcSites || 4), 10) || 4));
+  const cols = Math.max(1, Math.ceil(sites / rows));
+  const w = 400;
+  const h = 540;
+  const left = 30;
+  const top = 70;
+  const blockW = 280;
+  const blockH = 240;
+  const cw = blockW / Math.max(1, cols);
+  const ch = blockH / Math.max(1, rows);
+  const rPot = Math.max(10, Math.min(19, Math.min(cw, ch) * 0.28));
+  const tankX = 78;
+  const tankY = 350;
+  const tankW = 244;
+  const tankH = 110;
+  const volMax = getVolumenDepositoMaxLitros(cfg);
+  const volMez = getVolumenMezclaLitros(cfg);
+  const pct = Number.isFinite(volMax) && Number.isFinite(volMez) && volMax > 0
+    ? Math.max(0, Math.min(1, volMez / volMax))
+    : 0.6;
+  const waterY = tankY + tankH - Math.round(tankH * pct);
+  let s = `<svg viewBox="0 0 ${w} ${h}" class="torre-svg" role="img" aria-label="RDWC: módulos conectados con recirculación y depósito de control">`;
+  s += `<defs>
+    <linearGradient id="rdwcWater" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>`;
+  s += `<text x="${w / 2}" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937">RDWC · Recirculación continua</text>`;
+  s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="14" fill="#f8fafc" stroke="#cbd5e1"/>`;
+  s += `<text x="${left + 8}" y="${top - 8}" font-size="11" fill="#475569">Módulos de cultivo conectados</text>`;
+  for (let rn = 0; rn < rows; rn++) {
+    const y = top + (rn + 0.5) * ch;
+    s += `<line x1="${left + 10}" y1="${y}" x2="${left + blockW - 10}" y2="${y}" stroke="#60a5fa" stroke-width="2.2" stroke-dasharray="5 4"/>`;
+    for (let c = 0; c < cols; c++) {
+      const idx = rn * cols + c;
+      if (idx >= sites) continue;
+      const x = left + (c + 0.5) * cw;
+      const dat = state.torre && state.torre[rn] && state.torre[rn][c] ? state.torre[rn][c] : null;
+      const has = !!(dat && dat.variedad);
+      const fill = has ? '#dcfce7' : '#eef2ff';
+      const stroke = has ? '#15803d' : '#6366f1';
+      s += `<g data-n="${rn}" data-c="${c}" class="hc-cesta hc-cesta--interactive" role="button" tabindex="0" aria-label="Módulo fila ${rn + 1} sitio ${c + 1}">`;
+      s += `<circle cx="${x}" cy="${y}" r="${rPot}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+      s += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="10" font-weight="700" fill="#334155">${c + 1}</text>`;
+      s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.6).toFixed(1)}" fill="transparent" class="hc-cesta-hit" pointer-events="all"/>`;
+      s += `</g>`;
+    }
+  }
+  s += `<path d="M ${left + blockW - 6} ${top + blockH + 8} L ${left + blockW - 6} ${tankY - 12} L ${tankX + tankW - 10} ${tankY - 12}"
+      stroke="#0ea5e9" stroke-width="3" fill="none"/>`;
+  s += `<path d="M ${tankX + 10} ${tankY - 24} L ${left + 8} ${tankY - 24} L ${left + 8} ${top + 12}"
+      stroke="#38bdf8" stroke-width="3" fill="none" stroke-dasharray="7 5"/>`;
+  s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="12" fill="#e2e8f0" stroke="#64748b"/>`;
+  s += `<rect x="${tankX + 6}" y="${waterY}" width="${tankW - 12}" height="${tankY + tankH - waterY - 6}" rx="8" fill="url(#rdwcWater)" opacity="0.88"/>`;
+  s += `<text x="${w / 2}" y="${tankY - 34}" text-anchor="middle" font-size="11" fill="#0369a1">Retorno</text>`;
+  s += `<text x="${w / 2}" y="${tankY - 16}" text-anchor="middle" font-size="11" fill="#0284c7">Impulsión</text>`;
+  s += `<text x="${w / 2}" y="${tankY + 20}" text-anchor="middle" font-size="12" font-weight="700" fill="#334155">Depósito de control</text>`;
+  s += `<text x="${w / 2}" y="${tankY + 38}" text-anchor="middle" font-size="11" fill="#475569">Volumen trabajo: ${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L' : '—'}</text>`;
+  s += `<text x="${w / 2}" y="${tankY + 56}" text-anchor="middle" font-size="11" fill="#475569">Recirculación: ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire: ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
+  s += `</svg>`;
+  return s;
+}
+
 function generarSVGTorre() {
   // Usar configuración REAL de la torre activa
   const cfg = state.configTorre || {};
@@ -1446,6 +1518,7 @@ function actualizarBarraMultiSel() {
   bar.style.display = multiMode ? 'flex' : 'none';
   const esNft = state.configTorre?.tipoInstalacion === 'nft';
   const esDwc = state.configTorre?.tipoInstalacion === 'dwc';
+  const esRdwc = state.configTorre?.tipoInstalacion === 'rdwc';
   const hintQuitar = ' · 2.º toque = quitar';
   cnt.textContent =
     n === 0
@@ -1453,10 +1526,12 @@ function actualizarBarraMultiSel() {
         ? 'Toca huecos en el esquema NFT o en Lista (marca ámbar)' + hintQuitar
         : esDwc
           ? 'Toca macetas en el esquema DWC o en Lista (marca ámbar)' + hintQuitar
-          : 'Toca cestas en la torre o en Lista (marca ámbar)' + hintQuitar)
+          : esRdwc
+            ? 'Toca módulos RDWC en el esquema o en Lista (marca ámbar)' + hintQuitar
+            : 'Toca cestas en la torre o en Lista (marca ámbar)' + hintQuitar)
       : n === 1
-        ? (esNft ? '1 hueco seleccionado' + hintQuitar : esDwc ? '1 maceta seleccionada' + hintQuitar : '1 cesta seleccionada' + hintQuitar)
-        : (esNft ? n + ' huecos seleccionados' + hintQuitar : esDwc ? n + ' macetas seleccionadas' + hintQuitar : n + ' cestas seleccionadas' + hintQuitar);
+        ? (esNft ? '1 hueco seleccionado' + hintQuitar : esDwc ? '1 maceta seleccionada' + hintQuitar : esRdwc ? '1 módulo seleccionado' + hintQuitar : '1 cesta seleccionada' + hintQuitar)
+        : (esNft ? n + ' huecos seleccionados' + hintQuitar : esDwc ? n + ' macetas seleccionadas' + hintQuitar : esRdwc ? n + ' módulos seleccionados' + hintQuitar : n + ' cestas seleccionadas' + hintQuitar);
   if (btnAplicar) {
     btnAplicar.disabled = n === 0;
     btnAplicar.style.opacity = n === 0 ? '0.55' : '1';
@@ -1472,23 +1547,26 @@ function sincronizarTextosPanelInteraccionSistema() {
   const t = tipoInstalacionNormalizado(state.configTorre);
   const esNft = t === 'nft';
   const esDwc = t === 'dwc';
+  const esRdwc = t === 'rdwc';
   const tit = document.getElementById('torreInteraccionTitulo');
   const modRap = document.getElementById('torreAssignModoRapidoTxt');
   const finHint = document.getElementById('torreAssignFinalizarHint');
   const btnUpd = document.getElementById('btnActualizarInstalacionSistema');
   if (tit) {
     tit.textContent = esNft ? 'Huecos en el sistema NFT'
-      : esDwc ? 'Macetas en el DWC' : 'Cestas en la torre vertical';
+      : esDwc ? 'Macetas en el DWC' : esRdwc ? 'Módulos en el RDWC' : 'Cestas en la torre vertical';
   }
   if (btnUpd) {
     btnUpd.textContent = esNft ? '🔄 Actualizar NFT'
-      : esDwc ? '🔄 Actualizar DWC' : '🔄 Actualizar torre';
+      : esDwc ? '🔄 Actualizar DWC' : esRdwc ? '🔄 Actualizar RDWC' : '🔄 Actualizar torre';
   }
   if (modRap) {
     modRap.textContent = esNft
       ? 'Modo rápido: un toque = asignar ese hueco al instante'
       : esDwc
         ? 'Modo rápido: un toque = asignar esa maceta al instante'
+        : esRdwc
+          ? 'Modo rápido: un toque = asignar ese módulo al instante'
         : 'Modo rápido: un toque = asignar esa cesta al instante';
   }
   if (finHint) {
@@ -1496,6 +1574,8 @@ function sincronizarTextosPanelInteraccionSistema() {
       ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar NFT</strong> arriba si hace falta.'
       : esDwc
         ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar DWC</strong> arriba si hace falta.'
+        : esRdwc
+          ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar RDWC</strong> arriba si hace falta.'
         : 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar torre</strong> arriba si hace falta.';
   }
 }
@@ -1510,17 +1590,22 @@ function actualizarTorreAssignAyuda() {
   const t = tipoInstalacionNormalizado(state.configTorre);
   const esNft = t === 'nft';
   const esDwc = t === 'dwc';
+  const esRdwc = t === 'rdwc';
   if (torreAsignarInstantaneo) {
     el.innerHTML = esNft
       ? 'Cultivo y fecha → <strong>tocar huecos</strong> (o Lista) rellena al momento. Luego <strong>Finalizar asignación</strong>.'
       : esDwc
         ? 'Cultivo y fecha → <strong>tocar macetas</strong> (o Lista) rellena al momento. Luego <strong>Finalizar asignación</strong>.'
+        : esRdwc
+          ? 'Cultivo y fecha → <strong>tocar módulos</strong> RDWC (o Lista) rellena al momento. Luego <strong>Finalizar asignación</strong>.'
         : 'Cultivo y fecha → <strong>tocar cestas</strong> visibles (gira la torre si hace falta). Luego <strong>Finalizar asignación</strong>.';
   } else {
     el.innerHTML = esNft
       ? 'Marca varios <strong>huecos</strong> (marca ámbar en esquema o lista). <strong>Vuelve a tocar</strong> uno marcado para quitarlo. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
       : esDwc
         ? 'Marca varias <strong>macetas</strong> (marca ámbar). <strong>Vuelve a tocar</strong> una marcada para quitarla. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
+        : esRdwc
+          ? 'Marca varios <strong>módulos RDWC</strong> (marca ámbar). <strong>Vuelve a tocar</strong> uno marcado para quitarlo. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
         : 'Marca <strong>cestas</strong> (marca ámbar en maqueta o lista). <strong>Vuelve a tocar</strong> una marcada para quitarla. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.';
   }
 }
@@ -2021,7 +2106,7 @@ function finalizarAsignacionCultivos() {
     renderCalendario();
   }
   const tFin = tipoInstalacionNormalizado(state.configTorre);
-  const pieFin = tFin === 'nft' ? 'huecos NFT' : tFin === 'dwc' ? 'macetas DWC' : 'cestas';
+  const pieFin = tFin === 'nft' ? 'huecos NFT' : tFin === 'dwc' ? 'macetas DWC' : tFin === 'rdwc' ? 'módulos RDWC' : 'cestas';
   showToast('✅ Asignación finalizada · modo edición (' + pieFin + ')');
   try {
     if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
@@ -2033,6 +2118,7 @@ function actualizarChromePanelEsquemaPorTipo() {
   const cfg = state.configTorre || {};
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esRdwc = cfg.tipoInstalacion === 'rdwc';
   const intro = document.getElementById('torreEsquemaSub');
   if (intro) {
     if (esNft) {
@@ -2046,6 +2132,9 @@ function actualizarChromePanelEsquemaPorTipo() {
     } else if (esDwc) {
       intro.innerHTML =
         '<strong>DWC</strong>: tapa arriba, depósito abajo. <strong>Toca maceta</strong> o usa <strong>Lista</strong>.';
+    } else if (esRdwc) {
+      intro.innerHTML =
+        '<strong>RDWC</strong>: módulos conectados con <strong>impulsión/retorno</strong> y depósito de control. <strong>Toca módulo</strong> o usa <strong>Lista</strong>.';
     } else {
       intro.innerHTML =
         '<strong>Torre</strong> (maqueta): <strong>flechas o deslizar</strong> para girar; <strong>Lista</strong> para ver todas las cestas.';
@@ -2067,6 +2156,14 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<span class="k-niv">Filas</span>' +
         '<span class="k-sep">·</span>' +
         '<span class="k-ces">Macetas</span>' +
+        '<span class="k-hint"> · tocar</span>';
+    } else if (esRdwc) {
+      leg.innerHTML =
+        '<span class="k-dep">Depósito control</span>' +
+        '<span class="k-sep">·</span>' +
+        '<span class="k-niv">Filas</span>' +
+        '<span class="k-sep">·</span>' +
+        '<span class="k-ces">Módulos</span>' +
         '<span class="k-hint"> · tocar</span>';
     } else {
       leg.innerHTML =

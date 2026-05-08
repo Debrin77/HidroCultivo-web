@@ -1389,6 +1389,23 @@
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div id="sistemaDwcAyudaBody" class="torre-dwc-inner torre-sistema-panel-body">
+          <div id="sistemaRdwcBloque" class="setup-hidden">
+            <p class="torre-nft-p">RDWC: módulos conectados con recirculación continua y retorno al depósito de control.</p>
+            <div class="torre-dwc-grid-2">
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcSites">Sitios/cubos</label><input type="number" id="sysRdwcSites" class="torre-dwc-input" min="2" max="64" step="1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRows">Filas</label><input type="number" id="sysRdwcRows" class="torre-dwc-input" min="1" max="4" step="1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketVolL">Litros por cubo</label><input type="number" id="sysRdwcBucketVolL" class="torre-dwc-input" min="5" max="200" step="0.5"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlVolL">Depósito control (L)</label><input type="number" id="sysRdwcControlVolL" class="torre-dwc-input" min="10" max="800" step="0.5"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRecirculationLh">Recirculación (L/h)</label><input type="number" id="sysRdwcRecirculationLh" class="torre-dwc-input" min="200" max="12000" step="10"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcAirLpm">Aireación (L/min)</label><input type="number" id="sysRdwcAirLpm" class="torre-dwc-input" min="1" max="300" step="1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotMm">Diám. cesta (mm)</label><input type="number" id="sysRdwcNetPotMm" class="torre-dwc-input" min="40" max="200" step="1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="sysRdwcCenterSpacingCm" class="torre-dwc-input" min="20" max="150" step="1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcTempObjetivoC">Temp objetivo (°C)</label><input type="number" id="sysRdwcTempObjetivoC" class="torre-dwc-input" min="10" max="30" step="0.1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcLayout">Layout</label><select id="sysRdwcLayout" class="torre-dwc-input"><option value="line">Línea</option><option value="double_row">Doble fila</option><option value="u_shape">U</option></select></div>
+            </div>
+            <p id="sysRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
+            <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaRdwcDesdeFormulario()">Guardar datos RDWC</button>
+          </div>
           <div class="torre-dwc-grid-3" id="sysDwcMedidasRow">
             <div id="sysDwcMedidasLAWrap" class="torre-dwc-medidas-span2">
               <div>
@@ -2584,8 +2601,8 @@
     <div class="setup-page active" id="spage0">
       <div class="setup-title">Configura tu instalación</div>
       <div class="setup-subtitle">
-        Elige el tipo de sistema: <strong>torre vertical</strong>, <strong>NFT</strong> o <strong>DWC</strong> (cultivo en agua profunda oxigenada).
-        Cada uno guarda geometría, nutrientes y <strong>checklist de recarga</strong> (NFT: canales y película; DWC: bomba de aire y depósito único).
+        Elige el tipo de sistema: <strong>torre vertical</strong>, <strong>NFT</strong>, <strong>DWC</strong> o <strong>RDWC</strong> (recirculación continua entre módulos).
+        Cada uno guarda geometría, nutrientes y <strong>checklist de recarga</strong> (NFT: canales y película; DWC: depósito único; RDWC: recirculación + retorno).
         Puedes tener <strong>varias instalaciones mezclando tipos</strong> (por ejemplo 3 NFT en 3 pueblos, o 4 torres en el mismo balcón): cada una es independiente y guarda <strong>su municipio y clima</strong>. Cambia de activa en Inicio o Sistema.
       </div>
 
@@ -2612,6 +2629,13 @@
             <div class="setup-tipo-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bubbles"/></svg></div>
             <div class="setup-tipo-name">DWC</div>
             <div class="setup-tipo-hint">Agua profunda + aire</div>
+          </button>
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupCardTipoRdwc"
+            onclick="seleccionarTipoInstalacionSetup('rdwc')"
+            aria-pressed="false" aria-label="RDWC: módulos conectados con recirculación y retorno">
+            <div class="setup-tipo-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-layout"/></svg></div>
+            <div class="setup-tipo-name">RDWC</div>
+            <div class="setup-tipo-hint">Recirculación continua</div>
           </button>
         </div>
       </div>
@@ -2642,6 +2666,9 @@
           <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupInlineTipoDwc"
             onclick="seleccionarTipoInstalacionSetup('dwc')"
             aria-pressed="false" aria-label="DWC"><span class="setup-inline-tipo-ico" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-bubbles"/></svg></span> DWC</button>
+          <button type="button" class="equip-card setup-tipo-instalacion-card" id="setupInlineTipoRdwc"
+            onclick="seleccionarTipoInstalacionSetup('rdwc')"
+            aria-pressed="false" aria-label="RDWC"><span class="setup-inline-tipo-ico" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-layout"/></svg></span> RDWC</button>
         </div>
       </div>
 
@@ -2692,6 +2719,22 @@
         <p class="setup-dwc-help">
           Mismos campos que en <strong>Sistema</strong>. Explicación y <strong>tabla de tamaños de cesta</strong>: <strong>Consejos → DWC</strong>.
         </p>
+        <div id="setupRdwcDetalleWrap" class="setup-hidden">
+          <div class="setup-dwc-title">RDWC</div>
+          <p class="setup-dwc-help">Recirculación continua entre cubos + depósito de control. Define parámetros base del circuito.</p>
+          <div class="setup-dwc-grid-2">
+            <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcControlVolL">Depósito control (L)</label><input type="number" id="setupRdwcControlVolL" class="setup-dwc-input" min="10" max="800" step="0.5" placeholder="40"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcRecirculationLh">Bomba recirculación (L/h)</label><input type="number" id="setupRdwcRecirculationLh" class="setup-dwc-input" min="200" max="12000" step="10" placeholder="1200"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcAirLpm">Aireación total (L/min)</label><input type="number" id="setupRdwcAirLpm" class="setup-dwc-input" min="1" max="300" step="1" placeholder="20"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm">Diám. cesta (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="setupRdwcCenterSpacingCm" class="setup-dwc-input" min="20" max="150" step="1" placeholder="45"></div>
+          </div>
+          <p id="setupRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
+        </div>
+        <div id="setupDwcSoloBloque">
         <div class="setup-dwc-grid-3" id="setupDwcMedidasRow">
           <div id="setupDwcMedidasLAWrap" class="setup-dwc-medidas-span2">
             <div>
@@ -2827,6 +2870,7 @@
             onchange="try{actualizarResumenSetup()}catch(e){}">
           <span>Entrada de manguera de aire (tapa o borde)</span>
         </label>
+        </div>
       </div>
 
       <div id="setupNftBuilderWrap" class="setup-hidden">

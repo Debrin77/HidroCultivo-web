@@ -149,10 +149,12 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
       const titPrimer =
         tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
         : tCh === 'dwc' ? (esKratkyTit ? '🫧 Primer llenado Kratky — checklist' : '🫧 Primer llenado DWC — checklist')
+        : tCh === 'rdwc' ? '🔁 Primer llenado RDWC — checklist'
         : '🌿 Primer llenado — torre vertical — checklist';
       const titRecarga =
         tCh === 'nft' ? '🪴 Recarga NFT — checklist'
         : tCh === 'dwc' ? (esKratkyTit ? '🫧 Recarga Kratky — checklist' : '🫧 Recarga DWC — checklist')
+        : tCh === 'rdwc' ? '🔁 Recarga RDWC — checklist'
         : '🌿 Recarga — torre vertical — checklist';
       if (clRutaChecklist === 'primer_llenado') {
         clTit.textContent = titPrimer;
@@ -346,9 +348,10 @@ function construirTextoChecklistPreliminar() {
   }
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esRdwc = cfg.tipoInstalacion === 'rdwc';
   const esDwcK =
     esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
-  const esTorre = !esNft && !esDwc;
+  const esTorre = !esNft && !esDwc && !esRdwc;
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
     p1Partes.join(' + ') + '. Remover bien.' +
     (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '') +
@@ -384,7 +387,7 @@ function checklistInstalacionCompletaParaRecarga() {
   if (Number.isFinite(vm) && vm > 0 && (vm > vol + 0.01 || vm < 0.5)) return false;
   if (!cfg.nutriente || !NUTRIENTES_DB.some(n => n.id === cfg.nutriente)) return false;
   const tipo = cfg.tipoInstalacion;
-  if (tipo !== 'torre' && tipo !== 'nft' && tipo !== 'dwc') return false;
+  if (tipo !== 'torre' && tipo !== 'nft' && tipo !== 'dwc' && tipo !== 'rdwc') return false;
 
   if (cfg.checklistInstalacionConfirmada === true) return true;
 
@@ -394,7 +397,7 @@ function checklistInstalacionCompletaParaRecarga() {
   if (hayUso) return true;
 
   // DWC: depósito y nutriente ya guardados en Sistema (sin medición previa ni plantas) — permitir checklist
-  if (cfg.tipoInstalacion === 'dwc') {
+  if (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc') {
     const cap =
       typeof getDwcCapacidadLitrosDesdeConfig === 'function'
         ? getDwcCapacidadLitrosDesdeConfig(cfg)
@@ -792,7 +795,7 @@ function getCLPasos() {
     { id: 'PC1', seccion: '⚙️ Depósito, agua y nutriente', paso: 'PC·1',
       desc: 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.',
       nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Sistema</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.' +
-        (esDwc
+        (esDwc || esRdwc
           ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Sistema / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
           : ''),
       extraHtml:
@@ -915,6 +918,56 @@ function getCLPasos() {
           nota: 'Objetivo práctico: agua fresca (ideal 17–21°C, evitar >22°C sostenidos) y reposición sin sobrellenar (0,5–1 cm por debajo de base del sustrato).',
         }]
       : []);
+  const pasosRdwcCore = esRdwc
+    ? [
+        {
+          id: 'R0',
+          seccion: '🔁 RDWC — Recirculación y retorno',
+          paso: 'R·0',
+          desc: 'Validar línea de impulsión y retorno en todos los módulos antes de cerrar recarga.',
+          nota: 'Revisa caudal homogéneo por sitio, sin sifonados invertidos ni puntos muertos en retornos.',
+        },
+        {
+          id: 'R0b',
+          seccion: null,
+          paso: 'R·0b',
+          desc: 'Purgar aire en tramos altos y confirmar unión estanca en codos/racores.',
+          nota: 'Sin goteos visibles en 5-10 min de recirculación continua.',
+        },
+        {
+          id: 'R0c',
+          seccion: null,
+          paso: 'R·0c',
+          desc: 'Aireación y temperatura: comprobar burbujeo uniforme y objetivo térmico en depósito de control.',
+          nota: (function () {
+            const comp =
+              typeof rdwcEvaluarCompatConfig === 'function' ? rdwcEvaluarCompatConfig(cfg) : null;
+            const chip = typeof clEstadoChipHtml === 'function'
+              ? clEstadoChipHtml(comp ? comp.globalEstado : 'warn')
+              : '';
+            const base = 'Objetivo recomendado 18-21 °C en agua; si sube, prioriza sombreo/aislamiento del circuito.';
+            if (!comp) return base;
+            return (
+              base +
+              ' Compatibilidad actual ' +
+              chip +
+              ' · cesta ' +
+              comp.netPotRecoMm +
+              ' · cubo ' +
+              comp.bucketRecoL +
+              ' · separación ' +
+              comp.spacingRecoCm +
+              '.'
+            );
+          })(),
+          postCamposHtml:
+            '<div class="cl-rdwc-actions">' +
+            '<button type="button" class="btn" onclick="if(typeof aplicarRdwcRecomendacionBaseSistema===\'function\'){aplicarRdwcRecomendacionBaseSistema();}">Aplicar base RDWC ahora</button>' +
+            '<button type="button" class="btn btn-ghost" onclick="goTab(\'sistema\')">Ir a Sistema</button>' +
+            '</div>',
+        },
+      ]
+    : [];
 
   const pasosTorreObjetivo = esTorre
     ? [{
@@ -1201,13 +1254,14 @@ function getCLPasos() {
     ...(primerLlenado ? [...pasosConfigPrimerLlenado, ...pasosLimpiezaPrimerLlenado] : pasosCabeceraRecargaCompleta),
     ...pasosTorreObjetivo,
     ...pasosDwcOxigenacion,
+    ...pasosRdwcCore,
     ...pasoNftTuberiaRef,
     ...pasosNftExtra,
     ...(primerLlenado ? [] : pasosCubiertaDeposito),
 
   { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
     desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
-      (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : 'torre') +
+      (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : esRdwc ? 'depósito de control RDWC' : 'torre') +
       (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'),
     nota: primerLlenado
       ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.'
@@ -1224,6 +1278,8 @@ function getCLPasos() {
         ? (esDwcK
           ? 'Kratky: comprobar nivel estable, cámara de aire y ausencia de olores/espuma anómalos en el depósito'
           : 'Con el aireador en marcha (24 h): burbujeo uniforme en todo el depósito; sin zonas muertas ni ruido de succión en seco')
+        : esRdwc
+          ? 'Con recirculación activa: entrada/salida estable en todos los módulos; retorno limpio al depósito de control y sin descebe de bomba'
         : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
@@ -1234,6 +1290,8 @@ function getCLPasos() {
       ? (esDwcK
         ? 'Revisar cámara de aire y nivel (0,5–1 cm bajo base del sustrato); no sobrellenar'
         : 'Revisar difusores y caudal de aire (piedras porosas, obstrucciones, fugas en manguera)')
+      : esRdwc
+        ? 'Revisar retornos RDWC, nivel en depósito de control, difusores y ausencia de fugas en el anillo de recirculación'
       : esNft
         ? 'Revisar circuito y racores: película continua y sin fugas en alimentación o retornos'
         : 'Si el depósito lleva piedra o difusor de aire, encenderlo; si solo riegas por bomba, confirma circulación estable por la torre' },
@@ -1245,6 +1303,8 @@ function getCLPasos() {
   { id:'5.4', seccion:null, paso:'5.4',
     desc: esDwc
       ? (esDwcK ? 'Esperar 20 minutos con nivel estable antes de medir' : 'Esperar 20 minutos con el aireador en marcha antes de medir')
+      : esRdwc
+        ? 'Esperar 20 minutos con recirculación y aireación activas para estabilizar EC/pH y temperatura'
       : esNft
         ? 'Esperar unos minutos con la bomba en marcha hasta homogeneizar la mezcla en depósito y canales antes de medir'
         : 'Esperar ~20 min con bomba (y difusor de aire en depósito si lo usas) en marcha antes de medir',
@@ -1271,6 +1331,8 @@ function getCLPasos() {
       ? ('Película de agua visible en todos los canales; retorno limpio al depósito; sin ruidos de cavitación en la bomba')
       : esDwc
         ? 'Burbujeo estable; temperatura de agua razonable; depósito opaco y tapa bien cerrada'
+        : esRdwc
+          ? 'Recirculación cerrada estable; retorno por todos los módulos; depósito de control opaco y temperatura en rango'
         : ('Verificar que la bomba funciona y el agua circula por los ' + nNiv + ' niveles de la torre vertical') },
   ...(primerLlenado ? [] : [{
     id:'7.2', seccion:null, paso:'7.2',

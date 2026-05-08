@@ -130,6 +130,34 @@ function generarEventos(fecha) {
     }
   }
 
+  // ── Mantenimiento específico RDWC ───────────────────────────────────────
+  if (tCal === 'rdwc') {
+    if (diffDias >= 0 && diffDias % 7 === 0) {
+      eventos.push({
+        tipo: 'control',
+        icono: '🔁',
+        titulo: 'Revisión semanal de recirculación RDWC',
+        desc: 'Comprobar retorno por todos los módulos, limpiar prefiltro si aplica y verificar ausencia de fugas en racores/codos.',
+      });
+    }
+    if (diffDias >= 0 && diffDias % 14 === 0) {
+      eventos.push({
+        tipo: 'control',
+        icono: '💨',
+        titulo: 'Aireación RDWC',
+        desc: 'Inspeccionar difusores y mangueras de aire: burbujeo homogéneo, sin obstrucciones ni caída de caudal.',
+      });
+    }
+    if (diffDias >= 0 && diffDias % 28 === 0) {
+      eventos.push({
+        tipo: 'recarga',
+        icono: '🧪',
+        titulo: 'RDWC — valorar recambio parcial o total',
+        desc: 'Con 4 semanas de uso, revisar estabilidad EC/pH y decidir recambio parcial o recarga completa según deriva y carga radicular.',
+      });
+    }
+  }
+
   // ── Cosechas y rotación ───────────────────────────────────────────────
   const nivelesActivos = getNivelesActivos();
   nivelesActivos.forEach(n => {

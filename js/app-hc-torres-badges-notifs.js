@@ -12,12 +12,14 @@ function emojiMigracionPorTipoInstalacion(cfg) {
   if (!cfg || !cfg.tipoInstalacion) return '🌿';
   if (cfg.tipoInstalacion === 'nft') return '🪴';
   if (cfg.tipoInstalacion === 'dwc') return '🫧';
+  if (cfg.tipoInstalacion === 'rdwc') return '🧿';
   return '🌿';
 }
 
 function emojiSistemaUiPorTorre(t) {
   const cfg = t && t.config ? t.config : null;
   const tipo = tipoInstalacionNormalizado(cfg);
+  if (tipo === 'rdwc') return '🧿';
   if (tipo === 'dwc') return '🫧';
   if (tipo === 'nft') return '🪴';
   return (t && t.emoji) || '🌿';
@@ -553,6 +555,8 @@ function textoTipoInstalacionTorre(cfg) {
       ? 'NFT'
       : cfg && cfg.tipoInstalacion === 'dwc'
         ? 'DWC'
+        : cfg && cfg.tipoInstalacion === 'rdwc'
+          ? 'RDWC'
         : 'Torre vertical');
 }
 
@@ -608,6 +612,8 @@ function renderListaTorres() {
       ? ((cfgT.nftNumCanales || cfgT.numNiveles || 4) + ' canales × ' + (cfgT.nftHuecosPorCanal || cfgT.numCestas || 8) + ' huecos')
       : cfgT.tipoInstalacion === 'dwc'
         ? ((cfgT.numNiveles || 5) + ' filas × ' + (cfgT.numCestas || 5) + ' cestas')
+        : cfgT.tipoInstalacion === 'rdwc'
+          ? ((cfgT.rdwcRows || 1) + ' filas × ' + (cfgT.rdwcSites || 4) + ' sitios')
         : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
 
     return `<div class="torre-list-row${isActiva ? ' torre-list-row--active' : ''}">
@@ -619,7 +625,7 @@ function renderListaTorres() {
       <span class="torre-list-body">
         <span class="torre-list-name">${(t.nombre || '').trim() || 'Instalación'}</span>
         <span class="torre-list-meta">
-          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : cfgT.tipoInstalacion === 'dwc' ? '🫧 DWC · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
+          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : cfgT.tipoInstalacion === 'dwc' ? '🫧 DWC · ' : cfgT.tipoInstalacion === 'rdwc' ? '🧿 RDWC · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
           ${isActiva ? ' · <strong class="torre-list-active-tag">Activa</strong>' : ''}
         </span>
       </span>

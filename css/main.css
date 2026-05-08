@@ -12780,6 +12780,28 @@ button.toggle-switch:focus-visible {
   margin: 0 0 10px;
   line-height: 1.35;
 }
+.rdwc-compat-text {
+  display: block;
+  margin-bottom: 8px;
+}
+.rdwc-compat-btn {
+  border: 1px solid #7dd3fc;
+  background: #ecfeff;
+  color: #0c4a6e;
+  border-radius: 8px;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.rdwc-compat-btn:hover {
+  background: #cffafe;
+}
+.cl-rdwc-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
 .setup-dwc-grid-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

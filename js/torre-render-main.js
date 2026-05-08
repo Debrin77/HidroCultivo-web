@@ -5,6 +5,7 @@
 function renderTorre() {
   const cfg = state.configTorre || {};
   const esNft = cfg.tipoInstalacion === 'nft';
+  const esRdwc = cfg.tipoInstalacion === 'rdwc';
 
   const chk = document.getElementById('torreChkAnimSuaves');
   if (chk) chk.checked = state.configTorre?.torreAnimSvg !== false;
@@ -59,6 +60,15 @@ function renderTorre() {
     wrap.setAttribute(
       'aria-label',
       'DWC: tapa en vista superior con macetas y esquema frontal del depósito. Toca una maceta para la ficha o usa Lista.'
+    );
+    try {
+      bindTorreCestas(wrap);
+    } catch (e2) {}
+  } else if (esRdwc) {
+    wrap.innerHTML = generarSVGRdwc();
+    wrap.setAttribute(
+      'aria-label',
+      'RDWC: módulos conectados con recirculación y depósito de control. Toca un módulo para su ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
@@ -739,6 +749,7 @@ function updateTorreStats() {
   const volMez = getVolumenMezclaLitros(cfg);
   const esNftCfg = cfg.tipoInstalacion === 'nft';
   const esDwcCfg = cfg.tipoInstalacion === 'dwc';
+  const esRdwcCfg = cfg.tipoInstalacion === 'rdwc';
 
   // Título torre
   renderTablaVariedades();
@@ -759,6 +770,8 @@ function updateTorreStats() {
       depEl.textContent = pref + 'Depósito (capacidad y mezcla)';
     } else if (esDwcCfg) {
       depEl.textContent = pref + 'Depósito DWC (capacidad y mezcla)';
+    } else if (esRdwcCfg) {
+      depEl.textContent = pref + 'Depósito RDWC (control y recirculación)';
     } else {
       depEl.textContent = pref + 'Depósito (capacidad y mezcla)';
     }
@@ -769,6 +782,10 @@ function updateTorreStats() {
     if (esDwcCfg) {
       volHintEl.classList.add('setup-hidden');
       volHintEl.textContent = '';
+    } else if (esRdwcCfg) {
+      volHintEl.classList.remove('setup-hidden');
+      volHintEl.innerHTML =
+        'En RDWC usa litros de mezcla del depósito de control; la recirculación distribuye al resto de módulos.';
     } else {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
