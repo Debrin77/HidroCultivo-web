@@ -12827,6 +12827,16 @@ button.toggle-switch:focus-visible {
   font-size: 12px;
   line-height: 1.5;
 }
+#sysRdwcCalcStatus {
+  font-size: 12px;
+  line-height: 1.55;
+  color: #334155;
+  background: rgba(14, 116, 144, 0.08);
+  border: 1px solid rgba(14, 116, 144, 0.22);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+}
 #sistemaRdwcBloque .rdwc-compat-btn,
 #setupRdwcDetalleWrap .rdwc-compat-btn {
   font-size: 12px;
