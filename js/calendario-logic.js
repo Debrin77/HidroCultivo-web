@@ -284,30 +284,21 @@ function renderCalendario() {
     ? hcGetRecomendacionNutrienteContexto()
     : null;
   if (ctxNut && ctxNut.hayFruto && ctxNut.actual === 'veg' && fechaCambioNut) {
-    // Día objetivo exacto
-    if (fechaCambioNut.getMonth() === mes && fechaCambioNut.getFullYear() === año) {
-      addEvento(
-        fechaCambioNut.getDate(),
-        'nutriente',
-        '#7c3aed',
-        '🧪 Cambio sugerido a nutriente de floración/fruto'
-      );
-    }
-
-    // También marcar "hoy" cuando estamos en ventana próxima/retrasada para que sea visible en la vista mensual
-    const hoy0 = new Date();
-    hoy0.setHours(0, 0, 0, 0);
     const objetivo0 = new Date(fechaCambioNut);
     objetivo0.setHours(0, 0, 0, 0);
-    const diffHoy = Math.round((hoy0 - objetivo0) / 86400000);
-    if (diffHoy >= -10 && diffHoy <= 14 && hoy0.getMonth() === mes && hoy0.getFullYear() === año) {
-      const etiquetaHoy =
-        diffHoy > 0
+
+    // Marcar la ventana visible completa (10 días antes y 14 después),
+    // incluyendo el día objetivo exacto.
+    for (let off = -10; off <= 14; off++) {
+      const diaMarca = new Date(objetivo0.getTime() + off * 86400000);
+      if (diaMarca.getMonth() !== mes || diaMarca.getFullYear() !== año) continue;
+      const etiqueta =
+        off > 0
           ? '⚠️ Cambio de nutriente retrasado'
-          : diffHoy === 0
-            ? '🧪 Cambio de nutriente recomendado hoy'
+          : off === 0
+            ? '🧪 Día recomendado: cambio a floración/fruto'
             : '🧪 Cambio de nutriente próximo';
-      addEvento(hoy0.getDate(), 'nutriente', '#7c3aed', etiquetaHoy);
+      addEvento(diaMarca.getDate(), 'nutriente', '#7c3aed', etiqueta);
     }
   }
   if (ctxNut && ctxNut.hayFruto && ctxNut.actual === 'veg' && !fechaCambioNut) {

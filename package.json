@@ -32,6 +32,7 @@
     "esbuild": "^0.25.12"
   },
   "dependencies": {
-    "@capgo/capacitor-native-biometric": "^6.0.4"
+    "@capgo/capacitor-native-biometric": "^6.0.4",
+    "pdfkit": "^0.18.0"
   }
 }

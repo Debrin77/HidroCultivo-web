@@ -1748,24 +1748,24 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
     '<div class="tut-sheet tut-sheet--dim">' +
       '<div class="tut-handle"></div>' +
       '<div class="tut-head tut-head--tight">' +
-        '<div id="tutorialTorreTabTitulo" class="tut-title tut-title--lg">🌿 Tu sistema en HidroCultivo</div>' +
-        '<div class="tut-sub tut-sub--mt">Guía rápida de esta pantalla.</div>' +
+        '<div id="tutorialTorreTabTitulo" class="tut-title tut-title--lg">⚙️ Ayuda de Sistema</div>' +
+        '<div class="tut-sub tut-sub--mt">Resumen rápido de dónde está cada ajuste importante.</div>' +
       '</div>' +
       '<div class="tut-steps">' +
         '<div class="tut-callout tut-callout--green">' +
-          '<strong class="tut-strong-green">Resumen arriba</strong> · Plantas, días medios y cuántas van para cosecha.</div>' +
+          '<strong class="tut-strong-green">Instalación activa</strong> · Arriba eliges sistema (Torre/NFT/DWC), cambias nombre y ubicación.</div>' +
         '<div class="tut-callout tut-callout--blue">' +
-          '<strong class="tut-strong-blue">Modo de cultivo</strong> (Lechugas, Mixto…) adapta consejos generales; puedes cambiarlo cuando quieras.</div>' +
+          '<strong class="tut-strong-blue">Estrategia EC/pH</strong> · Aquí defines Auto o Manual y el nivel de intensidad para recomendaciones.</div>' +
         '<div class="tut-callout tut-callout--amber">' +
-          '<strong class="tut-strong-amber">Huecos del sistema</strong> · <em>Editar ficha</em> = detalle de cada planta. <em>Asignar cultivo</em> = rellenar muchos a la vez (tiene su propio tutorial).</div>' +
+          '<strong class="tut-strong-amber">Montaje por tipo</strong> · Si es NFT o DWC, revisa primero sus bloques de montaje/depósito y guarda.</div>' +
         '<div class="tut-callout tut-callout--muted">' +
-          '<strong>Esquema</strong> · <strong>Torre vertical</strong>: maqueta con giro y cestas de cara. <strong>NFT</strong>: canales y huecos. <strong>DWC</strong>: tapa y macetas. En todos puedes usar <strong>Lista</strong>. Animaciones fluidas según tipo en la barra inferior.</div>' +
+          '<strong>Fichas de plantas</strong> · Usa <em>Editar ficha</em> para variedad y fecha por hueco/maceta. Con fechas válidas, el calendario y las recomendaciones por fase serán precisos.</div>' +
       '</div>' +
       '<div class="tut-foot">' +
         '<button type="button" id="tutorialTorreTabOk" class="btn btn-primary tut-btn-sheet-primary">' +
-          'Entendido, continuar</button>' +
+          'Entendido</button>' +
         '<button type="button" id="tutorialTorreTabLuego" class="tut-btn-sheet-ghost">' +
-          'Ahora no</button>' +
+          'Cerrar</button>' +
       '</div></div>';
 
   const inner = overlay.querySelector('div');
