@@ -1212,6 +1212,76 @@ function cultivoEstadoChipHtml(estado) {
   return '<span class="cultivo-status-chip cultivo-status-chip--' + k + '">' + txt + '</span>';
 }
 
+function buildConsejoCambioNutrientePorFase() {
+  const cfg = state.configTorre || {};
+  const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+  const uso = nut && typeof hcNutrienteFaseUso === 'function' ? hcNutrienteFaseUso(nut) : 'unknown';
+  const usoTxtMap = { veg: 'VEG (crecimiento/hoja)', bloom: 'BLOOM (floración/fruto)', both: 'BOTH (todo el ciclo)', unknown: 'Sin clasificar' };
+  const usoTxt = usoTxtMap[uso] || usoTxtMap.unknown;
+  const agua = cfg.agua || state.configAgua || 'destilada';
+  const aguaBlanda = agua !== 'grifo';
+
+  const pares = [
+    ['Canna Aqua Vega A+B', 'Canna Aqua Flores A+B'],
+    ['Canna Hydro Vega A+B', 'Canna Hydro Flores A+B'],
+    ['Campeador Hoja A+B', 'Campeador Fruto A+B'],
+    ['VitaLink Hydro Max Grow A+B', 'VitaLink Hydro Max Bloom A+B'],
+    ['Green Planet Hydro Fuel Grow A/B', 'Green Planet Hydro Fuel Bloom A/B'],
+    ['Ionic Grow Hydro', 'Ionic Hydro Bloom'],
+    ['Hesi Hidro Crecimiento', 'Hesi Hydro Bloom'],
+    ['BioBizz Bio-Grow', 'BioBizz Bio-Bloom'],
+    ['Fox Farm Grow Big', 'Fox Farm Tiger Bloom'],
+  ];
+  const both = [
+    'Plagron Hydro A+B',
+    'Hy-Pro Hydro A+B',
+    'Mills Basis A/B',
+    "Atami B'cuzz Hydro A+B",
+    'GHE / Terra Aquatica Flora Series (3 partes)',
+    'Advanced Nutrients pH Perfect GMB (3 partes)',
+  ];
+
+  const paresRows = pares.map(p =>
+    '<tr><td>' + meteoEscHtml(p[0]) + '</td><td>→</td><td>' + meteoEscHtml(p[1]) + '</td></tr>'
+  ).join('');
+  const bothRows = both.map(n =>
+    '<tr><td colspan="3">' + meteoEscHtml(n) + '</td></tr>'
+  ).join('');
+
+  const guiaHtml =
+    '<p class="consejo-p consejo-p--mb10"><strong>Regla rápida:</strong> con cultivos de fruto, si empiezas con línea VEG cambia a BLOOM al entrar en <strong>prefloración</strong> (idealmente en la siguiente recarga completa). Con cultivos de hoja, prioriza base VEG.</p>' +
+    '<div class="consejo-ecph-wrap">' +
+      '<div class="consejo-titulo consejo-titulo--mb8">Marcas con par VEG → BLOOM</div>' +
+      '<table class="consejo-ecph-table"><thead><tr><th>Base VEG</th><th></th><th>Base BLOOM</th></tr></thead><tbody>' +
+        paresRows +
+      '</tbody></table>' +
+      '<div class="consejo-titulo consejo-titulo--mb8" style="margin-top:10px;">Marcas base para todo el ciclo (BOTH)</div>' +
+      '<table class="consejo-ecph-table"><tbody>' + bothRows + '</tbody></table>' +
+    '</div>' +
+    '<p class="consejo-p consejo-p--tight"><strong>CalMag en agua blanda:</strong> ' +
+      (aguaBlanda
+        ? 'con destilada/ósmosis, mantén CalMag en veg y bloom; orientativo de base ~0,4 mS/cm (≈400 µS/cm) antes de añadir nutrientes.'
+        : 'con grifo, normalmente se reduce u omite salvo indicación del fabricante o carencias.') +
+    '</p>';
+
+  const guiaWrap =
+    typeof hcWrapOrigenDetails === 'function'
+      ? hcWrapOrigenDetails(guiaHtml, 'Ver guía por fase y marca', false)
+      : guiaHtml;
+
+  return htmlConsejoCard(CONSEJOS_DATA.cultivo, {
+    icono: '🧴',
+    titulo: 'Cambio de nutriente por fase (veg/bloom)',
+    texto:
+      '<p class="consejo-p">Nutriente activo: <strong>' + meteoEscHtml(nut ? nut.nombre : 'Sin seleccionar') + '</strong> · tipo <strong>' + meteoEscHtml(usoTxt) + '</strong>. Esta guía te ayuda a mantener coherencia por cultivo, fase y composición.</p>' +
+      guiaWrap,
+    alerta: {
+      tipo: 'info',
+      txt: 'ℹ️ Si dos variedades comparten depósito y una entra antes en prefloración, conviene cambiar en la primera recarga de esa transición y apuntar a EC en zona media del rango.'
+    },
+  });
+}
+
 function buildConsejoObjetivoTorreCultivo() {
   const cfg = state.configTorre || {};
   if (cfg.tipoInstalacion !== 'torre') return '';
@@ -1957,6 +2027,7 @@ function renderConsejosLista() {
   if (consejoCatActiva === 'cultivo') {
     lista.innerHTML =
       cat.consejos.map(c => htmlConsejoCard(cat, c)).join('') +
+      buildConsejoCambioNutrientePorFase() +
       buildConsejoObjetivoTorreCultivo() +
       buildConsejoTablaGerminacionCultivos() +
       buildConsejoLuzExposicionCultivo();

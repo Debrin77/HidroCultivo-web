@@ -17,6 +17,41 @@ const DIAS_CAL = ['L','M','X','J','V','S','D'];
 /** Días consecutivos desde el trasplante en que se sugiere medir pH a diario (plántulas nuevas). */
 const DIAS_MUESTRA_PH_TRASPLANTE = 5;
 
+function getFechaSugeridaCambioNutriente() {
+  try {
+    const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+    if (!nut || typeof hcNutrienteFaseUso !== 'function') return null;
+    // Solo tiene sentido sugerir "cambio a bloom" si el actual es vegetativo.
+    if (hcNutrienteFaseUso(nut) !== 'veg') return null;
+    if (typeof torreTieneAlgunaPlantaDeFrutoActiva === 'function' && !torreTieneAlgunaPlantaDeFrutoActiva()) return null;
+
+    let msMin = null;
+    const nivelesActivos = typeof getNivelesActivos === 'function' ? getNivelesActivos() : [];
+    nivelesActivos.forEach(n => {
+      (state.torre[n] || []).forEach(c => {
+        if (!c || !c.variedad || !c.fecha) return;
+        const cultivo = typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null;
+        if (!cultivo || !cultivo.fructificacion || !cultivo.fases) return;
+        const t0 = new Date(c.fecha).getTime();
+        if (!Number.isFinite(t0)) return;
+        const f = cultivo.fases || {};
+        const dPlant = Number(f.plantula && f.plantula.dias) || 0;
+        const dVeg = Number(f.vegetativo && f.vegetativo.dias) || 0;
+        // Umbral de entrada a fase floral (prefloración si existe, si no floración).
+        const dCambio = Math.max(0, dPlant + dVeg);
+        const msCambio = t0 + dCambio * 86400000;
+        if (msMin == null || msCambio < msMin) msMin = msCambio;
+      });
+    });
+    if (msMin == null) return null;
+    const d = new Date(msMin);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  } catch (_) {
+    return null;
+  }
+}
+
 // Eventos del calendario basados en estado real del sistema
 function generarEventos(fecha) {
   const eventos = [];
@@ -62,6 +97,21 @@ function generarEventos(fecha) {
         'En Mediciones: checklist de recarga o interruptor «Recarga completa» al guardar medición. Las reposiciones parciales no cuentan para este recordatorio' +
         (sisLab ? ' del ' + sisLab + '.' : '.'),
     });
+  }
+
+  // ── Cambio de nutriente sugerido (veg -> bloom) ────────────────────────
+  const fechaCambioNut = getFechaSugeridaCambioNutriente();
+  if (fechaCambioNut) {
+    const fx = new Date(fechaCambioNut);
+    fx.setHours(0, 0, 0, 0);
+    if (fx.getTime() === d.getTime()) {
+      eventos.push({
+        tipo: 'nutriente',
+        icono: '🧪',
+        titulo: 'Cambio sugerido de nutriente',
+        desc: 'Inicio de fase floral en cultivos de fruto: recomendar cambio de nutriente vegetativo a floración/fruto en la próxima recarga completa.'
+      });
+    }
   }
 
   // ── Cosechas y rotación ───────────────────────────────────────────────
@@ -219,6 +269,12 @@ function renderCalendario() {
     }
   }
 
+  // Marca de calendario: fecha sugerida para cambio de nutriente (si aplica)
+  const fechaCambioNut = getFechaSugeridaCambioNutriente();
+  if (fechaCambioNut && fechaCambioNut.getMonth() === mes && fechaCambioNut.getFullYear() === año) {
+    addEvento(fechaCambioNut.getDate(), 'nutriente', '#7c3aed', '🧪 Cambio sugerido a nutriente de floración/fruto');
+  }
+
   // Limpieza — cada 30 días
   if (state.ultimaRecarga) {
     let base = new Date(state.ultimaRecarga);
@@ -332,7 +388,9 @@ function renderCalendario() {
       eventosDiaEl.innerHTML = '<div class="cal-list-empty">No hay eventos próximos este mes</div>';
     } else {
       eventosDiaEl.innerHTML = proximos.slice(0, 8).map(e =>
-        '<div class="cal-prox-row">' +
+        '<div class="cal-prox-row"' +
+        (e.tipo === 'nutriente' ? ' role="button" tabindex="0" onclick="irChecklistDesdeCalendario()" onkeydown="a11yKeyActivate(event, irChecklistDesdeCalendario)" aria-label="Ir a Historial y abrir checklist"' : '') +
+        '>' +
         '<div class="cal-prox-badge" style="--ev:' + e.color + '">' +
         '<div class="cal-prox-badge-dia">' + e.dia + '</div>' +
         '<div class="cal-prox-badge-mes">' + mesCorto + '</div>' +
@@ -355,6 +413,19 @@ function mostrarEventosDiaHC(d, mes, año) {
   if (card) requestAnimationFrame(function () {
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
+}
+
+function irChecklistDesdeCalendario() {
+  try {
+    if (typeof goTab === 'function') goTab('historial');
+    setTimeout(() => {
+      const btn = document.querySelector('.hist-checklist-btn');
+      if (!btn) return;
+      btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      btn.classList.add('pulse');
+      setTimeout(() => btn.classList.remove('pulse'), 1300);
+    }, 120);
+  } catch (_) {}
 }
 
 
@@ -388,6 +459,9 @@ function mostrarEventosDia(fecha) {
       <div class="evento-body">
         <div class="evento-titulo">${e.titulo}</div>
         <div class="evento-desc">${e.desc}</div>
+        ${e.tipo === 'nutriente'
+          ? '<button type="button" class="btn btn-primary evento-cta-checklist" onclick="irChecklistDesdeCalendario()">Ir a Historial → Checklist</button>'
+          : ''}
       </div>
     </div>
   `).join('');

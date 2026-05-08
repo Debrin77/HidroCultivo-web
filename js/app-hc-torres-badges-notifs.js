@@ -856,6 +856,7 @@ function actualizarBadgesNutriente() {
   const dashEstado = document.getElementById('dashNutrienteEstado');
   const dashRecomendado = document.getElementById('dashNutrienteRecomendado');
   const dashAviso   = document.getElementById('dashNutrienteAviso');
+  const dashAvisoGlobal = document.getElementById('dashCambioNutrienteAviso');
   const dashUbicacion = document.getElementById('dashUbicacionBadge');
   if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
   if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Sistema o Medir';
@@ -871,9 +872,17 @@ function actualizarBadgesNutriente() {
       typeof torreTieneAlgunaPlantaDeFrutoActiva === 'function'
         ? torreTieneAlgunaPlantaDeFrutoActiva()
         : false;
-    const recomendado = hayFruto ? 'BLOOM' : 'VEG';
+    const rec = typeof getRecomendacionEcPhTorre === 'function' ? getRecomendacionEcPhTorre() : null;
+    const fase = rec && rec.faseDominante ? String(rec.faseDominante) : '';
+    const conFaseReal = !!(rec && rec.conFaseReal);
+    const faseFlor = fase === 'prefloracion' || fase === 'floracion' || fase === 'fructificacion';
+    const recomendado = hayFruto
+      ? ((conFaseReal && faseFlor) ? 'BLOOM' : 'VEG')
+      : 'VEG';
     const recomendadoSub = hayFruto
-      ? ' (fruto: prefloración/floración/fructificación)'
+      ? ((conFaseReal && faseFlor)
+          ? ' (fruto en fase floral)'
+          : ' (fruto aún en vegetativo)')
       : ' (hoja/vegetativo)';
 
     if (dashEstado) dashEstado.textContent = 'Actual: ' + usoTxt;
@@ -890,6 +899,19 @@ function actualizarBadgesNutriente() {
     } else {
       dashAviso.textContent = '';
       dashAviso.classList.add('setup-hidden');
+    }
+  }
+  if (dashAvisoGlobal) {
+    const msgGlobal =
+      typeof hcGetAvisoCambioNutrientePorFase === 'function'
+        ? hcGetAvisoCambioNutrientePorFase('inicio')
+        : null;
+    if (msgGlobal) {
+      dashAvisoGlobal.textContent = msgGlobal;
+      dashAvisoGlobal.classList.remove('setup-hidden');
+    } else {
+      dashAvisoGlobal.textContent = '';
+      dashAvisoGlobal.classList.add('setup-hidden');
     }
   }
   if (dashUbicacion) {
