@@ -80,15 +80,45 @@ function generarEventos(fecha) {
 
   // ── Cambio de nutriente sugerido (veg -> bloom) ────────────────────────
   const fechaCambioNut = getFechaSugeridaCambioNutriente();
-  if (fechaCambioNut) {
-    const fx = new Date(fechaCambioNut);
-    fx.setHours(0, 0, 0, 0);
-    if (fx.getTime() === d.getTime()) {
+  const ctxNut = typeof hcGetRecomendacionNutrienteContexto === 'function'
+    ? hcGetRecomendacionNutrienteContexto()
+    : null;
+  if (ctxNut && ctxNut.hayFruto && ctxNut.actual === 'veg') {
+    if (fechaCambioNut) {
+      const fx = new Date(fechaCambioNut);
+      fx.setHours(0, 0, 0, 0);
+      const diffCambio = Math.round((d - fx) / 86400000);
+      if (diffCambio >= -10 && diffCambio <= 14) {
+        const diasRec = state.ultimaRecarga ? Math.round((d - new Date(state.ultimaRecarga)) / 86400000) : null;
+        const recargaCerca = Number.isFinite(diasRec) && diasRec >= 13 && diasRec <= 17;
+        const hintRecarga = recargaCerca
+          ? 'Aprovecha la recarga completa de estos días para hacer el cambio.'
+          : 'Si no coincide con recarga, programa una recarga anticipada o cambio controlado en cuanto puedas.';
+        const titulo =
+          diffCambio > 0
+            ? '⚠️ Cambio de nutriente retrasado'
+            : diffCambio === 0
+              ? '🧪 Cambio de nutriente recomendado hoy'
+              : '🧪 Cambio de nutriente próximo';
+        const desc =
+          diffCambio > 0
+            ? 'Ya estás en ventana floral con línea vegetativa. ' + hintRecarga
+            : diffCambio === 0
+              ? 'Inicio de fase floral en cultivos de fruto. Cambia de nutriente vegetativo a floración/fruto. ' + hintRecarga
+              : ('Faltan ' + Math.abs(diffCambio) + ' días para el cambio sugerido a nutriente de floración/fruto. Prepara la recarga. ' + hintRecarga);
+        eventos.push({
+          tipo: 'nutriente',
+          icono: '🧪',
+          titulo,
+          desc,
+        });
+      }
+    } else if (diffDias === 0) {
       eventos.push({
         tipo: 'nutriente',
         icono: '🧪',
-        titulo: 'Cambio sugerido de nutriente',
-        desc: 'Inicio de fase floral en cultivos de fruto: recomendar cambio de nutriente vegetativo a floración/fruto en la próxima recarga completa.'
+        titulo: 'Cambio de nutriente pendiente de fecha',
+        desc: 'Hay cultivos de fruto con nutriente vegetativo, pero faltan fechas en alguna ficha para calcular el día exacto del cambio. Completa fechas en Sistema.',
       });
     }
   }

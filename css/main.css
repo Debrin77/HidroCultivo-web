@@ -4398,25 +4398,35 @@ h1.dash-greeting {
   color: #4b5563;
   margin-top: 1px;
 }
+.dash-nutriente-tag {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  background: #f8fafc;
+}
+.dash-nutriente-tag--estado {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+.dash-nutriente-tag--razon {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
 .dash-nutriente-estado,
 .dash-nutriente-recomendado,
 .dash-nutriente-fuente,
-.dash-nutriente-razon{
-  margin-top: 4px;
+.dash-nutriente-razon {
+  margin-top: 2px;
   font-size: 11px;
   color: #374151;
   line-height: 1.3;
 }
-.dash-nutriente-fuente {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  padding: 2px 7px;
-  border-radius: 999px;
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
-  color: #374151;
-}
+.dash-nutriente-estado { margin-top: 0; font-weight: 700; color: #14532d; }
+.dash-nutriente-recomendado { font-weight: 700; color: #166534; }
+.dash-nutriente-fuente { margin-top: 0; font-weight: 700; color: #92400e; }
+.dash-nutriente-razon { color: #78350f; }
 .dash-nutriente-aviso{
   margin-top: 6px;
   padding: 6px 8px;
