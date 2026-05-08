@@ -310,6 +310,28 @@ function renderCalendario() {
       addEvento(hoy0.getDate(), 'nutriente', '#7c3aed', etiquetaHoy);
     }
   }
+  if (ctxNut && ctxNut.hayFruto && ctxNut.actual === 'veg' && !fechaCambioNut) {
+    const hoy0 = new Date();
+    if (hoy0.getMonth() === mes && hoy0.getFullYear() === año) {
+      addEvento(
+        hoy0.getDate(),
+        'nutriente',
+        '#7c3aed',
+        '🧪 Cambio de nutriente pendiente (faltan fechas en fichas)'
+      );
+    }
+  }
+  if (ctxNut && ctxNut.hayFruto && ctxNut.actual === 'veg' && ctxNut.recomendado === 'bloom') {
+    const hoy0 = new Date();
+    if (hoy0.getMonth() === mes && hoy0.getFullYear() === año) {
+      addEvento(
+        hoy0.getDate(),
+        'nutriente',
+        '#7c3aed',
+        '⚠️ Ya corresponde cambio a nutriente de floración/fruto'
+      );
+    }
+  }
 
   // Limpieza — cada 30 días
   if (state.ultimaRecarga) {

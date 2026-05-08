@@ -4479,10 +4479,12 @@ h1.dash-greeting {
   position: absolute;
   top: 10px;
   right: 14px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   text-align: right;
+  white-space: nowrap;
   min-width: 128px;
   font-size: 14px;
   font-weight: 700;
