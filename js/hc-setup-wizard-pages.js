@@ -1126,11 +1126,25 @@ function renderSetupPage() {
   const next = document.getElementById('setupBtnNext');
   if (back) back.style.display = setupPagina > 0 ? 'block' : 'none';
   const ultimoPaso = setupEsNuevaTorre ? SETUP_TOTAL_PAGES - 2 : SETUP_TOTAL_PAGES - 1;
-  if (next) next.textContent   = setupPagina === ultimoPaso ? '✅ Guardar y empezar' : 'Siguiente →';
+  if (next) {
+    if (setupPagina === 0) {
+      next.textContent = 'Empezar asistente →';
+      next.setAttribute('aria-label', 'Empezar asistente de configuración');
+    } else if (setupPagina === ultimoPaso) {
+      next.textContent = '✅ Guardar y empezar';
+      next.setAttribute('aria-label', 'Guardar configuración y empezar');
+    } else {
+      next.textContent = 'Siguiente →';
+      next.setAttribute('aria-label', 'Continuar al siguiente paso');
+    }
+  }
 }
 
 function setupNext() {
-  if (setupPagina === 0) return; // página 0: botón «Empezar asistente»
+  if (setupPagina === 0) {
+    iniciarConfiguracionTorre();
+    return;
+  }
   if (setupEsNuevaTorre && setupPagina === 1) {
     const inpNom = document.getElementById('setupNombreInstalacionInput');
     if (inpNom) setupNombreNuevaTorre = (inpNom.value || '').trim().slice(0, 40);
