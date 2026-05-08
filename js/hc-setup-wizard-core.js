@@ -50,6 +50,7 @@ function rdwcEnsureConfigDefaults(cfg) {
   if (!Number.isFinite(Number(c.rdwcHeadM))) c.rdwcHeadM = 1.2;
   if (!Number.isFinite(Number(c.rdwcLineLenM))) c.rdwcLineLenM = 12;
   if (!Number.isFinite(Number(c.rdwcFittings))) c.rdwcFittings = 12;
+  if (c.rdwcHydroMode !== 'silencioso' && c.rdwcHydroMode !== 'alto_rendimiento') c.rdwcHydroMode = 'estandar';
   if (!Number.isFinite(Number(c.rdwcTempWarnHighC))) c.rdwcTempWarnHighC = 22;
   if (!Number.isFinite(Number(c.rdwcTempWarnLowC))) c.rdwcTempWarnLowC = 17;
   if (c.rdwcFlowMode !== 'continuous') c.rdwcFlowMode = 'continuous';
@@ -159,12 +160,17 @@ function rdwcCalcularHidraulica(cfg) {
   const headM = Math.max(0, Number(c.rdwcHeadM) || 1.2);
   const lineLenM = Math.max(1, Number(c.rdwcLineLenM) || 12);
   const fittings = Math.max(0, Number(c.rdwcFittings) || 12);
+  const mode = c.rdwcHydroMode === 'silencioso' || c.rdwcHydroMode === 'alto_rendimiento' ? c.rdwcHydroMode : 'estandar';
   const totalVol = Math.max(controlVol + sites * bucketVol, controlVol);
 
+  const modeMult = mode === 'silencioso' ? 1.15 : mode === 'alto_rendimiento' ? 1.95 : 1.6;
+  const modeMinMult = mode === 'silencioso' ? 1.0 : mode === 'alto_rendimiento' ? 1.35 : 1.2;
+  const modeMaxMult = mode === 'silencioso' ? 1.75 : mode === 'alto_rendimiento' ? 2.7 : 2.3;
+
   // Regla práctica: 1.2-2 renovaciones/h del volumen total en RDWC.
-  const recMin = Math.max(900, Math.round(totalVol * 1.2));
-  const recObj = Math.max(recMin, Math.round(totalVol * 1.6));
-  const recMax = Math.max(recObj + 200, Math.round(totalVol * 2.3));
+  const recMin = Math.max(900, Math.round(totalVol * modeMinMult));
+  const recObj = Math.max(recMin, Math.round(totalVol * modeMult));
+  const recMax = Math.max(recObj + 200, Math.round(totalVol * modeMaxMult));
 
   // Aireación orientativa: 1 L/min por 8-10 L + margen por raíces.
   const airMin = Math.max(8, Math.round(totalVol / 10));
@@ -176,11 +182,15 @@ function rdwcCalcularHidraulica(cfg) {
   const pumpRec = Math.round(recObj * lossFac);
   const pumpMin = Math.round(recMin * lossFac);
 
-  // Diámetro muy orientativo por caudal de trabajo.
-  let tubeMm = 25;
-  if (pumpRec > 2200) tubeMm = 32;
-  if (pumpRec > 4200) tubeMm = 40;
-  if (pumpRec > 7000) tubeMm = 50;
+  // Diámetros orientativos separados para impulsión y retorno.
+  let tubeOutMm = 25;
+  if (pumpRec > 2200) tubeOutMm = 32;
+  if (pumpRec > 4200) tubeOutMm = 40;
+  if (pumpRec > 7000) tubeOutMm = 50;
+  let tubeRetMm = 32;
+  if (pumpRec > 3200) tubeRetMm = 40;
+  if (pumpRec > 6200) tubeRetMm = 50;
+  if (pumpRec > 9000) tubeRetMm = 63;
 
   const estadoRec = recUser < recMin ? 'warn' : recUser > recMax * 1.2 ? 'bad' : 'ok';
   const estadoAir = airUser < airMin ? 'warn' : airUser > airMax * 1.3 ? 'bad' : 'ok';
@@ -191,7 +201,8 @@ function rdwcCalcularHidraulica(cfg) {
     recMin, recObj, recMax,
     airMin, airObj, airMax,
     pumpMin, pumpRec,
-    tubeMm,
+    tubeOutMm, tubeRetMm,
+    mode,
     estadoRec, estadoAir, estadoGlobal,
   };
 }
@@ -206,11 +217,12 @@ function renderRdwcCalculoStatus(cfg, elId) {
   }
   el.innerHTML =
     'RDWC Pro ' + rdwcFlowChip(calc.estadoGlobal) +
+    ' · Perfil <strong>' + (calc.mode === 'silencioso' ? 'silencioso' : calc.mode === 'alto_rendimiento' ? 'alto rendimiento' : 'estándar') + '</strong>' +
     ' · Volumen total ≈ <strong>' + calc.totalVol + ' L</strong>' +
     ' · Recirculación objetivo <strong>' + calc.recObj + ' L/h</strong> (mín ' + calc.recMin + ')' +
     ' · Bomba recomendada <strong>' + calc.pumpRec + ' L/h</strong>' +
     ' · Aireación objetivo <strong>' + calc.airObj + ' L/min</strong> (mín ' + calc.airMin + ')' +
-    ' · Tubería sugerida <strong>Ø' + calc.tubeMm + ' mm</strong>.' +
+    ' · Impulsión <strong>Ø' + calc.tubeOutMm + ' mm</strong> · Retorno <strong>Ø' + calc.tubeRetMm + ' mm</strong>.' +
     ' Recirculación ' + rdwcFlowChip(calc.estadoRec) + ' · Aire ' + rdwcFlowChip(calc.estadoAir) + '.';
 }
 
@@ -250,6 +262,7 @@ function bindRdwcCompatLive(scope) {
           'sysRdwcHeadM',
           'sysRdwcLineLenM',
           'sysRdwcFittings',
+          'sysRdwcHydroMode',
         ]
       : [
           'setupRdwcSites',
@@ -283,6 +296,8 @@ function bindRdwcCompatLive(scope) {
       c2.rdwcHeadM = g('sysRdwcHeadM', c.rdwcHeadM || 1.2);
       c2.rdwcLineLenM = g('sysRdwcLineLenM', c.rdwcLineLenM || 12);
       c2.rdwcFittings = g('sysRdwcFittings', c.rdwcFittings || 12);
+      const hMode = document.getElementById('sysRdwcHydroMode');
+      c2.rdwcHydroMode = hMode && hMode.value ? hMode.value : c.rdwcHydroMode || 'estandar';
       c2.rdwcLayout = lay && lay.value ? lay.value : c.rdwcLayout || 'line';
       renderRdwcCompatStatus(c2, 'sysRdwcCompatStatus');
       renderRdwcCalculoStatus(c2, 'sysRdwcCalcStatus');
@@ -1571,6 +1586,8 @@ function syncSistemaRdwcDesdeConfig(cfg) {
   });
   const l = document.getElementById('sysRdwcLayout');
   if (l) l.value = c.rdwcLayout || 'line';
+  const hm = document.getElementById('sysRdwcHydroMode');
+  if (hm) hm.value = c.rdwcHydroMode || 'estandar';
   bindRdwcCompatLive('sys');
   renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
   renderRdwcCalculoStatus(c, 'sysRdwcCalcStatus');
@@ -1640,6 +1657,8 @@ function aplicarSistemaRdwcDesdeFormulario() {
   c.rdwcHeadM = Math.max(0, Math.min(6, gNum('sysRdwcHeadM', c.rdwcHeadM || 1.2)));
   c.rdwcLineLenM = Math.max(1, Math.min(60, gNum('sysRdwcLineLenM', c.rdwcLineLenM || 12)));
   c.rdwcFittings = Math.round(Math.max(0, Math.min(80, gNum('sysRdwcFittings', c.rdwcFittings || 12))));
+  const hm = document.getElementById('sysRdwcHydroMode');
+  c.rdwcHydroMode = hm && hm.value ? hm.value : (c.rdwcHydroMode || 'estandar');
   const lay = document.getElementById('sysRdwcLayout');
   c.rdwcLayout = lay && lay.value ? lay.value : (c.rdwcLayout || 'line');
   c.numNiveles = c.rdwcRows;
