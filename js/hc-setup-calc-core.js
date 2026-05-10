@@ -785,24 +785,35 @@ function hcFmtFechaDMY(ms) {
 function hcGetFechaSugeridaCambioVegABloomMs() {
   try {
     const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
-    if (!nut || hcNutrienteFaseUso(nut) !== 'veg') return null;
+    if (!nut) return null;
+    const faseUso = hcNutrienteFaseUso(nut);
+    if (faseUso === 'bloom') return null;
+    if (faseUso !== 'veg' && faseUso !== 'both' && faseUso !== 'unknown') return null;
     if (!torreTieneAlgunaPlantaDeFrutoActiva()) return null;
     let msMin = null;
-    const nivelesActivos = typeof getNivelesActivos === 'function' ? getNivelesActivos() : [];
-    nivelesActivos.forEach(n => {
-      (state.torre[n] || []).forEach(c => {
-        if (!c || !c.variedad || !c.fecha) return;
+    const cfg = state.configTorre || {};
+    const idxNivel =
+      typeof getNivelesActivos === 'function' ? getNivelesActivos() : [];
+    const nPorCfg = Math.max(0, Math.round(Number(cfg.numNiveles) || 0));
+    const nPorIdx = idxNivel.length ? Math.max(...idxNivel) + 1 : 0;
+    const nPorTorre = Array.isArray(state.torre) ? state.torre.length : 0;
+    const nMax = Math.max(nPorCfg, nPorIdx, nPorTorre, 1);
+    for (let n = 0; n < nMax; n++) {
+      const row = (state.torre && state.torre[n]) || [];
+      for (let ci = 0; ci < row.length; ci++) {
+        const c = row[ci];
+        if (!c || !c.variedad || !c.fecha) continue;
         const cultivo = typeof getCultivoDB === 'function' ? getCultivoDB(c.variedad) : null;
-        if (!cultivo || !cultivo.fructificacion || !cultivo.fases) return;
+        if (!cultivo || !cultivo.fructificacion || !cultivo.fases) continue;
         const t0 = new Date(c.fecha).getTime();
-        if (!Number.isFinite(t0)) return;
+        if (!Number.isFinite(t0)) continue;
         const f = cultivo.fases || {};
         const dPlant = Number(f.plantula && f.plantula.dias) || 0;
         const dVeg = Number(f.vegetativo && f.vegetativo.dias) || 0;
         const msCambio = t0 + Math.max(0, dPlant + dVeg) * 86400000;
         if (msMin == null || msCambio < msMin) msMin = msCambio;
-      });
-    });
+      }
+    }
     return msMin;
   } catch (_) {
     return null;
@@ -817,8 +828,18 @@ function hcGetRecomendacionNutrienteContexto() {
   const conFaseReal = !!(rec && rec.conFaseReal);
   const faseFlor = fase === 'prefloracion' || fase === 'floracion' || fase === 'fructificacion';
   const hayFruto = torreTieneAlgunaPlantaDeFrutoActiva();
-  const recomendado = hayFruto ? ((conFaseReal && faseFlor) ? 'bloom' : 'veg') : 'veg';
   const fechaCambioMs = hcGetFechaSugeridaCambioVegABloomMs();
+  let recomendadoBloomPorFecha = false;
+  if (hayFruto && Number.isFinite(fechaCambioMs)) {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const fc = new Date(fechaCambioMs);
+    fc.setHours(0, 0, 0, 0);
+    recomendadoBloomPorFecha = hoy.getTime() >= fc.getTime();
+  }
+  const recomendado = hayFruto
+    ? ((conFaseReal && faseFlor) || recomendadoBloomPorFecha ? 'bloom' : 'veg')
+    : 'veg';
   return {
     actual: uso,
     recomendado,
@@ -828,6 +849,7 @@ function hcGetRecomendacionNutrienteContexto() {
     faseFlor,
     fechaCambioMs,
     fechaCambioTxt: hcFmtFechaDMY(fechaCambioMs),
+    recomendadoBloomPorFecha,
   };
 }
 
@@ -843,7 +865,7 @@ function hcGetAvisoCambioNutrientePorFase(contexto) {
   const uso = hcNutrienteFaseUso(nut);
   const hayFruto = torreTieneAlgunaPlantaDeFrutoActiva();
   if (!hayFruto && uso !== 'bloom') return null;
-  if (hayFruto && uso !== 'veg') return null;
+  if (hayFruto && uso === 'bloom') return null;
 
   // Caso inverso: cultivo sin fruto con nutriente de floración/fruto.
   if (!hayFruto && uso === 'bloom') {
@@ -868,6 +890,36 @@ function hcGetAvisoCambioNutrientePorFase(contexto) {
     ? (NUTRIENTES_DB.find(n => n && n.id === altId) || null)
     : null;
   const altTxt = altNut ? (' → ' + altNut.nombre) : (altId ? (' → ' + altId) : '');
+
+  const ctxNut =
+    typeof hcGetRecomendacionNutrienteContexto === 'function'
+      ? hcGetRecomendacionNutrienteContexto()
+      : null;
+  if (
+    ctxNut &&
+    ctxNut.recomendadoBloomPorFecha &&
+    (!conFaseReal || !faseFlor) &&
+    (uso === 'veg' || uso === 'both' || uso === 'unknown')
+  ) {
+    const lead = (contexto === 'checklist' ? '⚠️ IMPRESCINDIBLE: ' : '');
+    const agua = cfg.agua || state.configAgua || 'destilada';
+    const calmagTxt =
+      (agua !== 'grifo' && typeof usarPreferenciaCalMagRecargaGlobal === 'function' && usarPreferenciaCalMagRecargaGlobal())
+        ? ' Si usas agua destilada/ósmosis, mantén CalMag también en floración: preacondiciona el agua base hasta ~0,4 mS/cm (≈400 µS/cm) antes de añadir nutrientes para evitar carencias de Ca/Mg.'
+        : '';
+    const fTxt = ctxNut.fechaCambioTxt || 'la fecha indicada';
+    return (
+      lead +
+      'Cultivo de fruto: por calendario de trasplante corresponde nutriente de floración desde el ' +
+      fTxt +
+      '. Sigues en base vegetativa o mixta (' +
+      (nut.nombre || 'actual') +
+      '). Cambia a BLOOM' +
+      altTxt +
+      ' en esta recarga (marca el cambio en checklist PC·2).' +
+      calmagTxt
+    );
+  }
 
   if (conFaseReal && faseFlor) {
     const faseMap = { prefloracion: 'prefloración', floracion: 'floración', fructificacion: 'fructificación' };

@@ -836,6 +836,9 @@ function actualizarBadgesNutriente() {
         } else {
           rangeVol.textContent = '~' + vr + ' L (referencia DWC · bajo sustrato)';
         }
+      } else if (cfg.tipoInstalacion === 'rdwc') {
+        rangeVol.textContent =
+          '~' + vr + ' L (depósito de control RDWC; mezcla y medición ahí; rango habitual en app 10–800 L)';
       } else {
         rangeVol.textContent = '≈ ' + vr + ' L (capacidad depósito)';
       }

@@ -147,11 +147,21 @@ function instalacionPlantillaSinCapacidadDepositoUsuario(cfg) {
 /**
  * Volumen de referencia (L) para escalados y límites en Medir / checklist:
  * - Torre y NFT: `volDeposito` (tope del depósito).
+ * - RDWC: depósito de control (`rdwcControlVolL`, o `volDeposito` si ya está unificado en config).
  * - DWC: si se puede calcular, **llenado seguro** bajo la base del sustrato (`getDwcVolumenSeguroMaxLitrosDesdeConfig`);
  *   si no, `volDeposito` o capacidad geométrica.
  */
 function getVolumenDepositoMaxLitros(cfg) {
   cfg = cfg || state.configTorre || {};
+  const tipoNorm =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipoNorm === 'rdwc') {
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
+    const vCtl = Number(cfg.rdwcControlVolL);
+    const vDep = Number(cfg.volDeposito);
+    const v = Number.isFinite(vCtl) && vCtl > 0 ? vCtl : vDep;
+    if (Number.isFinite(v) && v > 0) return Math.min(800, Math.max(10, Math.round(v * 10) / 10));
+  }
   if (cfg.tipoInstalacion === 'dwc' && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
     const vSafe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
     if (vSafe != null && vSafe > 0) return Math.min(800, Math.max(1, Math.round(vSafe * 10) / 10));
@@ -649,6 +659,9 @@ function evalVol(vol, ec, ph) {
   const umbralCrit = Math.max(2.5, volTarget * 0.68);
   const umbralWarnBajo = Math.max(3, volTarget * 0.78);
   const esDwc = cfgK.tipoInstalacion === 'dwc';
+  const esRdwc =
+    (typeof tipoInstalacionNormalizado === 'function' && tipoInstalacionNormalizado(cfgK) === 'rdwc') ||
+    cfgK.tipoInstalacion === 'rdwc';
 
   if (vol > volTop + 0.35) {
     const exceso = Math.round((vol - volTop) * 10) / 10;
@@ -658,7 +671,9 @@ function evalVol(vol, ec, ph) {
       '🟡',
       esDwc
         ? 'Volumen por encima del llenado seguro orientativo — riesgo de mojar el sustrato'
-        : 'Volumen por encima de la referencia configurada'
+        : esRdwc
+          ? 'Volumen por encima de la referencia del depósito de control RDWC'
+          : 'Volumen por encima de la referencia configurada'
     );
     setCard('cardVol', 'warn');
     const extraDwc =
@@ -685,7 +700,9 @@ function evalVol(vol, ec, ph) {
     const suf =
       esDwc
         ? ' (~' + refL + ' L mezcla / ref.)'
-        : ' (~' + refL + ' L depósito)';
+        : esRdwc
+          ? ' (~' + refL + ' L dep. control)'
+          : ' (~' + refL + ' L depósito)';
     setStatus('statusVol', 'ok', '✅', 'Volumen correcto' + suf);
     setCard('cardVol', 'ok');
     showCorreccion('correccionVol', '');

@@ -171,7 +171,7 @@ function initDiaRiego() {
 /** Controles de riego: torre (cálculo) vs NFT/DWC (solo clima de referencia). */
 function actualizarVistaRiegoPorTipoInstalacion() {
   const tipo = tipoInstalacionNormalizado(state.configTorre || {});
-  const esModoClima = tipo === 'nft' || tipo === 'dwc';
+  const esModoClima = tipo === 'nft' || tipo === 'dwc' || tipo === 'rdwc';
   const torreControls = document.getElementById('riegoTorreSoloWrap');
   const btnCalc = document.getElementById('btnCalcRiego');
   const titleEl = document.getElementById('riegoSectionTitle');
@@ -195,6 +195,9 @@ function actualizarVistaRiegoPorTipoInstalacion() {
     } else if (tipo === 'dwc') {
       titleEl.innerHTML =
         '🫧 Riego <span class="accent">DWC</span> <span class="riego-section-title-sub">· clima de referencia</span>';
+    } else if (tipo === 'rdwc') {
+      titleEl.innerHTML =
+        '🔁 Riego <span class="accent">RDWC</span> <span class="riego-section-title-sub">· clima de referencia</span>';
     } else {
       titleEl.innerHTML = '💧 Cálculo de <span class="accent">Riego</span>';
     }

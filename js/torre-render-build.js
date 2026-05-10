@@ -1032,7 +1032,7 @@ function generarSVGRdwc() {
     </marker>
   </defs>`;
   s += `<text x="${w / 2}" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937">RDWC · Recirculating Deep Water Culture</text>`;
-  s += `<text x="${w / 2}" y="46" text-anchor="middle" font-size="11" fill="#64748b">Impulsión (verde) + Retorno (azul) en circuito cerrado</text>`;
+  s += `<text x="${w / 2}" y="46" text-anchor="middle" font-size="11" fill="#64748b">Recirculación continua: envío/alta (verde) y retorno/baja (azul) — no es riego por impulsos</text>`;
   s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="16" fill="#f8fafc" stroke="#cbd5e1"/>`;
 
   // Buses principales (como en esquemas técnicos RDWC): superior = impulsión, inferior = retorno
@@ -1049,11 +1049,21 @@ function generarSVGRdwc() {
       const has = !!(dat && dat.variedad);
       const fill = has ? '#dbeafe' : '#eff6ff';
       const stroke = has ? '#0f172a' : '#334155';
+      let phaseEmoji = '';
+      if (dat && dat.variedad && typeof torreDiasCicloVisual === 'function' && typeof getEstado === 'function' && typeof getEmoji === 'function') {
+        const diasR = dat.fecha ? torreDiasCicloVisual(dat) : 0;
+        const estR = getEstado(dat.variedad, diasR);
+        phaseEmoji = getEmoji(estR) || '';
+      }
       // conexión vertical desde impulsión al módulo y del módulo a retorno
       s += `<line x1="${x}" y1="${supY}" x2="${x}" y2="${y - rPot - 3}" stroke="#16a34a" stroke-width="2.2" marker-end="url(#rdwcFlowOut)"/>`;
       s += `<line x1="${x}" y1="${y + rPot + 3}" x2="${x}" y2="${retY}" stroke="#2563eb" stroke-width="2.2" marker-end="url(#rdwcFlowIn)"/>`;
       s += `<g data-n="${rn}" data-c="${c}" class="hc-cesta hc-cesta--interactive" role="button" tabindex="0" aria-label="Módulo fila ${rn + 1} sitio ${c + 1}">`;
       s += `<rect x="${(x - rPot).toFixed(1)}" y="${(y - rPot).toFixed(1)}" width="${(rPot * 2).toFixed(1)}" height="${(rPot * 2).toFixed(1)}" rx="${(rPot * 0.24).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2.4"/>`;
+      if (phaseEmoji) {
+        const emoFs = Math.min(15, Math.max(10, rPot * 0.95));
+        s += `<text x="${x}" y="${(y - rPot - 5).toFixed(1)}" text-anchor="middle" font-size="${emoFs.toFixed(1)}" dominant-baseline="alphabetic" opacity="0.98">${phaseEmoji}</text>`;
+      }
       s += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="10" font-weight="800" fill="#1e293b">${idx + 1}</text>`;
       s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.6).toFixed(1)}" fill="transparent" class="hc-cesta-hit" pointer-events="all"/>`;
       s += `</g>`;
@@ -1106,19 +1116,25 @@ function generarSVGTorre() {
   const DEP_Y  = MARG_T + torreaH + DEP_GAP;
   const DEP_X  = (SVG_W - DEP_W) / 2;
 
-  // Volumen actual del depósito
+  // Volumen del depósito: si hay última medición, se muestra y alimenta el nivel; si no, la etiqueta muestra la capacidad configurada (no un 80 % fijo que parecía «16 L» con depósito de 20 L).
   const volConfigRaw = getVolumenDepositoMaxLitros(cfg);
   const volConfig =
     volConfigRaw != null && Number.isFinite(volConfigRaw) && volConfigRaw > 0 ? volConfigRaw : null;
-  const volActual =
-    state.ultimaMedicion?.vol && Number.isFinite(parseFloat(state.ultimaMedicion.vol))
+  const volMedido =
+    state.ultimaMedicion?.vol != null &&
+    String(state.ultimaMedicion.vol).trim() !== '' &&
+    Number.isFinite(parseFloat(state.ultimaMedicion.vol))
       ? parseFloat(state.ultimaMedicion.vol)
+      : null;
+  const volNivelIlust =
+    volMedido != null
+      ? volMedido
       : volConfig != null
-        ? volConfig * 0.8
+        ? volConfig * 0.78
         : null;
   const volPct =
-    volConfig != null && volActual != null && volConfig > 0
-      ? Math.min(1, Math.max(0, volActual / volConfig))
+    volConfig != null && volNivelIlust != null && volConfig > 0
+      ? Math.min(1, Math.max(0, volNivelIlust / volConfig))
       : 0;
   const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
   const tieneCalentador= state.configTorre?.equipamiento?.includes('calentador') ?? true;
@@ -1254,8 +1270,17 @@ function generarSVGTorre() {
 
   // Volumen fuera del depósito para máxima legibilidad (igual criterio que DWC).
   const volTorreLitros =
-    volActual != null && Number.isFinite(Number(volActual)) ? Math.round(Number(volActual) * 10) / 10 : null;
-  const volTorreTexto = volTorreLitros != null ? volTorreLitros + ' L' : '—';
+    volMedido != null && Number.isFinite(Number(volMedido))
+      ? Math.round(Number(volMedido) * 10) / 10
+      : volConfig != null
+        ? Math.round(Number(volConfig) * 10) / 10
+        : null;
+  const volTorreTexto =
+    volMedido != null
+      ? volTorreLitros + ' L'
+      : volConfig != null
+        ? volTorreLitros + ' L (cap.)'
+        : '—';
   s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
     font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreTexto}</text>`;
 
@@ -2157,7 +2182,7 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<strong>DWC</strong>: tapa arriba, depósito abajo. <strong>Toca maceta</strong> o usa <strong>Lista</strong>.';
     } else if (esRdwc) {
       intro.innerHTML =
-        '<strong>RDWC</strong>: módulos conectados con <strong>impulsión/retorno</strong> y depósito de control. <strong>Toca módulo</strong> o usa <strong>Lista</strong>.';
+        '<strong>RDWC</strong>: <strong>recirculación continua</strong> (envío/retorno), depósito de control abajo. Fase del cultivo <strong>encima</strong> de cada módulo. <strong>Toca módulo</strong> o <strong>Lista</strong>.';
     } else {
       intro.innerHTML =
         '<strong>Torre</strong> (maqueta): <strong>flechas o deslizar</strong> para girar; <strong>Lista</strong> para ver todas las cestas.';

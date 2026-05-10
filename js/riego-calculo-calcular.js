@@ -44,6 +44,7 @@ async function calcularRiego(opts = {}) {
   const riegoResultEl = document.getElementById('riegoResultado');
   const riegoClimaNftEl = document.getElementById('riegoClimaUsadoNft');
   const riegoClimaDwcEl = document.getElementById('riegoClimaUsadoDwc');
+  const riegoClimaRdwcEl = document.getElementById('riegoClimaUsadoRdwc');
   const btnCalc = document.getElementById('btnCalcRiego');
   const elHorarioHint = document.getElementById('riegoHorarioRecomendado');
   let btnCalcPrevTxt = '';
@@ -66,6 +67,10 @@ async function calcularRiego(opts = {}) {
     riegoClimaDwcEl.innerHTML = '';
     riegoClimaDwcEl.classList.add('setup-hidden');
   }
+  if (riegoClimaRdwcEl) {
+    riegoClimaRdwcEl.innerHTML = '';
+    riegoClimaRdwcEl.classList.add('setup-hidden');
+  }
 
   try {
     // ── Obtener datos Open-Meteo ──────────────────────────────────────────
@@ -80,7 +85,7 @@ async function calcularRiego(opts = {}) {
         : (typeof torreObjetivoMultiplicadorDemanda === 'function'
             ? torreObjetivoMultiplicadorDemanda(state.configTorre || {}, objetivoTorre)
             : (objetivoTorre === 'baby' ? 0.92 : 1.06));
-    const idx = (tipoRiego === 'nft' || tipoRiego === 'dwc') ? 0 : (diaRiego === 'manana' ? 1 : 0);
+    const idx = (tipoRiego === 'nft' || tipoRiego === 'dwc' || tipoRiego === 'rdwc') ? 0 : (diaRiego === 'manana' ? 1 : 0);
     const offsetHoras = idx * 24;
 
     /* ≥3 días: cubre mañana completa a cualquier hora; evita que "hoy"/"mañana" compartan el mismo trozo horario cuando la serie no empieza a medianoche. */
@@ -331,14 +336,18 @@ async function calcularRiego(opts = {}) {
 
     const esNftRiego = tipoRiego === 'nft';
     const esDwcRiego = tipoRiego === 'dwc';
-    if (esNftRiego || esDwcRiego) {
+    const esRdwcRiego = tipoRiego === 'rdwc';
+    if (esNftRiego || esDwcRiego || esRdwcRiego) {
       const panelNft = document.getElementById('riegoNftPanel');
       const panelDwc = document.getElementById('riegoDwcPanel');
+      const panelRdwc = document.getElementById('riegoRdwcPanel');
       const climaNft = document.getElementById('riegoClimaUsadoNft');
       const climaDwc = document.getElementById('riegoClimaUsadoDwc');
+      const climaRdwc = document.getElementById('riegoClimaUsadoRdwc');
       const blockTorre = document.getElementById('riegoTorreResultBlock');
       if (panelNft) panelNft.classList.toggle('setup-hidden', !esNftRiego);
       if (panelDwc) panelDwc.classList.toggle('setup-hidden', !esDwcRiego);
+      if (panelRdwc) panelRdwc.classList.toggle('setup-hidden', !esRdwcRiego);
       if (blockTorre) blockTorre.classList.add('setup-hidden');
 
       const precipMmN = Math.round((Number(daily.precipitation_sum?.[idx]) || 0) * 10) / 10;
@@ -373,6 +382,10 @@ async function calcularRiego(opts = {}) {
         climaDwc.innerHTML = bloqueClima;
         climaDwc.classList.remove('setup-hidden');
       }
+      if (esRdwcRiego && climaRdwc) {
+        climaRdwc.innerHTML = bloqueClima;
+        climaRdwc.classList.remove('setup-hidden');
+      }
 
       ['resMinON', 'resMinOFF', 'resCiclos', 'resTotalON', 'resEspaciado', 'resDutyCiclo', 'resMedioON', 'resMedioOFF', 'resMedioCiclos', 'resMedioTotal', 'resMedioDutyCiclo', 'resNocON', 'resNocOFF', 'resNocCiclos', 'resNocTotal', 'resNocEspaciado', 'resNocDuty'].forEach(id => {
         const el = document.getElementById(id);
@@ -399,7 +412,9 @@ async function calcularRiego(opts = {}) {
           : '\n\n🌐 Meteo: puede usarse caché reciente (~1 min). Pulsa «Calcular riego ahora» para traer datos nuevos del modelo.';
         elHorarioHint.textContent = (esNftRiego
           ? '🪴 NFT: riego continuo — no hay bloque de intensidad solar por pulsos; el clima sirve de referencia para vigilar estrés.'
-          : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.') + pieMeteo;
+          : esRdwcRiego
+            ? '🔁 RDWC: recirculación y aireación continuas — no es riego por goteo ni por impulsos como en torre; el clima solo orienta el follaje.'
+            : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.') + pieMeteo;
       }
       try {
         actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
@@ -411,9 +426,11 @@ async function calcularRiego(opts = {}) {
 
     const panelNftT = document.getElementById('riegoNftPanel');
     const panelDwcT = document.getElementById('riegoDwcPanel');
+    const panelRdwcT = document.getElementById('riegoRdwcPanel');
     const blockTorreT = document.getElementById('riegoTorreResultBlock');
     if (panelNftT) panelNftT.classList.add('setup-hidden');
     if (panelDwcT) panelDwcT.classList.add('setup-hidden');
+    if (panelRdwcT) panelRdwcT.classList.add('setup-hidden');
     if (blockTorreT) blockTorreT.classList.remove('setup-hidden');
 
     const ciclo = riegoMinutosDesdeDemanda(

@@ -718,11 +718,14 @@ function getCLPasos() {
   const ecRecTarget = getRecargaEcMetaMicroS();
   const pre = construirTextoChecklistPreliminar();
   const nNiv = cfg.numNiveles || NUM_NIVELES;
-  const esNft = cfg.tipoInstalacion === 'nft';
-  const esDwc = cfg.tipoInstalacion === 'dwc';
+  const tipoInstCl =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : (cfg.tipoInstalacion || 'torre');
+  const esNft = tipoInstCl === 'nft';
+  const esDwc = tipoInstCl === 'dwc';
+  const esRdwc = tipoInstCl === 'rdwc';
   const esDwcK =
     esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
-  const esTorre = !esNft && !esDwc;
+  const esTorre = !esNft && !esDwc && !esRdwc;
   const checklistTieneCalentador = Array.isArray(cfg.equipamiento) && cfg.equipamiento.includes('calentador');
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
   const nftReco = esNft && typeof nftRecomendacionCultivoDesdeConfig === 'function'
@@ -759,7 +762,7 @@ function getCLPasos() {
       labelClass: 'cl-calmag-option',
       label:
         '<strong class="cl-calmag-headline">Cambio a nutriente de floración/fruto</strong>' +
-        'Si lo marcas, esta recarga recalcula dosis con el nutriente BLOOM seleccionado.',
+        'Válido en <strong>torre, DWC, NFT y RDWC</strong>. Si lo marcas, esta recarga recalcula los ml del paso 4 con el BLOOM elegido (misma lógica que el calendario por fechas de trasplante).',
       _clOnchange: 'onChecklistCambioNutrienteToggle()',
     });
     paso40campos.push({
@@ -777,8 +780,19 @@ function getCLPasos() {
   }
 
   const aguaPrimer = cfg.agua || state.configAgua || 'destilada';
-  const vMaxRawPrimer = Number(cfg.volDeposito);
+  let vMaxRawPrimer = Number(cfg.volDeposito);
+  if (esRdwc && (!Number.isFinite(vMaxRawPrimer) || vMaxRawPrimer <= 0)) {
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
+    vMaxRawPrimer = Number(cfg.rdwcControlVolL);
+  }
   const volMaxPrimerIni = Number.isFinite(vMaxRawPrimer) && vMaxRawPrimer > 0 ? Math.round(vMaxRawPrimer) : 20;
+  const pc1SeccionTitulo = esRdwc ? '⚙️ Depósito de control, agua y nutriente' : '⚙️ Depósito, agua y nutriente';
+  const pc1DescPaso = esRdwc
+    ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.'
+    : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
+  const pc1LabelVolMax = esRdwc ? 'Litros depósito de control (L)' : 'Capacidad máx. depósito (L)';
+  const pc1PhVolMax = esRdwc ? '40' : '20';
+  const pc1LabelVolMez = esRdwc ? 'Litros de mezcla en reservorio (opcional)' : 'Litros de mezcla (opcional)';
   const vmPrimer = Number(cfg.volMezclaLitros);
   const mezPrimerVal =
     Number.isFinite(vmPrimer) && vmPrimer > 0 && vmPrimer < volMaxPrimerIni - 0.02
@@ -792,20 +806,22 @@ function getCLPasos() {
   }));
 
   const pasosConfigPrimerLlenado = [
-    { id: 'PC1', seccion: '⚙️ Depósito, agua y nutriente', paso: 'PC·1',
-      desc: 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.',
+    { id: 'PC1', seccion: pc1SeccionTitulo, paso: 'PC·1',
+      desc: pc1DescPaso,
       nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Sistema</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.' +
-        (esDwc || esRdwc
+        (esDwc
           ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Sistema / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
-          : ''),
+          : esRdwc
+            ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí preparas la mezcla y tomas EC/pH en <strong>Medir</strong>; la bomba de recirculación reparte al resto del circuito (volumen total del anillo ≠ este depósito).'
+            : ''),
       extraHtml:
         '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
         '<p class="cl-tabla-cultivos-hint">Ventana de consulta: ciérrala y sigue con el checklist.</p>',
       campos: [
-        { id: 'clPrimerVolMax', label: 'Capacidad máx. depósito (L)', type: 'number', step: '1', placeholder: '20',
+        { id: 'clPrimerVolMax', label: pc1LabelVolMax, type: 'number', step: '1', placeholder: pc1PhVolMax,
           value: String(volMaxPrimerIni),
           _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
-        { id: 'clPrimerVolMezcla', label: 'Litros de mezcla (opcional)', type: 'number', step: '0.1', placeholder: 'vacío = hasta el máximo',
+        { id: 'clPrimerVolMezcla', label: pc1LabelVolMez, type: 'number', step: '0.1', placeholder: 'vacío = hasta el máximo',
           value: mezPrimerVal,
           _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
         { id: 'clPrimerAgua', label: 'Agua para la mezcla', type: 'select', clase: 'wide',
@@ -831,6 +847,10 @@ function getCLPasos() {
     { id: 'PC2', seccion: null, paso: 'PC·2',
       desc: 'EC objetivo de esta recarga (µS/cm) y, si aplica, CalMag antes del abono.',
       nota: 'Tras escribir el EC, <strong>sal del campo</strong> (toca fuera, Tab o Intro) para recalcular los ml de nutriente y CalMag en los pasos siguientes.',
+      postCamposHtml:
+        infoCambioNutriente && infoCambioNutriente.hintHtml
+          ? '<div class="cl-note cl-note--nut-bloom-hint" role="status">' + infoCambioNutriente.hintHtml + '</div>'
+          : '',
       campos: paso40campos,
     },
   ];
@@ -845,7 +865,9 @@ function getCLPasos() {
         ? (esDwcK
           ? ('Sensores o medidores en tu Kratky (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea y superficie estable; sin remover en exceso.')
           : ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.'))
-        : ('Sensores o medidores en tu torre vertical (' + hwLista.join(', ') + '): comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
+        : esRdwc
+          ? ('Sensores o medidores en tu RDWC (' + hwLista.join(', ') + '): mide en el <strong>depósito de control</strong> con la recirculación unos minutos en marcha, solución homogénea y sin burbujas pegadas a la sonda.')
+          : ('Sensores o medidores en tu torre vertical (' + hwLista.join(', ') + '): comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. El <strong>registro</strong> de esta recarga lo cierras en el paso <strong>6.4</strong> y lo verás en <strong>Mediciones</strong>.',
   }] : [];
 
@@ -924,8 +946,8 @@ function getCLPasos() {
           id: 'R0',
           seccion: '🔁 RDWC — Recirculación y retorno',
           paso: 'R·0',
-          desc: 'Validar línea de impulsión y retorno en todos los módulos antes de cerrar recarga.',
-          nota: 'Revisa caudal homogéneo por sitio, sin sifonados invertidos ni puntos muertos en retornos.',
+          desc: 'Validar <strong>recirculación continua</strong> (línea de envío/alta y retorno/baja) en todos los módulos antes de cerrar recarga.',
+          nota: 'No es riego por impulsos ni goteo: la bomba de recirculación trabaja en continuo. Revisa caudal homogéneo por sitio, sin sifonados invertidos ni puntos muertos en retornos.',
         },
         {
           id: 'R0b',
@@ -1508,20 +1530,88 @@ function getChecklistCambioNutrienteInfo() {
     const ctx = typeof hcGetRecomendacionNutrienteContexto === 'function'
       ? hcGetRecomendacionNutrienteContexto()
       : null;
-    if (!ctx || !ctx.hayFruto || ctx.actual !== 'veg') return null;
+    if (!ctx || !ctx.hayFruto) return null;
     const actual = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
     if (!actual) return null;
+    const uso =
+      typeof hcNutrienteFaseUso === 'function' ? hcNutrienteFaseUso(actual) : 'unknown';
+    if (uso === 'bloom') return null;
     const altId = typeof hcNutrienteAlternativaFloracionId === 'function'
       ? hcNutrienteAlternativaFloracionId(actual.id)
       : null;
     const altNut = altId ? (NUTRIENTES_DB.find(n => n && n.id === altId) || null) : null;
-    const selectedId = String(cfg.checklistCambioNutrienteId || (altNut ? altNut.id : '') || '');
-    const enabled = cfg.checklistCambioNutrienteActivado === true;
-    const prevId = String(cfg.checklistCambioNutrientePrevioId || actual.id || '');
     const bloomOpts = NUTRIENTES_DB
       .filter(n => n && (typeof hcNutrienteFaseUso === 'function' ? hcNutrienteFaseUso(n) === 'bloom' : true))
       .map(n => ({ value: n.id, label: n.nombre }));
-    return { actual, selectedId, enabled, prevId, bloomOpts };
+    if (!bloomOpts.length) return null;
+    const selectedId = String(cfg.checklistCambioNutrienteId || (altNut ? altNut.id : '') || '');
+    const enabled = cfg.checklistCambioNutrienteActivado === true;
+    const prevId = String(cfg.checklistCambioNutrientePrevioId || actual.id || '');
+    const faseFlorUrgente = !!(ctx.conFaseReal && ctx.faseFlor);
+    const esc =
+      typeof escHtmlUi === 'function'
+        ? escHtmlUi
+        : function (t) {
+          return String(t || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/"/g, '&quot;');
+        };
+    const sisLab =
+      typeof etiquetaSistemaHidroponicoBreve === 'function'
+        ? String(etiquetaSistemaHidroponicoBreve(cfg) || '').trim()
+        : '';
+    const sisTxt = sisLab ? ' · ' + esc(sisLab) : '';
+    let hintHtml = '';
+    if (Number.isFinite(Number(ctx.fechaCambioMs))) {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const fc = new Date(Number(ctx.fechaCambioMs));
+      fc.setHours(0, 0, 0, 0);
+      const dDiff = Math.round((hoy - fc) / 86400000);
+      const fechaTxt = ctx.fechaCambioTxt || '';
+      if (dDiff === 0) {
+        hintHtml =
+          '📅 <strong>Ventana por fechas (trasplante):</strong> hoy coincide el inicio de fase floral en el modelo por días de cultivo' +
+          (fechaTxt ? ' (' + fechaTxt + ').' : '.') +
+          ' Marca el cambio a BLOOM para que el paso 4 recalcule ml con ese nutriente (torre, DWC, NFT y RDWC).' +
+          sisTxt;
+      } else if (dDiff > 0) {
+        hintHtml =
+          '📅 <strong>Ventana por fechas:</strong> el paso a floración sugerido era el ' +
+          esc(fechaTxt || '—') +
+          ' (hace ' +
+          dDiff +
+          ' días). Activa el cambio a BLOOM en esta recarga si aún usas base vegetativa.' +
+          sisTxt;
+      } else {
+        hintHtml =
+          '📅 <strong>Planificación:</strong> cambio sugerido el ' +
+          esc(fechaTxt || '—') +
+          ' (faltan ' +
+          Math.abs(dDiff) +
+          ' días). Puedes preparar ya el BLOOM o esperar; al marcarlo, las dosis del paso 4 siguen ese nutriente.' +
+          sisTxt;
+      }
+    } else if (faseFlorUrgente) {
+      hintHtml =
+        '🔔 <strong>Fase floral</strong> detectada por fechas de trasplante. Activa el cambio a BLOOM para alinear dosis y tablas con floración/fruto.' +
+        sisTxt;
+    } else if (uso === 'both' || uso === 'unknown') {
+      hintHtml =
+        'Cultivo de fruto con abono no exclusivamente vegetativo: puedes fijar un <strong>BLOOM</strong> concreto para esta recarga y recalcular ml del paso 4.' +
+        sisTxt;
+    }
+    return {
+      actual,
+      selectedId,
+      enabled,
+      prevId,
+      bloomOpts,
+      hintHtml,
+      faseFlorUrgente,
+      usoCorriente: uso,
+    };
   } catch (_) {
     return null;
   }
@@ -1864,8 +1954,10 @@ function clToggle(id) {
 
 function updateClProgress() {
   const pct = Math.round((clChecked.size / getCLTotal()) * 100);
-  document.getElementById('clProgressFill').style.width = pct + '%';
-  document.getElementById('clProgressText').textContent = `${clChecked.size} / ${getCLTotal()} pasos completados`;
+  const fill = document.getElementById('clProgressFill');
+  if (fill) fill.style.width = pct + '%';
+  const txt = document.getElementById('clProgressText');
+  if (txt) txt.textContent = `${clChecked.size} / ${getCLTotal()} pasos completados`;
   const btn = document.getElementById('clBtnFinalizar');
   if (!btn) return;
   const completo = clChecked.size >= getCLTotal();
