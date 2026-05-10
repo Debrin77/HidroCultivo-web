@@ -1014,6 +1014,9 @@ function generarSVGRdwc() {
     ? Math.max(0, Math.min(1, volMez / volMax))
     : 0.6;
   const waterY = tankY + tankH - Math.round(tankH * pct) - 6;
+  const ta = torreSvgAnimacionesActivas();
+  const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
+  const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
   let s = `<svg viewBox="0 0 ${w} ${h}" class="torre-svg" role="img" aria-label="RDWC: módulos conectados con recirculación y depósito de control">`;
   s += `<defs>
     <linearGradient id="rdwcWater" x1="0" y1="0" x2="0" y2="1">
@@ -1072,6 +1075,35 @@ function generarSVGRdwc() {
   // Depósito de control y conexiones con colectores
   s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="12" fill="url(#rdwcTankBody)" stroke="#475569" stroke-width="1.5"/>`;
   s += `<rect x="${tankX + 5}" y="${waterY}" width="${tankW - 10}" height="${tankY + tankH - waterY - 5}" rx="8" fill="url(#rdwcWater)" opacity="0.9"/>`;
+  // Depósito de control: mismo criterio que torre/DWC — calentador y difusor según Sistema → equipamiento
+  if (tieneCalentador) {
+    const hx = tankX + 14;
+    const hTop = tankY + tankH - 36;
+    s += `<rect x="${hx - 4}" y="${hTop}" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1.1"/>`;
+    s += `<circle cx="${hx}" cy="${hTop - 4}" r="3.2" fill="#fbbf24">${ta ? `<animate attributeName="opacity" from="0.55" to="1" dur="1.4s" repeatCount="indefinite" direction="alternate"/>` : ''}</circle>`;
+    s += `<text x="${hx}" y="${tankY + tankH - 8}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="6.5" fill="#9a3412" font-weight="800">CAL</text>`;
+  }
+  if (tieneDifusor) {
+    const ax = tankX + tankW - 14;
+    const ay = tankY + tankH - 14;
+    s += `<line x1="${ax}" y1="${tankY + 6}" x2="${ax}" y2="${ay - 8}" stroke="#64748b" stroke-width="1.35" stroke-dasharray="3 2"/>`;
+    s += `<ellipse cx="${ax}" cy="${ay}" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="1.1"/>`;
+    s += `<ellipse cx="${ax}" cy="${ay}" rx="7" ry="3.5" fill="#d1d5db" opacity="0.65"/>`;
+    if (ta) {
+      for (let bi = 0; bi < 5; bi++) {
+        const bx = ax + (bi % 3 - 1) * 3;
+        const y0 = ay - 5;
+        const y1 = Math.min(ay - 22, waterY + 10);
+        const delay = (bi * 0.22).toFixed(2);
+        const dur = (1.05 + bi * 0.12).toFixed(2);
+        s += `<circle cx="${bx}" cy="${y0}" r="${1.2 + (bi % 2) * 0.4}" fill="#bae6fd" opacity="0">
+          <animate attributeName="cy" from="${y0}" to="${y1}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
+          <animate attributeName="opacity" values="0;0.85;0.85;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+        </circle>`;
+      }
+    }
+    s += `<text x="${ax}" y="${tankY + tankH - 8}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="6.5" fill="#475569" font-weight="800">AIR</text>`;
+  }
   s += `<line x1="${tankX + tankW}" y1="${supY}" x2="${left + 8}" y2="${supY}" stroke="#16a34a" stroke-width="4" marker-end="url(#rdwcFlowOut)"/>`;
   s += `<line x1="${left + 8}" y1="${retY}" x2="${tankX + tankW}" y2="${retY}" stroke="#2563eb" stroke-width="4" marker-end="url(#rdwcFlowIn)"/>`;
   s += `<line x1="${tankX + tankW}" y1="${supY}" x2="${tankX + tankW}" y2="${tankY + 28}" stroke="#16a34a" stroke-width="4"/>`;
@@ -2182,7 +2214,7 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<strong>DWC</strong>: tapa arriba, depósito abajo. <strong>Toca maceta</strong> o usa <strong>Lista</strong>.';
     } else if (esRdwc) {
       intro.innerHTML =
-        '<strong>RDWC</strong>: <strong>recirculación continua</strong> (envío/retorno), depósito de control abajo. Fase del cultivo <strong>encima</strong> de cada módulo. <strong>Toca módulo</strong> o <strong>Lista</strong>.';
+        '<strong>RDWC</strong>: <strong>recirculación continua</strong> (envío/retorno), depósito de control abajo con <strong>CAL / AIR</strong> si los marcas en <strong>Sistema</strong>. Fase del cultivo <strong>encima</strong> de cada módulo. <strong>Toca módulo</strong> o <strong>Lista</strong>.';
     } else {
       intro.innerHTML =
         '<strong>Torre</strong> (maqueta): <strong>flechas o deslizar</strong> para girar; <strong>Lista</strong> para ver todas las cestas.';

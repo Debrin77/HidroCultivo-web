@@ -192,6 +192,23 @@ function getVolumenMezclaLitros(cfg) {
   return maxL;
 }
 
+/**
+ * Opciones de aviso por «volumen repuesto vs umbral × volumen útil» (Medir → próxima recarga).
+ * @returns {{ activo: boolean, mult: number, consejoDesdePct: number }}
+ */
+function getRecargaVolumenAvisoCfg() {
+  const c = state.configTorre || {};
+  const activo = c.recargaAvisoPorVolumen !== false;
+  let mult = Number(c.recargaUmbralVolumenMult);
+  if (!Number.isFinite(mult) || mult < 0.8) mult = 1;
+  if (mult > 1.5) mult = 1.5;
+  mult = Math.round(mult * 100) / 100;
+  let consejoDesdePct = Number(c.recargaConsejoCruceDesdePct);
+  if (!Number.isFinite(consejoDesdePct)) consejoDesdePct = 85;
+  consejoDesdePct = Math.round(Math.max(72, Math.min(100, consejoDesdePct)));
+  return { activo, mult, consejoDesdePct };
+}
+
 // ── Calcular ml de A+B necesarios para llegar a EC objetivo ─────────────────
 // Descuenta el CalMag ya disuelto (EC_CALMAG_BASE)
 // EC objetivo Aqua Vega: 1400 - 400(CalMag) = 1000 µS/cm

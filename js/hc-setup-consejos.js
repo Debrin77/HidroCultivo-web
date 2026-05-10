@@ -501,10 +501,26 @@ function mlAbonoParteDinamica(nut, partIndex, volLitros, ecMetaMicroS, ctx) {
 }
 
 function calcularMlParteNutriente(partIndex) {
-  const nut = getNutrienteTorre();
+  let nut = getNutrienteTorre();
+  if (
+    !nut &&
+    typeof clRutaChecklist !== 'undefined' &&
+    clRutaChecklist === 'primer_llenado' &&
+    Array.isArray(NUTRIENTES_DB) &&
+    NUTRIENTES_DB.length
+  ) {
+    nut = NUTRIENTES_DB.find(n => n && n.id === 'canna_aqua') || NUTRIENTES_DB[0];
+  }
   if (!nut) return 0;
   const cfg = state.configTorre || {};
-  const volObj = getVolumenMezclaLitros(cfg);
+  let volObj = getVolumenMezclaLitros(cfg);
+  if (
+    (volObj == null || !Number.isFinite(volObj) || volObj <= 0) &&
+    typeof clRutaChecklist !== 'undefined' &&
+    clRutaChecklist === 'primer_llenado'
+  ) {
+    volObj = typeof VOL_OBJETIVO === 'number' ? VOL_OBJETIVO : 18;
+  }
   if (volObj == null || !Number.isFinite(volObj) || volObj <= 0) return 0;
   const aguaGrifo = (cfg.agua || state.configAgua || 'destilada') === 'grifo';
   return mlAbonoParteDinamica(nut, partIndex, volObj, getRecargaEcMetaMicroS(), {

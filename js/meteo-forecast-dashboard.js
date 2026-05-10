@@ -228,6 +228,7 @@ function updateRecargaBar() {
   const barEl  = document.getElementById('recargaBar');
   const notaEl = document.getElementById('recargaNota');
   if (!diasEl || !barEl || !notaEl) return;
+  hydrateRecargaVolumenAvisoMedirUI();
 
   const sysLbl =
     typeof etiquetaSistemaHidroponicoBreve === 'function'
@@ -266,6 +267,19 @@ function updateRecargaBar() {
       sysLbl +
       (diasRestantes === 0 ? ' — HOY' : ' — en ~' + diasRestantes + ' días');
   }
+
+  try {
+    const av =
+      typeof getRecargaVolumenAvisoCfg === 'function'
+        ? getRecargaVolumenAvisoCfg()
+        : { activo: true, mult: 1, consejoDesdePct: 85 };
+    if (state.ultimaRecarga && av.activo && pct >= av.consejoDesdePct) {
+      const vr = getRecargaVolumenReferenciaLitros();
+      const acu = sumatorioReposicionLitrosDesdeRecargaCompleta();
+      const cx = buildRecargaConsejoLitrosYPlazoPlain(pct, diasTranscurridos, vr, acu);
+      if (cx) nota += ' — ' + cx;
+    }
+  } catch (_) {}
 
   diasEl.style.color = color;
   barEl.style.width = pct + '%';
@@ -326,6 +340,7 @@ function updateRecargaBar() {
   }
 
   const nPlantasTorre = contarPlantasTorreConVariedad();
+  updateRecargaReposTurnoverHint();
   updateRecargaConfirmUI(
     state.ultimaRecarga ? pct : 0,
     state.ultimaRecarga ? diasTranscurridos : 0,
@@ -357,9 +372,35 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
       'Recordatorio pospuesto (unas ' + horas + ' h). Sigue disponible el checklist, reposición parcial y «Recordar mañana».';
   }
 
+  const avUi =
+    typeof getRecargaVolumenAvisoCfg === 'function'
+      ? getRecargaVolumenAvisoCfg()
+      : { activo: true, mult: 1, consejoDesdePct: 85 };
+  let turnoverPendiente = false;
+  let volRBanner = null;
+  let acumBanner = null;
+  try {
+    if (state.ultimaRecarga && avUi.activo) {
+      volRBanner = getRecargaVolumenReferenciaLitros();
+      acumBanner = sumatorioReposicionLitrosDesdeRecargaCompleta();
+      if (
+        volRBanner &&
+        acumBanner &&
+        acumBanner.totalLitros >= volRBanner * avUi.mult - 1e-6
+      ) {
+        turnoverPendiente = true;
+      }
+    }
+  } catch (_) {}
+  const consejoBanner =
+    state.ultimaRecarga && avUi.activo && pct >= avUi.consejoDesdePct
+      ? buildRecargaConsejoLitrosYPlazoPlain(pct, diasTranscurridos, volRBanner, acumBanner)
+      : '';
+
   const urgente = !snooze && (
     (!state.ultimaRecarga && nPlantas > 0) ||
-    (state.ultimaRecarga && pct >= 72)
+    (state.ultimaRecarga && pct >= 72) ||
+    (state.ultimaRecarga && turnoverPendiente)
   );
 
   if (!urgente) {
@@ -378,18 +419,43 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
       '⚠️ No hay fecha de recarga completa. Si ya vaciaste y mezclaste de cero → checklist o interruptor «Recarga completa» al guardar. Si solo rellenaste volumen (plantas/evaporación) → reposición parcial; no reinicia este contador.';
   } else if (pct >= 85) {
     banner.classList.add('bad');
-    banner.textContent =
+    let t =
       pref +
       '🔴 Llevas ' +
       diasTranscurridos +
       ' días desde la última recarga completa. ¿Toca vaciar, limpiar y checklist? Si solo faltaba agua en el mismo cultivo, usa reposición parcial.';
-  } else {
+    if (turnoverPendiente) {
+      t +=
+        ' El volumen repuesto en suma ya alcanza el umbral configurado (≥' +
+        fmtMultRecargaVolumen(avUi.mult) +
+        '× el volumen útil de referencia).';
+    }
+    if (consejoBanner && !turnoverPendiente) t += ' ' + consejoBanner;
+    banner.textContent = t;
+  } else if (turnoverPendiente) {
     banner.classList.remove('bad');
-    banner.textContent =
+    let t =
+      pref +
+      '⚠️ Desde la última recarga completa has registrado en reposiciones parciales un volumen ≥ al umbral configurado (≥' +
+      fmtMultRecargaVolumen(avUi.mult) +
+      '× el volumen útil de referencia). Conviene planificar vaciado + limpieza + mezcla nueva (checklist). El aviso por días (~15) es un criterio aparte.';
+    if (pct >= 72) {
+      t +=
+        ' El plazo por días también es próximo (' +
+        (diasRestantes <= 0 ? 'hoy' : 'quedan ~' + diasRestantes + ' d') +
+        ').';
+    }
+    if (consejoBanner) t += ' ' + consejoBanner;
+    banner.textContent = t;
+  } else if (pct >= 72) {
+    banner.classList.remove('bad');
+    let t2 =
       pref +
       '⚠️ Pronto toca valorar una recarga completa (' +
       (diasRestantes <= 0 ? 'hoy según calendario' : 'quedan ~' + diasRestantes + ' d') +
       '). Rellenar sin vaciar = reposición parcial.';
+    if (consejoBanner) t2 += ' ' + consejoBanner;
+    banner.textContent = t2;
   }
 }
 
@@ -404,6 +470,239 @@ function parseFechaRegistroReposicionMs(fecha) {
   if (!y || m < 0 || m > 11 || d < 1 || d > 31) return NaN;
   const dt = new Date(y, m, d, 12, 0, 0, 0);
   return dt.getTime();
+}
+
+/** Inicio del día (local) de la última recarga completa (`ultimaRecarga` en ISO YYYY-MM-DD). */
+function parseUltimaRecargaCompletaDayMs() {
+  const iso = state.ultimaRecarga;
+  if (!iso || typeof iso !== 'string') return null;
+  const day = String(iso).split('T')[0];
+  const p = day.split('-');
+  if (p.length !== 3) return null;
+  const y = parseInt(p[0], 10);
+  const mo = parseInt(p[1], 10) - 1;
+  const d = parseInt(p[2], 10);
+  if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null;
+  const dt = new Date(y, mo, d, 0, 0, 0, 0);
+  const t = dt.getTime();
+  return Number.isFinite(t) ? t : null;
+}
+
+/**
+ * Litros añadidos en reposiciones parciales registradas desde la fecha de última recarga completa.
+ * Misma instalación activa si hay varias torres (por nombre).
+ */
+function sumatorioReposicionLitrosDesdeRecargaCompleta() {
+  const desde = parseUltimaRecargaCompletaDayMs();
+  if (desde == null) return null;
+  const reg = state.registro || [];
+  const tAct = typeof getTorreActiva === 'function' ? getTorreActiva() : null;
+  const nombreTorre = (tAct && tAct.nombre) ? String(tAct.nombre).trim() : '';
+  const multiTorre = state.torres && state.torres.length > 1;
+  let totalLitros = 0;
+  let count = 0;
+  for (let i = 0; i < reg.length; i++) {
+    const e = reg[i];
+    if (e.tipo !== 'reposicion') continue;
+    if (multiTorre && nombreTorre && e.torreNombre && String(e.torreNombre).trim() !== nombreTorre) continue;
+    const ts = parseFechaRegistroReposicionMs(e.fecha);
+    if (!isFinite(ts) || ts < desde) continue;
+    const L = typeof e.litros === 'number' ? e.litros : parseFloat(e.litros);
+    if (!isFinite(L) || L <= 0) continue;
+    totalLitros += L;
+    count++;
+  }
+  return { totalLitros: Math.round(totalLitros * 10) / 10, count };
+}
+
+/** Volumen de referencia (L) para la regla «~1× depósito repuesto»: litros de mezcla o, si no, tope de depósito. */
+function getRecargaVolumenReferenciaLitros() {
+  const cfg = state.configTorre || {};
+  if (typeof getVolumenMezclaLitros === 'function') {
+    const v = getVolumenMezclaLitros(cfg);
+    if (v != null && Number.isFinite(v) && v > 0) return v;
+  }
+  if (typeof getVolumenDepositoMaxLitros === 'function') {
+    const m = getVolumenDepositoMaxLitros(cfg);
+    if (m != null && Number.isFinite(m) && m > 0) return m;
+  }
+  return null;
+}
+
+function fmtLitrosReposTurnover(n) {
+  const r = Math.round(n * 10) / 10;
+  return (Math.abs(r % 1) < 0.05) ? String(Math.round(r)) : String(r);
+}
+
+function fmtMultRecargaVolumen(mult) {
+  const r = Math.round(mult * 100) / 100;
+  return String(r).replace('.', ',');
+}
+
+function hydrateRecargaVolumenAvisoMedirUI() {
+  const av =
+    typeof getRecargaVolumenAvisoCfg === 'function'
+      ? getRecargaVolumenAvisoCfg()
+      : { activo: true, mult: 1, consejoDesdePct: 85 };
+  const chk = document.getElementById('chkRecargaAvisoVolumen');
+  const inp = document.getElementById('inputRecargaUmbralVolumenMult');
+  const sel = document.getElementById('selectRecargaConsejoDesdePct');
+  if (chk) chk.checked = !!av.activo;
+  if (inp) inp.value = String(av.mult);
+  if (sel) {
+    const v = String(av.consejoDesdePct);
+    if (!sel.querySelector('option[value="' + v + '"]')) {
+      const o = document.createElement('option');
+      o.value = v;
+      o.textContent = v + ' % del ciclo (guardado)';
+      sel.appendChild(o);
+    }
+    sel.value = v;
+  }
+}
+
+function persistRecargaVolumenAvisoOpts() {
+  if (typeof initTorres !== 'function') return;
+  initTorres();
+  if (!state.configTorre) state.configTorre = {};
+  const chk = document.getElementById('chkRecargaAvisoVolumen');
+  const inp = document.getElementById('inputRecargaUmbralVolumenMult');
+  const sel = document.getElementById('selectRecargaConsejoDesdePct');
+  if (chk) {
+    if (chk.checked) delete state.configTorre.recargaAvisoPorVolumen;
+    else state.configTorre.recargaAvisoPorVolumen = false;
+  }
+  if (inp) {
+    let m = parseFloat(String(inp.value || '').replace(',', '.'));
+    if (!Number.isFinite(m)) m = 1;
+    m = Math.round(Math.max(0.8, Math.min(1.5, m)) * 100) / 100;
+    inp.value = String(m);
+    if (Math.abs(m - 1) < 0.021) delete state.configTorre.recargaUmbralVolumenMult;
+    else state.configTorre.recargaUmbralVolumenMult = m;
+  }
+  if (sel) {
+    const p = parseInt(String(sel.value || '85'), 10);
+    const pc = Number.isFinite(p) ? Math.round(Math.max(72, Math.min(100, p))) : 85;
+    if (pc === 85) delete state.configTorre.recargaConsejoCruceDesdePct;
+    else state.configTorre.recargaConsejoCruceDesdePct = pc;
+  }
+  if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
+  if (typeof saveState === 'function') saveState();
+  if (typeof updateRecargaBar === 'function') updateRecargaBar();
+}
+
+/**
+ * Consejo breve (texto plano) cruzando plazo por días y litros repuestos desde la última recarga completa.
+ * @param {number} pct Porcentaje del ciclo de días (0–100).
+ * @param {number} diasTranscurridos Días desde ultimaRecarga.
+ * @param {number|null} volRef Litros de referencia (mezcla / depósito).
+ * @param {{ totalLitros: number, count: number }|null} ac Acumulado de reposiciones parciales.
+ */
+function buildRecargaConsejoLitrosYPlazoPlain(pct, diasTranscurridos, volRef, ac) {
+  if (!volRef || !ac) return '';
+  const av =
+    typeof getRecargaVolumenAvisoCfg === 'function'
+      ? getRecargaVolumenAvisoCfg()
+      : { activo: true, mult: 1, consejoDesdePct: 85 };
+  if (!av.activo) return '';
+  const mult = av.mult;
+  const desdePct = av.consejoDesdePct;
+  const ratio = volRef > 0 ? ac.totalLitros / volRef : 0;
+  const haciaUmbral = volRef > 0 && mult > 0 ? ac.totalLitros / (volRef * mult) : 0;
+  const pctUmbral = Math.min(100, Math.round(haciaUmbral * 100));
+  const x = fmtLitrosReposTurnover(ac.totalLitros);
+  const y = fmtLitrosReposTurnover(volRef);
+  const mTxt = fmtMultRecargaVolumen(mult);
+
+  if (pct < desdePct) {
+    if (haciaUmbral >= 1) {
+      return 'Reposición acumulada ≥' + mTxt + '× el volumen útil (' + x + '/' + y + ' L ref.): conviene planificar vaciado + checklist.';
+    }
+    if (haciaUmbral >= 0.75) {
+      return 'Reposición acumulada alta (~' + pctUmbral + '% del umbral ' + mTxt + '×; ' + x + '/' + y + ' L): revisa EC/pH y la recarga completa.';
+    }
+    return '';
+  }
+
+  if (ac.count === 0) {
+    return 'Sin reposiciones con litros registradas no podemos cotejar el umbral ' + mTxt + '× volumen; anota cada rellenado en Medir.';
+  }
+  if (haciaUmbral >= 1) {
+    return 'Recomendación: ~' + diasTranscurridos + ' d desde recarga completa y repuesto ' + x + '/' + y + ' L (≥' + mTxt + '× volumen ref.). Conviene recarga completa (checklist).';
+  }
+  if (haciaUmbral >= 0.75) {
+    return 'Recomendación: plazo alto (' + diasTranscurridos + ' d) y repuesto ' + x + '/' + y + ' L (~' + pctUmbral + '% del umbral ' + mTxt + '×). Lo habitual es recarga completa; confirma EC/pH antes de posponer.';
+  }
+  return (
+    'Recomendación: plazo alto (' + diasTranscurridos + ' d) y repuesto ' + x + '/' + y + ' L (~' + pctUmbral + '% del umbral ' + mTxt + '×). ' +
+    'Por volumen aún no alcanzas ese multiplicador en reposiciones, pero por tiempo e higiene suele tocarse recarga completa: revisa EC/pH, olor y biofilm.'
+  );
+}
+
+/** Bloque informativo bajo la barra de días: reposición acumulada vs ~1× volumen de mezcla. */
+function updateRecargaReposTurnoverHint() {
+  const el = document.getElementById('recargaReposTurnoverHint');
+  if (!el) return;
+  el.classList.remove('recarga-repos-turnover--warn', 'recarga-repos-turnover--over');
+  const av =
+    typeof getRecargaVolumenAvisoCfg === 'function'
+      ? getRecargaVolumenAvisoCfg()
+      : { activo: true, mult: 1, consejoDesdePct: 85 };
+  if (!av.activo) {
+    el.style.display = 'none';
+    el.textContent = '';
+    el.innerHTML = '';
+    return;
+  }
+  const mult = av.mult;
+  if (!state.ultimaRecarga) {
+    el.style.display = 'none';
+    el.textContent = '';
+    el.innerHTML = '';
+    return;
+  }
+  const volRef = getRecargaVolumenReferenciaLitros();
+  const ac = sumatorioReposicionLitrosDesdeRecargaCompleta();
+  if (volRef == null || !ac) {
+    el.style.display = 'none';
+    el.textContent = '';
+    el.innerHTML = '';
+    return;
+  }
+  const ratio = volRef > 0 ? ac.totalLitros / volRef : 0;
+  const haciaUmbral = volRef > 0 && mult > 0 ? ac.totalLitros / (volRef * mult) : 0;
+  const diasTrHint = state.ultimaRecarga
+    ? Math.floor((Date.now() - new Date(state.ultimaRecarga).getTime()) / 86400000)
+    : 0;
+  const pctDiasHint = Math.min(100, (diasTrHint / 15) * 100);
+  const mTxt = fmtMultRecargaVolumen(mult);
+  el.style.display = 'block';
+  if (haciaUmbral >= 1) el.classList.add('recarga-repos-turnover--over');
+  else if (haciaUmbral >= 0.75) el.classList.add('recarga-repos-turnover--warn');
+  else if (pctDiasHint >= 72 && ac.count > 0) el.classList.add('recarga-repos-turnover--warn');
+  const base =
+    '🔁 <strong>Reposición acumulada</strong> (orientativa): desde la última recarga completa llevas <strong>' +
+    fmtLitrosReposTurnover(ac.totalLitros) +
+    ' L</strong> en <strong>' +
+    ac.count +
+    '</strong> registro(s) de reposición parcial. Umbral configurado: <strong>' +
+    mTxt +
+    '×</strong> el volumen útil de referencia (<strong>' +
+    fmtLitrosReposTurnover(volRef) +
+    ' L</strong> en <strong>Sistema</strong>) ≈ <strong>' +
+    fmtLitrosReposTurnover(Math.round(volRef * mult * 10) / 10) +
+    ' L</strong> acumulados para disparar el aviso fuerte.';
+  const tail =
+    haciaUmbral >= 1
+      ? ' <strong>Has alcanzado o superado ese umbral: planifica pronto vaciado + mezcla nueva</strong> (checklist) y revisa EC/pH.'
+      : haciaUmbral >= 0.75
+        ? ' Te acercas al umbral ' + mTxt + '×: vigila EC/pH y adelanta el cambio completo si la solución degrada.'
+        : ac.count > 0
+          ? ' Llevas ~' +
+            Math.min(100, Math.round(haciaUmbral * 100)) +
+            '% del umbral ' + mTxt + '×; si el plazo por días ya es alto (barra naranja/roja), prioriza recarga completa por higiene aunque no llegues al umbral en volumen.'
+          : ' Sigue registrando litros en cada reposición para que el total sea fiel.';
+  el.innerHTML = base + tail;
 }
 
 /** Suma litros y cuenta reposiciones parciales en los últimos `dias` (registro unificado). */
@@ -448,11 +747,37 @@ function actualizarResumenReposicionParcialUI() {
     const r = Math.round(n * 10) / 10;
     return (Math.abs(r % 1) < 0.05) ? String(Math.round(r)) : String(r);
   };
+  let extraTurn = '';
+  try {
+    const av =
+      typeof getRecargaVolumenAvisoCfg === 'function'
+        ? getRecargaVolumenAvisoCfg()
+        : { activo: true, mult: 1, consejoDesdePct: 85 };
+    if (state.ultimaRecarga && av.activo) {
+      const volRef = getRecargaVolumenReferenciaLitros();
+      const ac = sumatorioReposicionLitrosDesdeRecargaCompleta();
+      if (volRef && ac && ac.count > 0 && av.mult > 0) {
+        const hacia = ac.totalLitros / (volRef * av.mult);
+        const pctH = Math.min(100, Math.round(hacia * 100));
+        extraTurn =
+          '<br><span class="repos-resumen-muted">Desde la última <strong>recarga completa</strong>: ' +
+          fmt(ac.totalLitros) +
+          ' L repuestos (~' +
+          pctH +
+          '% del umbral ' +
+          String(av.mult).replace('.', ',') +
+          '× sobre ' +
+          fmt(volRef) +
+          ' L de referencia).</span>';
+      }
+    }
+  } catch (_) {}
   el.innerHTML =
     '📊 <strong class="repos-resumen-head">Tu rutina de reposición</strong>' + suf + ': ' +
     'últimos <strong>7 días</strong> → ' + fmt(s7.totalLitros) + ' L en <strong>' + s7.count + '</strong> vez(es) · ' +
     'últimos <strong>30 días</strong> → ' + fmt(s30.totalLitros) + ' L en <strong>' + s30.count + '</strong> · ' +
-    '<span class="repos-resumen-muted">Orientativo: si sube el consumo con el tamaño del follaje o el verano, lo verás aquí.</span>';
+    '<span class="repos-resumen-muted">Orientativo: si sube el consumo con el tamaño del follaje o el verano, lo verás aquí.</span>' +
+    extraTurn;
 }
 
 /** Litros añadidos en reposición parcial (obligatorio para registrar). */

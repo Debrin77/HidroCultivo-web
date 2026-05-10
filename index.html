@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-07-sistema-remove-editar-backup-full">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-11-recarga-repos-turnover">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -1042,6 +1042,36 @@
         </div>
         <div class="recarga-nota" id="recargaNota">Cuenta solo recargas con vaciado + limpieza + mezcla nueva (checklist o interruptor de recarga completa).</div>
         <div class="recarga-nota" id="recargaVolSeguroHint" style="display:none"></div>
+        <div class="recarga-nota" id="recargaReposTurnoverHint" style="display:none" role="status" aria-live="polite"></div>
+        <div class="config-section-collapsible recarga-collapse-wrap recarga-collapse-wrap--vol-aviso">
+          <button type="button" class="config-section-collapse-head recarga-collapse-head is-collapsed" id="btnCollapseRecargaVolAviso"
+            aria-expanded="false" aria-controls="collapseBodyRecargaVolAviso"
+            onclick="toggleMedirCollapse('recargaVolAviso')">
+            <span class="config-section-collapse-title-wrap">
+              <span class="config-section-collapse-title"><svg class="hc-ico hc-ico--title-inline" aria-hidden="true" focusable="false"><use href="#hc-i-cog"/></svg> Avisos por volumen repuesto</span>
+              <span class="config-section-collapse-subtitle">Activar o no, umbral × litros y desde qué día del ciclo cruza litros + plazo en la nota.</span>
+            </span>
+            <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
+          </button>
+          <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaVolAviso" hidden>
+            <p class="recarga-subhint">El contador de <strong>~15 días</strong> no cambia aquí. Solo ajusta la regla orientativa de litros repuestos (reposición parcial) frente al volumen útil de referencia en <strong>Sistema</strong>.</p>
+            <label class="recarga-confirm-label"><input type="checkbox" id="chkRecargaAvisoVolumen" checked onchange="persistRecargaVolumenAvisoOpts()"> Activar avisos y bloque informativo por volumen repuesto</label>
+            <label for="inputRecargaUmbralVolumenMult" class="recarga-confirm-label recarga-label-spaced">Umbral (× volumen útil de referencia)</label>
+            <input type="number" id="inputRecargaUmbralVolumenMult" class="form-input" inputmode="decimal" step="0.05" min="0.8" max="1.5" value="1" onchange="persistRecargaVolumenAvisoOpts()" />
+            <p class="recarga-subhint recarga-subhint--tight">1 = regla habitual «~1 depósito repuesto». Por ejemplo 1,2 retrasa el aviso fuerte hasta acumular unos 20 % más litros.</p>
+            <label for="selectRecargaConsejoDesdePct" class="recarga-confirm-label recarga-label-spaced">Texto que cruza litros + plazo en la nota superior desde</label>
+            <select id="selectRecargaConsejoDesdePct" class="form-input" onchange="persistRecargaVolumenAvisoOpts()">
+              <option value="72">72 % del ciclo (~día 11)</option>
+              <option value="75">75 % (~día 11–12)</option>
+              <option value="80">80 % (~día 12)</option>
+              <option value="85">85 % (~día 13), recomendado</option>
+              <option value="88">88 % (~día 13)</option>
+              <option value="90">90 % (~día 14)</option>
+              <option value="93">93 % (~día 14)</option>
+              <option value="100">100 % (día 15)</option>
+            </select>
+          </div>
+        </div>
         <div id="recargaUrgenteBanner" class="recarga-urgente-banner" role="status" aria-live="polite"></div>
         <div id="recargaConfirmPanel" class="recarga-confirm-panel">
           <div class="config-section-collapsible recarga-collapse-wrap">
@@ -1055,7 +1085,7 @@
               <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
             </button>
             <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaTotal" hidden>
-              <p class="recarga-subhint">El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo.</p>
+              <p class="recarga-subhint">El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo. Por aparte, la app compara las <strong>reposiciones parciales</strong> registradas con ~1× el volumen de mezcla (orientación «depósito repuesto»).</p>
               <button type="button" class="btn-recarga-confirm primary recarga-btn-full"
                 onclick="confirmarReposicionDeposito('con_nutrientes')"
                 aria-label="Abrir checklist de recarga completa de la instalación activa"><svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-clipboard"/></svg> Checklist recarga completa</button>
@@ -4358,16 +4388,16 @@
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=8"></script>
   <script src="js/hc-setup-registro.js?v=5"></script>
-  <script src="js/hc-setup-agua-sustrato.js?v=9"></script>
-  <script src="js/hc-setup-mediciones-logic.js?v=10"></script>
+  <script src="js/hc-setup-agua-sustrato.js?v=10"></script>
+  <script src="js/hc-setup-mediciones-logic.js?v=11"></script>
   <script src="js/hc-medicion-wizard.js?v=4"></script>
   <script src="js/hc-tools-pro.js?v=9"></script>
   <script src="js/hc-setup-checklist.js?v=15"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=27"></script>
-  <script src="js/calendario-logic.js?v=2"></script>
+  <script src="js/calendario-logic.js?v=4"></script>
   <script src="js/meteo-forecast-meteo.js?v=1"></script>
-  <script src="js/meteo-forecast-dashboard.js?v=12"></script>
+  <script src="js/meteo-forecast-dashboard.js?v=15"></script>
   <script src="js/riego-calculo-helpers.js?v=3"></script>
   <script src="js/riego-calculo-calcular.js?v=3"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>

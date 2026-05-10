@@ -1171,6 +1171,9 @@ function resolveMedirExpanded(key) {
   if (key === 'calentadorRiego') {
     return ui.calentadorRiego !== undefined ? !!ui.calentadorRiego : true;
   }
+  if (key === 'recargaVolAviso') {
+    return ui.recargaVolAviso !== undefined ? !!ui.recargaVolAviso : false;
+  }
   return true;
 }
 
@@ -1179,7 +1182,8 @@ function applyMedirCollapseUI() {
     { body: 'collapseBodyRecargaProxima', btn: 'btnCollapseRecargaProxima', key: 'recargaProxima' },
     { body: 'collapseBodyLuzOrigen', btn: 'btnCollapseLuzOrigen', key: 'luzOrigen' },
     { body: 'collapseBodyRecargaTotal', btn: 'btnCollapseRecargaTotal', key: 'recargaTotal' },
-    { body: 'collapseBodyRecargaParcial', btn: 'btnCollapseRecargaParcial', key: 'recargaParcial' }
+    { body: 'collapseBodyRecargaParcial', btn: 'btnCollapseRecargaParcial', key: 'recargaParcial' },
+    { body: 'collapseBodyRecargaVolAviso', btn: 'btnCollapseRecargaVolAviso', key: 'recargaVolAviso' }
   ];
   for (let i = 0; i < rows.length; i++) {
     const body = document.getElementById(rows[i].body);
@@ -1233,6 +1237,7 @@ function getCollapseDomByKey(key) {
     recargaParcial: { body: 'collapseBodyRecargaParcial', btn: 'btnCollapseRecargaParcial' },
     interiorGrow: { body: 'collapseBodyInteriorGrow', btn: 'btnCollapseInteriorGrow' },
     calentadorRiego: { body: 'collapseBodyCalentadorRiego', btn: 'btnCollapseCalentadorRiego' },
+    recargaVolAviso: { body: 'collapseBodyRecargaVolAviso', btn: 'btnCollapseRecargaVolAviso' },
   };
   return map[key] || null;
 }

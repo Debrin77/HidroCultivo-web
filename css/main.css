@@ -4787,6 +4787,21 @@ html.hc-theme-dark #tileVol .tile-icon .hc-ico { color: #22d3ee; }
   color: #991b1b;
 }
 
+/* Reposiciones acumuladas vs 1× volumen de mezcla (orientación literatura técnica) */
+#recargaReposTurnoverHint {
+  margin-top: 8px;
+}
+#recargaReposTurnoverHint.recarga-repos-turnover--warn {
+  border: 1.5px solid rgba(251, 191, 36, 0.65);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(251, 191, 36, 0.1);
+}
+#recargaReposTurnoverHint.recarga-repos-turnover--over {
+  border: 1.5px solid rgba(249, 115, 22, 0.85);
+  background: rgba(249, 115, 22, 0.12);
+}
+
 /* Aviso oficial MeteoAlarm en Inicio (flash suave) */
 .meteo-flash-aviso {
   display: block;

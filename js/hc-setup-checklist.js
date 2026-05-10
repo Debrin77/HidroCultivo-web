@@ -184,11 +184,18 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
 
 // Definición de pasos del checklist
 function generarPasosNutriente() {
-  const nut    = getNutrienteTorre();
+  const cfg = state.configTorre || {};
+  const primerLlenadoNut = typeof clRutaChecklist !== 'undefined' && clRutaChecklist === 'primer_llenado';
+  let nut = getNutrienteTorre();
+  if (!nut && primerLlenadoNut && Array.isArray(NUTRIENTES_DB) && NUTRIENTES_DB.length) {
+    nut = NUTRIENTES_DB.find(n => n && n.id === 'canna_aqua') || NUTRIENTES_DB[0];
+  }
   if (!nut) return [];
-  const cfg    = state.configTorre || {};
   const refNut = getRefDosisFabricante(nut.id);
-  const vol    = getVolumenMezclaLitros(cfg);
+  let vol = getVolumenMezclaLitros(cfg);
+  if (primerLlenadoNut && (vol == null || !Number.isFinite(vol) || vol <= 0)) {
+    vol = typeof VOL_OBJETIVO === 'number' ? VOL_OBJETIVO : 18;
+  }
   const mlCM   = calcularMlCalMag();
   const mlP0   = calcularMlParteNutriente(0);
   const mlP1   = nut.partes >= 2 ? calcularMlParteNutriente(1) : mlP0;
@@ -324,9 +331,23 @@ function generarPasosNutriente() {
 }
 
 function construirTextoChecklistPreliminar() {
-  const nut = getNutrienteTorre();
+  let nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
-  const vol = getVolumenMezclaLitros(cfg);
+  let vol = getVolumenMezclaLitros(cfg);
+  if (!nut && Array.isArray(NUTRIENTES_DB) && NUTRIENTES_DB.length) {
+    nut = NUTRIENTES_DB.find(n => n && n.id === 'canna_aqua') || NUTRIENTES_DB[0];
+  }
+  if (!nut) {
+    return {
+      descP1:
+        'Preparar solución provisional en cubo (~5 L) con agua destilada u ósmosis: cantidades según tu nutriente (elige marca en <strong>Sistema</strong> o en <strong>PC·1</strong> del primer llenado).',
+      descP2: 'Verificar stock: agua, nutriente, pH+/pH−, agua oxigenada 3 %, esponja.',
+      placeholderProv: '0.50',
+    };
+  }
+  if (vol == null || !Number.isFinite(vol) || vol <= 0) {
+    vol = typeof VOL_OBJETIVO === 'number' ? VOL_OBJETIVO : 18;
+  }
   const partes = nut.partes || 2;
   const orden = (nut.orden && nut.orden.length >= partes)
     ? nut.orden
@@ -695,12 +716,17 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
 
 function getCLPasos() {
   const cfg = state.configTorre || {};
-  const vol = getVolumenMezclaLitros(cfg);
-  const ecOpt = getECOptimaTorre();
-  const ecMin = ecOpt.min;
-  const ecMax = ecOpt.max;
-  const nut = getNutrienteTorre();
-  if (!nut || vol == null || !Number.isFinite(vol) || vol <= 0) {
+  const primerLlenado = clRutaChecklist === 'primer_llenado';
+  let nut = getNutrienteTorre();
+  let vol = getVolumenMezclaLitros(cfg);
+  if (primerLlenado) {
+    if (!nut && Array.isArray(NUTRIENTES_DB) && NUTRIENTES_DB.length) {
+      nut = NUTRIENTES_DB.find(n => n && n.id === 'canna_aqua') || NUTRIENTES_DB[0];
+    }
+    if (vol == null || !Number.isFinite(vol) || vol <= 0) {
+      vol = typeof VOL_OBJETIVO === 'number' ? VOL_OBJETIVO : 18;
+    }
+  } else if (!nut || vol == null || !Number.isFinite(vol) || vol <= 0) {
     return [
       {
         id: 'CL-CFG',
@@ -712,6 +738,21 @@ function getCLPasos() {
       },
     ];
   }
+  if (!nut) {
+    return [
+      {
+        id: 'CL-CFG',
+        seccion: '⚙️ Datos pendientes',
+        paso: '·',
+        desc:
+          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Sistema</strong> o el formulario que aparece al abrir el checklist.',
+        nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
+      },
+    ];
+  }
+  const ecOpt = getECOptimaTorre();
+  const ecMin = ecOpt.min;
+  const ecMax = ecOpt.max;
   const pHR =
     typeof torreGetPhRangoObjetivo === 'function' ? torreGetPhRangoObjetivo(nut, cfg) : (nut.pHRango || [5.5, 6.5]);
   const phObj = ((pHR[0] + pHR[1]) / 2).toFixed(1);
@@ -1101,7 +1142,6 @@ function getCLPasos() {
           : 'Sin datos suficientes para validar por cultivo. Completa canal y cultivos en Sistema o Asistente.',
     }]
     : [];
-  const primerLlenado = clRutaChecklist === 'primer_llenado';
   const checklistInterior =
     typeof instalacionEsUbicacionInterior === 'function' && instalacionEsUbicacionInterior(cfg);
   /** Recarga completa sin haber registrado antes una recarga en la app: sin parar bomba ni vaciar solución usada. */
@@ -1700,7 +1740,7 @@ function onPrimerLlenadoVolDesdeChecklist() {
   const elZ = document.getElementById('clPrimerVolMezcla');
   let vMax = parseFloat(String(elM && elM.value).replace(',', '.'));
   if (!Number.isFinite(vMax)) vMax = VOL_OBJETIVO;
-  vMax = Math.round(Math.max(5, Math.min(100, vMax)));
+  vMax = Math.round(Math.max(1, Math.min(800, vMax)));
   if (elM) elM.value = String(vMax);
   state.configTorre.volDeposito = vMax;
   const rawMez = elZ ? String(elZ.value || '').trim() : '';

@@ -65,13 +65,32 @@ function generarEventos(fecha) {
   if (state.ultimaRecarga) {
     const diasDesdeRecarga = Math.round((d - new Date(state.ultimaRecarga)) / 86400000);
     if (diasDesdeRecarga >= 13 && diasDesdeRecarga <= 17) {
+      let descRec = `Día ${diasDesdeRecarga} desde la última recarga completa en ${sisLab || 'el sistema activo'} (vaciado + mezcla). Preparar checklist: agua, CalMag, A+B…`;
+      try {
+        const av =
+          typeof getRecargaVolumenAvisoCfg === 'function'
+            ? getRecargaVolumenAvisoCfg()
+            : { activo: true, mult: 1, consejoDesdePct: 85 };
+        if (
+          av.activo &&
+          typeof sumatorioReposicionLitrosDesdeRecargaCompleta === 'function' &&
+          typeof getRecargaVolumenReferenciaLitros === 'function'
+        ) {
+          const ac = sumatorioReposicionLitrosDesdeRecargaCompleta();
+          const volRef = getRecargaVolumenReferenciaLitros();
+          if (ac && volRef && av.mult > 0 && ac.totalLitros >= volRef * av.mult * 0.75) {
+            descRec +=
+              ' En Medir verás también la reposición acumulada frente al umbral × volumen que tengas configurado.';
+          }
+        }
+      } catch (_) {}
       eventos.push({
         tipo: 'recarga',
         icono: '🔄',
         titulo:
           (diasDesdeRecarga >= 15 ? '¡Recarga completa del depósito!' : 'Recarga completa próxima') +
           (sisLab ? ' · ' + sisLab : ''),
-        desc: `Día ${diasDesdeRecarga} desde la última recarga completa en ${sisLab || 'el sistema activo'} (vaciado + mezcla). Preparar checklist: agua, CalMag, A+B…`
+        desc: descRec,
       });
     }
   } else if (diffDias === 0) {

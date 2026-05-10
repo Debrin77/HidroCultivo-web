@@ -572,7 +572,25 @@ function getAjustesEcPhPorContexto(cfg) {
 function getRecomendacionEcPhTorre() {
   const cfg = state.configTorre || {};
   const strategy = getEcPhStrategy(cfg);
-  const nut = getNutrienteTorre();
+  let nut = getNutrienteTorre();
+  if (!nut && Array.isArray(NUTRIENTES_DB) && NUTRIENTES_DB.length) {
+    nut = NUTRIENTES_DB.find(n => n && n.id === 'canna_aqua') || NUTRIENTES_DB[0];
+  }
+  if (!nut) {
+    return {
+      ec: { min: 900, max: 1400 },
+      ph: { min: 5.5, max: 6.5 },
+      faseDominante: null,
+      conFaseReal: false,
+      contexto: { ecMult: 1, phShift: 0 },
+      estrategia: strategy,
+      ecAgregacion: 'sin_nutriente',
+      mezclaFasesDistintas: false,
+      ecMediaFasesCatalogo: null,
+      variedadUnicaId: null,
+      variedadUnicaNombre: null,
+    };
+  }
   if (strategy === 'manual') {
     const ecM = getEcObjetivoManualUs(cfg);
     const phM = getPhObjetivoManualRango(cfg, nut);
@@ -624,7 +642,6 @@ function getRecomendacionEcPhTorre() {
 
   let ecRec;
   if (rangosEc.length === 0) {
-    const nut = getNutrienteTorre();
     ecRec = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400 };
   } else {
     const ecMin = Math.max(...rangosEc.map(r => r.min));
@@ -647,7 +664,6 @@ function getRecomendacionEcPhTorre() {
 
   let phRec;
   if (rangosPh.length === 0) {
-    const nut = getNutrienteTorre();
     const b = nut && Array.isArray(nut.pHRango) ? nut.pHRango : [5.5, 6.5];
     phRec = { min: b[0], max: b[1] };
   } else {
