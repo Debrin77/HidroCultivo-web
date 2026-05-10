@@ -548,7 +548,8 @@ function hydrateRecargaVolumenAvisoMedirUI() {
   const inp = document.getElementById('inputRecargaUmbralVolumenMult');
   const sel = document.getElementById('selectRecargaConsejoDesdePct');
   if (chk) chk.checked = !!av.activo;
-  if (inp) inp.value = String(av.mult);
+  // No pisar el umbral mientras el usuario escribe (vista previa vía estado + updateRecargaBar).
+  if (inp && document.activeElement !== inp) inp.value = String(av.mult);
   if (sel) {
     const v = String(av.consejoDesdePct);
     if (!sel.querySelector('option[value="' + v + '"]')) {
@@ -561,7 +562,15 @@ function hydrateRecargaVolumenAvisoMedirUI() {
   }
 }
 
-function persistRecargaVolumenAvisoOpts() {
+/**
+ * Lee Medir → avisos por volumen y aplica a `state.configTorre`.
+ * @param {{ persistDisk?: boolean, normalizeInput?: boolean }} [opts]
+ *   persistDisk: guardar torre + localStorage (por defecto true).
+ *   normalizeInput: reescribir el campo umbral y tratar NaN como 1 (por defecto igual que persistDisk).
+ */
+function applyRecargaVolumenAvisoFromMedirInputs(opts) {
+  const persistDisk = !opts || opts.persistDisk !== false;
+  const normalizeInput = opts && opts.normalizeInput != null ? !!opts.normalizeInput : persistDisk;
   if (typeof initTorres !== 'function') return;
   initTorres();
   if (!state.configTorre) state.configTorre = {};
@@ -573,12 +582,25 @@ function persistRecargaVolumenAvisoOpts() {
     else state.configTorre.recargaAvisoPorVolumen = false;
   }
   if (inp) {
-    let m = parseFloat(String(inp.value || '').replace(',', '.'));
-    if (!Number.isFinite(m)) m = 1;
-    m = Math.round(Math.max(0.8, Math.min(1.5, m)) * 100) / 100;
-    inp.value = String(m);
-    if (Math.abs(m - 1) < 0.021) delete state.configTorre.recargaUmbralVolumenMult;
-    else state.configTorre.recargaUmbralVolumenMult = m;
+    const raw = String(inp.value || '').replace(',', '.').trim();
+    if (normalizeInput) {
+      let m = parseFloat(raw);
+      if (!Number.isFinite(m)) m = 1;
+      m = Math.round(Math.max(0.8, Math.min(1.5, m)) * 100) / 100;
+      inp.value = String(m);
+      if (Math.abs(m - 1) < 0.021) delete state.configTorre.recargaUmbralVolumenMult;
+      else state.configTorre.recargaUmbralVolumenMult = m;
+    } else {
+      const endsDecSep = /[.,]$/.test(String(inp.value || '').trim());
+      if (raw !== '' && !endsDecSep) {
+        let m = parseFloat(raw);
+        if (Number.isFinite(m)) {
+          m = Math.round(Math.max(0.8, Math.min(1.5, m)) * 100) / 100;
+          if (Math.abs(m - 1) < 0.021) delete state.configTorre.recargaUmbralVolumenMult;
+          else state.configTorre.recargaUmbralVolumenMult = m;
+        }
+      }
+    }
   }
   if (sel) {
     const p = parseInt(String(sel.value || '85'), 10);
@@ -586,9 +608,23 @@ function persistRecargaVolumenAvisoOpts() {
     if (pc === 85) delete state.configTorre.recargaConsejoCruceDesdePct;
     else state.configTorre.recargaConsejoCruceDesdePct = pc;
   }
-  if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
-  if (typeof saveState === 'function') saveState();
+  if (persistDisk) {
+    if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
+    if (typeof saveState === 'function') saveState();
+  }
   if (typeof updateRecargaBar === 'function') updateRecargaBar();
+  try {
+    if (typeof actualizarResumenReposicionParcialUI === 'function') actualizarResumenReposicionParcialUI();
+  } catch (_) {}
+}
+
+/** Vista previa al teclear el umbral × (sin guardar disco hasta blur/change). */
+function previewRecargaVolumenAvisoMultFromInput() {
+  applyRecargaVolumenAvisoFromMedirInputs({ persistDisk: false, normalizeInput: false });
+}
+
+function persistRecargaVolumenAvisoOpts() {
+  applyRecargaVolumenAvisoFromMedirInputs({ persistDisk: true, normalizeInput: true });
 }
 
 /**
