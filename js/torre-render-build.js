@@ -1180,7 +1180,7 @@ function generarSVGRdwc() {
     s += `<text x="${ax}" y="${tankY + tankH - 6}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" fill="#475569" font-weight="800">AIR</text>`;
   }
   s += `<text x="${tankCx}" y="${tankY - 6}" text-anchor="middle" font-size="11" font-weight="800" fill="#1e293b" font-family="Syne,sans-serif">Depósito de control</text>`;
-  s += `<text x="${tankCx}" y="${tankY + tankH - 16}" text-anchor="middle" font-size="13" font-weight="800" fill="#e2e8f0" font-family="Syne,sans-serif">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'}</text>`;
+  s += `<text x="${tankCx}" y="${tankY + tankH - 16}" text-anchor="middle" font-size="13" font-weight="800" fill="#0f172a" font-family="Syne,sans-serif">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'}</text>`;
   const loopCx = W / 2 - 138;
   const loopCy = H - 19;
   s += `<g class="rdwc-loop-help-hit" role="button" tabindex="0" aria-label="Cómo funciona el anillo RDWC" opacity="0.95">`;
