@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-11-recarga-repos-turnover">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-11-meteo-recorte-pie">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -250,7 +250,7 @@
       <div id="meteoFlashAviso" class="meteo-flash-aviso setup-hidden" role="alert" aria-live="polite" aria-atomic="true"></div>
       <div id="dashCambioNutrienteAviso" class="meteo-flash-aviso setup-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Ambiente meteorológico y localidad: solo si la instalación está en exterior (Medir: bloque superior «Municipio» o asistente) -->
+      <!-- Ambiente meteorológico (exterior); municipio en Medir / asistente -->
       <div id="dashBloqueAmbienteExterior" class="dash-bloque-ambiente-exterior">
       <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
         <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
@@ -261,18 +261,13 @@
         </div>
       </div>
 
-      <p class="dash-block-label" id="dashUbicacionLabel">Ubicación del sistema</p>
-      <div id="dashLocalidadClimaWrap" class="dash-localidad-clima-wrap" role="status" aria-live="polite" aria-labelledby="dashUbicacionLabel">
-        <span class="dash-localidad-clima-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ubicacion-mapa" focusable="false"><use href="#hc-i-pin-mapa"/></svg></span>
-        <span id="dashLocalidadClimaText" class="dash-localidad-clima-text">—</span>
-      </div>
       </div>
 
       <!-- 4. Nutriente seleccionado -->
       <p class="dash-block-label" id="dashNutrienteLabel">Nutriente seleccionado</p>
       <div id="dashSistemaInfo" class="dash-sistema-info" role="button" tabindex="0"
         aria-describedby="dashNutrienteLabel"
-        aria-label="Ir a mediciones: nutriente, sistema y ubicación"
+        aria-label="Ir a mediciones: nutriente y sistema"
         onclick="goTab('mediciones')"
         onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">
         <div id="dashUbicacionBadge" class="dash-ubicacion-badge"></div>
@@ -1743,20 +1738,20 @@
 
       <div id="rotacionCard" class="setup-hidden"></div>
 
-      <div class="modo-selector" id="modoSelector">
-        <button type="button" class="modo-btn active" onclick="setModo('lechuga')" id="modo-lechuga" aria-pressed="true">Lechugas</button>
-        <button type="button" class="modo-btn" onclick="setModo('mixto')" id="modo-mixto" aria-pressed="false">Mixto</button>
-        <button type="button" class="modo-btn" onclick="setModo('intensivo')" id="modo-intensivo" aria-pressed="false">Intensivo</button>
-        <button type="button" class="modo-btn" onclick="setModo('mini')" id="modo-mini" aria-pressed="false">Compacto</button>
-      </div>
-
-      <div class="info-banner" id="modoInfo">
-        <span class="torre-info-banner-icon" aria-hidden="true"></span>
-        <span id="modoInfoText">Óptimo para EC 1300-1400 µS/cm — Editar ficha o asignar cultivo (barra encima del esquema)</span>
-      </div>
-
-      <!-- Tabla resumen de variedades -->
-      <div id="tablaVariedades" class="torre-tabla-variedades"></div>
+      <!-- Resumen N·C / variedad / días / estado / EC (desplegable) -->
+      <details class="torre-variedades-details" id="torreVariedadesDetails" open>
+        <summary class="torre-variedades-summary">
+          <span class="torre-variedades-summary-main">
+            <svg class="hc-ico torre-variedades-summary-ico" aria-hidden="true" focusable="false"><use href="#hc-i-chart"/></svg>
+            <span class="torre-variedades-summary-text">
+              <span class="torre-variedades-summary-title">Resumen por plaza</span>
+              <span class="torre-variedades-summary-sub">Variedad, días, estado y EC</span>
+            </span>
+          </span>
+          <span class="torre-variedades-summary-chev" aria-hidden="true">▾</span>
+        </summary>
+        <div id="tablaVariedades" class="torre-tabla-variedades"></div>
+      </details>
 
       <!-- Compatibilidad de cultivos — panel expansible -->
       <div class="card compat-panel-card">
@@ -4375,7 +4370,7 @@
   <script src="js/hc-bootstrap-state.js?v=7"></script>
   <script src="js/hc-bootstrap-pin.js?v=5"></script>
   <script src="js/hc-bootstrap-onboarding.js?v=26"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=17"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=18"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
   <script src="js/torre-render-build.js?v=2026-05-06-auto-checklist-cultivo"></script>
   <script src="js/torre-render-main.js?v=6"></script>
@@ -4399,7 +4394,7 @@
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=27"></script>
   <script src="js/calendario-logic.js?v=4"></script>
-  <script src="js/meteo-forecast-meteo.js?v=1"></script>
+  <script src="js/meteo-forecast-meteo.js?v=7"></script>
   <script src="js/meteo-forecast-dashboard.js?v=16"></script>
   <script src="js/riego-calculo-helpers.js?v=3"></script>
   <script src="js/riego-calculo-calcular.js?v=3"></script>

@@ -58,10 +58,13 @@ function resetApp() {
 function initApp() {
   updateClock();
   setInterval(updateClock, 30000);
-  // Set active modo button
-  document.querySelectorAll('.modo-btn').forEach(b => b.classList.remove('active'));
-  const modoBtn = document.getElementById('modo-' + modoActual);
-  if (modoBtn) modoBtn.classList.add('active');
+  // Modo de cultivos (lechuga / mixto / …): solo estado; no hay selector en Sistema (evita confusión con «Editar ficha»).
+  const modoSel = document.getElementById('modoSelector');
+  if (modoSel) {
+    modoSel.querySelectorAll('.modo-btn').forEach(b => b.classList.remove('active'));
+    const modoBtn = document.getElementById('modo-' + modoActual);
+    if (modoBtn) modoBtn.classList.add('active');
+  }
   // Multi-instalación antes del primer render (state.torres, nombre en UI, esquema)
   initTorres();
   reconciliarSlotTorreActivaAntesDeCargar();

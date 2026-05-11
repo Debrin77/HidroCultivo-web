@@ -680,6 +680,165 @@ function renderMeteoDias() {
   });
 }
 
+/**
+ * Plazas con variedad en la instalación activa (torre, NFT, DWC, RDWC: misma matriz `state.torre`),
+ * agrupadas por `grupo` del catálogo. `vacio: true` si no hay variedades → avisos conservadores.
+ */
+function meteoInstalacionPerfilCultivo() {
+  const perf = {
+    vacio: true,
+    n: 0,
+    lechugas: 0,
+    hojas: 0,
+    asiaticas: 0,
+    frutos: 0,
+    fresas: 0,
+    hierbas: 0,
+    raices: 0,
+    microgreens: 0,
+    tieneHojaBolting: false,
+    tieneFrutos: false,
+    tieneFresas: false,
+    tieneHierbasRaizMicro: false,
+    /** Hoja + fruto a la vez (depósito compartido; compatibilidad ya la avisa Sistema). */
+    mezclaHojaYFruto: false,
+  };
+  if (!state.torre || !Array.isArray(state.torre)) return perf;
+  const cfg = state.configTorre || {};
+  const numN =
+    typeof cfg.numNiveles === 'number' && cfg.numNiveles > 0
+      ? cfg.numNiveles
+      : typeof NUM_NIVELES !== 'undefined'
+        ? NUM_NIVELES
+        : 8;
+  const numCCfg =
+    typeof cfg.numCestas === 'number' && cfg.numCestas > 0
+      ? cfg.numCestas
+      : typeof NUM_CESTAS !== 'undefined'
+        ? NUM_CESTAS
+        : null;
+  for (let n = 0; n < numN && n < state.torre.length; n++) {
+    const row = state.torre[n] || [];
+    const numC = numCCfg != null ? Math.min(numCCfg, row.length) : row.length;
+    for (let c = 0; c < numC; c++) {
+      const cel = row[c];
+      if (!cel || !cel.variedad) continue;
+      perf.n++;
+      const db = typeof getCultivoDB === 'function' ? getCultivoDB(cel.variedad) : null;
+      const g = db && db.grupo ? String(db.grupo) : 'lechugas';
+      if (g === 'lechugas') perf.lechugas++;
+      else if (g === 'hojas') perf.hojas++;
+      else if (g === 'asiaticas') perf.asiaticas++;
+      else if (g === 'frutos') perf.frutos++;
+      else if (g === 'fresas') perf.fresas++;
+      else if (g === 'hierbas') perf.hierbas++;
+      else if (g === 'raices') perf.raices++;
+      else if (g === 'microgreens') perf.microgreens++;
+      else perf.lechugas++;
+    }
+  }
+  if (perf.n === 0) return perf;
+  perf.vacio = false;
+  perf.tieneHojaBolting = perf.lechugas + perf.hojas + perf.asiaticas > 0;
+  perf.tieneFrutos = perf.frutos > 0;
+  perf.tieneFresas = perf.fresas > 0;
+  perf.tieneHierbasRaizMicro = perf.hierbas + perf.raices + perf.microgreens > 0;
+  perf.mezclaHojaYFruto =
+    perf.tieneHojaBolting && (perf.tieneFrutos || perf.tieneFresas);
+  return perf;
+}
+
+/** Máximo de tarjetas de alerta por día (evita lista interminable en torre mixta + NFT). */
+const METEO_ALERTAS_MAX = 16;
+
+/**
+ * Fusiona avisos muy parecidos (p. ej. varios «VPD alto» seguidos) y quita duplicados exactos.
+ * @returns {{ items: Array<{tipo:string,icon:string,txt:string}>, recortados: number }} recortados = avisos omitidos por el tope diario.
+ */
+function fusionarAlertasMeteo(list) {
+  if (!list || !list.length) return { items: [], recortados: 0 };
+  const out = [];
+  let i = 0;
+  while (i < list.length) {
+    const a = list[i];
+    const t = a && a.txt ? String(a.txt) : '';
+    if (a && a.tipo === 'bad' && t.indexOf('VPD alto') === 0) {
+      const parts = [t];
+      i++;
+      while (i < list.length) {
+        const b = list[i];
+        const tb = b && b.txt ? String(b.txt) : '';
+        if (b && b.tipo === 'bad' && tb.indexOf('VPD alto') === 0) {
+          parts.push(tb);
+          i++;
+        } else break;
+      }
+      out.push({
+        tipo: 'bad',
+        icon: '🔴',
+        txt: parts.length === 1 ? parts[0] : parts.join('<br>'),
+      });
+      continue;
+    }
+    if (a && a.tipo === 'warn' && t.indexOf('VPD moderado-alto') === 0) {
+      const parts = [t];
+      i++;
+      while (i < list.length) {
+        const b = list[i];
+        const tb = b && b.txt ? String(b.txt) : '';
+        if (b && b.tipo === 'warn' && tb.indexOf('VPD moderado-alto') === 0) {
+          parts.push(tb);
+          i++;
+        } else break;
+      }
+      out.push({
+        tipo: 'warn',
+        icon: '🟡',
+        txt: parts.length === 1 ? parts[0] : parts.join('<br>'),
+      });
+      continue;
+    }
+    if (a && a.tipo === 'bad' && a.icon === '☀️' && /^UV\s+\d/.test(t)) {
+      const parts = [t];
+      i++;
+      while (i < list.length) {
+        const b = list[i];
+        const tb = b && b.txt ? String(b.txt) : '';
+        if (b && b.tipo === 'bad' && b.icon === '☀️' && /^UV\s+\d/.test(tb)) {
+          parts.push(tb);
+          i++;
+        } else break;
+      }
+      out.push({
+        tipo: 'bad',
+        icon: '☀️',
+        txt: parts.length === 1 ? parts[0] : parts.join('<br>'),
+      });
+      continue;
+    }
+    out.push(a);
+    i++;
+  }
+  const seen = new Set();
+  const dedup = [];
+  for (let j = 0; j < out.length; j++) {
+    const k = out[j].tipo + '\0' + out[j].txt;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    dedup.push(out[j]);
+  }
+  if (dedup.length <= METEO_ALERTAS_MAX) return { items: dedup, recortados: 0 };
+  const okList = dedup.filter(x => x.tipo === 'ok');
+  const nonOk = dedup.filter(x => x.tipo !== 'ok');
+  let trimmed =
+    okList.length > 1
+      ? nonOk.concat([{ tipo: 'ok', icon: '✅', txt: okList.map(o => o.txt).join('<br>') }])
+      : dedup;
+  if (trimmed.length <= METEO_ALERTAS_MAX) return { items: trimmed, recortados: 0 };
+  const recortados = trimmed.length - METEO_ALERTAS_MAX;
+  return { items: trimmed.slice(0, METEO_ALERTAS_MAX), recortados };
+}
+
 function seleccionarDia(idx) {
   diaSeleccionado = idx;
   document.querySelectorAll('.dia-card').forEach((c, i) => {
@@ -733,61 +892,273 @@ function seleccionarDia(idx) {
 
 function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
   const alertas = [];
-  const tMet = tipoInstalacionNormalizado(state.configTorre || {});
-  const ventVpdTxt = tMet === 'nft'
-    ? 'buena ventilación alrededor del cultivo y del circuito NFT'
-    : tMet === 'dwc'
-      ? 'buena ventilación alrededor del follaje y del depósito'
-      : 'buena ventilación alrededor de la torre vertical y del follaje';
+  const P = meteoInstalacionPerfilCultivo();
+  const sinCultivo = P.vacio;
+  /** Sin datos en torre → mensajes como si hubiera hoja (conservador). */
+  const avisarHoja = sinCultivo || P.tieneHojaBolting;
+  const avisarFrutos = !sinCultivo && (P.tieneFrutos || P.tieneFresas);
+  const avisarHierbasRaizMicro =
+    !sinCultivo && !P.tieneHojaBolting && !P.tieneFrutos && !P.tieneFresas && P.tieneHierbasRaizMicro;
+
+  const cfgMet = state.configTorre || {};
+  const tMet =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfgMet) : 'torre';
+  const labSis =
+    typeof etiquetaSistemaHidroponicoBreve === 'function'
+      ? etiquetaSistemaHidroponicoBreve(cfgMet)
+      : 'Torre vertical';
+  const sufCalorDeposito =
+    tMet === 'nft'
+      ? ' En NFT el canal expuesto calienta la lámina de agua con rapidez: agua de aporte más fresca si puedes y sombra del túnel/cañón.'
+      : tMet === 'dwc' || tMet === 'rdwc'
+        ? ' En ' +
+          labSis +
+          ' la cubeta al sol calienta el líquido: cubierta opaca, sombra lateral o cambio parcial de agua fría ayudan.'
+        : ' En torre el depósito suele ir apartado del dosel; aun así vigila temperatura del líquido en olas de calor.';
+
+  const ventVpdTxt =
+    tMet === 'nft'
+      ? 'buena ventilación alrededor del cultivo y del circuito NFT'
+      : tMet === 'dwc' || tMet === 'rdwc'
+        ? 'buena ventilación alrededor del follaje y del depósito / cubeta'
+        : 'buena ventilación alrededor de la torre vertical y del follaje';
   const m = state.ultimaMedicion;
   const tempAgua = m?.temp ? parseFloat(m.temp) : null;
   const ecActual = m?.ec   ? parseFloat(m.ec)   : null;
 
-  // ── 🦠 PYTHIUM — el enemigo número 1 de la hidropónica ───────────────────
+  if (P.mezclaHojaYFruto) {
+    alertas.push({
+      tipo: 'ok',
+      icon: 'ℹ️',
+      txt: `Varias familias en tu ${labSis}: las alertas van por grupo (hoja vs fruto). Si comparten nutriente, valida «Compatibilidad de cultivos» en Sistema; aquí solo clima y correcciones por tipo.`,
+    });
+  }
+
+  // ── 🦠 PYTHIUM — todo hidro (torre, NFT, DWC); más urgente con agua caliente
   if (tempAgua !== null && tempAgua > 25) {
     alertas.push({ tipo:'bad', icon:'🦠', txt:`🚨 ALERTA PYTHIUM: Agua a ${tempAgua}°C — temperatura crítica. El hongo Pythium destruye raíces en horas. Enfriar el depósito urgente con agua fría o hielo.` });
   } else if (tempAgua !== null && tempAgua > 22) {
     alertas.push({ tipo:'warn', icon:'🦠', txt:`⚠️ Riesgo Pythium: Agua a ${tempAgua}°C — zona de peligro (>22°C). Vigilar raíces diariamente. Asegurar difusor 24h y depósito opaco.` });
   } else if (tMax > 30) {
-    alertas.push({ tipo:'warn', icon:'🦠', txt:`⚠️ Temp ambiente ${tMax}°C — el agua del depósito puede calentarse. Verificar temperatura del agua y cubrir el depósito.` });
+    alertas.push({
+      tipo: 'warn',
+      icon: '🦠',
+      txt: `⚠️ Temp ambiente ${tMax}°C — el líquido del sistema puede calentarse (${labSis}). Medir agua y cubrir depósito/canal.${sufCalorDeposito}`,
+    });
   }
 
-  // ── 🌿 BOLTING (espigado) ──────────────────────────────────────────────────
-  if (tMax > 28)
-    alertas.push({ tipo:'bad', icon:'🌿', txt:`🌡️ ${tMax}°C — riesgo alto de bolting (espigado) en lechugas y rúcula. Toldo obligatorio en horas centrales.` });
-  else if (tMax > 24)
-    alertas.push({ tipo:'warn', icon:'🌿', txt:`🌡️ ${tMax}°C — vigilar espigado en variedades sensibles al calor. Considerar toldo 12-16h.` });
+  // ── 🌿 Calor: espigado (lechuga / hoja / asiáticas p. ej. mostaza) — no frutos
+  if (avisarHoja) {
+    const asiatTxt = P.asiaticas > 0 ? ' Mostaza, mizuna y asiáticas suelen pasar pronto a flor con calor.' : '';
+    if (tMax > 28)
+      alertas.push({
+        tipo: 'bad',
+        icon: '🌿',
+        txt: `🌡️ ${tMax}°C (hoja, ${labSis}) — bolting (espigado) muy probable en lechuga, rúcula, espinaca…${asiatTxt} Toldo u horario suave en horas centrales.`,
+      });
+    else if (tMax > 24)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🌿',
+        txt: `🌡️ ${tMax}°C (hoja) — vigilar espigado y alargamiento; toldo 12–16 h o sombra parcial.${asiatTxt}`,
+      });
+  }
 
-  // ── 🐛 PLAGAS — condiciones favorables ────────────────────────────────────
-  if (hum > 85 && tMax > 20)
-    alertas.push({ tipo:'warn', icon:'🐛', txt:`💧 Humedad ${hum}% + calor — condiciones ideales para mildiu y botritis. Revisar hojas inferiores. Mejorar ventilación.` });
-  if (hum < 30 && tMax > 25)
-    alertas.push({ tipo:'warn', icon:'🐛', txt:`🌵 Humedad ${hum}% y calor — posible aparición de araña roja. Revisar el envés de las hojas.` });
+  // ── 🍅 Calor: frutos / fresas (pepino, tomate…) — no espigado; sí flor/fruto
+  if (avisarFrutos) {
+    const etiqueta = P.tieneFresas && !P.tieneFrutos ? 'fresas' : P.tieneFrutos && !P.tieneFresas ? 'frutos' : 'frutos o fresas';
+    const sufNftPep =
+      tMet === 'nft' && P.tieneFrutos
+        ? ' NFT: raíces en aire + lámina fina; calor seco quema puntas — nebulización suave o sombrear malla si aplica.'
+        : '';
+    if (tMax > 34)
+      alertas.push({
+        tipo: 'bad',
+        icon: '🍅',
+        txt: `🌡️ ${tMax}°C (${etiqueta}, ${labSis}) — golpe de calor: marchitez, aborto floral o fruto joven dañado. Sombra fuerte mediodía, riego estable, ventilación.${sufNftPep}`,
+      });
+    else if (tMax > 30)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🍅',
+        txt: `🌡️ ${tMax}°C (${etiqueta}) — estrés térmico: polinización (viento/vibración), riego uniforme y calcio; toldo si quema el follaje.${sufNftPep}`,
+      });
+    else if (tMax > 26)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🍅',
+        txt: `🌡️ ${tMax}°C (${etiqueta}) — más transpiración; evita secar de golpe el medio (podredumbre apical en tomate/pepino).${sufNftPep}`,
+      });
+  }
 
-  // ── 💧 EC FUERA DE RANGO ──────────────────────────────────────────────────
+  if (avisarHierbasRaizMicro) {
+    if (tMax > 32)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🌿',
+        txt: `🌡️ ${tMax}°C (hierbas / microgreens / raíces, ${labSis}) — calor intenso: sombra parcial y no secar bandeja; vigilar aromáticas y brotes.`,
+      });
+    else if (tMax > 27)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🌿',
+        txt: `🌡️ ${tMax}°C (${labSis}) — día caluroso para hierbas/micro/raíces; riego ligero y ${ventVpdTxt}.`,
+      });
+  }
+
+  // ── 🐛 Humedad / plagas — matices por grupo ───────────────────────────────
+  if (hum > 85 && tMax > 20) {
+    if (sinCultivo) {
+      alertas.push({
+        tipo: 'warn',
+        icon: '🐛',
+        txt: `💧 Humedad ${hum}% + calor — riesgo de mildiú y botritis en hoja y frutos. Mejorar ${ventVpdTxt} y evitar mojar follaje al atardecer.`,
+      });
+    } else {
+      const partes = [];
+      if (P.tieneFresas) partes.push('fresas: Botrytis y mildiú si hay rocío en flor/fruto');
+      if (P.tieneHojaBolting) partes.push('hoja densa: mildiú en envés y hojas inferiores');
+      if (P.tieneFrutos) partes.push('frutos: mildiú foliar u hongos si el dosel está cerrado');
+      if (partes.length === 0)
+        partes.push('hongos foliares si el follaje queda húmedo mucho tiempo');
+      alertas.push({
+        tipo: 'warn',
+        icon: '🐛',
+        txt: `💧 Humedad ${hum}% + calor — ${partes.join(' · ')}. Mejorar ${ventVpdTxt}.`,
+      });
+    }
+  }
+  if (hum < 30 && tMax > 25) {
+    let detAra = 'revisa envés de hojas por araña o trips';
+    if (avisarFrutos) detAra = 'en tomate/pepino/pimiento la araña roja es frecuente; revisa envés y tallos';
+    else if (avisarHierbasRaizMicro && !avisarHoja) detAra = 'hierbas y brotes: revisa envés y puntas por trips o araña';
+    alertas.push({
+      tipo: 'warn',
+      icon: '🐛',
+      txt: `🌵 Humedad ${hum}% y calor — ambiente seco; ${detAra}.`,
+    });
+  }
+
+  // ── 💧 EC respecto al rango del cultivo (misma lógica que Sistema/Medir), no umbrales fijos de «hoja» ──
   if (ecActual !== null) {
-    if (ecActual > 1600)
-      alertas.push({ tipo:'bad', icon:'⚡', txt:`EC ${ecActual} µS/cm — demasiado alta. Las plantas no absorben agua (estrés osmótico). Diluir con agua destilada.` });
-    else if (ecActual < 900)
-      alertas.push({ tipo:'warn', icon:'⚡', txt:`EC ${ecActual} µS/cm — baja. Las plantas pueden mostrar clorosis (hojas amarillas). Añadir nutrientes.` });
+    let ecMinRef = 900;
+    let ecMaxRef = 1600;
+    try {
+      if (typeof getRecomendacionEcPhTorre === 'function') {
+        const rec = getRecomendacionEcPhTorre();
+        if (
+          rec &&
+          rec.ec &&
+          Number.isFinite(rec.ec.min) &&
+          Number.isFinite(rec.ec.max) &&
+          rec.ec.max > rec.ec.min + 40
+        ) {
+          ecMinRef = Math.round(rec.ec.min);
+          ecMaxRef = Math.round(rec.ec.max);
+        }
+      }
+    } catch (_) {}
+    const margenUs = 80;
+    if (ecActual > ecMaxRef + margenUs) {
+      alertas.push({
+        tipo: 'bad',
+        icon: '⚡',
+        txt:
+          `EC ${ecActual} µS/cm — por encima del rango orientativo en tu ${labSis} (~${ecMinRef}–${ecMaxRef} µS/cm). Conviene diluir y volver a medir.`,
+      });
+    } else if (ecActual < ecMinRef - margenUs) {
+      alertas.push({
+        tipo: 'warn',
+        icon: '⚡',
+        txt: `EC ${ecActual} µS/cm — por debajo del rango orientativo en ${labSis} (~${ecMinRef}–${ecMaxRef} µS/cm). Puede haber hambre de nutrientes; corrige y vuelve a medir.`,
+      });
+    }
   }
 
   // (Aviso de plántulas nuevas: está en Consejos para no duplicar en Meteorología)
 
-  // ── 🌊 VPD ────────────────────────────────────────────────────────────────
-  if (vpd > 1.6)
-    alertas.push({ tipo:'bad', icon:'🔴', txt:'Estrés hídrico severo — riego de mayor intensidad solar crítico. Revisar lechugas a las 13:00h.' });
-  else if (vpd > 1.2)
-    alertas.push({ tipo:'warn', icon:'🟡', txt:'Transpiración alta — programa de mayor intensidad solar activo. Vigilar signos de lacio.' });
-  else if (vpd < 0.4)
-    alertas.push({ tipo:'warn', icon:'💧', txt:'Humedad muy alta — riesgo de hongos foliares. Asegura ' + ventVpdTxt + '.' });
-  else
-    alertas.push({ tipo:'ok', icon:'✅', txt:'Condiciones de VPD óptimas para el cultivo.' });
+  // ── 🌊 VPD (transpiración) — distinto en hoja rápida vs frutos con fruto ───
+  if (vpd > 1.6) {
+    if (sinCultivo || avisarHoja)
+      alertas.push({
+        tipo: 'bad',
+        icon: '🔴',
+        txt: `VPD alto (hoja, ${labSis}) — lacio rápido al mediodía. Riego/sombra según instalación; revisar ~13 h.`,
+      });
+    if (avisarFrutos)
+      alertas.push({
+        tipo: 'bad',
+        icon: '🔴',
+        txt: `VPD alto (frutos, ${labSis}) — marchitez, fruto raído y bloqueo de calcio. Riego uniforme + sombra; en NFT vigila raíces y lámina; en DWC cubeta estable.`,
+      });
+    if (avisarHierbasRaizMicro && !avisarHoja && !avisarFrutos)
+      alertas.push({
+        tipo: 'bad',
+        icon: '🔴',
+        txt: `VPD alto (${labSis}) — brotes y hierbas pierden turgencia en seguida; sombra ligera y nebulización suave si aplica.`,
+      });
+  } else if (vpd > 1.2) {
+    if (sinCultivo || avisarHoja)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🟡',
+        txt: `VPD moderado-alto (hoja, ${labSis}) — lacio y bordes secos; riego o sombra.`,
+      });
+    if (avisarFrutos)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🟡',
+        txt: `VPD moderado-alto (frutos, ${labSis}) — más demanda de agua; riego estable (podredumbre apical, estrés floral).`,
+      });
+    if (avisarHierbasRaizMicro && !avisarHoja && !avisarFrutos)
+      alertas.push({
+        tipo: 'warn',
+        icon: '🟡',
+        txt: `VPD moderado-alto (${labSis}) — hierbas/microgreens: evitar sequedad extrema del sustrato o bandeja.`,
+      });
+  } else if (vpd < 0.4) {
+    let vpdBajo = 'Humedad muy alta — poco VPD: riesgo de hongos foliares. Asegura ' + ventVpdTxt + '.';
+    if (avisarFrutos && !sinCultivo) vpdBajo += ' En frutos favorece oidio / manchas si el dosel está cerrado.';
+    if ((P.tieneFresas || P.tieneHojaBolting) && !sinCultivo) vpdBajo += ' Fresas y hoja densa son muy sensibles al rocío prolongado.';
+    if ((tMet === 'dwc' || tMet === 'rdwc') && avisarFrutos) vpdBajo += ' En DWC vigila también gotas sobre la cubeta y floración.';
+    alertas.push({ tipo: 'warn', icon: '💧', txt: vpdBajo });
+  } else {
+    alertas.push({
+      tipo: 'ok',
+      icon: '✅',
+      txt: `VPD del día razonable para tus cultivos en ${labSis} (ajusta por planta si el dosel está muy abierto o cerrado).`,
+    });
+  }
 
-  if (uv >= 8 && tMax > 28)
-    alertas.push({ tipo:'bad', icon:'☀️', txt:`UV ${uv} + Temp ${tMax}°C — desplegar toldo. Activar opción en pestaña Riego.` });
-  else if (uv >= 6)
-    alertas.push({ tipo:'warn', icon:'☀️', txt:`UV ${uv} — considerar toldo si la temperatura sube de 28°C.` });
+  if (uv >= 8 && tMax > 28) {
+    if (avisarFrutos && !sinCultivo)
+      alertas.push({
+        tipo: 'bad',
+        icon: '☀️',
+        txt: `UV ${uv} + ${tMax}°C (frutos, ${labSis}) — quemadura en fruto y hoja; toldo o malla. Revisa Riego si usas sombra programada.`,
+      });
+    if (avisarHoja || sinCultivo)
+      alertas.push({
+        tipo: 'bad',
+        icon: '☀️',
+        txt: `UV ${uv} + ${tMax}°C (hoja, ${labSis}) — toldo o sombra en horas centrales; tipburn y lacio si el dosel recibe pleno sol.`,
+      });
+    if (avisarHierbasRaizMicro && !avisarHoja && !avisarFrutos && !sinCultivo)
+      alertas.push({
+        tipo: 'warn',
+        icon: '☀️',
+        txt: `UV ${uv} + ${tMax}°C — proteger hierbas/microgreens del pleno sol intenso.`,
+      });
+  } else if (uv >= 6) {
+    alertas.push({
+      tipo: 'warn',
+      icon: '☀️',
+      txt:
+        avisarFrutos && !sinCultivo
+          ? `UV ${uv} — con frutos en desarrollo conviene sombra parcial si la máxima supera ~28°C (piel de fruto y hoja).`
+          : `UV ${uv} — considerar toldo o sombra si la temperatura supera ~28°C.`,
+    });
+  }
 
   if (tMin < 5)
     alertas.push({ tipo:'bad', icon:'🥶', txt:`Temperatura mínima ${tMin}°C — riesgo de estrés por frío en raíces. Verificar calentador.` });
@@ -797,16 +1168,31 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
   if (viento > 40)
     alertas.push({ tipo:'warn', icon:'💨', txt:`Viento fuerte ${viento} km/h — aumenta la transpiración. El riego se ajusta automáticamente.` });
 
-  if (tMax > 32)
-    alertas.push({ tipo:'bad', icon:'🌡️', txt:`Temperatura máxima ${tMax}°C — riesgo de bolting (espigado) en lechugas. Toldo obligatorio.` });
-
   const el = document.getElementById('meteoAlertas');
-  el.innerHTML = alertas.map(a => `
+  if (!el) return;
+  const pack = fusionarAlertasMeteo(alertas);
+  let html = pack.items.map(a => `
     <div class="meteo-alerta-item ${a.tipo}">
       <span class="meteo-alerta-icon">${a.icon}</span>
       <span>${a.txt}</span>
     </div>
   `).join('');
+  if (pack.recortados > 0) {
+    const nR = pack.recortados;
+    const avTxt = nR === 1 ? 'aviso' : 'avisos';
+    const moTxt = nR === 1 ? 'no mostrado' : 'no mostrados';
+    html +=
+      '<div class="meteo-alertas-recorte" role="status" aria-live="polite">+' +
+      nR +
+      ' ' +
+      avTxt +
+      ' ' +
+      moTxt +
+      ' (máx. ' +
+      METEO_ALERTAS_MAX +
+      ' por día tras fusionar duplicados).</div>';
+  }
+  el.innerHTML = html;
 }
 
 
