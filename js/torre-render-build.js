@@ -1000,11 +1000,11 @@ function generarSVGRdwc() {
   const sites = Math.max(2, Math.min(64, parseInt(String(cfg.rdwcSites || 4), 10) || 4));
   const cols = Math.max(1, Math.ceil(sites / rows));
   const W = 400;
-  const headerH = 52;
+  const headerH = 56;
   const blockW = Math.min(340, Math.max(248, 36 + cols * 54));
   const blockH = Math.min(260, Math.max(128, 40 + rows * 74));
   const left = (W - blockW) / 2;
-  const top = headerH + 6;
+  const top = headerH + 18;
   const cw = blockW / Math.max(1, cols);
   const ch = blockH / Math.max(1, rows);
   const rPot = Math.max(15, Math.min(28, Math.min(cw, ch) * 0.32));
@@ -1087,6 +1087,7 @@ function generarSVGRdwc() {
         if (typeof getEmoji === 'function') phaseEmoji = getEmoji(est) || '';
       }
       const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
+      const cultEmoji = cult && cult.emoji ? String(cult.emoji) : '';
       const titLista = dat.variedad ? cultivoNombreLista(cult, dat.variedad) : 'Vacío';
       const nomCorto = titLista.length > 13 ? titLista.slice(0, 12) + '…' : titLista;
       const isSelected = !!(window.editingCesta && editingCesta.nivel === rn && editingCesta.cesta === c);
@@ -1132,8 +1133,9 @@ function generarSVGRdwc() {
           fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" opacity="0.45"/>`;
       }
       const emoFs = Math.min(16, Math.max(11, rPot * 0.88));
-      if (phaseEmoji) {
-        s += `<text x="${x}" y="${(y - 2).toFixed(1)}" text-anchor="middle" font-size="${emoFs.toFixed(1)}" dominant-baseline="middle" opacity="0.96">${phaseEmoji}</text>`;
+      if (cultEmoji || phaseEmoji) {
+        const icon = cultEmoji || phaseEmoji;
+        s += `<text x="${x}" y="${(y - 2).toFixed(1)}" text-anchor="middle" font-size="${emoFs.toFixed(1)}" dominant-baseline="middle" opacity="0.96">${icon}</text>`;
       } else if (!ultimaFoto?.data) {
         s += `<text x="${x}" y="${(y + 3).toFixed(1)}" font-family="Inconsolata,monospace" font-size="11" font-weight="600" text-anchor="middle" fill="#cbd5e1">·</text>`;
       }
@@ -1141,8 +1143,8 @@ function generarSVGRdwc() {
       if (dias > 0 && dat.variedad) {
         s += `<text x="${x}" y="${(y + rPot - 8).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${subFs.toFixed(1)}" font-weight="700" fill="${stroke}" text-anchor="middle">${dias}d</text>`;
       }
-      s += `<text x="${x}" y="${(y - rPot - 8).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="800" fill="#475569">${idx + 1}</text>`;
-      s += `<text x="${x}" y="${(y + rPot + 11).toFixed(1)}" text-anchor="middle" font-size="6.5" font-weight="700" fill="#334155" font-family="Syne,sans-serif">${escSvg(nomCorto)}</text>`;
+      const idxX = x + Math.max(7, rPot * 0.42);
+      s += `<text x="${idxX.toFixed(1)}" y="${(y - rPot - 8).toFixed(1)}" text-anchor="start" font-size="9" font-weight="800" fill="#475569">${idx + 1}</text>`;
       s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.55).toFixed(1)}" fill="rgba(0,0,0,0)" class="hc-cesta-hit" pointer-events="all"/>`;
       s += `</g>`;
     }
@@ -1178,7 +1180,7 @@ function generarSVGRdwc() {
     s += `<text x="${ax}" y="${tankY + tankH - 6}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" fill="#475569" font-weight="800">AIR</text>`;
   }
   s += `<text x="${tankCx}" y="${tankY - 6}" text-anchor="middle" font-size="11" font-weight="800" fill="#1e293b" font-family="Syne,sans-serif">Depósito de control</text>`;
-  s += `<text x="${tankCx}" y="${tankY + tankH + 16}" text-anchor="middle" font-size="10.5" fill="#475569">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'}</text>`;
+  s += `<text x="${tankCx}" y="${tankY + tankH - 16}" text-anchor="middle" font-size="13" font-weight="800" fill="#e2e8f0" font-family="Syne,sans-serif">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'}</text>`;
   const loopCx = W / 2 - 138;
   const loopCy = H - 19;
   s += `<g class="rdwc-loop-help-hit" role="button" tabindex="0" aria-label="Cómo funciona el anillo RDWC" opacity="0.95">`;
@@ -1189,8 +1191,8 @@ function generarSVGRdwc() {
   s += `<polygon points="${loopCx - 6},${loopCy + 4} ${loopCx - 11},${loopCy + 1} ${loopCx - 6},${loopCy - 1}" fill="#2563eb"/>`;
   s += `<text x="${loopCx + 16}" y="${loopCy + 3}" text-anchor="start" font-size="8.5" fill="#64748b">anillo</text>`;
   s += `</g>`;
-  s += `<text x="${W / 2}" y="${H - 26}" text-anchor="middle" font-size="9" fill="#64748b">Tuberías: impulsión y retorno en anillo cerrado</text>`;
-  s += `<text x="${W / 2}" y="${H - 11}" text-anchor="middle" font-size="9" fill="#64748b">Recirc. ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
+  s += `<text x="${W / 2}" y="${H - 26}" text-anchor="middle" font-size="10.5" fill="#475569">Tuberías: impulsión y retorno en anillo cerrado</text>`;
+  s += `<text x="${W / 2}" y="${H - 10}" text-anchor="middle" font-size="10.5" fill="#475569">Recirc. ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
   s += `</svg>`;
   return s;
 }
