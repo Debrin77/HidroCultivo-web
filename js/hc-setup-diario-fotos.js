@@ -123,7 +123,7 @@ function agregarFotoSistemaCompleto(event) {
           guardarEstadoTorreActual();
           saveState();
           renderDiarioBloqueSistema();
-          showToast('🏗 Foto del sistema guardada');
+          showToast('🏗 Foto de la instalación guardada');
           resolve();
         } catch (err) {
           reject(err);
@@ -149,7 +149,7 @@ async function hydrateDiarioSistemaThumbs(wrap) {
       img.alt = 'Instalación ' + (o.fecha || '');
       img.className = 'diario-sistema-thumb-img';
       img.addEventListener('click', () =>
-        verFotoCompletaDiario(o.data, 'Vista del sistema', o.fecha || '')
+        verFotoCompletaDiario(o.data, 'Vista de la instalación', o.fecha || '')
       );
       slot.innerHTML = '';
       slot.appendChild(img);
@@ -196,15 +196,15 @@ function renderDiarioBloqueSistema() {
 
   wrap.innerHTML =
     '<div class="diario-sistema-panel">' +
-    '<div class="diario-sistema-title">🏗 Vista del sistema completo</div>' +
+    '<div class="diario-sistema-title">🏗 Vista completa de la instalación</div>' +
     '<div class="hist-recarga-nutriente">' + (sisAct.emoji || '🌿') + ' ' + sisAct.nombre + '</div>' +
     '<div class="diario-sistema-intro">Registra la <strong>evolución de toda la instalación</strong> (no una sola maceta). Las fotos por cultivo siguen en cada <strong>ficha de planta</strong>. Estas entradas también salen en <strong>Historial → Registro</strong>.</div>' +
     '<div class="hc-foto-grid hc-foto-grid--mb">' +
-    '<label class="hc-label-foto hc-label-foto--green" aria-label="Foto del sistema con la cámara">' +
+    '<label class="hc-label-foto hc-label-foto--green" aria-label="Foto de la instalación con la cámara">' +
     '<span class="hc-foto-emoji" aria-hidden="true">📷</span><span>Cámara</span>' +
     '<input type="file" accept="image/*" capture="environment" class="hc-sr-file-input" onchange="agregarFotoSistemaCompletoCatch(event)">' +
     '</label>' +
-    '<label class="hc-label-foto hc-label-foto--blue" aria-label="Foto del sistema desde galería">' +
+    '<label class="hc-label-foto hc-label-foto--blue" aria-label="Foto de la instalación desde galería">' +
     '<span class="hc-foto-emoji" aria-hidden="true">🖼</span><span>Galería</span>' +
     '<input type="file" accept="image/*" class="hc-sr-file-input" onchange="agregarFotoSistemaCompletoCatch(event)">' +
     '</label></div>' +
@@ -224,7 +224,7 @@ async function borrarFotoSistemaCompletoDes(idxDesdeReciente) {
   const ordered = keys.slice().reverse();
   const key = ordered[idxDesdeReciente];
   if (!key) return;
-  if (!confirm('¿Quitar esta foto del sistema?')) return;
+  if (!confirm('¿Quitar esta foto de la instalación?')) return;
   try {
     await borrarFotoIDB(key);
   } catch (_) {}
@@ -238,7 +238,7 @@ async function borrarFotoSistemaCompletoDes(idxDesdeReciente) {
   renderDiarioBloqueSistema();
   const rp = document.getElementById('histRegistroPanel');
   if (rp && !rp.classList.contains('setup-hidden') && typeof renderRegistro === 'function') renderRegistro();
-  showToast('🗑 Foto del sistema eliminada');
+  showToast('🗑 Foto de la instalación eliminada');
 }
 
 async function renderDiarioSelector() {
@@ -253,7 +253,7 @@ async function renderDiarioSelector() {
       sel.innerHTML =
         '<div class="diario-selector-empty">' +
         '📌 El filtro de Historial está en <strong>' + escHtmlUi((tObj.emoji || '🌿') + ' ' + ((tObj.nombre || '').trim() || 'Instalación')) + '</strong>.<br>' +
-        '<button type="button" class="btn btn-primary setup-mt-8" onclick="cambiarAlSistemaFiltradoDiario(' + idxObjetivo + ')">Cambiar al sistema filtrado</button>' +
+        '<button type="button" class="btn btn-primary setup-mt-8" onclick="cambiarAlSistemaFiltradoDiario(' + idxObjetivo + ')">Cambiar a la instalación filtrada</button>' +
         '</div>';
       if (contenido) contenido.innerHTML = '';
       return;

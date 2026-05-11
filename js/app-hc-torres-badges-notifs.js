@@ -410,7 +410,7 @@ function sistemaEstaOperativa(cfg) {
 }
 
 function getMensajeStandbyContinuar() {
-  return '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.';
+  return '⏸ Instalación en stand-by / descanso. Reactiva modo operativa para continuar.';
 }
 
 function setStandbyLockDisabled(el, on) {
@@ -551,8 +551,8 @@ function toggleSistemaOperativa() {
     calcularRiego({ forceRefresh: true });
   }
   showToast(state.configTorre.operativa === false
-    ? '⏸ Sistema en stand-by / descanso'
-    : '✅ Sistema en modo operativa');
+    ? '⏸ Instalación en stand-by / descanso'
+    : '✅ Instalación en modo operativa');
 }
 
 function textoTipoInstalacionTorre(cfg) {
@@ -778,7 +778,7 @@ function actualizarBadgesNutriente() {
       rangeEC.removeAttribute('title');
     } else if (!tieneVariedades && strategyEc !== 'manual') {
       rangeEC.textContent =
-        'Sin variedad en la instalación: asigna cultivo y fecha en Sistema para un EC por fase (o EC manual en checklist).';
+        'Sin variedad en la instalación: asigna cultivo y fecha en Cultivo e instalación para un EC por fase (o EC manual en checklist).';
       rangeEC.title =
         'La fecha de la ficha es el trasplante al hidro. Si marcaste <strong>vivero</strong>, el rango EC/pH y la fase usan también una media de días en plug típica de ese cultivo (como en el resumen de cestas).';
     } else {
@@ -802,7 +802,7 @@ function actualizarBadgesNutriente() {
     const tieneVariedadesPh =
       typeof torreTieneAlgunaVariedadAsignada === 'function' && torreTieneAlgunaVariedadAsignada();
     if (!tieneVariedadesPh && strategyPh !== 'manual') {
-      rangePH.textContent = 'Misma lógica que EC: define plantas en Sistema o pH manual en checklist.';
+      rangePH.textContent = 'Misma lógica que EC: define plantas en Cultivo e instalación o pH manual en checklist.';
       rangePH.title = 'Con plantas y fecha, el pH se ajusta al catálogo por fase y al nutriente activo.';
     } else {
       const phOpt =
@@ -877,7 +877,7 @@ function actualizarBadgesNutriente() {
   const dashAviso   = document.getElementById('dashNutrienteAviso');
   const dashAvisoGlobal = document.getElementById('dashCambioNutrienteAviso');
   if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
-  if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Sistema o Medir';
+  if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Cultivo e instalación o Medir';
   if (dashEstado || dashRecomendado || dashRazon || dashFuente) {
     const usoRaw =
       nut && typeof hcNutrienteFaseUso === 'function'
@@ -1172,7 +1172,7 @@ function programarRecordatorios() {
     const cfg = slot.config || {};
     const sis =
       typeof etiquetaSistemaHidroponicoBreve === 'function' ? etiquetaSistemaHidroponicoBreve(cfg) : '';
-    const sisTxt = sis ? 'Sistema ' + sis + ': ' : '';
+    const sisTxt = sis ? 'Instalación ' + sis + ': ' : '';
 
     if (prefs.recarga && slot.ultimaRecarga) {
       const ultima = new Date(slot.ultimaRecarga);

@@ -561,9 +561,9 @@ function actualizarMeteoCaptionInstalacionActiva() {
   el.textContent =
     'Previsión y avisos usan la ubicación de «' +
     locTxt +
-    '» (cada sistema puede tener otra en Medir). Cultivo y alertas: instalación activa «' +
+    '» (cada instalación puede tener otra en Medir). Cultivo y alertas: instalación activa «' +
     nom +
-    '». Cambia de instalación en Inicio o Sistema para otra matriz y zona meteorológica.';
+    '». Cambia de instalación en Inicio o en Cultivo e instalación para otra matriz y zona meteorológica.';
 }
 
 async function cargarMeteo() {
@@ -999,7 +999,7 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
     alertas.push({
       tipo: 'ok',
       icon: 'ℹ️',
-      txt: `Varias familias en tu ${labSis}: las alertas van por grupo (hoja vs fruto). Si comparten nutriente, valida «Compatibilidad de cultivos» en Sistema; aquí solo clima y correcciones por tipo.`,
+      txt: `Varias familias en tu ${labSis}: las alertas van por grupo (hoja vs fruto). Si comparten nutriente, valida «Compatibilidad de cultivos» en Cultivo e instalación; aquí solo clima y correcciones por tipo.`,
     });
   }
 
@@ -1012,7 +1012,7 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
     alertas.push({
       tipo: 'warn',
       icon: '🦠',
-      txt: `⚠️ Temp ambiente ${tMax}°C — el líquido del sistema puede calentarse (${labSis}). Medir agua y cubrir depósito/canal.${sufCalorDeposito}`,
+      txt: `⚠️ Temp ambiente ${tMax}°C — el líquido del circuito puede calentarse (${labSis}). Medir agua y cubrir depósito/canal.${sufCalorDeposito}`,
     });
   }
 

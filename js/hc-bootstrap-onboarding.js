@@ -599,7 +599,7 @@ function hcAccionChecklistPostSetupDesdeSistema() {
     if (typeof mostrarChecklistBloqueadoCultivoSistema === 'function') {
       mostrarChecklistBloqueadoCultivoSistema({ desdeWizard: true, desdePostSetupRail: true });
     } else if (typeof showToast === 'function') {
-      showToast('Completa variedad y fecha en las cestas con planta (Sistema).', true);
+      showToast('Completa variedad y fecha en las cestas con planta (Cultivo e instalación).', true);
     }
     actualizarPostSetupChecklistRail();
     return;

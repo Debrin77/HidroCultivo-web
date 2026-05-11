@@ -633,7 +633,7 @@ function renderCompatGrid() {
           (nut.ecObjetivo ? nut.ecObjetivo[0] + '–' + nut.ecObjetivo[1] : '900–1400') +
           ' µS/cm · pH: ' +
           (nut.pHRango ? nut.pHRango[0] + '–' + nut.pHRango[1] : '5.5–6.5')
-        : 'Elige nutriente en <strong>Sistema</strong> o <strong>Medir</strong> para ver rangos orientativos.') +
+        : 'Elige nutriente en <strong>Cultivo e instalación</strong> o <strong>Medir</strong> para ver rangos orientativos.') +
       '</div>' +
     '</div>';
 
@@ -731,7 +731,7 @@ function actualizarAvisoCestasSinFecha() {
     inicio.style.display = 'block';
     inicio.innerHTML =
       '⚠️ Hay ' + nStr + ' ' + pl + ' con cultivo pero <strong>sin fecha</strong>. No se usan en el riego ni en la media de días (solo cuentan cestas con fecha válida). ' +
-      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'sistema\')">Ir a Sistema</button>';
+      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'sistema\')">Ir a Cultivo e instalación</button>';
   }
   if (torre) {
     torre.style.display = 'block';
@@ -744,7 +744,7 @@ function actualizarAvisoCestasSinFecha() {
     riego.style.display = 'block';
     riego.innerHTML =
       '⚠️ Con ' + nStr + ' ' + pl + ' sin fecha, <strong>no entran</strong> en plantas/Kc del riego ni en la media de días del inicio (solo las fechas válidas). ' +
-      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'sistema\')">Completar en Sistema</button>';
+      '<button type="button" class="aviso-cestas-ir" onclick="goTab(\'sistema\')">Completar en Cultivo e instalación</button>';
   }
 }
 
@@ -812,7 +812,7 @@ function updateTorreStats() {
     } else if (esRdwcCfg) {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
-        'En RDWC usa litros de mezcla del depósito de control; la recirculación distribuye al resto de módulos.';
+        'En RDWC este campo es del <strong>reservorio de control</strong>; para nutrientes la app suma además los <strong>cubos útiles</strong> configurados.';
     } else {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =

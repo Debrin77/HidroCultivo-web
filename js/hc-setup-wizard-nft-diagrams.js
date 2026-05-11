@@ -229,7 +229,7 @@ function nftDepositoVeredictoBloqueHtml(b, volUsuarioL) {
   let main = '';
   if (vAct == null) {
     main =
-      '<strong>Depósito:</strong> indica el volumen en <strong>Sistema</strong> para comprobar si cumple el margen orientativo.';
+      '<strong>Depósito:</strong> indica el volumen en <strong>Cultivo e instalación</strong> para comprobar si cumple el margen orientativo.';
   } else if (vAct < minL) {
     main =
       '<strong>Depósito:</strong> <span class="nft-verdict-bad">No cumple</span> el volumen útil mínimo orientativo para este circuito.';
@@ -547,7 +547,7 @@ function renderTorreSistemaResumenTabla(cfg) {
     const pend = cfg.nftPendientePct ?? 2;
 
     if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
-    rows.push(['Sistema', 'NFT']);
+    rows.push(['Cultivo e instalación', 'NFT']);
     rows.push(['Montaje', escHtmlUi(montajeDet)]);
     rows.push(['Canales (tubos)', String(hyd.nCh)]);
     rows.push(['Huecos por canal', String(hyd.nHx)]);
@@ -635,7 +635,7 @@ function renderTorreSistemaResumenTabla(cfg) {
     const vMez = getVolumenMezclaLitros(cfg);
     const esDwcTab = cfg.tipoInstalacion === 'dwc';
     if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
-    rows.push(['Sistema', esDwcTab ? 'DWC' : 'Torre vertical']);
+    rows.push(['Cultivo e instalación', esDwcTab ? 'DWC' : 'Torre vertical']);
     rows.push([esDwcTab ? 'Filas' : 'Niveles', String(N)]);
     rows.push([esDwcTab ? 'Cestas por fila' : 'Cestas por nivel', String(C)]);
     rows.push([esDwcTab ? 'Cestas totales' : 'Cestas totales', String(N * C)]);
@@ -713,7 +713,7 @@ function renderTorreSistemaResumenTabla(cfg) {
       } else {
         rows.push([
           'Cesta (net pot)',
-          escHtmlUi('Indica Ø en mm en Sistema o asistente · ref. 27–50 mm o personalizado'),
+          escHtmlUi('Indica Ø en mm en Cultivo e instalación o asistente · ref. 27–50 mm o personalizado'),
         ]);
       }
       const mTap = cfg.dwcTapaMarcoPorLadoMm;
@@ -755,7 +755,7 @@ function renderTorreSistemaResumenTabla(cfg) {
     'aria-expanded="true" aria-controls="torreSistemaResumenInner" onclick="toggleTorreSistemaResumenPanel()">' +
     '<span class="config-section-collapse-title-wrap">' +
     '<span class="config-section-collapse-title">' +
-    escHtmlUi('Resumen del sistema configurado') +
+    escHtmlUi('Resumen de la instalación configurada') +
     '</span></span>' +
     '<span class="config-section-collapse-chevron" aria-hidden="true">▼</span></button>';
   const disclosureBody =
@@ -846,7 +846,7 @@ function validarBombaUsuarioNftVsCalculo(b, caudalRaw, potenciaRaw) {
   } else {
     html =
       '<div class="nft-bomba-title nft-bomba-title--ok">Bomba: cumple</div>' +
-      '<div class="nft-bomba-text">El caudal declarado encaja con el <strong>margen orientativo</strong> para circulación continua (24 h), según los datos de tu sistema.</div>' +
+      '<div class="nft-bomba-text">El caudal declarado encaja con el <strong>margen orientativo</strong> para circulación continua (24 h), según los datos de tu instalación.</div>' +
       nftWrapDetalleTecnicoSummary(detalleCaudal + nftBombaDetalleTecnicoHtml(b));
   }
   if (Number.isFinite(potW) && potW > 0 && potW < Math.max(4, Math.round(b.potenciaRecW * 0.52))) {
@@ -978,7 +978,7 @@ function refrescarNftLayoutResumenChecklist() {
   if (altEff > 0) lines.push('Altura de bombeo al 1.º tubo: <strong>~' + altEff + ' cm</strong> (entra en el criterio de carga de la bomba).');
   else if (disp === 'pared' || disp === 'escalera') {
     lines.push(
-      '<span class="nft-altura-alerta">Indica la altura de bombeo (cm) en Sistema o asistente para un criterio más fiable.</span>'
+      '<span class="nft-altura-alerta">Indica la altura de bombeo (cm) en Cultivo e instalación o asistente para un criterio más fiable.</span>'
     );
   }
   el.innerHTML = lines.join('<br>');

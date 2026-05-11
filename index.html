@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-11-meteo-recorte-pie">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-11-cultivo-instalacion">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -196,7 +196,7 @@
   </div>
   <div id="globalStandbyBanner" class="global-standby-banner setup-hidden" role="status" aria-live="polite" aria-atomic="true">
     <span class="global-standby-banner-icon" aria-hidden="true"><svg class="hc-ico hc-ico--banner" focusable="false"><use href="#hc-i-pause"/></svg></span>
-    <span><strong>MODO DESCANSO ACTIVO</strong> · Sistema en stand-by. Se bloquean acciones operativas. Reactiva en <strong>Inicio</strong> con el interruptor «Estado del sistema».</span>
+    <span><strong>MODO DESCANSO ACTIVO</strong> · Instalación en stand-by. Se bloquean acciones operativas. Reactiva en <strong>Inicio</strong> con el interruptor «Estado operativo».</span>
   </div>
 
   <!-- CONTENT -->
@@ -214,7 +214,7 @@
         <span id="dashFecha">—</span>
       </div>
 
-      <p class="dash-instalacion-label" id="dashInstalacionLabel">Sistema seleccionado</p>
+      <p class="dash-instalacion-label" id="dashInstalacionLabel">Instalación seleccionada</p>
 
       <!-- 2. Instalación / sistema activo -->
       <button type="button" id="dashTorreBanner" class="dash-torre-banner"
@@ -351,8 +351,8 @@
             <div class="tile-status empty" id="tileVolStatus">Sin datos</div>
           </button>
         </div>
-        <button type="button" class="torre-summary" onclick="goTab('sistema')" aria-label="Ir a la vista Sistema de cultivo">
-          <div class="card-title"><svg class="hc-ico hc-ico--title" aria-hidden="true" focusable="false"><use href="#hc-i-plant"/></svg> Sistema de cultivo</div>
+        <button type="button" class="torre-summary" onclick="goTab('sistema')" aria-label="Ir a Cultivo e instalación">
+          <div class="card-title"><svg class="hc-ico hc-ico--title" aria-hidden="true" focusable="false"><use href="#hc-i-plant"/></svg> Cultivo e instalación</div>
           <div class="torre-summary-row">
             <div class="torre-mini-stat">
               <div class="torre-mini-val torre-mini-val-green" id="dashPlantas">0</div>
@@ -405,11 +405,11 @@
         <div class="dash-post-setup-camino-inner">
           <span class="dash-post-setup-kicker">Tras configurar el hidro</span>
           <p class="dash-post-setup-txt">
-            <strong>Sistema</strong> primero: en modo EC automático, variedad y <strong>fecha de trasplante al hidro</strong> en cada cesta con cultivo (así EC/pH van por etapa).
+            <strong>Cultivo e instalación</strong> primero: en modo EC automático, variedad y <strong>fecha de trasplante al hidro</strong> en cada cesta con cultivo (así EC/pH van por etapa).
             Después el <strong>checklist de recarga</strong> dosifica el depósito con esos valores.
           </p>
           <div class="dash-post-setup-actions">
-            <button type="button" class="btn btn-secondary btn-sm dash-post-setup-btn" onclick="goTab('sistema')">Ir a Sistema</button>
+            <button type="button" class="btn btn-secondary btn-sm dash-post-setup-btn" onclick="goTab('sistema')">Ir a Cultivo e instalación</button>
             <button type="button" class="btn btn-primary btn-sm dash-post-setup-btn" onclick="intentarAbrirChecklistDesdeInicio(false)">Checklist depósito</button>
           </div>
         </div>
@@ -431,7 +431,7 @@
           <fieldset class="dash-notif-prefs-fieldset" id="dashNotifPrefsFieldset">
             <label class="dash-notif-toggle-row">
               <input type="checkbox" id="notifOptRecarga" onchange="persistNotifOpciones()">
-              <span>Recarga completa pendiente (~15 días)</span>
+              <span>Recarga completa pendiente (según ritmo y estabilidad)</span>
             </label>
             <label class="dash-notif-toggle-row">
               <input type="checkbox" id="notifOptMedicion" onchange="persistNotifOpciones()">
@@ -686,7 +686,7 @@
           </div>
           <div class="config-options medir-grid-2-tight" role="radiogroup" aria-labelledby="labelUbicacionLuzMed">
             <button type="button" class="config-option" id="opt-medir-ubic-exterior" role="radio" aria-checked="true"
-              onclick="setUbicacionTorreMediciones('exterior')" aria-label="Sistema en exterior">
+              onclick="setUbicacionTorreMediciones('exterior')" aria-label="Montaje en exterior">
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title"><svg class="hc-ico hc-ico--opt-title" aria-hidden="true" focusable="false"><use href="#hc-i-sun"/></svg> Exterior</span>
@@ -694,7 +694,7 @@
               </span>
             </button>
             <button type="button" class="config-option" id="opt-medir-ubic-interior" role="radio" aria-checked="false"
-              onclick="setUbicacionTorreMediciones('interior')" aria-label="Sistema en interior">
+              onclick="setUbicacionTorreMediciones('interior')" aria-label="Montaje en interior">
               <span class="config-option-radio" aria-hidden="true"></span>
               <span class="config-option-body">
                 <span class="config-option-title"><svg class="hc-ico hc-ico--opt-title" aria-hidden="true" focusable="false"><use href="#hc-i-home"/></svg> Interior</span>
@@ -1024,13 +1024,13 @@
           aria-expanded="true" aria-controls="collapseBodyRecargaProxima">
           <span class="config-section-collapse-title-wrap">
             <span class="config-section-collapse-title"><svg class="hc-ico hc-ico--title-inline" aria-hidden="true" focusable="false"><use href="#hc-i-refresh"/></svg> Próxima recarga <strong>completa</strong></span>
-            <span class="recarga-sistema-line" id="recargaSistemaTag">Sistema: —</span>
+            <span class="recarga-sistema-line" id="recargaSistemaTag">Instalación: —</span>
             <span class="recarga-dias" id="recargaDias">—</span>
           </span>
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div class="config-section-collapse-body recarga-proxima-collapse-body" id="collapseBodyRecargaProxima">
-        <p class="recarga-instalacion-aviso" role="note"><strong>Sistema hidropónico (activo):</strong> <span id="recargaSistemaNombre">—</span>. Solo este montaje (mismo selector arriba en Mediciones). Si tienes varias instalaciones, cambia antes del checklist o del interruptor.</p>
+        <p class="recarga-instalacion-aviso" role="note"><strong>Instalación activa:</strong> <span id="recargaSistemaNombre">—</span>. Solo este montaje (mismo selector arriba en Mediciones). Si tienes varias instalaciones, cambia antes del checklist o del interruptor.</p>
         <div class="progress-track">
           <div class="progress-fill-bar" id="recargaBar"></div>
         </div>
@@ -1048,7 +1048,7 @@
             <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
           </button>
           <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaVolAviso" hidden>
-            <p class="recarga-subhint">El contador de <strong>~15 días</strong> no cambia aquí. Solo ajusta la regla orientativa de litros repuestos (reposición parcial) frente al volumen útil de referencia en <strong>Sistema</strong>.</p>
+            <p class="recarga-subhint">Este ajuste no cambia el <strong>ciclo orientativo</strong> de recarga. Solo modifica la regla de litros repuestos (reposición parcial) frente al volumen útil de referencia en <strong>Cultivo e instalación</strong>.</p>
             <label class="recarga-confirm-label"><input type="checkbox" id="chkRecargaAvisoVolumen" checked onchange="persistRecargaVolumenAvisoOpts()"> Activar avisos y bloque informativo por volumen repuesto</label>
             <label for="inputRecargaUmbralVolumenMult" class="recarga-confirm-label recarga-label-spaced">Umbral (× volumen útil de referencia)</label>
             <input type="number" id="inputRecargaUmbralVolumenMult" class="form-input" inputmode="decimal" step="0.05" min="0.8" max="1.5" value="1"
@@ -1058,14 +1058,14 @@
             <p class="recarga-subhint recarga-subhint--tight">1 = regla habitual «~1 depósito repuesto». Por ejemplo 1,2 retrasa el aviso fuerte hasta acumular unos 20 % más litros.</p>
             <label for="selectRecargaConsejoDesdePct" class="recarga-confirm-label recarga-label-spaced">Texto que cruza litros + plazo en la nota superior desde</label>
             <select id="selectRecargaConsejoDesdePct" class="form-input" onchange="persistRecargaVolumenAvisoOpts()">
-              <option value="72">72 % del ciclo (~día 11)</option>
-              <option value="75">75 % (~día 11–12)</option>
-              <option value="80">80 % (~día 12)</option>
-              <option value="85">85 % (~día 13), recomendado</option>
-              <option value="88">88 % (~día 13)</option>
-              <option value="90">90 % (~día 14)</option>
-              <option value="93">93 % (~día 14)</option>
-              <option value="100">100 % (día 15)</option>
+              <option value="72">72 % del ciclo</option>
+              <option value="75">75 % del ciclo</option>
+              <option value="80">80 % del ciclo</option>
+              <option value="85">85 % del ciclo, recomendado</option>
+              <option value="88">88 % del ciclo</option>
+              <option value="90">90 % del ciclo</option>
+              <option value="93">93 % del ciclo</option>
+              <option value="100">100 % del ciclo</option>
             </select>
           </div>
         </div>
@@ -1082,7 +1082,7 @@
               <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
             </button>
             <div class="config-section-collapse-body recarga-collapse-body" id="collapseBodyRecargaTotal" hidden>
-              <p class="recarga-subhint">El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador (~15 días) se reinicia solo. Por aparte, la app compara las <strong>reposiciones parciales</strong> registradas con ~1× el volumen de mezcla (orientación «depósito repuesto»).</p>
+              <p class="recarga-subhint">El <strong>checklist</strong> te guía paso a paso. Cuando lo termines, el contador orientativo se reinicia solo. Por aparte, la app compara las <strong>reposiciones parciales</strong> registradas con ~1× el volumen de mezcla (orientación «depósito repuesto»).</p>
               <button type="button" class="btn-recarga-confirm primary recarga-btn-full"
                 onclick="confirmarReposicionDeposito('con_nutrientes')"
                 aria-label="Abrir checklist de recarga completa de la instalación activa"><svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-clipboard"/></svg> Checklist recarga completa</button>
@@ -1150,11 +1150,11 @@
     <div class="tab-panel" id="tab-sistema" role="tabpanel" aria-labelledby="btn-sistema" aria-hidden="true">
       <h1 class="section-title section-title--with-ico">
         <svg class="hc-ico hc-ico--section" aria-hidden="true" focusable="false"><use href="#hc-i-layers"/></svg>
-        <span><span class="accent">Sistema</span> hidropónico</span>
+        <span><span class="accent">Cultivo e instalación</span></span>
       </h1>
       <div id="tabContextHintSistema" class="tab-context-hint setup-hidden" role="note">
         <div class="tab-context-hint-inner">
-          <strong>Sistema</strong>: cultivo y fecha de trasplante en cada hueco. Sin fecha válida, riego y EC/pH son solo orientativos. El checklist de recarga está en <strong>Inicio</strong> o <strong>Medir</strong>.
+          <strong>Cultivo e instalación</strong>: cultivo y fecha de trasplante en cada hueco. Sin fecha válida, riego y EC/pH son solo orientativos. El checklist de recarga está en <strong>Inicio</strong> o <strong>Medir</strong>.
           <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('sistema')" aria-label="Entendido, ocultar aviso">Entendido</button>
         </div>
       </div>
@@ -1174,8 +1174,8 @@
             </button>
           </div>
           <button type="button" onclick="abrirTutorialTorrePestanaSiPrimeraVez({ force: true })"
-            class="torre-tab-guia-btn" aria-label="Abrir ayuda de Sistema">
-            Ayuda de Sistema
+            class="torre-tab-guia-btn" aria-label="Abrir ayuda de Cultivo e instalación">
+            Ayuda de Cultivo e instalación
           </button>
         </div>
         <div class="torre-cambiar-nombre-row">
@@ -1257,7 +1257,7 @@
         <p id="sysEcPhStrategyHint" class="torre-dwc-max-cestas-hint setup-hidden" role="status"></p>
       </div>
 
-      <!-- Montaje NFT (Sistema): desplegable con resumen tras aplicar -->
+      <!-- Montaje NFT (Cultivo e instalación): desplegable con resumen tras aplicar -->
       <div id="sistemaNftMontajeCard" class="torre-card-elevated torre-sistema-panel setup-hidden">
         <button type="button" id="btnToggleSistemaNftMontaje" class="torre-sistema-panel-head"
           aria-expanded="true" aria-controls="sistemaNftMontajeBody" onclick="toggleSistemaNftMontajePanel()">
@@ -1422,6 +1422,7 @@
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcSites">Sitios/cubos</label><input type="number" id="sysRdwcSites" class="torre-dwc-input" min="2" max="64" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRows">Filas</label><input type="number" id="sysRdwcRows" class="torre-dwc-input" min="1" max="4" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketVolL">Litros por cubo</label><input type="number" id="sysRdwcBucketVolL" class="torre-dwc-input" min="5" max="200" step="0.5"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="sysRdwcBucketTrabajoL" class="torre-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlVolL">Depósito control (L)</label><input type="number" id="sysRdwcControlVolL" class="torre-dwc-input" min="10" max="800" step="0.5"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRecirculationLh">Recirculación (L/h)</label><input type="number" id="sysRdwcRecirculationLh" class="torre-dwc-input" min="200" max="12000" step="10"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcAirLpm">Aireación (L/min)</label><input type="number" id="sysRdwcAirLpm" class="torre-dwc-input" min="1" max="300" step="1"></div>
@@ -1434,6 +1435,7 @@
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcFittings">Codos/racores (uds)</label><input type="number" id="sysRdwcFittings" class="torre-dwc-input" min="0" max="80" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcHydroMode">Perfil hidráulico</label><select id="sysRdwcHydroMode" class="torre-dwc-input"><option value="silencioso">Silencioso</option><option value="estandar">Estándar</option><option value="alto_rendimiento">Alto rendimiento</option></select></div>
             </div>
+            <p class="torre-nft-p-soft">Para nutrientes en RDWC la app suma el <strong>reservorio de control</strong> y los <strong>litros útiles</strong> de cada cubo. Deja este campo vacío si quieres un cálculo conservador (~70 % del cubo) para mantener cámara de aire bajo la cesta.</p>
             <p id="sysRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
             <div id="sysRdwcCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
             <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaRdwcDesdeFormulario()">Guardar datos RDWC</button>
@@ -1676,7 +1678,7 @@
           <div class="torre-loading-placeholder">Cargando esquema…</div>
         </div>
         <div id="torreListaVista" class="torre-lista-wrap setup-hidden" aria-label="Lista de cestas por nivel"></div>
-        <div id="torreSistemaResumenWrap" class="torre-sistema-resumen-wrap" role="region" aria-label="Resumen de la configuración del sistema" hidden></div>
+        <div id="torreSistemaResumenWrap" class="torre-sistema-resumen-wrap" role="region" aria-label="Resumen de la configuración de la instalación" hidden></div>
         <div id="torreQuickTip" class="torre-quick-tip setup-hidden" aria-live="polite"></div>
         <div id="torreSwipeHint" class="torre-swipe-hint">Flechas o deslizar para girar la torre</div>
         <div id="torreNftDiagramHint" class="setup-hidden torre-nft-diagram-hint">
@@ -1862,6 +1864,7 @@
         <div class="card-title"><svg class="hc-ico hc-ico--title" aria-hidden="true" focusable="false"><use href="#hc-i-flask"/></svg> Rutina diaria</div>
         <p class="cal-rutina-text">
           <strong class="cal-rutina-strong">Sugerencia:</strong> una toma de muestra al día (pH, EC, temperatura del depósito) mantiene consejos y registros alineados con tu agua real.
+          El calendario te recordará la <strong class="cal-rutina-strong">medición diaria pendiente</strong> o la siguiente de la rutina.
           Si registras una <strong class="cal-rutina-strong">fecha nueva</strong> al trasplantar (en cualquier ficha de cultivo), el calendario marca <strong class="cal-rutina-strong-ph">5 días seguidos</strong> para reforzar el control diario del <strong class="cal-rutina-strong">pH</strong> por la variación típica en plántulas.
         </p>
       </div>
@@ -1906,7 +1909,7 @@
             inputmode="numeric" min="1" max="120" oninput="calcularRiego()"
             aria-describedby="riegoTorreHint">
           <input type="hidden" id="riegoEdad" value="4" autocomplete="off">
-          <p id="riegoTorreHint" class="riego-torre-hint">Indica cultivos y fechas en la pestaña Sistema; el número de plantas se actualiza solo cuando hay huecos con fecha.</p>
+          <p id="riegoTorreHint" class="riego-torre-hint">Indica cultivos y fechas en la pestaña Cultivo e instalación; el número de plantas se actualiza solo cuando hay huecos con fecha.</p>
           <p id="riegoLocalidadLine" class="riego-localidad-line" role="status" aria-live="polite"></p>
       </div>
       </div>
@@ -2269,7 +2272,7 @@
           <ol class="ayuda-ol">
             <li><strong>Inicio</strong>: comprueba instalación activa, nutriente y última medición.</li>
             <li><strong>Asistente</strong> (icono engranaje o guía del primer día): tipo de sistema, depósito, agua y nutriente si aún no lo configuraste.</li>
-            <li><strong>Sistema</strong>: en cada cesta con planta, variedad y <strong>fecha de trasplante al hidro</strong> (necesario para EC/pH por etapa en modo automático).</li>
+            <li><strong>Cultivo e instalación</strong>: en cada cesta con planta, variedad y <strong>fecha de trasplante al hidro</strong> (necesario para EC/pH por etapa en modo automático).</li>
             <li><strong>Medir</strong>: <strong>Asistente de mediciones</strong> para guardar con contexto; <strong>Herramientas Pro</strong> para conversor EC, dosis orientativa, pH y guía LED (ver FAQ).</li>
             <li><strong>Historial → Checklist</strong>: recarga o primer llenado; las dosis usan volumen, nutriente y (en automático) la etapa del cultivo.</li>
             <li><strong>Riego, Calendario, Meteo, Consejos</strong>: refuerzan la rutina cuando ya tienes mediciones reales.</li>
@@ -2281,7 +2284,7 @@
 
           <details>
             <summary>¿Qué pestaña uso primero?</summary>
-            <div class="ayuda-faq-a">Empieza por <strong>Inicio</strong> y, si aún no configuraste el hidro, abre el <strong>asistente</strong> (engranaje o guía del primer día). Después <strong>Sistema</strong> (plantas y fechas) y <strong>Medir</strong> para tener datos reales del agua.</div>
+            <div class="ayuda-faq-a">Empieza por <strong>Inicio</strong> y, si aún no configuraste el hidro, abre el <strong>asistente</strong> (engranaje o guía del primer día). Después <strong>Cultivo e instalación</strong> (plantas y fechas) y <strong>Medir</strong> para tener datos reales del agua.</div>
           </details>
           <details>
             <summary>¿Qué es EC y por qué aparece en µS/cm?</summary>
@@ -2297,7 +2300,7 @@
           </details>
           <details>
             <summary>¿Cómo uso la calculadora de EC objetivo y la comparación de nutrientes?</summary>
-            <div class="ayuda-faq-a">Indica la <strong>EC final</strong> que quieres, el <strong>volumen del depósito</strong> en litros y, si aplica, la <strong>EC base del agua</strong> (si no pones nada, se asume 0 µS/cm). Elige dos nutrientes en los desplegables y pulsa <strong>Calcular comparación</strong>: verás una estimación de <strong>ml por parte</strong> y total según el modelo del catálogo. <strong>Usar actual</strong> rellena volumen y otros datos desde la configuración o la última medición cuando existen. La comparativa <strong>no cambia</strong> solo el nutriente activo de la instalación; si te interesa otro producto, ajústalo en <strong>Sistema</strong>.</div>
+            <div class="ayuda-faq-a">Indica la <strong>EC final</strong> que quieres, el <strong>volumen del depósito</strong> en litros y, si aplica, la <strong>EC base del agua</strong> (si no pones nada, se asume 0 µS/cm). Elige dos nutrientes en los desplegables y pulsa <strong>Calcular comparación</strong>: verás una estimación de <strong>ml por parte</strong> y total según el modelo del catálogo. <strong>Usar actual</strong> rellena volumen y otros datos desde la configuración o la última medición cuando existen. La comparativa <strong>no cambia</strong> solo el nutriente activo de la instalación; si te interesa otro producto, ajústalo en <strong>Cultivo e instalación</strong>.</div>
           </details>
           <details>
             <summary>¿Puedo pasar resultados de Herramientas Pro al Asistente de mediciones?</summary>
@@ -2313,11 +2316,11 @@
           </details>
           <details>
             <summary>No me deja abrir el checklist</summary>
-            <div class="ayuda-faq-a">Con <strong>EC/pH automáticos</strong> hace falta tener <strong>variedad</strong> en las cestas que uses y <strong>fecha válida</strong> en todas ellas; si falta algo, la app te envía a <strong>Sistema</strong> y te lo explica. Con modo <strong>manual</strong> no aplica ese bloqueo. Tras un cuestionario mínimo de instalación sin plantas, el checklist puede abrirse una vez sin ese requisito.</div>
+            <div class="ayuda-faq-a">Con <strong>EC/pH automáticos</strong> hace falta tener <strong>variedad</strong> en las cestas que uses y <strong>fecha válida</strong> en todas ellas; si falta algo, la app te envía a <strong>Cultivo e instalación</strong> y te lo explica. Con modo <strong>manual</strong> no aplica ese bloqueo. Tras un cuestionario mínimo de instalación sin plantas, el checklist puede abrirse una vez sin ese requisito.</div>
           </details>
           <details>
             <summary>¿EC manual o automático?</summary>
-            <div class="ayuda-faq-a">En <strong>Sistema → estrategia EC/pH</strong>: <em>Automático</em> usa el catálogo por etapa (y el clima como ajuste suave). <em>Manual</em> fija un EC objetivo tuyo; eres responsable de revisarlo. El checklist y Medir respetan la opción elegida.</div>
+            <div class="ayuda-faq-a">En <strong>Cultivo e instalación → estrategia EC/pH</strong>: <em>Automático</em> usa el catálogo por etapa (y el clima como ajuste suave). <em>Manual</em> fija un EC objetivo tuyo; eres responsable de revisarlo. El checklist y Medir respetan la opción elegida.</div>
           </details>
           <details>
             <summary>Tengo varias instalaciones</summary>
@@ -2325,7 +2328,7 @@
           </details>
           <details>
             <summary>¿Cómo hago copia de seguridad?</summary>
-            <div class="ayuda-faq-a">En <strong>Sistema</strong>, al final, hay exportar / importar estado. Úsalo antes de cambiar de dispositivo o tras una temporada importante.</div>
+            <div class="ayuda-faq-a">En <strong>Cultivo e instalación</strong>, al final, hay exportar / importar estado. Úsalo antes de cambiar de dispositivo o tras una temporada importante.</div>
           </details>
           <details>
             <summary>¿Funciona sin internet?</summary>
@@ -2337,7 +2340,7 @@
           </details>
           <details>
             <summary>¿Es imprescindible indicar la ubicación del sistema?</summary>
-            <div class="ayuda-faq-a">Sí, si quieres que la <strong>meteorología</strong> (previsiones, temperatura ambiente, MeteoAlarm / AEMET y ajustes suaves de EC/pH por clima) corresponda a <strong>donde está de verdad</strong> tu hidro. La app toma la zona a partir de la <strong>localidad o municipio</strong> que configures en <strong>Medir</strong> (y el tipo de instalación en <strong>Sistema</strong>: exterior vs interior). Si dejas otra zona o una genérica, los datos y avisos serán de otro sitio y dejarán de ser fiables para tu cultivo.</div>
+            <div class="ayuda-faq-a">Sí, si quieres que la <strong>meteorología</strong> (previsiones, temperatura ambiente, MeteoAlarm / AEMET y ajustes suaves de EC/pH por clima) corresponda a <strong>donde está de verdad</strong> tu hidro. La app toma la zona a partir de la <strong>localidad o municipio</strong> que configures en <strong>Medir</strong> (y el tipo de instalación en <strong>Cultivo e instalación</strong>: exterior vs interior). Si dejas otra zona o una genérica, los datos y avisos serán de otro sitio y dejarán de ser fiables para tu cultivo.</div>
           </details>
           <details>
             <summary>¿Qué es el modo stand-by / descanso?</summary>
@@ -2476,7 +2479,7 @@
   <!-- FIN CONTENT -->
 
   <!-- TAB BAR -->
-  <nav class="tab-bar" role="tablist" aria-label="Secciones principales: Inicio y día a día · cultivo · agua y clima · registro · ayuda"
+  <nav class="tab-bar" role="tablist" aria-label="Secciones principales: Inicio y día a día · cultivo e instalación · agua y clima · registro · ayuda"
     title="Desliza lateralmente si no ves todas las pestañas">
     <button class="tab-btn active" type="button" role="tab" id="btn-inicio" onclick="goTab('inicio')" aria-label="Ir a Inicio" aria-selected="true" aria-controls="tab-inicio">
       <svg class="hc-ico hc-ico--ion-tab" aria-hidden="true" focusable="false"><use href="#hc-i-ion-home"/></svg>
@@ -2485,7 +2488,7 @@
       <div class="tab-badge setup-hidden" id="alertBadge"></div>
       <svg class="hc-ico hc-ico--ion-tab" aria-hidden="true" focusable="false"><use href="#hc-i-ion-pulse"/></svg>
     </button>
-    <button class="tab-btn" type="button" role="tab" id="btn-sistema" onclick="goTab('sistema')" aria-label="Ir a Sistema" aria-selected="false" aria-controls="tab-sistema">
+    <button class="tab-btn" type="button" role="tab" id="btn-sistema" onclick="goTab('sistema')" aria-label="Ir a Cultivo e instalación" title="Cultivo e instalación" aria-selected="false" aria-controls="tab-sistema">
       <svg class="hc-ico hc-ico--ion-tab" aria-hidden="true" focusable="false"><use href="#hc-i-ion-settings"/></svg>
     </button>
     <button class="tab-btn" type="button" role="tab" id="btn-calendario" onclick="goTab('calendario')" aria-label="Ir a Calendario" aria-selected="false" aria-controls="tab-calendario">
@@ -2523,7 +2526,7 @@
         </svg>
       </div>
       <h2 id="hcTabBarCoachTitle" class="hc-tab-bar-coach-title">Navega por abajo</h2>
-      <p class="hc-tab-bar-coach-text">La barra fija agrupa <strong>Inicio</strong>, <strong>Medir</strong>, <strong>Sistema</strong>, <strong>Riego</strong>, clima, historial y más. Si no ves todos los iconos, <strong>desliza horizontalmente</strong>.</p>
+      <p class="hc-tab-bar-coach-text">La barra fija agrupa <strong>Inicio</strong>, <strong>Medir</strong>, <strong>Cultivo e instalación</strong>, <strong>Riego</strong>, clima, historial y más. Si no ves todos los iconos, <strong>desliza horizontalmente</strong>.</p>
       <button type="button" class="btn btn-primary hc-tab-bar-coach-btn" onclick="dismissTabBarCoach()">Entendido</button>
     </div>
   </div>
@@ -2582,7 +2585,7 @@
       </article>
       <article class="welcome-value-card welcome-value-card--teal" role="listitem">
         <div class="welcome-value-icon" aria-hidden="true">💧</div>
-        <h3>Sistema hidropónico completo</h3>
+        <h3>Cultivo e instalación completo</h3>
         <p>Visión integrada de agua, nutrientes y operación por instalación activa.</p>
       </article>
       <article class="welcome-value-card welcome-value-card--indigo" role="listitem">
@@ -2650,7 +2653,7 @@
       <div class="setup-subtitle">
         Elige el tipo de sistema: <strong>torre vertical</strong>, <strong>NFT</strong>, <strong>DWC</strong> o <strong>RDWC</strong> (recirculación continua entre módulos).
         Cada uno guarda geometría, nutrientes y <strong>checklist de recarga</strong> (NFT: canales y película; DWC: depósito único; RDWC: recirculación + retorno).
-        Puedes tener <strong>varias instalaciones mezclando tipos</strong> (por ejemplo 3 NFT en 3 pueblos, o 4 torres en el mismo balcón): cada una es independiente y guarda <strong>su municipio y clima</strong>. Cambia de activa en Inicio o Sistema.
+        Puedes tener <strong>varias instalaciones mezclando tipos</strong> (por ejemplo 3 NFT en 3 pueblos, o 4 torres en el mismo balcón): cada una es independiente y guarda <strong>su municipio y clima</strong>. Cambia de activa en Inicio o en Cultivo e instalación.
       </div>
 
       <div id="setupTipoInstalacionPanel" class="setup-tipo-panel">
@@ -2692,7 +2695,7 @@
         aria-label="Empezar asistente de configuración paso a paso">
         Empezar asistente
       </button>
-      <p class="welcome-hint">Tras el asistente: revisa todo en <strong>Sistema</strong>, asigna variedades y fechas en las cestas, y usa el <strong>checklist de recarga</strong> para preparar el nutriente en el depósito. También podrás afinar datos en Medir → Configuración.</p>
+      <p class="welcome-hint">Tras el asistente: revisa todo en <strong>Cultivo e instalación</strong>, asigna variedades y fechas en las cestas, y usa el <strong>checklist de recarga</strong> para preparar el nutriente en el depósito. También podrás afinar datos en Medir → Configuración.</p>
     </div>
 
     <div class="setup-page" id="spage1">
@@ -2764,7 +2767,7 @@
           DWC
         </div>
         <p class="setup-dwc-help">
-          Mismos campos que en <strong>Sistema</strong>. Explicación y <strong>tabla de tamaños de cesta</strong>: <strong>Consejos → DWC</strong>.
+          Mismos campos que en <strong>Cultivo e instalación</strong>. Explicación y <strong>tabla de tamaños de cesta</strong>: <strong>Consejos → DWC</strong>.
         </p>
         <div id="setupRdwcDetalleWrap" class="setup-hidden">
           <div class="setup-dwc-title">RDWC</div>
@@ -2773,12 +2776,14 @@
             <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="setupRdwcBucketTrabajoL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcControlVolL">Depósito control (L)</label><input type="number" id="setupRdwcControlVolL" class="setup-dwc-input" min="10" max="800" step="0.5" placeholder="40"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRecirculationLh">Bomba recirculación (L/h)</label><input type="number" id="setupRdwcRecirculationLh" class="setup-dwc-input" min="200" max="12000" step="10" placeholder="1200"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcAirLpm">Aireación total (L/min)</label><input type="number" id="setupRdwcAirLpm" class="setup-dwc-input" min="1" max="300" step="1" placeholder="20"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm">Diám. cesta (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="setupRdwcCenterSpacingCm" class="setup-dwc-input" min="20" max="150" step="1" placeholder="45"></div>
           </div>
+          <p class="setup-dwc-help">Para nutrientes en RDWC se usa el <strong>reservorio de control</strong> más los <strong>litros útiles</strong> de cada cubo. Si no lo indicas, la app asume un llenado conservador (~70 % del cubo) para no ahogar la base de la planta.</p>
           <p id="setupRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
         </div>
         <div id="setupDwcSoloBloque">
@@ -2932,7 +2937,7 @@
                 <li class="setup-nft-guide-item"><strong>Primero</strong> la disposición (mesa, escalera o pared) y la <strong>altura de bombeo</strong> si el agua sube al primer tubo.</li>
                 <li class="setup-nft-guide-item"><strong>Después</strong> tubos / peldaños y huecos: en el dibujo todos los tubos comparten el mismo perfil y el mismo número de huecos.</li>
                 <li class="setup-nft-guide-item">Indica el <strong>diámetro de cesta</strong> (net pot, aro en el canal): referencia habitual <strong>27–50 mm</strong> u otro valor (personalizado).</li>
-                <li>Abajo afinas <strong>canal, lámina y bomba</strong>. En la pestaña <strong>Sistema</strong> puedes retocar montaje y <strong>Aplicar</strong> sin repetir todo.</li>
+                <li>Abajo afinas <strong>canal, lámina y bomba</strong>. En la pestaña <strong>Cultivo e instalación</strong> puedes retocar montaje y <strong>Aplicar</strong> sin repetir todo.</li>
               </ol>
             </div>
             <div class="setup-nft-layout-wrap">
@@ -3146,7 +3151,7 @@
           </div>
         </div>
         <p class="setup-nft-sistema-footnote">
-          En la <strong>pestaña Sistema</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
+          En la <strong>pestaña Cultivo e instalación</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
           El bloque <strong>Canal de cultivo</strong> alimenta el cálculo de caudal/volumen de película; el Ø de <strong>alimentación</strong> aquí es el de la línea de riego (bomba / derivaciones), no el del retorno ni el ancho del perfil de cultivo.
         </p>
       </div>
@@ -3615,7 +3620,7 @@
       <!-- Ciudad para meteo (si es exterior) -->
       <div id="seccionCiudadUbicacion" class="setup-mt-12">
         <div class="setup-block-title setup-mb-8"><svg class="hc-ico hc-ico--ubicacion-mapa" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg> Ciudad de esta instalación (meteorología)</div>
-        <p class="setup-note-ubic-torre">Cada sistema puede estar en un sitio distinto: aquí defines el clima y coordenadas <strong>solo para la instalación</strong> que estás configurando. Cambia de instalación en Inicio/Sistema y podrás tener otro municipio.</p>
+        <p class="setup-note-ubic-torre">Cada instalación puede estar en un sitio distinto: aquí defines el clima y coordenadas <strong>solo para la instalación</strong> que estás configurando. Cambia de activa en Inicio o en Cultivo e instalación y podrás tener otro municipio.</p>
         <input type="text" id="setupCiudad2" placeholder="Ciudad para meteo (nombre en castellano o valencià)"
           aria-label="Ciudad para datos meteorológicos"
           class="setup-input-city"
@@ -3663,7 +3668,7 @@
 
       <div id="infoVarTorres" class="setup-hidden setup-box-warn setup-box-warn-relaxed setup-box-warn--ico-row">
         <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-bulb"/></svg>
-        <span>Podrás añadir y configurar cada instalación adicional desde la pestaña <strong>Sistema</strong>
+        <span>Podrás añadir y configurar cada instalación adicional desde la pestaña <strong>Cultivo e instalación</strong>
         usando el botón <strong><svg class="hc-ico hc-ico--inline" style="vertical-align:-2px;margin-right:2px" aria-hidden="true" focusable="false"><use href="#hc-i-plus"/></svg> Nuevo sistema</strong>. Pueden ser <strong>torre, NFT o DWC</strong> mezclados; varias en la misma terraza o una por localidad, cada una con su
         nutriente, historial de mediciones, plantas y <strong>ubicación / clima</strong> (municipio en el asistente y en Mediciones).</span>
       </div>
@@ -3823,7 +3828,7 @@
         <div class="wiz-cultivos-row" id="wizCultivosRow"></div>
         <div class="wiz-hero-chips">
           <span class="wiz-hero-chip" id="wizHeroStatus">Listo</span>
-          <span class="wiz-hero-chip" id="wizHeroMode">Sistema activo</span>
+          <span class="wiz-hero-chip" id="wizHeroMode">Instalación activa</span>
           <span class="wiz-hero-chip" id="wizHeroScore">0 alertas</span>
         </div>
       </div>
@@ -4369,39 +4374,39 @@
   <script src="js/hc-bootstrap-config.js?v=4"></script>
   <script src="js/hc-bootstrap-state.js?v=7"></script>
   <script src="js/hc-bootstrap-pin.js?v=5"></script>
-  <script src="js/hc-bootstrap-onboarding.js?v=26"></script>
-  <script src="js/hc-bootstrap-init-nav.js?v=18"></script>
+  <script src="js/hc-bootstrap-onboarding.js?v=27"></script>
+  <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-11-rdwc-layout-readability"></script>
-  <script src="js/torre-render-main.js?v=8"></script>
+  <script src="js/torre-render-build.js?v=2026-05-11-cultivo-instalacion-b"></script>
+  <script src="js/torre-render-main.js?v=10"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=7"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=8"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-06-plantilla-vol"></script>
+  <script src="js/hc-setup-wizard-core.js?v=10"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=9"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-11-cultivo-instalacion"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-05-boot-guard"></script>
-  <script src="js/hc-setup-calc-core.js?v=16"></script>
-  <script src="js/hc-setup-rotacion.js?v=1"></script>
+  <script src="js/hc-setup-calc-core.js?v=19"></script>
+  <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=8"></script>
   <script src="js/hc-setup-registro.js?v=5"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=10"></script>
-  <script src="js/hc-setup-mediciones-logic.js?v=11"></script>
-  <script src="js/hc-medicion-wizard.js?v=4"></script>
-  <script src="js/hc-tools-pro.js?v=9"></script>
-  <script src="js/hc-setup-checklist.js?v=15"></script>
+  <script src="js/hc-setup-mediciones-logic.js?v=13"></script>
+  <script src="js/hc-medicion-wizard.js?v=5"></script>
+  <script src="js/hc-tools-pro.js?v=10"></script>
+  <script src="js/hc-setup-checklist.js?v=17"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
-  <script src="js/hc-setup-consejos.js?v=27"></script>
-  <script src="js/calendario-logic.js?v=4"></script>
-  <script src="js/meteo-forecast-meteo.js?v=10"></script>
-  <script src="js/meteo-forecast-dashboard.js?v=16"></script>
-  <script src="js/riego-calculo-helpers.js?v=3"></script>
-  <script src="js/riego-calculo-calcular.js?v=3"></script>
+  <script src="js/hc-setup-consejos.js?v=30"></script>
+  <script src="js/calendario-logic.js?v=7"></script>
+  <script src="js/meteo-forecast-meteo.js?v=12"></script>
+  <script src="js/meteo-forecast-dashboard.js?v=20"></script>
+  <script src="js/riego-calculo-helpers.js?v=4"></script>
+  <script src="js/riego-calculo-calcular.js?v=4"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
-  <script src="js/app-hc-medicion-toast.js?v=4"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=4"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=22"></script>
+  <script src="js/app-hc-medicion-toast.js?v=5"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=5"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=23"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=12"></script>
 </body>
 </html>

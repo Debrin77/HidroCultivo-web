@@ -41,13 +41,20 @@
   function prefll() {
     const ph = String(el('inputPH')?.value || '').trim();
     const vol = String(el('inputVol')?.value || '').trim();
+    const cfg = (typeof state !== 'undefined' && state && state.configTorre) ? state.configTorre : {};
+    const esRdwc =
+      (typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion) === 'rdwc';
     if (!el('toolPhActual')?.value && ph) el('toolPhActual').value = ph;
-    if (!el('toolDilVol')?.value && vol) el('toolDilVol').value = vol;
-    if (!el('toolPhVol')?.value && vol) el('toolPhVol').value = vol;
+    if (!el('toolDilVol')?.value && vol && !esRdwc) el('toolDilVol').value = vol;
+    if (!el('toolPhVol')?.value && vol && !esRdwc) el('toolPhVol').value = vol;
     try {
-      const vObj = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(state.configTorre || {}) : NaN;
-      if (!el('toolDilVol')?.value && Number.isFinite(vObj)) el('toolDilVol').value = String(vObj);
-      const ecObj = (typeof getEcObjetivoManualUs === 'function') ? getEcObjetivoManualUs(state.configTorre || {}) : null;
+      const vObj =
+        typeof getVolumenNutrientesLitros === 'function'
+          ? getVolumenNutrientesLitros(cfg)
+          : (typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : NaN);
+      if ((!el('toolDilVol')?.value || esRdwc) && Number.isFinite(vObj)) el('toolDilVol').value = String(vObj);
+      if ((!el('toolPhVol')?.value || esRdwc) && Number.isFinite(vObj)) el('toolPhVol').value = String(vObj);
+      const ecObj = (typeof getEcObjetivoManualUs === 'function') ? getEcObjetivoManualUs(cfg) : null;
       if (!el('toolDilEcObjetivo')?.value && Number.isFinite(ecObj)) el('toolDilEcObjetivo').value = String(Math.round(ecObj));
     } catch (_) {}
     populateNutrientes();

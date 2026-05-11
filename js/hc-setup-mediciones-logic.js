@@ -81,7 +81,7 @@ function getDashTileClassVol(val) {
 }
 
 /**
- * Subtítulo del selector de modo (Sistema): en modo lechuga, si hay EC objetivo en checklist,
+ * Subtítulo del selector de modo (Cultivo e instalación): en modo lechuga, si hay EC objetivo en checklist,
  * sustituye el rango fijo 1300–1400 por ese objetivo (± `EC_MEDICION_TOLERANCIA_OBJETIVO_US`).
  */
 function getModoInfoDescEfectivo(modoKey) {
@@ -128,7 +128,7 @@ const PH_PLUS_POR_ML    = 0.34;  // unidades pH por ml de pH+ (25-30%) en 18L
                                   // Dato real: 8ml pH+ subieron de 3.5 a ~6.2 en 19.5L ≈ 0.34/ml
 const VOL_OBJETIVO      = 18;    // litros referencia calibración (tablas 18 L)
 
-/** Instalación en interior (Medir / Sistema): sin bloque de ambiente meteorológico en Inicio ni avisos de exterior en Meteorología. */
+/** Instalación en interior (Medir / Cultivo e instalación): sin bloque de ambiente meteorológico en Inicio ni avisos de exterior en Meteorología. */
 function instalacionEsUbicacionInterior(cfg) {
   const c = cfg || state.configTorre || {};
   return (c.ubicacion || 'exterior') === 'interior';
@@ -193,6 +193,21 @@ function getVolumenMezclaLitros(cfg) {
 }
 
 /**
+ * Volumen real de solución sobre el que hay que dosificar nutrientes.
+ * En RDWC se corrige toda la solución del circuito, no solo el reservorio de control.
+ */
+function getVolumenNutrientesLitros(cfg) {
+  cfg = cfg || state.configTorre || {};
+  const tipoNorm =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipoNorm === 'rdwc' && typeof getRdwcVolumenSolucionTotalLitros === 'function') {
+    const totalL = getRdwcVolumenSolucionTotalLitros(cfg);
+    if (Number.isFinite(totalL) && totalL > 0) return totalL;
+  }
+  return getVolumenMezclaLitros(cfg);
+}
+
+/**
  * Opciones de aviso por «volumen repuesto vs umbral × volumen útil» (Medir → próxima recarga).
  * @returns {{ activo: boolean, mult: number, consejoDesdePct: number }}
  */
@@ -233,7 +248,7 @@ function calcularMlCalMag() {
   const nut = getNutrienteTorre();
   if (!nut || !nut.calmagNecesario) return 0;
   const cfg = state.configTorre || {};
-  const volObj = getVolumenMezclaLitros(cfg);
+  const volObj = getVolumenNutrientesLitros(cfg);
   let ml = mlCalMagParaAguaBlanda(volObj);
   if (typeof getFactorArranquePlantulaHidro === 'function') {
     const fa = getFactorArranquePlantulaHidro();
@@ -327,9 +342,12 @@ function evalEC(ec, vol) {
   if (isNaN(ec)) { setStatus('statusEC','empty','',''); setCard('cardEC',''); showCorreccion('correccionEC',''); return; }
 
   const nut = getNutrienteTorre();
-  const volActual  = isNaN(vol) ? getVolumenMezclaLitros(state.configTorre) : vol;
+  const cfgVol = state.configTorre || {};
+  const esRdwcVol =
+    (typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfgVol) : cfgVol.tipoInstalacion) === 'rdwc';
+  const volActual  = esRdwcVol ? getVolumenNutrientesLitros(cfgVol) : (isNaN(vol) ? getVolumenNutrientesLitros(cfgVol) : vol);
   if (!nut || volActual == null || !Number.isFinite(volActual) || volActual <= 0) {
-    setStatus('statusEC', 'empty', '', 'Configura nutriente y litros de depósito/mezcla en Torre o Sistema.');
+    setStatus('statusEC', 'empty', '', 'Configura nutriente y litros de depósito/mezcla en Torre o Cultivo e instalación.');
     setCard('cardEC', '');
     showCorreccion('correccionEC', '');
     return;
@@ -452,7 +470,10 @@ function evalPH(ph, vol) {
   }
 
   const nut       = getNutrienteTorre();
-  const volActual = isNaN(vol) ? getVolumenMezclaLitros(state.configTorre) : vol;
+  const cfgVol = state.configTorre || {};
+  const esRdwcVol =
+    (typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfgVol) : cfgVol.tipoInstalacion) === 'rdwc';
+  const volActual = esRdwcVol ? getVolumenNutrientesLitros(cfgVol) : (isNaN(vol) ? getVolumenNutrientesLitros(cfgVol) : vol);
   if (!nut || volActual == null || !Number.isFinite(volActual) || volActual <= 0) {
     setStatus('statusPH', 'empty', '', '');
     setCard('cardPH', '');
@@ -707,7 +728,7 @@ function evalVol(vol, ec, ph) {
         exceso +
         ' L</span></div>' +
         extraDwc +
-        '<div class="correccion-muted correccion-muted--loose">Si fue medición real, revisa llenado frente a cestas; si anotas volumen «a ojo», alinea con Sistema.</div>'
+        '<div class="correccion-muted correccion-muted--loose">Si fue medición real, revisa llenado frente a cestas; si anotas volumen «a ojo», alinea con Cultivo e instalación.</div>'
     );
     return;
   }

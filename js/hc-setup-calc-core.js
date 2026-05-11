@@ -308,7 +308,7 @@ function buildHtmlDosisSubirEcParaAviso(ecNum) {
   const nut = getNutrienteTorre();
   if (!nut) return '';
   const vol =
-    typeof getVolumenMezclaLitros === 'function' ? Number(getVolumenMezclaLitros(cfg)) : NaN;
+    typeof getVolumenNutrientesLitros === 'function' ? Number(getVolumenNutrientesLitros(cfg)) : NaN;
   if (!Number.isFinite(vol) || vol < 0.5) return '';
   const ecMeta =
     typeof getRecargaEcMetaMicroS === 'function' ? getRecargaEcMetaMicroS() : NaN;
@@ -423,7 +423,7 @@ function buildEcTransicionAvisoHtml() {
       ' µS/cm</strong>. Sube concentración hasta entrar en banda; el aviso permanece hasta que la medición lo confirme.</p>';
   } else if (mismoDistintasEtapas) {
     lead =
-      '<p class="ec-transicion-aviso-txt"><strong>EC baja respecto al rango unido del sistema.</strong> Misma variedad <strong>' +
+      '<p class="ec-transicion-aviso-txt"><strong>EC baja respecto al rango unido de la instalación.</strong> Misma variedad <strong>' +
       rec.variedadUnicaNombre +
       '</strong> pero distintas fechas o etapas por cesta: la última medición ~' +
       Math.round(ecNum) +
@@ -459,13 +459,13 @@ function buildEcTransicionAvisoHtml() {
   let checklistHint = '';
   if (checklistBloqueado) {
     checklistHint =
-      '<p class="ec-transicion-aviso-sub">Para dosificación guiada con EC automático por etapa, completa <strong>Sistema</strong> (variedad y fecha en cada cesta con cultivo); luego usa el checklist de recarga en Historial.</p>' +
+      '<p class="ec-transicion-aviso-sub">Para dosificación guiada con EC automático por etapa, completa <strong>Cultivo e instalación</strong> (variedad y fecha en cada cesta con cultivo); luego usa el checklist de recarga en Historial.</p>' +
       '<div class="ec-transicion-aviso-actions">' +
-      '<button type="button" class="btn btn-primary btn-sm" onclick="goTab(\'sistema\')">Ir a Sistema</button></div>';
+      '<button type="button" class="btn btn-primary btn-sm" onclick="goTab(\'sistema\')">Ir a Cultivo e instalación</button></div>';
   } else {
     checklistHint =
       '<div class="ec-transicion-aviso-actions">' +
-      '<button type="button" class="btn btn-secondary btn-sm" onclick="goTab(\'sistema\')">Sistema</button>' +
+      '<button type="button" class="btn btn-secondary btn-sm" onclick="goTab(\'sistema\')">Cultivo e instalación</button>' +
       '<button type="button" class="btn btn-primary btn-sm" onclick="intentarAbrirChecklistDesdeInicio(false)">Checklist depósito</button></div>';
   }
   return (
@@ -1049,7 +1049,7 @@ function getRecargaEcMetaMicroS() {
   const fa = getFactorArranquePlantulaHidro();
   let meta = mid;
   if (fa < 1 && Number.isFinite(ecLo) && Number.isFinite(ecHi) && ecHi >= ecLo) {
-    // Arranque suave: interpolar entre el suelo del rango recomendado y el punto medio — nunca por debajo de ecLo (cuadra con Medir / Sistema)
+    // Arranque suave: interpolar entre el suelo del rango recomendado y el punto medio — nunca por debajo de ecLo (cuadra con Medir / Cultivo e instalación)
     meta = Math.round(ecLo + (mid - ecLo) * fa);
     meta = Math.max(Math.round(ecLo), Math.min(Math.round(ecHi), meta));
   }
@@ -1099,6 +1099,12 @@ function getSetupVolumenMaxLitros() {
       return Math.min(800, Math.max(1, Math.round(dwcCap * 10) / 10));
     }
   }
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'rdwc') {
+    const ctl = parseFloat(String(document.getElementById('setupRdwcControlVolL')?.value || '40').replace(',', '.'));
+    if (Number.isFinite(ctl) && ctl > 0) {
+      return Math.min(800, Math.max(1, Math.round(ctl * 10) / 10));
+    }
+  }
   return parseInt(document.getElementById('sliderVol')?.value || 20, 10);
 }
 
@@ -1109,6 +1115,28 @@ function getSetupVolumenMezclaLitros() {
   if (!Number.isFinite(m) || m <= 0) return maxL;
   if (m >= maxL - 0.02) return maxL;
   return Math.min(maxL, Math.max(0.5, Math.round(m * 10) / 10));
+}
+
+function getSetupVolumenNutrientesLitros() {
+  const volMezcla = getSetupVolumenMezclaLitros();
+  if (!(typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'rdwc')) return volMezcla;
+  const cfgRdwc = {
+    tipoInstalacion: 'rdwc',
+    rdwcSites: Math.max(2, Math.min(64, parseInt(String(document.getElementById('setupRdwcSites')?.value || '4'), 10) || 4)),
+    rdwcBucketVolL: Math.max(5, Math.min(200, parseFloat(String(document.getElementById('setupRdwcBucketVolL')?.value || '20').replace(',', '.')) || 20)),
+    rdwcBucketTrabajoL: (function() {
+      const raw = String(document.getElementById('setupRdwcBucketTrabajoL')?.value || '').replace(',', '.').trim();
+      const n = parseFloat(raw);
+      return Number.isFinite(n) && n > 0 ? Math.round(n * 10) / 10 : undefined;
+    })(),
+    rdwcControlVolL: getSetupVolumenMaxLitros(),
+    volMezclaLitros: volMezcla,
+  };
+  if (typeof getRdwcVolumenSolucionTotalLitros === 'function') {
+    const total = getRdwcVolumenSolucionTotalLitros(cfgRdwc);
+    if (Number.isFinite(total) && total > 0) return total;
+  }
+  return volMezcla;
 }
 
 function getSetupECObjetivo() {
@@ -1185,7 +1213,8 @@ function renderDosisSetup() {
   if (!preview) return;
 
   const volMax = getSetupVolumenMaxLitros();
-  const vol    = getSetupVolumenMezclaLitros();
+  const vol    = getSetupVolumenNutrientesLitros();
+  const volRes = getSetupVolumenMezclaLitros();
   const ecObj  = getSetupECObjetivo();
   const d      = calcularDosisSetup(setupNutriente, vol, ecObj);
   const nut    = d.nut;
@@ -1195,8 +1224,14 @@ function renderDosisSetup() {
 
   // Contexto del cálculo
   html += '<div class="nut-dosis-ctx">' +
-    '📦 Depósito máx.: <strong>' + volMax + ' L</strong>' +
-    (vol < volMax - 0.05 ? ' · mezcla <strong>' + vol + ' L</strong>' : '') + ' · ' +
+    (
+      setupTipoInstalacion === 'rdwc'
+        ? '📦 Reservorio control: <strong>' + volMax + ' L</strong>' +
+          (volRes < volMax - 0.05 ? ' · mezcla en reservorio <strong>' + volRes + ' L</strong>' : '') +
+          ' · solución total para dosis <strong>' + vol + ' L</strong>'
+        : '📦 Depósito máx.: <strong>' + volMax + ' L</strong>' +
+          (vol < volMax - 0.05 ? ' · mezcla <strong>' + vol + ' L</strong>' : '')
+    ) + ' · ' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span class="nut-dosis-ctx-tag--ok">(según cultivos)</span>' :
      ecObj.fuente === 'promedio' ? ' <span class="nut-dosis-ctx-tag--warn">⚠️ cultivos con EC diferente</span>' :
@@ -1505,6 +1540,11 @@ function guardarSetupYContinuar() {
           rdwcSites: Math.max(2, Math.min(64, parseInt(String(document.getElementById('setupRdwcSites')?.value || '4'), 10) || 4)),
           rdwcRows: Math.max(1, Math.min(4, parseInt(String(document.getElementById('setupRdwcRows')?.value || '1'), 10) || 1)),
           rdwcBucketVolL: Math.max(5, Math.min(200, parseFloat(String(document.getElementById('setupRdwcBucketVolL')?.value || '20').replace(',', '.')) || 20)),
+          rdwcBucketTrabajoL: (function() {
+            const raw = String(document.getElementById('setupRdwcBucketTrabajoL')?.value || '').replace(',', '.').trim();
+            const n = parseFloat(raw);
+            return Number.isFinite(n) && n > 0 ? Math.round(n * 10) / 10 : undefined;
+          })(),
           rdwcControlVolL: Math.max(10, Math.min(800, parseFloat(String(document.getElementById('setupRdwcControlVolL')?.value || '40').replace(',', '.')) || 40)),
           rdwcRecirculationLh: Math.max(200, Math.min(12000, parseFloat(String(document.getElementById('setupRdwcRecirculationLh')?.value || '1200').replace(',', '.')) || 1200)),
           rdwcAirLpm: Math.max(1, Math.min(300, parseFloat(String(document.getElementById('setupRdwcAirLpm')?.value || '20').replace(',', '.')) || 20)),
@@ -1737,7 +1777,7 @@ function guardarSetupYContinuar() {
   updateTorreStats();
   updateDashboard();
 
-  // Tras configurar: pestaña Sistema para cultivos; el checklist se ofrece cuando el usuario confirme.
+  // Tras configurar: pestaña Cultivo e instalación para cultivos; el checklist se ofrece cuando el usuario confirme.
   if (typeof iniciarFlujoSistemaAntesChecklistPostSetup === 'function') {
     iniciarFlujoSistemaAntesChecklistPostSetup();
   } else {
@@ -1753,7 +1793,7 @@ function preguntarIniciarChecklist() {
   const torre      = state.torres?.[state.torreActiva || 0];
   const nombreTorre = (torre?.nombre || '').trim() || 'Instalación';
   const volMax     = getVolumenDepositoMaxLitros(cfg);
-  const vol        = getVolumenMezclaLitros(cfg);
+  const vol        = typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   if (!nut || vol == null || !Number.isFinite(vol) || vol <= 0) return;
   const ecObj      = getECOptimaTorre();
   const faArr      = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
@@ -1833,7 +1873,7 @@ function preguntarIniciarChecklist() {
 
       '<div class="checklist-pregunta-nota-pasos">' +
         'Las dosis de abajo usan el volumen de mezcla, el nutriente y el <strong>EC/pH recomendados según la etapa</strong> ' +
-        'registrada en <strong>Sistema</strong> (variedad y fecha de trasplante al hidro en cada cesta con cultivo). ' +
+        'registrada en <strong>Cultivo e instalación</strong> (variedad y fecha de trasplante al hidro en cada cesta con cultivo). ' +
         'Con modo EC automático, si cambias fechas o plantas, revisa de nuevo antes de dosificar.' +
       '</div>' +
 
@@ -1869,7 +1909,7 @@ function preguntarIniciarChecklist() {
           '<div class="tipo-checklist-opt-title">' +
             'Primer uso</div>' +
           '<div class="tipo-checklist-opt-text">' +
-            'Sistema nuevo o primer llenado del depósito (sin cultivo previo en esta mezcla)' +
+            'Instalación nueva o primer llenado del depósito (sin cultivo previo en esta mezcla)' +
           '</div>' +
         '</div>' +
         // Tras limpieza
@@ -1988,7 +2028,8 @@ function aplicarConfigTorre() {
   // Actualizar constantes dinámicas — NUM_NIVELES y NUM_CESTAS ahora son variables
   window.NUM_NIVELES_ACTIVO = cfg.numNiveles;
   window.NUM_CESTAS_ACTIVO  = cfg.numCestas;
-  const vMezAct = getVolumenMezclaLitros(cfg);
+  const vMezAct =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   window.VOL_OBJETIVO_ACTIVO =
     vMezAct != null && Number.isFinite(vMezAct) && vMezAct > 0 ? vMezAct : VOL_OBJETIVO;
 

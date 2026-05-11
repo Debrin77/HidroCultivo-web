@@ -104,7 +104,7 @@ function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
         '<strong>Primer llenado</strong>: depósito nuevo o sin haber cultivado aún — te saltamos apagar bomba, vaciado de solución usada y pasos de cosecha. ' +
         'Sí te guiamos en <strong>limpiar el depósito</strong> antes de la primera mezcla.<br><br>' +
         '<strong>Recarga completa</strong>: ya hubo cultivo y solución en el sistema; el recorrido habitual (parar bomba, vaciar, limpiar, cubrir depósito…).</p>' +
-      '<p class="checklist-dark-text checklist-dark-text--note">El checklist aplica a la <strong>instalación activa</strong> (revisa el nombre en Inicio, Mediciones o pestaña Sistema si tienes varias). Lo habitual es haber rellenado antes en <strong>Sistema</strong> las <strong>variedades y fechas</strong> en cada cesta: así las dosis al depósito y el EC orientativo encajan con lo implantado.</p>' +
+      '<p class="checklist-dark-text checklist-dark-text--note">El checklist aplica a la <strong>instalación activa</strong> (revisa el nombre en Inicio, Mediciones o pestaña Cultivo e instalación si tienes varias). Lo habitual es haber rellenado antes en <strong>Cultivo e instalación</strong> las <strong>variedades y fechas</strong> en cada cesta: así las dosis al depósito y el EC orientativo encajan con lo implantado.</p>' +
       '<p class="checklist-dark-text checklist-dark-text--note">Tras <strong>finalizar</strong> una recarga en el checklist, la app ya no muestra esta pregunta y abrirá directamente la recarga completa.</p>' +
       '<button type="button" id="clRutaPrimer" class="checklist-dark-btn checklist-dark-btn--teal">' +
         '🌱 Primer llenado del depósito</button>' +
@@ -192,7 +192,8 @@ function generarPasosNutriente() {
   }
   if (!nut) return [];
   const refNut = getRefDosisFabricante(nut.id);
-  let vol = getVolumenMezclaLitros(cfg);
+  let vol =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   if (primerLlenadoNut && (vol == null || !Number.isFinite(vol) || vol <= 0)) {
     vol = typeof VOL_OBJETIVO === 'number' ? VOL_OBJETIVO : 18;
   }
@@ -318,7 +319,7 @@ function generarPasosNutriente() {
         ? (esDwcKratky
           ? 'Kratky: controlar temperatura y volumen para mantener oxigenación por cámara de aire; seguimiento en <strong>Mediciones</strong>.'
           : 'DWC: el difusor homogeneiza y oxigena; control de nivel y nutrientes en <strong>Mediciones</strong>.')
-        : 'Sistema listo para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.')
+        : 'Instalación lista para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.')
   });
 
   pasos.push({
@@ -333,14 +334,15 @@ function generarPasosNutriente() {
 function construirTextoChecklistPreliminar() {
   let nut = getNutrienteTorre();
   const cfg = state.configTorre || {};
-  let vol = getVolumenMezclaLitros(cfg);
+  let vol =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   if (!nut && Array.isArray(NUTRIENTES_DB) && NUTRIENTES_DB.length) {
     nut = NUTRIENTES_DB.find(n => n && n.id === 'canna_aqua') || NUTRIENTES_DB[0];
   }
   if (!nut) {
     return {
       descP1:
-        'Preparar solución provisional en cubo (~5 L) con agua destilada u ósmosis: cantidades según tu nutriente (elige marca en <strong>Sistema</strong> o en <strong>PC·1</strong> del primer llenado).',
+        'Preparar solución provisional en cubo (~5 L) con agua destilada u ósmosis: cantidades según tu nutriente (elige marca en <strong>Cultivo e instalación</strong> o en <strong>PC·1</strong> del primer llenado).',
       descP2: 'Verificar stock: agua, nutriente, pH+/pH−, agua oxigenada 3 %, esponja.',
       placeholderProv: '0.50',
     };
@@ -417,7 +419,7 @@ function checklistInstalacionCompletaParaRecarga() {
     getNivelesActivos().some(n => (state.torre[n] || []).some(c => c && c.variedad));
   if (hayUso) return true;
 
-  // DWC: depósito y nutriente ya guardados en Sistema (sin medición previa ni plantas) — permitir checklist
+  // DWC: depósito y nutriente ya guardados en Cultivo e instalación (sin medición previa ni plantas) — permitir checklist
   if (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc') {
     const cap =
       typeof getDwcCapacidadLitrosDesdeConfig === 'function'
@@ -607,9 +609,9 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     '<div class="checklist-dark-sheet">' +
       '<div id="cldTitulo" class="checklist-dark-title checklist-dark-title--datos">Antes del checklist</div>' +
       '<p class="checklist-dark-text checklist-dark-text--datos-intro">' +
-        'Estos datos son para la <strong>instalación activa</strong> (la que ves arriba en Inicio o Sistema). Si no es la que quieres, usa <strong>Más tarde</strong>, cambia de instalación y vuelve a abrir el checklist. ' +
+        'Estos datos son para la <strong>instalación activa</strong> (la que ves arriba en Inicio o Cultivo e instalación). Si no es la que quieres, usa <strong>Más tarde</strong>, cambia de instalación y vuelve a abrir el checklist. ' +
         'Indica tipo, volumen, agua y nutriente para que los pasos del checklist coincidan con tu montaje real. ' +
-        'Puedes afinar todo después en <strong>Sistema</strong> o con el asistente completo.</p>' +
+        'Puedes afinar todo después en <strong>Cultivo e instalación</strong> o con el asistente completo.</p>' +
 
       '<div class="checklist-dark-kicker">Tipo de sistema</div>' +
       '<div class="checklist-dark-type-grid">' +
@@ -733,7 +735,7 @@ function getCLPasos() {
         seccion: '⚙️ Datos pendientes',
         paso: '·',
         desc:
-          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Sistema</strong> o el formulario que aparece al abrir el checklist.',
+          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario que aparece al abrir el checklist.',
         nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
       },
     ];
@@ -745,7 +747,7 @@ function getCLPasos() {
         seccion: '⚙️ Datos pendientes',
         paso: '·',
         desc:
-          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Sistema</strong> o el formulario que aparece al abrir el checklist.',
+          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario que aparece al abrir el checklist.',
         nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
       },
     ];
@@ -829,7 +831,7 @@ function getCLPasos() {
   const volMaxPrimerIni = Number.isFinite(vMaxRawPrimer) && vMaxRawPrimer > 0 ? Math.round(vMaxRawPrimer) : 20;
   const pc1SeccionTitulo = esRdwc ? '⚙️ Depósito de control, agua y nutriente' : '⚙️ Depósito, agua y nutriente';
   const pc1DescPaso = esRdwc
-    ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.'
+    ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación.'
     : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
   const pc1LabelVolMax = esRdwc ? 'Litros depósito de control (L)' : 'Capacidad máx. depósito (L)';
   const pc1PhVolMax = esRdwc ? '40' : '20';
@@ -849,11 +851,11 @@ function getCLPasos() {
   const pasosConfigPrimerLlenado = [
     { id: 'PC1', seccion: pc1SeccionTitulo, paso: 'PC·1',
       desc: pc1DescPaso,
-      nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Sistema</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.' +
+      nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Cultivo e instalación</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.' +
         (esDwc
-          ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Sistema / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
+          ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Cultivo e instalación / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
           : esRdwc
-            ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí preparas la mezcla y tomas EC/pH en <strong>Medir</strong>; la bomba de recirculación reparte al resto del circuito (volumen total del anillo ≠ este depósito).'
+            ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí preparas la mezcla y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado.'
             : ''),
       extraHtml:
         '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
@@ -921,7 +923,7 @@ function getCLPasos() {
           seccion: '💨 DWC — Bomba de aire y difusores',
           paso: 'D·0',
           desc:
-            'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Sistema.',
+            'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Cultivo e instalación.',
           nota:
             'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
           postCamposHtml:
@@ -1026,7 +1028,7 @@ function getCLPasos() {
           postCamposHtml:
             '<div class="cl-rdwc-actions">' +
             '<button type="button" class="btn" onclick="if(typeof aplicarRdwcRecomendacionBaseSistema===\'function\'){aplicarRdwcRecomendacionBaseSistema();}">Aplicar base RDWC ahora</button>' +
-            '<button type="button" class="btn btn-ghost" onclick="goTab(\'sistema\')">Ir a Sistema</button>' +
+            '<button type="button" class="btn btn-ghost" onclick="goTab(\'sistema\')">Ir a Cultivo e instalación</button>' +
             '</div>',
         },
       ]
@@ -1049,8 +1051,8 @@ function getCLPasos() {
           sp.densidadTxt +
           '</strong> · ' +
           sp.cicloTxt +
-          '. Cambia el objetivo en <strong>Sistema</strong> si buscas otro ritmo de cosecha.' +
-          ' Para alinear EC/pH de <strong>Medir</strong> con cada cesta, en Sistema indica <strong>variedad</strong>, ' +
+          '. Cambia el objetivo en <strong>Cultivo e instalación</strong> si buscas otro ritmo de cosecha.' +
+          ' Para alinear EC/pH de <strong>Medir</strong> con cada cesta, en Cultivo e instalación indica <strong>variedad</strong>, ' +
           '<strong>fecha de trasplante al hidro</strong> (día 0 en el sistema) y <strong>procedencia</strong> (vivero vs germinación propia).'
         );
       })(),
@@ -1065,7 +1067,7 @@ function getCLPasos() {
       desc:
         'Configura el <strong>canal donde van las cestas</strong> (tubo redondo o ancho útil de perfil rectangular), la <strong>lámina de agua</strong> (~3 mm habitual) y opcionalmente la <strong>longitud</strong> de cada canal. ' +
         'Con eso la app estima volumen de película y caudal orientativo, y contrasta con tu bomba en el paso N0.',
-      nota: 'El Ø de <strong>línea de riego</strong> (16–32 mm según tramo; retorno 40–50 mm aparte) se configuró en Sistema; aquí solo el canal de cultivo (redondo o rectangular), lámina y longitud.',
+      nota: 'El Ø de <strong>línea de riego</strong> (16–32 mm según tramo; retorno 40–50 mm aparte) se configuró en Cultivo e instalación; aquí solo el canal de cultivo (redondo o rectangular), lámina y longitud.',
       extraHtml: nftTuberiaReferenciaDocHtml({ forChecklist: true }),
       campos: [
         {
@@ -1139,7 +1141,7 @@ function getCLPasos() {
             '</strong> · ' +
             clEstadoChipHtml(nftReco.estado) +
             '.')
-          : 'Sin datos suficientes para validar por cultivo. Completa canal y cultivos en Sistema o Asistente.',
+          : 'Sin datos suficientes para validar por cultivo. Completa canal y cultivos en Cultivo e instalación o Asistente.',
     }]
     : [];
   const checklistInterior =
@@ -1153,7 +1155,7 @@ function getCLPasos() {
       nota:
         'Orientación de equipo (no es veredicto): ' +
         nftBomb.modeloRec +
-        ' Ajusta la capacidad del depósito en <strong>Sistema</strong>. Si la película se corta, sube caudal o revisa pendiente y tapones. Cifras y desglose: bloque «Depósito» y «Ver detalle técnico» debajo.',
+        ' Ajusta la capacidad del depósito en <strong>Cultivo e instalación</strong>. Si la película se corta, sube caudal o revisa pendiente y tapones. Cifras y desglose: bloque «Depósito» y «Ver detalle técnico» debajo.',
       campos: [
         { id:'clNftBombaUsuarioLh', label:'Tu bomba — caudal nominal (L/h)', type:'number', step:'10', placeholder:'ej. 600',
           value: cfg.nftBombaUsuarioCaudalLh != null ? String(cfg.nftBombaUsuarioCaudalLh) : '',
@@ -1323,11 +1325,13 @@ function getCLPasos() {
 
   { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
     desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
-      (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : esRdwc ? 'depósito de control RDWC' : 'torre') +
+      (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : esRdwc ? 'circuito RDWC (reservorio + cubos útiles)' : 'torre') +
       (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'),
     nota: primerLlenado
       ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.'
-      : 'CalMag: marcar o desmarcar recalcula los pasos siguientes.',
+      : (esRdwc
+        ? 'CalMag: marcar o desmarcar recalcula los pasos siguientes sobre la <strong>solución total</strong> del RDWC, no solo sobre el reservorio.'
+        : 'CalMag: marcar o desmarcar recalcula los pasos siguientes.'),
     campos: primerLlenado
       ? [{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }]
       : [...paso40campos, { id:'clEcInicial', label:'EC inicial del agua:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
@@ -1438,7 +1442,7 @@ function intentarAbrirChecklistDesdeInicio(esPrimeraVez) {
 
 /**
  * Modo EC automático: sin variedad o sin fechas en cestas ocupadas — no abrir checklist con dosis por etapa.
- * @param {{ desdeWizard?: boolean; desdePostSetupRail?: boolean }} [opts] - desdePostSetupRail: tras el asistente, con el panel «Continuar al checklist» en Sistema.
+ * @param {{ desdeWizard?: boolean; desdePostSetupRail?: boolean }} [opts] - desdePostSetupRail: tras el asistente, con el panel «Continuar al checklist» en Cultivo e instalación.
  */
 function mostrarChecklistBloqueadoCultivoSistema(opts) {
   const desdeWizard = !!(opts && opts.desdeWizard);
@@ -1450,16 +1454,16 @@ function mostrarChecklistBloqueadoCultivoSistema(opts) {
     typeof torreTodasLasCestasConVariedadTienenFechaValida === 'function' &&
     !torreTodasLasCestasConVariedadTienenFechaValida();
   const titulo = sinVariedades
-    ? 'Checklist: primero cultivo en Sistema'
+    ? 'Checklist: primero define el cultivo'
     : 'Checklist: fechas de trasplante';
   const par = sinVariedades
     ? 'Con <strong>EC/pH automáticos</strong>, el checklist usa el rango por <strong>etapa</strong>. ' +
       'Indica <strong>variedad</strong> en cada cesta con planta y la <strong>fecha de trasplante al hidro</strong>. ' +
       'Así las dosis y el EC mostrado coinciden con la fase real.'
     : 'Hay cestas con variedad pero falta la <strong>fecha de trasplante al hidro</strong> en alguna. ' +
-      'Complétalas en Sistema para que EC y pH sigan la etapa de cada planta.';
+      'Complétalas en Cultivo e instalación para que EC y pH sigan la etapa de cada planta.';
   const afterWizard = desdePostSetupRail
-    ? '<p class="checklist-bloqueo-foot">Cierra este aviso, termina las fichas en el esquema y pulsa otra vez <strong>Continuar al checklist</strong> en el panel inferior (sigue en <strong>Sistema</strong>).</p>'
+    ? '<p class="checklist-bloqueo-foot">Cierra este aviso, termina las fichas en el esquema y pulsa otra vez <strong>Continuar al checklist</strong> en el panel inferior (sigue en <strong>Cultivo e instalación</strong>).</p>'
     : desdeWizard
       ? '<p class="checklist-bloqueo-foot">Cuando lo tengas, inicia el checklist desde <strong>Inicio</strong> o el botón <strong>Checklist</strong> en <strong>Historial</strong>.</p>'
       : '<p class="checklist-bloqueo-foot">El checklist de recarga está en la pestaña <strong>Historial</strong> (botón arriba a la derecha).</p>';
@@ -1485,7 +1489,7 @@ function mostrarChecklistBloqueadoCultivoSistema(opts) {
     '</p>' +
     afterWizard +
     '<div class="checklist-bloqueo-actions">' +
-    '<button type="button" id="checklistBloqueoIrSistema" class="checklist-pregunta-btn-main">Ir a Sistema</button>' +
+    '<button type="button" id="checklistBloqueoIrSistema" class="checklist-pregunta-btn-main">Ir a Cultivo e instalación</button>' +
     btnHistorialHtml +
     '</div>' +
     '<button type="button" id="checklistBloqueoCerrar" class="checklist-pregunta-btn-later">Cerrar</button>' +
@@ -1524,7 +1528,7 @@ function abrirChecklist(esPrimeraVez = false, opts) {
   if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
     showToast(typeof getMensajeStandbyContinuar === 'function'
       ? getMensajeStandbyContinuar()
-      : '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+      : '⏸ Instalación en stand-by / descanso. Reactiva modo operativa para continuar.', true);
     return;
   }
   const omitirRequisitoCultivo = !!(opts && opts.omitirRequisitoCultivo);

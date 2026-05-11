@@ -899,7 +899,7 @@ html.hc-theme-dark .tab-btn.active svg {
   justify-content: center;
 }
 
-/* Tras el asistente: recordatorio checklist (solo pestaña Sistema) */
+/* Tras el asistente: recordatorio checklist (solo pestaña Cultivo e instalación) */
 .hc-post-setup-rail {
   position: fixed;
   left: 50%;
@@ -1445,7 +1445,7 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 #torreSistemaResumenWrap .config-section-collapse-head.is-collapsed .config-section-collapse-chevron {
   transform: rotate(-90deg);
 }
-/* Sistema DWC: cuerpo del resumen bajo la cabecera tipo panel NFT/DWC */
+/* DWC: cuerpo del resumen bajo la cabecera tipo panel NFT/DWC */
 .torre-sistema-resumen-dwc-inner {
   margin-top: 0;
 }
@@ -4274,7 +4274,7 @@ h1.dash-greeting {
   padding-left: 10px;
   border-left: 3px solid var(--green);
 }
-/** Rótulos de sección antes de recuadros en Inicio (misma jerarquía que «Sistema seleccionado»). */
+/** Rótulos de sección antes de recuadros en Inicio (misma jerarquía que «Instalación seleccionada»). */
 .dash-block-label {
   font-family: var(--font-ui);
   font-size: var(--text-sm);
@@ -4733,7 +4733,7 @@ html.hc-theme-dark #tileVol .tile-icon .hc-ico { color: #22d3ee; }
   color: var(--green);
   font-variant-numeric: tabular-nums;
 }
-/* Medir / Sistema: cabecera desplegable tipo «Próxima recarga completa» */
+/* Medir / Cultivo e instalación: cabecera desplegable tipo «Próxima recarga completa» */
 .medir-disclosure-main-head {
   align-items: flex-start;
   padding: 4px 0 12px;
@@ -5778,7 +5778,7 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   }
 }
 
-/* Sistema → Objetivo en torre vertical: mejor legibilidad (1 columna, centrado) */
+/* Cultivo e instalación → Objetivo en torre vertical: mejor legibilidad (1 columna, centrado) */
 #sistemaTorreObjetivoCard .torre-dwc-grid-2{
   grid-template-columns: 1fr;
 }
@@ -10261,7 +10261,7 @@ html.hc-theme-dark #tab-mediciones .recarga-card .config-section-collapse-subtit
   outline: 2px solid var(--green);
   outline-offset: 2px;
 }
-/* Indicador compartido: píldora + ▼ (Medir, Sistema, recargas, DWC anidado) */
+/* Indicador compartido: píldora + ▼ (Medir, Cultivo e instalación, recargas, DWC anidado) */
 .config-section-collapse-chevron {
   flex-shrink: 0;
   width: 24px;
@@ -10861,7 +10861,7 @@ button.config-option:focus-visible,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Pestaña Sistema: métricas, avisos y nutriente antes del esquema */
+/* Pestaña Cultivo e instalación: métricas, avisos y nutriente antes del esquema */
 .torre-tab-resumen-superior {
   margin-bottom: 12px;
 }
@@ -11253,7 +11253,7 @@ button.config-option:focus-visible,
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
-/* Pestaña Sistema: montaje NFT y datos DWC como panel desplegable */
+/* Pestaña Cultivo e instalación: montaje NFT y datos DWC como panel desplegable */
 .torre-sistema-panel {
   padding-top: 2px;
 }
@@ -12010,7 +12010,7 @@ html.hc-theme-dark .hc-germ-table th {
   border-top: none;
 }
 
-/* Sistema (NFT/DWC): <details> colapsables — separación respecto a botones y rejillas en móvil */
+/* Cultivo e instalación (NFT/DWC): <details> colapsables — separación respecto a botones y rejillas en móvil */
 .torre-sistema-details-spaced.torre-vol-detalles {
   margin-bottom: 14px;
 }

@@ -570,7 +570,7 @@ function getDwcCapacidadLitrosFromSetupInputs() {
   return getDwcCapacidadLitrosFromFormIds(DWC_FORM_IDS_SETUP);
 }
 
-/** Litros útiles del depósito desde campos de la pestaña Sistema (misma fórmula que el asistente). */
+/** Litros útiles del depósito desde campos de la pestaña Cultivo e instalación (misma fórmula que el asistente). */
 function getDwcCapacidadLitrosFromSistemaInputs() {
   return getDwcCapacidadLitrosFromFormIds(DWC_FORM_IDS_SISTEMA);
 }
@@ -766,14 +766,14 @@ function refrescarDwcDifusorChecklist() {
   const rec = dwcRecomendacionDifusorCompletaDesdeConfig(state.configTorre);
   if (!rec) {
     el.innerHTML =
-      '<p class="dwc-dif-empty">Completa <strong>capacidad máxima y litros de mezcla</strong> en Sistema o en <strong>PC·1</strong> (primer llenado) para calcular bomba y difusores con tu volumen real.</p>';
+      '<p class="dwc-dif-empty">Completa <strong>capacidad máxima y litros de mezcla</strong> en Cultivo e instalación o en <strong>PC·1</strong> (primer llenado) para calcular bomba y difusores con tu volumen real.</p>';
     return;
   }
   el.innerHTML = dwcFormatHtmlRecomendacionDifusorCore(rec);
 }
 
 /**
- * Litros para el aviso de oxigenación en Sistema DWC: prioriza L×A×P del formulario; si no, config (mezcla / máx.).
+ * Litros para el aviso de oxigenación en Cultivo e instalación (DWC): prioriza L×A×P del formulario; si no, config (mezcla / máx.).
  */
 function getDwcLitrosOxigenacionParaSistemaUI(cfg) {
   cfg = cfg || state.configTorre;
@@ -1345,7 +1345,7 @@ function aplicarDwcRejillaDesdeSetup(modoAplicacion) {
       DWC_SETUP_SLIDER_MAX_FILAS +
       '×' +
       DWC_SETUP_SLIDER_MAX_COLS +
-      ' (en Sistema puedes llegar a ' +
+      ' (en Cultivo e instalación puedes llegar a ' +
       DWC_REJILLA_MAX_FILAS +
       '×' +
       DWC_REJILLA_MAX_COLS +
@@ -1893,7 +1893,7 @@ function dwcHtmlDistanciaLlenadoTiempoReal(cfg) {
       '<div class="torre-dwc-llenado-live" role="region" aria-label="Llenado DWC">' +
       '<p class="torre-dwc-llenado-kicker">Llenado · distancia nutriente → sustrato (cm)</p>' +
       '<p class="torre-nft-p-soft">La recomendación automática aplica a <strong>cultivos de hoja</strong> (lechuga, asiáticas, hojas, hierbas) con fecha en la ficha. Tus plantas en rejilla son de <strong>otros grupos</strong> (p. ej. frutos): aquí no se calcula ese llenado.</p>' +
-      '<p class="torre-nft-p-soft">Sustrato de referencia en Sistema: <strong>' +
+      '<p class="torre-nft-p-soft">Sustrato de referencia en Cultivo e instalación: <strong>' +
       (typeof meteoEscHtml === 'function' ? meteoEscHtml(suNombre) : suNombre) +
       '</strong>.</p>' +
       '</div>'
@@ -1970,7 +1970,7 @@ function mountDwcDistanciaLlenadoTiempoReal() {
   }
 }
 
-/** Actualiza volumen (L), tapa/rejilla, máx. cestas, oxigenación/difusor y llenado (cm) en la pestaña Sistema DWC. */
+/** Actualiza volumen (L), tapa/rejilla, máx. cestas, oxigenación/difusor y llenado (cm) en la pestaña Cultivo e instalación (DWC). */
 function refreshDwcSistemaMedidasUI() {
   const volEl = document.getElementById('sysDwcVolumenLitrosHint');
   const oxEl = document.getElementById('sysDwcOxigenacionHint');
@@ -2218,7 +2218,7 @@ function onSetupDwcMedidasInput() {
   onSetupVolMezclaInput();
 }
 
-/** Rellena cfg con campos DWC desde inputs (pestaña Sistema o asistente). */
+/** Rellena cfg con campos DWC desde inputs (pestaña Cultivo e instalación o asistente). */
 function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   if (!cfg || !ids) return;
   const formaEl = ids.forma ? document.getElementById(ids.forma) : null;

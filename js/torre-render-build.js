@@ -43,7 +43,7 @@ function setModo(modo) {
   renderTorre();
 }
 
-/** Texto bajo el selector de modo (Sistema); respeta EC manual del checklist en modo lechuga. */
+/** Texto bajo el selector de modo (Cultivo e instalación); respeta EC manual del checklist en modo lechuga. */
 function refreshModoInfoText() {
   const el = document.getElementById('modoInfoText');
   if (!el) return;
@@ -1710,7 +1710,7 @@ function sincronizarTextosPanelInteraccionSistema() {
   const finHint = document.getElementById('torreAssignFinalizarHint');
   const btnUpd = document.getElementById('btnActualizarInstalacionSistema');
   if (tit) {
-    tit.textContent = esNft ? 'Huecos en el sistema NFT'
+    tit.textContent = esNft ? 'Huecos en el montaje NFT'
       : esDwc ? 'Macetas en el DWC' : esRdwc ? 'Módulos en el RDWC' : 'Cestas en la torre vertical';
   }
   if (btnUpd) {
@@ -1990,12 +1990,12 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
     '<div class="tut-sheet tut-sheet--dim">' +
       '<div class="tut-handle"></div>' +
       '<div class="tut-head tut-head--tight">' +
-        '<div id="tutorialTorreTabTitulo" class="tut-title tut-title--lg">⚙️ Ayuda de Sistema</div>' +
+        '<div id="tutorialTorreTabTitulo" class="tut-title tut-title--lg">⚙️ Ayuda de Cultivo e instalación</div>' +
         '<div class="tut-sub tut-sub--mt">Resumen rápido de dónde está cada ajuste importante.</div>' +
       '</div>' +
       '<div class="tut-steps">' +
         '<div class="tut-callout tut-callout--green">' +
-          '<strong class="tut-strong-green">Instalación activa</strong> · Arriba eliges sistema (Torre/NFT/DWC), cambias nombre y ubicación.</div>' +
+          '<strong class="tut-strong-green">Instalación activa</strong> · Arriba eliges el tipo de montaje (Torre/NFT/DWC), cambias nombre y ubicación.</div>' +
         '<div class="tut-callout tut-callout--blue">' +
           '<strong class="tut-strong-blue">Estrategia EC/pH</strong> · Aquí defines Auto o Manual y el nivel de intensidad para recomendaciones.</div>' +
         '<div class="tut-callout tut-callout--amber">' +
@@ -2291,7 +2291,7 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<strong>DWC</strong>: tapa arriba, depósito abajo. <strong>Toca maceta</strong> o usa <strong>Lista</strong>.';
     } else if (esRdwc) {
       intro.innerHTML =
-        '<strong>RDWC</strong>: <strong>recirculación continua</strong> (envío/retorno), depósito de control abajo con <strong>CAL / AIR</strong> si los marcas en <strong>Sistema</strong>. Fase del cultivo <strong>encima</strong> de cada módulo. <strong>Toca módulo</strong> o <strong>Lista</strong>.';
+        '<strong>RDWC</strong>: <strong>recirculación continua</strong> (envío/retorno), depósito de control abajo con <strong>CAL / AIR</strong> si los marcas en <strong>Cultivo e instalación</strong>. Fase del cultivo <strong>encima</strong> de cada módulo. <strong>Toca módulo</strong> o <strong>Lista</strong>.';
     } else {
       intro.innerHTML =
         '<strong>Torre</strong> (maqueta): <strong>flechas o deslizar</strong> para girar; <strong>Lista</strong> para ver todas las cestas.';

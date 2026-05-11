@@ -60,6 +60,54 @@ function rdwcEnsureConfigDefaults(cfg) {
   return c;
 }
 
+function rdwcParseLitrosTrabajo(raw) {
+  const v = parseFloat(String(raw == null ? '' : raw).replace(',', '.').trim());
+  if (!Number.isFinite(v) || v <= 0) return null;
+  return Math.round(v * 10) / 10;
+}
+
+function getRdwcBucketVolumenTrabajoAutoLitros(cfg) {
+  const c = cfg || {};
+  const bucketNom = Math.max(5, Number(c.rdwcBucketVolL) || 20);
+  // Auto conservador: deja una cámara de aire razonable bajo la cesta si el usuario no ha afinado el dato.
+  const autoL = bucketNom * 0.7;
+  const out = Math.min(bucketNom, Math.max(0.5, autoL));
+  return Math.round(out * 10) / 10;
+}
+
+function getRdwcBucketVolumenTrabajoLitros(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  const bucketNom = Math.max(5, Number(c.rdwcBucketVolL) || 20);
+  const manual = rdwcParseLitrosTrabajo(c.rdwcBucketTrabajoL);
+  if (manual != null) {
+    return Math.min(bucketNom, Math.max(0.5, Math.round(manual * 10) / 10));
+  }
+  return getRdwcBucketVolumenTrabajoAutoLitros(c);
+}
+
+function getRdwcVolumenControlTrabajoLitros(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  const controlMax = Math.max(10, Number(c.rdwcControlVolL || c.volDeposito || 40));
+  const mix = rdwcParseLitrosTrabajo(c.volMezclaLitros);
+  if (mix != null) {
+    return Math.min(controlMax, Math.max(0.5, Math.round(mix * 10) / 10));
+  }
+  return Math.round(controlMax * 10) / 10;
+}
+
+function getRdwcVolumenSolucionTotalLitros(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  const sites = Math.max(2, Math.round(Number(c.rdwcSites) || 4));
+  const controlL = getRdwcVolumenControlTrabajoLitros(c);
+  const bucketL = getRdwcBucketVolumenTrabajoLitros(c);
+  if (!Number.isFinite(controlL) || controlL <= 0 || !Number.isFinite(bucketL) || bucketL <= 0) return null;
+  return Math.round((controlL + sites * bucketL) * 10) / 10;
+}
+
 function rdwcCompatChipHtml(estado) {
   const k = estado === 'ok' || estado === 'warn' || estado === 'bad' ? estado : 'warn';
   const txt = k === 'ok' ? 'OK' : k === 'warn' ? 'Ajustar' : 'No recomendado';
@@ -153,15 +201,15 @@ function rdwcCalcularHidraulica(cfg) {
   const c = cfg || {};
   if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
   const sites = Math.max(2, Number(c.rdwcSites) || 4);
-  const bucketVol = Math.max(5, Number(c.rdwcBucketVolL) || 20);
-  const controlVol = Math.max(10, Number(c.rdwcControlVolL) || 40);
+  const bucketVol = getRdwcBucketVolumenTrabajoLitros(c);
+  const controlVol = getRdwcVolumenControlTrabajoLitros(c);
   const recUser = Math.max(100, Number(c.rdwcRecirculationLh) || 1200);
   const airUser = Math.max(1, Number(c.rdwcAirLpm) || 20);
   const headM = Math.max(0, Number(c.rdwcHeadM) || 1.2);
   const lineLenM = Math.max(1, Number(c.rdwcLineLenM) || 12);
   const fittings = Math.max(0, Number(c.rdwcFittings) || 12);
   const mode = c.rdwcHydroMode === 'silencioso' || c.rdwcHydroMode === 'alto_rendimiento' ? c.rdwcHydroMode : 'estandar';
-  const totalVol = Math.max(controlVol + sites * bucketVol, controlVol);
+  const totalVol = Math.max((Number(controlVol) || 0) + sites * (Number(bucketVol) || 0), Number(controlVol) || 0);
 
   const modeMult = mode === 'silencioso' ? 1.15 : mode === 'alto_rendimiento' ? 1.95 : 1.6;
   const modeMinMult = mode === 'silencioso' ? 1.0 : mode === 'alto_rendimiento' ? 1.35 : 1.2;
@@ -198,6 +246,9 @@ function rdwcCalcularHidraulica(cfg) {
 
   return {
     totalVol,
+    controlVol,
+    bucketVol,
+    sites,
     recMin, recObj, recMax,
     airMin, airObj, airMax,
     pumpMin, pumpRec,
@@ -219,6 +270,7 @@ function renderRdwcCalculoStatus(cfg, elId) {
     'RDWC Pro ' + rdwcFlowChip(calc.estadoGlobal) +
     ' · Perfil <strong>' + (calc.mode === 'silencioso' ? 'silencioso' : calc.mode === 'alto_rendimiento' ? 'alto rendimiento' : 'estándar') + '</strong>' +
     ' · Volumen total ≈ <strong>' + calc.totalVol + ' L</strong>' +
+    ' (<strong>' + calc.controlVol + ' L</strong> reservorio + ' + calc.sites + '×<strong>' + calc.bucketVol + ' L</strong> en cubos)' +
     ' · Recirculación objetivo <strong>' + calc.recObj + ' L/h</strong> (mín ' + calc.recMin + ')' +
     ' · Bomba recomendada <strong>' + calc.pumpRec + ' L/h</strong>' +
     ' · Aireación objetivo <strong>' + calc.airObj + ' L/min</strong> (mín ' + calc.airMin + ')' +
@@ -287,6 +339,7 @@ function bindRdwcCompatLive(scope) {
       c2.rdwcSites = g('sysRdwcSites', c.rdwcSites || 4);
       c2.rdwcRows = g('sysRdwcRows', c.rdwcRows || 1);
       c2.rdwcBucketVolL = g('sysRdwcBucketVolL', c.rdwcBucketVolL || 20);
+      c2.rdwcBucketTrabajoL = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcBucketTrabajoL')?.value);
       c2.rdwcControlVolL = g('sysRdwcControlVolL', c.rdwcControlVolL || 40);
       c2.rdwcRecirculationLh = g('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
       c2.rdwcAirLpm = g('sysRdwcAirLpm', c.rdwcAirLpm || 20);
@@ -311,6 +364,7 @@ function bindRdwcCompatLive(scope) {
       c2.rdwcSites = g('setupRdwcSites', c.rdwcSites || 4);
       c2.rdwcRows = g('setupRdwcRows', c.rdwcRows || 1);
       c2.rdwcBucketVolL = g('setupRdwcBucketVolL', c.rdwcBucketVolL || 20);
+      c2.rdwcBucketTrabajoL = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcBucketTrabajoL')?.value);
       c2.rdwcControlVolL = g('setupRdwcControlVolL', c.rdwcControlVolL || 40);
       c2.rdwcRecirculationLh = g('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
       c2.rdwcAirLpm = g('setupRdwcAirLpm', c.rdwcAirLpm || 20);
@@ -871,7 +925,7 @@ function refrescarSetupTipoInstalacionUI() {
   const t1 = document.getElementById('spage1Title');
   const st = document.getElementById('spage1Subtitle');
   if (t1) {
-    t1.textContent = isNft ? '🪴 Tu sistema NFT'
+    t1.textContent = isNft ? '🪴 Tu montaje NFT'
       : setupTipoInstalacion === 'dwc' ? '🫧 Tu DWC'
       : isRdwc ? '🧿 Tu RDWC'
       : '🌿 Tu torre vertical';
@@ -880,10 +934,10 @@ function refrescarSetupTipoInstalacionUI() {
     st.textContent = isNft
       ? 'Canales en paralelo, huecos por canal y pendiente. La rejilla usa un nivel por canal.'
       : setupTipoInstalacion === 'dwc'
-        ? 'Cubo con tapa: filas × cestas = orificios; litros = solución. Abajo: medidas del depósito, diámetro y altura de cesta, cúpulas y aire (también en Sistema).'
+        ? 'Cubo con tapa: filas × cestas = orificios; litros = solución. Abajo: medidas del depósito, diámetro y altura de cesta, cúpulas y aire (también en Cultivo e instalación).'
         : isRdwc
           ? 'RDWC: módulos conectados y recirculación continua. Ajusta sitios, volúmenes y aireación.'
-        : 'Configura las dimensiones de tu sistema hidropónico vertical';
+        : 'Configura las dimensiones de tu torre hidropónica vertical';
   }
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
   if (dwcWizard) dwcWizard.classList.toggle('setup-hidden', !(setupTipoInstalacion === 'dwc' || isRdwc));
@@ -1019,7 +1073,7 @@ function parseNftMesaTubosPorNivelStr(str) {
   return out.slice(0, 8);
 }
 
-/** Serializa tubos por nivel desde la cuadrícula del asistente (nft) o Sistema (sys). */
+/** Serializa tubos por nivel desde la cuadrícula del asistente (nft) o Cultivo e instalación (sys). */
 function getNftMesaTubosPorNivelStrFromGrid(prefix) {
   const isSys = prefix === 'sys';
   const nEl = document.getElementById(isSys ? 'sysNftMesaNumNiveles' : 'nftMesaNumNiveles');
@@ -1551,7 +1605,7 @@ function syncSistemaEcPhStrategyUI() {
           '). Útil como referencia si quieres un EC manual fijo; el cultivo real sigue variando por etapa.';
       } else if (nVar === 0) {
         hintMedia.textContent =
-          'Sin variedades asignadas en Sistema: define plantas y fecha para alinear el manual con el catálogo, o usa solo tu criterio.';
+          'Sin variedades asignadas en Cultivo e instalación: define plantas y fecha para alinear el manual con el catálogo, o usa solo tu criterio.';
       } else {
         hintMedia.textContent =
           'Esta variedad no define fases EC en el catálogo; usa el rango de la ficha o la tabla de variedades como referencia.';
@@ -1604,6 +1658,9 @@ function applySetupRdwcDesdeFormulario() {
   c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum('setupRdwcSites', c.rdwcSites || 4))));
   c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum('setupRdwcRows', c.rdwcRows || 1))));
   c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum('setupRdwcBucketVolL', c.rdwcBucketVolL || 20)));
+  const bucketTrabajoSetup = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcBucketTrabajoL')?.value);
+  if (bucketTrabajoSetup != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajoSetup);
+  else delete c.rdwcBucketTrabajoL;
   c.rdwcControlVolL = Math.max(10, Math.min(800, gNum('setupRdwcControlVolL', c.rdwcControlVolL || 40)));
   c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
   c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('setupRdwcAirLpm', c.rdwcAirLpm || 20)));
@@ -1623,6 +1680,7 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
     setupRdwcSites: c.rdwcSites,
     setupRdwcRows: c.rdwcRows,
     setupRdwcBucketVolL: c.rdwcBucketVolL,
+    setupRdwcBucketTrabajoL: c.rdwcBucketTrabajoL,
     setupRdwcControlVolL: c.rdwcControlVolL,
     setupRdwcRecirculationLh: c.rdwcRecirculationLh,
     setupRdwcAirLpm: c.rdwcAirLpm,
@@ -1648,6 +1706,9 @@ function aplicarSistemaRdwcDesdeFormulario() {
   c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum('sysRdwcSites', c.rdwcSites || 4))));
   c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum('sysRdwcRows', c.rdwcRows || 1))));
   c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum('sysRdwcBucketVolL', c.rdwcBucketVolL || 20)));
+  const bucketTrabajoSys = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcBucketTrabajoL')?.value);
+  if (bucketTrabajoSys != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajoSys);
+  else delete c.rdwcBucketTrabajoL;
   c.rdwcControlVolL = Math.max(10, Math.min(800, gNum('sysRdwcControlVolL', c.rdwcControlVolL || 40)));
   c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
   c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('sysRdwcAirLpm', c.rdwcAirLpm || 20)));
@@ -1883,7 +1944,7 @@ function aplicarSistemaEcPhStrategyDesdeFormulario() {
   );
 }
 
-/** Desde Sistema: mismo overlay que «configurar», saltando al paso 1 (NFT: canal, tubo Ø, lámina, bomba). */
+/** Desde Cultivo e instalación: mismo overlay que «configurar», saltando al paso 1 (NFT: canal, tubo Ø, lámina, bomba). */
 function abrirAsistenteNftCanalYTuboDesdeSistema() {
   if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') return;
   guardarEstadoTorreActual();

@@ -236,34 +236,38 @@ function updateRecargaBar() {
       : '—';
   const sisTag = document.getElementById('recargaSistemaTag');
   const sisNombre = document.getElementById('recargaSistemaNombre');
-  if (sisTag) sisTag.textContent = 'Sistema: ' + sysLbl;
+  if (sisTag) sisTag.textContent = 'Instalación: ' + sysLbl;
   if (sisNombre) sisNombre.textContent = sysLbl;
 
-  const diasRecarga = 15;
-  let diasTranscurridos = 0;
-
-  if (state.ultimaRecarga) {
-    const diff = Date.now() - new Date(state.ultimaRecarga).getTime();
-    diasTranscurridos = Math.floor(diff / 86400000);
-  }
-
-  const diasRestantes = Math.max(0, diasRecarga - diasTranscurridos);
-  const pct = Math.min(100, (diasTranscurridos / diasRecarga) * 100);
+  const evalRec = evaluarFatigaRecargaOculta();
+  const diasRecarga = Math.max(1, evalRec.diasObjetivo || 15);
+  const diasTranscurridos = evalRec.diasTranscurridos || 0;
+  const diasRestantes = Math.max(0, evalRec.diasRestantes || 0);
+  const pct = Math.min(100, evalRec.pct || 0);
 
   diasEl.textContent = diasRestantes > 0 ? diasRestantes + 'd' : '¡HOY!';
 
   const sisHint = ' · ' + sysLbl;
   let color, nota;
-  if (pct < 60) {
+  if (evalRec.level === 'change') {
+    color = '#dc2626';
+    nota =
+      '🔴 Recarga completa recomendada en ' +
+      sysLbl +
+      ' por estabilidad del sistema';
+  } else if (pct < 60) {
     color = '#16a34a';
     nota = 'Última recarga completa hace ' + diasTranscurridos + ' días' + sisHint;
+  } else if (evalRec.level === 'watch') {
+    color = '#d97706';
+    nota = '⚠️ Conviene vigilar la solución en ' + sysLbl + ' — revisión de recarga en ~' + diasRestantes + ' días';
   } else if (pct < 85) {
     color = '#d97706';
     nota = '⚠️ Recarga completa próxima (' + sysLbl + ') — quedan ~' + diasRestantes + ' días';
   } else {
-    color = '#dc2626';
+    color = '#d97706';
     nota =
-      '🔴 Recarga completa necesaria en ' +
+      '⚠️ Revisión de recarga en ' +
       sysLbl +
       (diasRestantes === 0 ? ' — HOY' : ' — en ~' + diasRestantes + ' días');
   }
@@ -273,7 +277,7 @@ function updateRecargaBar() {
       typeof getRecargaVolumenAvisoCfg === 'function'
         ? getRecargaVolumenAvisoCfg()
         : { activo: true, mult: 1, consejoDesdePct: 85 };
-    if (state.ultimaRecarga && av.activo && pct >= av.consejoDesdePct) {
+    if (state.ultimaRecarga && av.activo && (pct >= av.consejoDesdePct || evalRec.level === 'change')) {
       const vr = getRecargaVolumenReferenciaLitros();
       const acu = sumatorioReposicionLitrosDesdeRecargaCompleta();
       const cx = buildRecargaConsejoLitrosYPlazoPlain(pct, diasTranscurridos, vr, acu);
@@ -285,7 +289,7 @@ function updateRecargaBar() {
   barEl.style.width = pct + '%';
   barEl.style.background = color;
   notaEl.textContent = nota;
-  notaEl.style.color = pct > 85 ? '#dc2626' : '#6b7280';
+  notaEl.style.color = evalRec.level === 'change' ? '#dc2626' : '#6b7280';
 
   // Depósito visual: mismo objetivo que Medir — litros de mezcla si los configuraste;
   // si no, tope seguro / depósito (getVolumenMezclaLitros ya hace ese fallback).
@@ -344,7 +348,7 @@ function updateRecargaBar() {
   updateRecargaConfirmUI(
     state.ultimaRecarga ? pct : 0,
     state.ultimaRecarga ? diasTranscurridos : 0,
-    state.ultimaRecarga ? diasRestantes : 15,
+    state.ultimaRecarga ? diasRestantes : diasRecarga,
     nPlantasTorre
   );
 }
@@ -376,6 +380,7 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
     typeof getRecargaVolumenAvisoCfg === 'function'
       ? getRecargaVolumenAvisoCfg()
       : { activo: true, mult: 1, consejoDesdePct: 85 };
+  const evalRec = evaluarFatigaRecargaOculta();
   let turnoverPendiente = false;
   let volRBanner = null;
   let acumBanner = null;
@@ -393,14 +398,13 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
     }
   } catch (_) {}
   const consejoBanner =
-    state.ultimaRecarga && avUi.activo && pct >= avUi.consejoDesdePct
+    state.ultimaRecarga && avUi.activo && (pct >= avUi.consejoDesdePct || evalRec.level === 'change')
       ? buildRecargaConsejoLitrosYPlazoPlain(pct, diasTranscurridos, volRBanner, acumBanner)
       : '';
 
   const urgente = !snooze && (
     (!state.ultimaRecarga && nPlantas > 0) ||
-    (state.ultimaRecarga && pct >= 72) ||
-    (state.ultimaRecarga && turnoverPendiente)
+    (state.ultimaRecarga && evalRec.level === 'change')
   );
 
   if (!urgente) {
@@ -417,13 +421,21 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
     banner.textContent =
       pref +
       '⚠️ No hay fecha de recarga completa. Si ya vaciaste y mezclaste de cero → checklist o interruptor «Recarga completa» al guardar. Si solo rellenaste volumen (plantas/evaporación) → reposición parcial; no reinicia este contador.';
-  } else if (pct >= 85) {
+  } else if (evalRec.level === 'change') {
     banner.classList.add('bad');
     let t =
       pref +
-      '🔴 Llevas ' +
-      diasTranscurridos +
-      ' días desde la última recarga completa. ¿Toca vaciar, limpiar y checklist? Si solo faltaba agua en el mismo cultivo, usa reposición parcial.';
+      '🔴 Conviene vaciar, limpiar y rehacer la solución con el checklist. ';
+    if (evalRec.turnoverRatio >= 1.2) {
+      t += 'Se ha repuesto mucho volumen desde la última recarga completa. ';
+    } else if (evalRec.phSpan >= 0.9 || evalRec.ecSpanPct >= 0.35) {
+      t += 'Las últimas mediciones muestran menos estabilidad de la deseable. ';
+    } else if (evalRec.tempMax >= 24.5) {
+      t += 'La temperatura del agua ha sido alta y acorta la vida útil de la solución. ';
+    } else {
+      t += 'La combinación de días, reposiciones y estabilidad ya no compensa seguir corrigiendo sin renovar. ';
+    }
+    t += 'Si solo faltaba agua en el mismo cultivo, usa reposición parcial.';
     if (turnoverPendiente) {
       t +=
         ' El volumen repuesto en suma ya alcanza el umbral configurado (≥' +
@@ -432,30 +444,6 @@ function updateRecargaConfirmUI(pct, diasTranscurridos, diasRestantes, nPlantas)
     }
     if (consejoBanner && !turnoverPendiente) t += ' ' + consejoBanner;
     banner.textContent = t;
-  } else if (turnoverPendiente) {
-    banner.classList.remove('bad');
-    let t =
-      pref +
-      '⚠️ Desde la última recarga completa has registrado en reposiciones parciales un volumen ≥ al umbral configurado (≥' +
-      fmtMultRecargaVolumen(avUi.mult) +
-      '× el volumen útil de referencia). Conviene planificar vaciado + limpieza + mezcla nueva (checklist). El aviso por días (~15) es un criterio aparte.';
-    if (pct >= 72) {
-      t +=
-        ' El plazo por días también es próximo (' +
-        (diasRestantes <= 0 ? 'hoy' : 'quedan ~' + diasRestantes + ' d') +
-        ').';
-    }
-    if (consejoBanner) t += ' ' + consejoBanner;
-    banner.textContent = t;
-  } else if (pct >= 72) {
-    banner.classList.remove('bad');
-    let t2 =
-      pref +
-      '⚠️ Pronto toca valorar una recarga completa (' +
-      (diasRestantes <= 0 ? 'hoy según calendario' : 'quedan ~' + diasRestantes + ' d') +
-      '). Rellenar sin vaciar = reposición parcial.';
-    if (consejoBanner) t2 += ' ' + consejoBanner;
-    banner.textContent = t2;
   }
 }
 
@@ -488,6 +476,196 @@ function parseUltimaRecargaCompletaDayMs() {
   return Number.isFinite(t) ? t : null;
 }
 
+function parseFechaHoraRegistroMs(fecha, hora) {
+  if (!fecha || typeof fecha !== 'string') return NaN;
+  const p = fecha.split('/');
+  if (p.length < 3) return NaN;
+  const d = parseInt(p[0], 10);
+  const m = parseInt(p[1], 10) - 1;
+  const y = parseInt(p[2], 10);
+  if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(y)) return NaN;
+  let hh = 12;
+  let mm = 0;
+  if (hora && typeof hora === 'string') {
+    const hm = hora.split(':');
+    const hN = parseInt(hm[0], 10);
+    const mN = parseInt(hm[1], 10);
+    if (Number.isFinite(hN)) hh = Math.max(0, Math.min(23, hN));
+    if (Number.isFinite(mN)) mm = Math.max(0, Math.min(59, mN));
+  }
+  const dt = new Date(y, m, d, hh, mm, 0, 0);
+  const t = dt.getTime();
+  return Number.isFinite(t) ? t : NaN;
+}
+
+function recargaValorNum(raw) {
+  const n = parseFloat(String(raw == null ? '' : raw).replace(',', '.').trim());
+  return Number.isFinite(n) ? n : NaN;
+}
+
+function getMedicionesDesdeUltimaRecarga(limit) {
+  const desde = parseUltimaRecargaCompletaDayMs();
+  const arr = Array.isArray(state.mediciones) ? state.mediciones : [];
+  const out = [];
+  for (let i = 0; i < arr.length; i++) {
+    const m = arr[i];
+    if (!m) continue;
+    const ts = parseFechaHoraRegistroMs(m.fecha, m.hora);
+    if (!Number.isFinite(ts)) continue;
+    if (desde != null && ts < desde) continue;
+    out.push({
+      ts,
+      ec: recargaValorNum(m.ec),
+      ph: recargaValorNum(m.ph),
+      temp: recargaValorNum(m.temp),
+      vol: recargaValorNum(m.vol),
+    });
+  }
+  out.sort((a, b) => a.ts - b.ts);
+  if (limit && out.length > limit) return out.slice(-limit);
+  return out;
+}
+
+function getRegistroDesdeUltimaRecarga() {
+  const desde = parseUltimaRecargaCompletaDayMs();
+  const reg = Array.isArray(state.registro) ? state.registro : [];
+  const out = [];
+  for (let i = 0; i < reg.length; i++) {
+    const e = reg[i];
+    if (!e) continue;
+    const ts = parseFechaHoraRegistroMs(e.fecha, e.hora);
+    if (!Number.isFinite(ts)) continue;
+    if (desde != null && ts < desde) continue;
+    out.push({ ts, entry: e });
+  }
+  return out;
+}
+
+function getRecargaBaseDiasObjetivo(cfg, volRef) {
+  const c = cfg || {};
+  const tipo =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(c) : c.tipoInstalacion;
+  let dias = tipo === 'rdwc' ? 16 : tipo === 'nft' ? 14 : tipo === 'dwc' ? 13 : 12;
+  const vol = Number(volRef) || 0;
+  if (vol >= 200) dias += 5;
+  else if (vol >= 120) dias += 3;
+  else if (vol >= 80) dias += 1;
+  else if (vol > 0 && vol <= 25) dias -= 2;
+  else if (vol > 0 && vol <= 45) dias -= 1;
+  return Math.max(9, Math.min(tipo === 'rdwc' ? 28 : 22, Math.round(dias)));
+}
+
+function evaluarFatigaRecargaOculta() {
+  const cfg = state.configTorre || {};
+  const volRef = getRecargaVolumenReferenciaLitros();
+  const tipo =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  const diasTranscurridos = state.ultimaRecarga
+    ? Math.max(0, Math.floor((Date.now() - new Date(state.ultimaRecarga).getTime()) / 86400000))
+    : 0;
+  const baseDias = getRecargaBaseDiasObjetivo(cfg, volRef);
+  const av =
+    typeof getRecargaVolumenAvisoCfg === 'function'
+      ? getRecargaVolumenAvisoCfg()
+      : { activo: true, mult: 1, consejoDesdePct: 85 };
+  const ac = state.ultimaRecarga ? sumatorioReposicionLitrosDesdeRecargaCompleta() : null;
+  const turnoverRatio =
+    volRef && ac && av.mult > 0
+      ? ac.totalLitros / (volRef * av.mult)
+      : 0;
+  const meds = getMedicionesDesdeUltimaRecarga(8);
+  const reg = getRegistroDesdeUltimaRecarga();
+  const ecVals = meds.map(m => m.ec).filter(v => Number.isFinite(v) && v > 0);
+  const phVals = meds.map(m => m.ph).filter(v => Number.isFinite(v) && v > 0);
+  const tempVals = meds.map(m => m.temp).filter(v => Number.isFinite(v) && v > 0);
+  const phSpan = phVals.length ? Math.max(...phVals) - Math.min(...phVals) : 0;
+  const ecAvg = ecVals.length ? ecVals.reduce((s, v) => s + v, 0) / ecVals.length : 0;
+  const ecSpanPct = ecVals.length && ecAvg > 0 ? (Math.max(...ecVals) - Math.min(...ecVals)) / ecAvg : 0;
+  const tempMax = tempVals.length ? Math.max(...tempVals) : 0;
+  const ajustesPh = reg.filter(r => {
+    const e = r.entry || {};
+    return e.tipo === 'apunte' && /ajuste de ph/i.test(String(e.apunteTexto || ''));
+  }).length;
+  const ajustesNut = reg.filter(r => {
+    const e = r.entry || {};
+    return (e.tipo === 'apunte' && /a[nñ]adidos nutrientes/i.test(String(e.apunteTexto || '')))
+      || (e.tipo === 'reposicion' && e.modo === 'parcial_nutrientes');
+  }).length;
+
+  const estable =
+    meds.length >= 3 &&
+    phSpan <= 0.45 &&
+    ecSpanPct <= 0.18 &&
+    tempMax > 0 &&
+    tempMax <= 22.5 &&
+    ajustesPh <= 1 &&
+    ajustesNut <= 1;
+
+  let diasObjetivo = baseDias;
+  if (estable && Number(volRef) >= 100) diasObjetivo += 2;
+  if (estable && Number(volRef) >= 160) diasObjetivo += 1;
+  if (phSpan >= 0.9 || ecSpanPct >= 0.35 || tempMax >= 25.5) diasObjetivo -= 2;
+  else if (phSpan >= 0.65 || ecSpanPct >= 0.24 || tempMax >= 24) diasObjetivo -= 1;
+  if (ajustesPh + ajustesNut >= 5) diasObjetivo -= 1;
+  diasObjetivo = Math.max(9, Math.min(tipo === 'rdwc' ? 28 : 22, Math.round(diasObjetivo)));
+  const diasMax = Math.max(diasObjetivo + (tipo === 'rdwc' ? 3 : 2), diasObjetivo);
+
+  let pressure = 0;
+  if (diasTranscurridos >= Math.round(diasObjetivo * 0.85)) pressure += 1;
+  if (diasTranscurridos >= diasObjetivo) pressure += 2;
+  if (diasTranscurridos >= diasMax) pressure += 2;
+  if (turnoverRatio >= 0.85) pressure += 1;
+  if (turnoverRatio >= 1) pressure += 2;
+  if (turnoverRatio >= 1.2) pressure += 2;
+  if (phSpan >= 0.6) pressure += 1;
+  if (phSpan >= 0.9) pressure += 1;
+  if (ecSpanPct >= 0.22) pressure += 1;
+  if (ecSpanPct >= 0.35) pressure += 1;
+  if (tempMax >= 24) pressure += 1;
+  if (tempMax >= 26) pressure += 1;
+  if (ajustesPh + ajustesNut >= 4) pressure += 1;
+  if (ajustesPh + ajustesNut >= 7) pressure += 1;
+  if (estable && Number(volRef) >= 100) pressure -= 1;
+  if (estable && Number(volRef) >= 160) pressure -= 1;
+  pressure = Math.max(0, pressure);
+
+  const changeNeeded =
+    !!state.ultimaRecarga && (
+      diasTranscurridos >= diasMax ||
+      turnoverRatio >= 1.2 ||
+      pressure >= 5 ||
+      (pressure >= 4 && diasTranscurridos >= Math.round(diasObjetivo * 0.7))
+    );
+  const watchOnly =
+    !!state.ultimaRecarga && !changeNeeded && (
+      pressure >= 2 ||
+      diasTranscurridos >= diasObjetivo ||
+      turnoverRatio >= 0.85
+    );
+
+  return {
+    tipo,
+    volRef,
+    diasTranscurridos,
+    diasObjetivo,
+    diasMax,
+    pct: diasObjetivo > 0 ? Math.min(100, (diasTranscurridos / diasObjetivo) * 100) : 0,
+    diasRestantes: Math.max(0, diasObjetivo - diasTranscurridos),
+    turnoverRatio,
+    recargaLitros: ac && Number.isFinite(ac.totalLitros) ? ac.totalLitros : 0,
+    recargaCount: ac && Number.isFinite(ac.count) ? ac.count : 0,
+    phSpan,
+    ecSpanPct,
+    tempMax,
+    ajustesPh,
+    ajustesNut,
+    medsCount: meds.length,
+    estable,
+    pressure,
+    level: !state.ultimaRecarga ? 'no_data' : (changeNeeded ? 'change' : watchOnly ? 'watch' : 'ok'),
+  };
+}
+
 /**
  * Litros añadidos en reposiciones parciales registradas desde la fecha de última recarga completa.
  * Misma instalación activa si hay varias torres (por nombre).
@@ -515,9 +693,13 @@ function sumatorioReposicionLitrosDesdeRecargaCompleta() {
   return { totalLitros: Math.round(totalLitros * 10) / 10, count };
 }
 
-/** Volumen de referencia (L) para la regla «~1× depósito repuesto»: litros de mezcla o, si no, tope de depósito. */
+/** Volumen de referencia (L) para la regla «~1× solución repuesta»: litros de dosis o, si no, tope de depósito. */
 function getRecargaVolumenReferenciaLitros() {
   const cfg = state.configTorre || {};
+  if (typeof getVolumenNutrientesLitros === 'function') {
+    const vn = getVolumenNutrientesLitros(cfg);
+    if (vn != null && Number.isFinite(vn) && vn > 0) return vn;
+  }
   if (typeof getVolumenMezclaLitros === 'function') {
     const v = getVolumenMezclaLitros(cfg);
     if (v != null && Number.isFinite(v) && v > 0) return v;
@@ -691,6 +873,7 @@ function updateRecargaReposTurnoverHint() {
     return;
   }
   const mult = av.mult;
+  const evalRec = evaluarFatigaRecargaOculta();
   if (!state.ultimaRecarga) {
     el.style.display = 'none';
     el.textContent = '';
@@ -710,7 +893,8 @@ function updateRecargaReposTurnoverHint() {
   const diasTrHint = state.ultimaRecarga
     ? Math.floor((Date.now() - new Date(state.ultimaRecarga).getTime()) / 86400000)
     : 0;
-  const pctDiasHint = Math.min(100, (diasTrHint / 15) * 100);
+  const diasRefHint = Math.max(1, evalRec.diasObjetivo || 15);
+  const pctDiasHint = Math.min(100, (diasTrHint / diasRefHint) * 100);
   const mTxt = fmtMultRecargaVolumen(mult);
   el.style.display = 'block';
   if (haciaUmbral >= 1) el.classList.add('recarga-repos-turnover--over');
@@ -725,7 +909,7 @@ function updateRecargaReposTurnoverHint() {
     mTxt +
     '×</strong> el volumen útil de referencia (<strong>' +
     fmtLitrosReposTurnover(volRef) +
-    ' L</strong> en <strong>Sistema</strong>) ≈ <strong>' +
+    ' L</strong> en <strong>Instalación</strong>) ≈ <strong>' +
     fmtLitrosReposTurnover(Math.round(volRef * mult * 10) / 10) +
     ' L</strong> acumulados para disparar el aviso fuerte.';
   const tail =
@@ -845,7 +1029,7 @@ function confirmarReposicionDeposito(modo) {
   if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) {
     showToast(typeof getMensajeStandbyContinuar === 'function'
       ? getMensajeStandbyContinuar()
-      : '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+      : '⏸ Instalación en stand-by / descanso. Reactiva modo operativa para continuar.', true);
     return;
   }
   if (modo === 'con_nutrientes') {

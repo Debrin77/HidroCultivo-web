@@ -121,8 +121,12 @@
       }
     } catch (_) {}
     try {
-      if (typeof getVolumenMezclaLitros === 'function') {
-        const v = Number(getVolumenMezclaLitros(cfg));
+      if (typeof getVolumenNutrientesLitros === 'function' || typeof getVolumenMezclaLitros === 'function') {
+        const v = Number(
+          typeof getVolumenNutrientesLitros === 'function'
+            ? getVolumenNutrientesLitros(cfg)
+            : getVolumenMezclaLitros(cfg)
+        );
         if (Number.isFinite(v) && v > 0) out.volTarget = v;
       }
     } catch (_) {}

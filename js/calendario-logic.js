@@ -17,6 +17,74 @@ const DIAS_CAL = ['L','M','X','J','V','S','D'];
 /** Días consecutivos desde el trasplante en que se sugiere medir pH a diario (plántulas nuevas). */
 const DIAS_MUESTRA_PH_TRASPLANTE = 5;
 
+function parseFechaCalendarioLocal(fechaStr) {
+  if (!fechaStr || typeof fechaStr !== 'string') return null;
+  const p = fechaStr.split('/');
+  if (p.length < 3) return null;
+  const d = parseInt(p[0], 10);
+  const m = parseInt(p[1], 10) - 1;
+  const y = parseInt(p[2], 10);
+  if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(y)) return null;
+  const fecha = new Date(y, m, d, 0, 0, 0, 0);
+  return Number.isFinite(fecha.getTime()) ? fecha : null;
+}
+
+function getUltimaMedicionCalendarioFecha() {
+  const arr = Array.isArray(state.mediciones) ? state.mediciones : [];
+  for (let i = 0; i < arr.length; i++) {
+    const m = arr[i];
+    const fecha = parseFechaCalendarioLocal(m && m.fecha);
+    if (fecha) return fecha;
+  }
+  return parseFechaCalendarioLocal(state.ultimaMedicion && state.ultimaMedicion.fecha);
+}
+
+function getRecordatorioMedicionDiariaCalendario() {
+  if (typeof sistemaEstaOperativa === 'function' && !sistemaEstaOperativa()) return null;
+  const nPlantas =
+    typeof contarPlantasTorreConVariedad === 'function' ? contarPlantasTorreConVariedad() : 0;
+  const hayContexto = nPlantas > 0 || !!state.ultimaRecarga || !!getUltimaMedicionCalendarioFecha();
+  if (!hayContexto) return null;
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const ultimaFecha = getUltimaMedicionCalendarioFecha();
+  const diasSinMedir = ultimaFecha ? Math.max(0, Math.round((hoy - ultimaFecha) / 86400000)) : null;
+  const medidoHoy = !!(ultimaFecha && ultimaFecha.getTime() === hoy.getTime());
+  const fechaObjetivo = new Date(hoy.getTime() + (medidoHoy ? 86400000 : 0));
+  const titulo = medidoHoy ? 'Rutina diaria de medición' : 'Medición diaria pendiente';
+
+  let desc = medidoHoy
+    ? 'Hoy ya registraste una medición. Mañana vuelve a medir EC, pH y temperatura del agua para mantener el seguimiento al día.'
+    : 'Conviene registrar al menos una medición hoy: EC, pH y temperatura del agua.';
+
+  if (!medidoHoy && diasSinMedir != null) {
+    if (diasSinMedir >= 2) {
+      desc =
+        'Llevas ' +
+        diasSinMedir +
+        ' días sin registrar mediciones. Toca medir hoy EC, pH y temperatura del agua.';
+    } else if (diasSinMedir === 1) {
+      desc = 'Ayer fue la última medición. Mantén la rutina y registra hoy EC, pH y temperatura del agua.';
+    }
+  } else if (!medidoHoy && diasSinMedir == null) {
+    desc = 'Aún no hay mediciones guardadas en esta instalación. Empieza hoy con una toma de EC, pH y temperatura del agua.';
+  }
+
+  return {
+    fecha: fechaObjetivo,
+    evento: {
+      tipo: 'medicion',
+      icono: '📊',
+      color: '#0369a1',
+      label: '📊 ' + titulo,
+      titulo,
+      desc,
+      action: 'medicion',
+    },
+  };
+}
+
 function getFechaSugeridaCambioNutriente() {
   try {
     const ctxNut = typeof hcGetRecomendacionNutrienteContexto === 'function'
@@ -52,6 +120,11 @@ function generarEventos(fecha) {
       ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
       : '';
   const fmtUbicPlantaCal = (n, ci) => formatoUbicacionEnRegistro(tCal, n + 1, ci + 1);
+  const recMed = getRecordatorioMedicionDiariaCalendario();
+
+  if (recMed && recMed.fecha.getTime() === d.getTime()) {
+    eventos.push(recMed.evento);
+  }
 
   // ── Control diario EC y pH ────────────────────────────────────────────
   eventos.push({
@@ -65,7 +138,7 @@ function generarEventos(fecha) {
   if (state.ultimaRecarga) {
     const diasDesdeRecarga = Math.round((d - new Date(state.ultimaRecarga)) / 86400000);
     if (diasDesdeRecarga >= 13 && diasDesdeRecarga <= 17) {
-      let descRec = `Día ${diasDesdeRecarga} desde la última recarga completa en ${sisLab || 'el sistema activo'} (vaciado + mezcla). Preparar checklist: agua, CalMag, A+B…`;
+      let descRec = `Día ${diasDesdeRecarga} desde la última recarga completa en ${sisLab || 'la instalación activa'} (vaciado + mezcla). Preparar checklist: agua, CalMag, A+B…`;
       try {
         const av =
           typeof getRecargaVolumenAvisoCfg === 'function'
@@ -144,7 +217,7 @@ function generarEventos(fecha) {
         tipo: 'nutriente',
         icono: '🧪',
         titulo: 'Cambio de nutriente pendiente de fecha',
-        desc: 'Hay cultivos de fruto con nutriente vegetativo, pero faltan fechas en alguna ficha para calcular el día exacto del cambio. Completa fechas en Sistema.',
+        desc: 'Hay cultivos de fruto con nutriente vegetativo, pero faltan fechas en alguna ficha para calcular el día exacto del cambio. Completa fechas en Cultivo e instalación.',
       });
     }
   }
@@ -316,6 +389,14 @@ function renderCalendario() {
     const d = parseInt(parts[0]), mo = parseInt(parts[1])-1, a = parseInt(parts[2]);
     if (mo === mes && a === año) addEvento(d, 'medicion', '#0369a1', '📊 Medición EC:' + (m.ec||'—') + ' pH:' + (m.ph||'—'));
   });
+
+  const recMed = getRecordatorioMedicionDiariaCalendario();
+  if (recMed) {
+    const fechaRec = recMed.fecha;
+    if (fechaRec.getMonth() === mes && fechaRec.getFullYear() === año) {
+      addEvento(fechaRec.getDate(), recMed.evento.tipo, recMed.evento.color, recMed.evento.label);
+    }
+  }
 
   // Recargas completas — cada 15 días desde última recarga completa
   if (state.ultimaRecarga) {
@@ -492,7 +573,11 @@ function renderCalendario() {
     } else {
       eventosDiaEl.innerHTML = proximos.slice(0, 8).map(e =>
         '<div class="cal-prox-row"' +
-        (e.tipo === 'nutriente' ? ' role="button" tabindex="0" onclick="irChecklistDesdeCalendario()" onkeydown="a11yKeyActivate(event, irChecklistDesdeCalendario)" aria-label="Ir a Historial y abrir checklist"' : '') +
+        (e.tipo === 'nutriente'
+          ? ' role="button" tabindex="0" onclick="irChecklistDesdeCalendario()" onkeydown="a11yKeyActivate(event, irChecklistDesdeCalendario)" aria-label="Ir a Historial y abrir checklist"'
+          : e.action === 'medicion'
+            ? ' role="button" tabindex="0" onclick="irAMedicionesDesdeCalendario()" onkeydown="a11yKeyActivate(event, irAMedicionesDesdeCalendario)" aria-label="Ir a Mediciones"'
+            : '') +
         '>' +
         '<div class="cal-prox-badge" style="--ev:' + e.color + '">' +
         '<div class="cal-prox-badge-dia">' + e.dia + '</div>' +
@@ -531,6 +616,18 @@ function irChecklistDesdeCalendario() {
   } catch (_) {}
 }
 
+function irAMedicionesDesdeCalendario() {
+  try {
+    if (typeof goTab === 'function') goTab('mediciones');
+    setTimeout(() => {
+      const host = document.getElementById('ultimaMedicionCard') || document.getElementById('inputEC');
+      if (!host) return;
+      host.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (host instanceof HTMLInputElement) host.focus();
+    }, 120);
+  } catch (_) {}
+}
+
 
 function seleccionarDiaCal(fecha) {
   calDiaSeleccionado = fecha;
@@ -564,6 +661,8 @@ function mostrarEventosDia(fecha) {
         <div class="evento-desc">${e.desc}</div>
         ${e.tipo === 'nutriente'
           ? '<button type="button" class="btn btn-primary evento-cta-checklist" onclick="irChecklistDesdeCalendario()">Ir a Historial → Checklist</button>'
+          : e.action === 'medicion'
+            ? '<button type="button" class="btn btn-primary evento-cta-checklist" onclick="irAMedicionesDesdeCalendario()">Ir a Mediciones</button>'
           : ''}
       </div>
     </div>

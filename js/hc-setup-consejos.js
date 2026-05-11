@@ -36,7 +36,7 @@ const CONSEJOS_DATA = {
         alerta:{ tipo:'ok', txt:'✅ Un momento al trasplantar: abre la ficha, elige cultivo y fecha. Así fotos, registro y cálculo de riego quedan alineados con tus plantas reales.' } },
       { icono:'🧩', titulo:'Cultivos compatibles o no (y por qué)',
         texto:'En un sistema con <strong>un solo depósito</strong> (torre, NFT o DWC) todas las plantas comparten la <strong>misma agua</strong>: misma EC y mismo pH. Por eso solo conviene mezclar grupos con necesidades parecidas. <strong>Lechugas entre sí</strong> y con muchas <strong>asiáticas</strong> de hoja (p. ej. mizuna, komatsuna) suele funcionar si ajustas la EC con cuidado. Las <strong>hojas verdes</strong> más exigentes (espinaca, acelga) suelen pedir <strong>más nutrientes</strong> que un circuito solo lechuga. Los <strong>frutos</strong> (tomate, pepino, pimiento…) y varias <strong>hierbas de EC alta</strong> (menta, orégano, cebollino) descompensan a las lechugas: mejor <strong>otra instalación u otro depósito</strong>. Además del agua, piensa en la <strong>luz</strong>: una planta muy grande puede dejar a las demás a la sombra.',
-        alerta:{ tipo:'info', txt:'ℹ️ En <strong>Sistema → Compatibilidad de cultivos</strong> la app te avisa si mezclas grupos poco recomendables en el mismo depósito.' } },
+        alerta:{ tipo:'info', txt:'ℹ️ En <strong>Cultivo e instalación → Compatibilidad de cultivos</strong> la app te avisa si mezclas grupos poco recomendables en el mismo depósito.' } },
     ]
   },
   agua: {
@@ -513,7 +513,8 @@ function calcularMlParteNutriente(partIndex) {
   }
   if (!nut) return 0;
   const cfg = state.configTorre || {};
-  let volObj = getVolumenMezclaLitros(cfg);
+  let volObj =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   if (
     (volObj == null || !Number.isFinite(volObj) || volObj <= 0) &&
     typeof clRutaChecklist !== 'undefined' &&
@@ -614,18 +615,23 @@ function buildLineasCeldaDosis(ref, nut, volL, modo) {
 
 function buildHtmlTablaPreparacionFabricante18L() {
   const cfg = state.configTorre || {};
-  const Vraw = getVolumenMezclaLitros(cfg);
+  const Vraw =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   if (Vraw == null || !Number.isFinite(Vraw) || Vraw <= 0) {
     return (
-      '<p class="consejo-dosis18-vacio">Indica litros de depósito o mezcla y el nutriente en <strong>Torre</strong> o <strong>Sistema</strong> para ver esta tabla con tus litros reales.</p>'
+      '<p class="consejo-dosis18-vacio">Indica litros de depósito o mezcla y el nutriente en <strong>Torre</strong> o <strong>Cultivo e instalación</strong> para ver esta tabla con tus litros reales.</p>'
     );
   }
   const V = Math.round(Vraw * 10) / 10;
   const vCap = getVolumenDepositoMaxLitros(cfg);
+  const esRdwcTabla =
+    (typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion) === 'rdwc';
   const capNota =
-    vCap != null && Number.isFinite(vCap) && vCap > 0 && V < vCap - 0.05
+    esRdwcTabla
+      ? ' En RDWC la tabla suma el <strong>reservorio de control</strong> y los <strong>cubos útiles</strong> configurados.'
+      : (vCap != null && Number.isFinite(vCap) && vCap > 0 && V < vCap - 0.05
       ? ' Capacidad máx. del depósito: <strong>' + vCap + ' L</strong> (esta tabla usa <strong>' + V + ' L</strong> de mezcla).'
-      : '';
+      : '');
   const ecUsada = getRecargaEcMetaMicroS();
   const aguaK = cfg.agua || state.configAgua || 'destilada';
   const aguaNom = aguaK === 'grifo' ? 'Grifo' : aguaK === 'osmosis' ? 'Ósmosis' : 'Destilada';
@@ -643,7 +649,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
   const nutActivo = getNutrienteTorre();
   if (!nutActivo) {
     return (
-      '<p class="consejo-dosis18-vacio">Elige un nutriente en <strong>Sistema</strong> o <strong>Medir</strong> para mostrar dosis orientativas del fabricante.</p>'
+      '<p class="consejo-dosis18-vacio">Elige un nutriente en <strong>Cultivo e instalación</strong> o <strong>Medir</strong> para mostrar dosis orientativas del fabricante.</p>'
     );
   }
   const ref = getRefDosisFabricante(nutActivo.id);
@@ -663,7 +669,7 @@ function buildHtmlTablaPreparacionFabricante18L() {
     <div class="consejo-dosis18-wrap" id="consejos-tabla-dosis-18l">
       <div class="consejo-titulo consejo-titulo--mb8">Mezcla dinámica · <strong>${meteoEscHtml(nutActivo.nombre)}</strong> · <strong>${V} L</strong> · EC <strong>${ecUsada} µS/cm</strong> <span class="consejo-ec-meta">(${ecOrigen})</span></div>
       <div class="consejo-ecph-note consejo-ecph-note--mb">
-        Solo el <strong>nutriente activo</strong> de la instalación (cámbialo en la pestaña Sistema o en la configuración). Misma regla que el checklist: litros de mezcla (o capacidad máx. si no indicas margen), EC objetivo y <code>ecPorMl</code>.${capNota} ${leyendaBlanda}
+        Solo el <strong>nutriente activo</strong> de la instalación (cámbialo en la pestaña Cultivo e instalación o en la configuración). Misma regla que el checklist: litros de mezcla (o capacidad máx. si no indicas margen), EC objetivo y <code>ecPorMl</code>.${capNota} ${leyendaBlanda}
         Columna <strong>grifo</strong>: pendiente hacia la misma EC restando la <strong>EC base</strong> del agua (Mediciones). La ficha bajo el nombre resume la orientación del fabricante.
         <strong>A+B simétricos</strong> y <strong>1 parte</strong>: cálculo EC. <strong>3 botellas</strong> y <strong>A+B distintas</strong>: tabla × volumen. Comprueba con el <strong>medidor</strong>.
       </div>
@@ -693,7 +699,7 @@ function buildHtmlTablaConsejosPersonal() {
         <div class="consejo-titulo consejo-titulo--mb6">Tu tabla (volumen a medida)</div>
         <div class="consejo-ecph-note">
           Al <strong>completar el checklist de recarga</strong> (no es la primera configuración), puedes guardar aquí el nutriente y los litros del depósito.
-          Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen, para el <strong>sistema activo</strong> (Torre, NFT o DWC) en la pestaña Sistema.
+          Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen, para el <strong>sistema activo</strong> (Torre, NFT o DWC) en la pestaña Cultivo e instalación.
         </div>
       </div>`;
   }
@@ -1033,18 +1039,23 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
   const phTxt = meteoEscHtml(String(pHR[0])) + ' – ' + meteoEscHtml(String(pHR[1]));
 
   const volMax = typeof getVolumenDepositoMaxLitros === 'function' ? getVolumenDepositoMaxLitros(cfg) : 0;
-  const volObj = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : 0;
+  const volObj =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   let volTxt = '';
   if (volObj != null && Number.isFinite(volObj) && volObj > 0) {
+    const esRdwcVol =
+      (typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion) === 'rdwc';
     volTxt =
-      volMax != null &&
-      Number.isFinite(volMax) &&
-      volMax > 0 &&
-      volObj < volMax - 0.05
-        ? '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong> de mezcla (depósito hasta <strong>' + meteoEscHtml(String(volMax)) + ' L</strong>)'
-        : '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong>';
+      esRdwcVol
+        ? '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong> de solución total (reservorio + cubos útiles)'
+        : (volMax != null &&
+          Number.isFinite(volMax) &&
+          volMax > 0 &&
+          volObj < volMax - 0.05
+            ? '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong> de mezcla (depósito hasta <strong>' + meteoEscHtml(String(volMax)) + ' L</strong>)'
+            : '<strong>' + meteoEscHtml(String(volObj)) + ' L</strong>');
   } else {
-    volTxt = 'Configura capacidad y litros de mezcla en la pestaña <strong>Sistema</strong>.';
+    volTxt = 'Configura capacidad y litros de mezcla en la pestaña <strong>Cultivo e instalación</strong>.';
   }
 
   const manualEc = typeof getEcObjetivoManualUs === 'function'
@@ -1062,7 +1073,7 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
     fa < 1 && !(Number.isFinite(manualEc) && manualEc >= 200 && manualEc <= 6000)
       ? '<p class="consejo-checklist-resumen-foot">Arranque en hidro (~' +
         Math.round((1 - fa) * 100) +
-        '% hacia el piso del rango): la meta del checklist sigue dentro del mismo rango EC que Medir / Sistema.</p>'
+        '% hacia el piso del rango): la meta del checklist sigue dentro del mismo rango EC que Medir / Cultivo e instalación.</p>'
       : '';
 
   const instLine =
@@ -1071,10 +1082,10 @@ function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
       : '<p class="consejo-checklist-resumen-inst">Instalación activa · <strong>' + meteoEscHtml(sysBreve) + '</strong></p>';
 
   return (
-    '<div class="consejo-checklist-resumen" role="region" aria-label="Valores para el checklist según el sistema seleccionado">' +
+    '<div class="consejo-checklist-resumen" role="region" aria-label="Valores para el checklist según la instalación seleccionada">' +
     '<div class="consejo-checklist-resumen-kicker">📋 Valores para el checklist (recarga)</div>' +
     instLine +
-    '<p class="consejo-checklist-resumen-decl"><strong>Sistema configurado:</strong> ' +
+    '<p class="consejo-checklist-resumen-decl"><strong>Instalación configurada:</strong> ' +
     meteoEscHtml(sysLargo) +
     '. Lo siguiente es lo que usa la app en el <strong>checklist de recarga</strong> para <em>esta</em> instalación y nutriente seleccionado.</p>' +
     '<dl class="consejo-checklist-resumen-dl">' +
@@ -1112,11 +1123,12 @@ function buildConsejosAguaNutrienteDinamico() {
       icono: '🧪',
       titulo: 'Nutriente y depósito',
       texto:
-        '<p class="consejo-p">Para ver protocolo, dosis y rangos concretos, elige una <strong>marca de nutriente</strong> en Sistema o Medir e indica los <strong>litros del depósito</strong> en Torre o en el asistente.</p>',
+        '<p class="consejo-p">Para ver protocolo, dosis y rangos concretos, elige una <strong>marca de nutriente</strong> en Cultivo e instalación o Medir e indica los <strong>litros del depósito</strong> en Torre o en el asistente.</p>',
     });
   }
   const volMax = getVolumenDepositoMaxLitros(cfg);
-  const volObj = getVolumenMezclaLitros(cfg);
+  const volObj =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : getVolumenMezclaLitros(cfg);
   const ecOpt = getECOptimaTorre();
   const ecMin = ecOpt.min;
   const bloqueChecklist = buildConsejosNutrienteChecklistResumenHtml(nut, cfg);
@@ -1182,7 +1194,7 @@ function buildConsejosAguaNutrienteDinamico() {
       ? 'mezcla de <strong>' + volObj + ' L</strong> (depósito hasta <strong>' + volMax + ' L</strong>)'
       : volObj != null && Number.isFinite(volObj) && volObj > 0
         ? '<strong>' + volObj + ' L</strong>'
-        : 'indica litros en Torre o Sistema';
+        : 'indica litros en Torre o Cultivo e instalación';
   const textoRepos =
     'Volumen de referencia en la app: ' + volRefHtml + '. Repone con la <strong>misma calidad de agua</strong> que usas en recargas (según tu configuración). ' +
     '<strong>Si la EC sigue en rango</strong> para tus plantas, añade solo agua. ' + bloqueDosis;
@@ -1314,7 +1326,7 @@ function buildConsejoObjetivoTorreCultivo() {
       '</strong> · ' +
       meteoEscHtml(sp.cicloTxt) +
       '.',
-    alerta: { tipo: 'info', txt: 'ℹ️ Puedes cambiarlo en Sistema → Objetivo en torre vertical.' },
+    alerta: { tipo: 'info', txt: 'ℹ️ Puedes cambiarlo en Cultivo e instalación → Objetivo en torre vertical.' },
   });
 }
 
@@ -1707,7 +1719,7 @@ function buildConsejosNftHidraulica() {
       icono: 'ℹ️',
       titulo: 'Configuración NFT',
       html:
-        '<p class="consejo-p consejo-p--flush">Elige en <strong>Sistema</strong> instalación <strong>NFT</strong> y completa canal, lámina y longitud en el checklist (N·ref) o en el asistente para ver aquí el criterio orientativo de tu caso.</p>',
+        '<p class="consejo-p consejo-p--flush">Elige en <strong>Cultivo e instalación</strong> instalación <strong>NFT</strong> y completa canal, lámina y longitud en el checklist (N·ref) o en el asistente para ver aquí el criterio orientativo de tu caso.</p>',
     });
   }
   const formulaDetalle =
@@ -1773,12 +1785,12 @@ function buildConsejosDwcDifusorBloque() {
   if (rec) {
     dyn =
       '<div class="consejo-dwc-rec-box">' +
-      '<div class="consejo-dwc-rec-kicker">Según litros de mezcla y cestas (mismo criterio que checklist y Sistema)</div>' +
+      '<div class="consejo-dwc-rec-kicker">Según litros de mezcla y cestas (mismo criterio que checklist y Cultivo e instalación)</div>' +
       dwcFormatHtmlRecomendacionDifusorCore(rec) +
       '</div>';
   } else {
     dyn =
-      '<p class="consejo-p consejo-p--tight">Activa una instalación <strong>DWC</strong> y revisa volumen y rejilla en <strong>Sistema</strong> para ver aquí la recomendación de bomba y difusores.</p>';
+      '<p class="consejo-p consejo-p--tight">Activa una instalación <strong>DWC</strong> y revisa volumen y rejilla en <strong>Cultivo e instalación</strong> para ver aquí la recomendación de bomba y difusores.</p>';
   }
   return htmlInnerConsejoCard(cat, {
     icono: '💨',
@@ -1832,7 +1844,7 @@ function buildConsejosDwc() {
       'Según la forma del depósito: <strong>prismático</strong> L×A×P; <strong>cilíndrico</strong> Ø interior × profundidad/altura útil del líquido; <strong>troncopiramidal</strong> litros útiles medidos. Si indicas <strong>litros de mezcla</strong> por debajo del máximo, checklist y <strong>Consejos → Agua y EC</strong> escalan nutrientes con ese volumen. Si lo dejas vacío, la app usa la capacidad calculada o un valor orientativo interno.',
     alerta: {
       tipo: 'ok',
-      txt: '✅ En Sistema y asistente verás litros útiles al completar las medidas del depósito (o el volumen manual en tronco).',
+      txt: '✅ En Cultivo e instalación y asistente verás litros útiles al completar las medidas del depósito (o el volumen manual en tronco).',
     },
   });
   const densidad = htmlConsejoCard(cat, {
@@ -1871,7 +1883,7 @@ function buildConsejosDwc() {
               : recoCultivo.estado === 'warn'
                 ? '⚠️ Ajusta diámetro de cesta u objetivo para mejorar el encaje.'
                 : '⚠️ Grupo poco recomendable en DWC estándar; mejor sistema dedicado.')
-          : 'ℹ️ Puedes cambiarlo en Sistema o en el asistente DWC.',
+          : 'ℹ️ Puedes cambiarlo en Cultivo e instalación o en el asistente DWC.',
     },
   });
   const panelLlenDw =
@@ -1886,7 +1898,7 @@ function buildConsejosDwc() {
       '<p style="margin:12px 0 0;line-height:1.45;font-size:12px">Modelo para <strong>cultivos de hoja</strong> (lechuga, asiáticas, hojas, hierbas). EC, pH y volumen en <strong>Mediciones</strong> y recargas.</p>',
     alerta: {
       tipo: 'info',
-      txt: 'ℹ️ Cálculo en vivo desde sustrato en Sistema + variedad y fecha en cada cesta. Ajusta según observación y temperatura.',
+      txt: 'ℹ️ Cálculo en vivo desde sustrato en Cultivo e instalación + variedad y fecha en cada cesta. Ajusta según observación y temperatura.',
     },
   });
   const difusor = buildConsejosDwcDifusorBloque();
@@ -1898,7 +1910,7 @@ function buildConsejosDwc() {
       : medDetalle;
   const med = htmlConsejoCard(cat, {
     icono: '📐',
-    titulo: 'Qué es cada medida en Sistema',
+    titulo: 'Qué es cada medida en Cultivo e instalación',
     texto:
       '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> define bien forma, litros útiles y diámetro de cesta; el resto del cálculo depende de eso.</p>' +
       medWrap,

@@ -6,7 +6,7 @@
 // INIT APP
 // ══════════════════════════════════════════════════
 function resetApp() {
-  if (!confirm('⚠️ ¿Estás seguro? Esta acción borrará TODOS los datos del sistema incluyendo plantas, mediciones y configuración.')) return;
+  if (!confirm('⚠️ ¿Estás seguro? Esta acción borrará TODOS los datos guardados en este dispositivo, incluyendo plantas, mediciones y configuración.')) return;
   if (!confirm('⚠️ Segunda confirmación — esta acción NO se puede deshacer. ¿Continuar?')) return;
 
   // Borrar estado local (incl. sesión PIN para que vuelva a pedirse tras reset)
@@ -52,13 +52,13 @@ function resetApp() {
   initConfigUI();
   goTab('inicio');
 
-  showToast('🔄 Sistema reseteado · el checklist se abre solo desde Inicio o Historial cuando lo necesites');
+  showToast('🔄 Datos restablecidos · el checklist se abre solo desde Inicio o Historial cuando lo necesites');
 }
 
 function initApp() {
   updateClock();
   setInterval(updateClock, 30000);
-  // Modo de cultivos (lechuga / mixto / …): solo estado; no hay selector en Sistema (evita confusión con «Editar ficha»).
+  // Modo de cultivos (lechuga / mixto / …): solo estado; no hay selector en Cultivo e instalación (evita confusión con «Editar ficha»).
   const modoSel = document.getElementById('modoSelector');
   if (modoSel) {
     modoSel.querySelectorAll('.modo-btn').forEach(b => b.classList.remove('active'));

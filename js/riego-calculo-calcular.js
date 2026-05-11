@@ -23,7 +23,7 @@ async function calcularRiego(opts = {}) {
     if (opts && opts.manual) {
       showToast(typeof getMensajeStandbyContinuar === 'function'
         ? getMensajeStandbyContinuar()
-        : '⏸ Sistema en stand-by / descanso. Reactiva modo operativa para continuar.', true);
+        : '⏸ Instalación en stand-by / descanso. Reactiva modo operativa para continuar.', true);
     }
     return;
   }

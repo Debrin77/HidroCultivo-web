@@ -266,7 +266,7 @@ function actualizarResumenSetup() {
       : '') + '<br>' +
     hwResumen +
     '🌱 Cultivos: <strong>' + plantasSel + '</strong><br>' +
-    '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Sistema)' : 'Una torre') + '</strong>';
+    '🌿 Torres: <strong>' + (setupNumTorres === 'varias' ? 'Varias (añadir desde pestaña Cultivo e instalación)' : 'Una torre') + '</strong>';
 }
 
 // Tamaño de cestas

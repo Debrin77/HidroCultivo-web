@@ -149,7 +149,7 @@ function iniciarRotacion() {
 
   const lista = pasos.map((p, i) => (i+1) + '. ' + p).join('\n');
 
-  if (confirm('ROTACIÓN DE NIVELES\n\n' + lista + '\n\n¿Confirmar rotación?\n\nEsto actualizará las fechas de plantas en la instalación activa (vista Sistema).')) {
+  if (confirm('ROTACIÓN DE NIVELES\n\n' + lista + '\n\n¿Confirmar rotación?\n\nEsto actualizará las fechas de plantas en la instalación activa (vista Cultivo e instalación).')) {
     ejecutarRotacion();
   }
 }
