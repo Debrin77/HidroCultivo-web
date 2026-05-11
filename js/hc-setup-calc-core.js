@@ -803,6 +803,37 @@ function hcFmtFechaDMY(ms) {
   return dd + '/' + mm + '/' + yy;
 }
 
+/** Días catálogo plántula + vegetativo (fin de ventana vegetativa antes de prefloración/floración). */
+function hcDiasAcumPlantulaVegetativo(cultivo) {
+  const f = cultivo && cultivo.fases ? cultivo.fases : {};
+  const dPlant = Number(f.plantula && f.plantula.dias) || 0;
+  const dVeg = Number(f.vegetativo && f.vegetativo.dias) || 0;
+  const n = Math.round(dPlant) + Math.round(dVeg);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+/**
+ * Días calendario desde trasplante al hidro hasta alcanzar la misma edad biológica que plántula+vegetativo
+ * en el catálogo: con vivero se resta la media estimada en plug (misma referencia que getDiasEfectivosCicloBiologico).
+ */
+function hcDiasCalendarioHastaFinVegetativoNutriente(c, cultivo) {
+  const finVeg = hcDiasAcumPlantulaVegetativo(cultivo);
+  if (finVeg <= 0) return 0;
+  let offset = 0;
+  if (
+    c &&
+    typeof normalizarOrigenPlanta === 'function' &&
+    normalizarOrigenPlanta(c.origenPlanta) === 'vivero' &&
+    cultivo
+  ) {
+    const v =
+      typeof getDiasPlantonViveroEstimado === 'function' ? getDiasPlantonViveroEstimado(cultivo) : 0;
+    offset = Number.isFinite(v) && v > 0 ? Math.round(v) : 0;
+  }
+  return Math.max(0, finVeg - offset);
+}
+
+/** Fecha (ms) sugerida cambio nutriente veg→bloom: alineada con edad efectiva (vivero = media plug en cultivos-db). */
 function hcGetFechaSugeridaCambioVegABloomMs() {
   try {
     const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
@@ -828,10 +859,8 @@ function hcGetFechaSugeridaCambioVegABloomMs() {
         if (!cultivo || !cultivo.fructificacion || !cultivo.fases) continue;
         const t0 = new Date(c.fecha).getTime();
         if (!Number.isFinite(t0)) continue;
-        const f = cultivo.fases || {};
-        const dPlant = Number(f.plantula && f.plantula.dias) || 0;
-        const dVeg = Number(f.vegetativo && f.vegetativo.dias) || 0;
-        const msCambio = t0 + Math.max(0, dPlant + dVeg) * 86400000;
+        const dCal = hcDiasCalendarioHastaFinVegetativoNutriente(c, cultivo);
+        const msCambio = t0 + Math.max(0, dCal) * 86400000;
         if (msMin == null || msCambio < msMin) msMin = msCambio;
       }
     }
