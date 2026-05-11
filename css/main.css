@@ -10962,14 +10962,11 @@ button.config-option:focus-visible,
   font-weight: 600;
   color: #64748b;
 }
-#tab-sistema .torre-variedades-summary-chev {
+#tab-sistema .torre-variedades-summary .config-section-collapse-chevron {
   flex-shrink: 0;
-  font-size: 12px;
-  color: #64748b;
-  transition: transform 0.2s ease;
 }
-#tab-sistema .torre-variedades-details[open] .torre-variedades-summary-chev {
-  transform: rotate(-180deg);
+#tab-sistema .torre-variedades-details:not([open]) .config-section-collapse-chevron {
+  transform: rotate(-90deg);
 }
 #tab-sistema .torre-variedades-details #tablaVariedades.torre-tabla-variedades {
   padding: 12px 14px 14px;

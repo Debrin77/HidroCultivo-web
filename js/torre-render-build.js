@@ -1000,21 +1000,24 @@ function generarSVGRdwc() {
   const sites = Math.max(2, Math.min(64, parseInt(String(cfg.rdwcSites || 4), 10) || 4));
   const cols = Math.max(1, Math.ceil(sites / rows));
   const W = 400;
-  const H = 640;
-  const blockW = Math.min(340, Math.max(240, 32 + cols * 52));
-  const blockH = Math.min(248, Math.max(120, 36 + rows * 72));
+  const headerH = 52;
+  const blockW = Math.min(340, Math.max(248, 36 + cols * 54));
+  const blockH = Math.min(260, Math.max(128, 40 + rows * 74));
   const left = (W - blockW) / 2;
-  const top = 58;
+  const top = headerH + 6;
   const cw = blockW / Math.max(1, cols);
   const ch = blockH / Math.max(1, rows);
-  const rPot = Math.max(13, Math.min(26, Math.min(cw, ch) * 0.31));
-  const supY = top - 10;
-  const retY = top + blockH + 10;
-  const tankW = Math.min(352, W - 32);
-  const tankH = 76;
+  const rPot = Math.max(15, Math.min(28, Math.min(cw, ch) * 0.32));
+  const supY = top - 6;
+  const retY = top + blockH + 6;
+  const gapManifoldTank = 30;
+  const tankW = Math.min(360, Math.max(blockW + 16, W - 36));
+  const tankH = 70;
   const tankX = (W - tankW) / 2;
-  const tankY = H - tankH - 46;
+  const tankY = retY + gapManifoldTank;
   const tankCx = tankX + tankW / 2;
+  const footerH = 44;
+  const H = Math.max(320, tankY + tankH + footerH);
   const volMax = getVolumenDepositoMaxLitros(cfg);
   const volMez = getVolumenMezclaLitros(cfg);
   const pct = Number.isFinite(volMax) && Number.isFinite(volMez) && volMax > 0
@@ -1035,17 +1038,18 @@ function generarSVGRdwc() {
       <stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#dbeafe"/>
     </linearGradient>
   </defs>`;
-  s += `<text x="${W / 2}" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937" font-family="Syne,sans-serif">RDWC · recirculación</text>`;
-  s += `<text x="${W / 2}" y="42" text-anchor="middle" font-size="10" fill="#64748b">Impulsión (verde, arriba) · retorno (azul, abajo) · mezcla y medición en el depósito inferior</text>`;
+  s += `<text x="${W / 2}" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937" font-family="Syne,sans-serif">RDWC · recirculación</text>`;
+  s += `<text x="${W / 2}" y="36" text-anchor="middle" font-size="9.5" fill="#64748b">Verde = impulsión (arriba) · azul = retorno (abajo)</text>`;
+  s += `<text x="${W / 2}" y="48" text-anchor="middle" font-size="9.5" fill="#64748b">EC/pH y mezcla en el depósito de control (debajo de los módulos)</text>`;
   s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>`;
 
   s += `<line x1="${left + 12}" y1="${supY}" x2="${left + blockW - 12}" y2="${supY}" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
   s += `<line x1="${left + blockW - 12}" y1="${retY}" x2="${left + 12}" y2="${retY}" stroke="#2563eb" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
 
-  const supDropX = tankX + tankW - 18;
-  s += `<path d="M ${supDropX} ${tankY + 10} L ${supDropX} ${supY - 2} L ${left + blockW - 10} ${supY - 2}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
+  const supDropX = Math.min(W - 14, Math.max(tankX + tankW - 16, left + blockW + 8));
+  s += `<path d="M ${supDropX} ${tankY + 9} L ${supDropX} ${supY - 2} L ${left + blockW - 10} ${supY - 2}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
   const retRiserX = tankX + 18;
-  s += `<path d="M ${left + 12} ${retY} L ${retRiserX} ${retY} L ${retRiserX} ${tankY + tankH - 10}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
+  s += `<path d="M ${left + 12} ${retY} L ${retRiserX} ${retY} L ${retRiserX} ${tankY + tankH - 9}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
 
   for (let rn = 0; rn < rows; rn++) {
     const y = top + (rn + 0.5) * ch;
@@ -1173,9 +1177,20 @@ function generarSVGRdwc() {
     }
     s += `<text x="${ax}" y="${tankY + tankH - 6}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" fill="#475569" font-weight="800">AIR</text>`;
   }
-  s += `<text x="${tankCx}" y="${tankY - 8}" text-anchor="middle" font-size="12" font-weight="800" fill="#1e293b" font-family="Syne,sans-serif">Depósito de control</text>`;
-  s += `<text x="${tankCx}" y="${tankY + tankH + 18}" text-anchor="middle" font-size="11" fill="#475569">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'}</text>`;
-  s += `<text x="${W / 2}" y="${H - 12}" text-anchor="middle" font-size="9.5" fill="#64748b">Líneas verdes = impulsión · azules = retorno · Recirc. ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
+  s += `<text x="${tankCx}" y="${tankY - 6}" text-anchor="middle" font-size="11" font-weight="800" fill="#1e293b" font-family="Syne,sans-serif">Depósito de control</text>`;
+  s += `<text x="${tankCx}" y="${tankY + tankH + 16}" text-anchor="middle" font-size="10.5" fill="#475569">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'}</text>`;
+  const loopCx = W / 2 - 138;
+  const loopCy = H - 19;
+  s += `<g class="rdwc-loop-help-hit" role="button" tabindex="0" aria-label="Cómo funciona el anillo RDWC" opacity="0.95">`;
+  s += `<circle cx="${loopCx}" cy="${loopCy}" r="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>`;
+  s += `<path d="M ${loopCx - 7} ${loopCy - 1} A 8 8 0 0 1 ${loopCx + 7} ${loopCy - 1}" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-linecap="round"/>`;
+  s += `<polygon points="${loopCx + 6},${loopCy - 4} ${loopCx + 11},${loopCy - 1} ${loopCx + 6},${loopCy + 1}" fill="#16a34a"/>`;
+  s += `<path d="M ${loopCx + 7} ${loopCy + 1} A 8 8 0 0 1 ${loopCx - 7} ${loopCy + 1}" fill="none" stroke="#2563eb" stroke-width="1.6" stroke-linecap="round"/>`;
+  s += `<polygon points="${loopCx - 6},${loopCy + 4} ${loopCx - 11},${loopCy + 1} ${loopCx - 6},${loopCy - 1}" fill="#2563eb"/>`;
+  s += `<text x="${loopCx + 16}" y="${loopCy + 3}" text-anchor="start" font-size="8.5" fill="#64748b">anillo</text>`;
+  s += `</g>`;
+  s += `<text x="${W / 2}" y="${H - 26}" text-anchor="middle" font-size="9" fill="#64748b">Tuberías: impulsión y retorno en anillo cerrado</text>`;
+  s += `<text x="${W / 2}" y="${H - 11}" text-anchor="middle" font-size="9" fill="#64748b">Recirc. ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
   s += `</svg>`;
   return s;
 }

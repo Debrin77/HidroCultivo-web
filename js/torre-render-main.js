@@ -73,6 +73,9 @@ function renderTorre() {
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
+    try {
+      bindRdwcLoopHelp(wrap);
+    } catch (e3) {}
   } else {
     wrap.innerHTML = generarSVGTorre();
     wrap.setAttribute('aria-label',
@@ -100,6 +103,30 @@ function renderTorre() {
   try {
     sincronizarSistemaNftMontajeUI();
   } catch (e) {}
+}
+
+function bindRdwcLoopHelp(wrap) {
+  if (!wrap) return;
+  const nodes = wrap.querySelectorAll('.rdwc-loop-help-hit');
+  if (!nodes || !nodes.length) return;
+  const msg =
+    'RDWC en 3 pasos: 1) La bomba impulsa solución desde el depósito de control por la línea verde. ' +
+    '2) Cada módulo recibe caudal y la solución retorna por la línea azul. ' +
+    '3) El circuito cierra en el depósito, donde mides y corriges EC/pH.';
+  const onHelp = () => {
+    if (typeof showToast === 'function') showToast(msg);
+  };
+  nodes.forEach((el) => {
+    el.style.cursor = 'help';
+    el.onclick = onHelp;
+    el.onkeydown = (ev) => {
+      const k = ev && (ev.key || ev.code);
+      if (k === 'Enter' || k === ' ' || k === 'Spacebar') {
+        ev.preventDefault();
+        onHelp();
+      }
+    };
+  });
 }
 
 function torreGetNumCestasParaRot() {
