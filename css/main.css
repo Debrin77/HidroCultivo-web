@@ -90,6 +90,13 @@
   opacity: 1;
   filter: drop-shadow(0 1px 3px rgba(34, 197, 94, 0.35));
 }
+.hc-greeting-emoji {
+  display: inline-block;
+  font-size: 24px;
+  line-height: 1;
+  transform: translateY(1px);
+  filter: drop-shadow(0 1px 3px rgba(34, 197, 94, 0.28));
+}
 .hc-ico--meteo {
   width: 26px;
   height: 26px;
