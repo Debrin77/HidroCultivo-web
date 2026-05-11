@@ -270,7 +270,6 @@
         aria-label="Ir a mediciones: nutriente y sistema"
         onclick="goTab('mediciones')"
         onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">
-        <div id="dashUbicacionBadge" class="dash-ubicacion-badge"></div>
         <div class="dash-sistema-top">
           <div class="dash-sistema-main">
             <span class="dash-sistema-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
@@ -428,7 +427,7 @@
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div class="config-section-collapse-body recarga-proxima-collapse-body" id="panelNotifPrefsInicio">
-          <p class="dash-notif-prefs-lead">Las alertas meteorológicas (MeteoAlarm / AEMET en tu zona) siguen con el permiso del navegador. Aquí eliges si quieres avisos <strong>extra</strong> de cultivo.</p>
+          <p class="dash-notif-prefs-lead">Las alertas meteorológicas (MeteoAlarm / AEMET en tu zona) siguen con el permiso del navegador. Las casillas de avisos <strong>extra</strong> de cultivo son <strong>por instalación activa</strong> (cada sistema hidropónico puede llevarlas distinto).</p>
           <fieldset class="dash-notif-prefs-fieldset" id="dashNotifPrefsFieldset">
             <label class="dash-notif-toggle-row">
               <input type="checkbox" id="notifOptRecarga" onchange="persistNotifOpciones()">
@@ -1739,7 +1738,7 @@
       <div id="rotacionCard" class="setup-hidden"></div>
 
       <!-- Resumen N·C / variedad / días / estado / EC (desplegable) -->
-      <details class="torre-variedades-details" id="torreVariedadesDetails" open>
+      <details class="torre-variedades-details" id="torreVariedadesDetails">
         <summary class="torre-variedades-summary">
           <span class="torre-variedades-summary-main">
             <svg class="hc-ico torre-variedades-summary-ico" aria-hidden="true" focusable="false"><use href="#hc-i-chart"/></svg>
@@ -2163,6 +2162,7 @@
 
       <h1 class="section-title section-title--with-ico"><svg class="hc-ico hc-ico--section" aria-hidden="true" focusable="false"><use href="#hc-i-cloud-sun"/></svg><span><span class="accent">Meteorología</span></span></h1>
       <div class="meteo-ubic-caption"><svg class="hc-ico hc-ico--caption hc-ico--ubicacion-mapa" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg> Ubicación actual: <strong id="meteoUbicacionActual">—</strong></div>
+      <p class="meteo-perfil-caption" id="meteoPerfilInstalacionLine" role="status" aria-live="polite"></p>
 
       <div id="meteoMeteoclimaticBox" class="meteo-meteoclimatic-box setup-hidden" role="region" aria-label="Datos de estación cercana Meteoclimatic">
         <div id="meteoMeteoclimaticInner" class="meteo-meteoclimatic-inner"></div>
@@ -4380,7 +4380,7 @@
   <script src="js/hc-setup-wizard-dwc.js?v=8"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-06-plantilla-vol"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-05-boot-guard"></script>
-  <script src="js/hc-setup-calc-core.js?v=13"></script>
+  <script src="js/hc-setup-calc-core.js?v=15"></script>
   <script src="js/hc-setup-rotacion.js?v=1"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
@@ -4394,14 +4394,14 @@
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=27"></script>
   <script src="js/calendario-logic.js?v=4"></script>
-  <script src="js/meteo-forecast-meteo.js?v=7"></script>
+  <script src="js/meteo-forecast-meteo.js?v=9"></script>
   <script src="js/meteo-forecast-dashboard.js?v=16"></script>
   <script src="js/riego-calculo-helpers.js?v=3"></script>
   <script src="js/riego-calculo-calcular.js?v=3"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=4"></script>
   <script src="js/app-hc-setup-onboarding.js?v=4"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=19"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=21"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=12"></script>
 </body>
 </html>

@@ -531,6 +531,23 @@ function renderMeteoclimaticPanelMeteo(mc) {
     '<br><span class="meteo-mc-note">Red de estaciones aficionadas en la península y archipiélagos (gratis). Si no ves datos, la red puede estar saturada o el navegador bloquea el acceso: prueba más tarde.</span></div>';
 }
 
+/** Texto de contexto: alertas de cultivo ligadas a la instalación activa (cada sistema hidropónico tiene su matriz y config). */
+function actualizarMeteoCaptionInstalacionActiva() {
+  const el = document.getElementById('meteoPerfilInstalacionLine');
+  if (!el) return;
+  let nom = 'Instalación activa';
+  try {
+    if (typeof getTorreActiva === 'function') {
+      const t = getTorreActiva();
+      if (t && t.nombre && String(t.nombre).trim()) nom = String(t.nombre).trim();
+    }
+  } catch (_) {}
+  el.textContent =
+    'Avisos por cultivo, variedad y tipo de sistema para la instalación activa: «' +
+    nom +
+    '». Cambia de instalación en Inicio o Sistema para usar otra configuración.';
+}
+
 async function cargarMeteo() {
   const meteoLoader = document.getElementById('meteoLoader');
   if (!meteoLoader) return; // pestaña no activa — no hacer nada
@@ -544,6 +561,7 @@ async function cargarMeteo() {
     return 'No definida';
   })();
   if (meteoUbicEl) meteoUbicEl.textContent = labelUbic;
+  actualizarMeteoCaptionInstalacionActiva();
   meteoLoader.style.display = 'flex';
   const meteoDias = document.getElementById('meteoDias');
   const meteoDetalle = document.getElementById('meteoDetalle');
@@ -888,6 +906,7 @@ function seleccionarDia(idx) {
 
   // Alertas cultivo (vpd sigue calculado para heurísticas)
   renderAlertas(tMax, tMin, humMedia, viento, uv ?? 0, prob, vpd);
+  actualizarMeteoCaptionInstalacionActiva();
 }
 
 function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
@@ -1044,21 +1063,26 @@ function renderAlertas(tMax, tMin, hum, viento, uv, prob, vpd) {
     let ecMinRef = 900;
     let ecMaxRef = 1600;
     try {
+      if (typeof initTorres === 'function') initTorres();
       if (typeof getRecomendacionEcPhTorre === 'function') {
         const rec = getRecomendacionEcPhTorre();
-        if (
-          rec &&
-          rec.ec &&
-          Number.isFinite(rec.ec.min) &&
-          Number.isFinite(rec.ec.max) &&
-          rec.ec.max > rec.ec.min + 40
-        ) {
-          ecMinRef = Math.round(rec.ec.min);
-          ecMaxRef = Math.round(rec.ec.max);
+        if (rec && rec.ec && Number.isFinite(rec.ec.min) && Number.isFinite(rec.ec.max)) {
+          let lo = Math.round(Number(rec.ec.min));
+          let hi = Math.round(Number(rec.ec.max));
+          if (lo > hi) {
+            const x = lo;
+            lo = hi;
+            hi = x;
+          }
+          if (hi >= lo) {
+            ecMinRef = lo;
+            ecMaxRef = hi;
+          }
         }
       }
     } catch (_) {}
-    const margenUs = 80;
+    const band = Math.max(1, ecMaxRef - ecMinRef);
+    const margenUs = Math.max(80, Math.min(200, Math.round(band * 0.12)));
     if (ecActual > ecMaxRef + margenUs) {
       alertas.push({
         tipo: 'bad',

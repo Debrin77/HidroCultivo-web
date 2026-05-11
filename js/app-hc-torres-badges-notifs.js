@@ -38,6 +38,7 @@ function initTorres() {
       modoActual: modoActual || 'lechuga',
       mediciones: state.mediciones || [],
       registro: state.registro || [],
+      notifOpciones: { recarga: false, medicion: false, cosecha: false },
       fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
     }];
     state.torreActiva = 0; // índice en el array
@@ -54,6 +55,7 @@ function initTorres() {
       modoActual: modoActual || 'lechuga',
       mediciones: state.mediciones || [],
       registro: state.registro || [],
+      notifOpciones: { recarga: false, medicion: false, cosecha: false },
       fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
     }];
     state.torreActiva = 0;
@@ -81,6 +83,7 @@ function initTorres() {
     }
   });
   if (idsReparados || emojisMigrados) saveState();
+  if (typeof normalizarNotifOpcionesEnState === 'function') normalizarNotifOpcionesEnState(state);
 }
 
 function getTorreActiva() {
@@ -213,6 +216,7 @@ function cambiarTorreActiva(idx) {
   if (document.getElementById('tab-meteo')?.classList.contains('active')) cargarMeteo();
   if (document.getElementById('tab-calendario')?.classList.contains('active')) renderCalendario();
   if (document.getElementById('tab-mediciones')?.classList.contains('active')) initConfigUI();
+  if (typeof refreshDashNotificacionesUI === 'function') refreshDashNotificacionesUI();
 }
 
 /** Cestas con cultivo asignado (para detectar datos de torre más recientes en la raíz del state). */
@@ -869,7 +873,6 @@ function actualizarBadgesNutriente() {
   const dashRazon = document.getElementById('dashNutrienteRazon');
   const dashAviso   = document.getElementById('dashNutrienteAviso');
   const dashAvisoGlobal = document.getElementById('dashCambioNutrienteAviso');
-  const dashUbicacion = document.getElementById('dashUbicacionBadge');
   if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
   if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Sistema o Medir';
   if (dashEstado || dashRecomendado || dashRazon || dashFuente) {
@@ -951,16 +954,6 @@ function actualizarBadgesNutriente() {
     } else {
       dashAvisoGlobal.textContent = '';
       dashAvisoGlobal.classList.add('setup-hidden');
-    }
-  }
-  if (dashUbicacion) {
-    const ub = cfg.ubicacion || 'exterior';
-    if (ub === 'interior') {
-      const lz = { natural: 'natural', led: 'LED', mixto: 'natural + LED', fluorescente: 'T5', hps: 'HPS', sin_luz: 'sin luz' }[cfg.luz || 'led'] || 'LED';
-      const h = cfg.horasLuz || 16;
-      dashUbicacion.textContent = '🏠 Interior · ' + lz + ' · ' + h + 'h';
-    } else {
-      dashUbicacion.textContent = '☀️ Exterior';
     }
   }
   // Dashboard inicio — banner torre
@@ -1107,24 +1100,35 @@ async function enviarNotificacion(titulo, cuerpo, icono) {
 function ensureNotifOpciones() {
   if (typeof normalizarNotifOpcionesEnState === 'function') {
     normalizarNotifOpcionesEnState(state);
-  } else if (!state.notifOpciones || typeof state.notifOpciones !== 'object') {
-    state.notifOpciones = { recarga: false, medicion: false, cosecha: false, panelInicioColapsado: false };
+  }
+  if (!state.notifOpciones || typeof state.notifOpciones !== 'object') {
+    state.notifOpciones = { panelInicioColapsado: false };
+  } else if (typeof state.notifOpciones.panelInicioColapsado !== 'boolean') {
+    state.notifOpciones.panelInicioColapsado = false;
   }
 }
 
 function persistNotifOpciones() {
   ensureNotifOpciones();
+  initTorres();
+  const i = state.torreActiva || 0;
+  const slot = state.torres && state.torres[i];
+  if (!slot) return;
+  if (!slot.notifOpciones || typeof slot.notifOpciones !== 'object') {
+    slot.notifOpciones = { recarga: false, medicion: false, cosecha: false };
+  }
   const nr = document.getElementById('notifOptRecarga');
   const nm = document.getElementById('notifOptMedicion');
   const nc = document.getElementById('notifOptCosecha');
-  state.notifOpciones.recarga = !!(nr && nr.checked);
-  state.notifOpciones.medicion = !!(nm && nm.checked);
-  state.notifOpciones.cosecha = !!(nc && nc.checked);
+  slot.notifOpciones.recarga = !!(nr && nr.checked);
+  slot.notifOpciones.medicion = !!(nm && nm.checked);
+  slot.notifOpciones.cosecha = !!(nc && nc.checked);
   saveState();
 }
 
 function refreshDashNotificacionesUI() {
   ensureNotifOpciones();
+  initTorres();
   const fs = document.getElementById('dashNotifPrefsFieldset');
   const hint = document.getElementById('dashNotifPrefsHint');
   const panel = document.getElementById('panelNotifPrefsInicio');
@@ -1132,9 +1136,15 @@ function refreshDashNotificacionesUI() {
   const nr = document.getElementById('notifOptRecarga');
   const nm = document.getElementById('notifOptMedicion');
   const nc = document.getElementById('notifOptCosecha');
-  const o = state.notifOpciones;
-  if (panel) panel.hidden = !!o.panelInicioColapsado;
-  if (btn) btn.setAttribute('aria-expanded', o.panelInicioColapsado ? 'false' : 'true');
+  const panelCol = !!state.notifOpciones.panelInicioColapsado;
+  const i = state.torreActiva || 0;
+  const slot = state.torres && state.torres[i];
+  const o =
+    slot && slot.notifOpciones && typeof slot.notifOpciones === 'object'
+      ? slot.notifOpciones
+      : { recarga: false, medicion: false, cosecha: false };
+  if (panel) panel.hidden = panelCol;
+  if (btn) btn.setAttribute('aria-expanded', panelCol ? 'false' : 'true');
   if (nr) nr.checked = !!o.recarga;
   if (nm) nm.checked = !!o.medicion;
   if (nc) nc.checked = !!o.cosecha;
@@ -1147,55 +1157,139 @@ function programarRecordatorios() {
   if (!('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
   ensureNotifOpciones();
-  const prefs = state.notifOpciones;
+  initTorres();
   const ahora = new Date();
+  const torres = state.torres;
+  if (!Array.isArray(torres) || torres.length === 0) return;
 
-  if (prefs.recarga && state.ultimaRecarga) {
-    const ultima = new Date(state.ultimaRecarga);
-    const diasDesde = Math.floor((ahora - ultima) / 86400000);
-    if (diasDesde >= 14) {
-      const sis =
-        typeof etiquetaSistemaHidroponicoBreve === 'function'
-          ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
-          : '';
-      const sisTxt = sis ? 'Sistema ' + sis + ': ' : '';
-      enviarNotificacion(
-        '💧 HidroCultivo — Recarga completa pendiente' + (sis ? ' · ' + sis : ''),
-        sisTxt +
-          'Han pasado ' +
-          diasDesde +
-          ' días desde la última recarga completa (vaciado + mezcla). Revisa el checklist en la app.',
-        ''
-      );
-    }
-  }
+  torres.forEach((slot, slotIdx) => {
+    if (!slot || !slot.notifOpciones) return;
+    const prefs = slot.notifOpciones;
+    const nombreTorre = (slot.nombre && String(slot.nombre).trim()) || 'Instalación ' + (slotIdx + 1);
+    const cfg = slot.config || {};
+    const sis =
+      typeof etiquetaSistemaHidroponicoBreve === 'function' ? etiquetaSistemaHidroponicoBreve(cfg) : '';
+    const sisTxt = sis ? 'Sistema ' + sis + ': ' : '';
 
-  if (prefs.medicion && state.mediciones && state.mediciones.length > 0) {
-    const ultimaMed = state.mediciones[0];
-    const hoy = ahora.toLocaleDateString('es-ES');
-    if (ultimaMed.fecha !== hoy) {
-      const diasSinMedir = state.mediciones[0].fecha ?
-        Math.floor((ahora - new Date(state.mediciones[0].fecha.split('/').reverse().join('-'))) / 86400000) : 0;
-      if (diasSinMedir >= 2) {
+    if (prefs.recarga && slot.ultimaRecarga) {
+      const ultima = new Date(slot.ultimaRecarga);
+      const diasDesde = Math.floor((ahora - ultima) / 86400000);
+      if (diasDesde >= 14) {
         enviarNotificacion(
-          '📊 HidroCultivo — Mide hoy',
-          'Llevas ' + diasSinMedir + ' días sin registrar mediciones. Mide EC, pH y temperatura.',
+          '💧 HidroCultivo — Recarga pendiente · ' + nombreTorre,
+          sisTxt +
+            'En «' +
+            nombreTorre +
+            '» han pasado ' +
+            diasDesde +
+            ' días desde la última recarga completa (vaciado + mezcla). Revisa el checklist en la app.',
           ''
         );
       }
     }
-  }
 
-  if (prefs.medicion && typeof getRecomendacionEcPhTorre === 'function') {
-    const rec = getRecomendacionEcPhTorre();
-    if (rec && rec.ec && rec.ph) {
-      if (!state.configTorre) state.configTorre = {};
-      const firma = String(rec.faseDominante || 'general') + '|' + rec.ec.min + '-' + rec.ec.max + '|' + rec.ph.min + '-' + rec.ph.max;
-      const prev = state.configTorre.ecPhRecomendacionFirma || '';
-      if (prev && prev !== firma) {
+    if (prefs.medicion && slot.mediciones && slot.mediciones.length > 0) {
+      const ultimaMed = slot.mediciones[0];
+      const hoy = ahora.toLocaleDateString('es-ES');
+      if (ultimaMed.fecha !== hoy) {
+        const diasSinMedir = slot.mediciones[0].fecha
+          ? Math.floor(
+              (ahora - new Date(slot.mediciones[0].fecha.split('/').reverse().join('-'))) / 86400000
+            )
+          : 0;
+        if (diasSinMedir >= 2) {
+          enviarNotificacion(
+            '📊 HidroCultivo — Mide hoy · ' + nombreTorre,
+            'En «' +
+              nombreTorre +
+              '» llevas ' +
+              diasSinMedir +
+              ' días sin registrar mediciones. Mide EC, pH y temperatura.',
+            ''
+          );
+        }
+      }
+    }
+
+    if (prefs.cosecha && Array.isArray(slot.torre)) {
+      const numN = cfg.numNiveles || (typeof NUM_NIVELES !== 'undefined' ? NUM_NIVELES : 8);
+      const numC = cfg.numCestas || (typeof NUM_CESTAS !== 'undefined' ? NUM_CESTAS : 5);
+      let cultivosListos = 0;
+      const muestras = [];
+      for (let n = 0; n < numN && n < slot.torre.length; n++) {
+        const row = slot.torre[n] || [];
+        for (let ci = 0; ci < Math.min(numC, row.length); ci++) {
+          const c = row[ci];
+          if (!c || !c.variedad || !c.fecha) continue;
+          const cultN = getCultivoDB(c.variedad);
+          const dias =
+            typeof getDiasEfectivosCicloBiologico === 'function'
+              ? getDiasEfectivosCicloBiologico(c, cultN, ahora)
+              : Math.floor((ahora - new Date(c.fecha)) / 86400000);
+          const diasBase = DIAS_COSECHA[c.variedad] || 50;
+          const diasTotal =
+            typeof torreGetDiasCosechaObjetivo === 'function'
+              ? torreGetDiasCosechaObjetivo(diasBase, cfg)
+              : diasBase;
+          if (dias >= diasTotal) {
+            cultivosListos++;
+            if (muestras.length < 2) {
+              const labN = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
+              muestras.push(labN + ' (N' + (n + 1) + '·C' + (ci + 1) + ')');
+            }
+          }
+        }
+      }
+      if (cultivosListos > 0) {
+        const detalle =
+          muestras.length > 0
+            ? ' Ejemplos: ' + muestras.join(', ') + (cultivosListos > muestras.length ? '…' : '') + '.'
+            : '';
         enviarNotificacion(
-          '🧪 Ajuste recomendado EC/pH',
-          'Nueva etapa detectada (' +
+          '✂️ HidroCultivo — Cosecha lista · ' + nombreTorre,
+          'En «' +
+            nombreTorre +
+            '» tienes ' +
+            cultivosListos +
+            ' cultivo' +
+            (cultivosListos === 1 ? '' : 's') +
+            ' listos para cosechar.' +
+            detalle,
+          ''
+        );
+      }
+    }
+  });
+
+  if (typeof getRecomendacionEcPhTorre !== 'function') return;
+  const prevT = state.torre;
+  const prevC = state.configTorre;
+  try {
+    torres.forEach((slot, i) => {
+      if (!slot || !slot.notifOpciones || !slot.notifOpciones.medicion) return;
+      if (!slot.config) slot.config = {};
+      state.torre = Array.isArray(slot.torre) ? slot.torre : [];
+      state.configTorre = slot.config;
+      const rec = getRecomendacionEcPhTorre();
+      if (!rec || !rec.ec || !rec.ph) return;
+      const firma =
+        String(rec.faseDominante || 'general') +
+        '|' +
+        rec.ec.min +
+        '-' +
+        rec.ec.max +
+        '|' +
+        rec.ph.min +
+        '-' +
+        rec.ph.max;
+      const prev = slot.config.ecPhRecomendacionFirma || '';
+      if (prev && prev !== firma) {
+        const nombreTorre = (slot.nombre && String(slot.nombre).trim()) || 'Instalación ' + (i + 1);
+        enviarNotificacion(
+          '🧪 Ajuste recomendado EC/pH · ' + nombreTorre,
+          'En «' +
+            nombreTorre +
+            '»: nueva etapa detectada (' +
             (rec.faseDominante || 'general') +
             '). EC ' +
             rec.ec.min +
@@ -1209,49 +1303,13 @@ function programarRecordatorios() {
           ''
         );
       }
-      state.configTorre.ecPhRecomendacionFirma = firma;
-      guardarEstadoTorreActual();
-      saveState();
-    }
-  }
-
-  if (prefs.cosecha) {
-    let cultivosListos = 0;
-    const muestras = [];
-    const nivelesActivos = getNivelesActivos();
-    nivelesActivos.forEach(n => {
-      (state.torre[n] || []).forEach((c, ci) => {
-        if (!c.variedad || !c.fecha) return;
-        const cultN = getCultivoDB(c.variedad);
-        const dias =
-          typeof getDiasEfectivosCicloBiologico === 'function'
-            ? getDiasEfectivosCicloBiologico(c, cultN, ahora)
-            : Math.floor((ahora - new Date(c.fecha)) / 86400000);
-        const diasBase = DIAS_COSECHA[c.variedad] || 50;
-        const diasTotal = typeof torreGetDiasCosechaObjetivo === 'function'
-          ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
-          : diasBase;
-        if (dias >= diasTotal) {
-          cultivosListos++;
-          if (muestras.length < 2) {
-            const labN = cultivoNombreLista(getCultivoDB(c.variedad), c.variedad);
-            muestras.push(labN + ' (N' + (n + 1) + '·C' + (ci + 1) + ')');
-          }
-        }
-      });
+      slot.config.ecPhRecomendacionFirma = firma;
     });
-    if (cultivosListos > 0) {
-      const detalle =
-        muestras.length > 0
-          ? ' Ejemplos: ' + muestras.join(', ') + (cultivosListos > muestras.length ? '…' : '') + '.'
-          : '';
-      enviarNotificacion(
-        '✂️ HidroCultivo — Cosecha lista',
-        'Tienes ' + cultivosListos + ' cultivo' + (cultivosListos === 1 ? '' : 's') + ' listos para cosechar.' + detalle,
-        ''
-      );
-    }
+  } finally {
+    state.torre = prevT;
+    state.configTorre = prevC;
   }
+  saveState();
 }
 
 // Botón para activar notificaciones en pestaña inicio

@@ -50,16 +50,34 @@ function loadState() {
   return initState();
 }
 
-/** Recordatorios de cultivo (recarga / medición / cosecha): solo push si el usuario los activa. MeteoAlarm va aparte. */
+/** Recordatorios de cultivo (recarga / medición / cosecha): por instalación en `torres[i].notifOpciones`. Solo `panelInicioColapsado` queda en raíz. MeteoAlarm va aparte. */
 function normalizarNotifOpcionesEnState(s) {
   if (!s || typeof s !== 'object') return;
-  const p = s.notifOpciones;
-  s.notifOpciones = {
-    recarga: typeof p?.recarga === 'boolean' ? p.recarga : false,
-    medicion: typeof p?.medicion === 'boolean' ? p.medicion : false,
-    cosecha: typeof p?.cosecha === 'boolean' ? p.cosecha : false,
-    panelInicioColapsado: typeof p?.panelInicioColapsado === 'boolean' ? p.panelInicioColapsado : false,
+  const p = s.notifOpciones && typeof s.notifOpciones === 'object' ? s.notifOpciones : {};
+  const panelInicioColapsado = typeof p.panelInicioColapsado === 'boolean' ? p.panelInicioColapsado : false;
+  const baseFlags = {
+    recarga: typeof p.recarga === 'boolean' ? p.recarga : false,
+    medicion: typeof p.medicion === 'boolean' ? p.medicion : false,
+    cosecha: typeof p.cosecha === 'boolean' ? p.cosecha : false,
   };
+  if (Array.isArray(s.torres) && s.torres.length) {
+    s.torres.forEach((t) => {
+      if (!t || typeof t !== 'object') return;
+      if (!t.notifOpciones || typeof t.notifOpciones !== 'object') {
+        t.notifOpciones = { ...baseFlags };
+      } else {
+        t.notifOpciones.recarga = !!t.notifOpciones.recarga;
+        t.notifOpciones.medicion = !!t.notifOpciones.medicion;
+        t.notifOpciones.cosecha = !!t.notifOpciones.cosecha;
+      }
+    });
+    s.notifOpciones = { panelInicioColapsado };
+  } else {
+    s.notifOpciones = {
+      ...baseFlags,
+      panelInicioColapsado,
+    };
+  }
 }
 
 /** Origen de la planta en ficha: vivero | germinacion | '' */
@@ -175,6 +193,7 @@ function initState() {
   normalizarNotifOpcionesEnState(st);
   return st;
 }
+
 
 function saveState() {
   try {

@@ -6689,6 +6689,12 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
   align-items: center;
   gap: 6px;
 }
+.meteo-perfil-caption {
+  font-size: 11px;
+  color: var(--muted);
+  margin: -6px 0 12px 0;
+  line-height: 1.4;
+}
 .hc-ico--caption {
   width: 14px;
   height: 14px;

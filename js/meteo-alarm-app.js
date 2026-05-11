@@ -377,6 +377,12 @@ function buildAvisosMeteoHeuristicas() {
     : tMw === 'dwc'
       ? 'Asegura tapa, macetas y depósito DWC; revisa que no basculen.'
       : 'Asegura la torre vertical y el depósito; revisa estabilidad y sujeciones.';
+  const P =
+    typeof meteoInstalacionPerfilCultivo === 'function'
+      ? meteoInstalacionPerfilCultivo()
+      : { vacio: true, tieneHojaBolting: true, tieneFrutos: false, tieneFresas: false };
+  const avisarHoja = P.vacio || P.tieneHojaBolting;
+  const avisarFrutos = !P.vacio && (P.tieneFrutos || P.tieneFresas);
   const d = meteoData.daily;
   const tMax = Math.round(d.temperature_2m_max?.[0] ?? NaN);
   const tMin = Math.round(d.temperature_2m_min?.[0] ?? NaN);
@@ -395,14 +401,62 @@ function buildAvisosMeteoHeuristicas() {
     else if (prob >= 70) alertas.push({ tipo: 'warn', icon: '🌦️', titulo: 'Chubascos posibles (' + prob + '%)', txt: 'Planifica toldo/cobertura en horas de lluvia.' });
   }
   if (isFinite(tMax)) {
-    if (tMax >= 36) alertas.push({ tipo: 'bad', icon: '🌡️', titulo: 'Calor extremo (' + tMax + '°C)', txt: 'Riesgo de bolting y agua muy caliente. Toldo + vigilar temp del depósito.' });
-    else if (tMax >= 32) alertas.push({ tipo: 'warn', icon: '🌡️', titulo: 'Día muy caluroso (' + tMax + '°C)', txt: 'Vigila VPD y temperatura del agua. Sombra recomendada.' });
+    if (avisarHoja) {
+      if (tMax >= 36) {
+        alertas.push({
+          tipo: 'bad',
+          icon: '🌡️',
+          titulo: 'Calor extremo (' + tMax + '°C)',
+          txt: 'Riesgo de bolting (hoja) y agua muy caliente. Toldo + vigilar temp del depósito.',
+        });
+      } else if (tMax >= 32) {
+        alertas.push({
+          tipo: 'warn',
+          icon: '🌡️',
+          titulo: 'Día muy caluroso (' + tMax + '°C)',
+          txt: 'Vigila VPD y temperatura del agua. Sombra recomendada.',
+        });
+      }
+    } else if (avisarFrutos) {
+      if (tMax >= 36) {
+        alertas.push({
+          tipo: 'bad',
+          icon: '🌡️',
+          titulo: 'Calor extremo (' + tMax + '°C)',
+          txt: 'Estrés térmico en flor/fruto, aborto floral o calidad baja. Sombra, ventilación y agua del circuito lo más fresca posible.',
+        });
+      } else if (tMax >= 32) {
+        alertas.push({
+          tipo: 'warn',
+          icon: '🌡️',
+          titulo: 'Día muy caluroso (' + tMax + '°C)',
+          txt: 'Vigila polinización, cuajado y temperatura del depósito; sombrear en las horas centrales ayuda.',
+        });
+      }
+    } else if (tMax >= 36) {
+      alertas.push({
+        tipo: 'bad',
+        icon: '🌡️',
+        titulo: 'Calor extremo (' + tMax + '°C)',
+        txt: 'El líquido del sistema puede calentarse. Toldo o sombra y medir temperatura de agua.',
+      });
+    } else if (tMax >= 32) {
+      alertas.push({
+        tipo: 'warn',
+        icon: '🌡️',
+        titulo: 'Día muy caluroso (' + tMax + '°C)',
+        txt: 'Vigila transpiración y temperatura del agua.',
+      });
+    }
   }
   if (isFinite(tMin) && tMin <= 1) {
     alertas.push({ tipo: 'warn', icon: '🥶', titulo: 'Noche fría (' + tMin + '°C)', txt: 'Posible estrés en raíces. Revisa calentador/aislamiento.' });
   }
   if (isFinite(uv) && uv >= 8) {
-    alertas.push({ tipo: (tMax >= 30 ? 'bad' : 'warn'), icon: '☀️', titulo: 'UV alto (' + uv + ')', txt: 'Evita sol directo prolongado; toldo recomendado.' });
+    const uvTxt = avisarFrutos && !avisarHoja
+      ? 'Flor y fruto son sensibles; sombrear o filtrar UV intenso en las horas centrales.'
+      : 'Evita sol directo prolongado; toldo recomendado.';
+    alertas.push({ tipo: (tMax >= 30 ? 'bad' : 'warn'), icon: '☀️', titulo: 'UV alto (' + uv + ')', txt: uvTxt });
   }
   return alertas;
 }

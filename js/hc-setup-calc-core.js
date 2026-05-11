@@ -661,6 +661,11 @@ function getRecomendacionEcPhTorre() {
     min: Math.max(320, Math.round(ecRec.min * ctx.ecMult)),
     max: Math.max(420, Math.round(ecRec.max * ctx.ecMult)),
   };
+  if (ecRec.min > ecRec.max) {
+    const t = ecRec.min;
+    ecRec.min = ecRec.max;
+    ecRec.max = t;
+  }
 
   let phRec;
   if (rangosPh.length === 0) {
@@ -1635,6 +1640,15 @@ function guardarSetupYContinuar() {
     setupEsNuevaTorre = false;
     const EMOJIS = ['🌿','🌱','🥬','🍃','🌾','🪴','🌻','🫛','🎍'];
     const nTorres = (state.torres || []).length;
+    const prevSlot = state.torres && state.torres[state.torreActiva || 0];
+    const notifSeed =
+      prevSlot && prevSlot.notifOpciones && typeof prevSlot.notifOpciones === 'object'
+        ? {
+            recarga: !!prevSlot.notifOpciones.recarga,
+            medicion: !!prevSlot.notifOpciones.medicion,
+            cosecha: !!prevSlot.notifOpciones.cosecha,
+          }
+        : { recarga: false, medicion: false, cosecha: false };
     const nuevaTorre = {
       id: Date.now(),
       nombre: setupNombreNuevaTorre,
@@ -1647,6 +1661,7 @@ function guardarSetupYContinuar() {
       ultimaMedicion: null,
       ultimaRecarga: null,
       recargaSnoozeHasta: null,
+      notifOpciones: notifSeed,
       fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
     };
     if (!state.torres) state.torres = [];
