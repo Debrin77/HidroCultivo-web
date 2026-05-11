@@ -29,6 +29,17 @@ function invalidateMeteoNomiCache() {
   _meteoalarmListaCache.relevantes = null;
 }
 
+/** Firma de coords de la instalación activa: evita usar caché de previsión de otra ubicación al cambiar de sistema. */
+function meteoLocCacheSignature() {
+  try {
+    const g = getCoordsActivas();
+    if (!g || !Number.isFinite(g.lat) || !Number.isFinite(g.lon)) return '';
+    return String(Math.round(g.lat * 2000) / 2000) + '|' + String(Math.round(g.lon * 2000) / 2000);
+  } catch (_) {
+    return '';
+  }
+}
+
 function condEmoji(precipProb, tempMax, uv) {
   if (precipProb > 70) return '🌧️';
   if (precipProb > 40) return '🌦️';
@@ -542,10 +553,17 @@ function actualizarMeteoCaptionInstalacionActiva() {
       if (t && t.nombre && String(t.nombre).trim()) nom = String(t.nombre).trim();
     }
   } catch (_) {}
+  const cfg = state.configTorre || {};
+  const locTxt =
+    (cfg.localidadMeteo && String(cfg.localidadMeteo).trim()) ||
+    (cfg.ciudad && String(cfg.ciudad).split(',')[0].trim()) ||
+    'coordenadas de esta instalación (Medir / municipio)';
   el.textContent =
-    'Avisos por cultivo, variedad y tipo de sistema para la instalación activa: «' +
+    'Previsión y avisos usan la ubicación de «' +
+    locTxt +
+    '» (cada sistema puede tener otra en Medir). Cultivo y alertas: instalación activa «' +
     nom +
-    '». Cambia de instalación en Inicio o Sistema para usar otra configuración.';
+    '». Cambia de instalación en Inicio o Sistema para otra matriz y zona meteorológica.';
 }
 
 async function cargarMeteo() {
@@ -562,6 +580,14 @@ async function cargarMeteo() {
   })();
   if (meteoUbicEl) meteoUbicEl.textContent = labelUbic;
   actualizarMeteoCaptionInstalacionActiva();
+  const locSigAhora = meteoLocCacheSignature();
+  const meteoForzarPorUbicacion =
+    !!(state._meteoForecastCacheLocSig && locSigAhora && state._meteoForecastCacheLocSig !== locSigAhora);
+  if (meteoForzarPorUbicacion) {
+    try {
+      state._ultimoMeteoclimaticCercano = null;
+    } catch (_) {}
+  }
   meteoLoader.style.display = 'flex';
   const meteoDias = document.getElementById('meteoDias');
   const meteoDetalle = document.getElementById('meteoDetalle');
@@ -593,10 +619,27 @@ async function cargarMeteo() {
       'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
       '&daily=uv_index_max&forecast_days=7&timezone=auto';
 
+    const fetchOpts = { forceRefresh: meteoForzarPorUbicacion };
     const [meteoRaw, meteoUV] = await Promise.all([
-      meteoFetchConFallback(urlMBase, { cacheKey: 'meteo:main:' + urlMBase, timeoutMs: 4200, ttlMs: 2 * 60 * 1000 })
-        .catch(() => meteoFetchConFallback(urlMCoreBase, { cacheKey: 'meteo:core:' + urlMCoreBase, timeoutMs: 4200, ttlMs: 2 * 60 * 1000 })),
-      meteoFetchConFallback(urlMUV, { cacheKey: 'meteo:uv:' + urlMUV, timeoutMs: 3800, ttlMs: 8 * 60 * 1000 }),
+      meteoFetchConFallback(urlMBase, {
+        cacheKey: 'meteo:main:' + urlMBase,
+        timeoutMs: 4200,
+        ttlMs: 2 * 60 * 1000,
+        ...fetchOpts,
+      }).catch(() =>
+        meteoFetchConFallback(urlMCoreBase, {
+          cacheKey: 'meteo:core:' + urlMCoreBase,
+          timeoutMs: 4200,
+          ttlMs: 2 * 60 * 1000,
+          ...fetchOpts,
+        })
+      ),
+      meteoFetchConFallback(urlMUV, {
+        cacheKey: 'meteo:uv:' + urlMUV,
+        timeoutMs: 3800,
+        ttlMs: 8 * 60 * 1000,
+        ...fetchOpts,
+      }),
     ]);
     meteoData = meteoRaw;
     // Compatibilidad Open-Meteo: unificar nombres de viento legacy/nuevo
@@ -620,6 +663,7 @@ async function cargarMeteo() {
       meteoData.daily.uv_index_max = new Array(7).fill(0);
     }
     state._meteoForecastCache = meteoData;
+    state._meteoForecastCacheLocSig = meteoLocCacheSignature();
     saveState();
 
     renderMeteoDias();
@@ -645,7 +689,13 @@ async function cargarMeteo() {
 
   } catch(e) {
     const cached = state._meteoForecastCache;
-    if (cached && cached.daily && cached.hourly) {
+    const cacheUbicacionOk =
+      cached &&
+      cached.daily &&
+      cached.hourly &&
+      state._meteoForecastCacheLocSig &&
+      state._meteoForecastCacheLocSig === meteoLocCacheSignature();
+    if (cacheUbicacionOk) {
       meteoData = cached;
       try {
         renderMeteoDias();

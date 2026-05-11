@@ -207,6 +207,9 @@ function cambiarTorreActiva(idx) {
   // Marcar datos como obsoletos — se recargarán al abrir cada pestaña
   window._meteoObsoleto = true;
   window._riegoObsoleto  = true;
+  try {
+    if (typeof invalidateMeteoNomiCache === 'function') invalidateMeteoNomiCache();
+  } catch (_) {}
   // Recargar si la pestaña ya está abierta (sincronizar primero)
   if (document.getElementById('tab-riego')?.classList.contains('active')) {
     sincronizarInputsRiego();

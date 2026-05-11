@@ -984,30 +984,37 @@ function generarSVGDwc() {
 }
 
 /**
- * RDWC: vista simplificada de módulos conectados + depósito de control.
- * Incluye cestas tocables (clase hc-cesta) para reutilizar ficha/lista.
+ * RDWC: esquema tipo «manifold + cubos + depósito de control abajo» (recirculación).
+ * Cultivo por módulo como DWC (fase, foto, arco días, nombre). Flujo sin cabezas de flecha enormes.
  */
 function generarSVGRdwc() {
+  const escSvg = (t) =>
+    String(t || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   const cfg = state.configTorre || {};
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
   const rows = Math.max(1, Math.min(4, parseInt(String(cfg.rdwcRows || 1), 10) || 1));
   const sites = Math.max(2, Math.min(64, parseInt(String(cfg.rdwcSites || 4), 10) || 4));
   const cols = Math.max(1, Math.ceil(sites / rows));
-  const w = 420;
-  const h = 560;
-  const left = 84;
-  const top = 84;
-  const blockW = 300;
-  const blockH = 250;
+  const W = 400;
+  const H = 640;
+  const blockW = Math.min(340, Math.max(240, 32 + cols * 52));
+  const blockH = Math.min(248, Math.max(120, 36 + rows * 72));
+  const left = (W - blockW) / 2;
+  const top = 58;
   const cw = blockW / Math.max(1, cols);
   const ch = blockH / Math.max(1, rows);
-  const rPot = Math.max(11, Math.min(20, Math.min(cw, ch) * 0.29));
-  const tankX = 12;
-  const tankY = 166;
-  const tankW = 64;
-  const tankH = 124;
-  const supY = top - 20;
-  const retY = top + blockH + 20;
+  const rPot = Math.max(13, Math.min(26, Math.min(cw, ch) * 0.31));
+  const supY = top - 10;
+  const retY = top + blockH + 10;
+  const tankW = Math.min(352, W - 32);
+  const tankH = 76;
+  const tankX = (W - tankW) / 2;
+  const tankY = H - tankH - 46;
+  const tankCx = tankX + tankW / 2;
   const volMax = getVolumenDepositoMaxLitros(cfg);
   const volMez = getVolumenMezclaLitros(cfg);
   const pct = Number.isFinite(volMax) && Number.isFinite(volMez) && volMax > 0
@@ -1017,30 +1024,28 @@ function generarSVGRdwc() {
   const ta = torreSvgAnimacionesActivas();
   const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
   const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
-  let s = `<svg viewBox="0 0 ${w} ${h}" class="torre-svg" role="img" aria-label="RDWC: módulos conectados con recirculación y depósito de control">`;
+
+  let s = `<svg viewBox="0 0 ${W} ${H}" class="torre-svg" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="rdwcDiagTitle">`;
+  s += `<title id="rdwcDiagTitle">RDWC: módulos con recirculación y depósito de control abajo. Toca un cubo para la ficha.</title>`;
   s += `<defs>
     <linearGradient id="rdwcWater" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#93c5fd"/>
-      <stop offset="100%" stop-color="#2563eb"/>
+      <stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#2563eb"/>
     </linearGradient>
     <linearGradient id="rdwcTankBody" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f8fafc"/>
-      <stop offset="100%" stop-color="#dbeafe"/>
+      <stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#dbeafe"/>
     </linearGradient>
-    <marker id="rdwcFlowOut" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0,0 L8,4.5 L0,9 Z" fill="#16a34a"/>
-    </marker>
-    <marker id="rdwcFlowIn" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-      <path d="M0,0 L8,4.5 L0,9 Z" fill="#2563eb"/>
-    </marker>
   </defs>`;
-  s += `<text x="${w / 2}" y="28" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937">RDWC · Recirculating Deep Water Culture</text>`;
-  s += `<text x="${w / 2}" y="46" text-anchor="middle" font-size="11" fill="#64748b">Recirculación continua: envío/alta (verde) y retorno/baja (azul) — no es riego por impulsos</text>`;
-  s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="16" fill="#f8fafc" stroke="#cbd5e1"/>`;
+  s += `<text x="${W / 2}" y="26" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937" font-family="Syne,sans-serif">RDWC · recirculación</text>`;
+  s += `<text x="${W / 2}" y="42" text-anchor="middle" font-size="10" fill="#64748b">Impulsión (verde, arriba) · retorno (azul, abajo) · mezcla y medición en el depósito inferior</text>`;
+  s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>`;
 
-  // Buses principales (como en esquemas técnicos RDWC): superior = impulsión, inferior = retorno
-  s += `<line x1="${left + 14}" y1="${supY}" x2="${left + blockW - 14}" y2="${supY}" stroke="#16a34a" stroke-width="4" stroke-linecap="round" marker-end="url(#rdwcFlowOut)"/>`;
-  s += `<line x1="${left + blockW - 14}" y1="${retY}" x2="${left + 14}" y2="${retY}" stroke="#2563eb" stroke-width="4" stroke-linecap="round" marker-end="url(#rdwcFlowIn)"/>`;
+  s += `<line x1="${left + 12}" y1="${supY}" x2="${left + blockW - 12}" y2="${supY}" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
+  s += `<line x1="${left + blockW - 12}" y1="${retY}" x2="${left + 12}" y2="${retY}" stroke="#2563eb" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
+
+  const supDropX = tankX + tankW - 18;
+  s += `<path d="M ${supDropX} ${tankY + 10} L ${supDropX} ${supY - 2} L ${left + blockW - 10} ${supY - 2}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
+  const retRiserX = tankX + 18;
+  s += `<path d="M ${left + 12} ${retY} L ${retRiserX} ${retY} L ${retRiserX} ${tankY + tankH - 10}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
 
   for (let rn = 0; rn < rows; rn++) {
     const y = top + (rn + 0.5) * ch;
@@ -1048,74 +1053,129 @@ function generarSVGRdwc() {
       const idx = rn * cols + c;
       if (idx >= sites) continue;
       const x = left + (c + 0.5) * cw;
-      const dat = state.torre && state.torre[rn] && state.torre[rn][c] ? state.torre[rn][c] : null;
-      const has = !!(dat && dat.variedad);
-      const fill = has ? '#dbeafe' : '#eff6ff';
-      const stroke = has ? '#0f172a' : '#334155';
+      const dat =
+        state.torre && state.torre[rn] && state.torre[rn][c] ? state.torre[rn][c] : { variedad: '', fecha: '', fotos: [] };
+      const dias = dat.fecha && typeof torreDiasCicloVisual === 'function' ? torreDiasCicloVisual(dat) : 0;
+      const est = dat.variedad && typeof getEstado === 'function' ? getEstado(dat.variedad, dias) : '';
+      const diasBase = DIAS_COSECHA[dat.variedad] || 50;
+      const diasT =
+        typeof torreGetDiasCosechaObjetivo === 'function'
+          ? torreGetDiasCosechaObjetivo(diasBase, cfg)
+          : diasBase;
+      const pctC = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
+      let fill = '#f8fafc';
+      let stroke = '#94a3b8';
       let phaseEmoji = '';
-      if (dat && dat.variedad && typeof torreDiasCicloVisual === 'function' && typeof getEstado === 'function' && typeof getEmoji === 'function') {
-        const diasR = dat.fecha ? torreDiasCicloVisual(dat) : 0;
-        const estR = getEstado(dat.variedad, diasR);
-        phaseEmoji = getEmoji(estR) || '';
+      if (dat.variedad) {
+        if (est === 'plantula') {
+          fill = '#eff6ff';
+          stroke = '#2563eb';
+        } else if (est === 'crecimiento') {
+          fill = '#f0fdf4';
+          stroke = '#15803d';
+        } else if (est === 'madurez') {
+          fill = '#fffbeb';
+          stroke = '#b45309';
+        } else {
+          fill = '#faf5ff';
+          stroke = '#7c3aed';
+        }
+        if (typeof getEmoji === 'function') phaseEmoji = getEmoji(est) || '';
       }
-      // conexión vertical desde impulsión al módulo y del módulo a retorno
-      s += `<line x1="${x}" y1="${supY}" x2="${x}" y2="${y - rPot - 3}" stroke="#16a34a" stroke-width="2.2" marker-end="url(#rdwcFlowOut)"/>`;
-      s += `<line x1="${x}" y1="${y + rPot + 3}" x2="${x}" y2="${retY}" stroke="#2563eb" stroke-width="2.2" marker-end="url(#rdwcFlowIn)"/>`;
-      s += `<g data-n="${rn}" data-c="${c}" class="hc-cesta hc-cesta--interactive" role="button" tabindex="0" aria-label="Módulo fila ${rn + 1} sitio ${c + 1}">`;
-      s += `<rect x="${(x - rPot).toFixed(1)}" y="${(y - rPot).toFixed(1)}" width="${(rPot * 2).toFixed(1)}" height="${(rPot * 2).toFixed(1)}" rx="${(rPot * 0.24).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2.4"/>`;
+      const cult = dat.variedad ? getCultivoDB(dat.variedad) : null;
+      const titLista = dat.variedad ? cultivoNombreLista(cult, dat.variedad) : 'Vacío';
+      const nomCorto = titLista.length > 13 ? titLista.slice(0, 12) + '…' : titLista;
+      const isSelected = !!(window.editingCesta && editingCesta.nivel === rn && editingCesta.cesta === c);
+      const multiKey = rn + ',' + c;
+      const isMultiSel = torreInteraccionModo === 'asignar' && torreCestasMultiSel.has(multiKey);
+      const fotos = (dat.fotos || []).filter((f) => f && f.data);
+      const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
+      const clipId = `rdwc_clip_${rn}_${c}`;
+      const ariaMod = escAriaAttr(
+        'Módulo RDWC fila ' + (rn + 1) + ' sitio ' + (c + 1) + ', ' + titLista + (dias ? ', día ' + dias : '') + '. Pulsa para ficha.'
+      );
+
+      s += `<line x1="${x}" y1="${supY}" x2="${x}" y2="${y - rPot - 4}" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" opacity="0.75"/>`;
+      s += `<line x1="${x}" y1="${y + rPot + 4}" x2="${x}" y2="${retY}" stroke="#2563eb" stroke-width="1.5" stroke-linecap="round" opacity="0.75"/>`;
+
+      s += `<g data-n="${rn}" data-c="${c}" class="hc-cesta hc-cesta--interactive" role="button" tabindex="0" aria-label="${ariaMod}">`;
+      const rx = (x - rPot).toFixed(1);
+      const ry = (y - rPot).toFixed(1);
+      const rw = (rPot * 2).toFixed(1);
+      const rh = (rPot * 2).toFixed(1);
+      s += `<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="${(rPot * 0.22).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2.2"/>`;
+      if (isMultiSel) {
+        s += `<rect x="${(x - rPot - 4).toFixed(1)}" y="${(y - rPot - 4).toFixed(1)}" width="${(rPot * 2 + 8).toFixed(1)}" height="${(rPot * 2 + 8).toFixed(1)}" rx="${(rPot * 0.28).toFixed(1)}"
+          fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-dasharray="4 3" opacity="0.95"/>`;
+      }
+      if (isSelected) {
+        s += `<rect x="${(x - rPot - 3).toFixed(1)}" y="${(y - rPot - 3).toFixed(1)}" width="${(rPot * 2 + 6).toFixed(1)}" height="${(rPot * 2 + 6).toFixed(1)}" rx="${(rPot * 0.26).toFixed(1)}"
+          fill="none" stroke="#22c55e" stroke-width="2.4" opacity="0.95"/>`;
+      }
+      if (ultimaFoto?.data) {
+        s += `<defs><clipPath id="${clipId}"><rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="${(rPot * 0.22).toFixed(1)}"/></clipPath></defs>`;
+        s += `<image href="${ultimaFoto.data}" x="${rx}" y="${ry}" width="${rw}" height="${rh}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" opacity="0.88"/>`;
+        s += `<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="${(rPot * 0.22).toFixed(1)}" fill="none" stroke="rgba(255,255,255,0.75)" stroke-width="1"/>`;
+      }
+      if (pctC > 0 && pctC < 100 && dat.variedad) {
+        const r2 = rPot + 4;
+        const ang2 = (pctC / 100) * 2 * Math.PI - Math.PI / 2;
+        const x1e = x + r2 * Math.cos(-Math.PI / 2);
+        const y1e = y + r2 * Math.sin(-Math.PI / 2);
+        const x2e = x + r2 * Math.cos(ang2);
+        const y2e = y + r2 * Math.sin(ang2);
+        s += `<path d="M${x1e.toFixed(1)},${y1e.toFixed(1)} A${r2.toFixed(1)},${r2.toFixed(1)} 0 ${pctC > 50 ? 1 : 0},1 ${x2e.toFixed(1)},${y2e.toFixed(1)}"
+          fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" opacity="0.45"/>`;
+      }
+      const emoFs = Math.min(16, Math.max(11, rPot * 0.88));
       if (phaseEmoji) {
-        const emoFs = Math.min(15, Math.max(10, rPot * 0.95));
-        s += `<text x="${x}" y="${(y - rPot - 5).toFixed(1)}" text-anchor="middle" font-size="${emoFs.toFixed(1)}" dominant-baseline="alphabetic" opacity="0.98">${phaseEmoji}</text>`;
+        s += `<text x="${x}" y="${(y - 2).toFixed(1)}" text-anchor="middle" font-size="${emoFs.toFixed(1)}" dominant-baseline="middle" opacity="0.96">${phaseEmoji}</text>`;
+      } else if (!ultimaFoto?.data) {
+        s += `<text x="${x}" y="${(y + 3).toFixed(1)}" font-family="Inconsolata,monospace" font-size="11" font-weight="600" text-anchor="middle" fill="#cbd5e1">·</text>`;
       }
-      s += `<text x="${x}" y="${y + 4}" text-anchor="middle" font-size="10" font-weight="800" fill="#1e293b">${idx + 1}</text>`;
-      s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.6).toFixed(1)}" fill="transparent" class="hc-cesta-hit" pointer-events="all"/>`;
+      const subFs = Math.min(8.5, rPot * 0.42);
+      if (dias > 0 && dat.variedad) {
+        s += `<text x="${x}" y="${(y + rPot - 8).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${subFs.toFixed(1)}" font-weight="700" fill="${stroke}" text-anchor="middle">${dias}d</text>`;
+      }
+      s += `<text x="${x}" y="${(y - rPot - 8).toFixed(1)}" text-anchor="middle" font-size="9" font-weight="800" fill="#475569">${idx + 1}</text>`;
+      s += `<text x="${x}" y="${(y + rPot + 11).toFixed(1)}" text-anchor="middle" font-size="6.5" font-weight="700" fill="#334155" font-family="Syne,sans-serif">${escSvg(nomCorto)}</text>`;
+      s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.55).toFixed(1)}" fill="rgba(0,0,0,0)" class="hc-cesta-hit" pointer-events="all"/>`;
       s += `</g>`;
     }
   }
-  // Depósito de control y conexiones con colectores
-  s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="12" fill="url(#rdwcTankBody)" stroke="#475569" stroke-width="1.5"/>`;
-  s += `<rect x="${tankX + 5}" y="${waterY}" width="${tankW - 10}" height="${tankY + tankH - waterY - 5}" rx="8" fill="url(#rdwcWater)" opacity="0.9"/>`;
-  // Depósito de control: mismo criterio que torre/DWC — calentador y difusor según Sistema → equipamiento
+
+  s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="14" fill="url(#rdwcTankBody)" stroke="#475569" stroke-width="1.4"/>`;
+  s += `<rect x="${tankX + 6}" y="${waterY}" width="${tankW - 12}" height="${tankY + tankH - waterY - 8}" rx="9" fill="url(#rdwcWater)" opacity="0.9"/>`;
   if (tieneCalentador) {
-    const hx = tankX + 14;
-    const hTop = tankY + tankH - 36;
-    s += `<rect x="${hx - 4}" y="${hTop}" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1.1"/>`;
-    s += `<circle cx="${hx}" cy="${hTop - 4}" r="3.2" fill="#fbbf24">${ta ? `<animate attributeName="opacity" from="0.55" to="1" dur="1.4s" repeatCount="indefinite" direction="alternate"/>` : ''}</circle>`;
-    s += `<text x="${hx}" y="${tankY + tankH - 8}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="6.5" fill="#9a3412" font-weight="800">CAL</text>`;
+    const hx = tankX + 18;
+    const hTop = tankY + tankH - 34;
+    s += `<rect x="${hx - 4}" y="${hTop}" width="8" height="24" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1"/>`;
+    s += `<circle cx="${hx}" cy="${hTop - 3}" r="3" fill="#fbbf24">${ta ? `<animate attributeName="opacity" from="0.55" to="1" dur="1.4s" repeatCount="indefinite" direction="alternate"/>` : ''}</circle>`;
+    s += `<text x="${hx}" y="${tankY + tankH - 6}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" fill="#9a3412" font-weight="800">CAL</text>`;
   }
   if (tieneDifusor) {
-    const ax = tankX + tankW - 14;
-    const ay = tankY + tankH - 14;
-    s += `<line x1="${ax}" y1="${tankY + 6}" x2="${ax}" y2="${ay - 8}" stroke="#64748b" stroke-width="1.35" stroke-dasharray="3 2"/>`;
-    s += `<ellipse cx="${ax}" cy="${ay}" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="1.1"/>`;
-    s += `<ellipse cx="${ax}" cy="${ay}" rx="7" ry="3.5" fill="#d1d5db" opacity="0.65"/>`;
+    const ax = tankX + tankW - 18;
+    const ay = tankY + tankH - 12;
+    s += `<line x1="${ax}" y1="${tankY + 8}" x2="${ax}" y2="${ay - 8}" stroke="#64748b" stroke-width="1.2" stroke-dasharray="3 2"/>`;
+    s += `<ellipse cx="${ax}" cy="${ay}" rx="8" ry="4.5" fill="#9ca3af" stroke="#57534e" stroke-width="1"/>`;
     if (ta) {
-      for (let bi = 0; bi < 5; bi++) {
-        const bx = ax + (bi % 3 - 1) * 3;
-        const y0 = ay - 5;
-        const y1 = Math.min(ay - 22, waterY + 10);
-        const delay = (bi * 0.22).toFixed(2);
-        const dur = (1.05 + bi * 0.12).toFixed(2);
-        s += `<circle cx="${bx}" cy="${y0}" r="${1.2 + (bi % 2) * 0.4}" fill="#bae6fd" opacity="0">
-          <animate attributeName="cy" from="${y0}" to="${y1}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
-          <animate attributeName="opacity" values="0;0.85;0.85;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+      for (let bi = 0; bi < 4; bi++) {
+        const bx = ax + (bi % 3 - 1) * 2.5;
+        const y0 = ay - 4;
+        const y1 = Math.min(ay - 18, waterY + 8);
+        const delay = (bi * 0.25).toFixed(2);
+        const dur = (1.0 + bi * 0.1).toFixed(2);
+        s += `<circle cx="${bx}" cy="${y0}" r="1.1" fill="#bae6fd" opacity="0">
+          <animate attributeName="cy" from="${y0}" to="${y1}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;0.8;0.8;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
         </circle>`;
       }
     }
-    s += `<text x="${ax}" y="${tankY + tankH - 8}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="6.5" fill="#475569" font-weight="800">AIR</text>`;
+    s += `<text x="${ax}" y="${tankY + tankH - 6}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" fill="#475569" font-weight="800">AIR</text>`;
   }
-  s += `<line x1="${tankX + tankW}" y1="${supY}" x2="${left + 8}" y2="${supY}" stroke="#16a34a" stroke-width="4" marker-end="url(#rdwcFlowOut)"/>`;
-  s += `<line x1="${left + 8}" y1="${retY}" x2="${tankX + tankW}" y2="${retY}" stroke="#2563eb" stroke-width="4" marker-end="url(#rdwcFlowIn)"/>`;
-  s += `<line x1="${tankX + tankW}" y1="${supY}" x2="${tankX + tankW}" y2="${tankY + 28}" stroke="#16a34a" stroke-width="4"/>`;
-  s += `<line x1="${tankX + tankW}" y1="${retY}" x2="${tankX + tankW}" y2="${tankY + tankH - 24}" stroke="#2563eb" stroke-width="4"/>`;
-
-  s += `<text x="${tankX + tankW / 2}" y="${tankY - 12}" text-anchor="middle" font-size="11" font-weight="700" fill="#334155">Reservoir</text>`;
-  s += `<text x="${tankX + tankW / 2}" y="${tankY + tankH + 16}" text-anchor="middle" font-size="10.5" fill="#475569">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'} </text>`;
-  s += `<text x="${w - 12}" y="${h - 54}" text-anchor="end" font-size="11" fill="#16a34a">Impulsión (outflow)</text>`;
-  s += `<line x1="${w - 122}" y1="${h - 58}" x2="${w - 20}" y2="${h - 58}" stroke="#16a34a" stroke-width="3.4" marker-end="url(#rdwcFlowOut)"/>`;
-  s += `<text x="${w - 12}" y="${h - 30}" text-anchor="end" font-size="11" fill="#2563eb">Retorno (return)</text>`;
-  s += `<line x1="${w - 122}" y1="${h - 34}" x2="${w - 20}" y2="${h - 34}" stroke="#2563eb" stroke-width="3.4" marker-end="url(#rdwcFlowIn)"/>`;
-  s += `<text x="${w / 2}" y="${h - 12}" text-anchor="middle" font-size="10.5" fill="#64748b">Recirculación ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
+  s += `<text x="${tankCx}" y="${tankY - 8}" text-anchor="middle" font-size="12" font-weight="800" fill="#1e293b" font-family="Syne,sans-serif">Depósito de control</text>`;
+  s += `<text x="${tankCx}" y="${tankY + tankH + 18}" text-anchor="middle" font-size="11" fill="#475569">${Number.isFinite(volMez) ? (Math.round(volMez * 10) / 10) + ' L mezcla' : 'Volumen —'}</text>`;
+  s += `<text x="${W / 2}" y="${H - 12}" text-anchor="middle" font-size="9.5" fill="#64748b">Líneas verdes = impulsión · azules = retorno · Recirc. ${Math.round(Number(cfg.rdwcRecirculationLh || 1200))} L/h · Aire ${Math.round(Number(cfg.rdwcAirLpm || 20))} L/min</text>`;
   s += `</svg>`;
   return s;
 }
