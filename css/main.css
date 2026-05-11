@@ -12097,15 +12097,18 @@ html.hc-theme-dark .hc-germ-table th {
   font-weight: 600;
   color: #111827;
 }
-.compat-toggle-arrow {
-  font-size: 18px;
-  color: var(--muted);
-  transition: transform 0.2s;
+.compat-toggle-btn .config-section-collapse-chevron {
+  transform: rotate(-90deg);
 }
 .compat-grid {
   padding: 0 14px 14px;
   flex-direction: column;
   gap: 8px;
+}
+.torre-instalacion-picker-caret.config-section-collapse-chevron {
+  width: 22px;
+  height: 22px;
+  font-size: 11px;
 }
 .compat-grupos-title {
   font-size: 10px;

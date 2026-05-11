@@ -488,12 +488,12 @@ function toggleCompatPanel() {
 
   if (isOpen) {
     grid.classList.add('setup-hidden');
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
+    if (arrow) arrow.style.transform = 'rotate(-90deg)';
     if (btn) btn.setAttribute('aria-expanded','false');
   } else {
     grid.classList.remove('setup-hidden');
     grid.style.display = 'flex';
-    if (arrow) arrow.style.transform = 'rotate(180deg)';
+    if (arrow) arrow.style.transform = 'rotate(0deg)';
     if (btn) btn.setAttribute('aria-expanded','true');
     renderCompatGrid(); // Actualizar al abrir
   }
