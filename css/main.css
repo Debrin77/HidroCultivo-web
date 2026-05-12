@@ -8334,7 +8334,7 @@ html.hc-theme-dark .hist-torre-filter-btn--todas {
     radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 42%),
     linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-  padding: env(safe-area-inset-top, 47px) 16px 16px;
+  padding: env(safe-area-inset-top, 47px) 16px 12px;
   flex-shrink: 0;
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
 }
@@ -8364,7 +8364,7 @@ html.hc-theme-dark .hist-torre-filter-btn--todas {
   font-size: 12px;
   line-height: 1.45;
   color: var(--muted);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 .checklist-close {
   width: 32px; height: 32px;
@@ -8408,7 +8408,47 @@ button.checklist-close {
   font-weight: 600;
 }
 .checklist-summary {
-  margin-top: 12px;
+  margin-top: 8px;
+}
+.checklist-summary-disclosure {
+  border: 1px solid rgba(21, 128, 61, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+.checklist-summary-toggle {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+}
+.checklist-summary-toggle::-webkit-details-marker {
+  display: none;
+}
+.checklist-summary-toggle-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #15803d;
+  flex: 0 0 auto;
+}
+.checklist-summary-toggle-meta {
+  min-width: 0;
+  flex: 1;
+  text-align: right;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--white);
+  font-weight: 700;
+}
+.checklist-summary-panel {
+  padding: 0 12px 12px;
 }
 .checklist-summary-grid {
   display: grid;
@@ -8442,7 +8482,7 @@ button.checklist-close {
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 12px 132px;
+  padding: 12px 12px 104px;
 }
 
 .cl-phase-warn{
@@ -8722,30 +8762,32 @@ button.checklist-close {
 
 /* CalMag en paso 4 — activado muy visible (:has para estado checked) */
 label.cl-field.cl-calmag-option {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: 10px;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 6px;
   grid-column: 1 / -1;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1.5px solid var(--border);
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
   background: var(--bg3);
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
 }
 label.cl-field.cl-calmag-option input[type="checkbox"] {
-  margin-top: 2px;
+  margin-top: 1px;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   accent-color: #16a34a;
 }
-label.cl-field.cl-calmag-option span { font-size: 12px; line-height: 1.5; color: var(--muted); font-weight: 500; }
+label.cl-field.cl-calmag-option span { font-size: 11px; line-height: 1.35; color: var(--muted); font-weight: 500; }
 label.cl-field.cl-calmag-option .cl-calmag-headline {
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: var(--white);
+  font-size: 12px;
   font-weight: 800;
 }
 /* Texto oscuro sobre fondo verde muy claro — legible en checklist 4.1 (CalMag) */
@@ -8768,7 +8810,7 @@ label.cl-field.cl-calmag-option:has(input:checked) span {
   bottom: 0;
   left: 0; right: 0;
   background: linear-gradient(180deg, rgba(244, 246, 248, 0.15), var(--bg) 28%);
-  padding: 14px 16px calc(16px + env(safe-area-inset-bottom, 34px));
+  padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 34px));
   z-index: 810;
 }
 .checklist-footer-meta {
@@ -8779,8 +8821,11 @@ label.cl-field.cl-calmag-option:has(input:checked) span {
   font-size: 12px;
   line-height: 1.45;
   color: var(--muted);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
   text-align: center;
+}
+.checklist-footer-hint[hidden] {
+  display: none;
 }
 .checklist-footer-actions {
   display: flex;
@@ -8792,6 +8837,13 @@ label.cl-field.cl-calmag-option:has(input:checked) span {
 @media (max-width: 380px) {
   .checklist-title {
     font-size: 1.06rem;
+  }
+  .checklist-summary-toggle {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .checklist-summary-toggle-meta {
+    text-align: left;
   }
   .checklist-summary-grid,
   .cl-fields-grid {

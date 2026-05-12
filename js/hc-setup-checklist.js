@@ -807,7 +807,7 @@ function getCLPasos() {
       labelClass: 'cl-calmag-option',
       label:
         '<strong class="cl-calmag-headline">CalMag antes del abono</strong>' +
-        'Recomendado con agua blanda; con grifo suele omitirse. Al activarlo se recalculan CalMag y los ml de abono según el EC objetivo.',
+        'Úsalo con agua blanda. Si lo activas, la app recalcula CalMag y abono según el EC objetivo.',
       _clOnchange:'onChecklistRecargaPrefsChanged()',
     });
   }
@@ -820,7 +820,7 @@ function getCLPasos() {
       labelClass: 'cl-calmag-option',
       label:
         '<strong class="cl-calmag-headline">Cambio a nutriente de floración/fruto</strong>' +
-        'Válido en <strong>torre, DWC, NFT y RDWC</strong>. Si lo marcas, esta recarga recalcula los ml del paso 4 con el BLOOM elegido (misma lógica que el calendario por fechas de trasplante).',
+        'Si lo marcas, esta recarga recalcula el paso 4 con el BLOOM elegido.',
       _clOnchange: 'onChecklistCambioNutrienteToggle()',
     });
     paso40campos.push({
@@ -1982,6 +1982,7 @@ function renderChecklistHeaderSummary() {
   }
   const sum = document.getElementById('checklistSummary');
   if (!sum) return;
+  const compact = [ruta, sistema, clFmtLitros(vol)].filter(Boolean).join(' · ');
   const cards = [
     { k: 'Ruta', v: ruta },
     { k: 'Sistema', v: sistema },
@@ -1991,6 +1992,12 @@ function renderChecklistHeaderSummary() {
     { k: 'Diseño', v: diseno || '—' },
   ];
   sum.innerHTML =
+    '<details class="checklist-summary-disclosure" id="checklistSummaryDetails"' + (clChecked.size === 0 ? ' open' : '') + ' data-auto-collapsed="' + (clChecked.size > 0 ? '1' : '0') + '">' +
+    '<summary class="checklist-summary-toggle">' +
+    '<span class="checklist-summary-toggle-title">Resumen operativo</span>' +
+    '<span class="checklist-summary-toggle-meta">' + clEscHtml(compact || 'Instalación activa') + '</span>' +
+    '</summary>' +
+    '<div class="checklist-summary-panel">' +
     '<div class="checklist-summary-grid">' +
     cards.map(card =>
       '<div class="checklist-summary-card">' +
@@ -1998,7 +2005,9 @@ function renderChecklistHeaderSummary() {
       '<div class="checklist-summary-value">' + clEscHtml(card.v) + '</div>' +
       '</div>'
     ).join('') +
-    '</div>';
+    '</div>' +
+    '</div>' +
+    '</details>';
 }
 
 function clGetSectionBlocks(pasos) {
@@ -2192,13 +2201,22 @@ function updateClProgress() {
   if (fill) fill.style.width = pct + '%';
   const txt = document.getElementById('clProgressText');
   if (txt) txt.textContent = checked + ' / ' + total + ' pasos completados · ' + pct + '%';
+  const summaryDetails = document.getElementById('checklistSummaryDetails');
+  if (summaryDetails) {
+    if (checked > 0 && summaryDetails.dataset.autoCollapsed !== '1') {
+      summaryDetails.open = false;
+      summaryDetails.dataset.autoCollapsed = '1';
+    } else if (checked === 0) {
+      summaryDetails.open = true;
+      summaryDetails.dataset.autoCollapsed = '0';
+    }
+  }
   const hint = document.getElementById('clFooterHint');
   if (hint) {
-    const pending = Math.max(0, total - checked);
-    hint.textContent =
-      pending === 0
-        ? 'Todo listo. Ya puedes finalizar y registrar esta operación.'
-        : 'Te faltan ' + pending + ' paso' + (pending === 1 ? '' : 's') + ' para cerrar el checklist.';
+    hint.textContent = checked >= total
+      ? 'Todo listo. Ya puedes finalizar y registrar esta operación.'
+      : '';
+    hint.hidden = checked < total;
   }
   document.querySelectorAll('.cl-section-block').forEach(sectionEl => {
     const idx = sectionEl.getAttribute('data-cl-section-index');
