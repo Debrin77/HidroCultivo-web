@@ -1227,11 +1227,6 @@ function cambiarNutriente() {
 function seleccionarNutrienteRapido(id) {
   if (!state.configTorre) state.configTorre = {};
   state.configTorre.nutriente = id;
-  const tIdx = state.torreActiva || 0;
-  if (state.torres && state.torres[tIdx]) {
-    if (!state.torres[tIdx].config) state.torres[tIdx].config = { ...state.configTorre };
-    state.torres[tIdx].config.nutriente = id;
-  }
   saveState();
   const nutM = document.getElementById('nutrienteQuickModal');
   if (nutM) {

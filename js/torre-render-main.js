@@ -886,14 +886,6 @@ function guardarVolDepositoDesdeTorre() {
   else delete state.configTorre.volMezclaLitros;
 
   if (prevMax === vMax && prevMez === state.configTorre.volMezclaLitros) return;
-
-  const tIdx = state.torreActiva || 0;
-  if (state.torres && state.torres[tIdx]) {
-    if (!state.torres[tIdx].config) state.torres[tIdx].config = { ...state.configTorre };
-    state.torres[tIdx].config.volDeposito = vMax;
-    if (state.configTorre.volMezclaLitros != null) state.torres[tIdx].config.volMezclaLitros = state.configTorre.volMezclaLitros;
-    else delete state.torres[tIdx].config.volMezclaLitros;
-  }
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();

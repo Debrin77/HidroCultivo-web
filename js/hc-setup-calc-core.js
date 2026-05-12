@@ -1756,11 +1756,7 @@ function guardarSetupYContinuar() {
     }
   } else {
     // ── RECONFIGURAR TORRE EXISTENTE ──────────────────────────────────────
-    const tIdx = state.torreActiva || 0;
-    if (state.torres && state.torres[tIdx]) {
-      state.torres[tIdx].config = { ...state.configTorre };
-      state.torres[tIdx].torre  = JSON.parse(JSON.stringify(state.torre));
-    }
+    // No escribir directamente en el slot: el persist central valida y clona.
   }
 
   try {

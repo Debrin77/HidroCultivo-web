@@ -928,13 +928,6 @@ function setSustrato(tipo) {
   ensureSustratoMezclaDefaults();
   state.configTorre.sustratoMezcla.activa = false;
   state.configTorre.sustratoMezcla.a = t;
-  initTorres();
-  const tIdx = state.torreActiva || 0;
-  if (state.torres?.[tIdx]) {
-    if (!state.torres[tIdx].config) state.torres[tIdx].config = {};
-    state.torres[tIdx].config.sustrato = t;
-    if (state.torres[tIdx].config.sustratoMezcla) state.torres[tIdx].config.sustratoMezcla.activa = false;
-  }
   guardarEstadoTorreActual();
   saveState();
 
