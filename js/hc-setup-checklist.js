@@ -1898,12 +1898,198 @@ function abrirOverlayTablaCultivosChecklist() {
   try { a11yDialogOpened(overlay); } catch (e) {}
 }
 
+function clEscHtml(txt) {
+  if (typeof escHtmlUi === 'function') return escHtmlUi(txt);
+  return String(txt == null ? '' : txt)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function clFmtNum(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '—';
+  return String(Math.round(n * 10) / 10).replace(/\.0$/, '').replace('.', ',');
+}
+
+function clFmtLitros(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return '—';
+  return clFmtNum(n) + ' L';
+}
+
+function clFmtEc(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n <= 0) return '—';
+  return Math.round(n) + ' µS/cm';
+}
+
+function clFmtPhRango(phR) {
+  if (!Array.isArray(phR) || phR.length < 2) return '—';
+  return clFmtNum(phR[0]) + '–' + clFmtNum(phR[1]);
+}
+
+function clGetRutaChecklistLabel() {
+  return clRutaChecklist === 'primer_llenado' ? 'Primer llenado' : 'Recarga completa';
+}
+
+function clGetResumenDisenoChecklist(cfg) {
+  const c = cfg || {};
+  const tipo = tipoInstalacionNormalizado(c);
+  if (tipo === 'rdwc' && typeof textoResumenSistemaRdwcPanel === 'function') {
+    return textoResumenSistemaRdwcPanel(c);
+  }
+  if (tipo === 'dwc' && typeof textoResumenSistemaDwcPanel === 'function') {
+    return textoResumenSistemaDwcPanel(c);
+  }
+  if (tipo === 'nft') {
+    const canales = Math.max(1, Math.round(Number(c.nftNumCanales || c.numNiveles || 4)));
+    const huecos = Math.max(2, Math.round(Number(c.nftHuecosPorCanal || c.numCestas || 8)));
+    const pendiente = Math.max(1, Math.round(Number(c.nftPendientePct || 2)));
+    return canales + ' tubos · ' + huecos + ' huecos/tubo · ' + pendiente + '% pend.';
+  }
+  const niveles = Math.max(1, Math.round(Number(c.numNiveles || 1)));
+  const cestas = Math.max(1, Math.round(Number(c.numCestas || 8)));
+  return niveles + ' niveles · ' + cestas + ' cestas';
+}
+
+function renderChecklistHeaderSummary() {
+  const cfg = state.configTorre || {};
+  const ruta = clGetRutaChecklistLabel();
+  const sistema =
+    typeof etiquetaSistemaHidroponicoBreve === 'function'
+      ? String(etiquetaSistemaHidroponicoBreve(cfg) || 'Instalación activa')
+      : 'Instalación activa';
+  const vol =
+    typeof getVolumenNutrientesLitros === 'function'
+      ? getVolumenNutrientesLitros(cfg)
+      : (typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null);
+  const nut = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
+  const ecObj = typeof getRecargaEcMetaMicroS === 'function' ? getRecargaEcMetaMicroS() : null;
+  const phR =
+    nut && typeof torreGetPhRangoObjetivo === 'function'
+      ? torreGetPhRangoObjetivo(nut, cfg)
+      : (nut && Array.isArray(nut.pHRango) ? nut.pHRango : null);
+  const diseno = clGetResumenDisenoChecklist(cfg);
+  const sub = document.getElementById('checklistSubline');
+  if (sub) {
+    sub.textContent =
+      ruta +
+      ' guiado en ' +
+      sistema +
+      '. Revisa el resumen y completa cada bloque antes de registrar la operación.';
+  }
+  const sum = document.getElementById('checklistSummary');
+  if (!sum) return;
+  const cards = [
+    { k: 'Ruta', v: ruta },
+    { k: 'Sistema', v: sistema },
+    { k: 'Mezcla', v: clFmtLitros(vol) },
+    { k: 'Nutriente', v: nut ? nut.nombre : 'Sin definir' },
+    { k: 'Objetivo', v: clFmtEc(ecObj) + ' · pH ' + clFmtPhRango(phR) },
+    { k: 'Diseño', v: diseno || '—' },
+  ];
+  sum.innerHTML =
+    '<div class="checklist-summary-grid">' +
+    cards.map(card =>
+      '<div class="checklist-summary-card">' +
+      '<div class="checklist-summary-kicker">' + clEscHtml(card.k) + '</div>' +
+      '<div class="checklist-summary-value">' + clEscHtml(card.v) + '</div>' +
+      '</div>'
+    ).join('') +
+    '</div>';
+}
+
+function clGetSectionBlocks(pasos) {
+  const blocks = [];
+  let currentTitle = '';
+  let currentBlock = null;
+  pasos.forEach(p => {
+    if (p.seccion && p.seccion !== currentTitle) {
+      currentTitle = p.seccion;
+      currentBlock = { title: p.seccion, items: [] };
+      blocks.push(currentBlock);
+    }
+    if (!currentBlock) {
+      currentTitle = 'Checklist activo';
+      currentBlock = { title: currentTitle, items: [] };
+      blocks.push(currentBlock);
+    }
+    currentBlock.items.push(p);
+  });
+  return blocks;
+}
+
+function clInferStepTone(p) {
+  const txt = String((p && p.desc) || '').toLowerCase();
+  if (p && p.alert) return 'crítico';
+  if (/medir|ec|ph|temperatura|registro/.test(txt)) return 'medición';
+  if (/verificar|comprobar|confirmar|validar|revisar/.test(txt)) return 'verificación';
+  if (/limpiar|vaciar|llenar|preparar|añadir|ajustar|activar|apagar|arrancar/.test(txt)) return 'acción';
+  return 'paso';
+}
+
+function clRenderField(c) {
+  if (c.type === 'select') {
+    let optsHtml;
+    if (c.opcionesVal && c.opcionesVal.length) {
+      optsHtml = c.opcionesVal.map(o => {
+        const val = String(o.value).replace(/"/g, '&quot;');
+        const lab = clEscHtml(String(o.label != null ? o.label : o.value));
+        const sel = o.selected ? ' selected' : '';
+        return '<option value="' + val + '"' + sel + '>' + lab + '</option>';
+      }).join('');
+    } else {
+      optsHtml = (c.opciones || []).map(o => '<option>' + clEscHtml(String(o)) + '</option>').join('');
+    }
+    const chg = c._clOnchange ? ' onchange="' + c._clOnchange + '"' : '';
+    return '<div class="cl-field">' +
+      '<label class="cl-field-label">' + clEscHtml(c.label) + '</label>' +
+      '<div class="cl-field-control">' +
+      '<select id="' + c.id + '" class="' + (c.clase || '') + '"' + chg + '>' + optsHtml + '</select>' +
+      '</div>' +
+      '</div>';
+  }
+  if (c.type === 'checkbox') {
+    const lblExtra = c.labelClass ? ' ' + c.labelClass : '';
+    const chkClass = c.labelClass ? '' : ' class="cl-checkbox-inline-input"';
+    const lblClass = c.labelClass ? '' : ' cl-field--inline-check';
+    const spanClass = c.labelClass ? '' : ' class="cl-inline-check-text"';
+    return '<label class="cl-field' + lblExtra + lblClass + '">' +
+      '<input type="checkbox" id="' + c.id + '"' + chkClass +
+      (c.checked ? ' checked' : '') +
+      (c._clOnchange ? ' onchange="' + c._clOnchange + '"' : '') +
+      '>' +
+      '<span' + spanClass + '>' + (c.label || '') + '</span>' +
+      '</label>';
+  }
+  const valAttr = c.value != null && c.value !== '' ? ' value="' + String(c.value).replace(/"/g, '&quot;') + '"' : '';
+  const inpExtra = c._clOninput ? ' oninput="' + c._clOninput + '"' : '';
+  const blurExtra = c._clOnblur ? ' onblur="' + c._clOnblur + '"' : '';
+  const keyExtra = c._clOnkeydown ? ' onkeydown="' + c._clOnkeydown + '"' : '';
+  return '<div class="cl-field">' +
+    '<label class="cl-field-label">' + clEscHtml(c.label) + '</label>' +
+    '<div class="cl-field-control">' +
+    '<input type="' + c.type + '" id="' + c.id + '" step="' + (c.step || '1') + '"' +
+    ' placeholder="' + (c.placeholder || '') + '"' +
+    ' class="' + (c.clase || '') + '"' +
+    valAttr + inpExtra + blurExtra + keyExtra +
+    (c.type === 'number' ? ' inputmode="decimal"' : '') +
+    '>' +
+    (c.unit ? '<span class="unit">' + clEscHtml(c.unit) + '</span>' : '') +
+    '</div>' +
+    '</div>';
+}
+
 function renderChecklist() {
   const el = document.getElementById('checklistContent');
+  const pasos = getCLPasos();
+  const blocks = clGetSectionBlocks(pasos);
   let html = '';
-  let seccionActual = '';
 
-  // Aviso contextual: cultivos de fruto en floración/fruto con nutriente "veg"
+  renderChecklistHeaderSummary();
+
   try {
     const msg =
       typeof hcGetAvisoCambioNutrientePorFase === 'function'
@@ -1914,87 +2100,49 @@ function renderChecklist() {
     }
   } catch (_) {}
 
-  getCLPasos().forEach(p => {
-    if (p.seccion && p.seccion !== seccionActual) {
-      seccionActual = p.seccion;
-      html += `<div class="cl-section-title">${p.seccion}</div>`;
-    }
-
-    const campos = p.campos ? p.campos.map(c => {
-      if (c.type === 'select') {
-        let optsHtml;
-        if (c.opcionesVal && c.opcionesVal.length) {
-          optsHtml = c.opcionesVal.map(o => {
-            const val = String(o.value).replace(/"/g, '&quot;');
-            const lab = escHtmlUi(String(o.label != null ? o.label : o.value));
-            const sel = o.selected ? ' selected' : '';
-            return '<option value="' + val + '"' + sel + '>' + lab + '</option>';
-          }).join('');
-        } else {
-          optsHtml = (c.opciones || []).map(o => `<option>${escHtmlUi(String(o))}</option>`).join('');
-        }
-        const chg = c._clOnchange ? ' onchange="' + c._clOnchange + '"' : '';
-        return `<div class="cl-field">
-          <label>${c.label}</label>
-          <select id="${c.id}" class="${c.clase||''}"${chg}>
-            ${optsHtml}
-          </select>
-        </div>`;
-      }
-      if (c.type === 'checkbox') {
-        const lblExtra = c.labelClass ? ' ' + c.labelClass : '';
-        const chkClass = c.labelClass ? '' : ' class="cl-checkbox-inline-input"';
-        const lblClass = c.labelClass ? '' : ' cl-field--inline-check';
-        const spanClass = c.labelClass ? '' : ' class="cl-inline-check-text"';
-        return `<label class="cl-field${lblExtra}${lblClass}">
-          <input type="checkbox" id="${c.id}"${chkClass}
-            ${c.checked ? 'checked' : ''}
-            ${c._clOnchange ? ' onchange="' + c._clOnchange + '"' : ''}>
-          <span${spanClass}>${c.label || ''}</span>
-        </label>`;
-      }
-      const valAttr = (c.value != null && c.value !== '')
-        ? ' value="' + String(c.value).replace(/"/g, '&quot;') + '"'
+  blocks.forEach((block, blockIdx) => {
+    html +=
+      '<section class="cl-section-block" data-cl-section-index="' + blockIdx + '">' +
+      '<div class="cl-section-title">' +
+      '<div class="cl-section-title-main">' + block.title + '</div>' +
+      '<div class="cl-section-title-side"><span class="cl-section-count" id="clSectionCount-' + blockIdx + '">0 / ' + block.items.length + '</span></div>' +
+      '</div>' +
+      '<div class="cl-section-items">';
+    block.items.forEach(p => {
+      const campos = p.campos && p.campos.length
+        ? '<div class="cl-fields-grid">' + p.campos.map(clRenderField).join('') + '</div>'
         : '';
-      const inpExtra = c._clOninput ? ' oninput="' + c._clOninput + '"' : '';
-      const blurExtra = c._clOnblur ? ' onblur="' + c._clOnblur + '"' : '';
-      const keyExtra = c._clOnkeydown ? ' onkeydown="' + c._clOnkeydown + '"' : '';
-      return `<div class="cl-field">
-        <label>${c.label}</label>
-        <input type="${c.type}" id="${c.id}" step="${c.step||'1'}"
-          placeholder="${c.placeholder||''}"
-          class="${c.clase||''}"
-          ${valAttr}
-          ${inpExtra}
-          ${blurExtra}
-          ${keyExtra}
-          ${c.type === 'number' ? 'inputmode="decimal"' : ''}>
-        ${c.unit ? `<span class="unit">${c.unit}</span>` : ''}
-      </div>`;
-    }).join('') : '';
-
-    html += `
-      <div class="cl-item${p.alert ? ' alert-item' : ''}" id="clItem-${p.id}">
-        <button type="button" class="cl-checkbox" id="clCb-${p.id}" onclick="clToggle('${p.id}')"
-          aria-pressed="false" aria-label="Marcar paso: ${escAriaAttr(p.paso)}">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-            <path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div class="cl-body">
-          ${p.alert ? '<div class="cl-alert-tag">⚠️ Crítico</div>' : ''}
-          <div class="cl-step${p.alert ? ' alert' : ''}">${p.paso}</div>
-          <div class="cl-desc">${p.desc}</div>
-          ${p.nota ? `<div class="cl-note">${p.nota}</div>` : ''}
-          ${p.extraHtml || ''}
-          ${campos}
-          ${p.postCamposHtml || ''}
-        </div>
-      </div>`;
+      const tone = clInferStepTone(p);
+      html +=
+        '<article class="cl-item' + (p.alert ? ' alert-item' : '') + '" id="clItem-' + p.id + '" data-step-id="' + p.id + '" data-section-index="' + blockIdx + '">' +
+        '<button type="button" class="cl-checkbox" id="clCb-' + p.id + '" onclick="clToggle(\'' + p.id + '\')" aria-pressed="false" aria-label="Marcar paso: ' + escAriaAttr(p.paso) + '">' +
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
+        '<path d="M2 7l4 4 6-7" stroke="#0d2b1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>' +
+        '</button>' +
+        '<div class="cl-body">' +
+        '<div class="cl-item-head">' +
+        '<div class="cl-step' + (p.alert ? ' alert' : '') + '">' + p.paso + '</div>' +
+        '<div class="cl-badges">' +
+        '<span class="cl-badge cl-badge--' + (p.alert ? 'alert' : 'soft') + '">' + (p.alert ? 'Crítico' : clEscHtml(tone)) + '</span>' +
+        (p.campos && p.campos.length ? '<span class="cl-badge cl-badge--ghost">Dato</span>' : '') +
+        '</div>' +
+        '</div>' +
+        '<div class="cl-desc">' + p.desc + '</div>' +
+        (p.nota
+          ? '<details class="cl-note-disclosure"><summary>Detalle técnico</summary><div class="cl-note">' + p.nota + '</div></details>'
+          : '') +
+        (p.extraHtml ? '<div class="cl-extra">' + p.extraHtml + '</div>' : '') +
+        campos +
+        (p.postCamposHtml ? '<div class="cl-post-fields">' + p.postCamposHtml + '</div>' : '') +
+        '</div>' +
+        '</article>';
+    });
+    html += '</div></section>';
   });
 
   el.innerHTML = html;
-  const validIds = new Set(getCLPasos().map(p => p.id));
+  const validIds = new Set(pasos.map(p => p.id));
   const prevN = clChecked.size;
   clChecked = new Set([...clChecked].filter(id => validIds.has(id)));
   if (prevN !== clChecked.size) persistirClChecklistAvance();
@@ -2014,9 +2162,7 @@ function renderChecklist() {
     try { refrescarNftLayoutResumenChecklist(); } catch (e) {}
   }
   if ((state.configTorre || {}).tipoInstalacion === 'dwc') {
-    try {
-      refrescarDwcDifusorChecklist();
-    } catch (eDwcDif) {}
+    try { refrescarDwcDifusorChecklist(); } catch (eDwcDif) {}
   }
 }
 
@@ -2039,14 +2185,38 @@ function clToggle(id) {
 }
 
 function updateClProgress() {
-  const pct = Math.round((clChecked.size / getCLTotal()) * 100);
+  const total = getCLTotal();
+  const checked = clChecked.size;
+  const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
   const fill = document.getElementById('clProgressFill');
   if (fill) fill.style.width = pct + '%';
   const txt = document.getElementById('clProgressText');
-  if (txt) txt.textContent = `${clChecked.size} / ${getCLTotal()} pasos completados`;
+  if (txt) txt.textContent = checked + ' / ' + total + ' pasos completados · ' + pct + '%';
+  const hint = document.getElementById('clFooterHint');
+  if (hint) {
+    const pending = Math.max(0, total - checked);
+    hint.textContent =
+      pending === 0
+        ? 'Todo listo. Ya puedes finalizar y registrar esta operación.'
+        : 'Te faltan ' + pending + ' paso' + (pending === 1 ? '' : 's') + ' para cerrar el checklist.';
+  }
+  document.querySelectorAll('.cl-section-block').forEach(sectionEl => {
+    const idx = sectionEl.getAttribute('data-cl-section-index');
+    const items = sectionEl.querySelectorAll('.cl-item[data-section-index="' + idx + '"]');
+    const totalSection = items.length;
+    let doneSection = 0;
+    items.forEach(item => {
+      const stepId = item.getAttribute('data-step-id');
+      if (stepId && clChecked.has(stepId)) doneSection++;
+    });
+    const countEl = document.getElementById('clSectionCount-' + idx);
+    if (countEl) countEl.textContent = doneSection + ' / ' + totalSection;
+    sectionEl.classList.toggle('is-complete', totalSection > 0 && doneSection >= totalSection);
+    sectionEl.classList.toggle('is-started', doneSection > 0 && doneSection < totalSection);
+  });
   const btn = document.getElementById('clBtnFinalizar');
   if (!btn) return;
-  const completo = clChecked.size >= getCLTotal();
+  const completo = checked >= total;
   btn.disabled = !completo;
   const esPrimer = typeof clRutaChecklist !== 'undefined' && clRutaChecklist === 'primer_llenado';
   const lblFin = esPrimer ? '✅ Finalizar primer llenado' : '✅ Finalizar recarga completa';
