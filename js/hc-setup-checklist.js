@@ -1042,6 +1042,8 @@ function getCLPasos() {
               comp.netPotRecoMm +
               ' · cubo ' +
               comp.bucketRecoL +
+              ' · control ' +
+              comp.controlRecoL +
               ' · separación ' +
               comp.spacingRecoCm +
               '.' +

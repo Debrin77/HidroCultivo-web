@@ -233,6 +233,16 @@ function rdwcRecoPerfilPorGrupo(grupo) {
       cestaMinMm: 27,
       cestaMaxMm: 50,
       cestaTxt: '27–50 mm',
+      bucketMinL: 5,
+      bucketMaxL: 12,
+      bucketTxt: '5–12 L',
+      sepMinCm: 20,
+      sepMaxCm: 28,
+      sepTxt: '20–28 cm',
+      controlShare: 0.18,
+      controlMinL: 10,
+      controlMaxL: 20,
+      controlTrabajoPct: 0.85,
       permite: true,
       nota: 'Solo si buscas ciclos muy cortos o vivero.',
     };
@@ -244,6 +254,16 @@ function rdwcRecoPerfilPorGrupo(grupo) {
       cestaMinMm: 50,
       cestaMaxMm: 75,
       cestaTxt: '50–75 mm',
+      bucketMinL: 15,
+      bucketMaxL: 25,
+      bucketTxt: '15–25 L',
+      sepMinCm: 35,
+      sepMaxCm: 45,
+      sepTxt: '35–45 cm',
+      controlShare: 0.22,
+      controlMinL: 20,
+      controlMaxL: 50,
+      controlTrabajoPct: 0.85,
       permite: true,
       nota: 'Rosetas y hojas medianas: mejor soporte que en baby leaf.',
     };
@@ -255,6 +275,16 @@ function rdwcRecoPerfilPorGrupo(grupo) {
       cestaMinMm: 50,
       cestaMaxMm: 75,
       cestaTxt: '50–75 mm',
+      bucketMinL: g === 'hierbas' ? 12 : 20,
+      bucketMaxL: g === 'hierbas' ? 20 : 35,
+      bucketTxt: g === 'hierbas' ? '12–20 L' : '20–35 L',
+      sepMinCm: g === 'hierbas' ? 30 : 35,
+      sepMaxCm: g === 'hierbas' ? 40 : 50,
+      sepTxt: g === 'hierbas' ? '30–40 cm' : '35–50 cm',
+      controlShare: g === 'hierbas' ? 0.2 : 0.25,
+      controlMinL: g === 'hierbas' ? 18 : 25,
+      controlMaxL: g === 'hierbas' ? 40 : 70,
+      controlTrabajoPct: 0.85,
       permite: true,
       nota: 'Buen compromiso entre soporte y cámara de aire.',
     };
@@ -266,6 +296,16 @@ function rdwcRecoPerfilPorGrupo(grupo) {
       cestaMinMm: 50,
       cestaMaxMm: 75,
       cestaTxt: '50–75 mm',
+      bucketMinL: 12,
+      bucketMaxL: 20,
+      bucketTxt: '12–20 L',
+      sepMinCm: 30,
+      sepMaxCm: 40,
+      sepTxt: '30–40 cm',
+      controlShare: 0.2,
+      controlMinL: 18,
+      controlMaxL: 40,
+      controlTrabajoPct: 0.85,
       permite: true,
       nota: 'Sistema dedicado y control fino de higiene y temperatura.',
     };
@@ -277,6 +317,16 @@ function rdwcRecoPerfilPorGrupo(grupo) {
       cestaMinMm: 75,
       cestaMaxMm: 100,
       cestaTxt: '75–100 mm',
+      bucketMinL: 25,
+      bucketMaxL: 45,
+      bucketTxt: '25–45 L',
+      sepMinCm: 45,
+      sepMaxCm: 65,
+      sepTxt: '45–65 cm',
+      controlShare: 0.3,
+      controlMinL: 35,
+      controlMaxL: 100,
+      controlTrabajoPct: 0.85,
       permite: true,
       nota: 'Requiere sistema dedicado, más soporte y más volumen por planta.',
     };
@@ -287,6 +337,16 @@ function rdwcRecoPerfilPorGrupo(grupo) {
     cestaMinMm: 50,
     cestaMaxMm: 50,
     cestaTxt: '50 mm',
+    bucketMinL: 15,
+    bucketMaxL: 25,
+    bucketTxt: '15–25 L',
+    sepMinCm: 30,
+    sepMaxCm: 40,
+    sepTxt: '30–40 cm',
+    controlShare: 0.2,
+    controlMinL: 20,
+    controlMaxL: 45,
+    controlTrabajoPct: 0.85,
     permite: true,
     nota: 'Medida más habitual para cubos RDWC domésticos con hoja ligera.',
   };
@@ -325,6 +385,59 @@ function rdwcRecomendacionCultivoDesdeConfig(cfg) {
   };
 }
 
+function rdwcRoundHalfLitros(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 2) / 2;
+}
+
+function rdwcRecomendacionBaseDesdeConfig(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  const recoCult = rdwcRecomendacionCultivoDesdeConfig(c);
+  const perfil = recoCult ? recoCult.perfil : rdwcRecoPerfilPorGrupo(rdwcGrupoObjetivoDesdeConfig(c));
+  const sites = Math.max(2, Math.round(Number(c.rdwcSites) || 4));
+  const bucketBase = Number.isFinite(perfil.bucketMinL) && Number.isFinite(perfil.bucketMaxL)
+    ? rdwcRoundHalfLitros((perfil.bucketMinL + perfil.bucketMaxL) / 2)
+    : 20;
+  const cestaBase = Number.isFinite(perfil.cestaMinMm) && Number.isFinite(perfil.cestaMaxMm)
+    ? Math.round((perfil.cestaMinMm + perfil.cestaMaxMm) / 2)
+    : 125;
+  const sepBase = Number.isFinite(perfil.sepMinCm) && Number.isFinite(perfil.sepMaxCm)
+    ? Math.round((perfil.sepMinCm + perfil.sepMaxCm) / 2)
+    : 45;
+  const controlShare = Number.isFinite(perfil.controlShare) ? perfil.controlShare : 0.2;
+  const controlMinL = Number.isFinite(perfil.controlMinL) ? perfil.controlMinL : 20;
+  const controlMaxL = Number.isFinite(perfil.controlMaxL) ? perfil.controlMaxL : 60;
+  const controlTrabajoPct = Number.isFinite(perfil.controlTrabajoPct) ? perfil.controlTrabajoPct : 0.85;
+  const controlNominalCalc = sites * bucketBase * controlShare;
+  const controlMaxBase = rdwcRoundHalfLitros(Math.max(controlMinL, Math.min(controlMaxL, controlNominalCalc)));
+  const controlTrabajoBase = rdwcRoundHalfLitros(Math.max(0.5, controlMaxBase * controlTrabajoPct));
+  return {
+    recoCult,
+    perfil,
+    sites,
+    bucketBase,
+    cestaBase,
+    sepBase,
+    controlMaxBase,
+    controlTrabajoBase,
+    controlMargenBase: rdwcRoundHalfLitros(Math.max(0, controlMaxBase - controlTrabajoBase)),
+  };
+}
+
+function rdwcRecomendacionControlDesdeConfig(cfg) {
+  const base = rdwcRecomendacionBaseDesdeConfig(cfg);
+  if (!base) return null;
+  return {
+    maxL: base.controlMaxBase,
+    trabajoL: base.controlTrabajoBase,
+    margenL: base.controlMargenBase,
+    txt: base.controlMaxBase + ' L máx · ~' + base.controlTrabajoBase + ' L útiles',
+    recoCult: base.recoCult,
+  };
+}
+
 function renderRdwcCultivoPrevistoSelect(selectId, selectedValue) {
   const el = document.getElementById(selectId);
   if (!el || typeof CULTIVOS_DB === 'undefined' || !Array.isArray(CULTIVOS_DB)) return;
@@ -356,11 +469,19 @@ function rdwcEvaluarCompatConfig(cfg) {
   const sites = Math.max(2, Number(c.rdwcSites) || 4);
   const rows = Math.max(1, Number(c.rdwcRows) || 1);
   const bucketVol = Math.max(5, Number(c.rdwcBucketVolL) || 20);
+  const controlVol = Math.max(10, Number(c.rdwcControlVolL || c.volDeposito || 40));
   const netPot = Math.max(40, Number(c.rdwcNetPotMm) || 125);
   const spacing = Math.max(20, Number(c.rdwcCenterSpacingCm) || 45);
   const perRow = Math.max(1, Math.ceil(sites / rows));
 
   const recoCult = rdwcRecomendacionCultivoDesdeConfig(c);
+  const controlReco = rdwcRecomendacionControlDesdeConfig(c);
+  const bucketMinL = recoCult && Number.isFinite(recoCult.perfil.bucketMinL) ? recoCult.perfil.bucketMinL : 15;
+  const bucketMaxL = recoCult && Number.isFinite(recoCult.perfil.bucketMaxL) ? recoCult.perfil.bucketMaxL : 35;
+  const bucketWarnMin = Math.max(5, Math.floor(bucketMinL * 0.8));
+  const bucketWarnMax = Math.ceil(bucketMaxL * 1.2);
+  const sepMinCm = recoCult && Number.isFinite(recoCult.perfil.sepMinCm) ? recoCult.perfil.sepMinCm : 35;
+  const sepMaxCm = recoCult && Number.isFinite(recoCult.perfil.sepMaxCm) ? recoCult.perfil.sepMaxCm : 60;
   let potEstado = recoCult ? recoCult.estado : 'warn';
   if (!recoCult) {
     if (netPot >= 100 && netPot <= 160) potEstado = 'ok';
@@ -369,13 +490,23 @@ function rdwcEvaluarCompatConfig(cfg) {
   }
 
   let bucketEstado = 'warn';
-  if (bucketVol >= 15 && bucketVol <= 35) bucketEstado = 'ok';
-  else if ((bucketVol >= 10 && bucketVol < 15) || (bucketVol > 35 && bucketVol <= 45)) bucketEstado = 'warn';
+  if (bucketVol >= bucketMinL && bucketVol <= bucketMaxL) bucketEstado = 'ok';
+  else if ((bucketVol >= bucketWarnMin && bucketVol < bucketMinL) || (bucketVol > bucketMaxL && bucketVol <= bucketWarnMax)) bucketEstado = 'warn';
   else bucketEstado = 'bad';
 
+  let controlEstado = 'warn';
+  if (controlReco) {
+    const okMin = Math.max(10, controlReco.maxL * 0.85);
+    const warnMin = Math.max(10, controlReco.maxL * 0.7);
+    const warnMax = Math.max(controlReco.maxL + 10, controlReco.maxL * 1.6);
+    if (controlVol >= okMin && controlVol <= warnMax) controlEstado = 'ok';
+    else if ((controlVol >= warnMin && controlVol < okMin) || controlVol > warnMax) controlEstado = 'warn';
+    else controlEstado = 'bad';
+  }
+
   let spacingEstado = 'warn';
-  if (spacing >= 35 && spacing <= 60) spacingEstado = 'ok';
-  else if ((spacing >= 30 && spacing < 35) || (spacing > 60 && spacing <= 75)) spacingEstado = 'warn';
+  if (spacing >= sepMinCm && spacing <= sepMaxCm) spacingEstado = 'ok';
+  else if ((spacing >= Math.max(20, sepMinCm - 5) && spacing < sepMinCm) || (spacing > sepMaxCm && spacing <= sepMaxCm + 10)) spacingEstado = 'warn';
   else spacingEstado = 'bad';
 
   let layoutEstado = 'ok';
@@ -383,7 +514,7 @@ function rdwcEvaluarCompatConfig(cfg) {
   if (rows >= 4 && perRow >= 8) layoutEstado = 'bad';
 
   const prioridad = { ok: 0, warn: 1, bad: 2 };
-  const globalEstado = [potEstado, bucketEstado, spacingEstado, layoutEstado].reduce(
+  const globalEstado = [potEstado, bucketEstado, controlEstado, spacingEstado, layoutEstado].reduce(
     (acc, s) => (prioridad[s] > prioridad[acc] ? s : acc),
     'ok'
   );
@@ -392,12 +523,15 @@ function rdwcEvaluarCompatConfig(cfg) {
     globalEstado,
     potEstado,
     bucketEstado,
+    controlEstado,
     spacingEstado,
     layoutEstado,
-    spacingRecoCm: '35-60 cm',
+    spacingRecoCm: recoCult ? recoCult.perfil.sepTxt : '35-60 cm',
     netPotRecoMm: recoCult ? recoCult.perfil.cestaTxt : '100-160 mm',
-    bucketRecoL: '15-35 L',
+    bucketRecoL: recoCult ? recoCult.perfil.bucketTxt : '15-35 L',
+    controlRecoL: controlReco ? controlReco.txt : '20-60 L máx',
     recoCultivo: recoCult,
+    controlReco,
   };
 }
 
@@ -416,6 +550,8 @@ function rdwcCompatTextoResumen(comp) {
     rdwcCompatChipHtml(comp.potEstado) +
     ' · Cubo ' +
     rdwcCompatChipHtml(comp.bucketEstado) +
+    ' · Control ' +
+    rdwcCompatChipHtml(comp.controlEstado) +
     ' · Separación ' +
     rdwcCompatChipHtml(comp.spacingEstado) +
     ' · Distribución ' +
@@ -424,6 +560,8 @@ function rdwcCompatTextoResumen(comp) {
     comp.netPotRecoMm +
     ', cubo ' +
     comp.bucketRecoL +
+    ', control ' +
+    comp.controlRecoL +
     ', separación ' +
     comp.spacingRecoCm +
     (comp.recoCultivo
@@ -519,6 +657,8 @@ function renderRdwcCalculoStatus(cfg, elId) {
   }
   const bucketInfo = getRdwcBucketTrabajoResumen(cfgUse);
   const controlInfo = getRdwcControlTrabajoResumen(cfgUse);
+  const recoCult = rdwcRecomendacionCultivoDesdeConfig(cfgUse);
+  const controlReco = rdwcRecomendacionControlDesdeConfig(cfgUse);
   const controlTxt = controlInfo.tieneMargen
     ? ('<strong>' + controlInfo.trabajoL + ' L</strong> útiles en reservorio (máx ' + controlInfo.maxL + ' L · margen ' + controlInfo.margenL + ' L)')
     : ('<strong>' + controlInfo.trabajoL + ' L</strong> en reservorio de control');
@@ -528,6 +668,16 @@ function renderRdwcCalculoStatus(cfg, elId) {
       : bucketInfo.fuente === 'geometria'
         ? ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')')
         : ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')');
+  const cultivoTxt =
+    recoCult
+      ? ' · Cultivo ' +
+        (recoCult.cultivo ? '<strong>' + recoCult.cultivo.nombre + '</strong>' : '<strong>auto</strong>') +
+        ': cesta <strong>' + recoCult.perfil.cestaTxt + '</strong>, cubo <strong>' + recoCult.perfil.bucketTxt + '</strong> y separación <strong>' + recoCult.perfil.sepTxt + '</strong>'
+      : '';
+  const controlRecoTxt =
+    controlReco
+      ? ' · Depósito control orientativo <strong>' + controlReco.maxL + ' L</strong> (útiles ~' + controlReco.trabajoL + ' L)'
+      : '';
   el.innerHTML =
     'RDWC Pro ' + rdwcFlowChip(calc.estadoGlobal) +
     ' · Perfil <strong>' + (calc.mode === 'silencioso' ? 'silencioso' : calc.mode === 'alto_rendimiento' ? 'alto rendimiento' : 'estándar') + '</strong>' +
@@ -537,6 +687,8 @@ function renderRdwcCalculoStatus(cfg, elId) {
     ' · Bomba recomendada <strong>' + calc.pumpRec + ' L/h</strong>' +
     ' · Aireación objetivo <strong>' + calc.airObj + ' L/min</strong> (mín ' + calc.airMin + ')' +
     ' · Impulsión <strong>Ø' + calc.tubeOutMm + ' mm</strong> · Retorno <strong>Ø' + calc.tubeRetMm + ' mm</strong>.' +
+    cultivoTxt +
+    controlRecoTxt +
     ' Recirculación ' + rdwcFlowChip(calc.estadoRec) + ' · Aire ' + rdwcFlowChip(calc.estadoAir) + '.' +
     ' La aireación principal conviene repartirla en los <strong>cubos de cultivo</strong> (zona radicular); el depósito de control puede llevar apoyo opcional.' +
     ' Para nutrientes, añade los productos en el <strong>depósito de control</strong> con la recirculación en marcha; la dosis se calcula sobre ese total útil.';
@@ -672,17 +824,21 @@ function aplicarRdwcRecomendacionBaseSistema() {
   const recirc = Math.max(1200, Math.round(sites * 220));
   const air = Math.max(10, Math.round(sites * 2.5));
   const cTmp = { ...c, tipoInstalacion: 'rdwc', rdwcCultivoPrevisto: String(document.getElementById('sysRdwcCultivoPrevisto')?.value || c.rdwcCultivoPrevisto || '').trim() };
-  const recoCult = rdwcRecomendacionCultivoDesdeConfig(cTmp);
-  const cestaBase = recoCult
-    ? Math.round((recoCult.perfil.cestaMinMm + recoCult.perfil.cestaMaxMm) / 2)
-    : 125;
+  const base = rdwcRecomendacionBaseDesdeConfig(cTmp);
+  const cestaBase = base ? base.cestaBase : 125;
+  const bucketBase = base ? base.bucketBase : 20;
+  const sepBase = base ? base.sepBase : 45;
+  const controlBase = base ? base.controlMaxBase : 40;
+  const controlTrabajoBase = base ? base.controlTrabajoBase : 34;
   const setVal = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.value = String(v);
   };
-  setVal('sysRdwcBucketVolL', 20);
+  setVal('sysRdwcBucketVolL', bucketBase);
   setVal('sysRdwcNetPotMm', cestaBase);
-  setVal('sysRdwcCenterSpacingCm', 45);
+  setVal('sysRdwcCenterSpacingCm', sepBase);
+  setVal('sysRdwcControlVolL', controlBase);
+  setVal('sysRdwcControlTrabajoL', controlTrabajoBase);
   setVal('sysRdwcRecirculationLh', recirc);
   setVal('sysRdwcAirLpm', air);
   setVal('sysRdwcTempObjetivoC', 19);
@@ -690,7 +846,7 @@ function aplicarRdwcRecomendacionBaseSistema() {
   setVal('sysRdwcLineLenM', 12);
   setVal('sysRdwcFittings', 12);
   aplicarSistemaRdwcDesdeFormulario();
-  showToast('RDWC: recomendación base aplicada');
+  showToast('RDWC: recomendación base aplicada según cultivo');
 }
 
 function aplicarRdwcRecomendacionBaseSetup() {
@@ -700,22 +856,26 @@ function aplicarRdwcRecomendacionBaseSetup() {
   const recirc = Math.max(1200, Math.round(sites * 220));
   const air = Math.max(10, Math.round(sites * 2.5));
   const cTmp = { ...c, tipoInstalacion: 'rdwc', rdwcCultivoPrevisto: String(document.getElementById('setupRdwcCultivoPrevisto')?.value || c.rdwcCultivoPrevisto || '').trim() };
-  const recoCult = rdwcRecomendacionCultivoDesdeConfig(cTmp);
-  const cestaBase = recoCult
-    ? Math.round((recoCult.perfil.cestaMinMm + recoCult.perfil.cestaMaxMm) / 2)
-    : 125;
+  const base = rdwcRecomendacionBaseDesdeConfig(cTmp);
+  const cestaBase = base ? base.cestaBase : 125;
+  const bucketBase = base ? base.bucketBase : 20;
+  const sepBase = base ? base.sepBase : 45;
+  const controlBase = base ? base.controlMaxBase : 40;
+  const controlTrabajoBase = base ? base.controlTrabajoBase : 34;
   const setVal = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.value = String(v);
   };
-  setVal('setupRdwcBucketVolL', 20);
+  setVal('setupRdwcBucketVolL', bucketBase);
   setVal('setupRdwcNetPotMm', cestaBase);
-  setVal('setupRdwcCenterSpacingCm', 45);
+  setVal('setupRdwcCenterSpacingCm', sepBase);
+  setVal('setupRdwcControlVolL', controlBase);
+  setVal('setupRdwcControlTrabajoL', controlTrabajoBase);
   setVal('setupRdwcRecirculationLh', recirc);
   setVal('setupRdwcAirLpm', air);
   applySetupRdwcDesdeFormulario();
   try { renderSetupPage(); } catch (_) {}
-  showToast('RDWC (setup): recomendación base aplicada');
+  showToast('RDWC (setup): recomendación base aplicada según cultivo');
 }
 
 function torreNormalizeObjetivoCultivo(raw) {
@@ -1782,9 +1942,11 @@ function textoResumenSistemaRdwcPanel(cfg) {
   const r = Math.max(1, parseInt(String(cfg.rdwcRows || 1), 10) || 1);
   const b = Math.max(5, Math.round(Number(cfg.rdwcBucketVolL || 20)));
   const v = Math.max(10, Math.round(Number(cfg.rdwcControlVolL || 40)));
+  const vu = rdwcParseLitrosTrabajo(cfg.volMezclaLitros);
   const q = Math.max(200, Math.round(Number(cfg.rdwcRecirculationLh || 1200)));
   const air = Math.max(1, Math.round(Number(cfg.rdwcAirLpm || 20)));
-  return s + ' sitios · ' + r + ' fila(s) · cubo ' + b + ' L · depósito ' + v + ' L · recirc ' + q + ' L/h · aire ' + air + ' L/min';
+  const depTxt = vu != null ? ('depósito ' + vu + '/' + v + ' L') : ('depósito ' + v + ' L');
+  return s + ' sitios · ' + r + ' fila(s) · cubo ' + b + ' L · ' + depTxt + ' · recirc ' + q + ' L/h · aire ' + air + ' L/min';
 }
 
 function applySistemaTipoPanelesColapsablesUI() {
