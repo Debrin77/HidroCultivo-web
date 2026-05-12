@@ -1417,8 +1417,9 @@ function guardarSetupYContinuar() {
     }
   }
   if (isRdwc) {
-    if (typeof applySetupRdwcDesdeFormulario === 'function') applySetupRdwcDesdeFormulario();
-    const cR = state.configTorre || {};
+    const cR = typeof applySetupRdwcDesdeFormulario === 'function'
+      ? (applySetupRdwcDesdeFormulario() || {})
+      : {};
     niveles = Math.max(1, Math.min(4, Math.round(Number(cR.rdwcRows || 1))));
     cestas = Math.max(1, Math.ceil(Number(cR.rdwcSites || 4) / niveles));
     vol = Math.max(1, Math.round(Number(cR.rdwcControlVolL || 40)));

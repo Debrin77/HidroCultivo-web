@@ -8,6 +8,15 @@
 
 const MAX_TORRES = 10;
 
+function hcClonePlainData(value, fallback = null) {
+  if (value == null) return fallback;
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (_) {
+    return fallback;
+  }
+}
+
 function emojiMigracionPorTipoInstalacion(cfg) {
   if (!cfg || !cfg.tipoInstalacion) return '🌿';
   if (cfg.tipoInstalacion === 'nft') return '🪴';
@@ -33,13 +42,13 @@ function initTorres() {
       id: 1,
       nombre: 'Mi instalación',
       emoji: emojiMigracionPorTipoInstalacion(state.configTorre),
-      config: state.configTorre || null,
-      torre: state.torre || [],
+      config: hcClonePlainData(state.configTorre, null),
+      torre: hcClonePlainData(state.torre, []),
       modoActual: modoActual || 'lechuga',
-      mediciones: state.mediciones || [],
-      registro: state.registro || [],
+      mediciones: hcClonePlainData(state.mediciones, []),
+      registro: hcClonePlainData(state.registro, []),
       notifOpciones: { recarga: false, medicion: false, cosecha: false },
-      fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
+      fotosSistemaCompleto: hcClonePlainData(state.fotosSistemaCompleto, { fotoKeys: [], fotos: [] }),
     }];
     state.torreActiva = 0; // índice en el array
     saveState();
@@ -50,13 +59,13 @@ function initTorres() {
       id: 1,
       nombre: 'Mi instalación',
       emoji: emojiMigracionPorTipoInstalacion(state.configTorre),
-      config: state.configTorre || null,
-      torre: state.torre || [],
+      config: hcClonePlainData(state.configTorre, null),
+      torre: hcClonePlainData(state.torre, []),
       modoActual: modoActual || 'lechuga',
-      mediciones: state.mediciones || [],
-      registro: state.registro || [],
+      mediciones: hcClonePlainData(state.mediciones, []),
+      registro: hcClonePlainData(state.registro, []),
       notifOpciones: { recarga: false, medicion: false, cosecha: false },
-      fotosSistemaCompleto: { fotoKeys: [], fotos: [] },
+      fotosSistemaCompleto: hcClonePlainData(state.fotosSistemaCompleto, { fotoKeys: [], fotos: [] }),
     }];
     state.torreActiva = 0;
     saveState();
@@ -265,22 +274,18 @@ function guardarEstadoTorreActual() {
   if (!state.torres) return;
   const idx = state.torreActiva || 0;
   if (!state.torres[idx]) return;
-  state.torres[idx].torre      = JSON.parse(JSON.stringify(state.torre));
+  state.torres[idx].torre      = hcClonePlainData(state.torre, []);
   state.torres[idx].modoActual = modoActual;
-  state.torres[idx].mediciones = state.mediciones || [];
-  state.torres[idx].registro   = state.registro   || [];
+  state.torres[idx].mediciones = hcClonePlainData(state.mediciones, []);
+  state.torres[idx].registro   = hcClonePlainData(state.registro, []);
   state.torres[idx].ultimaMedicion = state.ultimaMedicion
     ? { ...state.ultimaMedicion }
     : null;
   state.torres[idx].ultimaRecarga = state.ultimaRecarga ?? null;
   state.torres[idx].recargaSnoozeHasta = state.recargaSnoozeHasta ?? null;
-  state.torres[idx].config     = state.configTorre || null;
+  state.torres[idx].config     = hcClonePlainData(state.configTorre, null);
   ensureFotosSistemaCompletoState();
-  try {
-    state.torres[idx].fotosSistemaCompleto = JSON.parse(JSON.stringify(state.fotosSistemaCompleto));
-  } catch (e) {
-    state.torres[idx].fotosSistemaCompleto = { fotoKeys: [], fotos: [] };
-  }
+  state.torres[idx].fotosSistemaCompleto = hcClonePlainData(state.fotosSistemaCompleto, { fotoKeys: [], fotos: [] });
   // Guardar configuración de riego: no machacar con valores por defecto del HTML si el input va vacío o inválido
   const prevR = state.torres[idx].riego || {};
   const nEl = document.getElementById('riegoNPlantas');
@@ -299,10 +304,10 @@ function cargarEstadoTorre(idx) {
   const t = state.torres[idx];
   if (!t) return;
   // Restaurar datos de esta torre
-  state.torre       = t.torre || [];
-  state.mediciones  = t.mediciones || [];
-  state.registro    = t.registro   || [];
-  state.configTorre = t.config     || null;
+  state.torre       = hcClonePlainData(t.torre, []);
+  state.mediciones  = hcClonePlainData(t.mediciones, []);
+  state.registro    = hcClonePlainData(t.registro, []);
+  state.configTorre = hcClonePlainData(t.config, null);
   const umSlot = t.ultimaMedicion;
   if (umSlot && typeof umSlot === 'object') {
     state.ultimaMedicion = { ...umSlot };
@@ -654,6 +659,7 @@ function abrirSetupNuevaTorre() {
   // Marcar que es una torre nueva (no reconfiguración)
   setupEsNuevaTorre = true;
   setupNombreNuevaTorre = '';
+  if (typeof setupRdwcDraft !== 'undefined') setupRdwcDraft = null;
 
   // Preconfigurar sliders con valores razonables para torre nueva
   setupPagina = 0;
