@@ -497,10 +497,12 @@ function rdwcEvaluarCompatConfig(cfg) {
   let controlEstado = 'warn';
   if (controlReco) {
     const okMin = Math.max(10, controlReco.maxL * 0.85);
+    const okMax = Math.max(controlReco.maxL + 2, controlReco.maxL * 1.15);
     const warnMin = Math.max(10, controlReco.maxL * 0.7);
     const warnMax = Math.max(controlReco.maxL + 10, controlReco.maxL * 1.6);
-    if (controlVol >= okMin && controlVol <= warnMax) controlEstado = 'ok';
+    if (controlVol >= okMin && controlVol <= okMax) controlEstado = 'ok';
     else if ((controlVol >= warnMin && controlVol < okMin) || controlVol > warnMax) controlEstado = 'warn';
+    else if ((controlVol > okMax && controlVol <= warnMax) || controlVol < warnMin) controlEstado = 'warn';
     else controlEstado = 'bad';
   }
 
@@ -704,8 +706,8 @@ function renderRdwcCompatStatus(cfg, elId) {
   }
   const btnHtml =
     elId === 'sysRdwcCompatStatus'
-      ? '<button type="button" class="rdwc-compat-btn" onclick="aplicarRdwcRecomendacionBaseSistema()">Aplicar recomendación base</button>'
-      : '<button type="button" class="rdwc-compat-btn" onclick="aplicarRdwcRecomendacionBaseSetup()">Aplicar recomendación base</button>';
+      ? '<button type="button" class="rdwc-compat-btn" onclick="aplicarRdwcRecomendacionBaseSistema()">Aplicar base según cultivo</button>'
+      : '<button type="button" class="rdwc-compat-btn" onclick="aplicarRdwcRecomendacionBaseSetup()">Aplicar base según cultivo</button>';
   el.innerHTML =
     '<span class="rdwc-compat-text">' +
     rdwcCompatTextoResumen(comp) +

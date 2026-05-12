@@ -1052,7 +1052,7 @@ function getCLPasos() {
           })(),
           postCamposHtml:
             '<div class="cl-rdwc-actions">' +
-            '<button type="button" class="btn" onclick="if(typeof aplicarRdwcRecomendacionBaseSistema===\'function\'){aplicarRdwcRecomendacionBaseSistema();}">Aplicar base RDWC ahora</button>' +
+            '<button type="button" class="btn" onclick="if(typeof aplicarRdwcRecomendacionBaseSistema===\'function\'){aplicarRdwcRecomendacionBaseSistema();}">Aplicar base RDWC según cultivo</button>' +
             '<button type="button" class="btn btn-ghost" onclick="goTab(\'sistema\')">Ir a Cultivo e instalación</button>' +
             '</div>',
         },
