@@ -214,6 +214,7 @@ function generarPasosNutriente() {
       : 'pH−';
   const pasos  = [];
   const esDwcNut = cfg.tipoInstalacion === 'dwc';
+  const esRdwcNut = cfg.tipoInstalacion === 'rdwc';
   const esDwcKratky =
     esDwcNut && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const faPl = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
@@ -222,6 +223,10 @@ function generarPasosNutriente() {
       ? ' Plántulas en hidro (primeras ~12 d): dosis iniciales atenuadas (~' +
         Math.round((1 - faPl) * 100) +
         '%) respecto a planta establecida; sube según observación.'
+      : '';
+  const notaRdwcMezcla =
+    esRdwcNut
+      ? ' En RDWC, añade cada producto en el <strong>depósito de control</strong> con la <strong>recirculación ya en marcha</strong> y deja homogeneizar antes del siguiente.'
       : '';
 
   // PASO 4.2 — CalMag (solo si el usuario / agua lo activan)
@@ -234,6 +239,7 @@ function generarPasosNutriente() {
           ? 'Arranque suave: menos CalMag que en mezcla «adulta»; tras estos ml: ~' + ecCM + ' µS estimados. '
           : 'Con agua destilada u ósmosis el objetivo habitual es ~' + EC_CALMAG_BASE + ' µS/cm (~' + (EC_CALMAG_BASE / 1000).toFixed(2) + ' mS/cm). Tras estos ml: ~' + ecCM + ' µS estimados. ') +
         (cfg.agua === 'grifo' ? 'Con agua del grifo, verificar si es necesario.' : '') +
+        notaRdwcMezcla +
         notaArranquePl,
       campos: [
         { id:'clCalmagMl', label:'ml CalMag:', type:'number', step:'0.1', placeholder: String(mlCM) },
@@ -248,7 +254,7 @@ function generarPasosNutriente() {
       id:'4.3', seccion:null, paso:'4.3', alert:true,
       desc: 'Añadir ' + orden[0] + ': ' + mlP0 + suf + ' — remover 3 min',
       nota: 'Dosis recomendada: ' + nut.dosis.recomendado + ' ' + nut.dosis.unidad +
-        '. EC objetivo: ' + ecFinal + ' µS/cm.' + notaArranquePl,
+        '. EC objetivo: ' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl,
       campos:[{ id:'clEcAB', label:'EC tras mezcla:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 2) {
@@ -259,19 +265,20 @@ function generarPasosNutriente() {
         (refNut.mlPorLitro.length >= 2 && Math.abs(refNut.mlPorLitro[0] - refNut.mlPorLitro[1]) < 1e-6
           ? ' Cantidades calculadas para ~' + ecFinal + ' µS/cm tras CalMag (modelo orientativo).'
           : '') +
+        notaRdwcMezcla +
         notaArranquePl,
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
       desc: 'Agitar ' + orden[1] + '. Añadir ' + mlP1 + suf + ' — remover 3 min',
-      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaArranquePl,
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl,
       campos:[{ id:'clEcAB', label:'EC tras mezcla completa (A+B):', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 3) {
     pasos.push({
       id:'4.3', seccion:null, paso:'4.3', alert:true,
       desc: 'Añadir ' + orden[0] + ' PRIMERO: ' + mlP0 + suf + ' — remover 2 min',
-      nota: '⚠️ IMPORTANTE: ' + orden[0] + ' siempre primero. Nunca mezclar ' + orden[0] + ' con ' + (orden[2]||orden[1]) + ' directamente.',
+      nota: '⚠️ IMPORTANTE: ' + orden[0] + ' siempre primero. Nunca mezclar ' + orden[0] + ' con ' + (orden[2]||orden[1]) + ' directamente.' + notaRdwcMezcla,
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
@@ -280,7 +287,7 @@ function generarPasosNutriente() {
     pasos.push({
       id:'4.4b', seccion:null, paso:'4.4b',
       desc: 'Añadir ' + orden[2] + ': ' + mlP2 + suf + ' — remover 3 min',
-      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaArranquePl,
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl,
       campos:[{ id:'clEcAB', label:'EC tras mezcla completa:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   }
@@ -288,7 +295,9 @@ function generarPasosNutriente() {
   const aguaBlanda = cfg.agua === 'destilada' || cfg.agua === 'osmosis' || (!cfg.agua && (state.configAgua === 'destilada' || state.configAgua === 'osmosis'));
   pasos.push({
     id:'4.5', seccion:null, paso:'4.5', alert:true,
-    desc: 'Medir pH al instante',
+    desc: esRdwcNut
+      ? 'Medir pH en el depósito de control tras homogeneizar 10–15 min'
+      : 'Medir pH al instante',
     nota: aguaBlanda
       ? 'Con agua destilada u ósmosis el pH sale <strong>muy bajo</strong> al principio: es normal.'
       : 'Tras nutrientes el pH puede quedar ácido; contrasta con el rango que buscas (~' + pHRango[0] + '–' + pHRango[1] + ').',
@@ -312,20 +321,26 @@ function generarPasosNutriente() {
       ? (esDwcKratky
         ? ('Confirmar cámara de aire y pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — raíces con oxígeno por espacio de aire (Kratky)')
         : ('Encender el <strong>aireador</strong> con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — raíces oxigenadas en el depósito'))
-      : 'Encender bomba con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — seguro para las raíces',
+      : esRdwcNut
+        ? 'Mantener <strong>recirculación + aireación</strong> continuas con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — circuito homogéneo y raíces oxigenadas'
+        : 'Encender bomba con pH ' + (tieneBuffer ? '~5,0' : pHRango[0]) + ' — seguro para las raíces',
     nota: tieneBuffer
       ? 'No corrijas más el pH hasta medir con calma (recordatorio en 4.8 y registro en paso 6).'
       : (esDwcNut
         ? (esDwcKratky
           ? 'Kratky: controlar temperatura y volumen para mantener oxigenación por cámara de aire; seguimiento en <strong>Mediciones</strong>.'
           : 'DWC: el difusor homogeneiza y oxigena; control de nivel y nutrientes en <strong>Mediciones</strong>.')
-        : 'Instalación lista para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.')
+        : esRdwcNut
+          ? 'En RDWC la recirculación ya se usa desde el llenado para repartir el agua por cubos y reservorio. Mantén el circuito estable y afina EC/pH desde <strong>Mediciones</strong>.'
+          : 'Instalación lista para operar. Afinar EC/pH en Mediciones los próximos días si hace falta.')
   });
 
   pasos.push({
     id:'4.8', seccion:null, paso:'4.8',
     desc: 'Seguimiento EC y pH',
-    nota: 'En las <strong>próximas ~2 horas</strong> y <strong>mañana</strong> (o al día siguiente), mide EC y pH, <strong>regístralos en Mediciones</strong> y corrige si hace falta. El checklist sigue; no hace falta rellenar aquí esas lecturas.'
+    nota: esRdwcNut
+      ? 'En las <strong>próximas ~2 horas</strong> y <strong>mañana</strong> (o al día siguiente), mide EC y pH en el <strong>depósito de control</strong> con la recirculación 10–15 min en marcha, <strong>regístralos en Mediciones</strong> y corrige si hace falta. El checklist sigue; no hace falta rellenar aquí esas lecturas.'
+      : 'En las <strong>próximas ~2 horas</strong> y <strong>mañana</strong> (o al día siguiente), mide EC y pH, <strong>regístralos en Mediciones</strong> y corrige si hace falta. El checklist sigue; no hace falta rellenar aquí esas lecturas.'
   });
 
   return pasos;
@@ -831,7 +846,7 @@ function getCLPasos() {
   const volMaxPrimerIni = Number.isFinite(vMaxRawPrimer) && vMaxRawPrimer > 0 ? Math.round(vMaxRawPrimer) : 20;
   const pc1SeccionTitulo = esRdwc ? '⚙️ Depósito de control, agua y nutriente' : '⚙️ Depósito, agua y nutriente';
   const pc1DescPaso = esRdwc
-    ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación.'
+    ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
     : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
   const pc1LabelVolMax = esRdwc ? 'Litros depósito de control (L)' : 'Capacidad máx. depósito (L)';
   const pc1PhVolMax = esRdwc ? '40' : '20';
@@ -855,7 +870,7 @@ function getCLPasos() {
         (esDwc
           ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Cultivo e instalación / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
           : esRdwc
-            ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí preparas la mezcla y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado.'
+            ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí añades los productos y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado. Eso no significa echar todo el volumen total de golpe en el reservorio: primero se ceba y luego se completa el circuito.'
             : ''),
       extraHtml:
         '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
@@ -1003,14 +1018,21 @@ function getCLPasos() {
           id: 'R0c',
           seccion: null,
           paso: 'R·0c',
-          desc: 'Aireación y temperatura: comprobar burbujeo uniforme y objetivo térmico en depósito de control.',
+          desc: 'Aireación y temperatura: comprobar burbujeo uniforme en los cubos y objetivo térmico en el agua del circuito.',
           nota: (function () {
             const comp =
               typeof rdwcEvaluarCompatConfig === 'function' ? rdwcEvaluarCompatConfig(cfg) : null;
             const chip = typeof clEstadoChipHtml === 'function'
               ? clEstadoChipHtml(comp ? comp.globalEstado : 'warn')
               : '';
-            const base = 'Objetivo recomendado 18-21 °C en agua; si sube, prioriza sombreo/aislamiento del circuito.';
+            const cultTxt =
+              comp && comp.recoCultivo
+                ? ' Cesta orientativa para ' +
+                  (comp.recoCultivo.cultivo ? '<strong>' + comp.recoCultivo.cultivo.nombre + '</strong>' : '<strong>el cultivo principal</strong>') +
+                  ': <strong>' + comp.recoCultivo.perfil.cestaTxt + '</strong>.'
+                : '';
+            const base =
+              'Objetivo recomendado 18-21 °C en agua; si sube, prioriza sombreo/aislamiento del circuito. La aireación principal conviene situarla en los <strong>cubos</strong>, donde está la mayor masa radicular; el depósito de control puede llevar apoyo adicional.';
             if (!comp) return base;
             return (
               base +
@@ -1022,7 +1044,8 @@ function getCLPasos() {
               comp.bucketRecoL +
               ' · separación ' +
               comp.spacingRecoCm +
-              '.'
+              '.' +
+              cultTxt
             );
           })(),
           postCamposHtml:
@@ -1310,6 +1333,17 @@ function getCLPasos() {
     desc:'Aclarar con agua limpia — mínimo 2 veces',
     nota:'Sin olor a oxigenada antes de llenar con agua para el paso 4 (mezcla nutritiva).' },
   ];
+  const pasosRdwcLlenadoCircuito = esRdwc ? [
+  { id:'4.1a', seccion:null, paso:'4.1a',
+    desc:'Cebar el circuito RDWC con agua limpia desde el depósito de control: cubrir bomba/retorno y arrancar la recirculación',
+    nota:'Aquí <strong>todavía no</strong> van los ml de CalMag ni del abono total. Primero reparte el agua por todo el circuito.' },
+  { id:'4.1b', seccion:null, paso:'4.1b',
+    desc:'Con la recirculación en marcha, seguir añadiendo agua hasta ~' + vol + ' L útiles totales en el circuito',
+    nota:'Ese volumen se reparte entre <strong>reservorio de control</strong> y <strong>cubos útiles</strong>. En cada cubo deja la lámina <strong>por debajo de la cesta / net pot</strong> para conservar cámara de aire y no ahogar la base.' },
+  { id:'4.1c', seccion:null, paso:'4.1c', alert:true,
+    desc:'Cuando el nivel ya esté estabilizado en todo el circuito, dosificar CalMag y nutrientes sobre ese <strong>volumen total</strong>',
+    nota:'Los ml de los pasos <strong>4.2+</strong> son para la <strong>solución total</strong> del RDWC (~' + vol + ' L), no solo para el reservorio de control. Añade cada producto en ese reservorio con la recirculación en marcha y espera la homogeneización antes del siguiente.' },
+  ] : [];
   const usaCampeadorPhDown =
     nut && (nut.id === 'campeador' || nut.id === 'campeador_hidro' || nut.id === 'campeador_fruto');
   const etiquetaPhDown = usaCampeadorPhDown ? 'pH− Campeador Down' : 'pH−';
@@ -1324,17 +1358,23 @@ function getCLPasos() {
     ...(primerLlenado ? [] : pasosCubiertaDeposito),
 
   { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
-    desc:'Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
-      (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : esRdwc ? 'circuito RDWC (reservorio + cubos útiles)' : 'torre') +
-      (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'),
+    desc: esRdwc
+      ? ('Preparar ~' + vol + ' litros de agua útil en el circuito RDWC (reservorio + cubos útiles) — <strong>no</strong> es echarlos de golpe en el reservorio' +
+        (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'))
+      : ('Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
+        (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : 'torre') +
+        (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.')),
     nota: primerLlenado
-      ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.'
+      ? (esRdwc
+        ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist. En RDWC estos ' + vol + ' L son la <strong>solución útil total</strong> repartida por el circuito; primero se ceba y nivela el sistema, luego se dosifica.'
+        : 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.')
       : (esRdwc
-        ? 'CalMag: marcar o desmarcar recalcula los pasos siguientes sobre la <strong>solución total</strong> del RDWC, no solo sobre el reservorio.'
+        ? 'CalMag: marcar o desmarcar recalcula los pasos siguientes sobre la <strong>solución total</strong> del RDWC, no solo sobre el reservorio. En RDWC este paso habla del <strong>volumen total ya repartido</strong> por el circuito.'
         : 'CalMag: marcar o desmarcar recalcula los pasos siguientes.'),
     campos: primerLlenado
       ? [{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }]
       : [...paso40campos, { id:'clEcInicial', label:'EC inicial del agua:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
+  ...pasosRdwcLlenadoCircuito,
   ...generarPasosNutriente(),
 
   { id:'5.1', seccion:'🔌 Paso 5 — Verificar sistema', paso:'5.1',

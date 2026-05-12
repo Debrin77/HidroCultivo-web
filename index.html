@@ -1421,9 +1421,13 @@
             <div class="torre-dwc-grid-2">
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcSites">Sitios/cubos</label><input type="number" id="sysRdwcSites" class="torre-dwc-input" min="2" max="64" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRows">Filas</label><input type="number" id="sysRdwcRows" class="torre-dwc-input" min="1" max="4" step="1"></div>
-              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketVolL">Litros por cubo</label><input type="number" id="sysRdwcBucketVolL" class="torre-dwc-input" min="5" max="200" step="0.5"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="sysRdwcBucketVolL" class="torre-dwc-input" min="5" max="200" step="0.5"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="sysRdwcBucketTrabajoL" class="torre-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
-              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlVolL">Depósito control (L)</label><input type="number" id="sysRdwcControlVolL" class="torre-dwc-input" min="10" max="800" step="0.5"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcCultivoPrevisto">Cultivo previsto</label><select id="sysRdwcCultivoPrevisto" class="torre-dwc-input"><option value="">Auto según cultivos asignados / configuración</option></select></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoDiamCm">Ø útil bajo cesta (cm)</label><input type="number" id="sysRdwcBucketTrabajoDiamCm" class="torre-dwc-input" min="5" max="80" step="0.1" placeholder="opcional"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoProfCm">Prof. útil bajo cesta (cm)</label><input type="number" id="sysRdwcBucketTrabajoProfCm" class="torre-dwc-input" min="1" max="80" step="0.1" placeholder="opcional"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlVolL">Depósito control (L máx)</label><input type="number" id="sysRdwcControlVolL" class="torre-dwc-input" min="10" max="800" step="0.5"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlTrabajoL">Litros útiles en depósito control</label><input type="number" id="sysRdwcControlTrabajoL" class="torre-dwc-input" min="0.5" max="800" step="0.1" placeholder="vacío = hasta el máximo"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRecirculationLh">Recirculación (L/h)</label><input type="number" id="sysRdwcRecirculationLh" class="torre-dwc-input" min="200" max="12000" step="10"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcAirLpm">Aireación (L/min)</label><input type="number" id="sysRdwcAirLpm" class="torre-dwc-input" min="1" max="300" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotMm">Diám. cesta (mm)</label><input type="number" id="sysRdwcNetPotMm" class="torre-dwc-input" min="40" max="200" step="1"></div>
@@ -1435,7 +1439,7 @@
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcFittings">Codos/racores (uds)</label><input type="number" id="sysRdwcFittings" class="torre-dwc-input" min="0" max="80" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcHydroMode">Perfil hidráulico</label><select id="sysRdwcHydroMode" class="torre-dwc-input"><option value="silencioso">Silencioso</option><option value="estandar">Estándar</option><option value="alto_rendimiento">Alto rendimiento</option></select></div>
             </div>
-            <p class="torre-nft-p-soft">Para nutrientes en RDWC la app suma el <strong>reservorio de control</strong> y los <strong>litros útiles</strong> de cada cubo. Deja este campo vacío si quieres un cálculo conservador (~70 % del cubo) para mantener cámara de aire bajo la cesta.</p>
+            <p class="torre-nft-p-soft">Para nutrientes en RDWC la app suma el <strong>reservorio de control útil</strong> y los <strong>litros útiles</strong> de cada cubo. Puedes indicar los litros útiles por cubo directamente o, si el cubo es aproximadamente cilíndrico, por <strong>Ø útil</strong> y <strong>profundidad útil</strong> bajo cesta. Si dejas vacío el útil del reservorio, la app usa el máximo; si quieres margen para mezclar y regular, indica aquí menos litros. El <strong>cultivo previsto</strong> sirve para recomendar la <strong>cesta net pot</strong> más adecuada.</p>
             <p id="sysRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
             <div id="sysRdwcCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
             <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaRdwcDesdeFormulario()">Guardar datos RDWC</button>
@@ -2775,16 +2779,21 @@
           <div class="setup-dwc-grid-2">
             <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="setupRdwcBucketTrabajoL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcControlVolL">Depósito control (L)</label><input type="number" id="setupRdwcControlVolL" class="setup-dwc-input" min="10" max="800" step="0.5" placeholder="40"></div>
+              <div><label class="form-label setup-dwc-label" for="setupRdwcCultivoPrevisto">Cultivo previsto</label><select id="setupRdwcCultivoPrevisto" class="setup-dwc-input"><option value="">Auto según cultivos asignados / configuración</option></select></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoDiamCm">Ø útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoDiamCm" class="setup-dwc-input" min="5" max="80" step="0.1" placeholder="opcional"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoProfCm">Prof. útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoProfCm" class="setup-dwc-input" min="1" max="80" step="0.1" placeholder="opcional"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcControlVolL">Depósito control (L máx)</label><input type="number" id="setupRdwcControlVolL" class="setup-dwc-input" min="10" max="800" step="0.5" placeholder="40"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcControlTrabajoL">Litros útiles en depósito control</label><input type="number" id="setupRdwcControlTrabajoL" class="setup-dwc-input" min="0.5" max="800" step="0.1" placeholder="vacío = hasta el máximo"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRecirculationLh">Bomba recirculación (L/h)</label><input type="number" id="setupRdwcRecirculationLh" class="setup-dwc-input" min="200" max="12000" step="10" placeholder="1200"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcAirLpm">Aireación total (L/min)</label><input type="number" id="setupRdwcAirLpm" class="setup-dwc-input" min="1" max="300" step="1" placeholder="20"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm">Diám. cesta (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="setupRdwcCenterSpacingCm" class="setup-dwc-input" min="20" max="150" step="1" placeholder="45"></div>
           </div>
-          <p class="setup-dwc-help">Para nutrientes en RDWC se usa el <strong>reservorio de control</strong> más los <strong>litros útiles</strong> de cada cubo. Si no lo indicas, la app asume un llenado conservador (~70 % del cubo) para no ahogar la base de la planta.</p>
+            <p class="setup-dwc-help">Para nutrientes en RDWC se usa el <strong>reservorio de control útil</strong> más los <strong>litros útiles</strong> de cada cubo. Puedes indicar esos litros directamente o por <strong>Ø útil</strong> y <strong>profundidad útil</strong> bajo cesta. Si dejas vacío el útil del reservorio, la app usa el máximo; si quieres margen para mezclar y ajustar, indica aquí menos litros. El <strong>cultivo previsto</strong> ayuda a recomendar la <strong>cesta net pot</strong> adecuada.</p>
           <p id="setupRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
+          <div id="setupRdwcCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
         </div>
         <div id="setupDwcSoloBloque">
         <div class="setup-dwc-grid-3" id="setupDwcMedidasRow">
@@ -4377,11 +4386,11 @@
   <script src="js/hc-bootstrap-onboarding.js?v=27"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-11-cultivo-instalacion-b"></script>
+  <script src="js/torre-render-build.js?v=2026-05-12-rdwc-cultivo-aire"></script>
   <script src="js/torre-render-main.js?v=10"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=10"></script>
+  <script src="js/hc-setup-wizard-core.js?v=12"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=9"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-11-cultivo-instalacion"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-05-boot-guard"></script>
@@ -4395,7 +4404,7 @@
   <script src="js/hc-setup-mediciones-logic.js?v=13"></script>
   <script src="js/hc-medicion-wizard.js?v=5"></script>
   <script src="js/hc-tools-pro.js?v=10"></script>
-  <script src="js/hc-setup-checklist.js?v=17"></script>
+  <script src="js/hc-setup-checklist.js?v=19"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=30"></script>
   <script src="js/calendario-logic.js?v=7"></script>

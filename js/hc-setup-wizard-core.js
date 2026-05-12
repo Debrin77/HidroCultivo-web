@@ -66,6 +66,12 @@ function rdwcParseLitrosTrabajo(raw) {
   return Math.round(v * 10) / 10;
 }
 
+function rdwcParseCm(raw) {
+  const v = parseFloat(String(raw == null ? '' : raw).replace(',', '.').trim());
+  if (!Number.isFinite(v) || v <= 0) return null;
+  return Math.round(v * 10) / 10;
+}
+
 function getRdwcBucketVolumenTrabajoAutoLitros(cfg) {
   const c = cfg || {};
   const bucketNom = Math.max(5, Number(c.rdwcBucketVolL) || 20);
@@ -73,6 +79,18 @@ function getRdwcBucketVolumenTrabajoAutoLitros(cfg) {
   const autoL = bucketNom * 0.7;
   const out = Math.min(bucketNom, Math.max(0.5, autoL));
   return Math.round(out * 10) / 10;
+}
+
+function getRdwcBucketVolumenTrabajoGeometriaLitros(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  const bucketNom = Math.max(5, Number(c.rdwcBucketVolL) || 20);
+  const diam = rdwcParseCm(c.rdwcBucketTrabajoDiamCm);
+  const prof = rdwcParseCm(c.rdwcBucketTrabajoProfCm);
+  if (diam == null || prof == null) return null;
+  const litros = (Math.PI * Math.pow(diam / 2, 2) * prof) / 1000;
+  if (!Number.isFinite(litros) || litros <= 0) return null;
+  return Math.min(bucketNom, Math.max(0.5, Math.round(litros * 10) / 10));
 }
 
 function getRdwcBucketVolumenTrabajoLitros(cfg) {
@@ -83,6 +101,8 @@ function getRdwcBucketVolumenTrabajoLitros(cfg) {
   if (manual != null) {
     return Math.min(bucketNom, Math.max(0.5, Math.round(manual * 10) / 10));
   }
+  const geom = getRdwcBucketVolumenTrabajoGeometriaLitros(c);
+  if (geom != null) return geom;
   return getRdwcBucketVolumenTrabajoAutoLitros(c);
 }
 
@@ -108,6 +128,222 @@ function getRdwcVolumenSolucionTotalLitros(cfg) {
   return Math.round((controlL + sites * bucketL) * 10) / 10;
 }
 
+function getRdwcBucketTrabajoResumen(cfg) {
+  const c = cfg || {};
+  const manual = rdwcParseLitrosTrabajo(c.rdwcBucketTrabajoL);
+  if (manual != null) {
+    return {
+      litros: getRdwcBucketVolumenTrabajoLitros(c),
+      fuente: 'manual',
+      detalle: 'manual',
+    };
+  }
+  const geom = getRdwcBucketVolumenTrabajoGeometriaLitros(c);
+  if (geom != null) {
+    const diam = rdwcParseCm(c.rdwcBucketTrabajoDiamCm);
+    const prof = rdwcParseCm(c.rdwcBucketTrabajoProfCm);
+    return {
+      litros: geom,
+      fuente: 'geometria',
+      detalle: 'Ø ' + diam + ' cm × ' + prof + ' cm',
+    };
+  }
+  return {
+    litros: getRdwcBucketVolumenTrabajoLitros(c),
+    fuente: 'auto',
+    detalle: 'auto ~70 % nominal',
+  };
+}
+
+function getRdwcControlTrabajoResumen(cfg) {
+  const c = cfg || {};
+  const controlMax = Math.max(10, Number(c.rdwcControlVolL || c.volDeposito || 40));
+  const controlTrabajo = getRdwcVolumenControlTrabajoLitros(c);
+  const margen = Math.max(0, Math.round((controlMax - controlTrabajo) * 10) / 10);
+  return {
+    maxL: Math.round(controlMax * 10) / 10,
+    trabajoL: controlTrabajo,
+    margenL: margen,
+    tieneMargen: margen > 0.05,
+  };
+}
+
+function rdwcCultivoPrevistoDesdeConfig(cfg) {
+  const c = cfg || {};
+  const id = String(c.rdwcCultivoPrevisto || '').trim();
+  if (!id || typeof getCultivoDB !== 'function') return null;
+  return getCultivoDB(id);
+}
+
+function rdwcGrupoObjetivoDesdeConfig(cfg) {
+  const c = cfg || {};
+  const cultPrev = rdwcCultivoPrevistoDesdeConfig(c);
+  if (cultPrev && cultPrev.grupo) return String(cultPrev.grupo).trim().toLowerCase();
+  try {
+    const tor = state.torre || [];
+    const count = {};
+    for (let i = 0; i < tor.length; i++) {
+      const row = tor[i] || [];
+      for (let j = 0; j < row.length; j++) {
+        const v = row[j] && row[j].variedad;
+        if (!v || typeof getCultivoDB !== 'function') continue;
+        const cult = getCultivoDB(v);
+        const g = cult && cult.grupo ? String(cult.grupo).trim().toLowerCase() : '';
+        if (!g) continue;
+        count[g] = (count[g] || 0) + 1;
+      }
+    }
+    let best = '';
+    let bestN = -1;
+    Object.keys(count).forEach(k => {
+      if (count[k] > bestN) {
+        best = k;
+        bestN = count[k];
+      }
+    });
+    if (best) return best;
+  } catch (_) {}
+  if (Array.isArray(c.cultivosIniciales) && typeof getCultivoDB === 'function') {
+    const count = {};
+    c.cultivosIniciales.forEach(v => {
+      const cult = getCultivoDB(v);
+      const g = cult && cult.grupo ? String(cult.grupo).trim().toLowerCase() : '';
+      if (!g) return;
+      count[g] = (count[g] || 0) + 1;
+    });
+    let best = '';
+    let bestN = -1;
+    Object.keys(count).forEach(k => {
+      if (count[k] > bestN) {
+        best = k;
+        bestN = count[k];
+      }
+    });
+    if (best) return best;
+  }
+  return 'lechugas';
+}
+
+function rdwcRecoPerfilPorGrupo(grupo) {
+  const g = String(grupo || '').trim().toLowerCase();
+  if (g === 'microgreens') {
+    return {
+      grupo: 'microgreens',
+      etiqueta: 'Microgreens / plántula muy joven',
+      cestaMinMm: 27,
+      cestaMaxMm: 50,
+      cestaTxt: '27–50 mm',
+      permite: true,
+      nota: 'Solo si buscas ciclos muy cortos o vivero.',
+    };
+  }
+  if (g === 'asiaticas') {
+    return {
+      grupo: 'asiaticas',
+      etiqueta: 'Asiáticas',
+      cestaMinMm: 50,
+      cestaMaxMm: 75,
+      cestaTxt: '50–75 mm',
+      permite: true,
+      nota: 'Rosetas y hojas medianas: mejor soporte que en baby leaf.',
+    };
+  }
+  if (g === 'hojas' || g === 'hierbas') {
+    return {
+      grupo: g,
+      etiqueta: g === 'hierbas' ? 'Hierbas aromáticas' : 'Hojas voluminosas',
+      cestaMinMm: 50,
+      cestaMaxMm: 75,
+      cestaTxt: '50–75 mm',
+      permite: true,
+      nota: 'Buen compromiso entre soporte y cámara de aire.',
+    };
+  }
+  if (g === 'fresas') {
+    return {
+      grupo: 'fresas',
+      etiqueta: 'Fresas',
+      cestaMinMm: 50,
+      cestaMaxMm: 75,
+      cestaTxt: '50–75 mm',
+      permite: true,
+      nota: 'Sistema dedicado y control fino de higiene y temperatura.',
+    };
+  }
+  if (g === 'frutos' || g === 'raices') {
+    return {
+      grupo: g,
+      etiqueta: g === 'raices' ? 'Raíces / tubérculos ligeros' : 'Frutos',
+      cestaMinMm: 75,
+      cestaMaxMm: 100,
+      cestaTxt: '75–100 mm',
+      permite: true,
+      nota: 'Requiere sistema dedicado, más soporte y más volumen por planta.',
+    };
+  }
+  return {
+    grupo: 'lechugas',
+    etiqueta: 'Lechugas / hojas ligeras',
+    cestaMinMm: 50,
+    cestaMaxMm: 50,
+    cestaTxt: '50 mm',
+    permite: true,
+    nota: 'Medida más habitual para cubos RDWC domésticos con hoja ligera.',
+  };
+}
+
+function rdwcRecomendacionCultivoDesdeConfig(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  const cultPrev = rdwcCultivoPrevistoDesdeConfig(c);
+  const grupo = rdwcGrupoObjetivoDesdeConfig(c);
+  const perfil = rdwcRecoPerfilPorGrupo(grupo);
+  const netPotRaw = Number(c.rdwcNetPotMm);
+  const netPot = Number.isFinite(netPotRaw) && netPotRaw >= 40 && netPotRaw <= 200 ? Math.round(netPotRaw) : null;
+  let estado = 'warn';
+  let veredicto = 'Indica el diámetro actual de la cesta para validarlo frente al cultivo previsto.';
+  if (netPot == null) {
+    estado = 'warn';
+  } else if (netPot < perfil.cestaMinMm) {
+    estado = 'warn';
+    veredicto = 'Cesta pequeña para el cultivo previsto.';
+  } else if (netPot > perfil.cestaMaxMm + 5) {
+    estado = 'warn';
+    veredicto = 'Cesta grande para la densidad habitual de este cultivo.';
+  } else {
+    estado = 'ok';
+    veredicto = 'Cesta dentro del rango recomendado para este cultivo.';
+  }
+  return {
+    cultivo: cultPrev,
+    grupo,
+    perfil,
+    netPotMm: Number.isFinite(netPot) ? netPot : null,
+    estado,
+    veredicto,
+    origen: cultPrev ? 'previsto' : 'auto',
+  };
+}
+
+function renderRdwcCultivoPrevistoSelect(selectId, selectedValue) {
+  const el = document.getElementById(selectId);
+  if (!el || typeof CULTIVOS_DB === 'undefined' || !Array.isArray(CULTIVOS_DB)) return;
+  const selected = String(selectedValue || '').trim();
+  el.innerHTML = '';
+  const autoOpt = document.createElement('option');
+  autoOpt.value = '';
+  autoOpt.textContent = 'Auto según cultivos asignados / configuración';
+  el.appendChild(autoOpt);
+  CULTIVOS_DB.slice().sort((a, b) => String(a.nombre || '').localeCompare(String(b.nombre || ''), 'es')).forEach(c => {
+    if (!c || !c.id) return;
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = (c.emoji ? c.emoji + ' ' : '') + (typeof cultivoNombreLista === 'function' ? cultivoNombreLista(c, c.nombre) : (c.nombre || c.id));
+    el.appendChild(opt);
+  });
+  el.value = selected;
+}
+
 function rdwcCompatChipHtml(estado) {
   const k = estado === 'ok' || estado === 'warn' || estado === 'bad' ? estado : 'warn';
   const txt = k === 'ok' ? 'OK' : k === 'warn' ? 'Ajustar' : 'No recomendado';
@@ -124,10 +360,13 @@ function rdwcEvaluarCompatConfig(cfg) {
   const spacing = Math.max(20, Number(c.rdwcCenterSpacingCm) || 45);
   const perRow = Math.max(1, Math.ceil(sites / rows));
 
-  let potEstado = 'warn';
-  if (netPot >= 100 && netPot <= 160) potEstado = 'ok';
-  else if ((netPot >= 75 && netPot < 100) || (netPot > 160 && netPot <= 180)) potEstado = 'warn';
-  else potEstado = 'bad';
+  const recoCult = rdwcRecomendacionCultivoDesdeConfig(c);
+  let potEstado = recoCult ? recoCult.estado : 'warn';
+  if (!recoCult) {
+    if (netPot >= 100 && netPot <= 160) potEstado = 'ok';
+    else if ((netPot >= 75 && netPot < 100) || (netPot > 160 && netPot <= 180)) potEstado = 'warn';
+    else potEstado = 'bad';
+  }
 
   let bucketEstado = 'warn';
   if (bucketVol >= 15 && bucketVol <= 35) bucketEstado = 'ok';
@@ -156,8 +395,9 @@ function rdwcEvaluarCompatConfig(cfg) {
     spacingEstado,
     layoutEstado,
     spacingRecoCm: '35-60 cm',
-    netPotRecoMm: '100-160 mm',
+    netPotRecoMm: recoCult ? recoCult.perfil.cestaTxt : '100-160 mm',
     bucketRecoL: '15-35 L',
+    recoCultivo: recoCult,
   };
 }
 
@@ -186,6 +426,16 @@ function rdwcCompatTextoResumen(comp) {
     comp.bucketRecoL +
     ', separación ' +
     comp.spacingRecoCm +
+    (comp.recoCultivo
+      ? '. Cultivo ' +
+        (comp.recoCultivo.cultivo
+          ? '<strong>' + comp.recoCultivo.cultivo.nombre + '</strong>'
+          : '<strong>auto</strong>') +
+        ' · ' +
+        comp.recoCultivo.perfil.etiqueta +
+        ' · ' +
+        comp.recoCultivo.veredicto
+      : '') +
     '. ' +
     accion
   );
@@ -261,21 +511,35 @@ function rdwcCalcularHidraulica(cfg) {
 function renderRdwcCalculoStatus(cfg, elId) {
   const el = document.getElementById(elId);
   if (!el) return;
-  const calc = rdwcCalcularHidraulica(cfg || state.configTorre || {});
+  const cfgUse = cfg || state.configTorre || {};
+  const calc = rdwcCalcularHidraulica(cfgUse);
   if (!calc) {
     el.innerHTML = '';
     return;
   }
+  const bucketInfo = getRdwcBucketTrabajoResumen(cfgUse);
+  const controlInfo = getRdwcControlTrabajoResumen(cfgUse);
+  const controlTxt = controlInfo.tieneMargen
+    ? ('<strong>' + controlInfo.trabajoL + ' L</strong> útiles en reservorio (máx ' + controlInfo.maxL + ' L · margen ' + controlInfo.margenL + ' L)')
+    : ('<strong>' + controlInfo.trabajoL + ' L</strong> en reservorio de control');
+  const bucketTxt =
+    bucketInfo.fuente === 'manual'
+      ? ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (manual)')
+      : bucketInfo.fuente === 'geometria'
+        ? ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')')
+        : ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')');
   el.innerHTML =
     'RDWC Pro ' + rdwcFlowChip(calc.estadoGlobal) +
     ' · Perfil <strong>' + (calc.mode === 'silencioso' ? 'silencioso' : calc.mode === 'alto_rendimiento' ? 'alto rendimiento' : 'estándar') + '</strong>' +
-    ' · Volumen total ≈ <strong>' + calc.totalVol + ' L</strong>' +
-    ' (<strong>' + calc.controlVol + ' L</strong> reservorio + ' + calc.sites + '×<strong>' + calc.bucketVol + ' L</strong> en cubos)' +
+    ' · Agua útil total recomendada ≈ <strong>' + calc.totalVol + ' L</strong>' +
+    ' (' + controlTxt + ' + ' + calc.sites + '×' + bucketTxt + ')' +
     ' · Recirculación objetivo <strong>' + calc.recObj + ' L/h</strong> (mín ' + calc.recMin + ')' +
     ' · Bomba recomendada <strong>' + calc.pumpRec + ' L/h</strong>' +
     ' · Aireación objetivo <strong>' + calc.airObj + ' L/min</strong> (mín ' + calc.airMin + ')' +
     ' · Impulsión <strong>Ø' + calc.tubeOutMm + ' mm</strong> · Retorno <strong>Ø' + calc.tubeRetMm + ' mm</strong>.' +
-    ' Recirculación ' + rdwcFlowChip(calc.estadoRec) + ' · Aire ' + rdwcFlowChip(calc.estadoAir) + '.';
+    ' Recirculación ' + rdwcFlowChip(calc.estadoRec) + ' · Aire ' + rdwcFlowChip(calc.estadoAir) + '.' +
+    ' La aireación principal conviene repartirla en los <strong>cubos de cultivo</strong> (zona radicular); el depósito de control puede llevar apoyo opcional.' +
+    ' Para nutrientes, añade los productos en el <strong>depósito de control</strong> con la recirculación en marcha; la dosis se calcula sobre ese total útil.';
 }
 
 function renderRdwcCompatStatus(cfg, elId) {
@@ -301,10 +565,15 @@ function bindRdwcCompatLive(scope) {
   const ids =
     scope === 'sys'
       ? [
+          'sysRdwcCultivoPrevisto',
           'sysRdwcSites',
           'sysRdwcRows',
           'sysRdwcBucketVolL',
+          'sysRdwcBucketTrabajoL',
+          'sysRdwcBucketTrabajoDiamCm',
+          'sysRdwcBucketTrabajoProfCm',
           'sysRdwcControlVolL',
+          'sysRdwcControlTrabajoL',
           'sysRdwcRecirculationLh',
           'sysRdwcAirLpm',
           'sysRdwcNetPotMm',
@@ -317,10 +586,15 @@ function bindRdwcCompatLive(scope) {
           'sysRdwcHydroMode',
         ]
       : [
+          'setupRdwcCultivoPrevisto',
           'setupRdwcSites',
           'setupRdwcRows',
           'setupRdwcBucketVolL',
+          'setupRdwcBucketTrabajoL',
+          'setupRdwcBucketTrabajoDiamCm',
+          'setupRdwcBucketTrabajoProfCm',
           'setupRdwcControlVolL',
+          'setupRdwcControlTrabajoL',
           'setupRdwcRecirculationLh',
           'setupRdwcAirLpm',
           'setupRdwcNetPotMm',
@@ -336,11 +610,15 @@ function bindRdwcCompatLive(scope) {
       };
       const lay = document.getElementById('sysRdwcLayout');
       const c2 = { ...c, tipoInstalacion: 'rdwc' };
+      c2.rdwcCultivoPrevisto = String(document.getElementById('sysRdwcCultivoPrevisto')?.value || '').trim();
       c2.rdwcSites = g('sysRdwcSites', c.rdwcSites || 4);
       c2.rdwcRows = g('sysRdwcRows', c.rdwcRows || 1);
       c2.rdwcBucketVolL = g('sysRdwcBucketVolL', c.rdwcBucketVolL || 20);
       c2.rdwcBucketTrabajoL = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcBucketTrabajoL')?.value);
+      c2.rdwcBucketTrabajoDiamCm = rdwcParseCm(document.getElementById('sysRdwcBucketTrabajoDiamCm')?.value);
+      c2.rdwcBucketTrabajoProfCm = rdwcParseCm(document.getElementById('sysRdwcBucketTrabajoProfCm')?.value);
       c2.rdwcControlVolL = g('sysRdwcControlVolL', c.rdwcControlVolL || 40);
+      c2.volMezclaLitros = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcControlTrabajoL')?.value);
       c2.rdwcRecirculationLh = g('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
       c2.rdwcAirLpm = g('sysRdwcAirLpm', c.rdwcAirLpm || 20);
       c2.rdwcNetPotMm = g('sysRdwcNetPotMm', c.rdwcNetPotMm || 125);
@@ -361,16 +639,21 @@ function bindRdwcCompatLive(scope) {
         return Number.isFinite(n) ? n : fb;
       };
       const c2 = { ...c, tipoInstalacion: 'rdwc' };
+      c2.rdwcCultivoPrevisto = String(document.getElementById('setupRdwcCultivoPrevisto')?.value || '').trim();
       c2.rdwcSites = g('setupRdwcSites', c.rdwcSites || 4);
       c2.rdwcRows = g('setupRdwcRows', c.rdwcRows || 1);
       c2.rdwcBucketVolL = g('setupRdwcBucketVolL', c.rdwcBucketVolL || 20);
       c2.rdwcBucketTrabajoL = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcBucketTrabajoL')?.value);
+      c2.rdwcBucketTrabajoDiamCm = rdwcParseCm(document.getElementById('setupRdwcBucketTrabajoDiamCm')?.value);
+      c2.rdwcBucketTrabajoProfCm = rdwcParseCm(document.getElementById('setupRdwcBucketTrabajoProfCm')?.value);
       c2.rdwcControlVolL = g('setupRdwcControlVolL', c.rdwcControlVolL || 40);
+      c2.volMezclaLitros = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcControlTrabajoL')?.value);
       c2.rdwcRecirculationLh = g('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
       c2.rdwcAirLpm = g('setupRdwcAirLpm', c.rdwcAirLpm || 20);
       c2.rdwcNetPotMm = g('setupRdwcNetPotMm', c.rdwcNetPotMm || 125);
       c2.rdwcCenterSpacingCm = g('setupRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
       renderRdwcCompatStatus(c2, 'setupRdwcCompatStatus');
+      renderRdwcCalculoStatus(c2, 'setupRdwcCalcStatus');
     }
   };
   ids.forEach(id => {
@@ -388,12 +671,17 @@ function aplicarRdwcRecomendacionBaseSistema() {
   const sites = Math.max(2, Math.round(Number(c.rdwcSites || 4)));
   const recirc = Math.max(1200, Math.round(sites * 220));
   const air = Math.max(10, Math.round(sites * 2.5));
+  const cTmp = { ...c, tipoInstalacion: 'rdwc', rdwcCultivoPrevisto: String(document.getElementById('sysRdwcCultivoPrevisto')?.value || c.rdwcCultivoPrevisto || '').trim() };
+  const recoCult = rdwcRecomendacionCultivoDesdeConfig(cTmp);
+  const cestaBase = recoCult
+    ? Math.round((recoCult.perfil.cestaMinMm + recoCult.perfil.cestaMaxMm) / 2)
+    : 125;
   const setVal = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.value = String(v);
   };
   setVal('sysRdwcBucketVolL', 20);
-  setVal('sysRdwcNetPotMm', 125);
+  setVal('sysRdwcNetPotMm', cestaBase);
   setVal('sysRdwcCenterSpacingCm', 45);
   setVal('sysRdwcRecirculationLh', recirc);
   setVal('sysRdwcAirLpm', air);
@@ -411,12 +699,17 @@ function aplicarRdwcRecomendacionBaseSetup() {
   const sites = Math.max(2, Math.round(Number(c.rdwcSites || 4)));
   const recirc = Math.max(1200, Math.round(sites * 220));
   const air = Math.max(10, Math.round(sites * 2.5));
+  const cTmp = { ...c, tipoInstalacion: 'rdwc', rdwcCultivoPrevisto: String(document.getElementById('setupRdwcCultivoPrevisto')?.value || c.rdwcCultivoPrevisto || '').trim() };
+  const recoCult = rdwcRecomendacionCultivoDesdeConfig(cTmp);
+  const cestaBase = recoCult
+    ? Math.round((recoCult.perfil.cestaMinMm + recoCult.perfil.cestaMaxMm) / 2)
+    : 125;
   const setVal = (id, v) => {
     const el = document.getElementById(id);
     if (el) el.value = String(v);
   };
   setVal('setupRdwcBucketVolL', 20);
-  setVal('setupRdwcNetPotMm', 125);
+  setVal('setupRdwcNetPotMm', cestaBase);
   setVal('setupRdwcCenterSpacingCm', 45);
   setVal('setupRdwcRecirculationLh', recirc);
   setVal('setupRdwcAirLpm', air);
@@ -1620,11 +1913,16 @@ function syncSistemaEcPhStrategyUI() {
 function syncSistemaRdwcDesdeConfig(cfg) {
   const c = cfg || state.configTorre || {};
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  renderRdwcCultivoPrevistoSelect('sysRdwcCultivoPrevisto', c.rdwcCultivoPrevisto);
   const map = {
     sysRdwcSites: c.rdwcSites,
     sysRdwcRows: c.rdwcRows,
     sysRdwcBucketVolL: c.rdwcBucketVolL,
+    sysRdwcBucketTrabajoL: c.rdwcBucketTrabajoL,
+    sysRdwcBucketTrabajoDiamCm: c.rdwcBucketTrabajoDiamCm,
+    sysRdwcBucketTrabajoProfCm: c.rdwcBucketTrabajoProfCm,
     sysRdwcControlVolL: c.rdwcControlVolL,
+    sysRdwcControlTrabajoL: c.volMezclaLitros,
     sysRdwcRecirculationLh: c.rdwcRecirculationLh,
     sysRdwcAirLpm: c.rdwcAirLpm,
     sysRdwcNetPotMm: c.rdwcNetPotMm,
@@ -1655,13 +1953,25 @@ function applySetupRdwcDesdeFormulario() {
     const n = parseFloat(String(el && el.value || '').replace(',', '.'));
     return Number.isFinite(n) ? n : fb;
   };
+  const cultPrevSetup = String(document.getElementById('setupRdwcCultivoPrevisto')?.value || '').trim();
+  if (cultPrevSetup) c.rdwcCultivoPrevisto = cultPrevSetup;
+  else delete c.rdwcCultivoPrevisto;
   c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum('setupRdwcSites', c.rdwcSites || 4))));
   c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum('setupRdwcRows', c.rdwcRows || 1))));
   c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum('setupRdwcBucketVolL', c.rdwcBucketVolL || 20)));
   const bucketTrabajoSetup = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcBucketTrabajoL')?.value);
   if (bucketTrabajoSetup != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajoSetup);
   else delete c.rdwcBucketTrabajoL;
+  const bucketTrabajoDiamSetup = rdwcParseCm(document.getElementById('setupRdwcBucketTrabajoDiamCm')?.value);
+  if (bucketTrabajoDiamSetup != null) c.rdwcBucketTrabajoDiamCm = bucketTrabajoDiamSetup;
+  else delete c.rdwcBucketTrabajoDiamCm;
+  const bucketTrabajoProfSetup = rdwcParseCm(document.getElementById('setupRdwcBucketTrabajoProfCm')?.value);
+  if (bucketTrabajoProfSetup != null) c.rdwcBucketTrabajoProfCm = bucketTrabajoProfSetup;
+  else delete c.rdwcBucketTrabajoProfCm;
   c.rdwcControlVolL = Math.max(10, Math.min(800, gNum('setupRdwcControlVolL', c.rdwcControlVolL || 40)));
+  const controlTrabajoSetup = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcControlTrabajoL')?.value);
+  if (controlTrabajoSetup != null) c.volMezclaLitros = Math.min(c.rdwcControlVolL, controlTrabajoSetup);
+  else delete c.volMezclaLitros;
   c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
   c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('setupRdwcAirLpm', c.rdwcAirLpm || 20)));
   c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum('setupRdwcNetPotMm', c.rdwcNetPotMm || 125))));
@@ -1671,17 +1981,22 @@ function applySetupRdwcDesdeFormulario() {
   c.volDeposito = Math.round(c.rdwcControlVolL);
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
   renderRdwcCompatStatus(c, 'setupRdwcCompatStatus');
+  renderRdwcCalculoStatus(c, 'setupRdwcCalcStatus');
 }
 
 function syncSetupRdwcFieldsDesdeConfig(cfg) {
   const c = cfg || state.configTorre || {};
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  renderRdwcCultivoPrevistoSelect('setupRdwcCultivoPrevisto', c.rdwcCultivoPrevisto);
   const map = {
     setupRdwcSites: c.rdwcSites,
     setupRdwcRows: c.rdwcRows,
     setupRdwcBucketVolL: c.rdwcBucketVolL,
     setupRdwcBucketTrabajoL: c.rdwcBucketTrabajoL,
+    setupRdwcBucketTrabajoDiamCm: c.rdwcBucketTrabajoDiamCm,
+    setupRdwcBucketTrabajoProfCm: c.rdwcBucketTrabajoProfCm,
     setupRdwcControlVolL: c.rdwcControlVolL,
+    setupRdwcControlTrabajoL: c.volMezclaLitros,
     setupRdwcRecirculationLh: c.rdwcRecirculationLh,
     setupRdwcAirLpm: c.rdwcAirLpm,
     setupRdwcNetPotMm: c.rdwcNetPotMm,
@@ -1693,6 +2008,7 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
   });
   bindRdwcCompatLive('setup');
   renderRdwcCompatStatus(c, 'setupRdwcCompatStatus');
+  renderRdwcCalculoStatus(c, 'setupRdwcCalcStatus');
 }
 
 function aplicarSistemaRdwcDesdeFormulario() {
@@ -1703,13 +2019,25 @@ function aplicarSistemaRdwcDesdeFormulario() {
     const n = parseFloat(String(el && el.value || '').replace(',', '.'));
     return Number.isFinite(n) ? n : fb;
   };
+  const cultPrevSys = String(document.getElementById('sysRdwcCultivoPrevisto')?.value || '').trim();
+  if (cultPrevSys) c.rdwcCultivoPrevisto = cultPrevSys;
+  else delete c.rdwcCultivoPrevisto;
   c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum('sysRdwcSites', c.rdwcSites || 4))));
   c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum('sysRdwcRows', c.rdwcRows || 1))));
   c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum('sysRdwcBucketVolL', c.rdwcBucketVolL || 20)));
   const bucketTrabajoSys = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcBucketTrabajoL')?.value);
   if (bucketTrabajoSys != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajoSys);
   else delete c.rdwcBucketTrabajoL;
+  const bucketTrabajoDiamSys = rdwcParseCm(document.getElementById('sysRdwcBucketTrabajoDiamCm')?.value);
+  if (bucketTrabajoDiamSys != null) c.rdwcBucketTrabajoDiamCm = bucketTrabajoDiamSys;
+  else delete c.rdwcBucketTrabajoDiamCm;
+  const bucketTrabajoProfSys = rdwcParseCm(document.getElementById('sysRdwcBucketTrabajoProfCm')?.value);
+  if (bucketTrabajoProfSys != null) c.rdwcBucketTrabajoProfCm = bucketTrabajoProfSys;
+  else delete c.rdwcBucketTrabajoProfCm;
   c.rdwcControlVolL = Math.max(10, Math.min(800, gNum('sysRdwcControlVolL', c.rdwcControlVolL || 40)));
+  const controlTrabajoSys = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcControlTrabajoL')?.value);
+  if (controlTrabajoSys != null) c.volMezclaLitros = Math.min(c.rdwcControlVolL, controlTrabajoSys);
+  else delete c.volMezclaLitros;
   c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
   c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('sysRdwcAirLpm', c.rdwcAirLpm || 20)));
   c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum('sysRdwcNetPotMm', c.rdwcNetPotMm || 125))));
