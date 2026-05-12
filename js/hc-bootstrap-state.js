@@ -201,12 +201,14 @@ function saveState() {
     // Sin esto, guardar solo state.torre (p. ej. tras editar una cesta) deja el slot obsoleto
     // y al recargar cargarEstadoTorre() sobrescribe la torre vacía → desaparecen plantas y el Diario.
     if (state && state.torres && state.torres.length > 0) {
-      guardarEstadoTorreActual();
+      const okSaveSlot = guardarEstadoTorreActual();
+      if (okSaveSlot === false) return false;
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     // Verificar que se guardó correctamente
     const saved = localStorage.getItem(STORAGE_KEY);
     if (!saved) console.error('Error: estado no guardado en localStorage');
+    return true;
   } catch(e) {
     console.error('Error saving state:', e);
     // Si falla por cuota, intentar limpiar datos antiguos
@@ -216,8 +218,10 @@ function saveState() {
         compactarStateFotos();
         localStorage.removeItem('hc_auth');
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        return true;
       } catch(e2) { console.error('No se pudo guardar:', e2); }
     }
+    return false;
   }
 }
 

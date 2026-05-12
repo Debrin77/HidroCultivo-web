@@ -1468,6 +1468,12 @@ function guardarSetupYContinuar() {
   }
 
   const usarNuevaEntrada = setupEsNuevaTorre || crearNuevaPorCambioTipo;
+  if (typeof hcCapturarSnapshotSeguridadTorre === 'function' && state.torres && state.torres[idxSlotGuardar]) {
+    hcCapturarSnapshotSeguridadTorre(
+      idxSlotGuardar,
+      usarNuevaEntrada ? 'setup-before-new-installation' : 'setup-before-reconfigure'
+    );
+  }
 
   const sensHwGuardar = {
     ec: !!(setupData.sensoresHardware && setupData.sensoresHardware.ec),

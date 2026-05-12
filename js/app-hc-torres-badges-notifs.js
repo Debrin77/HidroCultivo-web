@@ -17,6 +17,149 @@ function hcClonePlainData(value, fallback = null) {
   }
 }
 
+function hcEtiquetaTipoInstalacion(tipo) {
+  if (tipo === 'nft') return 'NFT';
+  if (tipo === 'dwc') return 'DWC';
+  if (tipo === 'rdwc') return 'RDWC';
+  return 'torre vertical';
+}
+
+function hcNormalizarConfigSegunTipo(cfg) {
+  const c = hcClonePlainData(cfg, {}) || {};
+  const tipo = tipoInstalacionNormalizado(c);
+  const prefixes = [
+    { tipo: 'nft', prefijo: 'nft' },
+    { tipo: 'dwc', prefijo: 'dwc' },
+    { tipo: 'rdwc', prefijo: 'rdwc' },
+  ];
+  const removedKeys = [];
+  prefixes.forEach(rule => {
+    if (rule.tipo === tipo) return;
+    Object.keys(c).forEach(k => {
+      if (!k || !k.startsWith(rule.prefijo)) return;
+      if (c[k] == null || c[k] === '') {
+        delete c[k];
+        return;
+      }
+      removedKeys.push(k);
+      delete c[k];
+    });
+  });
+  return { tipo, config: c, removedKeys };
+}
+
+function hcEvaluarIntegridadGuardadoInstalacion(slot, candidateCfg) {
+  const normalized = hcNormalizarConfigSegunTipo(candidateCfg);
+  const prevCfg = slot && slot.config && typeof slot.config === 'object' ? slot.config : null;
+  const prevTipo =
+    prevCfg && prevCfg.tipoInstalacion
+      ? tipoInstalacionNormalizado(prevCfg)
+      : '';
+  const nextTipo =
+    normalized.config && normalized.config.tipoInstalacion
+      ? tipoInstalacionNormalizado(normalized.config)
+      : normalized.tipo;
+  const blocked =
+    !!(
+      prevTipo &&
+      nextTipo &&
+      prevTipo !== nextTipo
+    );
+  return {
+    ok: !blocked,
+    prevTipo,
+    nextTipo,
+    normalizedConfig: normalized.config,
+    removedKeys: normalized.removedKeys,
+    message: blocked
+      ? 'Se bloqueó el guardado para proteger la instalación activa: era ' +
+        hcEtiquetaTipoInstalacion(prevTipo) +
+        ' y se intentaba guardar como ' +
+        hcEtiquetaTipoInstalacion(nextTipo) +
+        '.'
+      : '',
+  };
+}
+
+function hcCapturarSnapshotSeguridadTorre(idx, reason) {
+  initTorres();
+  const i = Number.isFinite(idx) && idx >= 0 ? idx : (state.torreActiva || 0);
+  const slot = state.torres && state.torres[i];
+  if (!slot) return false;
+  const prev = slot.safetySnapshot;
+  const now = Date.now();
+  const prevTs = prev && prev.capturedAtMs ? Number(prev.capturedAtMs) : 0;
+  const prevReason = prev && prev.reason ? String(prev.reason) : '';
+  if (prevTs > 0 && now - prevTs < 90000 && prevReason === String(reason || 'manual')) {
+    return false;
+  }
+  const activa = i === (state.torreActiva || 0);
+  const cfgRaw = activa ? state.configTorre : slot.config;
+  const norm = hcNormalizarConfigSegunTipo(cfgRaw);
+  slot.safetySnapshot = {
+    capturedAt: new Date(now).toISOString(),
+    capturedAtMs: now,
+    reason: String(reason || 'manual'),
+    tipoInstalacion: norm.tipo,
+    nombre: (String(slot.nombre || '').trim() || 'Instalación'),
+    config: hcClonePlainData(norm.config, null),
+    torre: hcClonePlainData(activa ? state.torre : slot.torre, []),
+    modoActual: activa ? modoActual : slot.modoActual,
+    fotosSistemaCompleto: hcClonePlainData(
+      activa ? state.fotosSistemaCompleto : slot.fotosSistemaCompleto,
+      { fotoKeys: [], fotos: [] }
+    ),
+  };
+  return true;
+}
+
+function hcCrearNombreInstalacionPorTipo(tipo, ordinal) {
+  const base =
+    tipo === 'nft' ? 'NFT'
+    : tipo === 'dwc' ? 'DWC'
+    : tipo === 'rdwc' ? 'RDWC'
+    : 'Torre';
+  return base + ' ' + ordinal;
+}
+
+function hcAppendNuevaInstalacionDesdeEstado(opts) {
+  initTorres();
+  if (!Array.isArray(state.torres)) state.torres = [];
+  if (state.torres.length >= MAX_TORRES) return -1;
+  const o = opts || {};
+  const tipo = tipoInstalacionNormalizado(state.configTorre || {});
+  const nuevaTorre = {
+    id: Date.now(),
+    nombre: String(o.nombre || hcCrearNombreInstalacionPorTipo(tipo, state.torres.length + 1)).trim(),
+    emoji: emojiMigracionPorTipoInstalacion({ tipoInstalacion: tipo }),
+    config: hcClonePlainData(hcNormalizarConfigSegunTipo(state.configTorre || {}).config, null),
+    torre: hcClonePlainData(state.torre, []),
+    modoActual: modoActual || 'lechuga',
+    mediciones: o.clearHistory === false ? hcClonePlainData(state.mediciones, []) : [],
+    registro: o.clearHistory === false ? hcClonePlainData(state.registro, []) : [],
+    ultimaMedicion: o.clearHistory === false && state.ultimaMedicion ? { ...state.ultimaMedicion } : null,
+    ultimaRecarga: o.clearHistory === false ? (state.ultimaRecarga ?? null) : null,
+    recargaSnoozeHasta: o.clearHistory === false ? (state.recargaSnoozeHasta ?? null) : null,
+    notifOpciones:
+      o.notifOpciones && typeof o.notifOpciones === 'object'
+        ? {
+            recarga: !!o.notifOpciones.recarga,
+            medicion: !!o.notifOpciones.medicion,
+            cosecha: !!o.notifOpciones.cosecha,
+          }
+        : { recarga: false, medicion: false, cosecha: false },
+    fotosSistemaCompleto:
+      o.clearHistory === false
+        ? hcClonePlainData(state.fotosSistemaCompleto, { fotoKeys: [], fotos: [] })
+        : { fotoKeys: [], fotos: [] },
+  };
+  state.torres.push(nuevaTorre);
+  const newIdx = state.torres.length - 1;
+  state.torreActiva = newIdx;
+  cargarEstadoTorre(newIdx);
+  return newIdx;
+}
+
 function emojiMigracionPorTipoInstalacion(cfg) {
   if (!cfg || !cfg.tipoInstalacion) return '🌿';
   if (cfg.tipoInstalacion === 'nft') return '🪴';
@@ -156,6 +299,7 @@ function actualizarTorreActual() {
       } catch (eD) {}
     }
   }
+  hcCapturarSnapshotSeguridadTorre(state.torreActiva || 0, 'system-update');
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
@@ -274,6 +418,27 @@ function guardarEstadoTorreActual() {
   if (!state.torres) return;
   const idx = state.torreActiva || 0;
   if (!state.torres[idx]) return;
+  const slot = state.torres[idx];
+  const integrity = hcEvaluarIntegridadGuardadoInstalacion(slot, state.configTorre || null);
+  if (!integrity.ok) {
+    state.torre = hcClonePlainData(slot.torre, []);
+    state.mediciones = hcClonePlainData(slot.mediciones, []);
+    state.registro = hcClonePlainData(slot.registro, []);
+    state.configTorre = hcClonePlainData(slot.config, null);
+    if (slot.ultimaMedicion && typeof slot.ultimaMedicion === 'object') state.ultimaMedicion = { ...slot.ultimaMedicion };
+    else state.ultimaMedicion = null;
+    state.ultimaRecarga = slot.ultimaRecarga ?? null;
+    state.recargaSnoozeHasta = slot.recargaSnoozeHasta ?? null;
+    ensureFotosSistemaCompletoState();
+    state.fotosSistemaCompleto = hcClonePlainData(slot.fotosSistemaCompleto, { fotoKeys: [], fotos: [] });
+    try {
+      if (typeof showToast === 'function') showToast(integrity.message, true);
+    } catch (_) {}
+    return false;
+  }
+  if (integrity.removedKeys && integrity.removedKeys.length) {
+    state.configTorre = hcClonePlainData(integrity.normalizedConfig, null);
+  }
   state.torres[idx].torre      = hcClonePlainData(state.torre, []);
   state.torres[idx].modoActual = modoActual;
   state.torres[idx].mediciones = hcClonePlainData(state.mediciones, []);
@@ -283,7 +448,7 @@ function guardarEstadoTorreActual() {
     : null;
   state.torres[idx].ultimaRecarga = state.ultimaRecarga ?? null;
   state.torres[idx].recargaSnoozeHasta = state.recargaSnoozeHasta ?? null;
-  state.torres[idx].config     = hcClonePlainData(state.configTorre, null);
+  state.torres[idx].config     = hcClonePlainData(integrity.normalizedConfig, null);
   ensureFotosSistemaCompletoState();
   state.torres[idx].fotosSistemaCompleto = hcClonePlainData(state.fotosSistemaCompleto, { fotoKeys: [], fotos: [] });
   // Guardar configuración de riego: no machacar con valores por defecto del HTML si el input va vacío o inválido
@@ -298,6 +463,7 @@ function guardarEstadoTorreActual() {
     toldo: toldoDesplegado,
     diaRiego: diaRiego,
   };
+  return true;
 }
 
 function cargarEstadoTorre(idx) {
@@ -307,7 +473,7 @@ function cargarEstadoTorre(idx) {
   state.torre       = hcClonePlainData(t.torre, []);
   state.mediciones  = hcClonePlainData(t.mediciones, []);
   state.registro    = hcClonePlainData(t.registro, []);
-  state.configTorre = hcClonePlainData(t.config, null);
+  state.configTorre = hcClonePlainData(hcNormalizarConfigSegunTipo(t.config).config, null);
   const umSlot = t.ultimaMedicion;
   if (umSlot && typeof umSlot === 'object') {
     state.ultimaMedicion = { ...umSlot };
@@ -1277,8 +1443,8 @@ function programarRecordatorios() {
     torres.forEach((slot, i) => {
       if (!slot || !slot.notifOpciones || !slot.notifOpciones.medicion) return;
       if (!slot.config) slot.config = {};
-      state.torre = Array.isArray(slot.torre) ? slot.torre : [];
-      state.configTorre = slot.config;
+      state.torre = hcClonePlainData(slot.torre, []);
+      state.configTorre = hcClonePlainData(hcNormalizarConfigSegunTipo(slot.config).config, {});
       const rec = getRecomendacionEcPhTorre();
       if (!rec || !rec.ec || !rec.ph) return;
       const firma =

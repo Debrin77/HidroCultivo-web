@@ -463,6 +463,48 @@ function cerrarOverlayChecklistDatosInstalacion() {
  */
 function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMezclaOpt, dwcModoOpt) {
   initTorres();
+  const idxAct = state.torreActiva || 0;
+  const slotAct = state.torres && state.torres[idxAct] ? state.torres[idxAct] : null;
+  const tipoActual = tipoInstalacionNormalizado((slotAct && slotAct.config) || state.configTorre || {});
+  let crearNuevaEntrada = false;
+  const notifSeed =
+    slotAct && slotAct.notifOpciones && typeof slotAct.notifOpciones === 'object'
+      ? {
+          recarga: !!slotAct.notifOpciones.recarga,
+          medicion: !!slotAct.notifOpciones.medicion,
+          cosecha: !!slotAct.notifOpciones.cosecha,
+        }
+      : { recarga: false, medicion: false, cosecha: false };
+  if (slotAct && slotAct.config && slotAct.config.tipoInstalacion && tipoActual !== tipo) {
+    if (state.torres.length >= MAX_TORRES) {
+      showToast(
+        'Ese cambio de tipo se protege como instalación nueva, pero ya has alcanzado el máximo (' +
+          MAX_TORRES +
+          ').',
+        true
+      );
+      return;
+    }
+    if (
+      !confirm(
+        'La instalación activa es ' +
+          hcEtiquetaTipoInstalacion(tipoActual) +
+          ' y aquí has elegido ' +
+          hcEtiquetaTipoInstalacion(tipo) +
+          '.\n\n' +
+          'Para no mezclar datos, se creará una instalación nueva y la actual quedará intacta.\n\n¿Continuar?'
+      )
+    ) {
+      return;
+    }
+    crearNuevaEntrada = true;
+    if (typeof hcCapturarSnapshotSeguridadTorre === 'function') {
+      hcCapturarSnapshotSeguridadTorre(idxAct, 'checklist-overlay-before-new-type');
+    }
+    guardarEstadoTorreActual();
+  } else if (typeof hcCapturarSnapshotSeguridadTorre === 'function') {
+    hcCapturarSnapshotSeguridadTorre(idxAct, 'checklist-overlay-before-reconfigure');
+  }
   const aguaOk = agua === 'osmosis' || agua === 'grifo' ? agua : 'destilada';
   const aguaMap = { destilada: 'destilada', osmosis: 'osmosis', grifo: 'grifo' };
   if (aguaMap[aguaOk]) setAgua(aguaMap[aguaOk]);
@@ -546,7 +588,19 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
     delete state.configTorre.volMezclaLitros;
   }
 
-  guardarEstadoTorreActual();
+  if (crearNuevaEntrada) {
+    const nomNueva = hcCrearNombreInstalacionPorTipo(tipo, state.torres.length + 1);
+    const newIdx =
+      typeof hcAppendNuevaInstalacionDesdeEstado === 'function'
+        ? hcAppendNuevaInstalacionDesdeEstado({ nombre: nomNueva, clearHistory: true, notifOpciones: notifSeed })
+        : -1;
+    if (newIdx < 0) {
+      showToast('No se pudo crear la nueva instalación protegida.', true);
+      return;
+    }
+  } else {
+    guardarEstadoTorreActual();
+  }
   saveState();
   aplicarConfigTorre();
   try { actualizarHeaderTorre(); } catch (eH) {}

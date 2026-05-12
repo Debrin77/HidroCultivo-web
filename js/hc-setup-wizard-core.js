@@ -2228,6 +2228,18 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
 }
 
 function aplicarSistemaRdwcDesdeFormulario() {
+  initTorres();
+  const idxAct = state.torreActiva || 0;
+  const slotAct = state.torres && state.torres[idxAct] ? state.torres[idxAct] : null;
+  const tipoPrevio = tipoInstalacionNormalizado((slotAct && slotAct.config) || state.configTorre || {});
+  if (slotAct && slotAct.config && slotAct.config.tipoInstalacion && tipoPrevio !== 'rdwc') {
+    showToast('Esta instalación no es RDWC. Para crear un RDWC nuevo usa "Nueva instalación" o el asistente.', true);
+    try { syncSistemaRdwcDesdeConfig(slotAct.config); } catch (_) {}
+    return;
+  }
+  if (typeof hcCapturarSnapshotSeguridadTorre === 'function') {
+    hcCapturarSnapshotSeguridadTorre(idxAct, 'rdwc-system-save');
+  }
   const c = state.configTorre || (state.configTorre = {});
   c.tipoInstalacion = 'rdwc';
   const gNum = (id, fb) => {
