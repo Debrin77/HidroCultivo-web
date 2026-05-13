@@ -580,6 +580,9 @@ async function cargarMeteo() {
   })();
   if (meteoUbicEl) meteoUbicEl.textContent = labelUbic;
   actualizarMeteoCaptionInstalacionActiva();
+  try {
+    if (typeof refreshAvisoUbicacionExteriorPendiente === 'function') refreshAvisoUbicacionExteriorPendiente();
+  } catch (_) {}
   const locSigAhora = meteoLocCacheSignature();
   const meteoForzarPorUbicacion =
     !!(state._meteoForecastCacheLocSig && locSigAhora && state._meteoForecastCacheLocSig !== locSigAhora);

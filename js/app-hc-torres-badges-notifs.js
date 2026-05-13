@@ -59,11 +59,13 @@ function hcEvaluarIntegridadGuardadoInstalacion(slot, candidateCfg) {
     normalized.config && normalized.config.tipoInstalacion
       ? tipoInstalacionNormalizado(normalized.config)
       : normalized.tipo;
+  const prevConfirmada = !!(prevCfg && prevCfg.checklistInstalacionConfirmada === true);
   const blocked =
     !!(
       prevTipo &&
       nextTipo &&
-      prevTipo !== nextTipo
+      prevTipo !== nextTipo &&
+      prevConfirmada
     );
   return {
     ok: !blocked,

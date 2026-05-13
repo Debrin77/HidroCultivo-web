@@ -82,6 +82,15 @@ function rdwcParseCm(raw) {
   return Math.round(v * 10) / 10;
 }
 
+/** Altura del cuerpo del net pot (mm), opcional; distinta de Ø del aro y de la prof. útil de agua bajo cesta. */
+function rdwcParseNetPotHeightMm(raw) {
+  const s = String(raw == null ? '' : raw).trim();
+  if (!s) return null;
+  const v = parseInt(s, 10);
+  if (!Number.isFinite(v) || v < 30 || v > 200) return null;
+  return v;
+}
+
 function getSetupRdwcDraftSeed() {
   const base = hcSetupClonePlain(
     setupRdwcDraft && typeof setupRdwcDraft === 'object'
@@ -124,6 +133,9 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
   c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum(prefix + 'RecirculationLh', c.rdwcRecirculationLh || 1200)));
   c.rdwcAirLpm = Math.max(1, Math.min(300, gNum(prefix + 'AirLpm', c.rdwcAirLpm || 20)));
   c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum(prefix + 'NetPotMm', c.rdwcNetPotMm || 125))));
+  const netPotH = rdwcParseNetPotHeightMm(document.getElementById(prefix + 'NetPotHeightMm')?.value);
+  if (netPotH != null) c.rdwcNetPotHeightMm = netPotH;
+  else delete c.rdwcNetPotHeightMm;
   c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum(prefix + 'CenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
   if (scope === 'sys') {
     c.rdwcTempObjetivoC = Math.max(10, Math.min(30, gNum(prefix + 'TempObjetivoC', c.rdwcTempObjetivoC || 19)));
@@ -801,6 +813,7 @@ function bindRdwcCompatLive(scope) {
           'sysRdwcRecirculationLh',
           'sysRdwcAirLpm',
           'sysRdwcNetPotMm',
+          'sysRdwcNetPotHeightMm',
           'sysRdwcCenterSpacingCm',
           'sysRdwcTempObjetivoC',
           'sysRdwcLayout',
@@ -822,6 +835,7 @@ function bindRdwcCompatLive(scope) {
           'setupRdwcRecirculationLh',
           'setupRdwcAirLpm',
           'setupRdwcNetPotMm',
+          'setupRdwcNetPotHeightMm',
           'setupRdwcCenterSpacingCm',
         ];
   const render = () => {
@@ -848,6 +862,9 @@ function bindRdwcCompatLive(scope) {
       c2.rdwcRecirculationLh = g('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
       c2.rdwcAirLpm = g('sysRdwcAirLpm', c.rdwcAirLpm || 20);
       c2.rdwcNetPotMm = g('sysRdwcNetPotMm', c.rdwcNetPotMm || 125);
+      const hSys = rdwcParseNetPotHeightMm(document.getElementById('sysRdwcNetPotHeightMm')?.value);
+      if (hSys != null) c2.rdwcNetPotHeightMm = hSys;
+      else delete c2.rdwcNetPotHeightMm;
       c2.rdwcCenterSpacingCm = g('sysRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
       c2.rdwcTempObjetivoC = g('sysRdwcTempObjetivoC', c.rdwcTempObjetivoC || 19);
       c2.rdwcHeadM = g('sysRdwcHeadM', c.rdwcHeadM || 1.2);
@@ -877,6 +894,9 @@ function bindRdwcCompatLive(scope) {
       c2.rdwcRecirculationLh = g('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
       c2.rdwcAirLpm = g('setupRdwcAirLpm', c.rdwcAirLpm || 20);
       c2.rdwcNetPotMm = g('setupRdwcNetPotMm', c.rdwcNetPotMm || 125);
+      const hSetup = rdwcParseNetPotHeightMm(document.getElementById('setupRdwcNetPotHeightMm')?.value);
+      if (hSetup != null) c2.rdwcNetPotHeightMm = hSetup;
+      else delete c2.rdwcNetPotHeightMm;
       c2.rdwcCenterSpacingCm = g('setupRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
       renderRdwcCompatStatus(c2, 'setupRdwcCompatStatus');
       renderRdwcCalculoStatus(c2, 'setupRdwcCalcStatus');
@@ -1196,7 +1216,7 @@ function seleccionarNftCanalDiam(mm) {
 }
 let setupUbicacion = 'exterior';
 let setupNutriente = 'canna_aqua';
-let setupCoordenadas = { lat: 39.9864, lon: -0.0495, ciudad: 'Castelló de la Plana' };
+let setupCoordenadas = { lat: null, lon: null, ciudad: '' };
 
 const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
@@ -2171,6 +2191,7 @@ function syncSistemaRdwcDesdeConfig(cfg) {
     sysRdwcRecirculationLh: c.rdwcRecirculationLh,
     sysRdwcAirLpm: c.rdwcAirLpm,
     sysRdwcNetPotMm: c.rdwcNetPotMm,
+    sysRdwcNetPotHeightMm: c.rdwcNetPotHeightMm,
     sysRdwcCenterSpacingCm: c.rdwcCenterSpacingCm,
     sysRdwcTempObjetivoC: c.rdwcTempObjetivoC,
     sysRdwcHeadM: c.rdwcHeadM,
@@ -2216,6 +2237,7 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
     setupRdwcRecirculationLh: c.rdwcRecirculationLh,
     setupRdwcAirLpm: c.rdwcAirLpm,
     setupRdwcNetPotMm: c.rdwcNetPotMm,
+    setupRdwcNetPotHeightMm: c.rdwcNetPotHeightMm,
     setupRdwcCenterSpacingCm: c.rdwcCenterSpacingCm,
   };
   Object.keys(map).forEach(id => {
@@ -2269,6 +2291,9 @@ function aplicarSistemaRdwcDesdeFormulario() {
   c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
   c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('sysRdwcAirLpm', c.rdwcAirLpm || 20)));
   c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum('sysRdwcNetPotMm', c.rdwcNetPotMm || 125))));
+  const netPotHeightSys = rdwcParseNetPotHeightMm(document.getElementById('sysRdwcNetPotHeightMm')?.value);
+  if (netPotHeightSys != null) c.rdwcNetPotHeightMm = netPotHeightSys;
+  else delete c.rdwcNetPotHeightMm;
   c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum('sysRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
   c.rdwcTempObjetivoC = Math.max(10, Math.min(30, gNum('sysRdwcTempObjetivoC', c.rdwcTempObjetivoC || 19)));
   c.rdwcHeadM = Math.max(0, Math.min(6, gNum('sysRdwcHeadM', c.rdwcHeadM || 1.2)));

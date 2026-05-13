@@ -441,9 +441,27 @@ function actualizarQuickActionsNoviceMode() {
 // Tras el asistente: Sistema (cultivos) → oferta de checklist
 // ══════════════════════════════════════════════════
 
+/** El rail va en el flujo del documento (debajo del título), no fijo abajo, para no tapar el esquema / modales de cesta. */
+function hcMountPostSetupChecklistRailInTabSistema() {
+  const rail = document.getElementById('hcPostSetupChecklistRail');
+  const tab = document.getElementById('tab-sistema');
+  if (!rail || !tab) return;
+  const h1 = tab.querySelector('h1.section-title');
+  if (h1) {
+    if (rail.previousElementSibling !== h1) {
+      h1.insertAdjacentElement('afterend', rail);
+    }
+    return;
+  }
+  if (rail.parentNode !== tab) tab.insertBefore(rail, tab.firstChild);
+}
+
 function ensurePostSetupChecklistRail() {
   let el = document.getElementById('hcPostSetupChecklistRail');
-  if (el) return el;
+  if (el) {
+    hcMountPostSetupChecklistRailInTabSistema();
+    return el;
+  }
   el = document.createElement('div');
   el.id = 'hcPostSetupChecklistRail';
   el.className = 'hc-post-setup-rail setup-hidden';
@@ -460,8 +478,8 @@ function ensurePostSetupChecklistRail() {
       '</div>' +
       '<div class="hc-post-setup-rail-title">Cultivos en el esquema</div>' +
       '<p class="hc-post-setup-rail-text" id="hcPostSetupRailText">' +
-        'Completa cada cesta con cultivo: variedad, <strong>fecha de trasplante al hidro</strong> y procedencia. ' +
-        'En cuanto esté listo, se abre solo el <strong>checklist guiado del depósito</strong> (mismo estilo que el asistente).' +
+        'Desplázate al <strong>esquema más abajo</strong> y completa cada cesta: variedad, <strong>fecha de trasplante al hidro</strong> y procedencia. ' +
+        'Cuando los datos estén listos, se abre solo el <strong>checklist del depósito</strong> (misma línea visual que el asistente).' +
       '</p>' +
       '<p class="hc-post-setup-rail-status setup-hidden" id="hcPostSetupRailStatus" role="status"></p>' +
       '<div class="hc-post-setup-rail-actions">' +
@@ -473,7 +491,16 @@ function ensurePostSetupChecklistRail() {
         '</button>' +
       '</div>' +
     '</div>';
-  document.body.appendChild(el);
+  const tabSistema = document.getElementById('tab-sistema');
+  const h1Sistema = tabSistema && tabSistema.querySelector('h1.section-title');
+  if (h1Sistema) {
+    h1Sistema.insertAdjacentElement('afterend', el);
+  } else if (tabSistema) {
+    tabSistema.insertBefore(el, tabSistema.firstChild);
+  } else {
+    document.body.appendChild(el);
+  }
+  hcMountPostSetupChecklistRailInTabSistema();
   const b1 = document.getElementById('hcPostSetupBtnChecklist');
   const b2 = document.getElementById('hcPostSetupBtnLater');
   if (b1) b1.addEventListener('click', () => hcAccionChecklistPostSetupDesdeSistema());
@@ -492,6 +519,7 @@ function actualizarPostSetupChecklistRail() {
     return;
   }
   ensurePostSetupChecklistRail();
+  hcMountPostSetupChecklistRailInTabSistema();
   const rail = document.getElementById('hcPostSetupChecklistRail');
   if (!rail) return;
   rail.classList.remove('setup-hidden');
@@ -644,6 +672,12 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
   setTimeout(() => {
     ensurePostSetupChecklistRail();
     actualizarPostSetupChecklistRail();
+    try {
+      const torreWrap = document.querySelector('#tab-sistema .torre-container');
+      if (torreWrap && typeof torreWrap.scrollIntoView === 'function') {
+        torreWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } catch (_) {}
   }, 120);
   setTimeout(() => {
     hcAbrirPrimeraFichaCultivoTrasWizard();

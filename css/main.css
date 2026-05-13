@@ -899,15 +899,15 @@ html.hc-theme-dark .tab-btn.active svg {
   justify-content: center;
 }
 
-/* Tras el asistente: recordatorio checklist (solo pestaña Cultivo e instalación) */
+/* Tras el asistente: guión instalación → cultivo → depósito (en flujo bajo el título; no fijo abajo = no tapa cestas) */
 .hc-post-setup-rail {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(var(--tab-h) + 8px);
-  z-index: 10140;
-  max-width: min(100vw - 20px, 400px);
-  width: calc(100% - 20px);
+  position: relative;
+  left: auto;
+  transform: none;
+  z-index: auto;
+  max-width: 100%;
+  width: 100%;
+  margin: 0 0 14px;
   pointer-events: auto;
   box-sizing: border-box;
 }
@@ -4879,6 +4879,28 @@ html.hc-theme-dark #tileVol .tile-icon .hc-ico { color: #22d3ee; }
   border-color: rgba(248, 113, 113, 0.85);
   background: linear-gradient(135deg, rgba(254, 242, 242, 0.98), rgba(254, 202, 202, 0.45));
   box-shadow: 0 4px 14px rgba(185, 28, 28, 0.12);
+}
+
+/* Exterior: falta municipio y/o coords guardadas en la instalación */
+.dash-ubic-exterior-pendiente {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(234, 88, 12, 0.55);
+  background: linear-gradient(135deg, rgba(255, 247, 237, 0.98), rgba(254, 215, 170, 0.35));
+  font-size: 0.92rem;
+  line-height: 1.4;
+  color: #7c2d12;
+}
+.dash-ubic-exterior-pendiente .hc-ico--inline {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+#tab-meteo .dash-ubic-exterior-pendiente {
+  margin-bottom: var(--dash-section-gap, 14px);
 }
 .meteo-flash-inner--error .meteo-flash-kicker {
   color: #991b1b;
@@ -9987,6 +10009,44 @@ html.hc-theme-dark .consejo-text-toggle {
   font-weight: 800;
   color: #0e7490;
   margin-bottom: 6px;
+}
+.consejo-dwc-netpot-ref-scroll {
+  margin: 10px 0 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+}
+.consejo-dwc-netpot-ref-table {
+  width: 100%;
+  min-width: 280px;
+  border-collapse: collapse;
+  font-size: 12px;
+  line-height: 1.35;
+}
+.consejo-dwc-netpot-ref-table th,
+.consejo-dwc-netpot-ref-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+.consejo-dwc-netpot-ref-table th {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  background: rgba(8, 145, 178, 0.12);
+}
+.consejo-dwc-netpot-ref-table tbody tr:last-child td {
+  border-bottom: none;
+}
+.consejo-dwc-netpot-ref-table td:first-child {
+  font-weight: 700;
+  color: var(--white);
+  white-space: nowrap;
 }
 .consejo-footnote { margin: 10px 0 0; font-size: 11px; color: var(--muted); line-height: 1.45; }
 .consejo-titulo {

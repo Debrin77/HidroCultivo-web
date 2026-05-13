@@ -1329,6 +1329,49 @@ function refreshUbicacionInstalacionUI() {
     riego.appendChild(icon);
     riego.appendChild(body);
   }
+  try {
+    refreshAvisoUbicacionExteriorPendiente();
+  } catch (_) {}
+}
+
+/**
+ * Aviso explícito en Inicio y Meteo si la instalación está en exterior y faltan datos para clima/coords guardados en la instalación activa.
+ */
+function refreshAvisoUbicacionExteriorPendiente() {
+  const dashEl = document.getElementById('dashUbicacionExteriorPendiente');
+  const meteoEl = document.getElementById('meteoUbicacionExteriorPendiente');
+  if (!dashEl && !meteoEl) return;
+  const cfg = state.configTorre || {};
+  const interior =
+    typeof instalacionEsUbicacionInterior === 'function' && instalacionEsUbicacionInterior(cfg);
+  if (interior) {
+    [dashEl, meteoEl].forEach(el => {
+      if (!el) return;
+      el.innerHTML = '';
+      el.classList.add('setup-hidden');
+    });
+    return;
+  }
+  const mun = typeof textoLocalidadMeteoCfg === 'function' ? textoLocalidadMeteoCfg(cfg) : '';
+  const faltaMun = !mun || !String(mun).trim();
+  const lat = Number(cfg.lat);
+  const lon = Number(cfg.lon);
+  const faltaCoords = !Number.isFinite(lat) || !Number.isFinite(lon);
+  const falta = faltaMun || faltaCoords;
+  const partes = [];
+  if (faltaMun) partes.push('el <strong>municipio</strong> (clima y avisos)');
+  if (faltaCoords) partes.push('las <strong>coordenadas</strong> en el mapa del paso de ubicación');
+  const msg = falta
+    ? '<svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg> ' +
+      '<span><strong>Ubicación incompleta</strong> (instalación en exterior): indica ' +
+      (partes.length === 2 ? partes.join(' y ') : partes[0]) +
+      '. <strong>Medir</strong>, bloque superior, o <strong>asistente</strong> (engranaje) → ubicación.</span>'
+    : '';
+  [dashEl, meteoEl].forEach(el => {
+    if (!el) return;
+    el.innerHTML = msg;
+    el.classList.toggle('setup-hidden', !falta);
+  });
 }
 
 function etiquetaFuenteMeteo(src) {

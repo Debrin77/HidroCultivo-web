@@ -488,7 +488,13 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
           cosecha: !!slotAct.notifOpciones.cosecha,
         }
       : { recarga: false, medicion: false, cosecha: false };
-  if (slotAct && slotAct.config && slotAct.config.tipoInstalacion && tipoActual !== tipo) {
+  if (
+    slotAct &&
+    slotAct.config &&
+    slotAct.config.tipoInstalacion &&
+    slotAct.config.checklistInstalacionConfirmada === true &&
+    tipoActual !== tipo
+  ) {
     if (state.torres.length >= MAX_TORRES) {
       showToast(
         'Ese cambio de tipo se protege como instalación nueva, pero ya has alcanzado el máximo (' +
@@ -532,9 +538,9 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
     luz: 'led',
     horasLuz: 16,
     equipamiento: ['difusor', 'calentador', 'bomba'],
-    lat: 39.9864,
-    lon: -0.0495,
-    ciudad: 'Castelló de la Plana',
+    lat: null,
+    lon: null,
+    ciudad: '',
     sustrato: normalizaSustratoKey(state.configSustrato || 'esponja'),
     tamanoCesta: 'standard',
     diametroTubo: 50,
@@ -848,6 +854,12 @@ function getCLPasos() {
   const esNft = tipoInstCl === 'nft';
   const esDwc = tipoInstCl === 'dwc';
   const esRdwc = tipoInstCl === 'rdwc';
+  const volNutrientesTotal =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : vol;
+  const volRdwcTxt =
+    esRdwc && volNutrientesTotal != null && Number.isFinite(volNutrientesTotal) && volNutrientesTotal > 0
+      ? Math.round(volNutrientesTotal * 10) / 10
+      : vol;
   const esDwcK =
     esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const esTorre = !esNft && !esDwc && !esRdwc;
@@ -1096,25 +1108,41 @@ function getCLPasos() {
               comp && comp.recoCultivo
                 ? ' Cesta orientativa para ' +
                   (comp.recoCultivo.cultivo ? '<strong>' + comp.recoCultivo.cultivo.nombre + '</strong>' : '<strong>el cultivo principal</strong>') +
-                  ': <strong>' + comp.recoCultivo.perfil.cestaTxt + '</strong>.'
+                  ': <strong>' + comp.recoCultivo.perfil.cestaTxt + '</strong> (se refiere al <strong>Ø del aro / net pot</strong>, no al volumen de agua).'
                 : '';
+            const cfgPot = Number(cfg.rdwcNetPotMm);
+            const cfgH = Number(cfg.rdwcNetPotHeightMm);
+            const tuMedTxt =
+              Number.isFinite(cfgPot) && cfgPot > 0
+                ? ' Has indicado <strong>Ø ' +
+                  Math.round(cfgPot) +
+                  ' mm</strong> en Cultivo e instalación' +
+                  (Number.isFinite(cfgH) && cfgH > 0
+                    ? ' y <strong>altura del cuerpo del net pot ' + Math.round(cfgH) + ' mm</strong> (opcional, altura del macetero de red; distinta de la profundidad útil del líquido).'
+                    : '. Si conoces el modelo, puedes añadir en la configuración RDWC la <strong>altura del net pot (mm)</strong> junto al Ø.')
+                : '';
+            const aclaracion =
+              '<br><br><span class="cl-rdwc-pot-hint">La recomendación por cultivo usa el <strong>diámetro del aro</strong>. La <strong>profundidad del plástico</strong> del net pot depende del fabricante (suele ser del orden del Ø o 50–150 mm típicos). ' +
+              'La <strong>prof. útil bajo cesta</strong> en el formulario es la <strong>columna de agua útil</strong> en el cubo, no la altura del macetero.</span>';
             const base =
               'Objetivo recomendado 18-21 °C en agua; si sube, prioriza sombreo/aislamiento del circuito. La aireación principal conviene situarla en los <strong>cubos</strong>, donde está la mayor masa radicular; el depósito de control puede llevar apoyo adicional.';
-            if (!comp) return base;
+            if (!comp) return base + aclaracion;
             return (
               base +
+              tuMedTxt +
               ' Compatibilidad actual ' +
               chip +
-              ' · cesta ' +
+              ' · referencia cesta ' +
               comp.netPotRecoMm +
-              ' · cubo ' +
+              ' (Ø) · cubo ' +
               comp.bucketRecoL +
               ' · control ' +
               comp.controlRecoL +
               ' · separación ' +
               comp.spacingRecoCm +
               '.' +
-              cultTxt
+              cultTxt +
+              aclaracion
             );
           })(),
           postCamposHtml:
@@ -1407,11 +1435,13 @@ function getCLPasos() {
     desc:'Cebar el circuito RDWC con agua limpia desde el depósito de control: cubrir bomba/retorno y arrancar la recirculación',
     nota:'Aquí <strong>todavía no</strong> van los ml de CalMag ni del abono total. Primero reparte el agua por todo el circuito.' },
   { id:'4.1b', seccion:null, paso:'4.1b',
-    desc:'Con la recirculación en marcha, seguir añadiendo agua hasta ~' + vol + ' L útiles totales en el circuito',
+    desc:'Con la recirculación en marcha, seguir añadiendo agua hasta ~' + volRdwcTxt + ' L útiles totales en el circuito',
     nota:'Ese volumen se reparte entre <strong>reservorio de control</strong> y <strong>cubos útiles</strong>. En cada cubo deja la lámina <strong>por debajo de la cesta / net pot</strong> para conservar cámara de aire y no ahogar la base.' },
   { id:'4.1c', seccion:null, paso:'4.1c', alert:true,
     desc:'Cuando el nivel ya esté estabilizado en todo el circuito, dosificar CalMag y nutrientes sobre ese <strong>volumen total</strong>',
-    nota:'Los ml de los pasos <strong>4.2+</strong> son para la <strong>solución total</strong> del RDWC (~' + vol + ' L), no solo para el reservorio de control. Añade cada producto en ese reservorio con la recirculación en marcha y espera la homogeneización antes del siguiente.' },
+    nota:'Los ml de los pasos <strong>4.2+</strong> están calculados para la <strong>solución útil de todo el circuito</strong> (~' +
+      volRdwcTxt +
+      ' L: depósito de control útil + cubos útiles según tu configuración). El número entre paréntesis es el <strong>agua útil total del sistema</strong>, no solo el litraje del reservorio. <strong>Vierte en el depósito de control</strong> con la recirculación en marcha hasta homogeneizar antes del siguiente producto.' },
   ] : [];
   const usaCampeadorPhDown =
     nut && (nut.id === 'campeador' || nut.id === 'campeador_hidro' || nut.id === 'campeador_fruto');
@@ -1428,14 +1458,14 @@ function getCLPasos() {
 
   { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
     desc: esRdwc
-      ? ('Preparar ~' + vol + ' litros de agua útil en el circuito RDWC (reservorio + cubos útiles) — <strong>no</strong> es echarlos de golpe en el reservorio' +
+      ? ('Preparar ~' + volRdwcTxt + ' litros de agua útil en el circuito RDWC (reservorio + cubos útiles) — <strong>no</strong> es echarlos de golpe en el reservorio' +
         (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'))
       : ('Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
         (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : 'torre') +
         (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.')),
     nota: primerLlenado
       ? (esRdwc
-        ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist. En RDWC estos ' + vol + ' L son la <strong>solución útil total</strong> repartida por el circuito; primero se ceba y nivela el sistema, luego se dosifica.'
+        ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist. En RDWC estos ' + volRdwcTxt + ' L son la <strong>solución útil total</strong> repartida por el circuito; primero se ceba y nivela el sistema, luego se dosifica.'
         : 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.')
       : (esRdwc
         ? 'CalMag: marcar o desmarcar recalcula los pasos siguientes sobre la <strong>solución total</strong> del RDWC, no solo sobre el reservorio. En RDWC este paso habla del <strong>volumen total ya repartido</strong> por el circuito.'
@@ -1498,7 +1528,7 @@ function getCLPasos() {
       { id:'clPhPlusRegFinal', label:'ml pH+ añadidos en total (opcional):', type:'number', step:'0.1', placeholder:'0' },
       { id:'clPhMinusRegFinal', label:'ml ' + etiquetaPhDown + ' añadidos (opcional):', type:'number', step:'0.1', placeholder:'0' },
       { id:'clTempAgua', label:'Temp agua:', unit:'°C', type:'number', step:'0.1', placeholder:'20' },
-      { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(vol) }
+      { id:'clVolFinal', label:'Volumen:', unit:'L', type:'number', step:'0.5', placeholder: String(esRdwc ? volRdwcTxt : vol) }
     ] },
 
   { id:'7.1', seccion:'✅ Paso 7 — Verificación final', paso:'7.1',
@@ -2064,7 +2094,7 @@ function renderChecklistHeaderSummary() {
     { k: 'Diseño', v: diseno || '—' },
   ];
   sum.innerHTML =
-    '<details class="checklist-summary-disclosure" id="checklistSummaryDetails"' + (clChecked.size === 0 ? ' open' : '') + ' data-auto-collapsed="' + (clChecked.size > 0 ? '1' : '0') + '">' +
+    '<details class="checklist-summary-disclosure" id="checklistSummaryDetails" data-auto-collapsed="1">' +
     '<summary class="checklist-summary-toggle">' +
     '<span class="checklist-summary-toggle-title">Resumen operativo</span>' +
     '<span class="checklist-summary-toggle-meta">' + clEscHtml(compact || 'Instalación activa') + '</span>' +
@@ -2278,9 +2308,6 @@ function updateClProgress() {
     if (checked > 0 && summaryDetails.dataset.autoCollapsed !== '1') {
       summaryDetails.open = false;
       summaryDetails.dataset.autoCollapsed = '1';
-    } else if (checked === 0) {
-      summaryDetails.open = true;
-      summaryDetails.dataset.autoCollapsed = '0';
     }
   }
   const hint = document.getElementById('clFooterHint');

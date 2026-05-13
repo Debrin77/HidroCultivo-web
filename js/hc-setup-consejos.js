@@ -1775,6 +1775,33 @@ function buildConsejosNftHidraulica() {
   return dyn + cultivo + formula + docWrap;
 }
 
+function buildConsejosDwcNetPotRefTabla() {
+  const cat = CONSEJOS_DATA.dwc;
+  const html =
+    '<p class="consejo-p consejo-p--tight">El <strong>Ø</strong> es el <strong>aro exterior del net pot</strong> (encaje en tapa). La <strong>altura del cuerpo</strong> es lo que suele figurar en catálogo o embalaje (profundidad del plástico del macetero). No es la <strong>columna de agua útil</strong> bajo la cesta en el cubo (RDWC/DWC).</p>' +
+    '<div class="consejo-dwc-netpot-ref-scroll">' +
+    '<table class="consejo-dwc-netpot-ref-table" role="grid" aria-label="Referencia orientativa Ø net pot y altura comercial">' +
+    '<thead><tr><th scope="col">Ø aro (mm)</th><th scope="col">Altura cuerpo típica (mm)</th><th scope="col">Nota</th></tr></thead>' +
+    '<tbody>' +
+    '<tr><td>50</td><td>45–60</td><td>Plántulas, albahaca en maceta pequeña</td></tr>' +
+    '<tr><td>80</td><td>55–75</td><td>Hojas compactas, clones</td></tr>' +
+    '<tr><td>100</td><td>60–85</td><td>Lechuga / asiáticas en cubo medio</td></tr>' +
+    '<tr><td>125</td><td>70–100</td><td>DWC «5 pulg» habitual; mucha lechuga</td></tr>' +
+    '<tr><td>150</td><td>75–110</td><td>Tomate/pepino joven en cubo grande</td></tr>' +
+    '<tr><td>200</td><td>85–130</td><td>Fruto adulto, raíz gruesa</td></tr>' +
+    '</tbody></table></div>' +
+    '<p class="consejo-footnote">Rangos orientativos entre fabricantes y líneas de distribución. Si tu modelo trae cifras, úsalas en <strong>Cultivo e instalación</strong> (Ø y altura opcional en RDWC).</p>';
+  return htmlInnerConsejoCard(cat, {
+    icono: '🔖',
+    titulo: 'Net pot: Ø ↔ altura comercial (referencia)',
+    html: html,
+    alerta: {
+      tipo: 'info',
+      txt: 'ℹ️ Solo ayuda visual al elegir pieza; no entra en cálculos de nutrientes ni volumen.',
+    },
+  });
+}
+
 function buildConsejosDwcDifusorBloque() {
   const cat = CONSEJOS_DATA.dwc;
   const rec =
@@ -1902,6 +1929,7 @@ function buildConsejosDwc() {
     },
   });
   const difusor = buildConsejosDwcDifusorBloque();
+  const netPotRef = buildConsejosDwcNetPotRefTabla();
   const medDetalle =
     '<strong>Prismático:</strong> L, A y P (profundidad/altura <em>útil</em> del líquido, cm) → volumen ≈ L×A×P÷1000. <strong>Cilíndrico:</strong> Ø interior y misma P → volumen ≈ π×(Ø/2)²×P÷1000. <strong>Troncopiramidal:</strong> litros útiles medidos (sin P en el cálculo). <strong>Diám. cesta</strong> = aro en la tapa (mm); <strong>alt. cesta</strong> para el llenado seguro bajo el sustrato. <strong>Marco</strong> y <strong>hueco</strong> entre cestas en el <strong>asistente DWC</strong>; si no los guardaste, el aviso de rejilla usa marco 0 y 4 mm.';
   const medWrap =
@@ -1935,7 +1963,7 @@ function buildConsejosDwc() {
     '<div id="mountDwcCestasGuiaConsejos"></div>' +
     '</div>' +
     '</div>';
-  return intro + vol + densidad + nivelDep + difusor + med + extras + tabla;
+  return intro + vol + densidad + nivelDep + difusor + med + netPotRef + extras + tabla;
 }
 
 /** Tarjeta de consejo con cuerpo HTML controlado (no escapar dos veces). */

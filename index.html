@@ -252,6 +252,7 @@
 
       <!-- Ambiente meteorológico (exterior); municipio en Medir / asistente -->
       <div id="dashBloqueAmbienteExterior" class="dash-bloque-ambiente-exterior">
+      <div id="dashUbicacionExteriorPendiente" class="dash-ubic-exterior-pendiente setup-hidden" role="alert" aria-live="polite"></div>
       <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
         <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
         <div class="meteo-alert-icon" id="meteoAlertIcon" aria-hidden="true"><svg class="hc-ico hc-ico--meteo" focusable="false"><use href="#hc-i-cloud-sun"/></svg></div>
@@ -514,7 +515,7 @@
         </div>
         <p class="medir-localidad-lead">Si el sistema está en <strong>exterior</strong>, escribe tu pueblo para previsiones y avisos. También lo puedes definir en el <strong>asistente</strong> (engranaje).</p>
         <div class="medir-localidad-meteo-row">
-          <input type="text" id="inputLocalidadMeteo" placeholder="Ej. Madrid, Valencia, Castelló de la Plana…"
+          <input type="text" id="inputLocalidadMeteo" placeholder="Ej. Madrid, Valencia, Sevilla…"
             aria-labelledby="labelLocalidadMeteoCab"
             autocomplete="address-level2"
             onchange="persistLocalidadMeteo()" onblur="persistLocalidadMeteo()"
@@ -620,7 +621,7 @@
             <!-- Buscador de municipio -->
             <div class="medir-mb-10">
               <label for="inputBuscarMunicipio" class="medir-field-label">Buscar municipio (calidad del agua del grifo)</label>
-              <input type="text" id="inputBuscarMunicipio" placeholder="Castellón, Castelló…"
+              <input type="text" id="inputBuscarMunicipio" placeholder="Ej. Madrid, Valencia, Sevilla…"
                 inputmode="search" autocomplete="address-level2"
                 class="medir-input-municipio"
                 oninput="onBuscarMunicipio(this.value)">
@@ -1430,7 +1431,8 @@
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlTrabajoL">Litros útiles en depósito control</label><input type="number" id="sysRdwcControlTrabajoL" class="torre-dwc-input" min="0.5" max="800" step="0.1" placeholder="vacío = hasta el máximo"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRecirculationLh">Recirculación (L/h)</label><input type="number" id="sysRdwcRecirculationLh" class="torre-dwc-input" min="200" max="12000" step="10"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcAirLpm">Aireación (L/min)</label><input type="number" id="sysRdwcAirLpm" class="torre-dwc-input" min="1" max="300" step="1"></div>
-              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotMm">Diám. cesta (mm)</label><input type="number" id="sysRdwcNetPotMm" class="torre-dwc-input" min="40" max="200" step="1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="sysRdwcNetPotMm" class="torre-dwc-input" min="40" max="200" step="1"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotHeightMm" title="Altura del cuerpo del macetero de red; opcional">Altura net pot (mm, opc.)</label><input type="number" id="sysRdwcNetPotHeightMm" class="torre-dwc-input" min="30" max="200" step="1" placeholder="—"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="sysRdwcCenterSpacingCm" class="torre-dwc-input" min="20" max="150" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcTempObjetivoC">Temp objetivo (°C)</label><input type="number" id="sysRdwcTempObjetivoC" class="torre-dwc-input" min="10" max="30" step="0.1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcLayout">Layout</label><select id="sysRdwcLayout" class="torre-dwc-input"><option value="line">Línea</option><option value="double_row">Doble fila</option><option value="u_shape">U</option></select></div>
@@ -1439,7 +1441,7 @@
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcFittings">Codos/racores (uds)</label><input type="number" id="sysRdwcFittings" class="torre-dwc-input" min="0" max="80" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcHydroMode">Perfil hidráulico</label><select id="sysRdwcHydroMode" class="torre-dwc-input"><option value="silencioso">Silencioso</option><option value="estandar">Estándar</option><option value="alto_rendimiento">Alto rendimiento</option></select></div>
             </div>
-            <p class="torre-nft-p-soft">Para nutrientes en RDWC la app suma el <strong>reservorio de control útil</strong> y los <strong>litros útiles</strong> de cada cubo. Puedes indicar los litros útiles por cubo directamente o, si el cubo es aproximadamente cilíndrico, por <strong>Ø útil</strong> y <strong>profundidad útil</strong> bajo cesta. Si dejas vacío el útil del reservorio, la app usa el máximo; si quieres margen para mezclar y regular, indica aquí menos litros. El <strong>cultivo previsto</strong> sirve para recomendar la <strong>cesta net pot</strong>, el <strong>volumen nominal por cubo</strong>, la <strong>separación c-c</strong> orientativa entre cubos y el <strong>depósito de control</strong> con margen útil para mezclar.</p>
+            <p class="torre-nft-p-soft">Para nutrientes en RDWC la app suma el <strong>reservorio de control útil</strong> y los <strong>litros útiles</strong> de cada cubo. Puedes indicar los litros útiles por cubo directamente o, si el cubo es aproximadamente cilíndrico, por <strong>Ø útil</strong> y <strong>profundidad útil</strong> bajo cesta (columna de agua, no altura del net pot). Si dejas vacío el útil del reservorio, la app usa el máximo; si quieres margen para mezclar y regular, indica aquí menos litros. El <strong>cultivo previsto</strong> orienta la recomendación del <strong>Ø del aro net pot</strong>, volumen nominal, separación y depósito de control; el <strong>Ø</strong> y la <strong>altura del net pot (opc.)</strong> puedes ajustarlos a mano si ya conoces el modelo.</p>
             <p id="sysRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
             <div id="sysRdwcCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
             <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaRdwcDesdeFormulario()">Guardar datos RDWC</button>
@@ -2169,6 +2171,7 @@
 
       <h1 class="section-title section-title--with-ico"><svg class="hc-ico hc-ico--section" aria-hidden="true" focusable="false"><use href="#hc-i-cloud-sun"/></svg><span><span class="accent">Meteorología</span></span></h1>
       <div class="meteo-ubic-caption"><svg class="hc-ico hc-ico--caption hc-ico--ubicacion-mapa" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg> Ubicación actual: <strong id="meteoUbicacionActual">—</strong></div>
+      <div id="meteoUbicacionExteriorPendiente" class="dash-ubic-exterior-pendiente setup-hidden" role="alert" aria-live="polite"></div>
       <p class="meteo-perfil-caption" id="meteoPerfilInstalacionLine" role="status" aria-live="polite"></p>
 
       <div id="meteoMeteoclimaticBox" class="meteo-meteoclimatic-box setup-hidden" role="region" aria-label="Datos de estación cercana Meteoclimatic">
@@ -2788,10 +2791,11 @@
             <div><label class="form-label setup-dwc-label" for="setupRdwcControlTrabajoL">Litros útiles en depósito control</label><input type="number" id="setupRdwcControlTrabajoL" class="setup-dwc-input" min="0.5" max="800" step="0.1" placeholder="vacío = hasta el máximo"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRecirculationLh">Bomba recirculación (L/h)</label><input type="number" id="setupRdwcRecirculationLh" class="setup-dwc-input" min="200" max="12000" step="10" placeholder="1200"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcAirLpm">Aireación total (L/min)</label><input type="number" id="setupRdwcAirLpm" class="setup-dwc-input" min="1" max="300" step="1" placeholder="20"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm">Diám. cesta (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotHeightMm" title="Altura del cuerpo del macetero de red; opcional">Altura net pot (mm, opc.)</label><input type="number" id="setupRdwcNetPotHeightMm" class="setup-dwc-input" min="30" max="200" step="1" placeholder="—"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="setupRdwcCenterSpacingCm" class="setup-dwc-input" min="20" max="150" step="1" placeholder="45"></div>
           </div>
-            <p class="setup-dwc-help">Para nutrientes en RDWC se usa el <strong>reservorio de control útil</strong> más los <strong>litros útiles</strong> de cada cubo. Puedes indicar esos litros directamente o por <strong>Ø útil</strong> y <strong>profundidad útil</strong> bajo cesta. Si dejas vacío el útil del reservorio, la app usa el máximo; si quieres margen para mezclar y ajustar, indica aquí menos litros. El <strong>cultivo previsto</strong> ayuda a recomendar la <strong>cesta net pot</strong>, el <strong>volumen nominal por cubo</strong>, la <strong>separación c-c</strong> entre cubos y el <strong>depósito de control</strong> orientativo.</p>
+            <p class="setup-dwc-help">Para nutrientes en RDWC se usa el <strong>reservorio de control útil</strong> más los <strong>litros útiles</strong> de cada cubo. Puedes indicar esos litros directamente o por <strong>Ø útil</strong> y <strong>profundidad útil</strong> bajo cesta (agua en el cubo, no altura del net pot). Si dejas vacío el útil del reservorio, la app usa el máximo; si quieres margen para mezclar y ajustar, indica aquí menos litros. El <strong>cultivo previsto</strong> orienta el <strong>Ø del aro net pot</strong>, volumen nominal, separación y depósito; el <strong>Ø</strong> y la <strong>altura del net pot (opc.)</strong> puedes fijarlos manualmente si conoces el modelo.</p>
           <p id="setupRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
           <div id="setupRdwcCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
         </div>
@@ -4413,7 +4417,7 @@
   <script src="js/hc-tools-pro.js?v=10"></script>
   <script src="js/hc-setup-checklist.js?v=24"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
-  <script src="js/hc-setup-consejos.js?v=30"></script>
+  <script src="js/hc-setup-consejos.js?v=31"></script>
   <script src="js/calendario-logic.js?v=7"></script>
   <script src="js/meteo-forecast-meteo.js?v=12"></script>
   <script src="js/meteo-forecast-dashboard.js?v=20"></script>

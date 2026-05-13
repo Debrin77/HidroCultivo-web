@@ -1432,10 +1432,13 @@ function guardarSetupYContinuar() {
   /** Guardar la instalación activa tal como está en memoria antes de que el asistente la sobrescriba. */
   guardarEstadoTorreActual();
 
-  const tipoEnSlotAntes = tipoInstalacionNormalizado(state.torres[idxSlotGuardar]?.config);
+  const cfgSlotAntesGuardar = state.torres[idxSlotGuardar]?.config;
+  const tipoEnSlotAntes = tipoInstalacionNormalizado(cfgSlotAntesGuardar);
+  /** Solo duplicar ranura si ya hubo una configuración guardada con el asistente; la plantilla inicial (o reset) no cuenta. */
+  const instalacionSlotYaConfirmada = !!(cfgSlotAntesGuardar && cfgSlotAntesGuardar.checklistInstalacionConfirmada === true);
 
   let crearNuevaPorCambioTipo = false;
-  if (!setupEsNuevaTorre && state.torres[idxSlotGuardar] && tipoEnSlotAntes !== tipoNuevoPrevio) {
+  if (!setupEsNuevaTorre && state.torres[idxSlotGuardar] && instalacionSlotYaConfirmada && tipoEnSlotAntes !== tipoNuevoPrevio) {
     if (state.torres.length >= MAX_TORRES) {
       showToast(
         'Cambiar el tipo de instalación crearía una instalación nueva, pero ya tienes el máximo (' +
@@ -1498,7 +1501,7 @@ function guardarSetupYContinuar() {
   const lonWizard = parseCoord(setupCoordenadas.lon, setupData.lon);
   const locWizard = ciudadWizard.split(',')[0].trim();
   const ubicEffGuardar = setupData.ubicacion || setupUbicacion || 'exterior';
-  if (usarNuevaEntrada && ubicEffGuardar === 'exterior') {
+  if (ubicEffGuardar === 'exterior') {
     if (!ciudadWizard || !Number.isFinite(latWizard) || !Number.isFinite(lonWizard)) {
       showToast(
         'En exterior indica la ciudad del mapa en el paso de luz y ubicación: cada instalación usa el clima de su municipio.',
@@ -1534,9 +1537,9 @@ function guardarSetupYContinuar() {
     antiRaices:    setupAntiRaices,
     alturaTorre:   setupAlturaTorre,
     bombaCalculada: window.setupBombaCalculada || null,
-    ciudad:       ciudadWizard || 'Castelló de la Plana',
-    lat:          Number.isFinite(latWizard) ? latWizard : 39.9864,
-    lon:          Number.isFinite(lonWizard) ? lonWizard : -0.0495,
+    ciudad:       ubicEffGuardar === 'interior' ? (ciudadWizard || '') : ciudadWizard,
+    lat:          Number.isFinite(latWizard) ? latWizard : null,
+    lon:          Number.isFinite(lonWizard) ? lonWizard : null,
     localidadMeteo: usarNuevaEntrada ? (locWizard || '') : (locWizard || prevLocMet || ''),
     sensoresHardware: sensHwGuardar,
     consejosModoUi: setupData.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante',
@@ -1557,6 +1560,13 @@ function guardarSetupYContinuar() {
           rdwcAirLpm: Math.max(1, Math.min(300, parseFloat(String(document.getElementById('setupRdwcAirLpm')?.value || '20').replace(',', '.')) || 20)),
           rdwcNetPotMm: Math.max(40, Math.min(200, parseInt(String(document.getElementById('setupRdwcNetPotMm')?.value || '125'), 10) || 125)),
           rdwcCenterSpacingCm: Math.max(20, Math.min(150, parseFloat(String(document.getElementById('setupRdwcCenterSpacingCm')?.value || '45').replace(',', '.')) || 45)),
+          ...(function () {
+            const raw = String(document.getElementById('setupRdwcNetPotHeightMm')?.value || '').trim();
+            if (!raw) return {};
+            const n = parseInt(raw, 10);
+            if (!Number.isFinite(n) || n < 30 || n > 200) return {};
+            return { rdwcNetPotHeightMm: n };
+          })(),
         }
       : {}),
   };
