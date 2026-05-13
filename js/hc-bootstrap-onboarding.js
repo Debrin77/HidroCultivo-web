@@ -451,10 +451,17 @@ function ensurePostSetupChecklistRail() {
   el.setAttribute('aria-label', 'Siguiente paso: cultivos y checklist');
   el.innerHTML =
     '<div class="hc-post-setup-rail-inner">' +
-      '<div class="hc-post-setup-rail-title">Siguiente: cultivos en el esquema</div>' +
+      '<div class="hc-post-setup-rail-track" aria-hidden="true">' +
+        '<span class="hc-post-setup-rail-chip hc-post-setup-rail-chip--done">1 · Instalación</span>' +
+        '<span class="hc-post-setup-rail-arrow" aria-hidden="true">→</span>' +
+        '<span class="hc-post-setup-rail-chip hc-post-setup-rail-chip--active">2 · Cultivo</span>' +
+        '<span class="hc-post-setup-rail-arrow" aria-hidden="true">→</span>' +
+        '<span class="hc-post-setup-rail-chip hc-post-setup-rail-chip--next">3 · Depósito</span>' +
+      '</div>' +
+      '<div class="hc-post-setup-rail-title">Cultivos en el esquema</div>' +
       '<p class="hc-post-setup-rail-text" id="hcPostSetupRailText">' +
-        'Toca cada cesta y completa variedad, <strong>fecha de trasplante al hidro</strong> y procedencia. ' +
-        'Luego podrás abrir el checklist de recarga con dosis alineadas a tus plantas.' +
+        'Completa cada cesta con cultivo: variedad, <strong>fecha de trasplante al hidro</strong> y procedencia. ' +
+        'En cuanto esté listo, se abre solo el <strong>checklist guiado del depósito</strong> (mismo estilo que el asistente).' +
       '</p>' +
       '<p class="hc-post-setup-rail-status setup-hidden" id="hcPostSetupRailStatus" role="status"></p>' +
       '<div class="hc-post-setup-rail-actions">' +
@@ -492,13 +499,15 @@ function actualizarPostSetupChecklistRail() {
   const bloqueado =
     typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
     torreBloqueaChecklistPorFaltaDatosCultivo();
+  const sinVariedad =
+    typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
+  const bloqueadoUi = !!bloqueado || sinVariedad;
   if (st) {
-    if (bloqueado) {
-      const sinNinguna =
-        typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
+    if (bloqueadoUi) {
+      const sinNinguna = sinVariedad;
       st.textContent = sinNinguna
-        ? 'Añade al menos un cultivo en una cesta, con fecha, para continuar (modo EC automático).'
-        : 'Revisa las cestas con cultivo: falta fecha u origen según lo que marques en cada ficha.';
+        ? 'Indica al menos un cultivo en el esquema; luego completa fechas si usas EC automático. Al estar listo, el checklist se abre solo.'
+        : 'Revisa las cestas con cultivo: falta fecha u origen según lo que marques en cada ficha. Cuando quede listo, el checklist se abrirá solo.';
       st.classList.remove('setup-hidden');
     } else {
       st.textContent = '';
@@ -507,43 +516,41 @@ function actualizarPostSetupChecklistRail() {
   }
   const btn = document.getElementById('hcPostSetupBtnChecklist');
   if (btn) {
-    btn.disabled = !!bloqueado;
-    btn.setAttribute('aria-disabled', bloqueado ? 'true' : 'false');
+    btn.disabled = !!bloqueadoUi;
+    btn.setAttribute('aria-disabled', bloqueadoUi ? 'true' : 'false');
   }
 }
 
-/** Solo en EC/pH automático: en manual el checklist no depende de fichas y se abre desde el rail. */
-function _hcAutoChecklistTrasCultivosPostSetupActivo() {
+/** Tras el asistente: al menos un cultivo y sin bloqueo de checklist (en automático: fechas/origen; en manual: siempre listo). */
+function _hcPostSetupListoParaChecklistGuiado() {
   try {
-    const cfg = state.configTorre || {};
-    if (typeof getEcPhStrategy === 'function' && getEcPhStrategy(cfg) === 'manual') return false;
-  } catch (_) {}
-  return true;
+    if (!state || !state.hcPostSetupChecklistPendiente) return false;
+    if (typeof torreTieneAlgunaVariedadAsignada !== 'function' || !torreTieneAlgunaVariedadAsignada()) return false;
+    if (typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' && torreBloqueaChecklistPorFaltaDatosCultivo()) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 function hcNotificarCambioCultivoSistema() {
   try {
     if (!state || !state.hcPostSetupChecklistPendiente) {
       try {
-        delete window._hcPostSetupAutoCkBloqueadoPrev;
+        delete window._hcPostSetupPrevListo;
       } catch (_) {}
       if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
       return;
     }
-    const bloqueado =
-      typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
-      torreBloqueaChecklistPorFaltaDatosCultivo();
-    let prev;
+    const listo = _hcPostSetupListoParaChecklistGuiado();
+    let prevListo = false;
     try {
-      prev = window._hcPostSetupAutoCkBloqueadoPrev;
-    } catch (_) {
-      prev = undefined;
-    }
-    const transicion =
-      prev === true && !bloqueado && _hcAutoChecklistTrasCultivosPostSetupActivo();
-    try {
-      window._hcPostSetupAutoCkBloqueadoPrev = bloqueado;
+      prevListo = window._hcPostSetupPrevListo === true;
     } catch (_) {}
+    try {
+      window._hcPostSetupPrevListo = listo;
+    } catch (_) {}
+    const transicion = listo && !prevListo;
     if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
     if (transicion) hcEjecutarChecklistPostSetupTrasCultivosListos();
   } catch (_) {}
@@ -551,7 +558,10 @@ function hcNotificarCambioCultivoSistema() {
 
 function hcEjecutarChecklistPostSetupTrasCultivosListos() {
   try {
-    delete window._hcPostSetupAutoCkBloqueadoPrev;
+    window._hcChecklistGuidedFlow = true;
+  } catch (_) {}
+  try {
+    delete window._hcPostSetupPrevListo;
   } catch (_) {}
   try {
     delete state.hcPostSetupChecklistPendiente;
@@ -572,7 +582,10 @@ function hcEjecutarChecklistPostSetupTrasCultivosListos() {
 
 function hcPostSetupChecklistMasTarde() {
   try {
-    delete window._hcPostSetupAutoCkBloqueadoPrev;
+    delete window._hcPostSetupPrevListo;
+  } catch (_) {}
+  try {
+    delete window._hcChecklistGuidedFlow;
   } catch (_) {}
   try {
     delete state.hcPostSetupChecklistPendiente;
@@ -635,9 +648,14 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
   setTimeout(() => {
     hcAbrirPrimeraFichaCultivoTrasWizard();
   }, 520);
+  setTimeout(() => {
+    try {
+      if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+    } catch (_) {}
+  }, 900);
   if (typeof showToast === 'function') {
     showToast(
-      'Completa cada cesta: variedad, fecha de trasplante y procedencia. Se abre la primera ficha; al terminar, el checklist de recarga.'
+      'Completa las cestas con cultivo (variedad, fecha, procedencia). Al estar listo, se abre el checklist del depósito en la misma línea visual que el asistente.'
     );
   }
 }

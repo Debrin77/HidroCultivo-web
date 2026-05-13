@@ -1763,14 +1763,8 @@ function guardarSetupYContinuar() {
     state.hcPostSetupChecklistPendiente = true;
   } catch (_) {}
   try {
-    window._hcPostSetupAutoCkBloqueadoPrev =
-      typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' &&
-      torreBloqueaChecklistPorFaltaDatosCultivo();
-  } catch (_) {
-    try {
-      window._hcPostSetupAutoCkBloqueadoPrev = true;
-    } catch (_) {}
-  }
+    window._hcPostSetupPrevListo = false;
+  } catch (_) {}
 
   saveState();
   aplicarConfigTorre();
@@ -1850,13 +1844,27 @@ function preguntarIniciarChecklist() {
       : cfg.tipoInstalacion === 'dwc' ? 'Iniciar checklist DWC'
       : 'Iniciar checklist — torre vertical'
   );
-  overlay.className = 'checklist-pregunta-overlay';
+  const clGuiadoPostSetup = !!(typeof window !== 'undefined' && window._hcChecklistGuidedFlow);
+  overlay.className = clGuiadoPostSetup
+    ? 'checklist-pregunta-overlay checklist-pregunta-overlay--guided'
+    : 'checklist-pregunta-overlay';
+
+  const sheetCls = 'checklist-pregunta-sheet' + (clGuiadoPostSetup ? ' checklist-pregunta-sheet--guided' : '');
+  const stripGuiado = clGuiadoPostSetup
+    ? '<div class="checklist-pregunta-guided-strip" aria-hidden="true">' +
+      '<span class="checklist-pregunta-guided-logo">HIDRO</span><span class="checklist-pregunta-guided-logo-alt">Cultivo</span>' +
+      '<span class="checklist-pregunta-guided-sep">·</span>' +
+      '<span class="checklist-pregunta-guided-step">Paso 3 de 3 · Depósito</span>' +
+      '</div>'
+    : '';
 
   overlay.innerHTML =
-    '<div class="checklist-pregunta-sheet">' +
+    '<div class="' + sheetCls + '">' +
 
       // Handle
       '<div class="checklist-pregunta-handle"></div>' +
+
+      stripGuiado +
 
       // Cabecera
       '<div class="checklist-pregunta-head">' +
@@ -1968,6 +1976,9 @@ function preguntarIniciarChecklist() {
     try {
       delete state.hcPostSetupChecklistPendiente;
       if (typeof saveState === 'function') saveState();
+    } catch (_) {}
+    try {
+      delete window._hcChecklistGuidedFlow;
     } catch (_) {}
     try {
       if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();

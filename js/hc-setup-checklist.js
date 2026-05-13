@@ -141,6 +141,16 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
     ensureChecklistOverlayLastInBody();
     aplicarConfigTorre();
 
+    const clSub = document.getElementById('checklistSubline');
+    if (clSub) {
+      try {
+        clSub.textContent =
+          typeof window !== 'undefined' && window._hcChecklistGuidedFlow
+            ? 'Continuación del asistente: primer llenado o recarga del depósito con pasos claros.'
+            : 'Misma línea visual que el asistente: pasos ordenados para la mezcla del depósito (instalación activa).';
+      } catch (_) {}
+    }
+
     const clTit = document.getElementById('checklistTitle');
     if (clTit) {
       const tCh = tipoInstalacionNormalizado(state.configTorre || {});
@@ -173,6 +183,9 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
       showToast('No se pudo abrir el checklist (interfaz). Recarga la página si persiste.', true);
       return;
     }
+    try {
+      co.classList.add('checklist-overlay--guided-flow');
+    } catch (_) {}
     co.classList.add('open');
     updateClProgress();
     a11yDialogOpened(co);
@@ -1660,7 +1673,12 @@ function cerrarChecklist() {
     if (!confirm('⚠️ Si cierras sin completar el checklist, la instalación activa puede quedar sin registrar bien el primer llenado o la recarga. ¿Salir de todas formas?')) return;
   }
   const co = document.getElementById('checklistOverlay');
+  if (!co) return;
   co.classList.remove('open');
+  try {
+    co.classList.remove('checklist-overlay--guided-flow');
+    delete window._hcChecklistGuidedFlow;
+  } catch (_) {}
   a11yDialogClosed(co);
 }
 
@@ -2473,8 +2491,14 @@ async function finalizarChecklist() {
   delete cfgFin.checklistCambioNutrientePrevioId;
 
   const co = document.getElementById('checklistOverlay');
-  co.classList.remove('open');
-  a11yDialogClosed(co);
+  if (co) {
+    co.classList.remove('open');
+    try {
+      co.classList.remove('checklist-overlay--guided-flow');
+      delete window._hcChecklistGuidedFlow;
+    } catch (_) {}
+    a11yDialogClosed(co);
+  }
   updateDashboard();
   showToast('✅ Recarga registrada correctamente');
 

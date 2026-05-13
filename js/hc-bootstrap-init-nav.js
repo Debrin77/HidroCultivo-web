@@ -39,7 +39,25 @@ function resetApp() {
     delete state.hcPostSetupChecklistPendiente;
   } catch (_) {}
   try {
-    delete window._hcPostSetupAutoCkBloqueadoPrev;
+    delete window._hcPostSetupPrevListo;
+  } catch (_) {}
+  try {
+    delete window._hcChecklistGuidedFlow;
+  } catch (_) {}
+  try {
+    const _clOv = document.getElementById('checklistOverlay');
+    if (_clOv) _clOv.classList.remove('checklist-overlay--guided-flow');
+  } catch (_) {}
+
+  // Misma base que initApp: slots multi-instalación y datos de la torre activa coherentes
+  try {
+    if (typeof initTorres === 'function') initTorres();
+  } catch (_) {}
+  try {
+    if (typeof reconciliarSlotTorreActivaAntesDeCargar === 'function') reconciliarSlotTorreActivaAntesDeCargar();
+  } catch (_) {}
+  try {
+    if (typeof cargarEstadoTorre === 'function') cargarEstadoTorre(state.torreActiva || 0);
   } catch (_) {}
 
   // Actualizar UI
@@ -50,9 +68,29 @@ function resetApp() {
   updateTorreStats();
   updateDashboard();
   initConfigUI();
+  try {
+    if (typeof actualizarHeaderTorre === 'function') actualizarHeaderTorre();
+  } catch (_) {}
+  try {
+    if (typeof aplicarConfigTorre === 'function') aplicarConfigTorre();
+  } catch (_) {}
   goTab('inicio');
 
-  showToast('🔄 Datos restablecidos · el checklist se abre solo desde Inicio o Historial cuando lo necesites');
+  // Sin recargar la página: bienvenida / asistente como en el primer arranque
+  setTimeout(() => {
+    try {
+      if (typeof mostrarBienvenidaOContinuarArranque === 'function') mostrarBienvenidaOContinuarArranque();
+    } catch (_) {}
+  }, 520);
+  setTimeout(() => {
+    try {
+      if (state && state.hcPostSetupChecklistPendiente && typeof actualizarPostSetupChecklistRail === 'function') {
+        actualizarPostSetupChecklistRail();
+      }
+    } catch (_) {}
+  }, 1400);
+
+  showToast('🔄 Datos restablecidos · bienvenida y configuración como al abrir la app por primera vez');
 }
 
 function initApp() {
