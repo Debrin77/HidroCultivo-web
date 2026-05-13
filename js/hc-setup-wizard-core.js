@@ -1224,6 +1224,9 @@ function abrirSetup() {
   // Reconfigurar instalación existente (no crear ranura nueva) salvo que se abra «Nuevo sistema»
   setupEsNuevaTorre = false;
   setupPagina = 0;
+  try {
+    if (typeof resetSetupCestaVariedadDraft === 'function') resetSetupCestaVariedadDraft();
+  } catch (_) {}
   const sh = (state.configTorre && state.configTorre.sensoresHardware) || {};
   setupData.sensoresHardware = {
     ec: !!sh.ec,
@@ -2476,6 +2479,40 @@ function aplicarSistemaTorreObjetivoDesdeFormulario() {
   try { renderTorreSistemaResumenTabla(state.configTorre); } catch (_) {}
   try { refreshConsejosSiVisible(); } catch (_) {}
   showToast('Objetivo de torre guardado: ' + (objetivo === 'baby' ? 'Alta densidad / baby leaf' : 'Planta adulta (tamaño completo)'));
+}
+
+/** Checklist recarga (paso T·obj): mismo criterio que Cultivo e instalación, sincroniza el select del sistema si existe. */
+function persistTorreObjetivoDesdeChecklist() {
+  if (!state.configTorre || tipoInstalacionNormalizado(state.configTorre) !== 'torre') return;
+  const sel = document.getElementById('clTorreObjetivoCultivo');
+  if (!sel) return;
+  const objetivo = torreNormalizeObjetivoCultivo(sel.value);
+  state.configTorre.torreObjetivoCultivo = objetivo;
+  try {
+    const sysSel = document.getElementById('sysTorreObjetivoCultivo');
+    if (sysSel) sysSel.value = objetivo;
+  } catch (_) {}
+  try {
+    guardarEstadoTorreActual();
+  } catch (_) {}
+  try {
+    saveState();
+  } catch (_) {}
+  try {
+    renderTorreSistemaResumenTabla(state.configTorre);
+  } catch (_) {}
+  try {
+    refreshConsejosSiVisible();
+  } catch (_) {}
+  try {
+    evalParam();
+  } catch (_) {}
+  showToast(
+    'Objetivo de torre: ' + (objetivo === 'baby' ? 'Alta densidad / baby leaf' : 'Planta adulta (tamaño completo)')
+  );
+  try {
+    if (typeof renderChecklist === 'function') renderChecklist();
+  } catch (_) {}
 }
 
 function aplicarSistemaEcPhStrategyDesdeFormulario() {

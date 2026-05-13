@@ -24,6 +24,173 @@ const setupData = {
 let setupPlantasSeleccionadas = new Set();
 let setupNumTorres = 'una';
 
+const SETUP_CESTA_VAR_MAX_CELDAS = 200;
+let _setupCestaVariedadCells = null;
+let _setupCestaVarDraftFil = 0;
+let _setupCestaVarDraftCols = 0;
+
+function resetSetupCestaVariedadDraft() {
+  _setupCestaVariedadCells = null;
+  _setupCestaVarDraftFil = 0;
+  _setupCestaVarDraftCols = 0;
+}
+
+function getSetupPlantasFilasCols() {
+  const t = typeof setupTipoInstalacion !== 'undefined' ? setupTipoInstalacion : 'torre';
+  if (t === 'nft') {
+    const mont =
+      typeof readNftMontajeFromSetupUi === 'function'
+        ? readNftMontajeFromSetupUi()
+        : { disposicion: 'mesa', escaleraCaras: 1, mesaMultinivel: false, mesaTubosStr: '' };
+    let nftNvSlider = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+    let niveles = Math.max(1, Math.min(24, nftNvSlider));
+    const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
+    if (mont.disposicion === 'mesa' && mont.mesaMultinivel && typeof parseNftMesaTubosPorNivelStr === 'function') {
+      const tiers = parseNftMesaTubosPorNivelStr(mont.mesaTubosStr || '');
+      if (tiers.length >= 2) niveles = Math.min(24, tiers.reduce((a, b) => a + b, 0));
+    } else if (mont.disposicion === 'escalera') {
+      const caras = mont.escaleraCaras === 2 ? 2 : 1;
+      niveles = Math.min(24, Math.max(1, nftNvSlider * caras));
+    }
+    return {
+      filas: niveles,
+      cols: Math.max(1, Math.min(30, huecos)),
+      labelFila: 'Tubo',
+      labelCol: 'Hueco',
+    };
+  }
+  if (t === 'rdwc') {
+    const sites = Math.max(2, Math.min(64, parseInt(String(document.getElementById('setupRdwcSites')?.value || '4'), 10) || 4));
+    const rows = Math.max(1, Math.min(4, parseInt(String(document.getElementById('setupRdwcRows')?.value || '1'), 10) || 1));
+    const cols = Math.max(1, Math.ceil(sites / rows));
+    return { filas: rows, cols, labelFila: 'Fila', labelCol: 'Sitio' };
+  }
+  const niveles = Math.max(1, parseInt(document.getElementById('sliderNiveles')?.value || 5, 10));
+  const cestas = Math.max(1, parseInt(document.getElementById('sliderCestas')?.value || 5, 10));
+  return {
+    filas: niveles,
+    cols: cestas,
+    labelFila: t === 'dwc' ? 'Fila' : 'Nivel',
+    labelCol: 'Cesta',
+  };
+}
+
+function asegurarSetupCestaVarDraftDims(filas, cols) {
+  if (_setupCestaVariedadCells && _setupCestaVarDraftFil === filas && _setupCestaVarDraftCols === cols) {
+    return;
+  }
+  const prev = _setupCestaVariedadCells || [];
+  const next = [];
+  for (let i = 0; i < filas; i++) {
+    next[i] = [];
+    for (let j = 0; j < cols; j++) {
+      next[i][j] = prev[i] && prev[i][j] ? prev[i][j] : '';
+    }
+  }
+  _setupCestaVariedadCells = next;
+  _setupCestaVarDraftFil = filas;
+  _setupCestaVarDraftCols = cols;
+}
+
+function buildSetupCultivoSelectOptionsHtml(selectedId) {
+  let html = '<option value="">— Vacío —</option>';
+  Object.keys(GRUPOS_CULTIVO).forEach(gk => {
+    const list = CULTIVOS_DB.filter(c => c.grupo === gk);
+    if (!list.length) return;
+    const lab = GRUPOS_CULTIVO[gk].nombre || gk;
+    const labAttr = escHtmlUi(lab).replace(/"/g, '&quot;');
+    html += '<optgroup label="' + labAttr + '">';
+    list.forEach(c => {
+      const sel = c.id === selectedId ? ' selected' : '';
+      html += '<option value="' + c.id + '"' + sel + '>' + (c.emoji ? c.emoji + ' ' : '') + escHtmlUi(c.nombre) + '</option>';
+    });
+    html += '</optgroup>';
+  });
+  return html;
+}
+
+function setupOnCestaVariedadChange(n, c, selEl) {
+  const dims = getSetupPlantasFilasCols();
+  asegurarSetupCestaVarDraftDims(dims.filas, dims.cols);
+  if (_setupCestaVariedadCells[n] && _setupCestaVariedadCells[n][c] !== undefined) {
+    _setupCestaVariedadCells[n][c] = selEl.value || '';
+  }
+}
+
+function renderSetupCestasVariedadGrid() {
+  const wrap = document.getElementById('setupCestasVariedadesWrap');
+  const titleEl = document.getElementById('setupCestasVariedadesTitle');
+  const hintEl = document.getElementById('setupCestasVariedadesHint');
+  const gridHost = document.getElementById('setupCestasVariedadesGrid');
+  if (!wrap || !gridHost) return;
+  const dims = getSetupPlantasFilasCols();
+  const total = dims.filas * dims.cols;
+  if (total > SETUP_CESTA_VAR_MAX_CELDAS) {
+    wrap.classList.remove('setup-hidden');
+    if (titleEl) titleEl.textContent = 'Asignación por cesta o hueco';
+    gridHost.innerHTML =
+      '<p class="setup-cesta-var-too-many">Con tu diseño actual hay más de ' +
+      SETUP_CESTA_VAR_MAX_CELDAS +
+      ' posiciones. Tras guardar, asigna variedad en cada cesta desde <strong>Cultivo e instalación</strong>.</p>';
+    if (hintEl) hintEl.textContent = '';
+    return;
+  }
+  asegurarSetupCestaVarDraftDims(dims.filas, dims.cols);
+  wrap.classList.remove('setup-hidden');
+  if (titleEl) {
+    titleEl.textContent =
+      'Variedad por ' +
+      dims.labelFila.toLowerCase() +
+      ' y ' +
+      dims.labelCol.toLowerCase() +
+      ' (opcional)';
+  }
+  if (hintEl) {
+    hintEl.textContent =
+      'Listado completo del catálogo. Deja «Vacío» donde quieras; podrás afinar cada cesta después del checklist.';
+  }
+  let html = '<div class="setup-cesta-var-row setup-cesta-var-row--head">';
+  html += '<span class="setup-cesta-var-rowh" aria-hidden="true"></span>';
+  for (let c = 0; c < dims.cols; c++) {
+    html += '<span class="setup-cesta-var-colh">' + (c + 1) + '</span>';
+  }
+  html += '</div>';
+  for (let n = 0; n < dims.filas; n++) {
+    html += '<div class="setup-cesta-var-row">';
+    html += '<span class="setup-cesta-var-rowh">' + escHtmlUi(dims.labelFila) + ' ' + (n + 1) + '</span>';
+    for (let c = 0; c < dims.cols; c++) {
+      const cur = (_setupCestaVariedadCells[n] || [])[c] || '';
+      const opts = buildSetupCultivoSelectOptionsHtml(cur);
+      html +=
+        '<select class="setup-cesta-var-select" ' +
+        'aria-label="' +
+        escAriaAttr(dims.labelFila + ' ' + (n + 1) + ', ' + dims.labelCol + ' ' + (c + 1)) +
+        '" onchange="setupOnCestaVariedadChange(' +
+        n +
+        ',' +
+        c +
+        ',this)">' +
+        opts +
+        '</select>';
+    }
+    html += '</div>';
+  }
+  gridHost.innerHTML = html;
+}
+
+function aplicarSetupCestaVariedadDraftATorre(torreArr, filas, cols) {
+  if (!torreArr || !_setupCestaVariedadCells) return;
+  for (let n = 0; n < filas && n < torreArr.length; n++) {
+    const row = torreArr[n];
+    if (!row) continue;
+    for (let c = 0; c < cols && c < row.length; c++) {
+      const vid = (_setupCestaVariedadCells[n] || [])[c];
+      if (!vid || typeof row[c] !== 'object') continue;
+      row[c].variedad = vid;
+    }
+  }
+}
+
 function renderSetupPlantasGrid() {
   const grid = document.getElementById('setupPlantasGrid');
   if (!grid) return;
@@ -31,11 +198,13 @@ function renderSetupPlantasGrid() {
   // Grupos principales aptos para inicio
   const grupos = [
     { key:'lechugas',  label:'Lechugas',      desc:'Fácil · 40-60 días' },
-    { key:'asiaticas', label:'Asiáticas',      desc:'Fácil · 35-40 días' },
-    { key:'hojas',     label:'Hojas verdes',   desc:'Fácil · 30-55 días' },
-    { key:'hierbas',   label:'Hierbas',        desc:'Media · 30-90 días' },
-    { key:'fresas',    label:'Fresas',         desc:'Media · 90 días' },
-    { key:'frutos',    label:'Frutos',         desc:'Avanzado · Torre dedicada' },
+    { key:'asiaticas', label:'Asiáticas',     desc:'Fácil · 35-40 días' },
+    { key:'hojas',     label:'Hojas verdes',  desc:'Fácil · 30-55 días' },
+    { key:'hierbas',   label:'Hierbas',       desc:'Media · 30-90 días' },
+    { key:'fresas',    label:'Fresas',        desc:'Media · 90 días' },
+    { key:'frutos',    label:'Frutos',        desc:'Avanzado · Torre dedicada' },
+    { key:'raices',    label:'Raíces',        desc:'Media · sustrato profundo' },
+    { key:'microgreens', label:'Microgreens', desc:'Rápido · 7-14 días' },
   ];
 
   grid.innerHTML = grupos.map(g => {
@@ -102,6 +271,7 @@ function renderSetupPlantasGrid() {
     const dosisDiv = document.getElementById('dosisSegunCultivo');
     if (dosisDiv) dosisDiv.classList.add('setup-hidden');
   }
+  renderSetupCestasVariedadGrid();
 }
 
 function toggleSetupPlanta(key) {
@@ -150,10 +320,10 @@ function actualizarResumenSetup() {
     fluorescente: 'Fluorescente T5', hps: 'HPS / HM', sin_luz: 'Sin luz adecuada'
   }[setupData.luz || 'led'] || 'LED';
   const hLuzRes = Math.max(12, Math.min(20, parseInt(String(setupData.horasLuz || 16), 10) || 16));
-  const grupos  = ['lechugas','asiaticas','hojas','hierbas','fresas','frutos'];
+  const grupos  = ['lechugas','asiaticas','hojas','hierbas','fresas','frutos','raices','microgreens'];
   const plantasNombres = {
     lechugas:'Lechugas', asiaticas:'Asiáticas', hojas:'Hojas verdes',
-    hierbas:'Hierbas', fresas:'Fresas', frutos:'Frutos'
+    hierbas:'Hierbas', fresas:'Fresas', frutos:'Frutos', raices:'Raíces', microgreens:'Microgreens',
   };
   const plantasSel = [...setupPlantasSeleccionadas].map(k => plantasNombres[k]||k).join(', ') || 'Sin seleccionar';
 

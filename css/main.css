@@ -14041,6 +14041,74 @@ button.toggle-switch:focus-visible {
   color: #374151;
   line-height: 1.8;
 }
+.setup-cesta-var-wrap {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+}
+.setup-cesta-var-title {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+.setup-cesta-var-hint {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0 0 10px;
+  line-height: 1.45;
+}
+.setup-cesta-var-grid-host {
+  max-height: 380px;
+  overflow: auto;
+  padding-bottom: 4px;
+}
+.setup-cesta-var-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.setup-cesta-var-row--head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel, #fff);
+  padding-bottom: 2px;
+}
+.setup-cesta-var-colh {
+  flex: 1 1 0;
+  min-width: 52px;
+  font-size: 10px;
+  text-align: center;
+  color: #64748b;
+}
+.setup-cesta-var-rowh {
+  flex: 0 0 4.75rem;
+  font-size: 10px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.setup-cesta-var-select {
+  flex: 1 1 0;
+  min-width: 52px;
+  font-size: 11px;
+  padding: 3px 4px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+}
+.setup-cesta-var-too-many {
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  color: #475569;
+}
 .setup-sp7-icon {
   font-size: 32px;
   margin-bottom: 8px;
@@ -15778,6 +15846,28 @@ html.hc-theme-dark .setup-ec-fuente,
 html.hc-theme-dark .nut-quick-detail {
   font-size: 12px;
   color: var(--muted);
+}
+html.hc-theme-dark .setup-cesta-var-wrap {
+  border-top-color: rgba(148, 163, 184, 0.25);
+}
+html.hc-theme-dark .setup-cesta-var-title {
+  color: var(--white);
+}
+html.hc-theme-dark .setup-cesta-var-hint,
+html.hc-theme-dark .setup-cesta-var-too-many {
+  color: var(--muted);
+}
+html.hc-theme-dark .setup-cesta-var-row--head {
+  background: var(--panel, #0f172a);
+}
+html.hc-theme-dark .setup-cesta-var-colh,
+html.hc-theme-dark .setup-cesta-var-rowh {
+  color: var(--muted);
+}
+html.hc-theme-dark .setup-cesta-var-select {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: var(--bg2, #1e293b);
+  color: var(--white);
 }
 html.hc-theme-dark .nut-quick-name {
   color: var(--white);

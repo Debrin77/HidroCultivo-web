@@ -841,6 +841,9 @@ function abrirSetupNuevaTorre() {
   setupNutriente = 'canna_aqua';
   setupUbicacion = 'exterior';
   setupPlantasSeleccionadas = new Set();
+  try {
+    if (typeof resetSetupCestaVariedadDraft === 'function') resetSetupCestaVariedadDraft();
+  } catch (_) {}
   setupNumTorres = 'una'; // no relevante para nueva torre
   setupData.sensoresHardware = { ec: false, ph: false, humedad: false };
   setupData.consejosModoUi = 'principiante';

@@ -1128,14 +1128,20 @@ function renderSetupPage() {
   const ultimoPaso = setupEsNuevaTorre ? SETUP_TOTAL_PAGES - 2 : SETUP_TOTAL_PAGES - 1;
   if (next) {
     if (setupPagina === 0) {
-      next.textContent = 'Empezar asistente →';
-      next.setAttribute('aria-label', 'Empezar asistente de configuración');
-    } else if (setupPagina === ultimoPaso) {
-      next.textContent = '✅ Guardar y empezar';
-      next.setAttribute('aria-label', 'Guardar configuración y empezar');
+      next.style.display = 'none';
+      next.setAttribute('aria-hidden', 'true');
+      next.tabIndex = -1;
     } else {
-      next.textContent = 'Siguiente →';
-      next.setAttribute('aria-label', 'Continuar al siguiente paso');
+      next.style.display = '';
+      next.removeAttribute('aria-hidden');
+      next.tabIndex = 0;
+      if (setupPagina === ultimoPaso) {
+        next.textContent = '✅ Guardar y empezar';
+        next.setAttribute('aria-label', 'Guardar configuración y empezar');
+      } else {
+        next.textContent = 'Siguiente →';
+        next.setAttribute('aria-label', 'Continuar al siguiente paso');
+      }
     }
   }
 }

@@ -1195,28 +1195,48 @@ function getCLPasos() {
       ]
     : [];
 
+  const curTorreObj =
+    typeof torreGetObjetivoCultivo === 'function'
+      ? torreGetObjetivoCultivo(cfg)
+      : cfg.torreObjetivoCultivo === 'baby'
+        ? 'baby'
+        : 'final';
   const pasosTorreObjetivo = esTorre
     ? [{
       id: 'Tobj',
       seccion: '🧭 Torre vertical — objetivo de cultivo',
       paso: 'T·obj',
-      desc: 'Confirmar si esta torre está orientada a <strong>baby leaf</strong> o <strong>planta completa</strong>.',
+      desc:
+        'Elige si la torre va orientada a <strong>baby leaf</strong> (cosecha joven, alta densidad) o a <strong>planta completa</strong>. ' +
+        'Influye en textos orientativos de densidad, ciclo y demanda de riego.',
       nota: (function () {
         const sp = typeof torreGetObjetivoSpec === 'function' && typeof torreGetObjetivoCultivo === 'function'
           ? torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg))
           : { label: 'Planta adulta (tamaño completo)', densidadTxt: '15–25 cm c-c', cicloTxt: 'cosecha completa' };
         return (
-          'Objetivo activo: <strong>' +
+          'Resumen del objetivo <strong>guardado</strong>: ' +
           sp.label +
-          '</strong> · densidad orientativa <strong>' +
+          ' · densidad orientativa <strong>' +
           sp.densidadTxt +
           '</strong> · ' +
           sp.cicloTxt +
-          '. Cambia el objetivo en <strong>Cultivo e instalación</strong> si buscas otro ritmo de cosecha.' +
-          ' Para alinear EC/pH de <strong>Medir</strong> con cada cesta, en Cultivo e instalación indica <strong>variedad</strong>, ' +
+          '. Puedes cambiarlo con el desplegable de este paso o en <strong>Cultivo e instalación</strong>. ' +
+          'Para alinear EC/pH de <strong>Medir</strong> con cada cesta, indica <strong>variedad</strong>, ' +
           '<strong>fecha de trasplante al hidro</strong> (día 0 en el sistema) y <strong>procedencia</strong> (vivero vs germinación propia).'
         );
       })(),
+      campos: [
+        {
+          id: 'clTorreObjetivoCultivo',
+          type: 'select',
+          label: 'Objetivo de la torre',
+          opcionesVal: [
+            { value: 'final', label: 'Planta adulta (tamaño completo)', selected: curTorreObj !== 'baby' },
+            { value: 'baby', label: 'Alta densidad / baby leaf (cosecha joven)', selected: curTorreObj === 'baby' },
+          ],
+          _clOnchange: 'persistTorreObjetivoDesdeChecklist()',
+        },
+      ],
     }]
     : [];
 

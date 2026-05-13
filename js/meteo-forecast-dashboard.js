@@ -1133,10 +1133,28 @@ async function fetchMeteoAlert() {
   }
 
   try {
-    // No bloquear la alerta por geolocalización (usar coords actuales y refrescar luego).
+    let cAlert = getCoordsActivas();
+    if (!cAlert || !Number.isFinite(cAlert.lat) || !Number.isFinite(cAlert.lon)) {
+      await ensureMeteoCoordsAuto();
+      cAlert = getCoordsActivas();
+    }
+    if (!cAlert || !Number.isFinite(cAlert.lat) || !Number.isFinite(cAlert.lon)) {
+      clearMeteoAlertRetry();
+      _meteoAlertRetryStep = 0;
+      if (alertEl && titleEl && textEl && iconEl) {
+        alertEl.className = 'meteo-alert warn';
+        iconEl.innerHTML = '<svg class="hc-ico hc-ico--meteo" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg>';
+        titleEl.textContent = 'Ubicación climática no definida';
+        textEl.textContent =
+          'Indica municipio o coordenadas en Medir o en el asistente de configuración para ver aquí temperatura, humedad y avisos de confort (VPD).';
+      }
+      return;
+    }
+
+    // No bloquear la alerta por geolocalización (coords ya válidas o intentadas arriba).
     void ensureMeteoCoordsAuto();
 
-    const baseUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+    const baseUrl = 'https://api.open-meteo.com/v1/forecast?latitude=' + cAlert.lat + '&longitude=' + cAlert.lon +
       '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,uv_index' +
       '&hourly=temperature_2m,relative_humidity_2m' +
       '&daily=uv_index_max&forecast_days=1&timezone=auto';

@@ -1716,6 +1716,11 @@ function guardarSetupYContinuar() {
       state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
     }
   }
+  try {
+    if (typeof aplicarSetupCestaVariedadDraftATorre === 'function') {
+      aplicarSetupCestaVariedadDraftATorre(state.torre, niveles, cestas);
+    }
+  } catch (_) {}
 
   // Guardar cultivos seleccionados en el setup
   state.configTorre.cultivosIniciales = [...setupPlantasSeleccionadas];

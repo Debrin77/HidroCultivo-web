@@ -153,6 +153,12 @@ function dismissTabBarCoach() {
       const so = document.getElementById('setupOverlay');
       if (so && so.classList.contains('open')) return;
     } catch (_) {}
+    // No forzar de nuevo el asistente si ya hay instalación guardada (p. ej. tras configurar y cerrar flujos).
+    try {
+      if (typeof hcEsPrimeraVezAsistenteInstalacion === 'function' && !hcEsPrimeraVezAsistenteInstalacion()) {
+        return;
+      }
+    } catch (_) {}
     if (typeof abrirSetup === 'function') abrirSetup();
   }, 450);
 }

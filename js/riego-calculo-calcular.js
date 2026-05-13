@@ -12,7 +12,7 @@
  * 6) N plantas en pulsos: si hay ≥1 cesta con fecha válida → ese recuento; si no → valor del campo (manual / guardado).
  * 7) riegoMinutosDesdeDemanda: carga ∝ (N/15)×Kc, ON/OFF con √demanda y perfil de sustrato; interior: OFF mín. 10 min y factores sala.
  * 8) Nocturno (solo torre goteo): ventana 21:00–07:00. Demanda nocturna (torre exterior con Meteoclimatic cercano: factor conservador en ventana local). Minutos ON/OFF: modelo → corredor riegoNocCorredorTablaTorre(T noc, HR, viento tramo) + ajuste esponja/turba → clamp. Exterior: por defecto refresco fijo ~30 s (~04:00); noches muy exigentes usan programa calculado; se omite solo si riegoTorreExteriorOmiteNocturnoPorClima. Interior: demanda ≈ 0,52×demanda día; omitir con riegoNocUmbralesOmitir.
- * Verificación manual (ej. Castelló 39.9864, −0.0495 · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
+ * Verificación manual (ej. municipio con lat/lon conocidos · “Mañana” · 21 lechugas 7 días): comprobar datos en riegoClimaUsado y reproducir con la API el día elegido.
  * Hoy vs mañana: `idx` 0/1 en daily + hourly filtrados por `dailyDateStr` (mismo día civil). Si la previsión casi no varía, demanda y minutos ON/OFF redondeados pueden coincidir.
  * General vs mediodía: demanda día usa VPD con T media diaria + HR media; mediodía usa VPD en 11–15 h + refuerzo UV. Mismo viento/UV diario/ET₀ en ambos; si tras redondeo los minutos coinciden, la UI lo indica.
  */
@@ -91,13 +91,33 @@ async function calcularRiego(opts = {}) {
     /* ≥3 días: cubre mañana completa a cualquier hora; evita que "hoy"/"mañana" compartan el mismo trozo horario cuando la serie no empieza a medianoche. */
     const diasForecast = 3;
 
+    let coords = getCoordsActivas();
+    if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) {
+      if (typeof ensureMeteoCoordsAuto === 'function') {
+        await ensureMeteoCoordsAuto();
+      }
+      coords = getCoordsActivas();
+    }
+    if (!coords || !Number.isFinite(coords.lat) || !Number.isFinite(coords.lon)) {
+      if (riegoLoaderEl) riegoLoaderEl.classList.add('setup-hidden');
+      if (elHorarioHint) {
+        elHorarioHint.textContent =
+          'Indica municipio o coordenadas en Medir (o en el asistente) para calcular el riego con clima de tu zona.';
+      }
+      showToast(
+        '⛅ Sin ubicación: indica municipio o GPS del sistema para calcular el riego con datos meteorológicos.',
+        true
+      );
+      throw new Error('sin-coords-riego');
+    }
+
     const urlECMWFBase = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      'latitude=' + coords.lat + '&longitude=' + coords.lon +
       '&daily=temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max,precipitation_sum' +
       '&hourly=relative_humidity_2m,temperature_2m,wind_speed_10m' +
       `&forecast_days=${diasForecast}&timezone=auto`;
     const urlECMWFCoreBase = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      'latitude=' + coords.lat + '&longitude=' + coords.lon +
       '&daily=temperature_2m_max,temperature_2m_min' +
       '&hourly=relative_humidity_2m,temperature_2m' +
       `&forecast_days=${diasForecast}&timezone=auto`;
@@ -105,12 +125,12 @@ async function calcularRiego(opts = {}) {
     // Modelo default para UV (ECMWF IFS no expone uv_index_max en daily). Mismos días que en Meteo (7)
     // para poder cruzar por fecha con el `daily.time` de ECMWF sin depender del índice posicional.
     const urlUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      'latitude=' + coords.lat + '&longitude=' + coords.lon +
       '&daily=uv_index_max' +
       '&forecast_days=7&timezone=auto';
 
     const urlET0 = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      'latitude=' + coords.lat + '&longitude=' + coords.lon +
       '&hourly=et0_fao_evapotranspiration' +
       `&forecast_days=${diasForecast}&timezone=auto`;
 
@@ -118,8 +138,7 @@ async function calcularRiego(opts = {}) {
       forceRefresh: refetchMeteo,
       allowStaleFallback: !refetchMeteo,
     });
-    const coordsMc = getCoordsActivas();
-    const mcPromise = meteoclimaticObservacionCercana(coordsMc.lat, coordsMc.lon, {
+    const mcPromise = meteoclimaticObservacionCercana(coords.lat, coords.lon, {
       timeoutMs: refetchMeteo ? 7000 : 5600,
     }).catch(() => null);
     const [data, dataUV, dEt0] = await Promise.all([
@@ -844,10 +863,12 @@ async function calcularRiego(opts = {}) {
     ocultarRiegoToldoRecoUI();
     document.getElementById('riegoLoader').classList.add('setup-hidden');
     const elH = document.getElementById('riegoHorarioRecomendado');
-    if (elH) {
+    if (elH && !(e && String(e.message || '') === 'sin-coords-riego')) {
       elH.textContent = 'No se pudo calcular el horario de mayor intensidad solar. Revisa conexión y ubicación, y pulsa de nuevo «Calcular riego ahora».';
     }
-    showToast('❌ Error al obtener datos meteorológicos', true);
+    if (!(e && String(e.message || '') === 'sin-coords-riego')) {
+      showToast('❌ Error al obtener datos meteorológicos', true);
+    }
   } finally {
     if (btnCalc) {
       btnCalc.disabled = false;

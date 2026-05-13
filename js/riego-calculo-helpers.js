@@ -360,7 +360,7 @@ function calcularEdadAutomatica() {
 }
 
 
-// Obtener coordenadas de la torre activa (o Castelló por defecto)
+// Obtener coordenadas de la instalación activa (sin valor por defecto geográfico)
 function getCoordsActivas() {
   const cfg = state.configTorre || {};
   const gl = parseFloat(cfg.meteoGeoLat);
@@ -368,10 +368,22 @@ function getCoordsActivas() {
   if (isFinite(gl) && isFinite(glo)) {
     return { lat: gl, lon: glo };
   }
-  return {
-    lat: cfg.lat || setupCoordenadas.lat || 39.9864,
-    lon: cfg.lon || setupCoordenadas.lon || -0.0495,
-  };
+  const lat = parseFloat(cfg.lat);
+  const lon = parseFloat(cfg.lon);
+  if (isFinite(lat) && isFinite(lon)) {
+    return { lat, lon };
+  }
+  const sl = parseFloat(setupCoordenadas && setupCoordenadas.lat);
+  const so = parseFloat(setupCoordenadas && setupCoordenadas.lon);
+  if (isFinite(sl) && isFinite(so)) {
+    return { lat: sl, lon: so };
+  }
+  return { lat: null, lon: null };
+}
+
+function tieneCoordsActivas() {
+  const g = getCoordsActivas();
+  return !!(g && Number.isFinite(g.lat) && Number.isFinite(g.lon));
 }
 
 

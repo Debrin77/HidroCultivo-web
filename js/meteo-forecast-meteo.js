@@ -569,6 +569,9 @@ function actualizarMeteoCaptionInstalacionActiva() {
 async function cargarMeteo() {
   const meteoLoader = document.getElementById('meteoLoader');
   if (!meteoLoader) return; // pestaña no activa — no hacer nada
+  const METEO_LDR_DEFAULT =
+    '<svg class="hc-ico hc-ico--inline hc-ico--spin" aria-hidden="true" focusable="false"><use href="#hc-i-refresh"/></svg><span>Cargando previsión 7 días...</span>';
+  meteoLoader.innerHTML = METEO_LDR_DEFAULT;
   const meteoUbicEl = document.getElementById('meteoUbicacionActual');
   const labelUbic = (() => {
     const cfg = state.configTorre || {};
@@ -607,19 +610,39 @@ async function cargarMeteo() {
     // No bloquear la carga por geolocalización (puede tardar varios segundos en algunos móviles).
     void ensureMeteoCoordsAuto();
 
+    let coordsM = getCoordsActivas();
+    if (!coordsM || !Number.isFinite(coordsM.lat) || !Number.isFinite(coordsM.lon)) {
+      if (typeof ensureMeteoCoordsAuto === 'function') {
+        await ensureMeteoCoordsAuto();
+      }
+      coordsM = getCoordsActivas();
+    }
+    if (!coordsM || !Number.isFinite(coordsM.lat) || !Number.isFinite(coordsM.lon)) {
+      meteoLoader.style.display = 'flex';
+      meteoLoader.innerHTML =
+        '<svg class="hc-ico hc-ico--inline" aria-hidden="true" focusable="false"><use href="#hc-i-pin-mapa"/></svg>' +
+        '<span>Para ver la previsión, indica <strong>municipio o coordenadas</strong> del sistema en el paso de ubicación del asistente o en <strong>Medir</strong>.</span>';
+      if (meteoDias) meteoDias.classList.add('setup-hidden');
+      if (meteoDetalle) meteoDetalle.classList.add('setup-hidden');
+      if (meteoAlertas) meteoAlertas.classList.add('setup-hidden');
+      if (meteoAvisosOficiales) meteoAvisosOficiales.classList.add('setup-hidden');
+      if (mcBoxLoad) mcBoxLoad.classList.add('setup-hidden');
+      return;
+    }
+
     // ECMWF para temp/humedad + modelo default para UV
     const urlMBase = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      'latitude=' + coordsM.lat + '&longitude=' + coordsM.lon +
       '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max' +
       '&hourly=temperature_2m,relative_humidity_2m' +
       '&forecast_days=7&timezone=auto';
     const urlMCoreBase = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      'latitude=' + coordsM.lat + '&longitude=' + coordsM.lon +
       '&daily=temperature_2m_max,temperature_2m_min' +
       '&hourly=temperature_2m,relative_humidity_2m' +
       '&forecast_days=7&timezone=auto';
     const urlMUV = 'https://api.open-meteo.com/v1/forecast?' +
-      'latitude=' + getCoordsActivas().lat + '&longitude=' + getCoordsActivas().lon +
+      'latitude=' + coordsM.lat + '&longitude=' + coordsM.lon +
       '&daily=uv_index_max&forecast_days=7&timezone=auto';
 
     const fetchOpts = { forceRefresh: meteoForzarPorUbicacion };
@@ -681,7 +704,7 @@ async function cargarMeteo() {
 
     const mcCached = state._ultimoMeteoclimaticCercano;
     if (mcCached && mcCached.temp != null) renderMeteoclimaticPanelMeteo(mcCached);
-    void meteoclimaticObservacionCercana(getCoordsActivas().lat, getCoordsActivas().lon, { timeoutMs: 7200 })
+    void meteoclimaticObservacionCercana(coordsM.lat, coordsM.lon, { timeoutMs: 7200 })
       .then((mc) => {
         try {
           state._ultimoMeteoclimaticCercano = mc;
