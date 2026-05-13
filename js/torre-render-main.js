@@ -117,9 +117,9 @@ function bindRdwcLoopHelp(wrap) {
   const nodes = wrap.querySelectorAll('.rdwc-loop-help-hit');
   if (!nodes || !nodes.length) return;
   const msg =
-    'RDWC en 3 pasos: 1) La bomba impulsa solución desde el depósito de control por la línea verde. ' +
-    '2) Cada módulo recibe caudal y la solución retorna por la línea azul. ' +
-    '3) El circuito cierra en el depósito, donde mides y corriges EC/pH.';
+    'RDWC — circuito: 1) La bomba de recirculación lleva solución desde el depósito de control (línea verde). ' +
+    '2) Cada módulo recibe caudal y retorna por la línea azul. 3) Cierras el anillo en el depósito, donde mides y corriges EC/pH. ' +
+    'Montaje (referencia habitual): sitúa la bomba de aire por encima del nivel máximo de líquido; lubrica junta y tubo en racores a presión y empuja con ligero giro; si separas cubos, deja al menos ~3 cm de tubo dentro del lateral; tras el primer llenado, repasa fugas.';
   const onHelp = () => {
     if (typeof showToast === 'function') showToast(msg);
   };

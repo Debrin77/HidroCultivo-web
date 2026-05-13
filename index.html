@@ -1419,6 +1419,7 @@
         <div id="sistemaDwcAyudaBody" class="torre-dwc-inner torre-sistema-panel-body">
           <div id="sistemaRdwcBloque" class="setup-hidden">
             <p class="torre-nft-p">RDWC: módulos conectados con recirculación continua y retorno al depósito de control.</p>
+            <p class="torre-nft-p-soft">Montaje (referencia habitual de kits RDWC, sin atar a una marca): sitúa la <strong>bomba de aire</strong> por encima del nivel máximo de solución; en tubos tipo push-fit, <strong>lubrica</strong> goma/PVC y conecta empujando con ligero giro; si separas cubos, conserva al menos unos <strong>3 cm de tubo</strong> dentro del lateral; tras el <strong>primer llenado</strong>, repasa fugas en juntas y tapones.</p>
             <div class="torre-dwc-grid-2">
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcSites">Sitios/cubos</label><input type="number" id="sysRdwcSites" class="torre-dwc-input" min="2" max="64" step="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRows">Filas</label><input type="number" id="sysRdwcRows" class="torre-dwc-input" min="1" max="4" step="1"></div>
@@ -2036,7 +2037,7 @@
             </div>
             <p class="riego-panel-lead">
               En <strong>RDWC</strong> la solución <strong>circula de forma continua</strong> entre el <strong>depósito de control</strong> (reservoir) y los módulos; la <strong>bomba de recirculación</strong> no sustituye a un temporizador de goteo: <strong>no</strong> es riego por impulsos ni por pulsos como en torre vertical.
-              Vigila caudal, purgado de aire, aireación y temperatura del líquido. Aquí solo tienes <strong>referencia del clima</strong> para el follaje (toldo, estrés térmico).
+              Vigila caudal, purgado de aire, aireación y temperatura del líquido. Sitúa la <strong>bomba de aire</strong> por encima del nivel máximo de la solución para evitar reflujo. Aquí solo tienes <strong>referencia del clima</strong> para el follaje (toldo, estrés térmico).
             </p>
             <div class="card-title riego-card-title-sm"><svg class="hc-ico hc-ico--title-sm" aria-hidden="true" focusable="false"><use href="#hc-i-cloud-sun"/></svg> Datos climáticos</div>
             <div id="riegoClimaUsadoRdwc" class="riego-clima-ref setup-hidden"></div>
@@ -2778,7 +2779,7 @@
         </p>
         <div id="setupRdwcDetalleWrap" class="setup-hidden">
           <div class="setup-dwc-title">RDWC</div>
-          <p class="setup-dwc-help">Recirculación continua entre cubos + depósito de control. Define parámetros base del circuito.</p>
+          <p class="setup-dwc-help">Recirculación continua entre cubos + depósito de control. Define parámetros base del circuito. Montaje (referencia habitual): bomba de aire por encima del nivel del líquido; lubricar y girar al encajar tubos a presión; al separar módulos, conserva al menos ~3 cm de tubo dentro del cubo; revisar fugas tras el primer llenado.</p>
           <div class="setup-dwc-grid-2">
             <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
@@ -4403,8 +4404,8 @@
   <script src="js/hc-bootstrap-onboarding.js?v=28"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-13-vol-mezcla-ui"></script>
-  <script src="js/torre-render-main.js?v=12"></script>
+  <script src="js/torre-render-build.js?v=2026-05-13-rdwc-consejos-hint"></script>
+  <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=20"></script>
@@ -4423,7 +4424,7 @@
   <script src="js/hc-tools-pro.js?v=10"></script>
   <script src="js/hc-setup-checklist.js?v=26"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
-  <script src="js/hc-setup-consejos.js?v=31"></script>
+  <script src="js/hc-setup-consejos.js?v=32"></script>
   <script src="js/calendario-logic.js?v=8"></script>
   <script src="js/meteo-forecast-meteo.js?v=13"></script>
   <script src="js/meteo-forecast-dashboard.js?v=21"></script>

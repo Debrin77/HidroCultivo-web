@@ -1202,6 +1202,7 @@ function generarSVGRdwc() {
   const loopCx = W / 2 - 138;
   const loopCy = H - 19;
   s += `<g class="rdwc-loop-help-hit" role="button" tabindex="0" aria-label="Cómo funciona el anillo RDWC" opacity="0.95">`;
+  s += `<title>Anillo: pulsa para ver el circuito (verde/azul). Montaje: bomba de aire por encima del nivel; lubricar racores push-fit; ~3 cm de tubo en cubo y fugas tras el primer llenado. Lista en Consejos, pestaña RDWC.</title>`;
   s += `<circle cx="${loopCx}" cy="${loopCy}" r="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>`;
   s += `<path d="M ${loopCx - 7} ${loopCy - 1} A 8 8 0 0 1 ${loopCx + 7} ${loopCy - 1}" fill="none" stroke="#16a34a" stroke-width="1.6" stroke-linecap="round"/>`;
   s += `<polygon points="${loopCx + 6},${loopCy - 4} ${loopCx + 11},${loopCy - 1} ${loopCx + 6},${loopCy + 1}" fill="#16a34a"/>`;

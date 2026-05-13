@@ -65,6 +65,11 @@ const CONSEJOS_DATA = {
     consejos: [],
     soloDwcDoc: true,
   },
+  rdwc: {
+    nombre: '🧿 RDWC', color: '#475569', bg: 'rgba(71,85,105,0.12)',
+    consejos: [],
+    soloRdwcDoc: true,
+  },
   clima: {
     nombre: '🌡️ Clima', color: '#b45309', bg: 'rgba(217,119,6,0.1)',
     consejos: [
@@ -225,7 +230,7 @@ function renderDiagnostico() {
 }
 
 let consejoCatActiva = 'cultivo';
-const CONSEJOS_CAT_ORDEN_UI = ['cultivo', 'problemas', 'agua', 'clima', 'ecph', 'nft', 'dwc', 'variedades'];
+const CONSEJOS_CAT_ORDEN_UI = ['cultivo', 'problemas', 'agua', 'clima', 'ecph', 'nft', 'dwc', 'rdwc', 'variedades'];
 
 function getConsejosModoUi(cfg) {
   const c = cfg || state.configTorre || {};
@@ -885,6 +890,7 @@ function renderConsejos() {
       if (key === 'ecph') return false;
       if (key === 'nft') return tipoInst === 'nft';
       if (key === 'dwc') return tipoInst === 'dwc';
+      if (key === 'rdwc') return tipoInst === 'rdwc';
       return true;
     });
   }
@@ -1775,8 +1781,8 @@ function buildConsejosNftHidraulica() {
   return dyn + cultivo + formula + docWrap;
 }
 
-function buildConsejosDwcNetPotRefTabla() {
-  const cat = CONSEJOS_DATA.dwc;
+function buildConsejosDwcNetPotRefTabla(catForCard) {
+  const cat = catForCard || CONSEJOS_DATA.dwc;
   const html =
     '<p class="consejo-p consejo-p--tight">El <strong>Ø</strong> es el <strong>aro exterior del net pot</strong> (encaje en tapa). La <strong>altura del cuerpo</strong> es lo que suele figurar en catálogo o embalaje (profundidad del plástico del macetero). No es la <strong>columna de agua útil</strong> bajo la cesta en el cubo (RDWC/DWC).</p>' +
     '<div class="consejo-dwc-netpot-ref-scroll">' +
@@ -1832,6 +1838,39 @@ function buildConsejosDwcDifusorBloque() {
       txt: '⚠️ No sustituye el dato del fabricante de la bomba ni un medidor de oxígeno disuelto.',
     },
   });
+}
+
+function buildConsejosRdwc() {
+  const cat = CONSEJOS_DATA.rdwc;
+  const intro = htmlConsejoCard(cat, {
+    icono: '🧿',
+    titulo: 'RDWC en esta app',
+    texto:
+      '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> la solución recircula de forma continua entre el depósito de control y los cubos; <strong>misma EC y mismo pH</strong> en todo el anillo.</p>' +
+      '<p class="consejo-p consejo-p--tight">Para dosis, la app usa el <strong>volumen útil del reservorio de control</strong> más los <strong>litros útiles</strong> de cada cubo (Cultivo e instalación).</p>',
+    alerta: {
+      tipo: 'info',
+      txt: 'ℹ️ Solo mezcla cultivos compatibles en el mismo circuito (como en un DWC compartido).',
+    },
+  });
+  const tres = htmlConsejoCard(cat, {
+    icono: '✅',
+    titulo: 'Montaje: 3 comprobaciones rápidas',
+    texto:
+      '<p class="consejo-p consejo-p--mb10">Antes de plantar o tras ampliar el circuito:</p>' +
+      '<ol class="consejo-proto-ol">' +
+      '<li class="consejo-proto-li"><strong>Bomba de aire</strong> por encima del nivel máximo de la solución (evita reflujo por sifón).</li>' +
+      '<li class="consejo-proto-li"><strong>Racores a presión (push-fit):</strong> lubrica junta y tubo; inserta empujando con ligero giro, como indique el manual del kit.</li>' +
+      '<li class="consejo-proto-li"><strong>Tubos entre cubos:</strong> si separas módulos, conserva al menos unos <strong>3 cm</strong> de tubo dentro del lateral; tras el <strong>primer llenado</strong>, repasa fugas en juntas y tapones.</li>' +
+      '</ol>' +
+      '<p class="consejo-footnote">Buenas prácticas habituales en manuales de kits RDWC comerciales; adapta siempre a tu pieza y fabricante.</p>',
+    alerta: {
+      tipo: 'ok',
+      txt: '✅ En el esquema, toca el icono del anillo para repasar impulsión (verde), retorno (azul) y medición en depósito de control.',
+    },
+  });
+  const netPot = buildConsejosDwcNetPotRefTabla(CONSEJOS_DATA.rdwc);
+  return intro + tres + netPot;
 }
 
 function buildConsejosDwc() {
@@ -2069,6 +2108,12 @@ function renderConsejosLista() {
   if (consejoCatActiva === 'dwc') {
     lista.innerHTML = buildConsejosDwc();
     mountDwcCestasGuiaEnPanelConsejos();
+    plegarTodosDesplegablesConsejosLista(lista);
+    return;
+  }
+
+  if (consejoCatActiva === 'rdwc') {
+    lista.innerHTML = buildConsejosRdwc();
     plegarTodosDesplegablesConsejosLista(lista);
     return;
   }
