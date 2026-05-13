@@ -23,9 +23,16 @@ function renderTorre() {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
     const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
     const pend = cfg.nftPendientePct ?? 2;
-    const volRaw = getVolumenDepositoMaxLitros(cfg);
+    const volRawMax = getVolumenDepositoMaxLitros(cfg);
+    const volRawMez = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
     const vol =
-      volRaw != null && Number.isFinite(volRaw) && volRaw > 0 ? volRaw : (typeof VOL_OBJETIVO !== 'undefined' ? VOL_OBJETIVO : 18);
+      volRawMez != null && Number.isFinite(volRawMez) && volRawMez > 0
+        ? volRawMez
+        : volRawMax != null && Number.isFinite(volRawMax) && volRawMax > 0
+          ? volRawMax
+          : typeof VOL_OBJETIVO !== 'undefined'
+            ? VOL_OBJETIVO
+            : 18;
     const eqArr = cfg.equipamiento;
     const bombMain = getNftBombaDesdeConfig(cfg);
     const altShow =
@@ -823,7 +830,7 @@ function updateTorreStats() {
   const volDepIn = document.getElementById('torreVolDepositoL');
   if (volDepIn && document.activeElement !== volDepIn) {
     if (volMax != null && Number.isFinite(volMax) && volMax > 0) {
-      volDepIn.value = String(Math.max(5, Math.min(100, Math.round(volMax))));
+      volDepIn.value = String(Math.max(5, Math.min(800, Math.round(volMax * 10) / 10)));
     } else {
       volDepIn.value = '';
     }
@@ -864,7 +871,7 @@ function guardarVolDepositoDesdeTorre() {
   if (!el) return;
   let vMax = parseFloat(String(el.value).replace(',', '.'));
   if (!Number.isFinite(vMax)) vMax = VOL_OBJETIVO;
-  vMax = Math.round(Math.max(5, Math.min(100, vMax)));
+  vMax = Math.round(Math.max(5, Math.min(800, vMax)) * 10) / 10;
   el.value = String(vMax);
 
   let mezclaRaw = elM ? String(elM.value || '').trim().replace(',', '.') : '';

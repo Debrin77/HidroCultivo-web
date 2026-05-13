@@ -1024,7 +1024,16 @@ function actualizarBadgesNutriente() {
         rangeVol.textContent =
           '~' + vr + ' L (depósito de control RDWC; mezcla y medición ahí; rango habitual en app 10–800 L)';
       } else {
-        rangeVol.textContent = '≈ ' + vr + ' L (capacidad depósito)';
+        const vm =
+          typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : vr;
+        const vmR = Number.isFinite(vm) && vm > 0 ? Math.round(vm * 10) / 10 : vr;
+        const capR = Math.round(Number(vrRaw) * 10) / 10;
+        if (Number.isFinite(capR) && capR > vmR + 0.35) {
+          rangeVol.textContent =
+            '~' + vmR + ' L en uso (dosis); capacidad máx. del depósito ≈ ' + capR + ' L';
+        } else {
+          rangeVol.textContent = '~' + vmR + ' L (volumen de mezcla y referencia para dosis)';
+        }
       }
       if (inputVol) {
         const vm = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : vr;

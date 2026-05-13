@@ -40,6 +40,23 @@ async function guardarMedicion() {
   if (state.mediciones.length > 200)
     state.mediciones = state.mediciones.slice(0, 200);
 
+  if (
+    vol &&
+    state.configTorre &&
+    typeof getVolumenDepositoMaxLitros === 'function'
+  ) {
+    const volN = parseFloat(String(vol).trim().replace(',', '.'));
+    const vmax = getVolumenDepositoMaxLitros(state.configTorre);
+    if (Number.isFinite(volN) && volN >= 0.5 && vmax != null && Number.isFinite(vmax) && vmax > 0) {
+      const capped = Math.min(vmax, Math.max(0.5, Math.round(volN * 10) / 10));
+      if (capped < vmax - 0.05) state.configTorre.volMezclaLitros = capped;
+      else delete state.configTorre.volMezclaLitros;
+      try {
+        if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
+      } catch (_) {}
+    }
+  }
+
   try {
     if (typeof intentarLimpiarEcAvisoTrasMedicion === 'function') intentarLimpiarEcAvisoTrasMedicion(ec);
   } catch (_) {}
@@ -100,6 +117,16 @@ async function guardarMedicion() {
 
   updateDashboard();
   updateRecargaBar();
+  try {
+    if (vol && typeof actualizarBadgesNutriente === 'function') actualizarBadgesNutriente();
+  } catch (_) {}
+  try {
+    if (vol) {
+      const panSis = document.getElementById('tab-sistema');
+      if (panSis && panSis.classList.contains('active') && typeof renderTorre === 'function') renderTorre();
+      else if (typeof updateTorreStats === 'function') updateTorreStats();
+    }
+  } catch (_) {}
   showToast('✅ Medición guardada · EC:' + (ec||'—') + ' pH:' + (ph||'—'));
 
   // ── 3. INTENTAR ENVIAR A GOOGLE SHEETS (opcional) ────────────────────────

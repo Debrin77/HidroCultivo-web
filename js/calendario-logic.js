@@ -119,6 +119,13 @@ function generarEventos(fecha) {
     typeof etiquetaSistemaHidroponicoBreve === 'function'
       ? etiquetaSistemaHidroponicoBreve(state.configTorre || {})
       : '';
+  const evalRecCal =
+    typeof evaluarFatigaRecargaOculta === 'function' ? evaluarFatigaRecargaOculta() : null;
+  const diObjRec =
+    evalRecCal && Number.isFinite(evalRecCal.diasObjetivo)
+      ? Math.max(9, Math.min(28, Math.round(evalRecCal.diasObjetivo)))
+      : 15;
+  const margenRec = Math.max(2, Math.min(4, Math.round(diObjRec * 0.14)));
   const fmtUbicPlantaCal = (n, ci) => formatoUbicacionEnRegistro(tCal, n + 1, ci + 1);
   const recMed = getRecordatorioMedicionDiariaCalendario();
 
@@ -134,11 +141,17 @@ function generarEventos(fecha) {
     desc: 'Medir EC (objetivo 1300-1400 µS/cm), pH (5.7-6.4) y temperatura del agua (18-22°C).'
   });
 
-  // ── Recarga del depósito ──────────────────────────────────────────────
+  // ── Recarga del depósito (intervalo ~diasObjetivo: volumen, tipo NFT/torre/DWC/RDWC, mediciones, reposición) ──
   if (state.ultimaRecarga) {
     const diasDesdeRecarga = Math.round((d - new Date(state.ultimaRecarga)) / 86400000);
-    if (diasDesdeRecarga >= 13 && diasDesdeRecarga <= 17) {
-      let descRec = `Día ${diasDesdeRecarga} desde la última recarga completa en ${sisLab || 'la instalación activa'} (vaciado + mezcla). Preparar checklist: agua, CalMag, A+B…`;
+    if (
+      diasDesdeRecarga >= diObjRec - margenRec &&
+      diasDesdeRecarga <= diObjRec + margenRec &&
+      diasDesdeRecarga > 0
+    ) {
+      let descRec =
+        `Día ${diasDesdeRecarga} desde la última recarga completa en ${sisLab || 'la instalación activa'} (vaciado + mezcla). ` +
+        `Referencia ~${diObjRec} d (volumen, mediciones y reposiciones). Preparar checklist: agua, CalMag, A+B…`;
       try {
         const av =
           typeof getRecargaVolumenAvisoCfg === 'function'
@@ -161,20 +174,38 @@ function generarEventos(fecha) {
         tipo: 'recarga',
         icono: '🔄',
         titulo:
-          (diasDesdeRecarga >= 15 ? '¡Recarga completa del depósito!' : 'Recarga completa próxima') +
+          (diasDesdeRecarga >= diObjRec ? '¡Recarga completa del depósito!' : 'Recarga completa próxima') +
           (sisLab ? ' · ' + sisLab : ''),
         desc: descRec,
       });
     }
-  } else if (diffDias === 0) {
-    eventos.push({
-      tipo: 'recarga',
-      icono: '🔄',
-      titulo: 'Registra tu última recarga completa' + (sisLab ? ' · ' + sisLab : ''),
-      desc:
-        'En Mediciones: checklist de recarga o interruptor «Recarga completa» al guardar medición. Las reposiciones parciales no cuentan para este recordatorio' +
-        (sisLab ? ' del ' + sisLab + '.' : '.'),
-    });
+  } else {
+    const drift =
+      evalRecCal && Number.isFinite(evalRecCal.diasRestantes)
+        ? Math.max(1, evalRecCal.diasRestantes)
+        : diObjRec;
+    const target = new Date(hoy.getTime() + drift * 86400000);
+    target.setHours(0, 0, 0, 0);
+    const diffTarget = Math.round((d - target) / 86400000);
+    if (diffTarget >= -margenRec && diffTarget <= margenRec) {
+      eventos.push({
+        tipo: 'recarga',
+        icono: '🔄',
+        titulo: 'Recarga completa estimada' + (sisLab ? ' · ' + sisLab : ''),
+        desc:
+          'Fecha orientativa según volumen de la instalación y tus mediciones recientes (misma lógica que la barra de recarga en Medir). ' +
+          'Registra la última recarga real (interruptor o checklist) para fijar el ciclo al día. Preparar checklist: agua, CalMag, A+B…',
+      });
+    } else if (diffDias === 0) {
+      eventos.push({
+        tipo: 'recarga',
+        icono: '🔄',
+        titulo: 'Registra tu última recarga completa' + (sisLab ? ' · ' + sisLab : ''),
+        desc:
+          'En Mediciones: checklist de recarga o interruptor «Recarga completa» al guardar medición. Las reposiciones parciales no cuentan para este recordatorio' +
+          (sisLab ? ' del ' + sisLab + '.' : '.'),
+      });
+    }
   }
 
   // ── Cambio de nutriente sugerido (veg -> bloom) ────────────────────────
@@ -189,7 +220,10 @@ function generarEventos(fecha) {
       const diffCambio = Math.round((d - fx) / 86400000);
       if (diffCambio >= -10 && diffCambio <= 14) {
         const diasRec = state.ultimaRecarga ? Math.round((d - new Date(state.ultimaRecarga)) / 86400000) : null;
-        const recargaCerca = Number.isFinite(diasRec) && diasRec >= 13 && diasRec <= 17;
+        const recargaCerca =
+          Number.isFinite(diasRec) &&
+          diasRec >= diObjRec - margenRec &&
+          diasRec <= diObjRec + margenRec;
         const hintRecarga = recargaCerca
           ? 'Aprovecha la recarga completa de estos días para hacer el cambio.'
           : 'Si no coincide con recarga, programa una recarga anticipada o cambio controlado en cuanto puedas.';
@@ -398,18 +432,56 @@ function renderCalendario() {
     }
   }
 
-  // Recargas completas — cada 15 días desde última recarga completa
-  if (state.ultimaRecarga) {
-    let base = new Date(state.ultimaRecarga);
-    for (let i = 0; i <= 8; i++) {
-      const rec = new Date(base.getTime() + i * 15 * 86400000);
-      if (rec.getMonth() === mes && rec.getFullYear() === año)
+  // Recargas: intervalo adaptativo (misma base que Medir / evaluarFatigaRecargaOculta)
+  const evalRecGrid =
+    typeof evaluarFatigaRecargaOculta === 'function' ? evaluarFatigaRecargaOculta() : null;
+  const diObjGrid =
+    evalRecGrid && Number.isFinite(evalRecGrid.diasObjetivo)
+      ? Math.max(9, Math.min(28, Math.round(evalRecGrid.diasObjetivo)))
+      : 15;
+  const hoyGrid = new Date();
+  hoyGrid.setHours(0, 0, 0, 0);
+  const baseMs =
+    typeof parseUltimaRecargaCompletaDayMs === 'function' ? parseUltimaRecargaCompletaDayMs() : null;
+
+  if (baseMs != null) {
+    const base = new Date(baseMs);
+    base.setHours(0, 0, 0, 0);
+    for (let n = 1; n <= 24; n++) {
+      const rec = new Date(base.getTime() + n * diObjGrid * 86400000);
+      if (rec.getMonth() === mes && rec.getFullYear() === año) {
         addEvento(
           rec.getDate(),
           'recarga',
           '#16a34a',
-          '💧 Recarga completa' + (sisCal ? ' · ' + sisCal : '')
+          '💧 Recarga · ~' + diObjGrid + ' d' + (sisCal ? ' · ' + sisCal : '')
         );
+      }
+    }
+  } else {
+    const hayCtxRecargaCal =
+      (typeof contarPlantasTorreConVariedad === 'function' && contarPlantasTorreConVariedad() > 0) ||
+      !!getUltimaMedicionCalendarioFecha() ||
+      (typeof getVolumenDepositoMaxLitros === 'function' &&
+        getVolumenDepositoMaxLitros(state.configTorre || {}) != null);
+    if (hayCtxRecargaCal) {
+      const drift =
+        evalRecGrid && Number.isFinite(evalRecGrid.diasRestantes)
+          ? Math.max(1, evalRecGrid.diasRestantes)
+          : diObjGrid;
+      const first = new Date(hoyGrid.getTime() + drift * 86400000);
+      first.setHours(0, 0, 0, 0);
+      for (let k = 0; k < 12; k++) {
+        const rec = new Date(first.getTime() + k * diObjGrid * 86400000);
+        if (rec.getMonth() === mes && rec.getFullYear() === año) {
+          addEvento(
+            rec.getDate(),
+            'recarga',
+            '#ca8a04',
+            '💧 Recarga (estim.) · ~' + diObjGrid + ' d' + (sisCal ? ' · ' + sisCal : '')
+          );
+        }
+      }
     }
   }
 

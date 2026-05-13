@@ -1243,25 +1243,31 @@ function generarSVGTorre() {
   const DEP_Y  = MARG_T + torreaH + DEP_GAP;
   const DEP_X  = (SVG_W - DEP_W) / 2;
 
-  // Volumen del depósito: si hay última medición, se muestra y alimenta el nivel; si no, la etiqueta muestra la capacidad configurada (no un 80 % fijo que parecía «16 L» con depósito de 20 L).
-  const volConfigRaw = getVolumenDepositoMaxLitros(cfg);
-  const volConfig =
-    volConfigRaw != null && Number.isFinite(volConfigRaw) && volConfigRaw > 0 ? volConfigRaw : null;
+  // Volumen: etiqueta y nivel siguen el mismo criterio que DWC — litros de mezcla / trabajo (≤ máx.); la última medición solo ajusta el nivel si existe.
+  const volCapRaw = getVolumenDepositoMaxLitros(cfg);
+  const volCap =
+    volCapRaw != null && Number.isFinite(volCapRaw) && volCapRaw > 0 ? volCapRaw : null;
+  const volMezRef =
+    typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
+  const volMez =
+    volMezRef != null && Number.isFinite(volMezRef) && volMezRef > 0 ? volMezRef : null;
   const volMedido =
     state.ultimaMedicion?.vol != null &&
     String(state.ultimaMedicion.vol).trim() !== '' &&
-    Number.isFinite(parseFloat(state.ultimaMedicion.vol))
-      ? parseFloat(state.ultimaMedicion.vol)
+    Number.isFinite(parseFloat(String(state.ultimaMedicion.vol).replace(',', '.')))
+      ? parseFloat(String(state.ultimaMedicion.vol).replace(',', '.'))
       : null;
   const volNivelIlust =
     volMedido != null
       ? volMedido
-      : volConfig != null
-        ? volConfig * 0.78
-        : null;
+      : volMez != null
+        ? volMez
+        : volCap != null
+          ? volCap * 0.78
+          : null;
   const volPct =
-    volConfig != null && volNivelIlust != null && volConfig > 0
-      ? Math.min(1, Math.max(0, volNivelIlust / volConfig))
+    volCap != null && volNivelIlust != null && volCap > 0
+      ? Math.min(1, Math.max(0, volNivelIlust / volCap))
       : 0;
   const tieneDifusor   = state.configTorre?.equipamiento?.includes('difusor')   ?? true;
   const tieneCalentador= state.configTorre?.equipamiento?.includes('calentador') ?? true;
@@ -1395,19 +1401,22 @@ function generarSVGTorre() {
     ${ta ? `<animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>` : ''}
   </ellipse>`;
 
-  // Volumen fuera del depósito para máxima legibilidad (igual criterio que DWC).
+  // Volumen fuera del depósito: siempre litros de referencia para dosis (mezcla); si hay medición distinta, el nivel ya la refleja arriba.
   const volTorreLitros =
-    volMedido != null && Number.isFinite(Number(volMedido))
-      ? Math.round(Number(volMedido) * 10) / 10
-      : volConfig != null
-        ? Math.round(Number(volConfig) * 10) / 10
-        : null;
-  const volTorreTexto =
-    volMedido != null
-      ? volTorreLitros + ' L'
-      : volConfig != null
-        ? volTorreLitros + ' L (cap.)'
-        : '—';
+    volMez != null
+      ? Math.round(volMez * 10) / 10
+      : volMedido != null && Number.isFinite(Number(volMedido))
+        ? Math.round(Number(volMedido) * 10) / 10
+        : volCap != null
+          ? Math.round(Number(volCap) * 10) / 10
+          : null;
+  const subCapTorre =
+    volCap != null &&
+    volTorreLitros != null &&
+    volTorreLitros < volCap - 0.05
+      ? ' · máx ' + Math.round(volCap * 10) / 10 + ' L'
+      : '';
+  const volTorreTexto = volTorreLitros != null ? volTorreLitros + ' L' + subCapTorre : '—';
   s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
     font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreTexto}</text>`;
 
