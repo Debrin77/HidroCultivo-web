@@ -3,6 +3,18 @@
 // CHECKLIST INTEGRADO — LÓGICA
 // ══════════════════════════════════════════════════
 
+/** True mientras el flujo post-asistente / checklist debe verse como continuación del asistente (misma línea que configuración). */
+function hcChecklistContinuidadVisualAsistente() {
+  try {
+    return !!(
+      (typeof window !== 'undefined' && window._hcChecklistGuidedFlow) ||
+      (typeof state !== 'undefined' && state && state.hcPostSetupChecklistPendiente)
+    );
+  } catch (_) {
+    return false;
+  }
+}
+
 let clChecked = new Set();
 let clEsPrimeraVez = false;
 /** 'recarga' = flujo completo (apagar, vaciar, cubrir…); 'primer_llenado' = depósito sin cultivo previo */
@@ -90,15 +102,28 @@ function cerrarOverlayRutaChecklistRecarga() {
  */
 function mostrarOverlayRutaChecklistRecarga(esPrimeraVez) {
   cerrarOverlayRutaChecklistRecarga();
+  const continuidad =
+    (typeof hcChecklistContinuidadVisualAsistente === 'function' && hcChecklistContinuidadVisualAsistente()) ||
+    !!esPrimeraVez;
   const overlay = document.createElement('div');
   overlay.id = 'checklistRutaRecargaOverlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', 'clRutaTitulo');
-  overlay.className = 'checklist-dark-overlay checklist-dark-overlay--ruta';
+  overlay.className =
+    'checklist-dark-overlay checklist-dark-overlay--ruta' +
+    (continuidad ? ' checklist-dark-overlay--setup-flow' : '');
+  const strip = continuidad
+    ? '<div class="checklist-pregunta-guided-strip checklist-flow-strip--sheet" aria-hidden="true">' +
+      '<span class="checklist-pregunta-guided-logo">HIDRO</span><span class="checklist-pregunta-guided-logo-alt">Cultivo</span>' +
+      '<span class="checklist-pregunta-guided-sep">·</span>' +
+      '<span class="checklist-pregunta-guided-step">Misma línea que el asistente</span>' +
+      '</div>'
+    : '';
 
   overlay.innerHTML =
-    '<div class="checklist-dark-sheet">' +
+    '<div class="checklist-dark-sheet' + (continuidad ? ' checklist-dark-sheet--setup-flow' : '') + '">' +
+      strip +
       '<div id="clRutaTitulo" class="checklist-dark-title checklist-dark-title--ruta">¿Qué tipo de checklist necesitas?</div>' +
       '<p class="checklist-dark-text checklist-dark-text--main">' +
         '<strong>Primer llenado</strong>: depósito nuevo o sin haber cultivado aún — te saltamos apagar bomba, vaciado de solución usada y pasos de cosecha. ' +
@@ -144,10 +169,12 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
     const clSub = document.getElementById('checklistSubline');
     if (clSub) {
       try {
-        clSub.textContent =
-          typeof window !== 'undefined' && window._hcChecklistGuidedFlow
-            ? 'Continuación del asistente: primer llenado o recarga del depósito con pasos claros.'
-            : 'Misma línea visual que el asistente: pasos ordenados para la mezcla del depósito (instalación activa).';
+        const guiado =
+          (typeof window !== 'undefined' && window._hcChecklistGuidedFlow) ||
+          (typeof state !== 'undefined' && state && state.hcPostSetupChecklistPendiente);
+        clSub.textContent = guiado
+          ? 'Continuación del asistente: mismo estilo que la configuración del sistema; pasos claros para el depósito (instalación activa).'
+          : 'Misma línea visual que el asistente: pasos ordenados para la mezcla del depósito (instalación activa).';
       } catch (_) {}
     }
 
@@ -686,15 +713,29 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       ? dwcGetModoCultivo(cfg)
       : 'aireado';
 
+  const continuidad =
+    (typeof hcChecklistContinuidadVisualAsistente === 'function' && hcChecklistContinuidadVisualAsistente()) ||
+    !!cfg.hcPlantillaAutogenerada;
+  const strip = continuidad
+    ? '<div class="checklist-pregunta-guided-strip checklist-flow-strip--sheet" aria-hidden="true">' +
+      '<span class="checklist-pregunta-guided-logo">HIDRO</span><span class="checklist-pregunta-guided-logo-alt">Cultivo</span>' +
+      '<span class="checklist-pregunta-guided-sep">·</span>' +
+      '<span class="checklist-pregunta-guided-step">Configuración del sistema</span>' +
+      '</div>'
+    : '';
+
   const overlay = document.createElement('div');
   overlay.id = 'checklistDatosInstalacionOverlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', 'cldTitulo');
-  overlay.className = 'checklist-dark-overlay checklist-dark-overlay--datos';
+  overlay.className =
+    'checklist-dark-overlay checklist-dark-overlay--datos' +
+    (continuidad ? ' checklist-dark-overlay--setup-flow' : '');
 
   overlay.innerHTML =
-    '<div class="checklist-dark-sheet">' +
+    '<div class="checklist-dark-sheet' + (continuidad ? ' checklist-dark-sheet--setup-flow' : '') + '">' +
+      strip +
       '<div id="cldTitulo" class="checklist-dark-title checklist-dark-title--datos">Antes del checklist</div>' +
       '<p class="checklist-dark-text checklist-dark-text--datos-intro">' +
         'Estos datos son para la <strong>instalación activa</strong> (la que ves arriba en Inicio o Cultivo e instalación). Si no es la que quieres, usa <strong>Más tarde</strong>, cambia de instalación y vuelve a abrir el checklist. ' +

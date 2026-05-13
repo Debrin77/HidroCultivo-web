@@ -1775,6 +1775,9 @@ function guardarSetupYContinuar() {
   try {
     window._hcPostSetupPrevListo = false;
   } catch (_) {}
+  try {
+    window._hcChecklistGuidedFlow = true;
+  } catch (_) {}
 
   saveState();
   aplicarConfigTorre();
@@ -1784,13 +1787,16 @@ function guardarSetupYContinuar() {
   updateTorreStats();
   updateDashboard();
 
+  // Cerrar asistente primero para que el paso a Cultivo / checklist sea continuo (sin solapamiento visual).
+  try {
+    if (typeof cerrarSetup === 'function') cerrarSetup();
+  } catch (_) {}
   // Tras configurar: pestaña Cultivo e instalación para cultivos; el checklist se ofrece cuando el usuario confirme.
   if (typeof iniciarFlujoSistemaAntesChecklistPostSetup === 'function') {
     iniciarFlujoSistemaAntesChecklistPostSetup();
   } else {
     preguntarIniciarChecklist();
   }
-  setTimeout(() => cerrarSetup(), 50);
 }
 
 function preguntarIniciarChecklist() {
@@ -1854,7 +1860,9 @@ function preguntarIniciarChecklist() {
       : cfg.tipoInstalacion === 'dwc' ? 'Iniciar checklist DWC'
       : 'Iniciar checklist — torre vertical'
   );
-  const clGuiadoPostSetup = !!(typeof window !== 'undefined' && window._hcChecklistGuidedFlow);
+  const clGuiadoPostSetup =
+    !!(typeof window !== 'undefined' && window._hcChecklistGuidedFlow) ||
+    !!(state && state.hcPostSetupChecklistPendiente);
   overlay.className = clGuiadoPostSetup
     ? 'checklist-pregunta-overlay checklist-pregunta-overlay--guided'
     : 'checklist-pregunta-overlay';
