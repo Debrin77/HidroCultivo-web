@@ -469,6 +469,63 @@ function dwcRecomendacionCultivoDesdeConfig(cfg) {
   };
 }
 
+/** Borrador DWC desde formulario sistema o asistente para recomendación Ø aro vs cultivo. */
+function dwcBuildConfigDraftForReco(scope) {
+  const p = scope === 'setup' ? 'setup' : 'sys';
+  const cfg = { ...(state.configTorre || {}), tipoInstalacion: 'dwc' };
+  const rim = _dwcParseOptMm(p + 'DwcPotRimMm', 25, 120);
+  if (rim != null) cfg.dwcNetPotRimMm = rim;
+  const objEl = document.getElementById(p + 'DwcObjetivoCultivo');
+  if (objEl && objEl.value) cfg.dwcObjetivoCultivo = dwcNormalizeObjetivoCultivo(objEl.value);
+  return cfg;
+}
+
+function renderDwcCultivoRecoStatus(scope) {
+  const elId = scope === 'setup' ? 'setupDwcCultivoRecoStatus' : 'sysDwcCultivoRecoStatus';
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const esSetup = scope === 'setup';
+  if (esSetup) {
+    if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') {
+      el.innerHTML = '';
+      el.classList.add('setup-hidden');
+      return;
+    }
+  } else if (!state.configTorre || state.configTorre.tipoInstalacion !== 'dwc') {
+    el.innerHTML = '';
+    el.classList.add('setup-hidden');
+    return;
+  }
+  const draft = dwcBuildConfigDraftForReco(scope);
+  const r = typeof dwcRecomendacionCultivoDesdeConfig === 'function' ? dwcRecomendacionCultivoDesdeConfig(draft) : null;
+  if (!r) {
+    el.innerHTML = '';
+    el.classList.add('setup-hidden');
+    return;
+  }
+  const chip = typeof rdwcCompatChipHtml === 'function' ? rdwcCompatChipHtml(r.estado) : '';
+  const esc = typeof meteoEscHtml === 'function' ? meteoEscHtml : function (x) {
+    return String(x == null ? '' : x);
+  };
+  const rimTxt =
+    r.rimActualMm != null
+      ? 'Indicas <strong>' + r.rimActualMm + ' mm</strong> (Ø aro).'
+      : 'Indica el <strong>Ø aro de cesta</strong> (mm) para validar.';
+  el.classList.remove('setup-hidden');
+  el.innerHTML =
+    '<span class="rdwc-compat-text"><strong>Recomendación cesta</strong> ' +
+    chip +
+    ' · ' +
+    esc(r.perfil.etiqueta) +
+    ' · rango orientativo <strong>' +
+    esc(r.perfil.cestaTxt) +
+    '</strong> · ' +
+    rimTxt +
+    ' <em>' +
+    esc(r.veredicto) +
+    '</em> También en <strong>Consejos → DWC</strong> y en el checklist de recarga.</span>';
+}
+
 function dwcRecomendacionCultivoTextoCorto(cfg) {
   const r = dwcRecomendacionCultivoDesdeConfig(cfg);
   if (!r) return '';
@@ -1544,6 +1601,9 @@ function refreshDwcTapHintSetup() {
       hintPri.classList.add('setup-hidden');
       hintPri.textContent = '';
     }
+    try {
+      renderDwcCultivoRecoStatus('setup');
+    } catch (eR0) {}
     return;
   }
   const filas = parseInt(document.getElementById('sliderNiveles')?.value || '0', 10);
@@ -1567,6 +1627,9 @@ function refreshDwcTapHintSetup() {
       hintPri.classList.add('setup-hidden');
       hintPri.textContent = '';
     }
+    try {
+      renderDwcCultivoRecoStatus('setup');
+    } catch (eR1) {}
     return;
   }
   el.classList.remove('setup-hidden');
@@ -1677,6 +1740,9 @@ function refreshDwcTapHintSetup() {
       hintPri.textContent = '';
     }
   }
+  try {
+    renderDwcCultivoRecoStatus('setup');
+  } catch (eR2) {}
 }
 
 /** Grupos de cultivo para los que aplica el modelo de distancia (hojas, sin frutos en DWC estándar). */
@@ -1995,6 +2061,9 @@ function refreshDwcSistemaMedidasUI() {
     try {
       refreshDwcMaxCestasHintSistema();
     } catch (eM) {}
+    try {
+      renderDwcCultivoRecoStatus('sys');
+    } catch (eR) {}
     return;
   }
   if (volEl) {
@@ -2062,6 +2131,9 @@ function refreshDwcSistemaMedidasUI() {
       try {
         mountDwcDistanciaLlenadoTiempoReal();
       } catch (_) {}
+      try {
+        renderDwcCultivoRecoStatus('sys');
+      } catch (eRk) {}
       return;
     }
     const par = dwcRecomendacionDifusorParaSistemaUI(cfg);
@@ -2101,6 +2173,9 @@ function refreshDwcSistemaMedidasUI() {
   try {
     applySistemaDwcLlenadoCollapseUI();
   } catch (_) {}
+  try {
+    renderDwcCultivoRecoStatus('sys');
+  } catch (eReco) {}
 }
 
 function refreshDwcTapHintSistema() {

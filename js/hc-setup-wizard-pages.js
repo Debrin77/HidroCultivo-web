@@ -1023,6 +1023,10 @@ function updateNftSetupPreview() {
   const mmHueMirror = document.getElementById('nftMesaHuecosMirror');
   if (mmHueMirror) mmHueMirror.textContent = String(huecos);
 
+  try {
+    renderNftCultivoRecoStatus('setup');
+  } catch (_) {}
+
   const preview = document.getElementById('nftPreview');
   if (!preview) return;
   const bNft = getNftBombaDesdeConfig(draft);

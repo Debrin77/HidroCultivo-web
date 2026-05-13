@@ -1213,6 +1213,9 @@ function seleccionarNftCanalDiam(mm) {
     if (el) el.classList.toggle('selected', d === setupNftCanalDiamMm);
   });
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+  try {
+    renderNftCultivoRecoStatus('setup');
+  } catch (_) {}
 }
 let setupUbicacion = 'exterior';
 let setupNutriente = 'canna_aqua';
@@ -2370,11 +2373,17 @@ function sincronizarSistemaNftMontajeUI() {
     }
   }
   if (!card) {
+    try {
+      renderNftCultivoRecoStatus('sys');
+    } catch (_) {}
     applySistemaTipoPanelesColapsablesUI();
     return;
   }
   if (!cfg || cfg.tipoInstalacion !== 'nft') {
     card.style.display = 'none';
+    try {
+      renderNftCultivoRecoStatus('sys');
+    } catch (_) {}
     applySistemaTipoPanelesColapsablesUI();
     return;
   }
@@ -2467,6 +2476,9 @@ function sincronizarSistemaNftMontajeUI() {
   onSistemaNftMesaMultinivelToggle();
   refrescarSistemaNftMontajeSubpanels();
   applySistemaTipoPanelesColapsablesUI();
+  try {
+    renderNftCultivoRecoStatus('sys');
+  } catch (_) {}
 }
 
 function aplicarSistemaTorreObjetivoDesdeFormulario() {

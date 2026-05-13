@@ -439,6 +439,63 @@ function nftRecomendacionCultivoTextoCorto(cfg) {
   );
 }
 
+function renderNftCultivoRecoStatus(scope) {
+  const elId = scope === 'setup' ? 'setupNftCultivoRecoStatus' : 'sysNftCultivoRecoStatus';
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const esSetup = scope === 'setup';
+  if (esSetup) {
+    if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') {
+      el.innerHTML = '';
+      el.classList.add('setup-hidden');
+      return;
+    }
+  } else if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') {
+    el.innerHTML = '';
+    el.classList.add('setup-hidden');
+    return;
+  }
+  let draft;
+  if (esSetup && typeof buildNftDraftConfigFromSetupUi === 'function') {
+    draft = Object.assign({}, state.configTorre || {}, buildNftDraftConfigFromSetupUi(), { tipoInstalacion: 'nft' });
+  } else if (!esSetup) {
+    draft = Object.assign({}, state.configTorre || {}, { tipoInstalacion: 'nft' });
+    const objEl = document.getElementById('sysNftObjetivoCultivo');
+    if (objEl && objEl.value && typeof nftNormalizeObjetivoCultivo === 'function') {
+      draft.nftObjetivoCultivo = nftNormalizeObjetivoCultivo(objEl.value);
+    }
+  } else {
+    draft = Object.assign({}, state.configTorre || {}, { tipoInstalacion: 'nft' });
+  }
+  const r = typeof nftRecomendacionCultivoDesdeConfig === 'function' ? nftRecomendacionCultivoDesdeConfig(draft) : null;
+  if (!r) {
+    el.innerHTML = '';
+    el.classList.add('setup-hidden');
+    return;
+  }
+  const chip = typeof rdwcCompatChipHtml === 'function' ? rdwcCompatChipHtml(r.estado) : '';
+  const esc = typeof meteoEscHtml === 'function' ? meteoEscHtml : function (x) {
+    return String(x == null ? '' : x);
+  };
+  const dAct =
+    r.diamActualMm != null && Number.isFinite(r.diamActualMm) ? 'Ø <strong>' + r.diamActualMm + ' mm</strong>' : 'Ø por indicar';
+  el.classList.remove('setup-hidden');
+  el.innerHTML =
+    '<span class="rdwc-compat-text"><strong>Recomendación canal (tubo de cultivo)</strong> ' +
+    chip +
+    ' · ' +
+    esc(r.perfil.etiqueta) +
+    ' · rango orientativo <strong>Ø ' +
+    r.perfil.canalMinMm +
+    '–' +
+    r.perfil.canalMaxMm +
+    ' mm</strong> · actual ' +
+    dAct +
+    '. <em>' +
+    esc(r.veredicto) +
+    '</em> También en <strong>Consejos → NFT</strong> y en el checklist de recarga.</span>';
+}
+
 /** Una sola línea de resumen NFT para #depositoTitulo, diagrama y Consejos (config activa). */
 function nftTextoResumenInstalacion(cfg) {
   cfg = cfg || state.configTorre || {};

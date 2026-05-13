@@ -1317,7 +1317,8 @@
         <div class="torre-nft-grid-2">
           <div>
             <label class="form-label torre-nft-label-xs" for="sysNftObjetivoCultivo">Objetivo de cultivo</label>
-            <select id="sysNftObjetivoCultivo" class="torre-nft-input-mt" aria-label="Objetivo de cultivo en NFT">
+            <select id="sysNftObjetivoCultivo" class="torre-nft-input-mt" aria-label="Objetivo de cultivo en NFT"
+              onchange="try{typeof renderNftCultivoRecoStatus==='function'&&renderNftCultivoRecoStatus('sys')}catch(e){}">
               <option value="final">Planta adulta (tamaño completo)</option>
               <option value="baby">Alta densidad / baby leaf (cosecha joven)</option>
             </select>
@@ -1326,6 +1327,7 @@
             <p id="sysNftObjetivoHint" class="torre-nft-p-note setup-hidden" role="status"></p>
           </div>
         </div>
+        <p id="sysNftCultivoRecoStatus" class="torre-nft-p-note setup-hidden" role="status" aria-live="polite"></p>
         <div id="sysNftRowNumCanales" class="torre-nft-row-mb">
           <label class="form-label torre-nft-label-xs" for="sysNftNumCanales">Tubos / canales (mesa o pared)</label>
           <input type="number" id="sysNftNumCanales" class="torre-nft-input-mt" min="1" max="24" step="1">
@@ -1523,6 +1525,7 @@
               <option value="baby">Alta densidad / baby leaf (cosecha joven)</option>
             </select>
           </div>
+          <p id="sysDwcCultivoRecoStatus" class="torre-dwc-vol-hint setup-hidden" role="status" aria-live="polite"></p>
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcRejillaPreferida">Botón principal rejilla</label>
             <select id="sysDwcRejillaPreferida" class="torre-dwc-input" aria-label="Modo preferido para aplicar rejilla"
@@ -2888,6 +2891,7 @@
             <option value="baby">Alta densidad / baby leaf (cosecha joven)</option>
           </select>
         </div>
+        <p id="setupDwcCultivoRecoStatus" class="setup-dwc-cap-hint setup-hidden" role="status" aria-live="polite"></p>
         <div>
           <label class="form-label setup-dwc-label" for="setupDwcRejillaPreferida">Botón principal rejilla</label>
           <select id="setupDwcRejillaPreferida" class="setup-dwc-input"
@@ -3098,6 +3102,7 @@
                   <button type="button" class="equip-card setup-nft-chip-sm" id="nftCanalDiam110" onclick="seleccionarNftCanalDiam(110)">110</button>
                 </div>
               </div>
+              <p id="setupNftCultivoRecoStatus" class="setup-nft-subhint setup-hidden" role="status" aria-live="polite"></p>
               <div id="nftCanalRectWrap" class="setup-hidden">
                 <label for="nftCanalAnchoMm" class="setup-label-tiny">Ancho útil fondo (mm)</label>
                 <input type="number" id="nftCanalAnchoMm" min="40" max="220" value="100" inputmode="numeric"
@@ -4408,10 +4413,10 @@
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=20"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=9"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-11-cultivo-instalacion"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-13-setup-footer"></script>
+  <script src="js/hc-setup-wizard-core.js?v=21"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=10"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-13-cultivo-reco-status"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-13-nft-reco-status"></script>
   <script src="js/hc-setup-calc-core.js?v=24"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
