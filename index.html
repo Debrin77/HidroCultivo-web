@@ -490,6 +490,7 @@
           <button type="button" class="tab-context-hint-close" onclick="dismissTabContextHint('mediciones')" aria-label="Entendido, ocultar aviso">Entendido</button>
         </div>
       </div>
+      <p id="medirDatosFacilesBanner" class="setup-field-hint setup-field-hint--banner medir-facil-banner setup-hidden" role="note"></p>
 
       <div id="ecTransicionAvisoMedir" class="ec-transicion-aviso setup-hidden" role="status" aria-live="polite"></div>
 
@@ -1008,13 +1009,14 @@
         </div>
         <div class="param-input-row">
           <input type="number" class="param-input" id="inputVol" placeholder="18"
-            aria-labelledby="labelMedirVol paramRangeVol"
-            aria-describedby="statusVol correccionVol"
+            aria-labelledby="labelMedirVol paramRangeVol medirVolAyuda"
+            aria-describedby="statusVol correccionVol medirVolAyuda"
             inputmode="decimal" step="0.5" min="0" max="20" oninput="evalParam()">
           <div class="param-unit">litros</div>
         </div>
         <div class="param-status empty" id="statusVol" role="status" aria-live="polite" aria-atomic="true"></div>
         <div class="correccion-box" id="correccionVol" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true"></div>
+        <p id="medirVolAyuda" class="setup-field-hint medir-param-hint">Litros que tienes ahora en el depósito de mezcla (regla, marca del recipiente o estimación). No tiene que coincidir con el tope del kit.</p>
       </div>
       </div>
 

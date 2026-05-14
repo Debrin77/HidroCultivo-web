@@ -124,6 +124,32 @@ function hcCrearNombreInstalacionPorTipo(tipo, ordinal) {
   return base + ' ' + ordinal;
 }
 
+/** Banner en pestaña Mediciones: qué datos son fáciles de anotar según el tipo activo. */
+function refrescarMedirDatosFacilesBanner(cfg) {
+  const el = document.getElementById('medirDatosFacilesBanner');
+  if (!el) return;
+  if (!cfg) {
+    el.classList.add('setup-hidden');
+    return;
+  }
+  el.classList.remove('setup-hidden');
+  const tipo =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipo === 'nft') {
+    el.textContent =
+      'Anota lo que leas hoy en el medidor (EC, pH, °C del agua). Volumen: litros actuales en el depósito de circulación; el rango te orienta frente a la capacidad guardada.';
+  } else if (tipo === 'dwc') {
+    el.textContent =
+      'Lecturas reales del agua; el volumen es lo que tienes hoy en el depósito. Si la app ya conoce la geometría DWC, el rango puede mostrar el útil seguro frente al tope.';
+  } else if (tipo === 'rdwc') {
+    el.textContent =
+      'Las dosis usan control + cubos configurados en Cultivo e instalación; aquí registras mediciones del día (EC, pH, °C, volumen al preparar o revisar la mezcla).';
+  } else {
+    el.textContent =
+      'Torre: valores del medidor y volumen con regla o a ojo en el depósito hoy. No hace falta precisión de laboratorio: importa la tendencia día a día.';
+  }
+}
+
 function hcAppendNuevaInstalacionDesdeEstado(opts) {
   initTorres();
   if (!Array.isArray(state.torres)) state.torres = [];
@@ -1043,7 +1069,7 @@ function actualizarBadgesNutriente() {
         inputVol.setAttribute('max', String(capIn));
       }
     } else if (cfg.hcPlantillaAutogenerada) {
-      rangeVol.textContent = 'Indica capacidad del depósito en Torre o asistente';
+      rangeVol.textContent = 'Indica capacidad en Cultivo e instalación, asistente o etiqueta del depósito';
       rangeVol.removeAttribute('title');
       if (inputVol) {
         inputVol.placeholder = '—';
@@ -1051,6 +1077,10 @@ function actualizarBadgesNutriente() {
       }
     }
   }
+
+  try {
+    refrescarMedirDatosFacilesBanner(state.configTorre);
+  } catch (eMedirBan) {}
 
   // Dashboard
   const dashNombre  = document.getElementById('dashNutrienteNombre');

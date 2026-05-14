@@ -9375,9 +9375,12 @@ html.hc-theme-dark .checklist-dark-sheet--setup-flow .checklist-dark-btn--link {
 .checklist-dark-kicker { font-size: 11px; font-weight: 800; color: #86efac; margin-bottom: 6px; }
 .checklist-dark-type-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin-bottom: 14px;
+}
+#cldVolDepositoHint.checklist-dark-text--mix-hint {
+  margin: 2px 0 8px;
 }
 .checklist-dark-type-opt {
   display: flex;
@@ -13451,6 +13454,15 @@ button.toggle-switch:focus-visible {
 }
 .tab-sistema-facil-banner {
   margin: 0 0 14px;
+}
+.medir-facil-banner {
+  margin: 0 0 12px;
+}
+.medir-param-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #64748b;
 }
 .torre-sistema-inline-hint {
   margin: 0 0 10px;

@@ -499,7 +499,7 @@ function cerrarOverlayChecklistDatosInstalacion() {
 }
 
 /**
- * Aplica torre, NFT o DWC mínimos tras el cuestionario previo al checklist (reset / primera recarga sin asistente).
+ * Aplica torre, NFT, DWC o RDWC mínimos tras el cuestionario previo al checklist (reset / primera recarga sin asistente).
  */
 function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMezclaOpt, dwcModoOpt) {
   initTorres();
@@ -612,6 +612,38 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
         state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
       }
     }
+  } else if (tipo === 'rdwc') {
+    const ctrlVol = Math.min(800, Math.max(10, Math.round(Number(vol) * 10) / 10));
+    state.configTorre = Object.assign({}, baseComun, {
+      tipoInstalacion: 'rdwc',
+      rdwcControlVolL: ctrlVol,
+      volDeposito: ctrlVol,
+      rdwcSites: 4,
+      rdwcRows: 1,
+      rdwcBucketVolL: 20,
+      numNiveles: 1,
+      numCestas: 4,
+    });
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(state.configTorre);
+    state.configTorre.numNiveles = Math.max(
+      1,
+      Math.min(4, Math.round(Number(state.configTorre.rdwcRows || 1)))
+    );
+    state.configTorre.numCestas = Math.max(
+      1,
+      Math.ceil(Number(state.configTorre.rdwcSites || 4) / state.configTorre.numNiveles)
+    );
+    state.configTorre.volDeposito = Math.max(
+      1,
+      Math.round(Number(state.configTorre.rdwcControlVolL || ctrlVol))
+    );
+    state.torre = [];
+    for (let n = 0; n < state.configTorre.numNiveles; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < state.configTorre.numCestas; c++) {
+        state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
+      }
+    }
   } else {
     state.configTorre = Object.assign({}, baseComun, {
       tipoInstalacion: 'torre',
@@ -690,6 +722,7 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   const tipoIni =
     cfg.tipoInstalacion === 'nft' ? 'nft'
     : cfg.tipoInstalacion === 'dwc' ? 'dwc'
+    : cfg.tipoInstalacion === 'rdwc' ? 'rdwc'
     : 'torre';
   const aguaIni = cfg.agua || state.configAgua || 'destilada';
   const nutObjIni = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
@@ -738,9 +771,8 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       strip +
       '<div id="cldTitulo" class="checklist-dark-title checklist-dark-title--datos">Antes del checklist</div>' +
       '<p class="checklist-dark-text checklist-dark-text--datos-intro">' +
-        'Estos datos son para la <strong>instalación activa</strong> (la que ves arriba en Inicio o Cultivo e instalación). Si no es la que quieres, usa <strong>Más tarde</strong>, cambia de instalación y vuelve a abrir el checklist. ' +
-        'Indica tipo, volumen, agua y nutriente para que los pasos del checklist coincidan con tu montaje real. ' +
-        'Puedes afinar todo después en <strong>Cultivo e instalación</strong> o con el asistente completo.</p>' +
+        'Datos mínimos para dosis orientativos: <strong>tipo</strong>, <strong>litros</strong> (etiqueta del depósito o de la caja del kit) y <strong>nutriente</strong>. Instalación activa: revisa el nombre en Inicio o Cultivo e instalación. ' +
+        'Si no es la correcta, pulsa <strong>Más tarde</strong>, cambia de instalación y vuelve. Lo demás lo afinas después en Cultivo e instalación o en el asistente.</p>' +
 
       '<div class="checklist-dark-kicker">Tipo de sistema</div>' +
       '<div class="checklist-dark-type-grid">' +
@@ -753,6 +785,9 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
         '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="dwc"' + (tipoIni === 'dwc' ? ' checked' : '') + '>' +
           '<span class="checklist-dark-type-opt-text">DWC</span></label>' +
+        '<label class="checklist-dark-type-opt">' +
+          '<input type="radio" name="cldTipoInst" value="rdwc"' + (tipoIni === 'rdwc' ? ' checked' : '') + '>' +
+          '<span class="checklist-dark-type-opt-text">RDWC</span></label>' +
       '</div>' +
       '<div id="cldDwcModoWrap" style="' + (tipoIni === 'dwc' ? '' : 'display:none;') + '">' +
         '<label class="checklist-dark-field-label">Modo DWC</label>' +
@@ -762,14 +797,15 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
         '</select>' +
       '</div>' +
 
-      '<label class="checklist-dark-field-label">Capacidad máxima del depósito (L)</label>' +
+      '<label class="checklist-dark-field-label" id="cldVolDepositoLabel">Capacidad máxima del depósito de mezcla (L)</label>' +
+      '<p id="cldVolDepositoHint" class="checklist-dark-text checklist-dark-text--mix-hint"></p>' +
       '<input id="cldVolDeposito" type="number" inputmode="numeric" min="1" max="600" step="1"' +
-        (volIni === '' ? ' placeholder="p. ej. 18"' : ' value="' + volIni + '"') +
+        (volIni === '' ? ' placeholder="Ej. 20 — etiqueta o Cultivo e instalación"' : ' value="' + volIni + '"') +
         ' class="checklist-dark-field-input checklist-dark-field-input--mb8">' +
       '<label class="checklist-dark-field-label">Litros de mezcla (opcional)</label>' +
       '<input id="cldVolMezcla" type="number" inputmode="decimal" min="0.5" max="600" step="0.1" placeholder="Vacío = hasta el máximo" value="' + mezIni.replace(/"/g, '') + '"' +
         ' class="checklist-dark-field-input checklist-dark-field-input--mb12">' +
-      '<p class="checklist-dark-text checklist-dark-text--mix-hint">Si no llenas hasta el tope (p. ej. 19 L en un depósito de 20 L), indícalo aquí: las dosis del checklist usarán esos litros.</p>' +
+      '<p class="checklist-dark-text checklist-dark-text--mix-hint">Si no llenas hasta el tope (p. ej. 19 L en un depósito de 20 L), indícalo aquí: las dosis del checklist usarán esos litros. En RDWC suele aplicarse al volumen útil del depósito de control.</p>' +
 
       '<label class="checklist-dark-field-label">Agua para la mezcla</label>' +
       '<select id="cldAgua" class="checklist-dark-field-input checklist-dark-select checklist-dark-select--mb12">' +
@@ -828,11 +864,28 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   };
 
   document.getElementById('cldBtnContinuar').addEventListener('click', continuar);
+  function syncCldVolDepositoCopy() {
+    const tipoSel = (overlay.querySelector('input[name="cldTipoInst"]:checked') || {}).value || 'torre';
+    const lab = document.getElementById('cldVolDepositoLabel');
+    const hint = document.getElementById('cldVolDepositoHint');
+    if (!lab || !hint) return;
+    if (tipoSel === 'rdwc') {
+      lab.textContent = 'Litros del depósito de control (L)';
+      hint.textContent =
+        'Suele figurar en la placa del kit: reservorio donde preparas la mezcla. Afinar cubos y circuito en Cultivo e instalación.';
+    } else {
+      lab.textContent = 'Capacidad máxima del depósito de mezcla (L)';
+      hint.textContent =
+        'Recipiente de solución: copia el dato de la etiqueta o de Cultivo e instalación si ya lo guardaste.';
+    }
+  }
+  syncCldVolDepositoCopy();
   overlay.querySelectorAll('input[name="cldTipoInst"]').forEach(r => {
     r.addEventListener('change', () => {
       const tipoSel = (overlay.querySelector('input[name="cldTipoInst"]:checked') || {}).value || 'torre';
       const wrap = document.getElementById('cldDwcModoWrap');
       if (wrap) wrap.style.display = tipoSel === 'dwc' ? '' : 'none';
+      syncCldVolDepositoCopy();
     });
   });
   document.getElementById('cldBtnAsistente').addEventListener('click', () => {
@@ -864,7 +917,7 @@ function getCLPasos() {
         seccion: '⚙️ Datos pendientes',
         paso: '·',
         desc:
-          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario que aparece al abrir el checklist.',
+          'Indica volumen de depósito (etiqueta o Cultivo e instalación) y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario al abrir el checklist.',
         nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
       },
     ];
@@ -876,7 +929,7 @@ function getCLPasos() {
         seccion: '⚙️ Datos pendientes',
         paso: '·',
         desc:
-          'Indica volumen de depósito y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario que aparece al abrir el checklist.',
+          'Indica volumen de depósito (etiqueta o Cultivo e instalación) y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario al abrir el checklist.',
         nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
       },
     ];
