@@ -515,6 +515,11 @@ function generarSVGDwc() {
       : (cfg.dwcDepositoForma || 'prismatico');
   const formaDwcTxt =
     typeof dwcFormaDepositoLabel === 'function' ? dwcFormaDepositoLabel(formaDwc) : formaDwc;
+  const esMulticubo =
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  /** Posiciones de piedras (cenital x, frente y) para burbujas en modo multivalvula. */
+  let dwcMcAirPts = null;
   const recoCultivo =
     typeof dwcRecomendacionCultivoDesdeConfig === 'function'
       ? dwcRecomendacionCultivoDesdeConfig(cfg)
@@ -682,6 +687,8 @@ function generarSVGDwc() {
   const tankStartY = planBottom + 48;
   const tankW = blockW;
   const tankH = 108;
+  /** Borde inferior del bloque frontal (depósito único o rejilla de cubos). */
+  let tankGraphicBottom = tankStartY + tankH;
   const tankX = planLeft;
   const rimH = 14;
   const innerPad = 10;
@@ -699,7 +706,65 @@ function generarSVGDwc() {
   let waveY = innerY0 + innerH0 * 0.35;
   const tankFaceInset = 4;
 
-  if (formaDwc === 'cilindrico') {
+  if (esMulticubo) {
+    const S = N * C;
+    const colsMc = Math.min(6, S);
+    const rowsMc = Math.ceil(S / colsMc);
+    const gapMc = 5;
+    const stripH = 18;
+    const yGrid0 = tankStartY + stripH + 8;
+    const availGridH = tankH - stripH - 8 - 6;
+    const miniH = Math.max(30, Math.min(46, (availGridH - (rowsMc - 1) * gapMc) / rowsMc));
+    const miniW = Math.max(24, (tankW - 12 - (colsMc - 1) * gapMc) / colsMc);
+    const manifoldY = tankStartY + stripH - 3;
+    const slots = [];
+    for (let k = 0; k < S; k++) {
+      const r = Math.floor(k / colsMc);
+      const co = k % colsMc;
+      const x = tankX + 6 + co * (miniW + gapMc);
+      const y = yGrid0 + r * (miniH + gapMc);
+      const ix = x + 2.5;
+      const iy = y + 7;
+      const iw = miniW - 5;
+      const ih = miniH - 12;
+      const cx = ix + iw / 2;
+      slots.push({ k, x, y, miniW, miniH, ix, iy, iw, ih, cx });
+    }
+    const iManEnd = Math.min(colsMc, S) - 1;
+    const mL = slots[0].cx;
+    const mR = slots[iManEnd].cx;
+    let dropSvg = '';
+    let cuboSvg = '';
+    dwcMcAirPts = [];
+    for (const o of slots) {
+      dropSvg += `<line x1="${o.cx}" y1="${(manifoldY + 2).toFixed(1)}" x2="${o.cx}" y2="${(o.iy - 0.5).toFixed(1)}"
+        stroke="${Dw.airLine}" stroke-width="1.35" stroke-dasharray="3 2" opacity="0.92"/>`;
+      cuboSvg += `<rect x="${o.x}" y="${o.y}" width="${o.miniW}" height="${o.miniH}" rx="4" fill="#f8fafc" stroke="#64748b" stroke-width="1"/>`;
+      const wTop = o.iy + o.ih * (1 - volPct);
+      cuboSvg += `<rect x="${o.ix}" y="${o.iy}" width="${o.iw}" height="${Math.max(0, wTop - o.iy).toFixed(1)}" fill="#f0f9ff" opacity="0.48"/>`;
+      cuboSvg += `<rect x="${o.ix}" y="${wTop.toFixed(1)}" width="${o.iw}" height="${(o.iy + o.ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
+      cuboSvg += `<rect x="${o.ix}" y="${o.iy}" width="${o.iw}" height="${o.ih}" rx="3" fill="none" stroke="#0ea5e9" stroke-width="0.85" opacity="0.34"/>`;
+      const sy = o.iy + o.ih - 3;
+      if (tieneDifusor) {
+        cuboSvg += `<ellipse cx="${o.cx}" cy="${sy}" rx="5.5" ry="3" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.75"/>`;
+        dwcMcAirPts.push({ cx: o.cx, stoneY: sy, waterTop: wTop });
+      }
+      cuboSvg += `<text x="${o.cx}" y="${(o.y + o.miniH - 2).toFixed(1)}" font-family="Inconsolata,monospace" font-size="5.5" fill="#94a3b8" text-anchor="middle">${o.k + 1}</text>`;
+    }
+    innerBottom = yGrid0 + rowsMc * miniH + (rowsMc - 1) * gapMc;
+    waterTopY = innerBottom - 22;
+    waveY = waterTopY;
+    hx = tankX + tankW - 22;
+    stoneX = slots[0].cx;
+    tankGraphicBottom = Math.max(tankStartY + tankH, innerBottom + 8);
+    clipPathInner = `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${(tankGraphicBottom - tankStartY).toFixed(1)}" rx="2"/>`;
+    tankFrontalSvg =
+      `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${stripH}" rx="4" fill="#eef2f7" stroke="#64748b" stroke-width="1.05"/>` +
+      `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${(tankStartY + 12).toFixed(1)}" text-anchor="middle" font-size="6.5" font-weight="800" fill="#334155" font-family="Syne,sans-serif" letter-spacing="0.02em">MANIFOLD · AIRE POR CUBO</text>` +
+      `<line x1="${mL}" y1="${manifoldY}" x2="${mR}" y2="${manifoldY}" stroke="#334155" stroke-width="2.3" stroke-linecap="round"/>` +
+      dropSvg +
+      cuboSvg;
+  } else if (formaDwc === 'cilindrico') {
     clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
     waterTopY = innerY0 + innerH0 * (1 - volPct);
     innerBottom = innerY0 + innerH0;
@@ -809,6 +874,8 @@ function generarSVGDwc() {
       `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.38"/>`;
   }
 
+  const dwcSvgH = Math.max(H, tankGraphicBottom + 40);
+
   let s = '';
   s += `<defs>
     <linearGradient id="dwcBgGrad" x1="0" y1="0" x2="1" y2="1">
@@ -831,7 +898,7 @@ function generarSVGDwc() {
     }
   </defs>`;
 
-  s += `<rect width="${W}" height="${H}" fill="url(#dwcBgGrad)"/>`;
+  s += `<rect width="${W}" height="${dwcSvgH}" fill="url(#dwcBgGrad)"/>`;
 
   /* ── Tapa vista cenital ── */
   const lidCxCyl = planLeft + planW / 2;
@@ -926,21 +993,23 @@ function generarSVGDwc() {
 
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
-  s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="${Dw.title}" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
+  s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="${Dw.title}" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · ${
+    esMulticubo ? 'CUBOS (MULTIVALVULA)' : 'DEPÓSITO'
+  }</text>`;
   s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="${Dw.sep}" stroke-width="1" stroke-dasharray="5 4"/>`;
 
   /* ── Alzado depósito (prisma / cubo isométrico, tronco piramidal o cilindro) ── */
   s += tankFrontalSvg;
   const stoneY = innerBottom - 10;
 
-  if (tieneCalentador) {
+  if (tieneCalentador && !esMulticubo) {
     const hTop = innerBottom - 52;
     s += `<rect x="${hx - 5}" y="${hTop}" width="10" height="${innerBottom - hTop - 2}" rx="5" fill="${Dw.calFill}" stroke="${Dw.calStroke}" stroke-width="1.1"/>`;
     s += `<circle cx="${hx}" cy="${hTop - 5}" r="4.5" fill="${Dw.calGlow}">${ta ? `<animate attributeName="opacity" values="0.55;1;0.55" dur="1.4s" repeatCount="indefinite"/>` : ''}</circle>`;
     s += `<text x="${hx}" y="${innerBottom + 11}" font-family="Inconsolata,monospace" font-size="7" fill="${Dw.calText}" text-anchor="middle" font-weight="800">CAL</text>`;
   }
 
-  if (tieneDifusor) {
+  if (tieneDifusor && !esMulticubo) {
     const tubeTop = tankStartY - 4;
     s += `<line x1="${stoneX}" y1="${tubeTop}" x2="${stoneX}" y2="${stoneY - 9}" stroke="${Dw.airLine}" stroke-width="1.8" stroke-dasharray="4 3"/>`;
     s += `<ellipse cx="${stoneX}" cy="${stoneY}" rx="13" ry="6.5" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="1.1"/>`;
@@ -958,6 +1027,26 @@ function generarSVGDwc() {
         </circle>`;
       }
     }
+  } else if (tieneDifusor && esMulticubo && dwcMcAirPts && dwcMcAirPts.length) {
+    s += `<text x="${W / 2}" y="${innerBottom + 11}" font-family="Inconsolata,monospace" font-size="7" fill="${Dw.airLabel}" text-anchor="middle" font-weight="800">AIRE / CUBO</text>`;
+    if (ta) {
+      let bi = 0;
+      for (const pt of dwcMcAirPts) {
+        if (bi >= 5) break;
+        for (let j = 0; j < 2; j++) {
+          const dx = (j - 0.5) * 3.5;
+          const delay = ((bi * 2 + j) * 0.18).toFixed(2);
+          const dur = (1.1 + (bi + j) * 0.08).toFixed(2);
+          const y0 = pt.stoneY - 3;
+          const y1 = pt.waterTop + 6;
+          s += `<circle cx="${pt.cx + dx}" cy="${y0}" r="1.2" fill="${Dw.bubble}" opacity="0">
+            <animate attributeName="cy" from="${y0}" to="${y1}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
+            <animate attributeName="opacity" values="0;0.85;0.85;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
+          </circle>`;
+        }
+        bi++;
+      }
+    }
   }
 
   /* Color por litros de mezcla (no por % del máx.): depósito grande + poca mezcla es válido. */
@@ -971,15 +1060,17 @@ function generarSVGDwc() {
       : '#64748b';
   const volTxtDwc =
     typeof volEtiqueta === 'number' && Number.isFinite(volEtiqueta) ? volEtiqueta + ' L' : '—';
-  s += `<text x="${W / 2}" y="${tankStartY + tankH + 24}" font-family="Syne,sans-serif" font-size="19" font-weight="900" fill="${volCol}" text-anchor="middle">${volTxtDwc}</text>`;
-
+  s += `<text x="${W / 2}" y="${tankGraphicBottom + 24}" font-family="Syne,sans-serif" font-size="19" font-weight="900" fill="${volCol}" text-anchor="middle">${volTxtDwc}</text>`;
 
   const pad = 14;
   const vbW = W + pad * 2;
-  const vbH = H + pad * 2;
+  const vbH = dwcSvgH + pad * 2;
+  const dwcTitleMulticubo = esMulticubo
+    ? ` Multivalvula: ${N} por ${C} cubos con línea de aire por sitio; volumen de mezcla total indicado abajo.`
+    : ' Debajo, frente del depósito con solución.';
   return (
-    `<svg class="torre-svg-diagram dwc-svg-diagram svg-centered-block" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
-    `<title id="dwcDiagTitle">DWC ${formaDwcTxt}: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''} Debajo, frente del depósito con solución. Toca una maceta para la ficha.</title>${s}</svg>`
+    `<svg class="torre-svg-diagram dwc-svg-diagram svg-centered-block" width="${W}" height="${dwcSvgH}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
+    `<title id="dwcDiagTitle">DWC ${formaDwcTxt}: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''}${dwcTitleMulticubo} Toca una maceta para la ficha.</title>${s}</svg>`
   );
 }
 
