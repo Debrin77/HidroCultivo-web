@@ -708,51 +708,67 @@ function generarSVGDwc() {
 
   if (esMulticubo) {
     const S = N * C;
-    const colsMc = Math.min(6, S);
-    const rowsMc = Math.ceil(S / colsMc);
-    const gapMc = 5;
+    /** Esquema legible: fila de cubos simbólicos (máx. 4); el total real va en leyenda. */
+    const kDraw = Math.min(Math.max(1, S), 4);
+    const gapMc = 7;
     const stripH = 18;
-    const yGrid0 = tankStartY + stripH + 8;
-    const availGridH = tankH - stripH - 8 - 6;
-    const miniH = Math.max(30, Math.min(46, (availGridH - (rowsMc - 1) * gapMc) / rowsMc));
-    const miniW = Math.max(24, (tankW - 12 - (colsMc - 1) * gapMc) / colsMc);
-    const manifoldY = tankStartY + stripH - 3;
+    const yGrid0 = tankStartY + stripH + 6;
+    const rowPadX = 14;
+    const miniH = Math.min(56, Math.max(44, tankH - stripH - 28));
+    const rowW = tankW - 2 * rowPadX;
+    const miniW = Math.min(78, Math.max(36, (rowW - (kDraw - 1) * gapMc) / kDraw));
+    const rowTotalW = kDraw * miniW + (kDraw - 1) * gapMc;
+    const row0X = tankX + (tankW - rowTotalW) / 2;
+    const manifoldY = tankStartY + stripH - 2;
     const slots = [];
-    for (let k = 0; k < S; k++) {
-      const r = Math.floor(k / colsMc);
-      const co = k % colsMc;
-      const x = tankX + 6 + co * (miniW + gapMc);
-      const y = yGrid0 + r * (miniH + gapMc);
-      const ix = x + 2.5;
-      const iy = y + 7;
-      const iw = miniW - 5;
-      const ih = miniH - 12;
+    for (let i = 0; i < kDraw; i++) {
+      const x = row0X + i * (miniW + gapMc);
+      const y = yGrid0;
+      const ix = x + 3;
+      const iy = y + 8;
+      const iw = miniW - 6;
+      const ih = miniH - 14;
       const cx = ix + iw / 2;
-      slots.push({ k, x, y, miniW, miniH, ix, iy, iw, ih, cx });
+      let subLbl;
+      if (S <= 4) {
+        subLbl = String(i + 1);
+      } else if (i < kDraw - 1) {
+        subLbl = String(i + 1);
+      } else {
+        subLbl = '⋯';
+      }
+      slots.push({ i, x, y, miniW, miniH, ix, iy, iw, ih, cx, subLbl });
     }
-    const iManEnd = Math.min(colsMc, S) - 1;
     const mL = slots[0].cx;
-    const mR = slots[iManEnd].cx;
+    const mR = slots[kDraw - 1].cx;
     let dropSvg = '';
     let cuboSvg = '';
     dwcMcAirPts = [];
     for (const o of slots) {
       dropSvg += `<line x1="${o.cx}" y1="${(manifoldY + 2).toFixed(1)}" x2="${o.cx}" y2="${(o.iy - 0.5).toFixed(1)}"
-        stroke="${Dw.airLine}" stroke-width="1.35" stroke-dasharray="3 2" opacity="0.92"/>`;
-      cuboSvg += `<rect x="${o.x}" y="${o.y}" width="${o.miniW}" height="${o.miniH}" rx="4" fill="#f8fafc" stroke="#64748b" stroke-width="1"/>`;
+        stroke="${Dw.airLine}" stroke-width="1.45" stroke-dasharray="3 2" opacity="0.92"/>`;
+      cuboSvg += `<rect x="${o.x}" y="${o.y}" width="${o.miniW}" height="${o.miniH}" rx="5" fill="#f8fafc" stroke="#64748b" stroke-width="1.05"/>`;
       const wTop = o.iy + o.ih * (1 - volPct);
       cuboSvg += `<rect x="${o.ix}" y="${o.iy}" width="${o.iw}" height="${Math.max(0, wTop - o.iy).toFixed(1)}" fill="#f0f9ff" opacity="0.48"/>`;
       cuboSvg += `<rect x="${o.ix}" y="${wTop.toFixed(1)}" width="${o.iw}" height="${(o.iy + o.ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
-      cuboSvg += `<rect x="${o.ix}" y="${o.iy}" width="${o.iw}" height="${o.ih}" rx="3" fill="none" stroke="#0ea5e9" stroke-width="0.85" opacity="0.34"/>`;
+      cuboSvg += `<rect x="${o.ix}" y="${o.iy}" width="${o.iw}" height="${o.ih}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="0.9" opacity="0.36"/>`;
       const sy = o.iy + o.ih - 3;
       if (tieneDifusor) {
-        cuboSvg += `<ellipse cx="${o.cx}" cy="${sy}" rx="5.5" ry="3" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.75"/>`;
+        cuboSvg += `<ellipse cx="${o.cx}" cy="${sy}" rx="6.5" ry="3.4" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.8"/>`;
         dwcMcAirPts.push({ cx: o.cx, stoneY: sy, waterTop: wTop });
       }
-      cuboSvg += `<text x="${o.cx}" y="${(o.y + o.miniH - 2).toFixed(1)}" font-family="Inconsolata,monospace" font-size="5.5" fill="#94a3b8" text-anchor="middle">${o.k + 1}</text>`;
+      const subFs = o.subLbl === '⋯' ? 14 : 6.5;
+      const subFill = o.subLbl === '⋯' ? '#64748b' : '#94a3b8';
+      cuboSvg += `<text x="${o.cx}" y="${(o.y + o.miniH - 2).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${subFs}" font-weight="${o.subLbl === '⋯' ? '700' : '600'}" fill="${subFill}" text-anchor="middle">${o.subLbl}</text>`;
     }
-    innerBottom = yGrid0 + rowsMc * miniH + (rowsMc - 1) * gapMc;
-    waterTopY = innerBottom - 22;
+    const capY = yGrid0 + miniH + 5;
+    const capTxt =
+      S > kDraw
+        ? `${S} sitios · rejilla ${N}×${C} (${S} salidas de aire)`
+        : `${S} sitio${S === 1 ? '' : 's'} · rejilla ${N}×${C}`;
+    const capSvg = `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${capY.toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7.5" font-weight="700" fill="#475569">${capTxt}</text>`;
+    innerBottom = capY + 4;
+    waterTopY = innerBottom - 20;
     waveY = waterTopY;
     hx = tankX + tankW - 22;
     stoneX = slots[0].cx;
@@ -763,7 +779,8 @@ function generarSVGDwc() {
       `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${(tankStartY + 12).toFixed(1)}" text-anchor="middle" font-size="6.5" font-weight="800" fill="#334155" font-family="Syne,sans-serif" letter-spacing="0.02em">MANIFOLD · AIRE POR CUBO</text>` +
       `<line x1="${mL}" y1="${manifoldY}" x2="${mR}" y2="${manifoldY}" stroke="#334155" stroke-width="2.3" stroke-linecap="round"/>` +
       dropSvg +
-      cuboSvg;
+      cuboSvg +
+      capSvg;
   } else if (formaDwc === 'cilindrico') {
     clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
     waterTopY = innerY0 + innerH0 * (1 - volPct);
