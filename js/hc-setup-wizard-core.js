@@ -29,6 +29,113 @@ function tipoInstalacionNormalizado(cfg) {
   return 'torre';
 }
 
+/** 'kit' = comercial / caja; 'diy' = a medida (comportamiento histórico si falta clave). */
+function hcNftMontajeOrigenNormalizado(cfg) {
+  return (cfg && cfg.nftMontajeOrigen) === 'kit' ? 'kit' : 'diy';
+}
+
+function hcRdwcMontajeOrigenNormalizado(cfg) {
+  return (cfg && cfg.rdwcMontajeOrigen) === 'kit' ? 'kit' : 'diy';
+}
+
+function readNftMontajeOrigenDesdeSetupUi() {
+  return document.getElementById('setupNftMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+}
+
+function readNftMontajeOrigenDesdeSistemaUi() {
+  return document.getElementById('sysNftMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+}
+
+function readRdwcMontajeOrigenDesdeForm(scope) {
+  const idKit = scope === 'sys' ? 'sysRdwcMontajeOrigenKit' : 'setupRdwcMontajeOrigenKit';
+  return document.getElementById(idKit)?.classList.contains('selected') ? 'kit' : 'diy';
+}
+
+function seleccionarSetupNftMontajeOrigen(mode) {
+  const kit = mode === 'kit';
+  const bKit = document.getElementById('setupNftMontajeOrigenKit');
+  const bDiy = document.getElementById('setupNftMontajeOrigenDiy');
+  if (bKit) {
+    bKit.classList.toggle('selected', kit);
+    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
+  }
+  if (bDiy) {
+    bDiy.classList.toggle('selected', !kit);
+    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
+  }
+  const diyBlock = document.getElementById('setupNftMontajeDiyBlock');
+  if (diyBlock) diyBlock.classList.toggle('setup-hidden', kit);
+  const hint = document.getElementById('setupNftMontajeOrigenHint');
+  if (hint) hint.classList.toggle('setup-hidden', !kit);
+  try {
+    updateNftSetupPreview();
+  } catch (_) {}
+  try {
+    actualizarResumenSetup();
+  } catch (_) {}
+}
+
+function seleccionarSistemaNftMontajeOrigen(mode) {
+  const kit = mode === 'kit';
+  const bKit = document.getElementById('sysNftMontajeOrigenKit');
+  const bDiy = document.getElementById('sysNftMontajeOrigenDiy');
+  if (bKit) {
+    bKit.classList.toggle('selected', kit);
+    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
+  }
+  if (bDiy) {
+    bDiy.classList.toggle('selected', !kit);
+    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
+  }
+  const diyBlock = document.getElementById('sysNftMontajeDiyBlock');
+  if (diyBlock) diyBlock.classList.toggle('setup-hidden', kit);
+  const hint = document.getElementById('sysNftMontajeOrigenHint');
+  if (hint) hint.classList.toggle('setup-hidden', !kit);
+}
+
+function seleccionarSetupRdwcMontajeOrigen(mode) {
+  const kit = mode === 'kit';
+  const bKit = document.getElementById('setupRdwcMontajeOrigenKit');
+  const bDiy = document.getElementById('setupRdwcMontajeOrigenDiy');
+  if (bKit) {
+    bKit.classList.toggle('selected', kit);
+    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
+  }
+  if (bDiy) {
+    bDiy.classList.toggle('selected', !kit);
+    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
+  }
+  const ex = document.getElementById('setupRdwcMontajeDiyExtra');
+  if (ex) ex.classList.toggle('setup-hidden', kit);
+  const hint = document.getElementById('setupRdwcMontajeOrigenHint');
+  if (hint) hint.classList.toggle('setup-hidden', !kit);
+  try {
+    applySetupRdwcDesdeFormulario();
+  } catch (_) {}
+}
+
+function seleccionarSistemaRdwcMontajeOrigen(mode) {
+  const kit = mode === 'kit';
+  const bKit = document.getElementById('sysRdwcMontajeOrigenKit');
+  const bDiy = document.getElementById('sysRdwcMontajeOrigenDiy');
+  if (bKit) {
+    bKit.classList.toggle('selected', kit);
+    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
+  }
+  if (bDiy) {
+    bDiy.classList.toggle('selected', !kit);
+    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
+  }
+  const ex = document.getElementById('sysRdwcMontajeDiyExtra');
+  if (ex) ex.classList.toggle('setup-hidden', kit);
+  const hint = document.getElementById('sysRdwcMontajeOrigenHint');
+  if (hint) hint.classList.toggle('setup-hidden', !kit);
+  try {
+    renderRdwcCompatStatus(state.configTorre || {}, 'sysRdwcCompatStatus');
+    renderRdwcCalculoStatus(state.configTorre || {}, 'sysRdwcCalcStatus');
+  } catch (_) {}
+}
+
 /** Etiqueta corta para avisos (recarga, calendario, notificaciones). */
 function etiquetaSistemaHidroponicoBreve(cfg) {
   const t = tipoInstalacionNormalizado(cfg || {});
@@ -117,35 +224,54 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
   c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum(prefix + 'Sites', c.rdwcSites || 4))));
   c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum(prefix + 'Rows', c.rdwcRows || 1))));
   c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum(prefix + 'BucketVolL', c.rdwcBucketVolL || 20)));
-  const bucketTrabajo = rdwcParseLitrosTrabajo(document.getElementById(prefix + 'BucketTrabajoL')?.value);
-  if (bucketTrabajo != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajo);
-  else delete c.rdwcBucketTrabajoL;
-  const bucketDiam = rdwcParseCm(document.getElementById(prefix + 'BucketTrabajoDiamCm')?.value);
-  if (bucketDiam != null) c.rdwcBucketTrabajoDiamCm = bucketDiam;
-  else delete c.rdwcBucketTrabajoDiamCm;
-  const bucketProf = rdwcParseCm(document.getElementById(prefix + 'BucketTrabajoProfCm')?.value);
-  if (bucketProf != null) c.rdwcBucketTrabajoProfCm = bucketProf;
-  else delete c.rdwcBucketTrabajoProfCm;
   c.rdwcControlVolL = Math.max(10, Math.min(800, gNum(prefix + 'ControlVolL', c.rdwcControlVolL || 40)));
   const controlTrabajo = rdwcParseLitrosTrabajo(document.getElementById(prefix + 'ControlTrabajoL')?.value);
   if (controlTrabajo != null) c.volMezclaLitros = Math.min(c.rdwcControlVolL, controlTrabajo);
   else delete c.volMezclaLitros;
-  c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum(prefix + 'RecirculationLh', c.rdwcRecirculationLh || 1200)));
-  c.rdwcAirLpm = Math.max(1, Math.min(300, gNum(prefix + 'AirLpm', c.rdwcAirLpm || 20)));
   c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum(prefix + 'NetPotMm', c.rdwcNetPotMm || 125))));
-  const netPotH = rdwcParseNetPotHeightMm(document.getElementById(prefix + 'NetPotHeightMm')?.value);
-  if (netPotH != null) c.rdwcNetPotHeightMm = netPotH;
-  else delete c.rdwcNetPotHeightMm;
-  c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum(prefix + 'CenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
-  if (scope === 'sys') {
-    c.rdwcTempObjetivoC = Math.max(10, Math.min(30, gNum(prefix + 'TempObjetivoC', c.rdwcTempObjetivoC || 19)));
-    c.rdwcHeadM = Math.max(0, Math.min(6, gNum(prefix + 'HeadM', c.rdwcHeadM || 1.2)));
-    c.rdwcLineLenM = Math.max(1, Math.min(60, gNum(prefix + 'LineLenM', c.rdwcLineLenM || 12)));
-    c.rdwcFittings = Math.round(Math.max(0, Math.min(80, gNum(prefix + 'Fittings', c.rdwcFittings || 12))));
-    const hm = document.getElementById(prefix + 'HydroMode');
-    c.rdwcHydroMode = hm && hm.value ? hm.value : c.rdwcHydroMode || 'estandar';
-    const lay = document.getElementById(prefix + 'Layout');
-    c.rdwcLayout = lay && lay.value ? lay.value : c.rdwcLayout || 'line';
+  const modo = readRdwcMontajeOrigenDesdeForm(scope);
+  if (modo === 'kit') {
+    c.rdwcMontajeOrigen = 'kit';
+    delete c.rdwcBucketTrabajoL;
+    delete c.rdwcBucketTrabajoDiamCm;
+    delete c.rdwcBucketTrabajoProfCm;
+    delete c.rdwcRecirculationLh;
+    delete c.rdwcAirLpm;
+    delete c.rdwcNetPotHeightMm;
+    delete c.rdwcCenterSpacingCm;
+    delete c.rdwcTempObjetivoC;
+    delete c.rdwcHeadM;
+    delete c.rdwcLineLenM;
+    delete c.rdwcFittings;
+    delete c.rdwcHydroMode;
+    delete c.rdwcLayout;
+  } else {
+    delete c.rdwcMontajeOrigen;
+    const bucketTrabajo = rdwcParseLitrosTrabajo(document.getElementById(prefix + 'BucketTrabajoL')?.value);
+    if (bucketTrabajo != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajo);
+    else delete c.rdwcBucketTrabajoL;
+    const bucketDiam = rdwcParseCm(document.getElementById(prefix + 'BucketTrabajoDiamCm')?.value);
+    if (bucketDiam != null) c.rdwcBucketTrabajoDiamCm = bucketDiam;
+    else delete c.rdwcBucketTrabajoDiamCm;
+    const bucketProf = rdwcParseCm(document.getElementById(prefix + 'BucketTrabajoProfCm')?.value);
+    if (bucketProf != null) c.rdwcBucketTrabajoProfCm = bucketProf;
+    else delete c.rdwcBucketTrabajoProfCm;
+    c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum(prefix + 'RecirculationLh', c.rdwcRecirculationLh || 1200)));
+    c.rdwcAirLpm = Math.max(1, Math.min(300, gNum(prefix + 'AirLpm', c.rdwcAirLpm || 20)));
+    const netPotH = rdwcParseNetPotHeightMm(document.getElementById(prefix + 'NetPotHeightMm')?.value);
+    if (netPotH != null) c.rdwcNetPotHeightMm = netPotH;
+    else delete c.rdwcNetPotHeightMm;
+    c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum(prefix + 'CenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
+    if (scope === 'sys') {
+      c.rdwcTempObjetivoC = Math.max(10, Math.min(30, gNum(prefix + 'TempObjetivoC', c.rdwcTempObjetivoC || 19)));
+      c.rdwcHeadM = Math.max(0, Math.min(6, gNum(prefix + 'HeadM', c.rdwcHeadM || 1.2)));
+      c.rdwcLineLenM = Math.max(1, Math.min(60, gNum(prefix + 'LineLenM', c.rdwcLineLenM || 12)));
+      c.rdwcFittings = Math.round(Math.max(0, Math.min(80, gNum(prefix + 'Fittings', c.rdwcFittings || 12))));
+      const hm = document.getElementById(prefix + 'HydroMode');
+      c.rdwcHydroMode = hm && hm.value ? hm.value : c.rdwcHydroMode || 'estandar';
+      const lay = document.getElementById(prefix + 'Layout');
+      c.rdwcLayout = lay && lay.value ? lay.value : c.rdwcLayout || 'line';
+    }
   }
   c.numNiveles = c.rdwcRows;
   c.numCestas = Math.max(1, Math.ceil(c.rdwcSites / c.rdwcRows));
@@ -1358,6 +1484,11 @@ function abrirSetup() {
   renderNutrientesGrid();
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
   else updateTorreBuilder();
+  try {
+    if (setupTipoInstalacion === 'nft') {
+      seleccionarSetupNftMontajeOrigen(hcNftMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+    }
+  } catch (_) {}
   renderSetupPage();
   setTimeout(function () {
     const lhIn = document.getElementById('nftBombaUsuarioLh');
@@ -1553,6 +1684,8 @@ function refrescarSetupTipoInstalacionUI() {
     try {
       refrescarNftMontajeSubpanels();
       refrescarNftCanalesSliderEtiqueta();
+      const cfgN = state.configTorre || {};
+      seleccionarSetupNftMontajeOrigen(hcNftMontajeOrigenNormalizado(cfgN) === 'kit' ? 'kit' : 'diy');
     } catch (e) {}
   }
 }
@@ -2300,6 +2433,9 @@ function syncSistemaRdwcDesdeConfig(cfg) {
   if (l) l.value = c.rdwcLayout || 'line';
   const hm = document.getElementById('sysRdwcHydroMode');
   if (hm) hm.value = c.rdwcHydroMode || 'estandar';
+  try {
+    seleccionarSistemaRdwcMontajeOrigen(hcRdwcMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+  } catch (_) {}
   bindRdwcCompatLive('sys');
   renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
   renderRdwcCalculoStatus(c, 'sysRdwcCalcStatus');
@@ -2338,9 +2474,13 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
     const el = document.getElementById(id);
     if (el) el.value = map[id] != null ? String(map[id]) : '';
   });
+  try {
+    seleccionarSetupRdwcMontajeOrigen(hcRdwcMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+  } catch (_) {}
   bindRdwcCompatLive('setup');
-  renderRdwcCompatStatus(c, 'setupRdwcCompatStatus');
-  renderRdwcCalculoStatus(c, 'setupRdwcCalcStatus');
+  const cFresh = setupRdwcDraft || c;
+  renderRdwcCompatStatus(cFresh, 'setupRdwcCompatStatus');
+  renderRdwcCalculoStatus(cFresh, 'setupRdwcCalcStatus');
 }
 
 function aplicarSistemaRdwcDesdeFormulario() {
@@ -2358,49 +2498,8 @@ function aplicarSistemaRdwcDesdeFormulario() {
   }
   const c = state.configTorre || (state.configTorre = {});
   c.tipoInstalacion = 'rdwc';
-  const gNum = (id, fb) => {
-    const el = document.getElementById(id);
-    const n = parseFloat(String(el && el.value || '').replace(',', '.'));
-    return Number.isFinite(n) ? n : fb;
-  };
-  const cultPrevSys = String(document.getElementById('sysRdwcCultivoPrevisto')?.value || '').trim();
-  if (cultPrevSys) c.rdwcCultivoPrevisto = cultPrevSys;
-  else delete c.rdwcCultivoPrevisto;
-  c.rdwcSites = Math.round(Math.max(2, Math.min(64, gNum('sysRdwcSites', c.rdwcSites || 4))));
-  c.rdwcRows = Math.round(Math.max(1, Math.min(4, gNum('sysRdwcRows', c.rdwcRows || 1))));
-  c.rdwcBucketVolL = Math.max(5, Math.min(200, gNum('sysRdwcBucketVolL', c.rdwcBucketVolL || 20)));
-  const bucketTrabajoSys = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcBucketTrabajoL')?.value);
-  if (bucketTrabajoSys != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajoSys);
-  else delete c.rdwcBucketTrabajoL;
-  const bucketTrabajoDiamSys = rdwcParseCm(document.getElementById('sysRdwcBucketTrabajoDiamCm')?.value);
-  if (bucketTrabajoDiamSys != null) c.rdwcBucketTrabajoDiamCm = bucketTrabajoDiamSys;
-  else delete c.rdwcBucketTrabajoDiamCm;
-  const bucketTrabajoProfSys = rdwcParseCm(document.getElementById('sysRdwcBucketTrabajoProfCm')?.value);
-  if (bucketTrabajoProfSys != null) c.rdwcBucketTrabajoProfCm = bucketTrabajoProfSys;
-  else delete c.rdwcBucketTrabajoProfCm;
-  c.rdwcControlVolL = Math.max(10, Math.min(800, gNum('sysRdwcControlVolL', c.rdwcControlVolL || 40)));
-  const controlTrabajoSys = rdwcParseLitrosTrabajo(document.getElementById('sysRdwcControlTrabajoL')?.value);
-  if (controlTrabajoSys != null) c.volMezclaLitros = Math.min(c.rdwcControlVolL, controlTrabajoSys);
-  else delete c.volMezclaLitros;
-  c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum('sysRdwcRecirculationLh', c.rdwcRecirculationLh || 1200)));
-  c.rdwcAirLpm = Math.max(1, Math.min(300, gNum('sysRdwcAirLpm', c.rdwcAirLpm || 20)));
-  c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum('sysRdwcNetPotMm', c.rdwcNetPotMm || 125))));
-  const netPotHeightSys = rdwcParseNetPotHeightMm(document.getElementById('sysRdwcNetPotHeightMm')?.value);
-  if (netPotHeightSys != null) c.rdwcNetPotHeightMm = netPotHeightSys;
-  else delete c.rdwcNetPotHeightMm;
-  c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum('sysRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
-  c.rdwcTempObjetivoC = Math.max(10, Math.min(30, gNum('sysRdwcTempObjetivoC', c.rdwcTempObjetivoC || 19)));
-  c.rdwcHeadM = Math.max(0, Math.min(6, gNum('sysRdwcHeadM', c.rdwcHeadM || 1.2)));
-  c.rdwcLineLenM = Math.max(1, Math.min(60, gNum('sysRdwcLineLenM', c.rdwcLineLenM || 12)));
-  c.rdwcFittings = Math.round(Math.max(0, Math.min(80, gNum('sysRdwcFittings', c.rdwcFittings || 12))));
-  const hm = document.getElementById('sysRdwcHydroMode');
-  c.rdwcHydroMode = hm && hm.value ? hm.value : (c.rdwcHydroMode || 'estandar');
-  const lay = document.getElementById('sysRdwcLayout');
-  c.rdwcLayout = lay && lay.value ? lay.value : (c.rdwcLayout || 'line');
-  c.numNiveles = c.rdwcRows;
-  c.numCestas = Math.max(1, Math.ceil(c.rdwcSites / c.rdwcRows));
-  c.volDeposito = Math.round(c.rdwcControlVolL);
-  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  const built = buildRdwcConfigFromForm('sys', c);
+  Object.assign(c, built);
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
@@ -2580,6 +2679,9 @@ function sincronizarSistemaNftMontajeUI() {
   }
   onSistemaNftMesaMultinivelToggle();
   refrescarSistemaNftMontajeSubpanels();
+  try {
+    seleccionarSistemaNftMontajeOrigen(hcNftMontajeOrigenNormalizado(cfg) === 'kit' ? 'kit' : 'diy');
+  } catch (_) {}
   applySistemaTipoPanelesColapsablesUI();
   try {
     renderNftCultivoRecoStatus('sys');
@@ -2700,6 +2802,8 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   if (document.getElementById('sysNftDispEscalera')?.classList.contains('selected')) dispo = 'escalera';
   else if (document.getElementById('sysNftDispPared')?.classList.contains('selected')) dispo = 'pared';
   cfg.nftDisposicion = dispo;
+  if (readNftMontajeOrigenDesdeSistemaUi() === 'kit') cfg.nftMontajeOrigen = 'kit';
+  else delete cfg.nftMontajeOrigen;
   const altRaw = parseFloat(String(document.getElementById('sysNftAlturaBombeoCm')?.value || '').replace(',', '.'));
   if (Number.isFinite(altRaw) && altRaw > 0) cfg.nftAlturaBombeoCm = Math.min(500, Math.round(altRaw));
   else delete cfg.nftAlturaBombeoCm;

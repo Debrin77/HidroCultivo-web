@@ -982,6 +982,9 @@ function buildNftDraftConfigFromSetupUi() {
   const pot = typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : { rimMm: null, heightMm: null };
   if (pot.rimMm != null) draft.nftNetPotRimMm = pot.rimMm;
   if (pot.heightMm != null) draft.nftNetPotHeightMm = pot.heightMm;
+  if (typeof readNftMontajeOrigenDesdeSetupUi === 'function' && readNftMontajeOrigenDesdeSetupUi() === 'kit') {
+    draft.nftMontajeOrigen = 'kit';
+  }
   return draft;
 }
 

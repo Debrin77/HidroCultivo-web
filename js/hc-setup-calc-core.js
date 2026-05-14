@@ -1570,6 +1570,9 @@ function guardarSetupYContinuar() {
         }
       : {}),
   };
+  if (isRdwc && typeof buildRdwcConfigFromForm === 'function') {
+    Object.assign(state.configTorre, buildRdwcConfigFromForm('setup', state.configTorre));
+  }
   const ccSetup = parseFloat(String(document.getElementById('setupCalentadorConsignaC')?.value || '').replace(',', '.'));
   if (setupEquipamiento.has('calentador') && Number.isFinite(ccSetup) && ccSetup >= 10 && ccSetup <= 35) {
     state.configTorre.calentadorConsignaC = Math.round(ccSetup * 10) / 10;
@@ -1623,7 +1626,13 @@ function guardarSetupYContinuar() {
       lhInp ? lhInp.value : '',
       wInp ? wInp.value : ''
     );
-    if (vPump.tipo === 'error' && vPump.toast) showToast(vPump.toast, true);
+    if (
+      vPump.tipo === 'error' &&
+      vPump.toast &&
+      !(typeof readNftMontajeOrigenDesdeSetupUi === 'function' && readNftMontajeOrigenDesdeSetupUi() === 'kit')
+    ) {
+      showToast(vPump.toast, true);
+    }
     state.configTorre.nftObjetivoCultivo =
       typeof nftGetObjetivoCultivo === 'function'
         ? nftGetObjetivoCultivo(state.configTorre)
@@ -1641,6 +1650,11 @@ function guardarSetupYContinuar() {
       state.configTorre.nftNetPotHeightMm = hParsed;
     } else {
       delete state.configTorre.nftNetPotHeightMm;
+    }
+    if (typeof readNftMontajeOrigenDesdeSetupUi === 'function' && readNftMontajeOrigenDesdeSetupUi() === 'kit') {
+      state.configTorre.nftMontajeOrigen = 'kit';
+    } else {
+      delete state.configTorre.nftMontajeOrigen;
     }
   } else {
     delete state.configTorre.nftNumCanales;
@@ -1665,6 +1679,7 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftNetPotRimMm;
     delete state.configTorre.nftNetPotHeightMm;
     delete state.configTorre.nftObjetivoCultivo;
+    delete state.configTorre.nftMontajeOrigen;
   }
   if (isDwc) {
     dwcMergeCamposFormularioEnCfg(state.configTorre, DWC_FORM_IDS_SETUP);

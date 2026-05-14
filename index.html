@@ -1273,7 +1273,18 @@
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div id="sistemaNftMontajeBody" class="torre-sistema-panel-body">
+        <div class="setup-nft-montaje-origen-row torre-nft-row-mb">
+          <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
+          <div class="torre-nft-grid-2-tight">
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftMontajeOrigenKit" onclick="seleccionarSistemaNftMontajeOrigen('kit')"
+              aria-pressed="false">Kit comercial</button>
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn selected" id="sysNftMontajeOrigenDiy" onclick="seleccionarSistemaNftMontajeOrigen('diy')"
+              aria-pressed="true">DIY / a medida</button>
+          </div>
+        </div>
+        <p id="sysNftMontajeOrigenHint" class="torre-nft-p-note setup-hidden" role="note">Modo kit: canal/tubo/bomba quedan con valores por defecto; usa el asistente solo si tu kit difiere.</p>
         <p class="torre-nft-p">Lo mismo que en el <strong>asistente</strong>: cuenta tubos y huecos que ves, Ø de cesta del embalaje y (si sube agua) la alzada al primer tubo. Pulsa <strong>Aplicar montaje NFT</strong> al terminar.</p>
+        <div id="sysNftMontajeDiyBlock">
         <details class="torre-vol-detalles torre-sistema-details-spaced">
           <summary class="torre-vol-detalles-summary">Pasos, flujo en escalera y asistente</summary>
           <div class="torre-vol-wrap torre-vol-wrap--inner">
@@ -1290,6 +1301,20 @@
           class="torre-nft-btn-dashed">
           Abrir asistente — canal / tubo / bomba
         </button>
+        <div class="torre-nft-bomba-wrap">
+          <div class="torre-nft-bomba-kicker">Bomba — datos de placa (opcional)</div>
+          <div class="torre-nft-grid-2-8">
+            <div>
+              <label class="form-label torre-nft-label-xs" for="sysNftBombaLh">Caudal (L/h)</label>
+              <input type="number" id="sysNftBombaLh" class="torre-nft-input-mt" min="0" step="10" placeholder="ej. 600" inputmode="numeric" autocomplete="off">
+            </div>
+            <div>
+              <label class="form-label torre-nft-label-xs" for="sysNftBombaW">Potencia (W)</label>
+              <input type="number" id="sysNftBombaW" class="torre-nft-input-mt" min="0" step="1" placeholder="ej. 15" inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
+        </div>
+        </div>
         <div class="torre-nft-grid-3">
           <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftDispMesa" onclick="seleccionarSistemaNftDisposicion('mesa')"
             aria-pressed="true">Mesa</button>
@@ -1394,19 +1419,6 @@
             </div>
           </div>
         </div>
-        <div class="torre-nft-bomba-wrap">
-          <div class="torre-nft-bomba-kicker">Bomba — datos de placa (opcional)</div>
-          <div class="torre-nft-grid-2-8">
-            <div>
-              <label class="form-label torre-nft-label-xs" for="sysNftBombaLh">Caudal (L/h)</label>
-              <input type="number" id="sysNftBombaLh" class="torre-nft-input-mt" min="0" step="10" placeholder="ej. 600" inputmode="numeric" autocomplete="off">
-            </div>
-            <div>
-              <label class="form-label torre-nft-label-xs" for="sysNftBombaW">Potencia (W)</label>
-              <input type="number" id="sysNftBombaW" class="torre-nft-input-mt" min="0" step="1" placeholder="ej. 15" inputmode="numeric" autocomplete="off">
-            </div>
-          </div>
-        </div>
         <button type="button" class="torre-nft-apply-btn" onclick="aplicarSistemaNftMontajeDesdeFormulario()">
           Aplicar montaje NFT
         </button>
@@ -1426,19 +1438,31 @@
           <div id="sistemaRdwcBloque" class="setup-hidden">
             <p class="torre-nft-p"><strong>Datos mínimos:</strong> sitios/cubos visibles y <strong>litros del depósito de control</strong> en la placa del kit. Lo demás puede quedar por defecto o con lo que indique tu bomba; no hace falta calcular caudales a mano.</p>
             <p class="torre-nft-p-soft">Montaje (kits genéricos): bomba de aire por encima del nivel de solución; tubos a presión con giro suave; al separar cubos, deja ~3 cm de tubo dentro del lateral; tras el primer llenado, revisa fugas.</p>
+            <div class="setup-nft-montaje-origen-row torre-nft-row-mb">
+              <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
+              <div class="torre-nft-grid-2-tight">
+                <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysRdwcMontajeOrigenKit" onclick="seleccionarSistemaRdwcMontajeOrigen('kit')"
+                  aria-pressed="false">Kit comercial</button>
+                <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn selected" id="sysRdwcMontajeOrigenDiy" onclick="seleccionarSistemaRdwcMontajeOrigen('diy')"
+                  aria-pressed="true">DIY / a medida</button>
+              </div>
+            </div>
+            <p id="sysRdwcMontajeOrigenHint" class="torre-nft-p-note setup-hidden" role="note">Modo kit: ocultamos afinado de cubo útil, caudales e hidráulica; la app usa estimaciones y valores por defecto.</p>
             <div class="torre-dwc-grid-2">
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcSites">Sitios/cubos</label><input type="number" id="sysRdwcSites" class="torre-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRows">Filas</label><input type="number" id="sysRdwcRows" class="torre-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="sysRdwcBucketVolL" class="torre-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
-              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="sysRdwcBucketTrabajoL" class="torre-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcCultivoPrevisto">Cultivo previsto</label><select id="sysRdwcCultivoPrevisto" class="torre-dwc-input"><option value="">Auto según cultivos asignados / configuración</option></select></div>
-              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoDiamCm">Ø útil bajo cesta (cm)</label><input type="number" id="sysRdwcBucketTrabajoDiamCm" class="torre-dwc-input" min="5" max="80" step="0.1" placeholder="opcional"></div>
-              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoProfCm">Prof. útil bajo cesta (cm)</label><input type="number" id="sysRdwcBucketTrabajoProfCm" class="torre-dwc-input" min="1" max="80" step="0.1" placeholder="opcional"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlVolL">Depósito control (L máx)</label><input type="number" id="sysRdwcControlVolL" class="torre-dwc-input" min="10" max="800" step="0.5" placeholder="40"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcControlTrabajoL">Litros útiles en depósito control</label><input type="number" id="sysRdwcControlTrabajoL" class="torre-dwc-input" min="0.5" max="800" step="0.1" placeholder="vacío = hasta el máximo"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="sysRdwcNetPotMm" class="torre-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
+            </div>
+            <div id="sysRdwcMontajeDiyExtra" class="torre-dwc-grid-2">
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="sysRdwcBucketTrabajoL" class="torre-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoDiamCm">Ø útil bajo cesta (cm)</label><input type="number" id="sysRdwcBucketTrabajoDiamCm" class="torre-dwc-input" min="5" max="80" step="0.1" placeholder="opcional"></div>
+              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketTrabajoProfCm">Prof. útil bajo cesta (cm)</label><input type="number" id="sysRdwcBucketTrabajoProfCm" class="torre-dwc-input" min="1" max="80" step="0.1" placeholder="opcional"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRecirculationLh">Recirculación (L/h)</label><input type="number" id="sysRdwcRecirculationLh" class="torre-dwc-input" min="200" max="12000" step="10" placeholder="1200"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcAirLpm">Aireación (L/min)</label><input type="number" id="sysRdwcAirLpm" class="torre-dwc-input" min="1" max="300" step="1" placeholder="20"></div>
-              <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="sysRdwcNetPotMm" class="torre-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcNetPotHeightMm" title="Altura del cuerpo del macetero de red; opcional">Altura net pot (mm, opc.)</label><input type="number" id="sysRdwcNetPotHeightMm" class="torre-dwc-input" min="30" max="200" step="1" placeholder="—"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="sysRdwcCenterSpacingCm" class="torre-dwc-input" min="20" max="150" step="1" placeholder="45"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcTempObjetivoC">Temp objetivo (°C)</label><input type="number" id="sysRdwcTempObjetivoC" class="torre-dwc-input" min="10" max="30" step="0.1" placeholder="19"></div>
@@ -2796,19 +2820,31 @@
           <div class="setup-dwc-title">Sistema RDWC</div>
           <p class="setup-dwc-help"><strong>En un vistazo:</strong> cuenta los <strong>sitios/cubos</strong> y mira en la placa del kit los <strong>litros del depósito de control</strong>. Cubo nominal, recirculación y aireación pueden quedar como vienen por defecto o con el dato de tu bomba si lo tienes a mano; no hace falta calcular caudales a mano.</p>
           <p class="setup-dwc-help">Nutrientes: sumamos <strong>útil del depósito de control + útil de cada cubo</strong>. Los litros útiles y Ø/prof. bajo cesta son <strong>opcionales</strong> si ya indicaste volumen nominal; vacíos = estimación razonable. Cultivo previsto y net pot ayudan a afinar sin medir todo a mano.</p>
+          <div class="setup-nft-montaje-origen-row setup-mb-10">
+            <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
+            <div class="setup-nft-layout-grid setup-nft-montaje-origen-chips">
+              <button type="button" class="equip-card nft-disp-btn" id="setupRdwcMontajeOrigenKit" onclick="seleccionarSetupRdwcMontajeOrigen('kit')"
+                aria-pressed="false">Kit comercial</button>
+              <button type="button" class="equip-card nft-disp-btn selected" id="setupRdwcMontajeOrigenDiy" onclick="seleccionarSetupRdwcMontajeOrigen('diy')"
+                aria-pressed="true">DIY / a medida</button>
+            </div>
+          </div>
+          <p id="setupRdwcMontajeOrigenHint" class="setup-dwc-help setup-hidden" role="note">Modo kit: ocultamos volumen útil fino del cubo, caudales y separación; la app estimará con el nominal del cubo y valores por defecto. Elige DIY si afinas tubería o bombas.</p>
           <div class="setup-dwc-grid-2">
             <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="setupRdwcBucketTrabajoL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
-              <div><label class="form-label setup-dwc-label" for="setupRdwcCultivoPrevisto">Cultivo previsto</label><select id="setupRdwcCultivoPrevisto" class="setup-dwc-input"><option value="">Auto según cultivos asignados / configuración</option></select></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoDiamCm">Ø útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoDiamCm" class="setup-dwc-input" min="5" max="80" step="0.1" placeholder="opcional"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoProfCm">Prof. útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoProfCm" class="setup-dwc-input" min="1" max="80" step="0.1" placeholder="opcional"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcCultivoPrevisto">Cultivo previsto</label><select id="setupRdwcCultivoPrevisto" class="setup-dwc-input"><option value="">Auto según cultivos asignados / configuración</option></select></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcControlVolL">Depósito control (L máx)</label><input type="number" id="setupRdwcControlVolL" class="setup-dwc-input" min="10" max="800" step="0.5" placeholder="40"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcControlTrabajoL">Litros útiles en depósito control</label><input type="number" id="setupRdwcControlTrabajoL" class="setup-dwc-input" min="0.5" max="800" step="0.1" placeholder="vacío = hasta el máximo"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
+          </div>
+          <div id="setupRdwcMontajeDiyExtra" class="setup-dwc-grid-2">
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="setupRdwcBucketTrabajoL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoDiamCm">Ø útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoDiamCm" class="setup-dwc-input" min="5" max="80" step="0.1" placeholder="opcional"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoProfCm">Prof. útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoProfCm" class="setup-dwc-input" min="1" max="80" step="0.1" placeholder="opcional"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRecirculationLh">Bomba recirculación (L/h)</label><input type="number" id="setupRdwcRecirculationLh" class="setup-dwc-input" min="200" max="12000" step="10" placeholder="1200"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcAirLpm">Aireación total (L/min)</label><input type="number" id="setupRdwcAirLpm" class="setup-dwc-input" min="1" max="300" step="1" placeholder="20"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotHeightMm" title="Altura del cuerpo del macetero de red; opcional">Altura net pot (mm, opc.)</label><input type="number" id="setupRdwcNetPotHeightMm" class="setup-dwc-input" min="30" max="200" step="1" placeholder="—"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcCenterSpacingCm">Separación c-c (cm)</label><input type="number" id="setupRdwcCenterSpacingCm" class="setup-dwc-input" min="20" max="150" step="1" placeholder="45"></div>
           </div>
@@ -2963,7 +2999,18 @@
             <div class="torre-preview nft-schematic-host" id="nftPreview" aria-hidden="true"></div>
           </div>
           <div class="torre-controls">
-            <p class="setup-field-hint setup-mb-8">Kit comercial: suele bastar la <strong>forma del montaje</strong>, número de <strong>canales/tubos</strong> y el <strong>Ø de cesta</strong> del embalaje. DIY: cinta al tubo de cultivo y, si el agua sube, la <strong>alzada al primer tubo</strong> (no hace falta calcular caudales).</p>
+            <p class="setup-field-hint setup-mb-8">Elige si tu NFT es un <strong>kit comercial</strong> (datos mínimos del embalaje) o un <strong>montaje DIY</strong> (canal, tubería y comprobación de bomba).</p>
+            <div class="setup-nft-montaje-origen-row setup-mb-10">
+              <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
+              <div class="setup-nft-layout-grid setup-nft-montaje-origen-chips">
+                <button type="button" class="equip-card nft-disp-btn" id="setupNftMontajeOrigenKit" onclick="seleccionarSetupNftMontajeOrigen('kit')"
+                  aria-pressed="false">Kit comercial</button>
+                <button type="button" class="equip-card nft-disp-btn selected" id="setupNftMontajeOrigenDiy" onclick="seleccionarSetupNftMontajeOrigen('diy')"
+                  aria-pressed="true">DIY / a medida</button>
+              </div>
+            </div>
+            <p id="setupNftMontajeOrigenHint" class="setup-field-hint setup-mb-8 setup-hidden" role="note">Modo kit: basta disposición, tubos/huecos y Ø de cesta; la app usa valores por defecto para canal y bomba. Cambia a DIY si quieres afinar lámina, tubería o validar tu bomba.</p>
+            <div id="setupNftMontajeDiyBlock">
             <div class="setup-nft-guide">
               <div class="setup-nft-guide-title">Cómo configurarlo</div>
               <ol class="setup-nft-guide-list">
@@ -3182,12 +3229,13 @@
               <div id="nftBombaUsuarioValidacion" class="setup-validation-text" role="status"></div>
             </div>
             <div id="resultadoBombaNft" class="setup-hidden setup-mt-10"></div>
+            </div>
+            <p class="setup-nft-sistema-footnote">
+              En la <strong>pestaña Cultivo e instalación</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
+              El bloque <strong>Canal de cultivo</strong> alimenta el cálculo de caudal/volumen de película; el Ø de <strong>alimentación</strong> aquí es el de la línea de riego (bomba / derivaciones), no el del retorno ni el ancho del perfil de cultivo.
+            </p>
           </div>
         </div>
-        <p class="setup-nft-sistema-footnote">
-          En la <strong>pestaña Cultivo e instalación</strong>, cada fila equivale a un canal y cada hueco a una planta en ese canal.
-          El bloque <strong>Canal de cultivo</strong> alimenta el cálculo de caudal/volumen de película; el Ø de <strong>alimentación</strong> aquí es el de la línea de riego (bomba / derivaciones), no el del retorno ni el ancho del perfil de cultivo.
-        </p>
       </div>
 
       <div class="torre-controls setup-vol-deposito-wrap" id="setupVolDepositoWrap">

@@ -13618,6 +13618,22 @@ button.toggle-switch:focus-visible {
   height: 16px;
   accent-color: #0891b2;
 }
+.setup-nft-montaje-origen-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.setup-nft-montaje-origen-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #14532d;
+}
+.setup-nft-montaje-origen-chips .equip-card {
+  min-width: 118px;
+}
 .setup-nft-guide {
   background: linear-gradient(180deg, #f0fdf4, #ecfdf5);
   border: 1.5px solid #bbf7d0;
