@@ -659,14 +659,26 @@ function hcAbrirPrimeraFichaCultivoTrasWizard() {
     if (!state || !state.hcPostSetupChecklistPendiente) return;
     const so = document.getElementById('setupOverlay');
     if (so && so.classList.contains('open')) return;
+    if (typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' && !torreBloqueaChecklistPorFaltaDatosCultivo()) {
+      return;
+    }
     if (typeof getNivelesActivos !== 'function' || typeof openModal !== 'function') return;
     const niveles = getNivelesActivos();
     for (let i = 0; i < niveles.length; i++) {
       const n = niveles[i];
       const row = state.torre[n];
       if (!row || !row.length) continue;
-      openModal(n, 0);
-      return;
+      for (let j = 0; j < row.length; j++) {
+        const c = row[j];
+        if (!c) continue;
+        const vOk = String(c.variedad || '').trim();
+        const ms = c.fecha ? new Date(c.fecha).getTime() : NaN;
+        const fechaOk = Number.isFinite(ms);
+        if (!vOk || !fechaOk) {
+          openModal(n, j);
+          return;
+        }
+      }
     }
   } catch (_) {}
 }
@@ -679,6 +691,9 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
     ensurePostSetupChecklistRail();
     actualizarPostSetupChecklistRail();
     try {
+      if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+    } catch (_) {}
+    try {
       const torreWrap = document.querySelector('#tab-sistema .torre-container');
       if (torreWrap && typeof torreWrap.scrollIntoView === 'function') {
         torreWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -688,15 +703,20 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
   setTimeout(() => {
     hcAbrirPrimeraFichaCultivoTrasWizard();
   }, 520);
-  setTimeout(() => {
-    try {
-      if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
-    } catch (_) {}
-  }, 900);
   if (typeof showToast === 'function') {
-    showToast(
-      'Completa las cestas con cultivo (variedad, fecha, procedencia). Al estar listo, se abre el checklist del depósito en la misma línea visual que el asistente.'
-    );
+    const bloqueado =
+      typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' && torreBloqueaChecklistPorFaltaDatosCultivo();
+    const sinVariedad =
+      typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
+    if (bloqueado || sinVariedad) {
+      showToast(
+        'Completa el esquema: variedad (y en EC automático fecha de trasplante al hidro) en cada cesta que uses. La barra «Cultivo → checklist» se activa al estar listo.'
+      );
+    } else {
+      showToast(
+        'Datos de cultivo listos para el checklist: en unos segundos puede abrirse el asistente del depósito, o usa «Continuar al checklist» arriba del esquema.'
+      );
+    }
   }
 }
 

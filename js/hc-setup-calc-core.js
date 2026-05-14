@@ -297,6 +297,24 @@ function torreBloqueaChecklistPorFaltaDatosCultivo() {
   return !torreTodasLasCestasConVariedadTienenFechaValida();
 }
 
+/**
+ * Tras guardar el asistente: si ya hay variedad en una cesta pero no fecha (EC automático),
+ * asignar la fecha de hoy como «entrada al hidro» por defecto. Se puede corregir en Cultivo / ficha.
+ */
+function aplicarFechaDefectoTrasplanteEnCestasConVariedadSinFecha(torreArr) {
+  if (!torreArr || !Array.isArray(torreArr)) return;
+  const hoy = new Date().toISOString().slice(0, 10);
+  torreArr.forEach(row => {
+    if (!Array.isArray(row)) return;
+    row.forEach(c => {
+      if (!c || typeof c !== 'object') return;
+      if (!String(c.variedad || '').trim()) return;
+      const ms = c.fecha ? new Date(c.fecha).getTime() : NaN;
+      if (!Number.isFinite(ms)) c.fecha = hoy;
+    });
+  });
+}
+
 function torreCultivoListoParaDosisEcEtapa() {
   return !torreBloqueaChecklistPorFaltaDatosCultivo();
 }
@@ -1787,6 +1805,9 @@ function guardarSetupYContinuar() {
     if (typeof aplicarSetupCestaVariedadDraftATorre === 'function') {
       aplicarSetupCestaVariedadDraftATorre(state.torre, niveles, cestas);
     }
+  } catch (_) {}
+  try {
+    aplicarFechaDefectoTrasplanteEnCestasConVariedadSinFecha(state.torre);
   } catch (_) {}
 
   // Guardar cultivos seleccionados en el setup

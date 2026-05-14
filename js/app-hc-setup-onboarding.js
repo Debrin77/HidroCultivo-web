@@ -147,7 +147,7 @@ function renderSetupCestasVariedadGrid() {
   }
   if (hintEl) {
     hintEl.textContent =
-      'Listado completo del catálogo. Deja «Vacío» donde quieras; podrás afinar cada cesta después del checklist.';
+      'Misma rejilla que verás en Cultivo: lo que elijas aquí queda en el esquema. Las cestas sin cultivo déjalas en «Vacío». Si pones variedad, al guardar usamos la fecha de hoy como trasplante al hidro (puedes cambiarla en la ficha). Los botones de arriba son solo grupos (orientan EC y resumen), no sustituyen a la variedad por cesta.';
   }
   let html = '<div class="setup-cesta-var-row setup-cesta-var-row--head">';
   html += '<span class="setup-cesta-var-rowh" aria-hidden="true"></span>';
