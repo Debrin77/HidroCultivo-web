@@ -2806,6 +2806,17 @@
           <div id="setupRdwcCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
         </div>
         <div id="setupDwcSoloBloque">
+        <div>
+          <label class="form-label setup-dwc-label" for="setupDwcDepositoForma">Forma del depósito DWC</label>
+          <select id="setupDwcDepositoForma" class="setup-dwc-input"
+            onchange="try{onDwcFormaChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"
+            aria-label="Forma geométrica del depósito DWC">
+            <option value="prismatico">Cubo / prismático regular</option>
+            <option value="cilindrico">Cilíndrico (cubo redondo)</option>
+            <option value="troncopiramidal">Troncopiramidal / tronco-cónico</option>
+          </select>
+        </div>
+        <p class="setup-dwc-help">Empieza por la <strong>forma</strong>; luego indica las <strong>medidas útiles del líquido</strong> (interior del depósito) y el volumen si procede.</p>
         <div class="setup-dwc-grid-3" id="setupDwcMedidasRow">
           <div id="setupDwcMedidasLAWrap" class="setup-dwc-medidas-span2">
             <div>
@@ -2837,16 +2848,6 @@
           </div>
         </div>
         <p class="setup-dwc-help"><strong>Medidas de tapa y geometría.</strong> Prismático: L×A×P. <strong>Cilíndrico:</strong> Ø interior y profundidad/altura útil del líquido. <strong>Troncopiramidal:</strong> litros medidos. El llenado seguro frente a cesta/sustrato usa P y altura de cesta.</p>
-        <div>
-          <label class="form-label setup-dwc-label" for="setupDwcDepositoForma">Forma del depósito DWC</label>
-          <select id="setupDwcDepositoForma" class="setup-dwc-input"
-            onchange="try{onDwcFormaChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"
-            aria-label="Forma geométrica del depósito DWC">
-            <option value="prismatico">Cubo / prismático regular</option>
-            <option value="cilindrico">Cilíndrico (cubo redondo)</option>
-            <option value="troncopiramidal">Troncopiramidal / tronco-cónico</option>
-          </select>
-        </div>
         <div id="setupDwcVolumenManualWrap" class="setup-hidden">
           <label class="form-label setup-dwc-label" for="setupDwcVolumenManualL">Volumen útil real (L)</label>
           <input type="number" id="setupDwcVolumenManualL" min="1" max="800" step="0.1" placeholder="ej. 18.0"
@@ -2869,7 +2870,7 @@
             <label class="form-label setup-dwc-label" for="setupDwcPotHmm"
               title="Altura de la cesta desde la tapa hasta el fondo">Altura cesta (mm)</label>
             <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" inputmode="numeric" autocomplete="off"
-              onchange="try{actualizarResumenSetup()}catch(e){}"
+              onchange="try{syncSetupVolMezclaSugeridoDwc();actualizarResumenSetup()}catch(e){}"
               title="De la tapa al fondo de la cesta"
               class="setup-dwc-input">
           </div>
@@ -2942,6 +2943,7 @@
             onchange="try{actualizarResumenSetup()}catch(e){}">
           <span>Entrada de manguera de aire (tapa o borde)</span>
         </label>
+        <div id="setupVolMezclaSlotDwc" class="setup-dwc-vol-mezcla-slot setup-mt-10" aria-label="Litros de solución en el asistente DWC"></div>
         </div>
       </div>
 
@@ -3191,7 +3193,8 @@
             Tope físico del recipiente (porcentaje de llenado y bomba). Las dosis usan los litros de mezcla si los indicas abajo.
           </p>
         </div>
-        <div class="torre-control-row torre-control-row--vol-mezcla">
+        <div id="setupVolMezclaSlotDefault">
+        <div id="setupVolMezclaBlock" class="torre-control-row torre-control-row--vol-mezcla">
           <div class="torre-control-label torre-control-label--vol-mezcla">
             <span id="setupVolMezclaLabel">Litros de mezcla (opcional)</span>
             <span id="setupVolMezclaAyuda" class="setup-vol-mezcla-ayuda">
@@ -3201,6 +3204,7 @@
           <input type="number" id="setupVolMezclaL" inputmode="decimal" min="0.5" step="0.1" placeholder="—"
             class="setup-vol-mezcla-input"
             oninput="onSetupVolMezclaInput()">
+        </div>
         </div>
       </div>
 

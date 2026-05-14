@@ -1524,9 +1524,9 @@ function refrescarSetupTipoInstalacionUI() {
   const mezAyuda = document.getElementById('setupVolMezclaAyuda');
   if (mezLab && mezAyuda) {
     if (setupTipoInstalacion === 'dwc') {
-      mezLab.textContent = 'Litros con los que vas a trabajar (opcional)';
+      mezLab.textContent = 'Litros de solución en el depósito (relleno operativo)';
       mezAyuda.textContent =
-        'Vacío = usamos la capacidad calculada con las medidas del depósito. Si aún no las pusiste, un valor orientativo interno. Si llenas menos, las dosis usan esos litros.';
+        'La app puede sugerir litros al llenado seguro: capacidad geométrica menos la reserva bajo la base del sustrato (altura estimada según tipo de sustrato y altura de cesta) y una cámara de aire orientativa ~0,5–1 cm, coherente con Cultivo e instalación. Si el campo está vacío o sigue la última sugerencia, se recalcula al cambiar medidas o cesta; edítalo a mano si tu llenado real es otro.';
     } else if (isRdwc) {
       mezLab.textContent = 'Litros útiles en depósito de control (opcional)';
       mezAyuda.textContent =
@@ -1537,6 +1537,9 @@ function refrescarSetupTipoInstalacionUI() {
         'Vacío = llenar hasta el máximo. Si rellenas a menos (p. ej. 19 L en depósito de 20 L), las dosis se calculan sobre esos litros.';
     }
   }
+  try {
+    if (typeof repositionSetupVolMezclaBlock === 'function') repositionSetupVolMezclaBlock();
+  } catch (_) {}
   if (setupTipoInstalacion === 'dwc') {
     try {
       onSetupDwcMedidasInput();
@@ -1577,6 +1580,11 @@ function onSetupVolMezclaInput() {
   const el = document.getElementById('setupVolMezclaL');
   if (!el) return;
   const raw = el.value.trim();
+  if (!raw) {
+    try {
+      el.removeAttribute('data-hc-dwc-mezcla-auto');
+    } catch (_) {}
+  }
   if (raw) {
     const m = parseFloat(String(raw).replace(',', '.'));
     if (Number.isFinite(m) && m > maxL) el.value = String(maxL);

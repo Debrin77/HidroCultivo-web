@@ -627,6 +627,64 @@ function getDwcCapacidadLitrosFromSetupInputs() {
   return getDwcCapacidadLitrosFromFormIds(DWC_FORM_IDS_SETUP);
 }
 
+/** Borrador DWC desde el formulario del asistente (paso 1) para cálculos de volumen seguro. */
+function buildDwcDraftCfgFromSetupWizardInputs() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return null;
+  const c = { tipoInstalacion: 'dwc' };
+  const su =
+    (typeof state !== 'undefined' && state.configTorre && state.configTorre.sustrato) ||
+    (typeof state !== 'undefined' && state.configSustrato);
+  if (su) c.sustrato = su;
+  try {
+    dwcMergeCamposFormularioEnCfg(c, DWC_FORM_IDS_SETUP);
+  } catch (e) {
+    return null;
+  }
+  return c;
+}
+
+/**
+ * Rellena setupVolMezclaL con litros de llenado seguro (orientativo) si el campo está vacío
+ * o sigue coincidiendo con la última sugerencia automática.
+ */
+function syncSetupVolMezclaSugeridoDwc() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  const inp = document.getElementById('setupVolMezclaL');
+  if (!inp) return;
+  const draft = buildDwcDraftCfgFromSetupWizardInputs();
+  if (!draft) return;
+  const vSeg = getDwcVolumenSeguroMaxLitrosDesdeConfig(draft);
+  if (vSeg == null || !Number.isFinite(vSeg) || vSeg <= 0) return;
+  const maxL = typeof getSetupVolumenMaxLitros === 'function' ? getSetupVolumenMaxLitros() : vSeg;
+  const vClamped = Math.round(Math.min(vSeg, maxL != null && maxL > 0 ? maxL : vSeg) * 10) / 10;
+  const prevAuto = inp.getAttribute('data-hc-dwc-mezcla-auto');
+  const cur = String(inp.value || '').trim().replace(',', '.');
+  const curN = cur ? parseFloat(cur) : NaN;
+  const shouldApply =
+    cur === '' ||
+    (prevAuto != null &&
+      prevAuto !== '' &&
+      Number.isFinite(curN) &&
+      Number.isFinite(Number(prevAuto)) &&
+      Math.abs(curN - Number(prevAuto)) < 0.06);
+  if (!shouldApply) return;
+  inp.value = String(vClamped);
+  inp.setAttribute('data-hc-dwc-mezcla-auto', String(vClamped));
+  try {
+    onSetupVolMezclaInput();
+  } catch (_) {}
+}
+
+/** Litros de mezcla del asistente: abajo del bloque DWC o junto al slider de capacidad (torre/NFT). */
+function repositionSetupVolMezclaBlock() {
+  const block = document.getElementById('setupVolMezclaBlock');
+  const slotDwc = document.getElementById('setupVolMezclaSlotDwc');
+  const slotDefault = document.getElementById('setupVolMezclaSlotDefault');
+  if (!block || !slotDwc || !slotDefault) return;
+  const isDwc = typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'dwc';
+  (isDwc ? slotDwc : slotDefault).appendChild(block);
+}
+
 /** Litros útiles del depósito desde campos de la pestaña Cultivo e instalación (misma fórmula que el asistente). */
 function getDwcCapacidadLitrosFromSistemaInputs() {
   return getDwcCapacidadLitrosFromFormIds(DWC_FORM_IDS_SISTEMA);
@@ -1743,6 +1801,9 @@ function refreshDwcTapHintSetup() {
   try {
     renderDwcCultivoRecoStatus('setup');
   } catch (eR2) {}
+  try {
+    syncSetupVolMezclaSugeridoDwc();
+  } catch (_) {}
 }
 
 /** Grupos de cultivo para los que aplica el modelo de distancia (hojas, sin frutos en DWC estándar). */
@@ -2290,6 +2351,9 @@ function onSetupDwcMedidasInput() {
     }
   }
   updateTorreBuilder();
+  try {
+    syncSetupVolMezclaSugeridoDwc();
+  } catch (_) {}
   onSetupVolMezclaInput();
 }
 
@@ -2542,6 +2606,9 @@ function onDwcModoChanged(formIds) {
     if (typeof refreshDwcSistemaMedidasUI === 'function' && ids === DWC_FORM_IDS_SISTEMA) {
       refreshDwcSistemaMedidasUI();
     }
+  } catch (_) {}
+  try {
+    if (ids === DWC_FORM_IDS_SETUP) syncSetupVolMezclaSugeridoDwc();
   } catch (_) {}
 }
 
