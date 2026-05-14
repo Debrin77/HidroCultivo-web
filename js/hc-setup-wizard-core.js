@@ -2092,6 +2092,32 @@ function syncSistemaDwcRdwcPanelIndependienteUI(cfg) {
   if (kicker) kicker.textContent = esRdwc ? 'Sistema RDWC' : 'Depósito DWC';
 }
 
+/**
+ * Muestra solo el bloque RDWC o solo los controles DWC dentro de #sistemaDwcAyudaBody.
+ * No reescribe inputs: solo corrige clases .setup-hidden para evitar mezcla si el DOM quedó desincronizado
+ * (p. ej. tras cambiar instalación o tipo sin renderTorre()).
+ */
+function applySistemaDwcRdwcBodyVisibilitySegunTipo(cfg) {
+  const c = cfg || state.configTorre;
+  if (!c || (c.tipoInstalacion !== 'dwc' && c.tipoInstalacion !== 'rdwc')) return;
+  const rdwcBloque = document.getElementById('sistemaRdwcBloque');
+  const dwcBodyHost = document.getElementById('sistemaDwcAyudaBody');
+  if (!rdwcBloque || !dwcBodyHost) return;
+  if (c.tipoInstalacion === 'rdwc') {
+    rdwcBloque.classList.remove('setup-hidden');
+    Array.from(dwcBodyHost.children).forEach(ch => {
+      if (ch === rdwcBloque) return;
+      ch.classList.add('setup-hidden');
+    });
+  } else {
+    Array.from(dwcBodyHost.children).forEach(ch => {
+      if (ch === rdwcBloque) return;
+      ch.classList.remove('setup-hidden');
+    });
+    rdwcBloque.classList.add('setup-hidden');
+  }
+}
+
 function applySistemaTipoPanelesColapsablesUI() {
   const cfg = state.configTorre;
   const nftCard = document.getElementById('sistemaNftMontajeCard');
@@ -2110,6 +2136,7 @@ function applySistemaTipoPanelesColapsablesUI() {
   const dwcRes = document.getElementById('sistemaDwcResumen');
   if (dwcCard && dwcBtn && dwcBody && cfg && (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc') && dwcCard.style.display === 'block') {
     syncSistemaDwcRdwcPanelIndependienteUI(cfg);
+    applySistemaDwcRdwcBodyVisibilitySegunTipo(cfg);
     if (dwcRes) dwcRes.textContent = cfg.tipoInstalacion === 'rdwc' ? textoResumenSistemaRdwcPanel(cfg) : textoResumenSistemaDwcPanel(cfg);
     const colD = cfg.uiSistemaDwcColapsado === true;
     dwcBody.hidden = colD;
@@ -2134,6 +2161,9 @@ function toggleSistemaDwcPanel() {
   guardarEstadoTorreActual();
   saveState();
   applySistemaTipoPanelesColapsablesUI();
+  try {
+    applySistemaDwcRdwcBodyVisibilitySegunTipo(state.configTorre);
+  } catch (_) {}
 }
 
 function syncSistemaEcPhStrategyUI() {
@@ -2383,25 +2413,10 @@ function sincronizarSistemaNftMontajeUI() {
     if (cfg && (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc')) {
       dwcInfo.style.display = 'block';
       syncSistemaDwcRdwcPanelIndependienteUI(cfg);
-      const rdwcBloque = document.getElementById('sistemaRdwcBloque');
-      const dwcBodyHost = document.getElementById('sistemaDwcAyudaBody');
+      applySistemaDwcRdwcBodyVisibilitySegunTipo(cfg);
       if (cfg.tipoInstalacion === 'rdwc') {
-        if (rdwcBloque) rdwcBloque.classList.remove('setup-hidden');
-        if (dwcBodyHost) {
-          Array.from(dwcBodyHost.children).forEach(ch => {
-            if (rdwcBloque && ch === rdwcBloque) return;
-            ch.classList.add('setup-hidden');
-          });
-        }
         syncSistemaRdwcDesdeConfig(cfg);
       } else {
-        if (dwcBodyHost) {
-          Array.from(dwcBodyHost.children).forEach(ch => {
-            if (rdwcBloque && ch === rdwcBloque) return;
-            ch.classList.remove('setup-hidden');
-          });
-        }
-        if (rdwcBloque) rdwcBloque.classList.add('setup-hidden');
         syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
         try {
           refreshDwcSistemaMedidasUI();

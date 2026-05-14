@@ -2079,6 +2079,11 @@ function aplicarConfigTorre() {
   actualizarVisibilidadPanelInteriorGrow();
   try { actualizarVisibilidadPanelCalentadorConsigna(); } catch (_) {}
   try { sincronizarTextosPanelInteraccionSistema(); } catch (_) {}
+  try {
+    if (typeof applySistemaDwcRdwcBodyVisibilitySegunTipo === 'function') {
+      applySistemaDwcRdwcBodyVisibilitySegunTipo(cfg);
+    }
+  } catch (_) {}
 }
 
 // ── Detectar si hay plántulas nuevas (< 5 días) en la torre ─────────────────
