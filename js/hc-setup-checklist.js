@@ -15,6 +15,32 @@ function hcChecklistContinuidadVisualAsistente() {
   }
 }
 
+/**
+ * DWC: quita volMezclaLitros si solo repite el máximo orientativo (cámara de aire / cesta).
+ * El campo «litros de mezcla (opcional)» en PC·1 puede quedar vacío sin cambiar las dosis:
+ * getVolumenMezclaLitros ya usa ese máximo cuando no hay valor explícito por debajo.
+ */
+function dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg) {
+  try {
+    if (!cfg) return false;
+    const tipo =
+      typeof tipoInstalacionNormalizado === 'function'
+        ? tipoInstalacionNormalizado(cfg)
+        : cfg.tipoInstalacion;
+    if (tipo !== 'dwc') return false;
+    const vm = Number(cfg.volMezclaLitros);
+    if (!Number.isFinite(vm) || vm <= 0) return false;
+    if (typeof getVolumenDepositoMaxLitros !== 'function') return false;
+    const maxO = getVolumenDepositoMaxLitros(cfg);
+    if (maxO == null || !Number.isFinite(maxO) || maxO <= 0) return false;
+    if (Math.abs(vm - maxO) > 0.35) return false;
+    delete cfg.volMezclaLitros;
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
 let clChecked = new Set();
 let clEsPrimeraVez = false;
 /** 'recarga' = flujo completo (apagar, vaciar, cubrir…); 'primer_llenado' = depósito sin cultivo previo */
@@ -693,6 +719,17 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
 function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   cerrarOverlayChecklistDatosInstalacion();
   const cfg = state.configTorre || {};
+  try {
+    if (
+      cfg &&
+      (typeof tipoInstalacionNormalizado === 'function'
+        ? tipoInstalacionNormalizado(cfg) === 'dwc'
+        : cfg.tipoInstalacion === 'dwc') &&
+      dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg)
+    ) {
+      if (typeof saveState === 'function') saveState();
+    }
+  } catch (_) {}
   const volDesdeCfg =
     typeof litrosDepositoParaChecklist === 'function'
       ? litrosDepositoParaChecklist(cfg)
@@ -724,6 +761,17 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     : cfg.tipoInstalacion === 'dwc' ? 'dwc'
     : cfg.tipoInstalacion === 'rdwc' ? 'rdwc'
     : 'torre';
+  let cldVolMezclaPlaceholder = 'Vacío = hasta el máximo';
+  let cldVolMezclaHint =
+    'Si no llenas hasta el tope (p. ej. 19 L en un depósito de 20 L), indícalo aquí: las dosis del checklist usarán esos litros. En RDWC suele aplicarse al volumen útil del depósito de control.';
+  if (tipoIni === 'dwc' && typeof getVolumenDepositoMaxLitros === 'function') {
+    const mo = getVolumenDepositoMaxLitros(cfg);
+    if (mo != null && Number.isFinite(mo) && mo > 0) {
+      cldVolMezclaPlaceholder = 'Vacío → orientativo ~' + (Math.round(mo * 10) / 10) + ' L (aire + cesta)';
+    }
+    cldVolMezclaHint =
+      'En DWC, <strong>vacío</strong>: las dosis usan el volumen <strong>orientativo</strong> (cámara de aire y cesta), igual que Cultivo e instalación. Solo indica litros si <strong>rellenas menos</strong> que ese orientativo.';
+  }
   const aguaIni = cfg.agua || state.configAgua || 'destilada';
   const nutObjIni = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
   const nutIni =
@@ -803,9 +851,11 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
         (volIni === '' ? ' placeholder="Ej. 20 — etiqueta o Cultivo e instalación"' : ' value="' + volIni + '"') +
         ' class="checklist-dark-field-input checklist-dark-field-input--mb8">' +
       '<label class="checklist-dark-field-label">Litros de mezcla (opcional)</label>' +
-      '<input id="cldVolMezcla" type="number" inputmode="decimal" min="0.5" max="600" step="0.1" placeholder="Vacío = hasta el máximo" value="' + mezIni.replace(/"/g, '') + '"' +
+      '<input id="cldVolMezcla" type="number" inputmode="decimal" min="0.5" max="600" step="0.1" placeholder="' +
+        String(cldVolMezclaPlaceholder).replace(/"/g, '&quot;') +
+        '" value="' + mezIni.replace(/"/g, '') + '"' +
         ' class="checklist-dark-field-input checklist-dark-field-input--mb12">' +
-      '<p class="checklist-dark-text checklist-dark-text--mix-hint">Si no llenas hasta el tope (p. ej. 19 L en un depósito de 20 L), indícalo aquí: las dosis del checklist usarán esos litros. En RDWC suele aplicarse al volumen útil del depósito de control.</p>' +
+      '<p class="checklist-dark-text checklist-dark-text--mix-hint">' + cldVolMezclaHint + '</p>' +
 
       '<label class="checklist-dark-field-label">Agua para la mezcla</label>' +
       '<select id="cldAgua" class="checklist-dark-field-input checklist-dark-select checklist-dark-select--mb12">' +
@@ -1020,15 +1070,28 @@ function getCLPasos() {
   const pc1SeccionTitulo = esRdwc ? '⚙️ Depósito de control, agua y nutriente' : '⚙️ Depósito, agua y nutriente';
   const pc1DescPaso = esRdwc
     ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
-    : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
+    : esDwc
+      ? 'Capacidad del depósito (geométrica o etiqueta), agua y nutriente. Los <strong>ml del paso 4</strong> usan el volumen <strong>orientativo</strong> con cámara de aire y cesta (como en Cultivo e instalación). El siguiente campo es <strong>solo</strong> si vas a llenar <strong>menos</strong> litros que ese orientativo; déjalo vacío si no.'
+      : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
   const pc1LabelVolMax = esRdwc ? 'Litros depósito de control (L)' : 'Capacidad máx. depósito (L)';
   const pc1PhVolMax = esRdwc ? '40' : '20';
-  const pc1LabelVolMez = esRdwc ? 'Litros de mezcla en reservorio (opcional)' : 'Litros de mezcla (opcional)';
+  const pc1LabelVolMez = esRdwc
+    ? 'Litros de mezcla en reservorio (opcional)'
+    : esDwc
+      ? 'Solo si llenas menos que el orientativo (L, opcional)'
+      : 'Litros de mezcla (opcional)';
   const vmPrimer = Number(cfg.volMezclaLitros);
   const mezPrimerVal =
     Number.isFinite(vmPrimer) && vmPrimer > 0 && vmPrimer < volMaxPrimerIni - 0.02
       ? String(Math.round(vmPrimer * 10) / 10)
       : '';
+  let pc1PhVolMez = 'vacío = hasta el máximo';
+  if (esDwc && !esRdwc && typeof getVolumenDepositoMaxLitros === 'function') {
+    const mo = getVolumenDepositoMaxLitros(cfg);
+    if (mo != null && Number.isFinite(mo) && mo > 0) {
+      pc1PhVolMez = 'Vacío → orientativo ~' + String(Math.round(mo * 10) / 10) + ' L (aire + cesta)';
+    }
+  }
   const nutIdPrimer = cfg.nutriente && NUTRIENTES_DB.some(n => n.id === cfg.nutriente) ? cfg.nutriente : nut.id;
   const optsNutPrimer = NUTRIENTES_DB.map(n => ({
     value: n.id,
@@ -1052,7 +1115,7 @@ function getCLPasos() {
         { id: 'clPrimerVolMax', label: pc1LabelVolMax, type: 'number', step: '1', placeholder: pc1PhVolMax,
           value: String(volMaxPrimerIni),
           _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
-        { id: 'clPrimerVolMezcla', label: pc1LabelVolMez, type: 'number', step: '0.1', placeholder: 'vacío = hasta el máximo',
+        { id: 'clPrimerVolMezcla', label: pc1LabelVolMez, type: 'number', step: '0.1', placeholder: pc1PhVolMez,
           value: mezPrimerVal,
           _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
         { id: 'clPrimerAgua', label: 'Agua para la mezcla', type: 'select', clase: 'wide',
@@ -2309,6 +2372,24 @@ function clRenderField(c) {
 
 function renderChecklist() {
   const el = document.getElementById('checklistContent');
+  try {
+    const tipoN =
+      state &&
+      state.configTorre &&
+      typeof tipoInstalacionNormalizado === 'function'
+        ? tipoInstalacionNormalizado(state.configTorre)
+        : state && state.configTorre && state.configTorre.tipoInstalacion;
+    if (
+      clRutaChecklist === 'primer_llenado' &&
+      state &&
+      state.configTorre &&
+      tipoN === 'dwc' &&
+      dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(state.configTorre)
+    ) {
+      if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
+      if (typeof saveState === 'function') saveState();
+    }
+  } catch (_) {}
   const pasos = getCLPasos();
   const blocks = clGetSectionBlocks(pasos);
   let html = '';
