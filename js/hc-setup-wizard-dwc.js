@@ -216,6 +216,39 @@ function getDwcAlturaSustratoEstimadaMm(cfg) {
 }
 
 /**
+ * Estima el colgado típico de la cesta (cuerpo de net pot) bajo la tapa hacia el líquido (cm).
+ * Sirve para restar a la profundidad útil P: la lámina no debe llegar al sustrato (hueco ~0,5–1 cm).
+ */
+function _dwcColgadoCestaBajoTapaCm(cfg, Pcm) {
+  const P = Number(Pcm);
+  const hPotRaw = Number((cfg || {}).dwcNetPotHeightMm);
+  const hPotMm = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200 ? hPotRaw : 70;
+  const potCm = hPotMm / 10;
+  const rim = Number((cfg || {}).dwcNetPotRimMm);
+  let hang = potCm * 0.38 + 1.0;
+  if (Number.isFinite(rim) && rim >= 25 && rim <= 120) {
+    const dCm = rim / 10;
+    hang = Math.min(hang, Math.max(2.0, dCm * 0.72));
+  }
+  const capByP = Number.isFinite(P) && P > 0 ? Math.max(2.2, P * 0.48) : 12;
+  return Math.min(Math.max(2.0, hang), capByP);
+}
+
+/**
+ * Altura de columna de líquido (cm) hasta la superficie segura: P − colgado − lámina de aire bajo sustrato.
+ * Evita el error anterior (usar solo hPot−sustrato como si fuera toda la columna de agua).
+ */
+function _dwcAlturaColumnaLiquidoSeguraCm(cfg, Pcm) {
+  const P = Number(Pcm);
+  if (!Number.isFinite(P) || P < 5 || P > 200) return null;
+  const gapLaminaCm = 0.85;
+  const hang = _dwcColgadoCestaBajoTapaCm(cfg, P);
+  const hIdeal = P - hang - gapLaminaCm;
+  const hMinModelo = Math.min(P * 0.18, 5.0);
+  return Math.min(P, Math.max(hMinModelo, hIdeal));
+}
+
+/**
  * Volumen máximo de llenado seguro (L) en DWC:
  * deja la superficie del nutriente 0.5–1.0 cm por debajo de la base del sustrato.
  */
@@ -223,46 +256,29 @@ function getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg) {
   const c = cfg || state.configTorre || {};
   const cap = getDwcCapacidadLitrosDesdeConfig(c);
   if (!Number.isFinite(cap) || cap <= 0) return null;
-  const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
 
-  if (forma === 'troncopiramidal') {
-    const P = Number(c.dwcDepositoProfCm);
-    const hPotRaw = Number(c.dwcNetPotHeightMm);
-    const hPotMm = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200 ? hPotRaw : 70;
-    const hSustratoMm = getDwcAlturaSustratoEstimadaMm(c);
-    const baseSustratoDesdeTapaCm = Math.max(0.5, (hPotMm - hSustratoMm) / 10);
-    const margenSegCm = 0.8;
-    const alturaAguaSegCm = Math.max(0.5, baseSustratoDesdeTapaCm - margenSegCm);
-
-    if (Number.isFinite(P) && P >= 5 && P <= 200) {
-      const alturaAguaSegClamped = Math.min(P, alturaAguaSegCm);
-      const litros = cap * (alturaAguaSegClamped / P);
-      const out = Math.round(litros * 10) / 10;
-      return out > 0 ? out : null;
+  let Puse = Number(c.dwcDepositoProfCm);
+  if (!Number.isFinite(Puse) || Puse < 5 || Puse > 200) {
+    const L = Number(c.dwcDepositoLargoCm);
+    const W = Number(c.dwcDepositoAnchoCm);
+    if (Number.isFinite(L) && Number.isFinite(W) && L > 0 && W > 0 && cap > 0) {
+      const pEst = (cap * 1000) / (L * W);
+      if (Number.isFinite(pEst) && pEst >= 5 && pEst <= 200) Puse = pEst;
     }
-
+  }
+  if (!Number.isFinite(Puse) || Puse < 5 || Puse > 200) {
     const vm = getDwcVolumenManualLitrosDesdeConfig(c);
     if (!Number.isFinite(vm) || vm <= 0) return null;
-    const reservaCm = Math.max(0.5, baseSustratoDesdeTapaCm - margenSegCm);
-    const altRefCm = Math.max(10, Math.min(50, (hPotMm / 10) * 1.15));
-    const frac = Math.min(0.96, Math.max(0.78, reservaCm / altRefCm));
-    const out = Math.round(cap * frac * 10) / 10;
+    const out = Math.round(vm * 0.82 * 10) / 10;
     return out > 0 ? out : null;
   }
 
-  const P = Number(c.dwcDepositoProfCm);
-  if (!Number.isFinite(P) || P < 5 || P > 200) return null;
-
-  const hPotRaw = Number(c.dwcNetPotHeightMm);
-  const hPotMm = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200 ? hPotRaw : 70;
-  const hSustratoMm = getDwcAlturaSustratoEstimadaMm(c);
-  const baseSustratoDesdeTapaCm = Math.max(0.5, (hPotMm - hSustratoMm) / 10);
-  const margenSegCm = 0.8; // centro del rango 0.5–1.0 cm
-  const alturaAguaSegCm = Math.max(0.5, baseSustratoDesdeTapaCm - margenSegCm);
-  const alturaAguaSegClamped = Math.min(P, alturaAguaSegCm);
-  const litros = cap * (alturaAguaSegClamped / P);
+  const hCol = _dwcAlturaColumnaLiquidoSeguraCm(c, Puse);
+  if (hCol == null || hCol <= 0) return null;
+  const litros = cap * (hCol / Puse);
   const out = Math.round(litros * 10) / 10;
   if (!Number.isFinite(out) || out <= 0) return null;
+  if (out >= cap - 0.02) return Math.round((cap - 0.1) * 10) / 10;
   return out;
 }
 
@@ -287,8 +303,15 @@ function getDwcVolumenMaxMezclaLitrosDesdeConfig(cfg) {
     capDims != null && capDims > 0 ? Math.min(800, Math.max(1, Math.round(capDims * 10) / 10)) : null;
   const geometric = geoOk != null ? geoOk : capOk;
   const safeRaw = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
-  const safeOk =
-    safeRaw != null && safeRaw > 0 ? Math.min(800, Math.max(0.5, Math.round(safeRaw * 10) / 10)) : null;
+  let safeOk = null;
+  if (safeRaw != null && safeRaw > 0) {
+    const geoRef = geometric != null ? geometric : capOk;
+    if (geoRef != null && safeRaw < geoRef * 0.06) {
+      safeOk = null;
+    } else {
+      safeOk = Math.min(800, Math.max(1, Math.round(safeRaw * 10) / 10));
+    }
+  }
   if (geometric != null && safeOk != null) return Math.min(geometric, safeOk);
   if (safeOk != null) return safeOk;
   if (geometric != null) return geometric;
@@ -302,8 +325,15 @@ function getSetupDwcVolumenMaxMezclaOrientativoLitros() {
   const cap = getDwcCapacidadLitrosFromSetupInputs();
   const geoL = cap != null && cap > 0 ? Math.min(800, Math.max(1, Math.round(cap * 10) / 10)) : null;
   const safeRaw = getDwcVolumenSeguroMaxLitrosDesdeConfig(draft);
-  const sL =
-    safeRaw != null && safeRaw > 0 ? Math.min(800, Math.max(0.5, Math.round(safeRaw * 10) / 10)) : null;
+  let sL = null;
+  if (safeRaw != null && safeRaw > 0) {
+    const geoRef = geoL;
+    if (geoRef != null && safeRaw < geoRef * 0.06) {
+      sL = null;
+    } else {
+      sL = Math.min(800, Math.max(1, Math.round(safeRaw * 10) / 10));
+    }
+  }
   if (geoL != null && sL != null) return Math.min(geoL, sL);
   if (sL != null) return sL;
   return geoL;
