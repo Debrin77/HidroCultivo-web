@@ -1413,7 +1413,7 @@
         <button type="button" id="btnToggleSistemaDwc" class="torre-sistema-panel-head torre-sistema-panel-head--dwc"
           aria-expanded="true" aria-controls="sistemaDwcAyudaBody" onclick="toggleSistemaDwcPanel()">
           <span class="torre-sistema-panel-head-stack">
-            <span class="torre-sistema-panel-kicker">Depósito DWC</span>
+            <span id="sistemaDwcAyudaPanelKicker" class="torre-sistema-panel-kicker">Depósito DWC</span>
             <span id="sistemaDwcResumen" class="torre-sistema-panel-sub"></span>
           </span>
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
@@ -2774,14 +2774,16 @@
       </div>
 
       <div id="setupDwcDetalleWrap" class="setup-hidden setup-dwc-wrap">
-        <div class="setup-dwc-title">
-          DWC
+        <div id="setupDwcIntroBloque">
+          <div class="setup-dwc-title">
+            DWC
+          </div>
+          <p class="setup-dwc-help">
+            Mismos campos que en <strong>Cultivo e instalación</strong>. Explicación y <strong>tabla de tamaños de cesta</strong>: <strong>Consejos → DWC</strong>.
+          </p>
         </div>
-        <p class="setup-dwc-help">
-          Mismos campos que en <strong>Cultivo e instalación</strong>. Explicación y <strong>tabla de tamaños de cesta</strong>: <strong>Consejos → DWC</strong>.
-        </p>
         <div id="setupRdwcDetalleWrap" class="setup-hidden">
-          <div class="setup-dwc-title">RDWC</div>
+          <div class="setup-dwc-title">Sistema RDWC</div>
           <p class="setup-dwc-help">Recirculación continua entre cubos + depósito de control. Define parámetros base del circuito. Montaje (referencia habitual): bomba de aire por encima del nivel del líquido; lubricar y girar al encajar tubos a presión; al separar módulos, conserva al menos ~3 cm de tubo dentro del cubo; revisar fugas tras el primer llenado.</p>
           <div class="setup-dwc-grid-2">
             <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>

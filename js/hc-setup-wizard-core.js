@@ -1503,6 +1503,9 @@ function refrescarSetupTipoInstalacionUI() {
   }
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
   if (dwcWizard) dwcWizard.classList.toggle('setup-hidden', !(setupTipoInstalacion === 'dwc' || isRdwc));
+  if (dwcWizard) dwcWizard.classList.toggle('setup-dwc-wrap--rdwc', isRdwc);
+  const dwcIntroSetup = document.getElementById('setupDwcIntroBloque');
+  if (dwcIntroSetup) dwcIntroSetup.classList.toggle('setup-hidden', isRdwc);
   const rdwcWizard = document.getElementById('setupRdwcDetalleWrap');
   if (rdwcWizard) rdwcWizard.classList.toggle('setup-hidden', !isRdwc);
   const dwcSoloWizard = document.getElementById('setupDwcSoloBloque');
@@ -1524,6 +1527,10 @@ function refrescarSetupTipoInstalacionUI() {
       mezLab.textContent = 'Litros con los que vas a trabajar (opcional)';
       mezAyuda.textContent =
         'Vacío = usamos la capacidad calculada con las medidas del depósito. Si aún no las pusiste, un valor orientativo interno. Si llenas menos, las dosis usan esos litros.';
+    } else if (isRdwc) {
+      mezLab.textContent = 'Litros útiles en depósito de control (opcional)';
+      mezAyuda.textContent =
+        'Vacío = hasta el máximo del depósito de control. En RDWC las dosis consideran también los litros útiles de los cubos del circuito; este campo solo acota el reservorio donde mezclas y mides.';
     } else {
       mezLab.textContent = 'Litros de mezcla (opcional)';
       mezAyuda.textContent =
@@ -2058,6 +2065,33 @@ function textoResumenSistemaRdwcPanel(cfg) {
   return s + ' sitios · ' + r + ' fila(s) · cubo ' + b + ' L · ' + depTxt + ' · recirc ' + q + ' L/h · aire ' + air + ' L/min';
 }
 
+/**
+ * DWC y RDWC no se mezclan: comparten contenedor histórico en DOM, pero el tipo activo
+ * gobierna título, cabecera y clases; cada rama de sincronización solo muestra su bloque.
+ */
+function syncSistemaDwcRdwcPanelIndependienteUI(cfg) {
+  const c = cfg || state.configTorre;
+  if (!c || (c.tipoInstalacion !== 'dwc' && c.tipoInstalacion !== 'rdwc')) return;
+  const esDwc = c.tipoInstalacion === 'dwc';
+  const esRdwc = c.tipoInstalacion === 'rdwc';
+  const card = document.getElementById('sistemaDwcAyudaCard');
+  const headBtn = document.getElementById('btnToggleSistemaDwc');
+  const kicker = document.getElementById('sistemaDwcAyudaPanelKicker');
+  if (card) {
+    card.classList.toggle('torre-sistema-panel--dwc', esDwc);
+    card.classList.toggle('torre-sistema-panel--rdwc', esRdwc);
+  }
+  if (headBtn) {
+    headBtn.classList.toggle('torre-sistema-panel-head--dwc', esDwc);
+    headBtn.classList.toggle('torre-sistema-panel-head--rdwc', esRdwc);
+    headBtn.setAttribute(
+      'aria-label',
+      esRdwc ? 'Desplegar u ocultar el formulario del sistema RDWC' : 'Desplegar u ocultar el formulario del depósito DWC'
+    );
+  }
+  if (kicker) kicker.textContent = esRdwc ? 'Sistema RDWC' : 'Depósito DWC';
+}
+
 function applySistemaTipoPanelesColapsablesUI() {
   const cfg = state.configTorre;
   const nftCard = document.getElementById('sistemaNftMontajeCard');
@@ -2075,6 +2109,7 @@ function applySistemaTipoPanelesColapsablesUI() {
   const dwcBody = document.getElementById('sistemaDwcAyudaBody');
   const dwcRes = document.getElementById('sistemaDwcResumen');
   if (dwcCard && dwcBtn && dwcBody && cfg && (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc') && dwcCard.style.display === 'block') {
+    syncSistemaDwcRdwcPanelIndependienteUI(cfg);
     if (dwcRes) dwcRes.textContent = cfg.tipoInstalacion === 'rdwc' ? textoResumenSistemaRdwcPanel(cfg) : textoResumenSistemaDwcPanel(cfg);
     const colD = cfg.uiSistemaDwcColapsado === true;
     dwcBody.hidden = colD;
@@ -2347,6 +2382,7 @@ function sincronizarSistemaNftMontajeUI() {
   if (dwcInfo) {
     if (cfg && (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc')) {
       dwcInfo.style.display = 'block';
+      syncSistemaDwcRdwcPanelIndependienteUI(cfg);
       const rdwcBloque = document.getElementById('sistemaRdwcBloque');
       const dwcBodyHost = document.getElementById('sistemaDwcAyudaBody');
       if (cfg.tipoInstalacion === 'rdwc') {
@@ -2359,10 +2395,13 @@ function sincronizarSistemaNftMontajeUI() {
         }
         syncSistemaRdwcDesdeConfig(cfg);
       } else {
-        if (rdwcBloque) rdwcBloque.classList.add('setup-hidden');
         if (dwcBodyHost) {
-          Array.from(dwcBodyHost.children).forEach(ch => ch.classList.remove('setup-hidden'));
+          Array.from(dwcBodyHost.children).forEach(ch => {
+            if (rdwcBloque && ch === rdwcBloque) return;
+            ch.classList.remove('setup-hidden');
+          });
         }
+        if (rdwcBloque) rdwcBloque.classList.add('setup-hidden');
         syncDwcFormInputsDesdeConfig(cfg, DWC_FORM_IDS_SISTEMA);
         try {
           refreshDwcSistemaMedidasUI();

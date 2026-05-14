@@ -11863,7 +11863,25 @@ button.config-option:focus-visible,
   color: #0e7490;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
 }
+.torre-sistema-panel-head--rdwc {
+  background: color-mix(in srgb, #7c3aed 10%, #fff);
+  border: 1.5px solid rgba(124, 58, 237, 0.35);
+  margin: 0 0 8px;
+}
+.torre-sistema-panel-head--rdwc:hover,
+.torre-sistema-panel-head--rdwc:focus-visible {
+  border-color: rgba(124, 58, 237, 0.55);
+}
+.torre-sistema-panel-head--rdwc .config-section-collapse-chevron {
+  border-color: rgba(124, 58, 237, 0.45);
+  background: #fff;
+  color: #5b21b6;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
 .torre-sistema-panel--dwc .torre-sistema-panel-body {
+  margin-top: 0;
+}
+.torre-sistema-panel--rdwc .torre-sistema-panel-body {
   margin-top: 0;
 }
 .torre-sistema-panel-head-stack {
@@ -13420,6 +13438,10 @@ button.toggle-switch:focus-visible {
   border-radius: 14px;
   background: linear-gradient(180deg, #ecfeff 0%, #e0f2fe 100%);
   border: 1.5px solid #06b6d4;
+}
+.setup-dwc-wrap.setup-dwc-wrap--rdwc {
+  background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+  border-color: #7c3aed;
 }
 .setup-dwc-title {
   font-size: 10px;
