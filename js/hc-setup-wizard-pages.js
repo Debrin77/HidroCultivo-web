@@ -1151,6 +1151,11 @@ function renderSetupPage() {
       }
     }
   }
+  try {
+    if (typeof aplicarSetupWizardExclusividadTorreVertical === 'function') {
+      aplicarSetupWizardExclusividadTorreVertical();
+    }
+  } catch (_) {}
 }
 
 function setupNext() {

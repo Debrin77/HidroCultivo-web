@@ -451,7 +451,14 @@ let setupAlturaTorre   = 1.2;
 
 function mostrarSeccionTuboBomba(mostrar) {
   const el = document.getElementById('seccionTuboBomba');
-  if (el) el.style.display = mostrar ? 'block' : 'none';
+  if (!el) return;
+  if (mostrar) {
+    el.classList.remove('setup-hidden');
+    el.style.display = 'block';
+  } else {
+    el.style.display = 'none';
+    el.classList.add('setup-hidden');
+  }
 }
 
 function seleccionarTubo(mm) {

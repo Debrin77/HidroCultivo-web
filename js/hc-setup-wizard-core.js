@@ -152,7 +152,15 @@ function seleccionarSetupTorreMontajeOrigen(mode) {
     mostrarSeccionTuboBomba(!kit);
   } else {
     const sec = document.getElementById('seccionTuboBomba');
-    if (sec) sec.style.display = kit ? 'none' : 'block';
+    if (sec) {
+      if (kit) {
+        sec.style.display = 'none';
+        sec.classList.add('setup-hidden');
+      } else {
+        sec.classList.remove('setup-hidden');
+        sec.style.display = 'block';
+      }
+    }
   }
   if (!kit) {
     try {
@@ -1726,6 +1734,33 @@ function iniciarConfiguracionTorre() {
   renderSetupPage();
 }
 
+/**
+ * Oculta siempre el bloque «tubo central y bomba» y los chips Kit/DIY de torre
+ * salvo en paso 1 con tipo torre vertical (donde seleccionarSetupTorreMontajeOrigen reabre DIY).
+ * Importante: debe ejecutarse aunque setupPagina !== 1 (antes el return temprano impedía ocultar al cambiar de tipo en otros pasos).
+ */
+function aplicarSetupWizardExclusividadTorreVertical() {
+  const tipo = typeof setupTipoInstalacion !== 'undefined' ? setupTipoInstalacion : 'torre';
+  const pag = typeof setupPagina !== 'undefined' ? setupPagina : 0;
+  const row = document.getElementById('setupTorreMontajeOrigenRow');
+  const hint = document.getElementById('setupTorreMontajeOrigenHint');
+  const sec = document.getElementById('seccionTuboBomba');
+  const mostrarBloqueTorreMontajeYTubo = tipo === 'torre' && pag === 1;
+  if (!mostrarBloqueTorreMontajeYTubo) {
+    if (row) row.classList.add('setup-hidden');
+    if (hint) hint.classList.add('setup-hidden');
+    if (sec) {
+      sec.style.display = 'none';
+      sec.classList.add('setup-hidden');
+    }
+    try {
+      if (typeof mostrarSeccionTuboBomba === 'function') mostrarSeccionTuboBomba(false);
+    } catch (_) {}
+    return;
+  }
+  if (row) row.classList.remove('setup-hidden');
+}
+
 function seleccionarTipoInstalacionSetup(tipo) {
   if (tipo === 'nft') setupTipoInstalacion = 'nft';
   else if (tipo === 'dwc') setupTipoInstalacion = 'dwc';
@@ -1800,6 +1835,9 @@ function refrescarSetupTipoInstalacionUI() {
   }
   const cestaBlk = document.getElementById('setupBloqueTamanoCestas');
   if (cestaBlk) cestaBlk.style.display = (setupTipoInstalacion === 'dwc' || setupTipoInstalacion === 'rdwc') ? 'none' : '';
+  try {
+    aplicarSetupWizardExclusividadTorreVertical();
+  } catch (_) {}
   if (setupPagina !== 1) {
     try {
       refreshDwcTapHintSetup();
@@ -1812,11 +1850,6 @@ function refrescarSetupTipoInstalacionUI() {
   const nw = document.getElementById('setupNftBuilderWrap');
   if (tw) tw.style.display = (isNft || isRdwc) ? 'none' : 'block';
   if (nw) nw.classList.toggle('setup-hidden', !isNft);
-  if (setupTipoInstalacion !== 'torre') {
-    try {
-      if (typeof mostrarSeccionTuboBomba === 'function') mostrarSeccionTuboBomba(false);
-    } catch (_) {}
-  }
   const t1 = document.getElementById('spage1Title');
   const st = document.getElementById('spage1Subtitle');
   if (t1) {
