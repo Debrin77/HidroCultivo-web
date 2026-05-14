@@ -13432,6 +13432,32 @@ button.toggle-switch:focus-visible {
   margin: 8px 0 0;
   line-height: 1.45;
 }
+.setup-field-hint {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+.setup-field-hint--banner {
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+.setup-field-hint--banner strong {
+  color: #334155;
+}
+.tab-sistema-facil-banner {
+  margin: 0 0 14px;
+}
+.torre-sistema-inline-hint {
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #64748b;
+}
 .setup-dwc-wrap {
   margin-top: 12px;
   padding: 12px 14px;

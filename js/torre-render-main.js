@@ -819,11 +819,11 @@ function updateTorreStats() {
     } else if (esRdwcCfg) {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
-        'En RDWC este campo es del <strong>reservorio de control</strong>; para nutrientes la app suma además los <strong>cubos útiles</strong> configurados.';
+        'En RDWC este bloque es el <strong>reservorio de control</strong> (suele venir en la placa del kit); para nutrientes la app suma los <strong>cubos útiles</strong> configurados arriba.';
     } else {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
-        'Litros de mezcla usados por el checklist. Resumen de cultivo en <strong>Inicio</strong>.';
+        'Litros de mezcla usados por el checklist. Si no sabes el máximo, mira la <strong>etiqueta del depósito</strong>. Resumen de cultivo en <strong>Inicio</strong>.';
     }
   }
 

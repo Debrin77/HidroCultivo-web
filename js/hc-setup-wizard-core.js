@@ -1494,13 +1494,15 @@ function refrescarSetupTipoInstalacionUI() {
   }
   if (st) {
     st.textContent = isNft
-      ? 'Canales en paralelo, huecos por canal y pendiente. La rejilla usa un nivel por canal.'
+      ? 'Kit: disposición, canales y huecos que veas, Ø de cesta en el embalaje. DIY: cinta al tubo y alzada al 1.º tubo si sube agua; sin calcular caudales.'
       : setupTipoInstalacion === 'dwc'
-        ? 'Cubo con tapa: filas × cestas = orificios; litros = solución. Abajo: medidas del depósito, diámetro y altura de cesta, cúpulas y aire (también en Cultivo e instalación).'
+        ? 'Depósito: medidas interiores con cinta o litros en la caja; Ø de cesta en el envase. Rejilla y litros de mezcla los sugerimos; lo opcional puede quedar vacío.'
         : isRdwc
-          ? 'RDWC: módulos conectados y recirculación continua. Ajusta sitios, volúmenes y aireación.'
-        : 'Configura las dimensiones de tu torre hidropónica vertical';
+          ? 'Cuenta cubos y lee litros del depósito de control en la placa del kit. Recirculación y aire: valores por defecto o lo que ponga tu bomba; no hace falta calcular a mano.'
+        : 'Niveles y cestas por nivel: manual del kit o a ojo. Depósito y tubo los afinas luego en Cultivo e instalación.';
   }
+  const torreFacil = document.getElementById('setupTorreQuickHint');
+  if (torreFacil) torreFacil.classList.toggle('setup-hidden', setupTipoInstalacion !== 'torre');
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
   if (dwcWizard) dwcWizard.classList.toggle('setup-hidden', !(setupTipoInstalacion === 'dwc' || isRdwc));
   if (dwcWizard) dwcWizard.classList.toggle('setup-dwc-wrap--rdwc', isRdwc);
@@ -2397,12 +2399,40 @@ function aplicarSistemaRdwcDesdeFormulario() {
   showToast('✅ Datos RDWC guardados');
 }
 
+/** Texto corto en Cultivo e instalación: qué datos son fáciles de conseguir según el tipo activo. */
+function refrescarSistemaDatosFacilesBanner(cfg) {
+  const el = document.getElementById('sistemaDatosFacilesBanner');
+  if (!el) return;
+  if (!cfg) {
+    el.classList.add('setup-hidden');
+    return;
+  }
+  el.classList.remove('setup-hidden');
+  const tipo = typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipo === 'nft') {
+    el.textContent =
+      'NFT: disposición, tubos/huecos y Ø de cesta (suele venir en la caja del net pot). Altura de bombeo solo si el agua sube; datos de bomba son opcionales (placa del equipo).';
+  } else if (tipo === 'dwc') {
+    el.textContent =
+      'DWC: cinta por dentro del depósito o litros en etiqueta; Ø de cesta en el envase. Rejilla y litros de mezcla los orienta la app si dejas vacío lo opcional.';
+  } else if (tipo === 'rdwc') {
+    el.textContent =
+      'RDWC: cuenta cubos y lee litros del depósito de control en la placa del kit. Ø útil bajo cesta y caudales pueden quedar por defecto o con el dato de tu bomba.';
+  } else {
+    el.textContent =
+      'Torre vertical: niveles y cestas en el asistente o en el esquema; depósito y litros de mezcla abajo (etiqueta del depósito o cinta métrica).';
+  }
+}
+
 function sincronizarSistemaNftMontajeUI() {
   const card = document.getElementById('sistemaNftMontajeCard');
   const dwcInfo = document.getElementById('sistemaDwcAyudaCard');
   const torreObj = document.getElementById('sistemaTorreObjetivoCard');
   const ecphCard = document.getElementById('sistemaEcPhStrategyCard');
   const cfg = state.configTorre;
+  try {
+    refrescarSistemaDatosFacilesBanner(cfg);
+  } catch (eBan) {}
   if (ecphCard) {
     if (cfg) ecphCard.style.display = 'block';
     else ecphCard.style.display = 'none';
