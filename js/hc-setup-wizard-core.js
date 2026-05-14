@@ -2030,7 +2030,10 @@ function textoResumenSistemaDwcPanel(cfg) {
   parts.push(formaTxt);
   if (forma === 'troncopiramidal') {
     if (L && W) {
-      parts.push(Math.round(Number(L)) + '×' + Math.round(Number(W)) + ' cm (tapa)');
+      parts.push(Math.round(Number(L)) + '×' + Math.round(Number(W)) + ' cm (boca)');
+    }
+    if (P) {
+      parts.push('P ' + Math.round(Number(P)) + ' cm');
     }
   } else if (L && W && P) {
     if (forma === 'cilindrico') {
@@ -2048,7 +2051,17 @@ function textoResumenSistemaDwcPanel(cfg) {
   }
   if (forma === 'troncopiramidal') {
     const vm = Number(cfg.dwcDepositoVolManualL);
-    parts.push(Number.isFinite(vm) && vm > 0 ? 'útil ~' + vm + ' L' : 'indica litros útiles');
+    let g = null;
+    if (typeof dwcTroncoLitrosDesdeLAMenosP === 'function') {
+      g = dwcTroncoLitrosDesdeLAMenosP(Number(L), Number(W), Number(P));
+    }
+    if (Number.isFinite(vm) && vm > 0) {
+      parts.push('útil ~' + Math.round(vm * 10) / 10 + ' L (medido)');
+    } else if (g != null) {
+      parts.push('~' + g + ' L (L×A×P)');
+    } else {
+      parts.push('L×A×P o litros útiles');
+    }
   }
   if (cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0) {
     parts.push('Ø' + Math.round(Number(cfg.dwcNetPotRimMm)) + ' mm');

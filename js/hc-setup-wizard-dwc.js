@@ -130,6 +130,18 @@ function dwcRequiereVolumenManual(forma) {
   return dwcNormalizeDepositoForma(forma) === 'troncopiramidal';
 }
 
+/**
+ * Troncopiramidal: boca interior (L×A) × altura útil del líquido P (cm) ≈ prisma recto;
+ * útil para capacidad y llenado seguro frente a cesta cuando no hay litros medidos a mano.
+ */
+function dwcTroncoLitrosDesdeLAMenosP(L, W, P) {
+  if (!Number.isFinite(L) || !Number.isFinite(W) || !Number.isFinite(P)) return null;
+  if (L < 5 || L > 300 || W < 5 || W > 300 || P < 5 || P > 200) return null;
+  const litros = (L * W * P) / 1000;
+  if (!Number.isFinite(litros) || litros <= 0) return null;
+  return Math.round(litros * 10) / 10;
+}
+
 function _dwcParseVolManualLitros(raw) {
   const v = parseFloat(String(raw == null ? '' : raw).replace(',', '.').trim());
   if (!Number.isFinite(v) || v < 1 || v > 800) return null;
@@ -144,7 +156,7 @@ function getDwcVolumenManualLitrosDesdeConfig(cfg) {
  * Capacidad útil del depósito DWC (L) desde config guardada:
  * - prismático: L×A×P
  * - cilíndrico: π·(D/2)^2·P (D interior; L y W en config se guardan iguales a D)
- * - troncopiramidal: litros manuales (obligatorio para precisión)
+ * - troncopiramidal: litros manuales si los indicas; si no, L×A×P (boca × altura útil del líquido, aprox. prisma)
  */
 function getDwcCapacidadLitrosDesdeConfig(cfg) {
   cfg = cfg || {};
@@ -152,7 +164,12 @@ function getDwcCapacidadLitrosDesdeConfig(cfg) {
   const volManual = getDwcVolumenManualLitrosDesdeConfig(cfg);
   if (volManual != null && !dwcRequiereVolumenManual(forma)) return volManual;
   if (dwcRequiereVolumenManual(forma)) {
-    return volManual;
+    if (volManual != null && volManual > 0) return volManual;
+    const L = Number(cfg.dwcDepositoLargoCm);
+    const W = Number(cfg.dwcDepositoAnchoCm);
+    const P = Number(cfg.dwcDepositoProfCm);
+    const g = dwcTroncoLitrosDesdeLAMenosP(L, W, P);
+    return g;
   }
   const L = Number(cfg.dwcDepositoLargoCm);
   const W = Number(cfg.dwcDepositoAnchoCm);
@@ -209,13 +226,23 @@ function getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg) {
   const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
 
   if (forma === 'troncopiramidal') {
-    const vm = getDwcVolumenManualLitrosDesdeConfig(c);
-    if (!Number.isFinite(vm) || vm <= 0) return null;
+    const P = Number(c.dwcDepositoProfCm);
     const hPotRaw = Number(c.dwcNetPotHeightMm);
     const hPotMm = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200 ? hPotRaw : 70;
     const hSustratoMm = getDwcAlturaSustratoEstimadaMm(c);
     const baseSustratoDesdeTapaCm = Math.max(0.5, (hPotMm - hSustratoMm) / 10);
     const margenSegCm = 0.8;
+    const alturaAguaSegCm = Math.max(0.5, baseSustratoDesdeTapaCm - margenSegCm);
+
+    if (Number.isFinite(P) && P >= 5 && P <= 200) {
+      const alturaAguaSegClamped = Math.min(P, alturaAguaSegCm);
+      const litros = cap * (alturaAguaSegClamped / P);
+      const out = Math.round(litros * 10) / 10;
+      return out > 0 ? out : null;
+    }
+
+    const vm = getDwcVolumenManualLitrosDesdeConfig(c);
+    if (!Number.isFinite(vm) || vm <= 0) return null;
     const reservaCm = Math.max(0.5, baseSustratoDesdeTapaCm - margenSegCm);
     const altRefCm = Math.max(10, Math.min(50, (hPotMm / 10) * 1.15));
     const frac = Math.min(0.96, Math.max(0.78, reservaCm / altRefCm));
@@ -611,7 +638,10 @@ function getDwcCapacidadLitrosFromFormIds(ids) {
   const volManual = ids.volManual ? _dwcParseVolManualLitros(document.getElementById(ids.volManual)?.value) : null;
   if (volManual != null && !dwcRequiereVolumenManual(forma)) return volManual;
   if (dwcRequiereVolumenManual(forma)) {
-    return volManual;
+    if (volManual != null && volManual > 0) return volManual;
+    const P = _dwcParseOptCm(ids.prof, 5, 200);
+    const { L, W } = dwcLargoAnchoCmEffectivosDesdeFormIds(ids);
+    return dwcTroncoLitrosDesdeLAMenosP(L, W, P);
   }
   const P = _dwcParseOptCm(ids.prof, 5, 200);
   const { L, W } = dwcLargoAnchoCmEffectivosDesdeFormIds(ids);
@@ -2139,16 +2169,21 @@ function refreshDwcSistemaMedidasUI() {
       cfgDraft.dwcDepositoForma = forma;
       if (Ld != null) cfgDraft.dwcDepositoLargoCm = Ld;
       if (Wd != null) cfgDraft.dwcDepositoAnchoCm = Wd;
-      if (forma === 'troncopiramidal') delete cfgDraft.dwcDepositoProfCm;
-      else if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
+      if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
+      else delete cfgDraft.dwcDepositoProfCm;
       if (vm != null) cfgDraft.dwcDepositoVolManualL = vm;
+      else delete cfgDraft.dwcDepositoVolManualL;
       if (hPotD != null) cfgDraft.dwcNetPotHeightMm = hPotD;
       const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
       const hSustratoMm = getDwcAlturaSustratoEstimadaMm(cfgDraft);
       volEl.style.display = 'block';
       volEl.textContent =
         (forma === 'troncopiramidal'
-          ? 'Volumen util configurado del deposito: ~' + cap + ' L (manual). '
+          ? 'Volumen util del deposito (tronco): ~' +
+            cap +
+            ' L (' +
+            (vm != null ? 'medido o L×A×P' : 'L×A×P aprox.') +
+            '). '
           : vm != null
             ? 'Volumen util configurado del deposito: ~' + cap + ' L (manual, sobrescribe geometria). '
           : forma === 'cilindrico'
@@ -2161,7 +2196,8 @@ function refreshDwcSistemaMedidasUI() {
       const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value || cfg.dwcDepositoForma);
       if (forma === 'troncopiramidal') {
         volEl.style.display = 'block';
-        volEl.textContent = 'Deposito troncopiramidal: indica volumen util real en litros para ajustar nutrientes y limites de llenado.';
+        volEl.textContent =
+          'Troncopiramidal: indica L×A y profundidad útil P del líquido (la app estima ~litros) o litros medidos a mano; con altura de cesta se calcula el llenado seguro.';
       } else {
         volEl.style.display = 'none';
         volEl.textContent = '';
@@ -2339,7 +2375,9 @@ function onSetupDwcMedidasInput() {
       hint.classList.remove('setup-hidden');
       hint.textContent =
         forma === 'troncopiramidal'
-          ? 'Volumen util manual: ~' + cap + ' L (troncopiramidal).'
+          ? (vm != null
+              ? 'Capacidad ~' + cap + ' L (prioriza litros medidos). Con P y cesta se orienta llenado seguro y mezcla.'
+              : 'Capacidad estimada ~' + cap + ' L (L×A×P como prisma en la boca; tronco real puede variar). Ajusta con litros medidos si los tienes.')
           : vm != null
             ? 'Volumen util manual: ~' + cap + ' L (sobrescribe calculo geometrico).'
           : forma === 'cilindrico'
@@ -2380,8 +2418,7 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   else delete cfg.dwcDepositoVolManualL;
   if (L != null) cfg.dwcDepositoLargoCm = L; else delete cfg.dwcDepositoLargoCm;
   if (W != null) cfg.dwcDepositoAnchoCm = W; else delete cfg.dwcDepositoAnchoCm;
-  if (dwcRequiereVolumenManual(forma)) delete cfg.dwcDepositoProfCm;
-  else if (P != null) cfg.dwcDepositoProfCm = P;
+  if (P != null) cfg.dwcDepositoProfCm = P;
   else delete cfg.dwcDepositoProfCm;
   if (rim != null) cfg.dwcNetPotRimMm = rim; else delete cfg.dwcNetPotRimMm;
   if (hPot != null) cfg.dwcNetPotHeightMm = hPot; else delete cfg.dwcNetPotHeightMm;
@@ -2478,7 +2515,7 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
     setVal(ids.largo, c.dwcDepositoLargoCm);
     setVal(ids.ancho, c.dwcDepositoAnchoCm);
   }
-  if (ids.prof) setVal(ids.prof, dwcRequiereVolumenManual(formaSync) ? '' : c.dwcDepositoProfCm);
+  if (ids.prof) setVal(ids.prof, c.dwcDepositoProfCm != null ? c.dwcDepositoProfCm : '');
   if (ids.volManual) setVal(ids.volManual, c.dwcDepositoVolManualL);
   setVal(ids.rim, c.dwcNetPotRimMm);
   setVal(ids.alt, c.dwcNetPotHeightMm);
@@ -2512,15 +2549,15 @@ function toggleDwcVolumenManualUI(formIds, cfg) {
   const inp = document.getElementById(ids.volManual);
   const help = document.getElementById(isSetup ? 'setupDwcVolumenManualHint' : 'sysDwcVolumenManualHint');
   if (wrap) wrap.classList.remove('setup-hidden');
-  if (profWrap) profWrap.classList.toggle('setup-hidden', on);
+  if (profWrap) profWrap.classList.remove('setup-hidden');
   if (inp) {
-    inp.required = on;
-    inp.setAttribute('aria-required', on ? 'true' : 'false');
+    inp.required = false;
+    inp.setAttribute('aria-required', 'false');
   }
   if (help) {
     help.classList.remove('setup-hidden');
     help.textContent = on
-      ? 'Obligatorio en troncopiramidal: indica litros utiles reales del deposito (medidos). No hace falta la profundidad P: el volumen ya lo defines aqui.'
+      ? 'Troncopiramidal: indica L×A (boca) y profundidad/altura útil P del líquido para calcular ~litros y el llenado seguro según cesta; o solo litros medidos si prefieres (sobrescribe L×A×P).'
       : 'Opcional: si conoces litros utiles reales, este valor sobrescribe el calculo geometrico.';
   }
   try {
@@ -2558,10 +2595,6 @@ function onDwcFormaChanged(formIds) {
       if (seed != null) dIn.value = String(Math.round(seed * 10) / 10);
     }
   }
-  if (dwcRequiereVolumenManual(forma)) {
-    const profIn = document.getElementById(ids.prof);
-    if (profIn) profIn.value = '';
-  }
   try {
     toggleDwcVolumenManualUI(ids, state.configTorre);
   } catch (_) {}
@@ -2581,10 +2614,14 @@ function dwcValidarVolumenManualSegunForma(cfg, contexto) {
   if (!dwcRequiereVolumenManual(forma)) return true;
   const vm = getDwcVolumenManualLitrosDesdeConfig(c);
   if (vm != null && vm > 0) return true;
+  const L = Number(c.dwcDepositoLargoCm);
+  const W = Number(c.dwcDepositoAnchoCm);
+  const P = Number(c.dwcDepositoProfCm);
+  if (dwcTroncoLitrosDesdeLAMenosP(L, W, P) != null) return true;
   const msg =
     contexto === 'setup'
-      ? 'Para deposito troncopiramidal debes indicar el volumen util real (L) antes de continuar.'
-      : 'Para guardar DWC troncopiramidal debes indicar el volumen util real (L).';
+      ? 'Troncopiramidal: indica volumen útil medido (L) o largo × ancho × profundidad útil del líquido (cm).'
+      : 'Troncopiramidal: indica volumen útil (L) o L×A×P (cm) en el formulario DWC.';
   showToast(msg, true);
   return false;
 }

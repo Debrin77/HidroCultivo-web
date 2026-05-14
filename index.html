@@ -1484,7 +1484,7 @@
               </div>
             </div>
             <div id="sysDwcProfWrap">
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcProfCm" title="Profundidad o altura útil del líquido (fondo → nivel máximo de solución)">P útil cm</label>
+              <label class="form-label torre-dwc-lbl-mono" for="sysDwcProfCm" title="Profundidad o altura útil del líquido (fondo → nivel máximo). Troncopiramidal: misma P para estimar L×A×P.">P útil cm</label>
               <input type="number" id="sysDwcProfCm" class="torre-dwc-input" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Profundidad o altura útil del líquido cm"
                 oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
             </div>
@@ -1492,7 +1492,7 @@
           <details class="torre-vol-detalles torre-sistema-details-spaced">
             <summary class="torre-vol-detalles-summary">Cómo calculamos el volumen útil</summary>
             <div class="torre-vol-wrap torre-vol-wrap--inner">
-              <p class="torre-nft-p-soft" style="margin:0"><strong>Medidas geométricas</strong> (tapa y depósito). Prismático: ≈ L×A×P. Cilíndrico: Ø interior útil y P del líquido. Troncopiramidal: indica litros medidos. El llenado seguro usa P y altura de cesta abajo.</p>
+              <p class="torre-nft-p-soft" style="margin:0"><strong>Medidas geométricas</strong> (tapa y depósito). Prismático: ≈ L×A×P. Cilíndrico: Ø interior útil y P del líquido. <strong>Troncopiramidal:</strong> boca L×A y P del líquido ≈ prisma (estimación); si el tronco real difiere, indica litros medidos. El llenado seguro usa P y altura de cesta.</p>
             </div>
           </details>
           <div id="sysDwcVolumenManualWrap" class="setup-hidden">
@@ -2851,13 +2851,13 @@
             </div>
           </div>
           <div id="setupDwcProfWrap">
-            <label class="form-label setup-dwc-label" for="setupDwcProfCm" title="Profundidad o altura útil del líquido">Prof./alt. útil (cm)</label>
+            <label class="form-label setup-dwc-label" for="setupDwcProfCm" title="Profundidad o altura útil del líquido (desde el fondo hasta el nivel máximo de solución). Troncopiramidal: misma P para estimar volumen como L×A×P.">Prof./alt. útil (cm)</label>
             <input type="number" id="setupDwcProfCm" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off"
               oninput="try{onSetupDwcMedidasInput()}catch(e){}"
               class="setup-dwc-input">
           </div>
         </div>
-        <p class="setup-dwc-help"><strong>Medidas de tapa y geometría.</strong> Prismático: L×A×P. <strong>Cilíndrico:</strong> Ø interior y profundidad/altura útil del líquido. <strong>Troncopiramidal:</strong> litros medidos. El llenado seguro frente a cesta/sustrato usa P y altura de cesta.</p>
+        <p class="setup-dwc-help"><strong>Medidas de tapa y geometría.</strong> Prismático: L×A×P. <strong>Cilíndrico:</strong> Ø interior y profundidad/altura útil del líquido. <strong>Troncopiramidal:</strong> boca interior L×A y <strong>altura útil P del líquido</strong> (la app estima litros como prisma; opcional litros medidos si difiere mucho). El llenado seguro según cesta usa P y altura de cesta.</p>
         <div id="setupDwcVolumenManualWrap" class="setup-hidden">
           <label class="form-label setup-dwc-label" for="setupDwcVolumenManualL">Volumen útil real (L)</label>
           <input type="number" id="setupDwcVolumenManualL" min="1" max="800" step="0.1" placeholder="ej. 18.0"
