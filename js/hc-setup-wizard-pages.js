@@ -1244,8 +1244,20 @@ function updateTorreBuilder() {
   const elVol = document.getElementById('valVol');
   if (elVol) {
     if (setupTipoInstalacion === 'dwc' && dwcCap != null && dwcCap > 0) {
+      let safeHtml = '';
+      try {
+        const draft = typeof buildDwcDraftCfgFromSetupWizardInputs === 'function' ? buildDwcDraftCfgFromSetupWizardInputs() : null;
+        const vSeg =
+          draft && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function'
+            ? getDwcVolumenSeguroMaxLitrosDesdeConfig(draft)
+            : null;
+        if (vSeg != null && vSeg > 0 && Math.abs(vSeg - volDepDwc) > 0.15) {
+          safeHtml =
+            '<span class="setup-inline-approx"> · op. ~' + Math.round(vSeg * 10) / 10 + ' L</span>';
+        }
+      } catch (_) {}
       elVol.innerHTML =
-        volDepDwc + '<span class="setup-inline-unit-l">L</span>';
+        volDepDwc + '<span class="setup-inline-unit-l">L</span>' + safeHtml;
     } else if (setupTipoInstalacion === 'dwc') {
       elVol.innerHTML =
         volSlider +
@@ -1268,6 +1280,15 @@ function updateTorreBuilder() {
     return;
   }
   preview.classList.remove('torre-preview--dwc');
+
+  if (setupTipoInstalacion === 'torre') {
+    try {
+      if (typeof readTorreMontajeOrigenDesdeSetupUi === 'function' && readTorreMontajeOrigenDesdeSetupUi() === 'diy') {
+        calcularBombaRecomendada();
+        refrescarUIMensajeBombaUsuarioTorre();
+      }
+    } catch (_) {}
+  }
 
   // Actualizar preview visual de la torre vertical
   preview.innerHTML = '';

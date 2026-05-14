@@ -38,6 +38,180 @@ function hcRdwcMontajeOrigenNormalizado(cfg) {
   return (cfg && cfg.rdwcMontajeOrigen) === 'kit' ? 'kit' : 'diy';
 }
 
+/** 'kit' = comercial; 'diy' = a medida (por defecto si falta clave). */
+function hcTorreMontajeOrigenNormalizado(cfg) {
+  return (cfg && cfg.torreMontajeOrigen) === 'kit' ? 'kit' : 'diy';
+}
+
+function readTorreMontajeOrigenDesdeSetupUi() {
+  return document.getElementById('setupTorreMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+}
+
+/**
+ * Estimación orientativa de bomba para torre vertical (caudal L/h, head m, potencia W)
+ * según niveles, altura y carga por cestas por nivel.
+ */
+function hcComputeTorreBombaOrientativa(niveles, alturaM, cestasPorNivel) {
+  const n = Math.max(1, Math.min(10, parseInt(String(niveles), 10) || 5));
+  const c = Math.max(1, Math.min(8, parseInt(String(cestasPorNivel), 10) || 5));
+  const h = Math.max(0.5, Math.min(3, Number(alturaM) || 1.2));
+  const cargaCestas = 1 + 0.07 * Math.max(0, c - 4);
+  const caudalMin = Math.round(1.5 * n * 60 * cargaCestas);
+  const caudalRec = Math.round(2.0 * n * 60 * cargaCestas);
+  const headMetros = Math.round(h * 1.2 * 10) / 10;
+  const Q = caudalRec / 1000;
+  const potenciaW = Math.ceil((Q * headMetros) / (0.367 * 0.35));
+  const potenciaRec = Math.max(5, potenciaW * 2);
+  let modeloRec = '';
+  if (caudalRec <= 400 && headMetros <= 1.5) {
+    modeloRec = 'Bomba 5-8W · 400-600 L/h · head 1.5m (ej: Jebao, Sunsun SS-200)';
+  } else if (caudalRec <= 600 && headMetros <= 2.0) {
+    modeloRec = 'Bomba 8-12W · 600-800 L/h · head 2.0m (ej: Jebao PP-388)';
+  } else if (caudalRec <= 900 && headMetros <= 2.5) {
+    modeloRec = 'Bomba 12-18W · 800-1000 L/h · head 2.5m (ej: Sunsun CHJ-503)';
+  } else {
+    modeloRec = 'Bomba 18-25W · 1200+ L/h · head 3m+ (consultar catálogo)';
+  }
+  return { caudalMin, caudalRec, headMetros, potenciaRec, modeloRec, niveles: n, cestas: c };
+}
+
+function validarBombaUsuarioTorreVsCalculo(b, lhStr, wStr) {
+  if (!b) return { tipo: 'sin_datos', html: '', toast: null };
+  const q = parseFloat(String(lhStr ?? '').replace(',', '.'));
+  const potW = parseFloat(String(wStr ?? '').replace(',', '.'));
+  const caudalMinLH = b.caudalMin;
+  const caudalRecLH = b.caudalRec;
+  if (!Number.isFinite(caudalMinLH) || !Number.isFinite(caudalRecLH)) {
+    return { tipo: 'sin_datos', html: '', toast: null };
+  }
+  if (!Number.isFinite(q) || q <= 0) {
+    return {
+      tipo: 'vacío',
+      html:
+        '<p class="setup-validation-text">Opcional: indica el caudal de la placa (L/h) para comprobar si encaja con la altura y los niveles.</p>',
+      toast: null,
+    };
+  }
+  if (q < caudalMinLH) {
+    return {
+      tipo: 'error',
+      html:
+        '<div class="setup-torre-bomba-verdict setup-torre-bomba-verdict--bad">Bomba: puede quedarse corta</div>' +
+        '<p class="setup-validation-text">El caudal declarado está <strong>por debajo del mínimo orientativo</strong> (' +
+        caudalMinLH +
+        ' L/h) para ' +
+        b.niveles +
+        ' niveles y la carga de cestas indicada. Revisa la curva Q–H del fabricante a unos <strong>' +
+        b.headMetros +
+        ' m</strong> de altura manométrica.</p>',
+      toast:
+        'Torre vertical: el caudal de tu bomba parece insuficiente para esta altura y número de niveles (revisa la curva Q–H).',
+    };
+  }
+  let tipo = 'ok';
+  let html =
+    '<div class="setup-torre-bomba-verdict setup-torre-bomba-verdict--ok">Bomba: dentro del rango orientativo</div>' +
+    '<p class="setup-validation-text">Superas el mínimo orientativo (' +
+    caudalMinLH +
+    ' L/h); el valor recomendado orientativo es ~' +
+    caudalRecLH +
+    ' L/h con altura manométrica ~' +
+    b.headMetros +
+    ' m.</p>';
+  if (q < caudalRecLH) {
+    tipo = 'marginal';
+    html =
+      '<div class="setup-torre-bomba-verdict setup-torre-bomba-verdict--warn">Bomba: justa</div>' +
+      '<p class="setup-validation-text">Cumples el mínimo orientativo pero <strong>sin mucho margen</strong>. Si la subida real es mayor o el tubo es estrecho, vigila el reparto en copas altas.</p>';
+  }
+  if (Number.isFinite(potW) && potW > 0 && potW < Math.max(4, Math.round(b.potenciaRec * 0.52))) {
+    tipo = tipo === 'ok' ? 'potencia_baja' : tipo;
+    html +=
+      '<p class="setup-validation-text"><strong>Potencia eléctrica baja</strong> frente al orden de magnitud orientativo (~' +
+      b.potenciaRec +
+      ' W): confirma en la ficha que el caudal se mantiene a la altura real de bombeo.</p>';
+  }
+  return { tipo, html, toast: null };
+}
+
+function seleccionarSetupTorreMontajeOrigen(mode) {
+  const kit = mode === 'kit';
+  const bKit = document.getElementById('setupTorreMontajeOrigenKit');
+  const bDiy = document.getElementById('setupTorreMontajeOrigenDiy');
+  if (bKit) {
+    bKit.classList.toggle('selected', kit);
+    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
+  }
+  if (bDiy) {
+    bDiy.classList.toggle('selected', !kit);
+    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
+  }
+  const hint = document.getElementById('setupTorreMontajeOrigenHint');
+  if (hint) hint.classList.toggle('setup-hidden', !kit);
+  if (typeof mostrarSeccionTuboBomba === 'function') {
+    mostrarSeccionTuboBomba(!kit);
+  } else {
+    const sec = document.getElementById('seccionTuboBomba');
+    if (sec) sec.style.display = kit ? 'none' : 'block';
+  }
+  if (!kit) {
+    try {
+      calcularBombaRecomendada();
+    } catch (_) {}
+  } else {
+    const msg = document.getElementById('setupTorreBombaUsuarioMsg');
+    if (msg) msg.innerHTML = '';
+  }
+  try {
+    refrescarUIMensajeBombaUsuarioTorre();
+  } catch (_) {}
+  try {
+    actualizarResumenSetup();
+  } catch (_) {}
+}
+
+function refrescarUIMensajeBombaUsuarioTorre() {
+  const el = document.getElementById('setupTorreBombaUsuarioMsg');
+  if (!el) return;
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion !== 'torre') {
+    el.innerHTML = '';
+    return;
+  }
+  if (typeof readTorreMontajeOrigenDesdeSetupUi === 'function' && readTorreMontajeOrigenDesdeSetupUi() === 'kit') {
+    el.innerHTML = '';
+    return;
+  }
+  const sliderH = document.getElementById('sliderAltura');
+  const n = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
+  const c = parseInt(document.getElementById('sliderCestas')?.value || 5, 10);
+  const b = hcComputeTorreBombaOrientativa(n, sliderH ? parseFloat(sliderH.value) : 1.2, c);
+  const lhRaw = document.getElementById('setupTorreBombaUsuarioLh')?.value ?? '';
+  const wRaw = document.getElementById('setupTorreBombaUsuarioW')?.value ?? '';
+  const v = validarBombaUsuarioTorreVsCalculo(b, lhRaw, wRaw);
+  el.innerHTML = v.html || '';
+}
+
+function onSetupTorreBombaUsuarioInput() {
+  refrescarUIMensajeBombaUsuarioTorre();
+}
+
+let _torreBombaBlurToastKey = '';
+function onSetupTorreBombaUsuarioBlur() {
+  refrescarUIMensajeBombaUsuarioTorre();
+  const sliderH = document.getElementById('sliderAltura');
+  const n = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
+  const c = parseInt(document.getElementById('sliderCestas')?.value || 5, 10);
+  const b = hcComputeTorreBombaOrientativa(n, sliderH ? parseFloat(sliderH.value) : 1.2, c);
+  const lhRaw = document.getElementById('setupTorreBombaUsuarioLh')?.value ?? '';
+  const wRaw = document.getElementById('setupTorreBombaUsuarioW')?.value ?? '';
+  const v = validarBombaUsuarioTorreVsCalculo(b, lhRaw, wRaw);
+  const key = v.tipo + '|' + lhRaw + '|' + wRaw;
+  if (v.tipo === 'error' && v.toast && key !== _torreBombaBlurToastKey) {
+    _torreBombaBlurToastKey = key;
+    showToast(v.toast, true);
+  }
+}
+
 function readNftMontajeOrigenDesdeSetupUi() {
   return document.getElementById('setupNftMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
 }
@@ -1455,7 +1629,11 @@ function abrirSetup() {
     sv.value = String(snapped);
   }
   if (svm) {
-    const maxL = parseInt(sv?.value || '20', 10);
+    let maxL = parseInt(sv?.value || '20', 10);
+    if (setupTipoInstalacion === 'dwc' && typeof getSetupVolumenMaxLitros === 'function') {
+      const mCap = getSetupVolumenMaxLitros();
+      if (Number.isFinite(mCap) && mCap > 0) maxL = Math.round(mCap * 10) / 10;
+    }
     const mez = Number(c.volMezclaLitros);
     if (Number.isFinite(mez) && mez > 0 && mez < maxL - 0.02) {
       svm.value = String(Math.round(mez * 10) / 10);
@@ -1487,6 +1665,8 @@ function abrirSetup() {
   try {
     if (setupTipoInstalacion === 'nft') {
       seleccionarSetupNftMontajeOrigen(hcNftMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+    } else if (tipoInstalacionNormalizado(c) === 'torre') {
+      seleccionarSetupTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
     }
   } catch (_) {}
   renderSetupPage();
@@ -1506,6 +1686,23 @@ function abrirSetup() {
           : '';
     }
     if (setupTipoInstalacion === 'nft') refrescarUIMensajeBombaUsuarioNft('setup');
+    if (tipoInstalacionNormalizado(c) === 'torre') {
+      const lhT = document.getElementById('setupTorreBombaUsuarioLh');
+      const wT = document.getElementById('setupTorreBombaUsuarioW');
+      if (lhT) {
+        lhT.value =
+          c.torreBombaUsuarioCaudalLh != null && c.torreBombaUsuarioCaudalLh !== ''
+            ? String(c.torreBombaUsuarioCaudalLh)
+            : '';
+      }
+      if (wT) {
+        wT.value =
+          c.torreBombaUsuarioPotenciaW != null && c.torreBombaUsuarioPotenciaW !== ''
+            ? String(c.torreBombaUsuarioPotenciaW)
+            : '';
+      }
+      refrescarUIMensajeBombaUsuarioTorre();
+    }
   }, 0);
   a11yDialogOpened(o);
 }
@@ -1615,6 +1812,11 @@ function refrescarSetupTipoInstalacionUI() {
   const nw = document.getElementById('setupNftBuilderWrap');
   if (tw) tw.style.display = (isNft || isRdwc) ? 'none' : 'block';
   if (nw) nw.classList.toggle('setup-hidden', !isNft);
+  if (setupTipoInstalacion !== 'torre') {
+    try {
+      if (typeof mostrarSeccionTuboBomba === 'function') mostrarSeccionTuboBomba(false);
+    } catch (_) {}
+  }
   const t1 = document.getElementById('spage1Title');
   const st = document.getElementById('spage1Subtitle');
   if (t1) {
@@ -1634,6 +1836,13 @@ function refrescarSetupTipoInstalacionUI() {
   }
   const torreFacil = document.getElementById('setupTorreQuickHint');
   if (torreFacil) torreFacil.classList.toggle('setup-hidden', setupTipoInstalacion !== 'torre');
+  if (setupTipoInstalacion === 'torre') {
+    try {
+      const cTorreUi =
+        state.configTorre && tipoInstalacionNormalizado(state.configTorre) === 'torre' ? state.configTorre : {};
+      seleccionarSetupTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(cTorreUi) === 'kit' ? 'kit' : 'diy');
+    } catch (_) {}
+  }
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
   if (dwcWizard) dwcWizard.classList.toggle('setup-hidden', !(setupTipoInstalacion === 'dwc' || isRdwc));
   if (dwcWizard) dwcWizard.classList.toggle('setup-dwc-wrap--rdwc', isRdwc);

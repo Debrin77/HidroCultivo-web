@@ -1094,6 +1094,12 @@ function usarCalMagEnRecarga() {
 
 function getSetupVolumenMaxLitros() {
   if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'dwc') {
+    if (typeof getSetupDwcVolumenMaxMezclaOrientativoLitros === 'function') {
+      const orient = getSetupDwcVolumenMaxMezclaOrientativoLitros();
+      if (orient != null && orient > 0) {
+        return Math.min(800, Math.max(0.5, Math.round(orient * 10) / 10));
+      }
+    }
     const dwcCap = getDwcCapacidadLitrosFromSetupInputs();
     if (dwcCap != null && dwcCap > 0) {
       return Math.min(800, Math.max(1, Math.round(dwcCap * 10) / 10));
@@ -1704,10 +1710,56 @@ function guardarSetupYContinuar() {
       if (!state.configTorre.equipamiento.includes(eq)) state.configTorre.equipamiento.push(eq);
     });
   }
-  const volEfectivo =
-    isDwc && Number(state.configTorre.volDeposito) > 0
-      ? Number(state.configTorre.volDeposito)
-      : vol;
+  if (isNft || isDwc || isRdwc) {
+    delete state.configTorre.torreMontajeOrigen;
+    delete state.configTorre.torreBombaUsuarioCaudalLh;
+    delete state.configTorre.torreBombaUsuarioPotenciaW;
+  }
+  if (!isNft && !isDwc && !isRdwc) {
+    if (typeof readTorreMontajeOrigenDesdeSetupUi === 'function' && readTorreMontajeOrigenDesdeSetupUi() === 'kit') {
+      state.configTorre.torreMontajeOrigen = 'kit';
+      delete state.configTorre.torreBombaUsuarioCaudalLh;
+      delete state.configTorre.torreBombaUsuarioPotenciaW;
+    } else {
+      delete state.configTorre.torreMontajeOrigen;
+      const lhTorre = document.getElementById('setupTorreBombaUsuarioLh');
+      const wTorre = document.getElementById('setupTorreBombaUsuarioW');
+      const uLhT = lhTorre ? parseFloat(String(lhTorre.value).replace(',', '.')) : NaN;
+      const uWT = wTorre ? parseFloat(String(wTorre.value).replace(',', '.')) : NaN;
+      if (Number.isFinite(uLhT) && uLhT > 0) state.configTorre.torreBombaUsuarioCaudalLh = Math.round(uLhT);
+      else delete state.configTorre.torreBombaUsuarioCaudalLh;
+      if (Number.isFinite(uWT) && uWT > 0) state.configTorre.torreBombaUsuarioPotenciaW = Math.round(uWT);
+      else delete state.configTorre.torreBombaUsuarioPotenciaW;
+      const sliderAltTorre = document.getElementById('sliderAltura');
+      const altM = sliderAltTorre ? parseFloat(sliderAltTorre.value) : NaN;
+      const bTorre =
+        typeof hcComputeTorreBombaOrientativa === 'function'
+          ? hcComputeTorreBombaOrientativa(niveles, Number.isFinite(altM) ? altM : 1.2, cestas)
+          : null;
+      const vTorre =
+        typeof validarBombaUsuarioTorreVsCalculo === 'function'
+          ? validarBombaUsuarioTorreVsCalculo(bTorre, lhTorre ? lhTorre.value : '', wTorre ? wTorre.value : '')
+          : { tipo: 'ok', toast: null };
+      if (vTorre.tipo === 'error' && vTorre.toast) {
+        showToast(vTorre.toast, true);
+      }
+      const huecosTorre = niveles * cestas;
+      if (huecosTorre >= 40 && !setupEquipamiento.has('difusor')) {
+        showToast(
+          'Torre con muchas plantas: en DIY conviene oxigenar el depósito (p. ej. difusor) además de la circulación por el tubo.',
+          false
+        );
+      }
+    }
+  }
+  const volEfectivo = (function () {
+    if (!isDwc || !(Number(state.configTorre.volDeposito) > 0)) return vol;
+    if (typeof getDwcVolumenMaxMezclaLitrosDesdeConfig === 'function') {
+      const capM = getDwcVolumenMaxMezclaLitrosDesdeConfig(state.configTorre);
+      if (capM != null && capM > 0) return capM;
+    }
+    return Number(state.configTorre.volDeposito);
+  })();
   const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
   if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < volEfectivo - 0.02) {
     state.configTorre.volMezclaLitros = Math.min(volEfectivo, Math.max(0.5, Math.round(mezParsed * 10) / 10));

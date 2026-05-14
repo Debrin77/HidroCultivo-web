@@ -523,33 +523,20 @@ function calcularBombaRecomendada() {
   const alturaEl = document.getElementById('valAltura');
   if (alturaEl) alturaEl.textContent = ' ' + setupAlturaTorre.toFixed(1) + 'm';
 
-  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);
+  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10) || 5;
+  const cestas = parseInt(document.getElementById('sliderCestas')?.value || 5, 10) || 5;
 
-  // Cálculo técnico de bomba
-  // Caudal necesario: 1.5 L/min por nivel activo = 1.5 × N × 60 = 90N L/h
-  const caudalMin  = Math.round(1.5 * niveles * 60);         // L/h mínimo
-  const caudalRec  = Math.round(2.0 * niveles * 60);         // L/h recomendado
+  const b =
+    typeof hcComputeTorreBombaOrientativa === 'function'
+      ? hcComputeTorreBombaOrientativa(niveles, setupAlturaTorre, cestas)
+      : null;
+  if (!b) return;
 
-  // Head (altura de elevación) = altura torre + 20% de pérdidas por fricción
-  const headMetros = Math.round(setupAlturaTorre * 1.2 * 10) / 10;
-
-  // Potencia estimada (W) = (Q × H) / (367 × η) donde η≈0.35 para bombas pequeñas
-  // Q en m³/h, H en metros
-  const Q = caudalRec / 1000;  // m³/h
-  const potenciaW = Math.ceil((Q * headMetros) / (0.367 * 0.35));
-  const potenciaRec = Math.max(5, potenciaW * 2); // factor seguridad ×2
-
-  // Recomendación de bomba según caudal y head
-  let modeloRec = '';
-  if (caudalRec <= 400 && headMetros <= 1.5) {
-    modeloRec = 'Bomba 5-8W · 400-600 L/h · head 1.5m (ej: Jebao, Sunsun SS-200)';
-  } else if (caudalRec <= 600 && headMetros <= 2.0) {
-    modeloRec = 'Bomba 8-12W · 600-800 L/h · head 2.0m (ej: Jebao PP-388)';
-  } else if (caudalRec <= 900 && headMetros <= 2.5) {
-    modeloRec = 'Bomba 12-18W · 800-1000 L/h · head 2.5m (ej: Sunsun CHJ-503)';
-  } else {
-    modeloRec = 'Bomba 18-25W · 1200+ L/h · head 3m+ (consultar catálogo)';
-  }
+  const caudalMin = b.caudalMin;
+  const caudalRec = b.caudalRec;
+  const headMetros = b.headMetros;
+  const potenciaRec = b.potenciaRec;
+  const modeloRec = b.modeloRec;
 
   // Aviso tubo interior si aplica
   let avisoTuboInt = '';
@@ -588,6 +575,9 @@ function calcularBombaRecomendada() {
 
   // Guardar en setupData
   window.setupBombaCalculada = { caudalMin, caudalRec, headMetros, potenciaRec, modeloRec };
+  try {
+    if (typeof refrescarUIMensajeBombaUsuarioTorre === 'function') refrescarUIMensajeBombaUsuarioTorre();
+  } catch (_) {}
 }
 
 function seleccionarCesta(tam) {

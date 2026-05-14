@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-13-setup-cesta-var">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-14-torre-dwc-vol">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -2779,6 +2779,16 @@
       </div>
 
       <div id="setupTorreBuilderWrap">
+      <div id="setupTorreMontajeOrigenRow" class="setup-nft-montaje-origen-row setup-mb-10">
+        <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
+        <div class="setup-nft-layout-grid setup-nft-montaje-origen-chips">
+          <button type="button" class="equip-card nft-disp-btn" id="setupTorreMontajeOrigenKit" onclick="seleccionarSetupTorreMontajeOrigen('kit')"
+            aria-pressed="false">Kit comercial</button>
+          <button type="button" class="equip-card nft-disp-btn selected" id="setupTorreMontajeOrigenDiy" onclick="seleccionarSetupTorreMontajeOrigen('diy')"
+            aria-pressed="true">DIY / a medida</button>
+        </div>
+      </div>
+      <p id="setupTorreMontajeOrigenHint" class="setup-field-hint setup-hidden" role="note">Modo kit: aquí no afinamos tubo central ni bomba; puedes retocar depósito y dimensiones en Cultivo e instalación. Elige DIY si quieres orientación de tubo, altura y bomba (y opcionalmente validar tu placa).</p>
       <div class="torre-builder">
         <!-- Preview visual -->
         <div>
@@ -3359,6 +3369,26 @@
         <!-- Resultado cálculo bomba -->
         <div id="resultadoBomba" class="setup-box-info">
           Selecciona diámetro y altura para calcular la bomba recomendada
+        </div>
+
+        <div id="setupTorreBombaUsuarioBlock" class="setup-mt-10">
+          <div class="setup-kicker setup-kicker-md setup-mb-6">Tu bomba (opcional, DIY)</div>
+          <p class="setup-field-hint setup-mb-8">Si tienes la placa a mano, indica caudal nominal (L/h) y potencia (W); lo comparamos con el mínimo orientativo según niveles, cestas por nivel y altura de la torre.</p>
+          <div class="setup-grid-2 setup-grid-gap-8">
+            <div>
+              <label class="form-label" for="setupTorreBombaUsuarioLh">Caudal placa (L/h)</label>
+              <input type="number" id="setupTorreBombaUsuarioLh" class="form-input" min="50" max="20000" step="10" placeholder="ej. 800" inputmode="decimal" autocomplete="off"
+                oninput="try{onSetupTorreBombaUsuarioInput()}catch(e){}"
+                onblur="try{onSetupTorreBombaUsuarioBlur()}catch(e){}">
+            </div>
+            <div>
+              <label class="form-label" for="setupTorreBombaUsuarioW">Potencia (W)</label>
+              <input type="number" id="setupTorreBombaUsuarioW" class="form-input" min="1" max="500" step="1" placeholder="opcional" inputmode="numeric" autocomplete="off"
+                oninput="try{onSetupTorreBombaUsuarioInput()}catch(e){}"
+                onblur="try{onSetupTorreBombaUsuarioBlur()}catch(e){}">
+            </div>
+          </div>
+          <div id="setupTorreBombaUsuarioMsg" class="setup-mt-6" role="status" aria-live="polite"></div>
         </div>
 
       </div>
@@ -4478,11 +4508,11 @@
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=21"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=10"></script>
+  <script src="js/hc-setup-wizard-core.js?v=22"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=11"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-13-cultivo-reco-status"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-13-nft-reco-status"></script>
-  <script src="js/hc-setup-calc-core.js?v=24"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-14-torre-dwc-vol"></script>
+  <script src="js/hc-setup-calc-core.js?v=25"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
@@ -4502,7 +4532,7 @@
   <script src="js/riego-calculo-calcular.js?v=5"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=6"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=6"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=7"></script>
   <script src="js/app-hc-torres-badges-notifs.js?v=28"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=12"></script>
 </body>

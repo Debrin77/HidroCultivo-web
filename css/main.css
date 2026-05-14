@@ -14693,6 +14693,14 @@ button.toggle-switch:focus-visible {
   line-height: 1.45;
   font-weight: 600;
 }
+.setup-torre-bomba-verdict {
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.setup-torre-bomba-verdict--ok { color: #166534; }
+.setup-torre-bomba-verdict--warn { color: #b45309; }
+.setup-torre-bomba-verdict--bad { color: #b91c1c; }
 .equip-card {
   background: #ffffff;
   border: 2px solid #e5e7eb;

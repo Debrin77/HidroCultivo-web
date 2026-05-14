@@ -274,10 +274,48 @@ function dwcSyncVolDepositoDesdeCapacidadEstimada(cfg) {
   cfg.volDeposito = Math.min(800, Math.max(1, Math.round(cap * 10) / 10));
 }
 
+/**
+ * Tope orientativo de litros de mezcla en DWC: capacidad geométrica (volDeposito / dimensiones)
+ * recortada por el llenado seguro bajo cesta + cámara de aire cuando aplica.
+ */
+function getDwcVolumenMaxMezclaLitrosDesdeConfig(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
+  const geo = Number(cfg.volDeposito);
+  const capDims = getDwcCapacidadLitrosDesdeConfig(cfg);
+  const geoOk = Number.isFinite(geo) && geo > 0 ? Math.min(800, Math.max(1, Math.round(geo * 10) / 10)) : null;
+  const capOk =
+    capDims != null && capDims > 0 ? Math.min(800, Math.max(1, Math.round(capDims * 10) / 10)) : null;
+  const geometric = geoOk != null ? geoOk : capOk;
+  const safeRaw = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
+  const safeOk =
+    safeRaw != null && safeRaw > 0 ? Math.min(800, Math.max(0.5, Math.round(safeRaw * 10) / 10)) : null;
+  if (geometric != null && safeOk != null) return Math.min(geometric, safeOk);
+  if (safeOk != null) return safeOk;
+  if (geometric != null) return geometric;
+  return null;
+}
+
+/** Máximo de mezcla en el asistente DWC (inputs actuales del paso 1). */
+function getSetupDwcVolumenMaxMezclaOrientativoLitros() {
+  const draft = buildDwcDraftCfgFromSetupWizardInputs();
+  if (!draft) return null;
+  const cap = getDwcCapacidadLitrosFromSetupInputs();
+  const geoL = cap != null && cap > 0 ? Math.min(800, Math.max(1, Math.round(cap * 10) / 10)) : null;
+  const safeRaw = getDwcVolumenSeguroMaxLitrosDesdeConfig(draft);
+  const sL =
+    safeRaw != null && safeRaw > 0 ? Math.min(800, Math.max(0.5, Math.round(safeRaw * 10) / 10)) : null;
+  if (geoL != null && sL != null) return Math.min(geoL, sL);
+  if (sL != null) return sL;
+  return geoL;
+}
+
 /** Si había litros de mezcla guardados con otro máximo, recortar al depósito actual (evita fallo en checklist). */
 function dwcClampVolMezclaACapacidadDeposito(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
-  const vmax = Number(cfg.volDeposito);
+  const vmax =
+    typeof getDwcVolumenMaxMezclaLitrosDesdeConfig === 'function'
+      ? getDwcVolumenMaxMezclaLitrosDesdeConfig(cfg)
+      : Number(cfg.volDeposito);
   if (!Number.isFinite(vmax) || vmax < 1) return;
   const vm = Number(cfg.volMezclaLitros);
   if (Number.isFinite(vm) && vm > 0 && vm > vmax + 0.01) {
@@ -2373,8 +2411,16 @@ function onSetupDwcMedidasInput() {
   if (hint) {
     if (cap != null && cap > 0) {
       hint.classList.remove('setup-hidden');
+      let extraSeg = '';
+      try {
+        const draft = buildDwcDraftCfgFromSetupWizardInputs();
+        const vSeg = draft ? getDwcVolumenSeguroMaxLitrosDesdeConfig(draft) : null;
+        if (vSeg != null && vSeg > 0 && Math.abs(vSeg - cap) > 0.2) {
+          extraSeg = ' Llenado operativo orientativo (bajo cesta + aire): ~' + Math.round(vSeg * 10) / 10 + ' L.';
+        }
+      } catch (_) {}
       hint.textContent =
-        forma === 'troncopiramidal'
+        (forma === 'troncopiramidal'
           ? (vm != null
               ? 'Capacidad ~' + cap + ' L (prioriza litros medidos). Con P y cesta se orienta llenado seguro y mezcla.'
               : 'Capacidad estimada ~' + cap + ' L (L×A×P como prisma en la boca; tronco real puede variar). Ajusta con litros medidos si los tienes.')
@@ -2382,7 +2428,7 @@ function onSetupDwcMedidasInput() {
             ? 'Volumen util manual: ~' + cap + ' L (sobrescribe calculo geometrico).'
           : forma === 'cilindrico'
             ? 'Capacidad geometrica estimada: ~' + cap + ' L (cilindro: π × (Ø interior/2)² × prof. útil del líquido).'
-            : 'Capacidad geometrica estimada: ~' + cap + ' L (largo × ancho × prof. útil en cm ÷ 1000).';
+            : 'Capacidad geometrica estimada: ~' + cap + ' L (largo × ancho × prof. útil en cm ÷ 1000).') + extraSeg;
     } else {
       hint.classList.add('setup-hidden');
       hint.textContent = '';
