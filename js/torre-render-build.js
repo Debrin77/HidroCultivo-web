@@ -762,11 +762,8 @@ function generarSVGDwc() {
       cuboSvg += `<text x="${o.cx}" y="${(o.y + o.miniH - 2).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${subFs}" font-weight="${o.subLbl === '⋯' ? '700' : '600'}" fill="${subFill}" text-anchor="middle">${o.subLbl}</text>`;
     }
     const capY = yGrid0 + miniH + 5;
-    const capTxt =
-      S > kDraw
-        ? `${S} sitios · rejilla ${N}×${C} (${S} salidas de aire)`
-        : `${S} sitio${S === 1 ? '' : 's'} · rejilla ${N}×${C}`;
-    const capSvg = `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${capY.toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7.5" font-weight="700" fill="#475569">${capTxt}</text>`;
+    const capTxt = S > kDraw ? `${S} cubos` : `${S} cubo${S === 1 ? '' : 's'}`;
+    const capSvg = `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${capY.toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" font-weight="700" fill="#475569">${capTxt}</text>`;
     innerBottom = capY + 4;
     waterTopY = innerBottom - 20;
     waveY = waterTopY;
@@ -776,7 +773,7 @@ function generarSVGDwc() {
     clipPathInner = `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${(tankGraphicBottom - tankStartY).toFixed(1)}" rx="2"/>`;
     tankFrontalSvg =
       `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${stripH}" rx="4" fill="#eef2f7" stroke="#64748b" stroke-width="1.05"/>` +
-      `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${(tankStartY + 12).toFixed(1)}" text-anchor="middle" font-size="6.5" font-weight="800" fill="#334155" font-family="Syne,sans-serif" letter-spacing="0.02em">MANIFOLD · AIRE POR CUBO</text>` +
+      `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${(tankStartY + 12).toFixed(1)}" text-anchor="middle" font-size="6" font-weight="800" fill="#334155" font-family="Syne,sans-serif" letter-spacing="0.04em">MULTI</text>` +
       `<line x1="${mL}" y1="${manifoldY}" x2="${mR}" y2="${manifoldY}" stroke="#334155" stroke-width="2.3" stroke-linecap="round"/>` +
       dropSvg +
       cuboSvg +
@@ -1011,7 +1008,7 @@ function generarSVGDwc() {
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
   s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="${Dw.title}" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · ${
-    esMulticubo ? 'CUBOS (MULTIVALVULA)' : 'DEPÓSITO'
+    esMulticubo ? 'CUBOS' : 'DEPÓSITO'
   }</text>`;
   s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="${Dw.sep}" stroke-width="1" stroke-dasharray="5 4"/>`;
 
@@ -1083,7 +1080,7 @@ function generarSVGDwc() {
   const vbW = W + pad * 2;
   const vbH = dwcSvgH + pad * 2;
   const dwcTitleMulticubo = esMulticubo
-    ? ` Multivalvula: ${N} por ${C} cubos con línea de aire por sitio; volumen de mezcla total indicado abajo.`
+    ? ` Multivalvula, ${N * C} cubos, mezcla total abajo.`
     : ' Debajo, frente del depósito con solución.';
   return (
     `<svg class="torre-svg-diagram dwc-svg-diagram svg-centered-block" width="${W}" height="${dwcSvgH}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +

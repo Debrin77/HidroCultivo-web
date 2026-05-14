@@ -89,6 +89,49 @@ function dwcGetOxigenacionDiseno(cfg) {
   return dwcNormalizeOxigenacionDiseno(c.dwcOxigenacionDiseno);
 }
 
+/**
+ * Cubos multivalvula: una maceta por cubo. `dwcNumCubos` es la fuente de verdad;
+ * en config se refleja como numNiveles=1, numCestas=dwcNumCubos para el esquema.
+ */
+function dwcGetNumCubosIndependientes(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (dwcGetOxigenacionDiseno(c) !== 'cubos_independientes') return 0;
+  const n = parseInt(String(c.dwcNumCubos), 10);
+  if (Number.isFinite(n) && n >= 1) return Math.min(24, n);
+  const f = Math.max(1, parseInt(String(c.numNiveles || 1), 10) || 1);
+  const col = Math.max(1, parseInt(String(c.numCestas || 1), 10) || 1);
+  return Math.min(24, Math.max(1, f * col));
+}
+
+function dwcAplicarMatrizCultivoMulticuboEnCfg(cfg, ids) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
+  if (dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') {
+    delete cfg.dwcNumCubos;
+    return;
+  }
+  let n = NaN;
+  if (ids && ids.numCubos) {
+    const el = document.getElementById(ids.numCubos);
+    if (el && String(el.value).trim() !== '') {
+      const p = parseInt(String(el.value).trim(), 10);
+      if (Number.isFinite(p) && p >= 1) n = p;
+    }
+  }
+  if (!Number.isFinite(n) || n < 1) {
+    const d = parseInt(String(cfg.dwcNumCubos), 10);
+    if (Number.isFinite(d) && d >= 1) n = d;
+  }
+  if (!Number.isFinite(n) || n < 1) {
+    n =
+      Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1) *
+      Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
+  }
+  n = Math.min(24, Math.max(1, Math.round(n)));
+  cfg.dwcNumCubos = n;
+  cfg.numNiveles = 1;
+  cfg.numCestas = n;
+}
+
 function dwcGetModoCultivo(cfg) {
   const c = cfg || state.configTorre || {};
   if (c.dwcModo) return dwcNormalizeModo(c.dwcModo);
@@ -946,9 +989,14 @@ function dwcRecomendacionDifusorCompletaDesdeConfig(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
   const vol = getVolumenMezclaLitros(cfg);
   if (!Number.isFinite(vol) || vol <= 0) return null;
-  const nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
-  const nc = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
+  let nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
+  let nc = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
   const diseno = dwcGetOxigenacionDiseno(cfg);
+  if (diseno === 'cubos_independientes') {
+    const nCub = dwcGetNumCubosIndependientes(cfg);
+    nf = 1;
+    nc = Math.max(1, nCub);
+  }
   return dwcCalcDifusorRecomendacion(vol, nf, nc, { diseno, cfg });
 }
 
@@ -962,9 +1010,14 @@ function dwcRecomendacionDifusorParaSistemaUI(cfg) {
   try {
     dwcMergeCamposFormularioEnCfg(cfgEff, DWC_FORM_IDS_SISTEMA);
   } catch (_) {}
-  const nf = Math.max(1, parseInt(String(cfgEff.numNiveles || 1), 10) || 1);
-  const nc = Math.max(1, parseInt(String(cfgEff.numCestas || 1), 10) || 1);
+  let nf = Math.max(1, parseInt(String(cfgEff.numNiveles || 1), 10) || 1);
+  let nc = Math.max(1, parseInt(String(cfgEff.numCestas || 1), 10) || 1);
   const diseno = dwcGetOxigenacionDiseno(cfgEff);
+  if (diseno === 'cubos_independientes') {
+    const nCub = dwcGetNumCubosIndependientes(cfgEff);
+    nf = 1;
+    nc = Math.max(1, nCub);
+  }
   const rec = dwcCalcDifusorRecomendacion(lit.vol, nf, nc, { diseno, cfg: cfgEff });
   if (!rec) return null;
   return { rec, lit };
@@ -983,9 +1036,9 @@ function dwcFormatHtmlRecomendacionDifusorCore(rec) {
             ? ' Origen por sitio: <strong>reparto</strong> de la mezcla total (por debajo del tope seguro por cubo con tus medidas).'
             : ' Origen por sitio: equilibrio entre reparto y llenado seguro según medidas y cesta.';
     return (
-      '<p class="dwc-dif-p dwc-dif-p-gap"><strong>Varios cubos / multivalvula</strong> (cada sitio con solución <strong>aislada</strong> y su línea de aire al fondo): <strong>' +
+      '<p class="dwc-dif-p dwc-dif-p-gap"><strong>Varios cubos / multivalvula</strong> (cada cubo con solución <strong>aislada</strong> y su línea de aire): <strong>' +
       rec.nTotal +
-      '</strong> sitios · <strong>~' +
+      '</strong> cubos · <strong>~' +
       rec.volPorSitio +
       ' L</strong> útiles por sitio para el cálculo (~<strong>' +
       rec.vol +
@@ -1048,7 +1101,7 @@ function dwcFormatSistemaDwcDifusorSoloResultado(rec, lit) {
     return (
       'Modo <strong>varios cubos</strong> (aire multivalvula): <strong>' +
       rec.nTotal +
-      '</strong> sitios, <strong>~' +
+      '</strong> cubos, <strong>~' +
       rec.vol +
       ' L</strong> mezcla total, <strong>~' +
       rec.volPorSitio +
@@ -1062,7 +1115,7 @@ function dwcFormatSistemaDwcDifusorSoloResultado(rec, lit) {
       rec.reco +
       ' L/min</strong>; ≈' +
       rec.caudalPorSitioReco +
-      ' L/min por sitio + margen reparto). <strong>Una línea con difusor al fondo de cada cubo.</strong> Verifica el caudal del fabricante a la profundidad de tu nutriente.'
+      ' L/min por cubo + margen reparto). <strong>Una línea con difusor al fondo de cada cubo.</strong> Verifica el caudal del fabricante a la profundidad de tu nutriente.'
     );
   }
   const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value);
@@ -1526,6 +1579,10 @@ function aplicarDwcRejillaVoluntariaDesdeFormularioSistema() {
   try {
     dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
   } catch (e0) {}
+  if (dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes') {
+    showToast('Con varios cubos no aplica la rejilla de una sola tapa: indica cuántos cubos y guarda.', true);
+    return;
+  }
   const o = dwcMaxCestasDesdeConfigTorre(cfg);
   if (!o || o.max < 1) {
     const formaR = dwcNormalizeDepositoForma(cfg.dwcDepositoForma);
@@ -1583,6 +1640,10 @@ function aplicarDwcRejillaDesdeFormularioSistema(modoAplicacion) {
   try {
     dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
   } catch (e) {}
+  if (dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes') {
+    showToast('Con varios cubos no aplica la rejilla de una sola tapa: indica cuántos cubos y guarda.', true);
+    return;
+  }
   const o = dwcMaxCestasDesdeConfigTorre(cfg);
   const btnMax = document.getElementById('btnDwcAplicarRejillaPrincipal');
   const btnObj = document.getElementById('btnDwcAplicarRejillaSecundaria');
@@ -1662,6 +1723,11 @@ function aplicarDwcRejillaPreferidaDesdeSetup() {
 
 function aplicarDwcRejillaDesdeSetup(modoAplicacion) {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  const ox = dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value);
+  if (ox === 'cubos_independientes') {
+    showToast('Con varios cubos no aplica la rejilla de una sola tapa: indica cuántos cubos abajo.', true);
+    return;
+  }
   const rim = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
   const { L, W } = dwcLargoAnchoCmEffectivosDesdeFormIds(DWC_FORM_IDS_SETUP);
   const mh = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
@@ -1743,6 +1809,7 @@ function refreshDwcVoluntariaCabenHint() {
   try {
     dwcMergeCamposFormularioEnCfg(cfgCalc, DWC_FORM_IDS_SISTEMA);
   } catch (e) {}
+  if (dwcGetOxigenacionDiseno(cfgCalc) === 'cubos_independientes') return;
   const o = dwcMaxCestasDesdeConfigTorre(cfgCalc);
   if (!o || o.max < 1) {
     hintV.classList.add('setup-hidden');
@@ -1852,6 +1919,18 @@ function refreshDwcMaxCestasHintSistema() {
   try {
     dwcMergeCamposFormularioEnCfg(cfgCalc, DWC_FORM_IDS_SISTEMA);
   } catch (eM) {}
+  if (dwcGetOxigenacionDiseno(cfgCalc) === 'cubos_independientes') {
+    if (btnPri) {
+      btnPri.classList.add('setup-hidden');
+      btnPri.disabled = true;
+    }
+    if (btnSec) {
+      btnSec.classList.add('setup-hidden');
+      btnSec.disabled = true;
+    }
+    hideVoluntaria();
+    return;
+  }
   const o = dwcMaxCestasDesdeConfigTorre(cfgCalc);
   if (!o || o.max < 1) {
     if (btnPri) {
@@ -1924,6 +2003,39 @@ function refreshDwcTapHintSetup() {
     try {
       renderDwcCultivoRecoStatus('setup');
     } catch (eR0) {}
+    return;
+  }
+  const oxSetup = dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value);
+  if (oxSetup === 'cubos_independientes') {
+    const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
+    const nn = Number.isFinite(nRaw) && nRaw >= 1 ? Math.min(24, nRaw) : 4;
+    el.classList.remove('setup-hidden');
+    el.style.borderRadius = '10px';
+    el.style.padding = '8px 10px';
+    el.style.fontSize = '10px';
+    el.style.lineHeight = '1.45';
+    el.style.fontWeight = '600';
+    el.style.background = '#f0f9ff';
+    el.style.border = '1.5px solid #bae6fd';
+    el.style.color = '#0c4a6e';
+    el.textContent = nn + ' cubo' + (nn === 1 ? '' : 's') + ' · 1 maceta/cubo · mezcla total = suma en depósito.';
+    const b0 = document.getElementById('btnDwcAplicarRejillaPrincipalSetup');
+    const b1 = document.getElementById('btnDwcAplicarRejillaSecundariaSetup');
+    if (b0) {
+      b0.classList.add('setup-hidden');
+      b0.disabled = true;
+    }
+    if (b1) {
+      b1.classList.add('setup-hidden');
+      b1.disabled = true;
+    }
+    if (hintPri) {
+      hintPri.classList.add('setup-hidden');
+      hintPri.textContent = '';
+    }
+    try {
+      renderDwcCultivoRecoStatus('setup');
+    } catch (eRm) {}
     return;
   }
   const filas = parseInt(document.getElementById('sliderNiveles')?.value || '0', 10);
@@ -2452,6 +2564,9 @@ function refreshDwcSistemaMedidasUI() {
       dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
     wrapLps.classList.toggle('setup-hidden', !showLps);
   }
+  try {
+    dwcRefreshMulticuboDependienteUi('sys');
+  } catch (_) {}
 
   if (oxEl) {
     const modoDwc = dwcGetModoCultivo(cfg);
@@ -2524,6 +2639,31 @@ function refreshDwcTapHintSistema() {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') {
     el.style.display = 'none';
     el.textContent = '';
+    return;
+  }
+  if (dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes') {
+    let n = dwcGetNumCubosIndependientes(cfg);
+    const elNc = document.getElementById('sysDwcNumCubos');
+    const selOx = document.getElementById('sysDwcOxigenacionDiseno');
+    if (elNc && selOx && dwcNormalizeOxigenacionDiseno(selOx.value) === 'cubos_independientes') {
+      const r = parseInt(String(elNc.value || '').trim(), 10);
+      if (Number.isFinite(r) && r >= 1) n = Math.min(24, r);
+    }
+    el.style.display = 'block';
+    el.style.borderRadius = '10px';
+    el.style.padding = '8px 10px';
+    el.style.fontSize = '10px';
+    el.style.lineHeight = '1.45';
+    el.style.fontWeight = '600';
+    el.style.background = '#f0f9ff';
+    el.style.border = '1.5px solid #bae6fd';
+    el.style.color = '#0c4a6e';
+    el.textContent =
+      'Multivalvula: ' +
+      n +
+      ' cubo' +
+      (n === 1 ? '' : 's') +
+      ' (1 maceta/cubo). Mezcla total = suma; aire según litros y objetivo.';
     return;
   }
   const filas = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
@@ -2719,6 +2859,29 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
     if (mh.hueco != null) cfg.dwcTapaHuecoMm = mh.hueco;
     else delete cfg.dwcTapaHuecoMm;
   }
+  dwcAplicarMatrizCultivoMulticuboEnCfg(cfg, ids);
+}
+
+/** Muestra u oculta rejilla de tapa (solo depósito unido) y campo «cubos» en multivalvula. */
+function dwcRefreshMulticuboDependienteUi(which) {
+  const esMc = selVal => dwcNormalizeOxigenacionDiseno(selVal) === 'cubos_independientes';
+  if (which === 'sys') {
+    const sel = document.getElementById('sysDwcOxigenacionDiseno');
+    const mc = esMc(sel && sel.value);
+    const wNc = document.getElementById('sysDwcNumCubosWrap');
+    if (wNc) wNc.classList.toggle('setup-hidden', !mc);
+    const wRej = document.getElementById('sysDwcRejillaPreferidaWrap');
+    if (wRej) wRej.classList.toggle('setup-hidden', mc);
+    const wAcc = document.getElementById('sysDwcDepUnidoRejillaAccionesWrap');
+    if (wAcc) wAcc.classList.toggle('setup-hidden', mc);
+  } else if (which === 'setup') {
+    const sel = document.getElementById('setupDwcOxigenacionDiseno');
+    const mc = esMc(sel && sel.value);
+    const wNc = document.getElementById('setupDwcNumCubosWrap');
+    if (wNc) wNc.classList.toggle('setup-hidden', !mc);
+    const wBl = document.getElementById('setupDwcDepUnidoRejillaWrap');
+    if (wBl) wBl.classList.toggle('setup-hidden', mc);
+  }
 }
 
 /** DWC: rellena tamanoCesta / tamanoCestaCustom desde Ø cesta en mm (asistente) para no duplicar el bloque de tamaños. */
@@ -2797,6 +2960,26 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
     const vps = c.dwcLitrosUtilesPorSitioL;
     setVal(ids.litrosUtilesPorSitio, vps != null && Number.isFinite(Number(vps)) ? String(vps) : '');
   }
+  if (ids.numCubos) {
+    const elNc = document.getElementById(ids.numCubos);
+    if (elNc) {
+      if (dwcGetOxigenacionDiseno(c) === 'cubos_independientes') {
+        const n0 =
+          c.dwcNumCubos != null && Number.isFinite(Number(c.dwcNumCubos))
+            ? Math.min(24, Math.max(1, Math.round(Number(c.dwcNumCubos))))
+            : Math.min(
+                24,
+                Math.max(
+                  1,
+                  (parseInt(String(c.numNiveles || 1), 10) || 1) * (parseInt(String(c.numCestas || 1), 10) || 1)
+                )
+              );
+        elNc.value = String(n0);
+      } else {
+        elNc.value = '';
+      }
+    }
+  }
   if (ids.marco) setVal(ids.marco, c.dwcTapaMarcoPorLadoMm);
   if (ids.hueco) setVal(ids.hueco, c.dwcTapaHuecoMm);
   const cu = document.getElementById(ids.cupulas);
@@ -2815,6 +2998,10 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
       const w = document.getElementById('setupDwcLitrosUtilesPorSitioWrap');
       const sel = document.getElementById('setupDwcOxigenacionDiseno');
       if (w && sel) w.classList.toggle('setup-hidden', sel.value !== 'cubos_independientes');
+      dwcRefreshMulticuboDependienteUi('setup');
+    }
+    if (ids === DWC_FORM_IDS_SISTEMA) {
+      dwcRefreshMulticuboDependienteUi('sys');
     }
   } catch (_) {}
 }
@@ -2936,6 +3123,9 @@ function aplicarSistemaDwcDesdeFormulario() {
   initTorres();
   const cfg = state.configTorre;
   dwcMergeCamposFormularioEnCfg(cfg, DWC_FORM_IDS_SISTEMA);
+  try {
+    redimensionarMatrizTorreDwcPreservando(cfg, cfg.numNiveles, cfg.numCestas);
+  } catch (_) {}
   if (!dwcValidarVolumenManualSegunForma(cfg, 'sistema')) return;
   dwcSincronizarTamanoCestaDesdeRim(cfg);
   try {

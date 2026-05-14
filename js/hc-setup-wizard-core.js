@@ -1848,7 +1848,18 @@ function refrescarSetupTipoInstalacionUI() {
   const isRdwc = setupTipoInstalacion === 'rdwc';
   const tw = document.getElementById('setupTorreBuilderWrap');
   const nw = document.getElementById('setupNftBuilderWrap');
-  if (tw) tw.style.display = (isNft || isRdwc) ? 'none' : 'block';
+  if (tw) {
+    let hideTorreBuilder = isNft || isRdwc;
+    if (
+      !hideTorreBuilder &&
+      setupTipoInstalacion === 'dwc' &&
+      typeof dwcNormalizeOxigenacionDiseno === 'function'
+    ) {
+      const oxv = dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value);
+      if (oxv === 'cubos_independientes') hideTorreBuilder = true;
+    }
+    tw.style.display = hideTorreBuilder ? 'none' : 'block';
+  }
   if (nw) nw.classList.toggle('setup-hidden', !isNft);
   const t1 = document.getElementById('spage1Title');
   const st = document.getElementById('spage1Subtitle');
@@ -2395,6 +2406,9 @@ function textoResumenSistemaDwcPanel(cfg) {
       : (cfg.dwcDepositoForma || 'prismatico');
   const n = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
   const c = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
+  const esMc =
+    typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  const nCubos = typeof dwcGetNumCubosIndependientes === 'function' ? dwcGetNumCubosIndependientes(cfg) : n * c;
   const parts = [];
   const formaTxt =
     forma === 'cilindrico'
@@ -2441,12 +2455,16 @@ function textoResumenSistemaDwcPanel(cfg) {
   if (cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0) {
     parts.push('Ø' + Math.round(Number(cfg.dwcNetPotRimMm)) + ' mm');
   }
-  parts.push(n + '×' + c + ' macetas');
+  if (esMc) {
+    parts.push(nCubos + ' cubo' + (nCubos === 1 ? '' : 's') + ' (1 maceta/cubo)');
+  } else {
+    parts.push(n + '×' + c + ' macetas');
+  }
   if (typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes') {
     parts.push('aire multidepósito');
     const lu = Number(cfg.dwcLitrosUtilesPorSitioL);
     if (Number.isFinite(lu) && lu > 0) {
-      parts.push('~' + Math.round(lu * 10) / 10 + ' L útil/sitio (medido)');
+      parts.push('~' + Math.round(lu * 10) / 10 + ' L útil/cubo (medido)');
     }
   }
   let line = parts.join(' · ');
@@ -3147,6 +3165,7 @@ const DWC_FORM_IDS_SISTEMA = {
   objetivo: 'sysDwcObjetivoCultivo',
   rejillaModo: 'sysDwcRejillaPreferida',
   oxigenacionDiseno: 'sysDwcOxigenacionDiseno',
+  numCubos: 'sysDwcNumCubos',
   litrosUtilesPorSitio: 'sysDwcLitrosUtilesPorSitioL',
   cupulas: 'sysDwcCupulas',
   aire: 'sysDwcEntradaAire',
@@ -3164,6 +3183,7 @@ const DWC_FORM_IDS_SETUP = {
   objetivo: 'setupDwcObjetivoCultivo',
   rejillaModo: 'setupDwcRejillaPreferida',
   oxigenacionDiseno: 'setupDwcOxigenacionDiseno',
+  numCubos: 'setupDwcNumCubos',
   litrosUtilesPorSitio: 'setupDwcLitrosUtilesPorSitioL',
   marco: 'setupDwcTapaMarcoMm',
   hueco: 'setupDwcTapaHuecoMm',

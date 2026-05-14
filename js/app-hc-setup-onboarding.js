@@ -65,6 +65,14 @@ function getSetupPlantasFilasCols() {
     const cols = Math.max(1, Math.ceil(sites / rows));
     return { filas: rows, cols, labelFila: 'Fila', labelCol: 'Sitio' };
   }
+  if (t === 'dwc') {
+    const oxRaw = document.getElementById('setupDwcOxigenacionDiseno')?.value;
+    if (typeof dwcNormalizeOxigenacionDiseno === 'function' && dwcNormalizeOxigenacionDiseno(oxRaw) === 'cubos_independientes') {
+      const nc = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
+      const nCub = Math.min(24, Math.max(1, Number.isFinite(nc) && nc >= 1 ? nc : 4));
+      return { filas: 1, cols: nCub, labelFila: 'Cubo', labelCol: 'Maceta' };
+    }
+  }
   const niveles = Math.max(1, parseInt(document.getElementById('sliderNiveles')?.value || 5, 10));
   const cestas = Math.max(1, parseInt(document.getElementById('sliderCestas')?.value || 5, 10));
   return {
@@ -303,12 +311,29 @@ function actualizarResumenSetup() {
   if (!el) return;
   const isNft = setupTipoInstalacion === 'nft';
   const isDwc = setupTipoInstalacion === 'dwc';
+  const dwcMcSetup =
+    isDwc &&
+    typeof dwcNormalizeOxigenacionDiseno === 'function' &&
+    dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+      'cubos_independientes';
   const niveles = isNft
     ? (document.getElementById('sliderNftCanales')?.value || 4)
-    : (document.getElementById('sliderNiveles')?.value || 5);
-  const cestas  = isNft
+    : dwcMcSetup
+      ? '1'
+      : (document.getElementById('sliderNiveles')?.value || 5);
+  const cestas = isNft
     ? (document.getElementById('sliderNftHuecos')?.value || 8)
-    : (document.getElementById('sliderCestas')?.value  || 5);
+    : dwcMcSetup
+      ? String(
+          Math.min(
+            24,
+            Math.max(
+              1,
+              parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10) || 4
+            )
+          )
+        )
+      : (document.getElementById('sliderCestas')?.value || 5);
   const pendTxt = isNft ? (document.getElementById('sliderNftPendiente')?.value || 2) + '% pendiente · ' : '';
   const volMax  = getSetupVolumenMaxLitros();
   const volMez  = getSetupVolumenMezclaLitros();
@@ -391,11 +416,13 @@ function actualizarResumenSetup() {
     const objSel = document.getElementById('setupDwcObjetivoCultivo')?.value;
     const objLbl = dwcNormalizeObjetivoCultivo(objSel) === 'baby' ? 'baby leaf' : 'lechuga final';
     geoDwcRes += ' · objetivo ' + objLbl;
-    const rejSel = dwcNormalizeRejillaModo(document.getElementById('setupDwcRejillaPreferida')?.value);
-    geoDwcRes += ' · botón principal ' + (rejSel === 'max' ? 'máxima' : 'recomendada');
-    const mhG = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
-    if (mhG.marco != null && mhG.marco > 0) geoDwcRes += ' · marco tapa ' + mhG.marco + ' mm/lado';
-    if (mhG.hueco != null) geoDwcRes += ' · entre cestas ' + mhG.hueco + ' mm';
+    if (!dwcMcSetup) {
+      const rejSel = dwcNormalizeRejillaModo(document.getElementById('setupDwcRejillaPreferida')?.value);
+      geoDwcRes += ' · botón principal ' + (rejSel === 'max' ? 'máxima' : 'recomendada');
+      const mhG = _dwcParseMarcoHuecoMmIds('setupDwcTapaMarcoMm', 'setupDwcTapaHuecoMm');
+      if (mhG.marco != null && mhG.marco > 0) geoDwcRes += ' · marco tapa ' + mhG.marco + ' mm/lado';
+      if (mhG.hueco != null) geoDwcRes += ' · entre cestas ' + mhG.hueco + ' mm';
+    }
   }
   if (!isNft && !isDwc) {
     const tObj = (state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final';
@@ -424,7 +451,25 @@ function actualizarResumenSetup() {
           ? '⚡ NFT: circulación <strong>24 h</strong> · criterio bomba/depósito en el paso de equipo y en checklist (veredicto visible; cifras en «detalle técnico»).<br>'
           : '')
       : isDwc
-        ? '🫧 DWC: <strong>' + niveles + ' filas × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoDwcRes + '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
+        ? dwcMcSetup
+          ? '🫧 DWC: <strong>' +
+            cestas +
+            ' cubo' +
+            (parseInt(cestas, 10) === 1 ? '' : 's') +
+            ' (1 maceta/cubo) · ' +
+            volTxtResume +
+            '</strong>' +
+            geoDwcRes +
+            '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
+          : '🫧 DWC: <strong>' +
+            niveles +
+            ' filas × ' +
+            cestas +
+            ' cestas · ' +
+            volTxtResume +
+            '</strong>' +
+            geoDwcRes +
+            '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
         : '🌿 Torre: <strong>' + niveles + ' niveles × ' + cestas + ' cestas · ' + volTxtResume + '</strong>' + geoTorreRes + '<br>') +
     '🧪 Nutriente: <strong>' + (nut?.nombre || 'Canna Aqua Vega') + '</strong><br>' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +

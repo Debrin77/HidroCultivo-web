@@ -1717,6 +1717,13 @@ function guardarSetupYContinuar() {
     try {
       dwcSyncVolDepositoDesdeCapacidadEstimada(state.configTorre);
     } catch (eSync) {}
+    if (
+      typeof dwcGetOxigenacionDiseno === 'function' &&
+      dwcGetOxigenacionDiseno(state.configTorre) === 'cubos_independientes'
+    ) {
+      niveles = Math.max(1, parseInt(String(state.configTorre.numNiveles || 1), 10) || 1);
+      cestas = Math.max(1, parseInt(String(state.configTorre.numCestas || 1), 10) || 1);
+    }
   }
   if (isRdwc) {
     if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(state.configTorre);

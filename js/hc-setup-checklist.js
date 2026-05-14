@@ -1179,58 +1179,62 @@ function getCLPasos() {
           seccion: '💨 DWC — Bomba de aire y difusores',
           paso: 'D·0',
           desc: dwcOxMult
-            ? 'Dimensiona la <strong>bomba multivalvula</strong> y <strong>una línea de aire por cubo</strong> (cada depósito con solución aislada: kits comerciales o DIY). Los litros del checklist deben ser la <strong>suma</strong> de solución de todos los cubos; el esquema (filas×cestas) cuenta los <strong>sitios</strong>. El recuadro inferior replica la lógica de Cultivo e instalación.'
+            ? 'Dimensiona la <strong>bomba multivalvula</strong> y <strong>una línea de aire por cubo</strong>. Los litros del checklist son la <strong>suma</strong> de solución de todos los cubos; indica <strong>cuántos cubos</strong> en Cultivo e instalación (1 maceta por cubo). El recuadro inferior replica la misma lógica.'
             : 'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Cultivo e instalación.',
           nota: dwcOxMult
-            ? 'En multivalvula el fabricante suele indicar el caudal <strong>total</strong> de la bomba: la app estima el mínimo por cubo (~1 L/min por 10 L en el <strong>útil</strong> de cada sitio) + margen de reparto. Ese útil por cubo sigue la misma idea de <strong>cámara de aire</strong> que en depósito único (mínimo entre reparto de la mezcla total y llenado seguro con tus medidas/cesta); puedes fijarlo en <strong>Cultivo e instalación</strong> si mediste cada cubo. Comprueba el dato a la <strong>profundidad</strong> y que <strong>cada salida</strong> tenga difusor al fondo.'
+            ? 'Caudal orientativo por <strong>volumen útil por cubo</strong> y edad/objetivo del cultivo; el fabricante suele dar el caudal <strong>total</strong> de la bomba. Útil por cubo: cámara de aire como en depósito único (puedes medirlo en Sistema). Cada salida con difusor al fondo.'
             : 'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
           postCamposHtml:
             '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" role="status" aria-live="polite"></div>',
         },
-        {
-          id: 'D0b',
-          seccion: null,
-          paso: 'D·0b',
-          desc:
-            'Rejilla DWC activa: valida si aplicar <strong>máxima geométrica</strong> o <strong>recomendada por objetivo</strong> antes de cerrar la recarga.',
-          nota:
-            (function () {
-              const objKey =
-                typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(cfg) : 'final';
-              const spec =
-                typeof dwcGetObjetivoSpec === 'function'
-                  ? dwcGetObjetivoSpec(objKey)
-                  : { label: 'Planta adulta (tamaño completo)', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
-              const modoPri =
-                typeof dwcGetRejillaModoPreferido === 'function'
-                  ? dwcGetRejillaModoPreferido(cfg)
-                  : (cfg.dwcRejillaModoPreferido === 'max' ? 'max' : 'objetivo');
-              const modoTxt = modoPri === 'max' ? 'máxima geométrica' : 'recomendada por objetivo';
-              const reco =
-                typeof dwcRecomendacionCultivoDesdeConfig === 'function'
-                  ? dwcRecomendacionCultivoDesdeConfig(cfg)
-                  : null;
-              let cestaTxt = '';
-              if (reco) {
-                cestaTxt =
-                  ' Cesta: <strong>' +
-                  reco.perfil.cestaTxt +
-                  '</strong> · actual <strong>' +
-                  (reco.rimActualMm != null ? reco.rimActualMm + ' mm' : '—') +
-                  '</strong> · ' + clEstadoChipHtml(reco.estado) + '.';
-              }
-              return (
-                'Objetivo activo: <strong>' +
-                spec.label +
-                '</strong> (' +
-                spec.ccTxt +
-                ' c-c). Botón principal: <strong>' +
-                modoTxt +
-                '</strong>. Rejilla/tapa y litros útiles se validan por separado.' +
-                cestaTxt
-              );
-            })(),
-        },
+        ...(dwcOxMult
+          ? []
+          : [
+              {
+                id: 'D0b',
+                seccion: null,
+                paso: 'D·0b',
+                desc:
+                  'Rejilla DWC activa: valida si aplicar <strong>máxima geométrica</strong> o <strong>recomendada por objetivo</strong> antes de cerrar la recarga.',
+                nota:
+                  (function () {
+                    const objKey =
+                      typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(cfg) : 'final';
+                    const spec =
+                      typeof dwcGetObjetivoSpec === 'function'
+                        ? dwcGetObjetivoSpec(objKey)
+                        : { label: 'Planta adulta (tamaño completo)', litrosTxt: '3–5 L/planta', ccTxt: '15–25 cm' };
+                    const modoPri =
+                      typeof dwcGetRejillaModoPreferido === 'function'
+                        ? dwcGetRejillaModoPreferido(cfg)
+                        : (cfg.dwcRejillaModoPreferido === 'max' ? 'max' : 'objetivo');
+                    const modoTxt = modoPri === 'max' ? 'máxima geométrica' : 'recomendada por objetivo';
+                    const reco =
+                      typeof dwcRecomendacionCultivoDesdeConfig === 'function'
+                        ? dwcRecomendacionCultivoDesdeConfig(cfg)
+                        : null;
+                    let cestaTxt = '';
+                    if (reco) {
+                      cestaTxt =
+                        ' Cesta: <strong>' +
+                        reco.perfil.cestaTxt +
+                        '</strong> · actual <strong>' +
+                        (reco.rimActualMm != null ? reco.rimActualMm + ' mm' : '—') +
+                        '</strong> · ' + clEstadoChipHtml(reco.estado) + '.';
+                    }
+                    return (
+                      'Objetivo activo: <strong>' +
+                      spec.label +
+                      '</strong> (' +
+                      spec.ccTxt +
+                      ' c-c). Botón principal: <strong>' +
+                      modoTxt +
+                      '</strong>. Rejilla/tapa y litros útiles se validan por separado.' +
+                      cestaTxt
+                    );
+                  })(),
+              },
+            ]),
       ]
     : (esDwcK
       ? [{
@@ -2647,6 +2651,10 @@ async function finalizarChecklist() {
       (state.configTorre && state.configTorre.tipoInstalacion === 'dwc' && state.configTorre.dwcLitrosUtilesPorSitioL != null)
         ? String(state.configTorre.dwcLitrosUtilesPorSitioL)
         : '',
+    dwcNumCubos:
+      state.configTorre && state.configTorre.tipoInstalacion === 'dwc' && state.configTorre.dwcNumCubos != null
+        ? String(state.configTorre.dwcNumCubos)
+        : '',
     notas:        cambioNutrienteAplicado
       ? ('Recarga completa del depósito · Cambio nutriente: ' + (nutPrev ? nutPrev.nombre : 'anterior') + ' → ' + nutR.nombre)
       : 'Recarga completa del depósito',
@@ -2671,6 +2679,7 @@ async function finalizarChecklist() {
     dwcRejillaModoPreferido: recargaData.dwcRejillaModoPreferido || '',
     dwcOxigenacionDiseno: recargaData.dwcOxigenacionDiseno || '',
     dwcLitrosUtilesPorSitioL: recargaData.dwcLitrosUtilesPorSitioL || '',
+    dwcNumCubos: recargaData.dwcNumCubos || '',
     icono: '🔄'
   });
 

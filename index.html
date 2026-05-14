@@ -1555,6 +1555,7 @@
             </select>
           </div>
           <p id="sysDwcCultivoRecoStatus" class="torre-dwc-vol-hint setup-hidden" role="status" aria-live="polite"></p>
+          <div id="sysDwcRejillaPreferidaWrap">
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcRejillaPreferida">Botón principal rejilla</label>
             <select id="sysDwcRejillaPreferida" class="torre-dwc-input" aria-label="Modo preferido para aplicar rejilla"
@@ -1563,6 +1564,7 @@
               <option value="max">Máxima geométrica</option>
             </select>
           </div>
+          </div>
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcOxigenacionDiseno">Distribución del aire</label>
             <select id="sysDwcOxigenacionDiseno" class="torre-dwc-input" aria-label="Cómo repartes el aire en DWC"
@@ -1570,7 +1572,12 @@
               <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
               <option value="cubos_independientes">Varios cubos / multivalvula (cada sitio con su línea)</option>
             </select>
-            <p class="torre-nft-p-soft" style="margin:0.35rem 0 0">Kits tipo DWC por cubos (p. ej. manuales multivalvula): elige la segunda opción; los litros de mezcla deben ser la <strong>suma</strong> de todos los cubos y el esquema debe reflejar <strong>cuántos sitios</strong> oxigenas.</p>
+            <p class="torre-nft-p-soft" style="margin:0.35rem 0 0">Multivalvula: indica <strong>cuántos cubos</strong>; la mezcla en la app es la <strong>suma</strong> de todos. Un depósito unido: usa la rejilla de la tapa abajo.</p>
+          </div>
+          <div id="sysDwcNumCubosWrap" class="setup-hidden">
+            <label class="form-label torre-dwc-lbl-mono" for="sysDwcNumCubos">Cubos instalados</label>
+            <input type="number" id="sysDwcNumCubos" class="torre-dwc-input" min="1" max="24" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC con multivalvula"
+              oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
           </div>
           <div id="sysDwcLitrosUtilesPorSitioWrap" class="setup-hidden">
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcLitrosUtilesPorSitioL">Litros útiles por cubo (L, opcional)</label>
@@ -1580,6 +1587,7 @@
           </div>
           <p id="sysDwcVolumenLitrosHint" class="torre-dwc-vol-hint setup-hidden" role="status"></p>
           <p id="sysDwcTapaCestasHint" class="torre-dwc-tapa-hint setup-hidden" role="status"></p>
+          <div id="sysDwcDepUnidoRejillaAccionesWrap">
           <button type="button" class="torre-dwc-apply-grid-btn setup-hidden" id="btnDwcAplicarRejillaPrincipal"
             onclick="aplicarDwcRejillaPreferidaDesdeFormularioSistema()">
             Aplicar rejilla recomendada (objetivo)
@@ -1606,6 +1614,7 @@
               </div>
             </div>
             <p id="sysDwcRejillaVoluntariaHint" class="torre-dwc-vol-hint setup-hidden" role="status"></p>
+          </div>
           </div>
           <p id="sysDwcOxigenacionHint" class="torre-dwc-ox-hint setup-hidden" role="status"></p>
           <label class="torre-dwc-check-row torre-dwc-check-row--mb6">
@@ -2967,6 +2976,29 @@
         </div>
         <p id="setupDwcCultivoRecoStatus" class="setup-dwc-cap-hint setup-hidden" role="status" aria-live="polite"></p>
         <div>
+          <label class="form-label setup-dwc-label" for="setupDwcOxigenacionDiseno">Distribución del aire</label>
+          <select id="setupDwcOxigenacionDiseno" class="setup-dwc-input"
+            onchange="try{var w=document.getElementById('setupDwcLitrosUtilesPorSitioWrap');if(w)w.classList.toggle('setup-hidden',(this.value||'')!=='cubos_independientes');try{dwcRefreshMulticuboDependienteUi('setup')}catch(e0){};try{updateTorreBuilder()}catch(e1){};try{refreshDwcTapHintSetup()}catch(e2){};actualizarResumenSetup()}catch(e){}"
+            aria-label="DWC asistente: un depósito o cubos multivalvula">
+            <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
+            <option value="cubos_independientes">Varios cubos / multivalvula (cada cubo con su línea)</option>
+          </select>
+        </div>
+        <div id="setupDwcNumCubosWrap" class="setup-hidden">
+          <label class="form-label setup-dwc-label" for="setupDwcNumCubos">Cubos instalados</label>
+          <input type="number" id="setupDwcNumCubos" class="setup-dwc-input" min="1" max="24" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC multivalvula"
+            oninput="try{updateTorreBuilder()}catch(e0){}try{refreshDwcTapHintSetup()}catch(e1){}try{actualizarResumenSetup()}catch(e2){}">
+        </div>
+        <div id="setupDwcLitrosUtilesPorSitioWrap" class="setup-hidden">
+          <label class="form-label setup-dwc-label" for="setupDwcLitrosUtilesPorSitioL">Litros útiles por cubo (L, opcional)</label>
+          <input type="number" id="setupDwcLitrosUtilesPorSitioL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="Vacío → seguro y reparto" inputmode="decimal" autocomplete="off"
+            onchange="try{actualizarResumenSetup()}catch(e){}"
+            oninput="try{actualizarResumenSetup()}catch(e){}"
+            aria-label="Litros útiles por cubo DWC multivalvula">
+          <p class="setup-dwc-help" style="margin-top:0.35rem">Vacío: la app usa el mínimo entre mezcla total ÷ cubos y el <strong>llenado seguro</strong> por cubo (cámara de aire), con las medidas y cesta de <strong>un cubo típico</strong>.</p>
+        </div>
+        <div id="setupDwcDepUnidoRejillaWrap">
+        <div>
           <label class="form-label setup-dwc-label" for="setupDwcRejillaPreferida">Botón principal rejilla</label>
           <select id="setupDwcRejillaPreferida" class="setup-dwc-input"
             onchange="try{actualizarResumenSetup()}catch(e){}"
@@ -2975,23 +3007,6 @@
             <option value="objetivo">Recomendada por objetivo</option>
             <option value="max">Máxima geométrica</option>
           </select>
-        </div>
-        <div>
-          <label class="form-label setup-dwc-label" for="setupDwcOxigenacionDiseno">Distribución del aire</label>
-          <select id="setupDwcOxigenacionDiseno" class="setup-dwc-input"
-            onchange="try{var w=document.getElementById('setupDwcLitrosUtilesPorSitioWrap');if(w)w.classList.toggle('setup-hidden',(this.value||'')!=='cubos_independientes');actualizarResumenSetup()}catch(e){}"
-            aria-label="DWC asistente: un depósito o cubos multivalvula">
-            <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
-            <option value="cubos_independientes">Varios cubos / multivalvula (cada sitio con su línea)</option>
-          </select>
-        </div>
-        <div id="setupDwcLitrosUtilesPorSitioWrap" class="setup-hidden">
-          <label class="form-label setup-dwc-label" for="setupDwcLitrosUtilesPorSitioL">Litros útiles por cubo (L, opcional)</label>
-          <input type="number" id="setupDwcLitrosUtilesPorSitioL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="Vacío → seguro y reparto" inputmode="decimal" autocomplete="off"
-            onchange="try{actualizarResumenSetup()}catch(e){}"
-            oninput="try{actualizarResumenSetup()}catch(e){}"
-            aria-label="Litros útiles por cubo DWC multivalvula">
-          <p class="setup-dwc-help" style="margin-top:0.35rem">Vacío: la app usa el mínimo entre mezcla total ÷ sitios y el <strong>llenado seguro</strong> por cubo (cámara de aire), con las medidas y cesta de <strong>un cubo típico</strong>.</p>
         </div>
         <div class="setup-dwc-grid-2 setup-dwc-grid-2-bottom">
           <div>
@@ -3021,6 +3036,7 @@
           onclick="aplicarDwcRejillaMaximaDesdeSetup()">
           Aplicar rejilla máxima a los deslizadores
         </button>
+        </div>
         <label class="setup-dwc-check-label setup-dwc-check-label-gap">
           <input type="checkbox" id="setupDwcCupulas" class="setup-dwc-check-input"
             onchange="try{actualizarResumenSetup()}catch(e){}">
@@ -4536,7 +4552,7 @@
   <script src="js/hc-bootstrap-onboarding.js?v=29"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-14-dwc-svg-multicubo-v2"></script>
+  <script src="js/torre-render-build.js?v=2026-05-14-dwc-svg-multicubo-v3"></script>
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
@@ -4554,7 +4570,7 @@
   <script src="js/hc-setup-mediciones-logic.js?v=13"></script>
   <script src="js/hc-medicion-wizard.js?v=5"></script>
   <script src="js/hc-tools-pro.js?v=10"></script>
-  <script src="js/hc-setup-checklist.js?v=29"></script>
+  <script src="js/hc-setup-checklist.js?v=30"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=32"></script>
   <script src="js/calendario-logic.js?v=8"></script>

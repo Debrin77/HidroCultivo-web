@@ -1239,13 +1239,24 @@ function updateTorreBuilder() {
   }
   const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);
   const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
+  let dwcNivPrev = niveles;
+  let dwcCesPrev = cestas;
+  if (setupTipoInstalacion === 'dwc' && typeof dwcNormalizeOxigenacionDiseno === 'function') {
+    const oxB = dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value);
+    if (oxB === 'cubos_independientes') {
+      const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
+      const nn = Math.min(24, Math.max(1, Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : 4));
+      dwcNivPrev = 1;
+      dwcCesPrev = nn;
+    }
+  }
   const volSlider = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
   const dwcCap = getDwcCapacidadLitrosFromSetupInputs();
   const volDepDwc =
     dwcCap != null && dwcCap > 0 ? Math.round(dwcCap * 10) / 10 : volSlider;
 
-  document.getElementById('valNiveles').textContent = niveles;
-  document.getElementById('valCestas').textContent  = cestas;
+  document.getElementById('valNiveles').textContent = dwcNivPrev;
+  document.getElementById('valCestas').textContent  = dwcCesPrev;
   const elVol = document.getElementById('valVol');
   if (elVol) {
     if (setupTipoInstalacion === 'dwc' && dwcCap != null && dwcCap > 0) {
@@ -1278,7 +1289,7 @@ function updateTorreBuilder() {
 
   if (setupTipoInstalacion === 'dwc') {
     preview.classList.add('torre-preview--dwc');
-    renderDwcLidSetupPreview(preview, niveles, cestas, volDepDwc);
+    renderDwcLidSetupPreview(preview, dwcNivPrev, dwcCesPrev, volDepDwc);
     try {
       refreshDwcTapHintSetup();
     } catch (eHint) {}
