@@ -65,6 +65,30 @@ function dwcNormalizeModo(raw) {
   return v === 'kratky' ? 'kratky' : 'aireado';
 }
 
+/**
+ * Oxigenación DWC: un solo volumen de agua compartido (rejilla en depósito) frente a varios cubos/depósitos
+ * con solución separada y bomba multivalvula (una línea por sitio).
+ */
+function dwcNormalizeOxigenacionDiseno(raw) {
+  const v = String(raw == null ? '' : raw).trim().toLowerCase();
+  if (
+    v === 'cubos_independientes' ||
+    v === 'cubos' ||
+    v === 'multideposito' ||
+    v === 'multivalvula' ||
+    v === 'buckets' ||
+    v === 'multi'
+  ) {
+    return 'cubos_independientes';
+  }
+  return 'dep_unido';
+}
+
+function dwcGetOxigenacionDiseno(cfg) {
+  const c = cfg || state.configTorre || {};
+  return dwcNormalizeOxigenacionDiseno(c.dwcOxigenacionDiseno);
+}
+
 function dwcGetModoCultivo(cfg) {
   const c = cfg || state.configTorre || {};
   if (c.dwcModo) return dwcNormalizeModo(c.dwcModo);
@@ -821,21 +845,89 @@ function dwcCaudalAireOrientativoLmin(volLitros) {
 }
 
 /**
- * Recomendación de bomba/difusor DWC: volumen de solución real (L) + filas × cestas (más cestas → más demanda de O₂, orientativo ~2,5% extra por cesta respecto a la primera, tope ×1,35).
- * Salidas de difusor: ~1 punto cada ~18 L (máx. 6 en montajes caseros típicos).
+ * Litros útiles por sitio (cubo) para dimensionar aire en multivalvula.
+ * Manual opcional; si no, min(reparto mezcla_total/N, llenado seguro por cubo) con la misma geometría/cesta que depósito único.
  */
-function dwcCalcDifusorRecomendacion(volLitros, nFilas, nPorFila) {
+function dwcLitrosPorSitioOxigenacionMulticubo(cfg, volMezclaTotal, nTotal) {
+  const n = Math.max(1, parseInt(String(nTotal), 10) || 1);
+  const vt = Number(volMezclaTotal);
+  if (!cfg || cfg.tipoInstalacion !== 'dwc' || !Number.isFinite(vt) || vt <= 0 || n < 1) {
+    return { vPer: null, fuente: null };
+  }
+  const explicit = Number(cfg.dwcLitrosUtilesPorSitioL);
+  if (Number.isFinite(explicit) && explicit >= 0.5) {
+    return { vPer: Math.min(explicit, vt / n), fuente: 'medido' };
+  }
+  let safeOne = null;
+  try {
+    if (typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
+      safeOne = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
+    }
+  } catch (_) {}
+  const avg = vt / n;
+  if (safeOne != null && Number.isFinite(safeOne) && safeOne > 0) {
+    const vPer = Math.min(safeOne, avg);
+    let fuente = 'balance';
+    if (safeOne < avg - 0.05) fuente = 'llenado_seguro';
+    else if (avg < safeOne - 0.05) fuente = 'reparto';
+    return { vPer, fuente };
+  }
+  return { vPer: avg, fuente: 'reparto' };
+}
+
+/**
+ * Recomendación de bomba/difusor DWC.
+ * - dep_unido: un depósito con agua compartida; factor ~2,5% extra por cesta (raíz), tope ×1,35; salidas ~1/18 L.
+ * - cubos_independientes: varios depósitos aislados (kits multivalvula / DIY): caudal por sitio según L/N sitios,
+ *   total bomba ≈ N × caudal/sitio × margen reparto (orientativo).
+ */
+function dwcCalcDifusorRecomendacion(volLitros, nFilas, nPorFila, opts) {
+  opts = opts || {};
+  const diseno =
+    opts.diseno === 'cubos_independientes' ? 'cubos_independientes' : 'dep_unido';
   const nf = Math.max(1, parseInt(String(nFilas != null ? nFilas : 1), 10) || 1);
   const nc = Math.max(1, parseInt(String(nPorFila != null ? nPorFila : 1), 10) || 1);
   const nTotal = nf * nc;
   const v = Number(volLitros);
   if (!Number.isFinite(v) || v <= 0) return null;
+
+  if (diseno === 'cubos_independientes') {
+    const pair = dwcLitrosPorSitioOxigenacionMulticubo(opts.cfg || {}, v, nTotal);
+    const vPer = pair.vPer;
+    if (!vPer || !Number.isFinite(vPer) || vPer <= 0) return null;
+    const basePer = dwcCaudalAireOrientativoLmin(vPer);
+    if (!basePer) return null;
+    const multManifold = 1.15;
+    const scTot = x => Math.round(x * nTotal * multManifold * 10) / 10;
+    const min = Math.max(1.2, scTot(basePer.min));
+    const reco = Math.max(2, scTot(basePer.reco));
+    const fuerte = Math.max(3, scTot(basePer.fuerte));
+    const salidasSug = Math.min(12, Math.max(1, nTotal));
+    return {
+      diseno: 'cubos_independientes',
+      vol: Math.round(v * 10) / 10,
+      volPorSitio: Math.round(vPer * 10) / 10,
+      volPorSitioFuente: pair.fuente,
+      nTotal,
+      nFilas: nf,
+      nPorFila: nc,
+      factorDem: 1,
+      min,
+      reco,
+      fuerte,
+      salidasSug,
+      multManifold,
+      caudalPorSitioReco: Math.round(basePer.reco * 10) / 10,
+    };
+  }
+
   const base = dwcCaudalAireOrientativoLmin(v);
   if (!base) return null;
   const factorDem = Math.min(1.35, 1 + Math.max(0, nTotal - 1) * 0.025);
   const sc = x => Math.round(x * factorDem * 10) / 10;
   const salidasSug = Math.min(6, Math.max(1, Math.ceil(v / 18)));
   return {
+    diseno: 'dep_unido',
     vol: Math.round(v * 10) / 10,
     nTotal,
     nFilas: nf,
@@ -856,7 +948,8 @@ function dwcRecomendacionDifusorCompletaDesdeConfig(cfg) {
   if (!Number.isFinite(vol) || vol <= 0) return null;
   const nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
   const nc = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
-  return dwcCalcDifusorRecomendacion(vol, nf, nc);
+  const diseno = dwcGetOxigenacionDiseno(cfg);
+  return dwcCalcDifusorRecomendacion(vol, nf, nc, { diseno, cfg });
 }
 
 /** Igual que checklist pero el volumen puede salir de L×A×P del formulario Sistema si están completos. */
@@ -865,15 +958,57 @@ function dwcRecomendacionDifusorParaSistemaUI(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return null;
   const lit = getDwcLitrosOxigenacionParaSistemaUI(cfg);
   if (!lit) return null;
-  const nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
-  const nc = Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
-  const rec = dwcCalcDifusorRecomendacion(lit.vol, nf, nc);
+  const cfgEff = { ...cfg };
+  try {
+    dwcMergeCamposFormularioEnCfg(cfgEff, DWC_FORM_IDS_SISTEMA);
+  } catch (_) {}
+  const nf = Math.max(1, parseInt(String(cfgEff.numNiveles || 1), 10) || 1);
+  const nc = Math.max(1, parseInt(String(cfgEff.numCestas || 1), 10) || 1);
+  const diseno = dwcGetOxigenacionDiseno(cfgEff);
+  const rec = dwcCalcDifusorRecomendacion(lit.vol, nf, nc, { diseno, cfg: cfgEff });
   if (!rec) return null;
   return { rec, lit };
 }
 
 function dwcFormatHtmlRecomendacionDifusorCore(rec) {
   if (!rec) return '';
+  if (rec.diseno === 'cubos_independientes') {
+    const pct = Math.round((rec.multManifold - 1) * 100);
+    const fuenteTxt =
+      rec.volPorSitioFuente === 'medido'
+        ? ' Origen por sitio: <strong>valor medido</strong> que indicaste (acotado al reparto medio de la mezcla total).'
+        : rec.volPorSitioFuente === 'llenado_seguro'
+          ? ' Origen por sitio: <strong>mínimo</strong> entre mezcla repartida y <strong>llenado seguro</strong> con cámara de aire y cesta (misma lógica que un depósito único).'
+          : rec.volPorSitioFuente === 'reparto'
+            ? ' Origen por sitio: <strong>reparto</strong> de la mezcla total (por debajo del tope seguro por cubo con tus medidas).'
+            : ' Origen por sitio: equilibrio entre reparto y llenado seguro según medidas y cesta.';
+    return (
+      '<p class="dwc-dif-p dwc-dif-p-gap"><strong>Varios cubos / multivalvula</strong> (cada sitio con solución <strong>aislada</strong> y su línea de aire al fondo): <strong>' +
+      rec.nTotal +
+      '</strong> sitios · <strong>~' +
+      rec.volPorSitio +
+      ' L</strong> útiles por sitio para el cálculo (~<strong>' +
+      rec.vol +
+      ' L</strong> mezcla total en el esquema).' +
+      fuenteTxt +
+      ' Caudal orientativo en la <strong>salida de la bomba</strong> (todas las líneas en uso): <strong>' +
+      rec.min +
+      '–' +
+      rec.fuerte +
+      ' L/min</strong> (~<strong>' +
+      rec.reco +
+      ' L/min</strong> referencia; ≈<strong>' +
+      rec.caudalPorSitioReco +
+      ' L/min</strong> por sitio a ~' +
+      rec.volPorSitio +
+      ' L + <strong>+' +
+      pct +
+      '%</strong> folga reparto/válvulas).</p>' +
+      '<p class="dwc-dif-p"><strong>Salidas:</strong> al menos <strong>' +
+      rec.salidasSug +
+      '</strong> línea(s) con difusor al fondo de <em>cada</em> cubo. Comprueba en la placa el caudal a tu <strong>profundidad</strong>; el dato del fabricante suele ser el caudal <strong>total</strong> de la bomba, no por salida.</p>'
+    );
+  }
   return (
     '<p class="dwc-dif-p dwc-dif-p-gap"><strong>~' +
     rec.vol +
@@ -901,6 +1036,35 @@ function dwcFormatHtmlRecomendacionDifusorCore(rec) {
  */
 function dwcFormatSistemaDwcDifusorSoloResultado(rec, lit) {
   if (!rec || !lit) return '';
+  if (rec.diseno === 'cubos_independientes') {
+    const fuenteCorta =
+      rec.volPorSitioFuente === 'medido'
+        ? 'Litros por cubo medidos por ti.'
+        : rec.volPorSitioFuente === 'llenado_seguro'
+          ? 'Por sitio: llenado seguro con cámara de aire (como depósito único).'
+          : rec.volPorSitioFuente === 'reparto'
+            ? 'Por sitio: reparto de la mezcla total.'
+            : 'Por sitio: entre reparto y llenado seguro.';
+    return (
+      'Modo <strong>varios cubos</strong> (aire multivalvula): <strong>' +
+      rec.nTotal +
+      '</strong> sitios, <strong>~' +
+      rec.vol +
+      ' L</strong> mezcla total, <strong>~' +
+      rec.volPorSitio +
+      ' L</strong> útiles/sitio para el cálculo (' +
+      fuenteCorta +
+      ') Bomba orientativa <strong>' +
+      rec.min +
+      '–' +
+      rec.fuerte +
+      ' L/min</strong> en conjunto (~<strong>' +
+      rec.reco +
+      ' L/min</strong>; ≈' +
+      rec.caudalPorSitioReco +
+      ' L/min por sitio + margen reparto). <strong>Una línea con difusor al fondo de cada cubo.</strong> Verifica el caudal del fabricante a la profundidad de tu nutriente.'
+    );
+  }
   const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value);
   const { L, W } = dwcLargoAnchoCmEffectivosDesdeFormIds(DWC_FORM_IDS_SISTEMA);
   const P = _dwcParseOptCm('sysDwcProfCm', 5, 200);
@@ -2212,6 +2376,8 @@ function refreshDwcSistemaMedidasUI() {
       oxEl.style.display = 'none';
       oxEl.textContent = '';
     }
+    const wrapLpsClear = document.getElementById('sysDwcLitrosUtilesPorSitioWrap');
+    if (wrapLpsClear) wrapLpsClear.classList.add('setup-hidden');
     const distWClear = document.getElementById('sysDwcDistanciaSustratoWrap');
     if (distWClear) distWClear.innerHTML = '';
     try {
@@ -2278,6 +2444,14 @@ function refreshDwcSistemaMedidasUI() {
   try {
     refreshDwcMaxCestasHintSistema();
   } catch (e3) {}
+
+  const wrapLps = document.getElementById('sysDwcLitrosUtilesPorSitioWrap');
+  if (wrapLps) {
+    const showLps =
+      typeof dwcGetOxigenacionDiseno === 'function' &&
+      dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+    wrapLps.classList.toggle('setup-hidden', !showLps);
+  }
 
   if (oxEl) {
     const modoDwc = dwcGetModoCultivo(cfg);
@@ -2513,6 +2687,26 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
     const elModo = document.getElementById(ids.rejillaModo);
     cfg.dwcRejillaModoPreferido = dwcNormalizeRejillaModo(elModo && elModo.value);
   }
+  if (ids.oxigenacionDiseno) {
+    const elOx = document.getElementById(ids.oxigenacionDiseno);
+    cfg.dwcOxigenacionDiseno = dwcNormalizeOxigenacionDiseno(elOx && elOx.value);
+  } else {
+    cfg.dwcOxigenacionDiseno = dwcNormalizeOxigenacionDiseno(cfg.dwcOxigenacionDiseno);
+  }
+  if (dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes' && ids.litrosUtilesPorSitio) {
+    const elS = document.getElementById(ids.litrosUtilesPorSitio);
+    if (elS) {
+      const raw = String(elS.value || '').trim().replace(',', '.');
+      const x = parseFloat(raw);
+      if (raw !== '' && Number.isFinite(x) && x >= 0.5 && x <= 200) {
+        cfg.dwcLitrosUtilesPorSitioL = Math.round(Math.min(200, Math.max(0.5, x)) * 10) / 10;
+      } else {
+        delete cfg.dwcLitrosUtilesPorSitioL;
+      }
+    }
+  } else if (dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') {
+    delete cfg.dwcLitrosUtilesPorSitioL;
+  }
   cfg.dwcCupulas = document.getElementById(ids.cupulas)?.checked === true;
   if (!cfg.dwcCupulas) delete cfg.dwcCupulas;
   cfg.dwcEntradaAireManguera = document.getElementById(ids.aire)?.checked === true;
@@ -2598,6 +2792,11 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   if (ids.modo) setVal(ids.modo, dwcGetModoCultivo(c));
   if (ids.objetivo) setVal(ids.objetivo, dwcGetObjetivoCultivo(c));
   if (ids.rejillaModo) setVal(ids.rejillaModo, dwcGetRejillaModoPreferido(c));
+  if (ids.oxigenacionDiseno) setVal(ids.oxigenacionDiseno, dwcGetOxigenacionDiseno(c));
+  if (ids.litrosUtilesPorSitio) {
+    const vps = c.dwcLitrosUtilesPorSitioL;
+    setVal(ids.litrosUtilesPorSitio, vps != null && Number.isFinite(Number(vps)) ? String(vps) : '');
+  }
   if (ids.marco) setVal(ids.marco, c.dwcTapaMarcoPorLadoMm);
   if (ids.hueco) setVal(ids.hueco, c.dwcTapaHuecoMm);
   const cu = document.getElementById(ids.cupulas);
@@ -2610,6 +2809,13 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
   }
   try {
     toggleDwcVolumenManualUI(ids, c);
+  } catch (_) {}
+  try {
+    if (ids === DWC_FORM_IDS_SETUP) {
+      const w = document.getElementById('setupDwcLitrosUtilesPorSitioWrap');
+      const sel = document.getElementById('setupDwcOxigenacionDiseno');
+      if (w && sel) w.classList.toggle('setup-hidden', sel.value !== 'cubos_independientes');
+    }
   } catch (_) {}
 }
 

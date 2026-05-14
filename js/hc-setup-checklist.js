@@ -1071,7 +1071,9 @@ function getCLPasos() {
   const pc1DescPaso = esRdwc
     ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
     : esDwc
-      ? 'Capacidad del depósito (geométrica o etiqueta), agua y nutriente. Los <strong>ml del paso 4</strong> usan el volumen <strong>orientativo</strong> con cámara de aire y cesta (como en Cultivo e instalación). El siguiente campo es <strong>solo</strong> si vas a llenar <strong>menos</strong> litros que ese orientativo; déjalo vacío si no.'
+      ? (typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes'
+          ? 'Litros de <strong>mezcla total</strong> (suma de todos los cubos), agua y nutriente; el esquema ya refleja cuántos <strong>sitios</strong> hay. Los <strong>ml del paso 4</strong> usan ese total. El útil por cubo con cámara de aire (como depósito único) orienta también la bomba en Cultivo: allí puedes indicar <strong>litros útiles por cubo</strong> o dejar que la app use el mínimo entre reparto y llenado seguro con las medidas de un cubo típico.'
+          : 'Capacidad del depósito (geométrica o etiqueta), agua y nutriente. Los <strong>ml del paso 4</strong> usan el volumen <strong>orientativo</strong> con cámara de aire y cesta (como en Cultivo e instalación). El siguiente campo es <strong>solo</strong> si vas a llenar <strong>menos</strong> litros que ese orientativo; déjalo vacío si no.')
       : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
   const pc1LabelVolMax = esRdwc ? 'Litros depósito de control (L)' : 'Capacidad máx. depósito (L)';
   const pc1PhVolMax = esRdwc ? '40' : '20';
@@ -1167,16 +1169,21 @@ function getCLPasos() {
 
   const nftBomb = esNft ? getNftBombaDesdeConfig(cfg) : null;
 
+  const dwcOxMult =
+    typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+
   const pasosDwcOxigenacion = esDwc && !esDwcK
     ? [
         {
           id: 'D0',
           seccion: '💨 DWC — Bomba de aire y difusores',
           paso: 'D·0',
-          desc:
-            'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Cultivo e instalación.',
-          nota:
-            'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
+          desc: dwcOxMult
+            ? 'Dimensiona la <strong>bomba multivalvula</strong> y <strong>una línea de aire por cubo</strong> (cada depósito con solución aislada: kits comerciales o DIY). Los litros del checklist deben ser la <strong>suma</strong> de solución de todos los cubos; el esquema (filas×cestas) cuenta los <strong>sitios</strong>. El recuadro inferior replica la lógica de Cultivo e instalación.'
+            : 'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Cultivo e instalación.',
+          nota: dwcOxMult
+            ? 'En multivalvula el fabricante suele indicar el caudal <strong>total</strong> de la bomba: la app estima el mínimo por cubo (~1 L/min por 10 L en el <strong>útil</strong> de cada sitio) + margen de reparto. Ese útil por cubo sigue la misma idea de <strong>cámara de aire</strong> que en depósito único (mínimo entre reparto de la mezcla total y llenado seguro con tus medidas/cesta); puedes fijarlo en <strong>Cultivo e instalación</strong> si mediste cada cubo. Comprueba el dato a la <strong>profundidad</strong> y que <strong>cada salida</strong> tenga difusor al fondo.'
+            : 'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
           postCamposHtml:
             '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" role="status" aria-live="polite"></div>',
         },
@@ -2632,6 +2639,14 @@ async function finalizarChecklist() {
       (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
         ? (state.configTorre.dwcRejillaModoPreferido || (typeof dwcGetRejillaModoPreferido === 'function' ? dwcGetRejillaModoPreferido(state.configTorre) : 'objetivo'))
         : '',
+    dwcOxigenacionDiseno:
+      (state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
+        ? (typeof dwcGetOxigenacionDiseno === 'function' ? dwcGetOxigenacionDiseno(state.configTorre) : 'dep_unido')
+        : '',
+    dwcLitrosUtilesPorSitioL:
+      (state.configTorre && state.configTorre.tipoInstalacion === 'dwc' && state.configTorre.dwcLitrosUtilesPorSitioL != null)
+        ? String(state.configTorre.dwcLitrosUtilesPorSitioL)
+        : '',
     notas:        cambioNutrienteAplicado
       ? ('Recarga completa del depósito · Cambio nutriente: ' + (nutPrev ? nutPrev.nombre : 'anterior') + ' → ' + nutR.nombre)
       : 'Recarga completa del depósito',
@@ -2654,6 +2669,8 @@ async function finalizarChecklist() {
     dwcObjetivoCultivo: recargaData.dwcObjetivoCultivo || '',
     dwcModo: recargaData.dwcModo || '',
     dwcRejillaModoPreferido: recargaData.dwcRejillaModoPreferido || '',
+    dwcOxigenacionDiseno: recargaData.dwcOxigenacionDiseno || '',
+    dwcLitrosUtilesPorSitioL: recargaData.dwcLitrosUtilesPorSitioL || '',
     icono: '🔄'
   });
 
@@ -2688,7 +2705,7 @@ async function finalizarChecklist() {
     nutriente: nutR.nombre,
     observaciones: `Color agua: ${gCL('clColorAgua')} · Estado plantas: ${gCL('clEstadoPlantas')} · Min sin bomba: ${gCL('clMinSinBomba')}` +
       ((state.configTorre && state.configTorre.tipoInstalacion === 'dwc')
-        ? ` · DWC modo: ${recargaData.dwcModo || '-'} · Objetivo: ${recargaData.dwcObjetivoCultivo || '-'} · Rejilla: ${recargaData.dwcRejillaModoPreferido || '-'}`
+        ? ` · DWC modo: ${recargaData.dwcModo || '-'} · Objetivo: ${recargaData.dwcObjetivoCultivo || '-'} · Rejilla: ${recargaData.dwcRejillaModoPreferido || '-'} · Aire: ${recargaData.dwcOxigenacionDiseno || '-'}`
         : '') +
       (cambioNutrienteAplicado
         ? ` · Cambio nutriente: ${(recargaData.nutrientePrevioNombre || '-')} -> ${(nutR.nombre || '-')}`

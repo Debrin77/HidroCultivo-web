@@ -2442,6 +2442,13 @@ function textoResumenSistemaDwcPanel(cfg) {
     parts.push('Ø' + Math.round(Number(cfg.dwcNetPotRimMm)) + ' mm');
   }
   parts.push(n + '×' + c + ' macetas');
+  if (typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes') {
+    parts.push('aire multidepósito');
+    const lu = Number(cfg.dwcLitrosUtilesPorSitioL);
+    if (Number.isFinite(lu) && lu > 0) {
+      parts.push('~' + Math.round(lu * 10) / 10 + ' L útil/sitio (medido)');
+    }
+  }
   let line = parts.join(' · ');
   if (typeof dwcTextoResumenLlenadoCm === 'function') {
     const ll = dwcTextoResumenLlenadoCm(cfg);
@@ -3139,6 +3146,8 @@ const DWC_FORM_IDS_SISTEMA = {
   modo: 'sysDwcModoCultivo',
   objetivo: 'sysDwcObjetivoCultivo',
   rejillaModo: 'sysDwcRejillaPreferida',
+  oxigenacionDiseno: 'sysDwcOxigenacionDiseno',
+  litrosUtilesPorSitio: 'sysDwcLitrosUtilesPorSitioL',
   cupulas: 'sysDwcCupulas',
   aire: 'sysDwcEntradaAire',
 };
@@ -3154,6 +3163,8 @@ const DWC_FORM_IDS_SETUP = {
   modo: 'setupDwcModoCultivo',
   objetivo: 'setupDwcObjetivoCultivo',
   rejillaModo: 'setupDwcRejillaPreferida',
+  oxigenacionDiseno: 'setupDwcOxigenacionDiseno',
+  litrosUtilesPorSitio: 'setupDwcLitrosUtilesPorSitioL',
   marco: 'setupDwcTapaMarcoMm',
   hueco: 'setupDwcTapaHuecoMm',
   cupulas: 'setupDwcCupulas',
