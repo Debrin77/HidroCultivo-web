@@ -138,6 +138,9 @@ function setDiaRiego(dia) {
   if (document.getElementById('tab-riego')?.classList.contains('active')) {
     calcularRiego({ forceRefresh: true });
   }
+  try {
+    riegoPersistirPreferencias();
+  } catch (_) {}
 }
 
 /** Sincroniza botones Hoy/Mañana con `diaRiego` sin disparar el cálculo (goTab llama a calcularRiego después). */
@@ -168,6 +171,67 @@ function initDiaRiego() {
   }
 }
 
+/** Persiste toldo y día de riego en configTorre y en el slot activo. */
+function riegoPersistirPreferencias() {
+  if (!state.configTorre) state.configTorre = {};
+  if (!state.configTorre.riego) state.configTorre.riego = {};
+  state.configTorre.riego.toldo = !!toldoDesplegado;
+  state.configTorre.riego.diaRiego = diaRiego === 'manana' ? 'manana' : 'hoy';
+  const tIdx = state.torreActiva || 0;
+  if (!state.torres[tIdx]) state.torres[tIdx] = {};
+  if (!state.torres[tIdx].riego) state.torres[tIdx].riego = {};
+  state.torres[tIdx].riego.toldo = !!toldoDesplegado;
+  state.torres[tIdx].riego.diaRiego = state.configTorre.riego.diaRiego;
+  try {
+    saveState();
+  } catch (_) {}
+}
+
+/** Restaura toldo/día desde configTorre o slot (sin recalcular). */
+function riegoCargarToldoDesdeConfig() {
+  const cfgR = state.configTorre && state.configTorre.riego;
+  const slotR = state.torres && state.torres[state.torreActiva || 0] && state.torres[state.torreActiva || 0].riego;
+  if (cfgR && cfgR.toldo !== undefined) toldoDesplegado = !!cfgR.toldo;
+  else if (slotR && slotR.toldo !== undefined) toldoDesplegado = !!slotR.toldo;
+  const dia =
+    (cfgR && (cfgR.diaRiego === 'hoy' || cfgR.diaRiego === 'manana') && cfgR.diaRiego) ||
+    (slotR && (slotR.diaRiego === 'hoy' || slotR.diaRiego === 'manana') && slotR.diaRiego) ||
+    'hoy';
+  diaRiego = dia;
+  riegoAplicarToldoUI();
+}
+
+function riegoAplicarToldoUI() {
+  const sw = document.getElementById('toldoSwitch');
+  if (sw) {
+    sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
+    sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
+  }
+}
+
+function actualizarRiegoToldoCopy(esModoClima) {
+  const label = document.getElementById('labelToldoRiegoText');
+  const hint = document.getElementById('riegoToldoHint');
+  const ubic = (state.configTorre && state.configTorre.ubicacion) || 'exterior';
+  const esInterior = ubic === 'interior';
+  if (label) {
+    label.textContent = esModoClima
+      ? 'Toldo / malla de sombra (protección follaje y depósito)'
+      : 'Toldo o malla de sombra desplegada';
+  }
+  if (hint) {
+    if (esModoClima) {
+      hint.textContent = esInterior
+        ? 'En interior el toldo suele no aplicarse; actívalo solo si usas malla frente a ventanas o lámparas muy intensas.'
+        : 'El riego del sistema es continuo; el toldo ajusta la referencia climática (UV, estrés térmico) para decidir sombra en plantas y depósito.';
+      hint.classList.remove('setup-hidden');
+    } else {
+      hint.classList.add('setup-hidden');
+      hint.textContent = '';
+    }
+  }
+}
+
 /** Controles de riego: torre (cálculo) vs NFT/DWC (solo clima de referencia). */
 function actualizarVistaRiegoPorTipoInstalacion() {
   const tipo = tipoInstalacionNormalizado(state.configTorre || {});
@@ -179,10 +243,10 @@ function actualizarVistaRiegoPorTipoInstalacion() {
   const diaInfo = document.getElementById('riegoDiaInfo');
   const btnHoy = document.getElementById('btnRiegoHoy');
   const btnManana = document.getElementById('btnRiegoManana');
+  const toldoWrap = document.getElementById('toldoToggle');
 
   if (torreControls) torreControls.classList.toggle('setup-hidden', esModoClima);
-  if (diaGrp) diaGrp.classList.toggle('setup-hidden', esModoClima);
-  if (diaInfo) diaInfo.classList.toggle('setup-hidden', esModoClima);
+  if (toldoWrap) toldoWrap.classList.remove('setup-hidden');
   if (btnCalc) {
     btnCalc.classList.toggle('setup-hidden', esModoClima);
     btnCalc.hidden = esModoClima;
@@ -220,6 +284,9 @@ function actualizarVistaRiegoPorTipoInstalacion() {
       esModoClima ? 'Mostrar previsión meteorológica de mañana' : 'Calcular riego para mañana con previsión meteorológica'
     );
   }
+  try {
+    actualizarRiegoToldoCopy(esModoClima);
+  } catch (_) {}
 }
 let esRecarga = false;
 
@@ -245,16 +312,8 @@ function toggleRecarga() {
 
 function toggleToldo() {
   toldoDesplegado = !toldoDesplegado;
-  const sw = document.getElementById('toldoSwitch');
-  if (sw) {
-    sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
-    sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
-  }
-  const tIdx = state.torreActiva || 0;
-  if (!state.torres[tIdx]) state.torres[tIdx] = {};
-  if (!state.torres[tIdx].riego) state.torres[tIdx].riego = {};
-  state.torres[tIdx].riego.toldo = toldoDesplegado;
-  saveState();
+  riegoAplicarToldoUI();
+  riegoPersistirPreferencias();
   calcularRiego();
 }
 
@@ -316,16 +375,8 @@ function actualizarRiegoToldoRecoUI(esInterior, tempMax, uvIdxRaw) {
 function activarToldoRecomendado() {
   if (!toldoDesplegado) {
     toldoDesplegado = true;
-    const sw = document.getElementById('toldoSwitch');
-    if (sw) {
-      sw.className = 'toggle-switch on';
-      sw.setAttribute('aria-checked', 'true');
-    }
-    const tIdx = state.torreActiva || 0;
-    if (!state.torres[tIdx]) state.torres[tIdx] = {};
-    if (!state.torres[tIdx].riego) state.torres[tIdx].riego = {};
-    state.torres[tIdx].riego.toldo = true;
-    saveState();
+    riegoAplicarToldoUI();
+    riegoPersistirPreferencias();
   }
   calcularRiego({ manual: true });
 }

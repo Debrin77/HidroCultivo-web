@@ -1401,6 +1401,9 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   min-height: min(56vh, 680px);
   overflow: visible;
 }
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--multicubo {
+  min-height: min(62vh, 760px);
+}
 /* NFT: el diagrama puede crecer en altura; el scroll es en el contenedor */
 .torre-sistema-resumen-wrap {
   margin: 10px 10px 6px;
@@ -5939,6 +5942,46 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   line-height: 1.55;
   font-weight: 600;
   color: #0c4a6e;
+}
+.cl-note--dwc-mc-guide {
+  margin: 10px 0 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #14532d;
+}
+.cl-dwc-mc-guide-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+.cl-dwc-mc-guide-steps {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+.cl-dwc-mc-guide-steps li {
+  margin-bottom: 0.35rem;
+}
+.cl-dwc-mc-guide-steps li:last-child {
+  margin-bottom: 0;
+}
+.cl-dwc-mc-cubo-marks {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cl-dwc-mc-cubo-mark {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.cl-dwc-mc-cubo-mark:last-child {
+  margin-bottom: 0;
 }
 .cl-nft-layout-resumen {
   margin-bottom: 10px;

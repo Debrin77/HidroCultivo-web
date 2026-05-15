@@ -520,6 +520,19 @@ function generarSVGDwc() {
     dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
   /** Posiciones de piedras (cenital x, frente y) para burbujas en modo multivalvula. */
   let dwcMcAirPts = null;
+  const S_mc = esMulticubo ? Math.max(1, N * C) : 0;
+  let mcCols = 1;
+  let mcRows = 1;
+  let mcCubeSz = 56;
+  let mcGapPlan = 16;
+  let mcGapFront = 14;
+  if (esMulticubo) {
+    mcCols = S_mc <= 6 ? S_mc : Math.ceil(S_mc / 2);
+    mcRows = S_mc <= 6 ? 1 : 2;
+    mcCubeSz = S_mc <= 4 ? 78 : S_mc <= 6 ? 70 : 58;
+    mcGapPlan = S_mc <= 4 ? 20 : 14;
+    mcGapFront = S_mc <= 4 ? 18 : 12;
+  }
   const recoCultivo =
     typeof dwcRecomendacionCultivoDesdeConfig === 'function'
       ? dwcRecomendacionCultivoDesdeConfig(cfg)
@@ -544,23 +557,31 @@ function generarSVGDwc() {
           volOk: '#0284c7',
         };
 
-  const W = 400;
-  const H = 548;
+  const W = esMulticubo
+    ? Math.min(580, Math.max(460, 52 + mcCols * (mcCubeSz + mcGapPlan)))
+    : 400;
+  const H = esMulticubo ? 640 : 548;
 
   /* Mismo ancho exterior para tapa (cenital) y depósito (frente), alineados. */
-  const blockW = Math.min(320, Math.max(228, 28 + C * 30));
+  const planPad = esMulticubo ? 12 : 10;
+  const blockW = esMulticubo
+    ? mcCols * mcCubeSz + Math.max(0, mcCols - 1) * mcGapPlan + planPad * 2
+    : Math.min(320, Math.max(228, 28 + C * 30));
   const planLeft = (W - blockW) / 2;
   const planW = blockW;
-  const planTop = 54;
-  const planPad = 10;
-  const planH = Math.min(200, 28 + N * 30);
+  const planTop = esMulticubo ? 32 : 54;
+  const planH = esMulticubo
+    ? mcRows * mcCubeSz + Math.max(0, mcRows - 1) * mcGapPlan + planPad * 2
+    : Math.min(200, 28 + N * 30);
   const planInnerX = planLeft + planPad;
   const planInnerY = planTop + planPad;
   const planInnerW = planW - planPad * 2;
   const planInnerH = planH - planPad * 2;
-  const cellW = planInnerW / C;
-  const cellH = planInnerH / N;
-  const Rpot = Math.max(7, Math.min(20, Math.min(cellW, cellH) * 0.38));
+  const cellW = esMulticubo ? mcCubeSz : planInnerW / C;
+  const cellH = esMulticubo ? mcCubeSz : planInnerH / N;
+  const Rpot = esMulticubo
+    ? Math.max(14, Math.min(26, mcCubeSz * 0.36))
+    : Math.max(7, Math.min(20, Math.min(cellW, cellH) * 0.38));
 
   function macetaSvg(n, c, cx, cy, r, topView) {
     const dat =
@@ -604,7 +625,9 @@ function generarSVGDwc() {
     const ultimaFoto = fotos.length > 0 ? fotos[fotos.length - 1] : null;
     const varTxt = dat.variedad ? String(dat.variedad) : 'vacía';
     const ariaCesta = escAriaAttr(
-      `Maceta fila ${n + 1} columna ${c + 1}, ${varTxt}` +
+      (esMulticubo
+        ? `Cubo ${c + 1}, maceta ${varTxt}`
+        : `Maceta fila ${n + 1} columna ${c + 1}, ${varTxt}`) +
         (dias ? ', día ' + dias + ' de cultivo' : '') +
         '. Pulsa para abrir ficha o asignar cultivo.'
     );
@@ -707,77 +730,68 @@ function generarSVGDwc() {
   const tankFaceInset = 4;
 
   if (esMulticubo) {
-    const S = N * C;
-    /** Esquema legible: fila de cubos simbólicos (máx. 4); el total real va en leyenda. */
-    const kDraw = Math.min(Math.max(1, S), 4);
-    const gapMc = 7;
-    const stripH = 18;
-    const yGrid0 = tankStartY + stripH + 6;
-    const rowPadX = 14;
-    const miniH = Math.min(56, Math.max(44, tankH - stripH - 28));
+    const S = S_mc;
+    const fCols = mcCols;
+    const fRows = mcRows;
+    const gapMc = mcGapFront;
+    const stripH = 8;
+    const yGrid0 = tankStartY + stripH + 10;
+    const rowPadX = 10;
+    const miniH = fRows > 1 ? 52 : 58;
     const rowW = tankW - 2 * rowPadX;
-    const miniW = Math.min(78, Math.max(36, (rowW - (kDraw - 1) * gapMc) / kDraw));
-    const rowTotalW = kDraw * miniW + (kDraw - 1) * gapMc;
+    const miniW = Math.min(88, Math.max(42, (rowW - (fCols - 1) * gapMc) / fCols));
+    const rowTotalW = fCols * miniW + (fCols - 1) * gapMc;
     const row0X = tankX + (tankW - rowTotalW) / 2;
-    const manifoldY = tankStartY + stripH - 2;
-    const slots = [];
-    for (let i = 0; i < kDraw; i++) {
-      const x = row0X + i * (miniW + gapMc);
-      const y = yGrid0;
-      const ix = x + 3;
-      const iy = y + 8;
-      const iw = miniW - 6;
-      const ih = miniH - 14;
-      const cx = ix + iw / 2;
-      let subLbl;
-      if (S <= 4) {
-        subLbl = String(i + 1);
-      } else if (i < kDraw - 1) {
-        subLbl = String(i + 1);
-      } else {
-        subLbl = '⋯';
-      }
-      slots.push({ i, x, y, miniW, miniH, ix, iy, iw, ih, cx, subLbl });
-    }
-    const mL = slots[0].cx;
-    const mR = slots[kDraw - 1].cx;
+    const gridBlockH = fRows * miniH + Math.max(0, fRows - 1) * (gapMc + 6);
     let dropSvg = '';
     let cuboSvg = '';
+    let manifoldSvg = '';
     dwcMcAirPts = [];
-    for (const o of slots) {
-      dropSvg += `<line x1="${o.cx}" y1="${(manifoldY + 2).toFixed(1)}" x2="${o.cx}" y2="${(o.iy - 0.5).toFixed(1)}"
-        stroke="${Dw.airLine}" stroke-width="1.45" stroke-dasharray="3 2" opacity="0.92"/>`;
-      cuboSvg += `<rect x="${o.x}" y="${o.y}" width="${o.miniW}" height="${o.miniH}" rx="5" fill="#f8fafc" stroke="#64748b" stroke-width="1.05"/>`;
-      const wTop = o.iy + o.ih * (1 - volPct);
-      cuboSvg += `<rect x="${o.ix}" y="${o.iy}" width="${o.iw}" height="${Math.max(0, wTop - o.iy).toFixed(1)}" fill="#f0f9ff" opacity="0.48"/>`;
-      cuboSvg += `<rect x="${o.ix}" y="${wTop.toFixed(1)}" width="${o.iw}" height="${(o.iy + o.ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
-      cuboSvg += `<rect x="${o.ix}" y="${o.iy}" width="${o.iw}" height="${o.ih}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="0.9" opacity="0.36"/>`;
-      const sy = o.iy + o.ih - 3;
+    const rowManifolds = [];
+    for (let idx = 0; idx < S; idx++) {
+      const fr = Math.floor(idx / fCols);
+      const fc = idx % fCols;
+      const x = row0X + fc * (miniW + gapMc);
+      const y = yGrid0 + fr * (miniH + gapMc + 6);
+      const ix = x + 4;
+      const iy = y + 10;
+      const iw = miniW - 8;
+      const ih = miniH - 16;
+      const cx = ix + iw / 2;
+      const manifoldY = y - 4;
+      if (!rowManifolds[fr]) rowManifolds[fr] = { y: manifoldY, xs: [] };
+      rowManifolds[fr].xs.push(cx);
+      dropSvg += `<line x1="${cx}" y1="${(manifoldY + 1).toFixed(1)}" x2="${cx}" y2="${(iy - 1).toFixed(1)}"
+        stroke="${Dw.airLine}" stroke-width="1.6" stroke-dasharray="4 2.5" opacity="0.9"/>`;
+      cuboSvg += `<rect x="${x}" y="${y}" width="${miniW}" height="${miniH}" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.15"/>`;
+      const wTop = iy + ih * (1 - volPct);
+      cuboSvg += `<rect x="${ix}" y="${iy}" width="${iw}" height="${Math.max(0, wTop - iy).toFixed(1)}" fill="#f0f9ff" opacity="0.48"/>`;
+      cuboSvg += `<rect x="${ix}" y="${wTop.toFixed(1)}" width="${iw}" height="${(iy + ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
+      cuboSvg += `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="0.95" opacity="0.38"/>`;
+      const sy = iy + ih - 3;
       if (tieneDifusor) {
-        cuboSvg += `<ellipse cx="${o.cx}" cy="${sy}" rx="6.5" ry="3.4" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.8"/>`;
-        dwcMcAirPts.push({ cx: o.cx, stoneY: sy, waterTop: wTop });
+        cuboSvg += `<ellipse cx="${cx}" cy="${sy}" rx="7" ry="3.6" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.85"/>`;
+        dwcMcAirPts.push({ cx, stoneY: sy, waterTop: wTop });
       }
-      const subFs = o.subLbl === '⋯' ? 14 : 6.5;
-      const subFill = o.subLbl === '⋯' ? '#64748b' : '#94a3b8';
-      cuboSvg += `<text x="${o.cx}" y="${(o.y + o.miniH - 2).toFixed(1)}" font-family="Inconsolata,monospace" font-size="${subFs}" font-weight="${o.subLbl === '⋯' ? '700' : '600'}" fill="${subFill}" text-anchor="middle">${o.subLbl}</text>`;
     }
-    const capY = yGrid0 + miniH + 5;
-    const capTxt = S > kDraw ? `${S} cubos` : `${S} cubo${S === 1 ? '' : 's'}`;
-    const capSvg = `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${capY.toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" font-weight="700" fill="#475569">${capTxt}</text>`;
-    innerBottom = capY + 4;
+    rowManifolds.forEach((rm) => {
+      if (!rm || !rm.xs.length) return;
+      const mL = Math.min(...rm.xs);
+      const mR = Math.max(...rm.xs);
+      manifoldSvg += `<line x1="${mL}" y1="${rm.y}" x2="${mR}" y2="${rm.y}" stroke="#334155" stroke-width="2.6" stroke-linecap="round"/>`;
+    });
+    innerBottom = yGrid0 + gridBlockH + 6;
     waterTopY = innerBottom - 20;
     waveY = waterTopY;
     hx = tankX + tankW - 22;
-    stoneX = slots[0].cx;
-    tankGraphicBottom = Math.max(tankStartY + tankH, innerBottom + 8);
+    stoneX = row0X + miniW / 2;
+    tankGraphicBottom = Math.max(tankStartY + tankH, innerBottom + 10);
     clipPathInner = `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${(tankGraphicBottom - tankStartY).toFixed(1)}" rx="2"/>`;
     tankFrontalSvg =
-      `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${stripH}" rx="4" fill="#eef2f7" stroke="#64748b" stroke-width="1.05"/>` +
-      `<text x="${(tankX + tankW / 2).toFixed(1)}" y="${(tankStartY + 12).toFixed(1)}" text-anchor="middle" font-size="6" font-weight="800" fill="#334155" font-family="Syne,sans-serif" letter-spacing="0.04em">MULTI</text>` +
-      `<line x1="${mL}" y1="${manifoldY}" x2="${mR}" y2="${manifoldY}" stroke="#334155" stroke-width="2.3" stroke-linecap="round"/>` +
+      `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${stripH}" rx="3" fill="#eef2f7" stroke="#94a3b8" stroke-width="0.9" opacity="0.85"/>` +
+      manifoldSvg +
       dropSvg +
-      cuboSvg +
-      capSvg;
+      cuboSvg;
   } else if (formaDwc === 'cilindrico') {
     clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
     waterTopY = innerY0 + innerH0 * (1 - volPct);
@@ -921,95 +935,110 @@ function generarSVGDwc() {
   const lidRInCyl = Math.max(12, lidROutCyl - planPad);
 
   let dwcLidCylNoCabenOverlay = '';
-  if (formaDwc === 'cilindrico') {
-    const rimMm = Number(cfg.dwcNetPotRimMm);
-    const Lcm = Number(cfg.dwcDepositoLargoCm);
-    const Wcm = Number(cfg.dwcDepositoAnchoCm);
-    let marcoMm = 0;
-    let huecoMm = 4;
-    if (cfg.dwcTapaMarcoPorLadoMm != null && Number.isFinite(Number(cfg.dwcTapaMarcoPorLadoMm)) && Number(cfg.dwcTapaMarcoPorLadoMm) >= 0) {
-      marcoMm = Number(cfg.dwcTapaMarcoPorLadoMm);
+  if (esMulticubo) {
+    for (let idx = 0; idx < S_mc; idx++) {
+      const row = Math.floor(idx / mcCols);
+      const col = idx % mcCols;
+      const bx = planInnerX + col * (mcCubeSz + mcGapPlan);
+      const by = planInnerY + row * (mcCubeSz + mcGapPlan);
+      const cx = bx + mcCubeSz / 2;
+      const cy = by + mcCubeSz / 2;
+      const rPot = Math.max(14, Math.min(26, mcCubeSz * 0.36));
+      s += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${mcCubeSz}" height="${mcCubeSz}" rx="11" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.07))"/>`;
+      s += `<rect x="${(bx + 6).toFixed(1)}" y="${(by + 6).toFixed(1)}" width="${(mcCubeSz - 12).toFixed(1)}" height="${(mcCubeSz - 12).toFixed(1)}" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+      s += macetaSvg(0, idx, cx, cy, rPot, true);
     }
-    if (cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0) {
-      huecoMm = Number(cfg.dwcTapaHuecoMm);
-    }
-    if (
-      typeof dwcEvaluarCapestEnTapa === 'function' &&
-      Number.isFinite(rimMm) &&
-      rimMm > 0 &&
-      Number.isFinite(Lcm) &&
-      Number.isFinite(Wcm)
-    ) {
-      const evLid = dwcEvaluarCapestEnTapa(N, C, rimMm, Lcm, Wcm, marcoMm, huecoMm, 'cilindrico');
-      if (evLid.estado === 'no') {
-        const rArm = lidRInCyl * 0.72;
-        const cx = lidCxCyl;
-        const cy = lidCyCyl;
-        dwcLidCylNoCabenOverlay =
-          `<g class="dwc-lid-cyl-no-caben" pointer-events="none" aria-hidden="true">` +
-          `<line x1="${(cx - rArm).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx + rArm).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="#dc2626" stroke-width="3.2" stroke-linecap="round"/>` +
-          `<line x1="${cx.toFixed(1)}" y1="${(cy - rArm).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy + rArm).toFixed(1)}" stroke="#dc2626" stroke-width="3.2" stroke-linecap="round"/>` +
-          `<text x="${cx.toFixed(1)}" y="${(cy + lidRInCyl * 0.28).toFixed(1)}" text-anchor="middle" fill="#991b1b" font-size="9" font-weight="800" font-family="Syne,sans-serif">No caben en tapa</text>` +
-          `</g>`;
-      }
-    }
-  }
-
-  if (formaDwc === 'cilindrico') {
-    s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidROutCyl.toFixed(2)}" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
-    s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidRInCyl.toFixed(2)}" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
-    s += `<g clip-path="url(#dwcLidPlanClipCyl)">`;
   } else {
-    s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
-    s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
-    if (formaDwc === 'troncopiramidal') {
-      const topInPlan = 18;
-      const botW = planW - 36;
-      const cxP = planLeft + planW / 2;
-      const yT = planTop + 4;
-      const yB = planTop + planH - 4;
-      s += `<path d="M ${cxP - (planW - 2 * topInPlan) / 2} ${yT} L ${cxP + (planW - 2 * topInPlan) / 2} ${yT} L ${cxP + botW / 2} ${yB} L ${cxP - botW / 2} ${yB} Z"
-        fill="none" stroke="#475569" stroke-width="1.25" opacity="0.5"/>`;
-    } else {
-      const isCubePlan = dep.L != null && dep.W != null && Math.abs(dep.L - dep.W) / Math.max(dep.L, dep.W) <= 0.06;
-      if (isCubePlan) {
-        const side = Math.min(planInnerW, planInnerH) * 0.76;
-        const ox = planInnerX + (planInnerW - side) / 2;
-        const oy = planInnerY + (planInnerH - side) / 2;
-        s += `<rect x="${ox.toFixed(1)}" y="${oy.toFixed(1)}" width="${side.toFixed(1)}" height="${side.toFixed(1)}" rx="7" fill="none" stroke="#64748b" stroke-width="1.15" opacity="0.48"/>`;
-      } else if (dep.L != null && dep.W != null) {
-        const sk = Math.min(16, planInnerW * 0.09);
-        s += `<path d="M ${(planInnerX + sk).toFixed(1)} ${planInnerY.toFixed(1)} L ${(planInnerX + planInnerW).toFixed(1)} ${planInnerY.toFixed(1)} L ${(planInnerX + planInnerW - sk * 0.5).toFixed(1)} ${(planInnerY + planInnerH).toFixed(1)} L ${planInnerX.toFixed(1)} ${(planInnerY + planInnerH).toFixed(1)} Z"
-          fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.52"/>`;
+    if (formaDwc === 'cilindrico') {
+      const rimMm = Number(cfg.dwcNetPotRimMm);
+      const Lcm = Number(cfg.dwcDepositoLargoCm);
+      const Wcm = Number(cfg.dwcDepositoAnchoCm);
+      let marcoMm = 0;
+      let huecoMm = 4;
+      if (cfg.dwcTapaMarcoPorLadoMm != null && Number.isFinite(Number(cfg.dwcTapaMarcoPorLadoMm)) && Number(cfg.dwcTapaMarcoPorLadoMm) >= 0) {
+        marcoMm = Number(cfg.dwcTapaMarcoPorLadoMm);
+      }
+      if (cfg.dwcTapaHuecoMm != null && Number.isFinite(Number(cfg.dwcTapaHuecoMm)) && Number(cfg.dwcTapaHuecoMm) >= 0) {
+        huecoMm = Number(cfg.dwcTapaHuecoMm);
+      }
+      if (
+        typeof dwcEvaluarCapestEnTapa === 'function' &&
+        Number.isFinite(rimMm) &&
+        rimMm > 0 &&
+        Number.isFinite(Lcm) &&
+        Number.isFinite(Wcm)
+      ) {
+        const evLid = dwcEvaluarCapestEnTapa(N, C, rimMm, Lcm, Wcm, marcoMm, huecoMm, 'cilindrico');
+        if (evLid.estado === 'no') {
+          const rArm = lidRInCyl * 0.72;
+          const cx = lidCxCyl;
+          const cy = lidCyCyl;
+          dwcLidCylNoCabenOverlay =
+            `<g class="dwc-lid-cyl-no-caben" pointer-events="none" aria-hidden="true">` +
+            `<line x1="${(cx - rArm).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx + rArm).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="#dc2626" stroke-width="3.2" stroke-linecap="round"/>` +
+            `<line x1="${cx.toFixed(1)}" y1="${(cy - rArm).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy + rArm).toFixed(1)}" stroke="#dc2626" stroke-width="3.2" stroke-linecap="round"/>` +
+            `<text x="${cx.toFixed(1)}" y="${(cy + lidRInCyl * 0.28).toFixed(1)}" text-anchor="middle" fill="#991b1b" font-size="9" font-weight="800" font-family="Syne,sans-serif">No caben en tapa</text>` +
+            `</g>`;
+        }
       }
     }
-  }
-  for (let gi = 1; gi < C; gi++) {
-    const x = planInnerX + gi * cellW;
-    s += `<line x1="${x.toFixed(1)}" y1="${planInnerY}" x2="${x.toFixed(1)}" y2="${planInnerY + planInnerH}" stroke="#e2e8f0" stroke-width="1"/>`;
-  }
-  for (let gj = 1; gj < N; gj++) {
-    const y = planInnerY + gj * cellH;
-    s += `<line x1="${planInnerX}" y1="${y.toFixed(1)}" x2="${planInnerX + planInnerW}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>`;
-  }
 
-  for (let n = 0; n < N; n++) {
-    for (let c = 0; c < C; c++) {
-      const cx = planInnerX + (c + 0.5) * cellW;
-      const cy = planInnerY + (n + 0.5) * cellH;
-      s += macetaSvg(n, c, cx, cy, Rpot, true);
+    if (formaDwc === 'cilindrico') {
+      s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidROutCyl.toFixed(2)}" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
+      s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidRInCyl.toFixed(2)}" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+      s += `<g clip-path="url(#dwcLidPlanClipCyl)">`;
+    } else {
+      s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
+      s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+      if (formaDwc === 'troncopiramidal') {
+        const topInPlan = 18;
+        const botW = planW - 36;
+        const cxP = planLeft + planW / 2;
+        const yT = planTop + 4;
+        const yB = planTop + planH - 4;
+        s += `<path d="M ${cxP - (planW - 2 * topInPlan) / 2} ${yT} L ${cxP + (planW - 2 * topInPlan) / 2} ${yT} L ${cxP + botW / 2} ${yB} L ${cxP - botW / 2} ${yB} Z"
+          fill="none" stroke="#475569" stroke-width="1.25" opacity="0.5"/>`;
+      } else {
+        const isCubePlan = dep.L != null && dep.W != null && Math.abs(dep.L - dep.W) / Math.max(dep.L, dep.W) <= 0.06;
+        if (isCubePlan) {
+          const side = Math.min(planInnerW, planInnerH) * 0.76;
+          const ox = planInnerX + (planInnerW - side) / 2;
+          const oy = planInnerY + (planInnerH - side) / 2;
+          s += `<rect x="${ox.toFixed(1)}" y="${oy.toFixed(1)}" width="${side.toFixed(1)}" height="${side.toFixed(1)}" rx="7" fill="none" stroke="#64748b" stroke-width="1.15" opacity="0.48"/>`;
+        } else if (dep.L != null && dep.W != null) {
+          const sk = Math.min(16, planInnerW * 0.09);
+          s += `<path d="M ${(planInnerX + sk).toFixed(1)} ${planInnerY.toFixed(1)} L ${(planInnerX + planInnerW).toFixed(1)} ${planInnerY.toFixed(1)} L ${(planInnerX + planInnerW - sk * 0.5).toFixed(1)} ${(planInnerY + planInnerH).toFixed(1)} L ${planInnerX.toFixed(1)} ${(planInnerY + planInnerH).toFixed(1)} Z"
+            fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.52"/>`;
+        }
+      }
     }
-  }
-  if (formaDwc === 'cilindrico') {
-    s += `</g>`;
-    s += dwcLidCylNoCabenOverlay;
+    for (let gi = 1; gi < C; gi++) {
+      const x = planInnerX + gi * cellW;
+      s += `<line x1="${x.toFixed(1)}" y1="${planInnerY}" x2="${x.toFixed(1)}" y2="${planInnerY + planInnerH}" stroke="#e2e8f0" stroke-width="1"/>`;
+    }
+    for (let gj = 1; gj < N; gj++) {
+      const y = planInnerY + gj * cellH;
+      s += `<line x1="${planInnerX}" y1="${y.toFixed(1)}" x2="${planInnerX + planInnerW}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>`;
+    }
+
+    for (let n = 0; n < N; n++) {
+      for (let c = 0; c < C; c++) {
+        const cx = planInnerX + (c + 0.5) * cellW;
+        const cy = planInnerY + (n + 0.5) * cellH;
+        s += macetaSvg(n, c, cx, cy, Rpot, true);
+      }
+    }
+    if (formaDwc === 'cilindrico') {
+      s += `</g>`;
+      s += dwcLidCylNoCabenOverlay;
+    }
   }
 
   /* Separador cenital → frontal */
   const sepY = planBottom + 30;
-  s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="${Dw.title}" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · ${
-    esMulticubo ? 'CUBOS' : 'DEPÓSITO'
-  }</text>`;
+  if (!esMulticubo) {
+    s += `<text class="diag-label-strong dwc-diag-title" x="${W / 2}" y="${sepY - 5}" text-anchor="middle" fill="${Dw.title}" font-size="10.5" font-weight="900" font-family="Syne,sans-serif" letter-spacing="0.04em">PROYECCIÓN FRONTAL · DEPÓSITO</text>`;
+  }
   s += `<line x1="36" y1="${sepY}" x2="${W - 36}" y2="${sepY}" stroke="${Dw.sep}" stroke-width="1" stroke-dasharray="5 4"/>`;
 
   /* ── Alzado depósito (prisma / cubo isométrico, tronco piramidal o cilindro) ── */
@@ -1042,7 +1071,6 @@ function generarSVGDwc() {
       }
     }
   } else if (tieneDifusor && esMulticubo && dwcMcAirPts && dwcMcAirPts.length) {
-    s += `<text x="${W / 2}" y="${innerBottom + 11}" font-family="Inconsolata,monospace" font-size="7" fill="${Dw.airLabel}" text-anchor="middle" font-weight="800">AIRE / CUBO</text>`;
     if (ta) {
       let bi = 0;
       for (const pt of dwcMcAirPts) {
@@ -1080,11 +1108,15 @@ function generarSVGDwc() {
   const vbW = W + pad * 2;
   const vbH = dwcSvgH + pad * 2;
   const dwcTitleMulticubo = esMulticubo
-    ? ` Multivalvula, ${N * C} cubos, mezcla total abajo.`
+    ? ` Multivalvula: ${S_mc} cubos, una maceta por cubo. Toca cada maceta para cultivo.`
     : ' Debajo, frente del depósito con solución.';
+  const dwcSvgClass =
+    'torre-svg-diagram dwc-svg-diagram svg-centered-block' + (esMulticubo ? ' dwc-svg-diagram--multicubo' : '');
   return (
-    `<svg class="torre-svg-diagram dwc-svg-diagram svg-centered-block" width="${W}" height="${dwcSvgH}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
-    `<title id="dwcDiagTitle">DWC ${formaDwcTxt}: tapa superior ${N} por ${C} macetas; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''}${dwcTitleMulticubo} Toca una maceta para la ficha.</title>${s}</svg>`
+    `<svg class="${dwcSvgClass}" width="${W}" height="${dwcSvgH}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
+    `<title id="dwcDiagTitle">DWC ${formaDwcTxt}: ${
+      esMulticubo ? S_mc + ' cubos independientes' : 'tapa superior ' + N + ' por ' + C + ' macetas'
+    }; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''}${dwcTitleMulticubo}</title>${s}</svg>`
   );
 }
 

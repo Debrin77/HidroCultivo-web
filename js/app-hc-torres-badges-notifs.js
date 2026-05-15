@@ -491,6 +491,10 @@ function guardarEstadoTorreActual() {
     toldo: toldoDesplegado,
     diaRiego: diaRiego,
   };
+  if (!state.configTorre) state.configTorre = {};
+  if (!state.configTorre.riego) state.configTorre.riego = {};
+  state.configTorre.riego.toldo = !!toldoDesplegado;
+  state.configTorre.riego.diaRiego = diaRiego === 'manana' ? 'manana' : 'hoy';
   return true;
 }
 
@@ -551,22 +555,12 @@ function cargarEstadoTorre(idx) {
     });
   }
   // Restaurar toldo / día de riego; plantas y edad vía sincronizarInputsRiego (torre activa + slot guardado)
-  const riegoData = t.riego || {};
-  const swToldo = document.getElementById('toldoSwitch');
-  if (riegoData.toldo !== undefined) {
-    toldoDesplegado = riegoData.toldo;
-  } else {
-    toldoDesplegado = false;
-  }
-  if (swToldo) {
-    swToldo.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
-    swToldo.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
-  }
-  if (riegoData.diaRiego === 'hoy' || riegoData.diaRiego === 'manana') {
-    setDiaRiego(riegoData.diaRiego);
-  } else {
-    setDiaRiego('hoy');
-  }
+  try {
+    if (typeof riegoCargarToldoDesdeConfig === 'function') riegoCargarToldoDesdeConfig();
+  } catch (_) {}
+  try {
+    if (typeof initDiaRiego === 'function') initDiaRiego();
+  } catch (_) {}
   try {
     if (typeof sincronizarInputsRiego === 'function') sincronizarInputsRiego();
   } catch (eRiegoSync) {}

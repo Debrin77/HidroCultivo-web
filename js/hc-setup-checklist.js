@@ -294,6 +294,25 @@ function generarPasosNutriente() {
     esRdwcNut
       ? ' En RDWC, añade cada producto en el <strong>depósito de control</strong> con la <strong>recirculación ya en marcha</strong> y deja homogeneizar antes del siguiente.'
       : '';
+  const dwcOxMultNut =
+    esDwcNut &&
+    !esDwcKratky &&
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  const nCubosNut =
+    dwcOxMultNut && typeof dwcGetNumCubosIndependientes === 'function'
+      ? dwcGetNumCubosIndependientes(cfg)
+      : 0;
+  const notaDwcMulticuboNut =
+    dwcOxMultNut && vol != null && Number.isFinite(vol) && vol > 0
+      ? ' <strong>Por cubo (~' +
+        Math.round(vol * 10) / 10 +
+        ' L):</strong> repite estos ml y el orden de productos en <strong>cada</strong> depósito (' +
+        (nCubosNut > 0 ? nCubosNut + ' cubos' : 'todos los cubos') +
+        '). No mezcles todo el volumen del sistema en un solo cubo. Si todos son iguales, puedes preparar la mezcla en un <strong>cubo auxiliar</strong> y repartir.'
+      : dwcOxMultNut
+        ? ' Repite el procedimiento de dosificación <strong>en cada cubo</strong> por separado.'
+        : '';
 
   // PASO 4.2 — CalMag (solo si el usuario / agua lo activan)
   if (usarCalMagEnRecarga() && mlCM > 0) {
@@ -306,7 +325,8 @@ function generarPasosNutriente() {
           : 'Con agua destilada u ósmosis el objetivo habitual es ~' + EC_CALMAG_BASE + ' µS/cm (~' + (EC_CALMAG_BASE / 1000).toFixed(2) + ' mS/cm). Tras estos ml: ~' + ecCM + ' µS estimados. ') +
         (cfg.agua === 'grifo' ? 'Con agua del grifo, verificar si es necesario.' : '') +
         notaRdwcMezcla +
-        notaArranquePl,
+        notaArranquePl +
+        notaDwcMulticuboNut,
       campos: [
         { id:'clCalmagMl', label:'ml CalMag:', type:'number', step:'0.1', placeholder: String(mlCM) },
         { id:'clEcCalMag', label:'EC tras CalMag:', unit:'µS/cm', type:'number', step:'1', placeholder: String(ecCM) }
@@ -320,7 +340,7 @@ function generarPasosNutriente() {
       id:'4.3', seccion:null, paso:'4.3', alert:true,
       desc: 'Añadir ' + orden[0] + ': ' + mlP0 + suf + ' — remover 3 min',
       nota: 'Dosis recomendada: ' + nut.dosis.recomendado + ' ' + nut.dosis.unidad +
-        '. EC objetivo: ' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl,
+        '. EC objetivo: ' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl + notaDwcMulticuboNut,
       campos:[{ id:'clEcAB', label:'EC tras mezcla:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 2) {
@@ -332,12 +352,13 @@ function generarPasosNutriente() {
           ? ' Cantidades calculadas para ~' + ecFinal + ' µS/cm tras CalMag (modelo orientativo).'
           : '') +
         notaRdwcMezcla +
-        notaArranquePl,
+        notaArranquePl +
+        notaDwcMulticuboNut,
     });
     pasos.push({
       id:'4.4', seccion:null, paso:'4.4',
       desc: 'Agitar ' + orden[1] + '. Añadir ' + mlP1 + suf + ' — remover 3 min',
-      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl,
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl + notaDwcMulticuboNut,
       campos:[{ id:'clEcAB', label:'EC tras mezcla completa (A+B):', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   } else if (nut.partes === 3) {
@@ -353,7 +374,7 @@ function generarPasosNutriente() {
     pasos.push({
       id:'4.4b', seccion:null, paso:'4.4b',
       desc: 'Añadir ' + orden[2] + ': ' + mlP2 + suf + ' — remover 3 min',
-      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl,
+      nota: 'EC objetivo de la mezcla: ~' + ecFinal + ' µS/cm.' + notaRdwcMezcla + notaArranquePl + notaDwcMulticuboNut,
       campos:[{ id:'clEcAB', label:'EC tras mezcla completa:', unit:'µS/cm', type:'number', step:'10', placeholder: String(ecFinal) }]
     });
   }
@@ -1006,6 +1027,38 @@ function getCLPasos() {
       : vol;
   const esDwcK =
     esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
+  const dwcOxMult =
+    esDwc &&
+    !esDwcK &&
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  const nCubosMc =
+    dwcOxMult && typeof dwcGetNumCubosIndependientes === 'function'
+      ? dwcGetNumCubosIndependientes(cfg)
+      : 0;
+  const volPorCuboMc =
+    dwcOxMult && typeof getVolumenNutrientesLitros === 'function'
+      ? getVolumenNutrientesLitros(cfg)
+      : null;
+  const volTotalMc =
+    dwcOxMult && typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
+  const clGuiaMcHtml =
+    dwcOxMult && typeof dwcHtmlGuiaMulticuboChecklist === 'function'
+      ? dwcHtmlGuiaMulticuboChecklist(cfg)
+      : '';
+  const notaDwcMulticuboNut =
+    dwcOxMult && volPorCuboMc != null && Number.isFinite(volPorCuboMc) && volPorCuboMc > 0
+      ? ' Los ml son para <strong>~' +
+        Math.round(volPorCuboMc * 10) / 10 +
+        ' L en <strong>un cubo</strong> — repite en los ' +
+        (nCubosMc > 0 ? nCubosMc : 'N') +
+        ' cubos' +
+        (volTotalMc != null && Number.isFinite(volTotalMc) && volTotalMc > volPorCuboMc + 0.05
+          ? ' (referencia total ~' + Math.round(volTotalMc * 10) / 10 + ' L).' : '.') +
+        ' Si todos tienen el mismo volumen, puedes mezclar una vez en un <strong>cubo auxiliar</strong> y repartir.'
+      : dwcOxMult
+        ? ' Repite el mismo orden (agua → CalMag → nutrientes → pH) en <strong>cada cubo</strong>; los ml no son para toda la suma de litros.'
+        : '';
   const esTorre = !esNft && !esDwc && !esRdwc;
   const checklistTieneCalentador = Array.isArray(cfg.equipamiento) && cfg.equipamiento.includes('calentador');
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
@@ -1071,17 +1124,23 @@ function getCLPasos() {
   const pc1DescPaso = esRdwc
     ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
     : esDwc
-      ? (typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes'
-          ? 'Litros de <strong>mezcla total</strong> (suma de todos los cubos), agua y nutriente; el esquema ya refleja cuántos <strong>sitios</strong> hay. Los <strong>ml del paso 4</strong> usan ese total. El útil por cubo con cámara de aire (como depósito único) orienta también la bomba en Cultivo: allí puedes indicar <strong>litros útiles por cubo</strong> o dejar que la app use el mínimo entre reparto y llenado seguro con las medidas de un cubo típico.'
+      ? (dwcOxMult
+          ? 'Aquí anotas <strong>litros totales</strong> del sistema (orientativo). Los <strong>ml del paso 4</strong> salen de los <strong>litros de un cubo</strong> — configúralo en Cultivo (cuántos cubos + medidas de un cubo típico).'
           : 'Capacidad del depósito (geométrica o etiqueta), agua y nutriente. Los <strong>ml del paso 4</strong> usan el volumen <strong>orientativo</strong> con cámara de aire y cesta (como en Cultivo e instalación). El siguiente campo es <strong>solo</strong> si vas a llenar <strong>menos</strong> litros que ese orientativo; déjalo vacío si no.')
       : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
-  const pc1LabelVolMax = esRdwc ? 'Litros depósito de control (L)' : 'Capacidad máx. depósito (L)';
+  const pc1LabelVolMax = esRdwc
+    ? 'Litros depósito de control (L)'
+    : dwcOxMult
+      ? 'Litros totales ref. (suma cubos, L)'
+      : 'Capacidad máx. depósito (L)';
   const pc1PhVolMax = esRdwc ? '40' : '20';
   const pc1LabelVolMez = esRdwc
     ? 'Litros de mezcla en reservorio (opcional)'
-    : esDwc
-      ? 'Solo si llenas menos que el orientativo (L, opcional)'
-      : 'Litros de mezcla (opcional)';
+    : dwcOxMult
+      ? 'Litros totales si no llenas al máx. (opc.)'
+      : esDwc
+        ? 'Solo si llenas menos que el orientativo (L, opcional)'
+        : 'Litros de mezcla (opcional)';
   const vmPrimer = Number(cfg.volMezclaLitros);
   const mezPrimerVal =
     Number.isFinite(vmPrimer) && vmPrimer > 0 && vmPrimer < volMaxPrimerIni - 0.02
@@ -1105,12 +1164,15 @@ function getCLPasos() {
     { id: 'PC1', seccion: pc1SeccionTitulo, paso: 'PC·1',
       desc: pc1DescPaso,
       nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Cultivo e instalación</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.' +
-        (esDwc
-          ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Cultivo e instalación / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
-          : esRdwc
-            ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí añades los productos y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado. Eso no significa echar todo el volumen total de golpe en el reservorio: primero se ceba y luego se completa el circuito.'
-            : ''),
+        (dwcOxMult
+          ? ' En varios cubos, los litros de arriba son <strong>referencia del conjunto</strong>; la mezcla nutritiva va <strong>cubo a cubo</strong> (ver guía abajo).'
+          : esDwc
+            ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Cultivo e instalación / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
+            : esRdwc
+              ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí añades los productos y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado. Eso no significa echar todo el volumen total de golpe en el reservorio: primero se ceba y luego se completa el circuito.'
+              : ''),
       extraHtml:
+        (clGuiaMcHtml || '') +
         '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
         '<p class="cl-tabla-cultivos-hint">Ventana de consulta: ciérrala y sigue con el checklist.</p>',
       campos: [
@@ -1160,7 +1222,9 @@ function getCLPasos() {
       : esDwc
         ? (esDwcK
           ? ('Sensores o medidores en tu Kratky (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea y superficie estable; sin remover en exceso.')
-          : ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.'))
+          : dwcOxMult
+            ? ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide <strong>en cada cubo</strong> (mezcla homogénea, aireador unos minutos; anota el cubo en Mediciones si difieren).')
+            : ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.'))
         : esRdwc
           ? ('Sensores o medidores en tu RDWC (' + hwLista.join(', ') + '): mide en el <strong>depósito de control</strong> con la recirculación unos minutos en marcha, solución homogénea y sin burbujas pegadas a la sonda.')
           : ('Sensores o medidores en tu torre vertical (' + hwLista.join(', ') + '): comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
@@ -1169,8 +1233,7 @@ function getCLPasos() {
 
   const nftBomb = esNft ? getNftBombaDesdeConfig(cfg) : null;
 
-  const dwcOxMult =
-    typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  let mapRegionToken = 0;
 
   const pasosDwcOxigenacion = esDwc && !esDwcK
     ? [
@@ -1179,12 +1242,13 @@ function getCLPasos() {
           seccion: '💨 DWC — Bomba de aire y difusores',
           paso: 'D·0',
           desc: dwcOxMult
-            ? 'Dimensiona la <strong>bomba multivalvula</strong> y <strong>una línea de aire por cubo</strong>. Los litros del checklist son la <strong>suma</strong> de solución de todos los cubos; indica <strong>cuántos cubos</strong> en Cultivo e instalación (1 maceta por cubo). El recuadro inferior replica la misma lógica.'
+            ? 'Dimensiona la <strong>bomba multivalvula</strong> (caudal total) y <strong>una línea de aire por cubo</strong>. En PC·1 anotas litros de referencia del sistema; en el paso 4 los <strong>ml son por cubo</strong>.'
             : 'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Cultivo e instalación.',
           nota: dwcOxMult
-            ? 'Caudal orientativo por <strong>volumen útil por cubo</strong> y edad/objetivo del cultivo; el fabricante suele dar el caudal <strong>total</strong> de la bomba. Útil por cubo: cámara de aire como en depósito único (puedes medirlo en Sistema). Cada salida con difusor al fondo.'
+            ? 'Caudal de la <strong>bomba en conjunto</strong> (suma de cubos). Cada salida: difusor al fondo. La mezcla va <strong>en cada cubo</strong>, no en un depósito común.'
             : 'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
           postCamposHtml:
+            (clGuiaMcHtml || '') +
             '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" role="status" aria-live="polite"></div>',
         },
         ...(dwcOxMult
@@ -1644,20 +1708,48 @@ function getCLPasos() {
     ...pasosNftExtra,
     ...(primerLlenado ? [] : pasosCubiertaDeposito),
 
+  ...(dwcOxMult && volPorCuboMc != null && Number.isFinite(volPorCuboMc)
+    ? [{
+        id: '4.0mc',
+        seccion: null,
+        paso: '4.0',
+        desc:
+          'Antes de dosificar: confirma que <strong>cada cubo</strong> tiene ~' +
+          Math.round(volPorCuboMc * 10) / 10 +
+          ' L de agua y burbujeo activo en su línea.',
+        nota:
+          'Marca el paso cuando hayas revisado todos los cubos. Los ml del 4.2+ son <strong>por cubo</strong>; puedes usar un cubo auxiliar si todos son iguales.',
+        postCamposHtml:
+          typeof dwcHtmlChecklistCubosMarcadores === 'function'
+            ? dwcHtmlChecklistCubosMarcadores(cfg)
+            : '',
+      }]
+    : []),
+
   { id:'4.1', seccion:'🧪 Paso 4 — Nueva solución nutritiva', paso:'4.1',
     desc: esRdwc
       ? ('Preparar ~' + volRdwcTxt + ' litros de agua útil en el circuito RDWC (reservorio + cubos útiles) — <strong>no</strong> es echarlos de golpe en el reservorio' +
         (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'))
-      : ('Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
-        (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : 'torre') +
-        (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.')),
+      : dwcOxMult && volPorCuboMc != null && Number.isFinite(volPorCuboMc)
+        ? ('Llenar <strong>cada cubo</strong> con ~' +
+          Math.round(volPorCuboMc * 10) / 10 +
+          ' L de agua (destilada/ósmosis recomendado)' +
+          (nCubosMc > 1 ? ' — ' + nCubosMc + ' cubos por separado' : '') +
+          (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'))
+        : ('Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
+          (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : 'torre') +
+          (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.')),
     nota: primerLlenado
       ? (esRdwc
         ? 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist. En RDWC estos ' + volRdwcTxt + ' L son la <strong>solución útil total</strong> repartida por el circuito; primero se ceba y nivela el sistema, luego se dosifica.'
-        : 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.')
+        : dwcOxMult
+          ? 'Volumen de referencia del sistema en <strong>PC·1</strong>; los ml de nutrientes son <strong>por cubo</strong>.' + notaDwcMulticuboNut
+          : 'Volumen, agua, nutriente y EC objetivo están en <strong>PC·1 / PC·2</strong>. Para cambiarlos, vuelve arriba en el checklist.')
       : (esRdwc
         ? 'CalMag: marcar o desmarcar recalcula los pasos siguientes sobre la <strong>solución total</strong> del RDWC, no solo sobre el reservorio. En RDWC este paso habla del <strong>volumen total ya repartido</strong> por el circuito.'
-        : 'CalMag: marcar o desmarcar recalcula los pasos siguientes.'),
+        : dwcOxMult
+          ? 'CalMag y nutrientes: mismos ml en <strong>cada cubo</strong>.' + notaDwcMulticuboNut
+          : 'CalMag: marcar o desmarcar recalcula los pasos siguientes.'),
     campos: primerLlenado
       ? [{ id:'clEcInicial', label:'EC inicial:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }]
       : [...paso40campos, { id:'clEcInicial', label:'EC inicial del agua:', unit:'µS/cm', type:'number', step:'1', placeholder:'0' }] },
@@ -1670,7 +1762,9 @@ function getCLPasos() {
       : esDwc
         ? (esDwcK
           ? 'Kratky: comprobar nivel estable, cámara de aire y ausencia de olores/espuma anómalos en el depósito'
-          : 'Con el aireador en marcha (24 h): burbujeo uniforme en todo el depósito; sin zonas muertas ni ruido de succión en seco')
+          : dwcOxMult
+            ? 'Con el aireador en marcha (24 h): burbujeo uniforme en <strong>cada cubo</strong>; sin zonas muertas ni succión en seco en ninguna línea'
+            : 'Con el aireador en marcha (24 h): burbujeo uniforme en todo el depósito; sin zonas muertas ni ruido de succión en seco')
         : esRdwc
           ? 'Con recirculación activa: entrada/salida estable en todos los módulos; retorno limpio al depósito de control y sin descebe de bomba'
         : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
@@ -2246,6 +2340,18 @@ function clGetResumenDisenoChecklist(cfg) {
 
 function renderChecklistHeaderSummary() {
   const cfg = state.configTorre || {};
+  const esDwcHdr = cfg.tipoInstalacion === 'dwc';
+  const esDwcKHdr =
+    esDwcHdr && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
+  const dwcOxMultHdr =
+    esDwcHdr &&
+    !esDwcKHdr &&
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  const nCubosMcHdr =
+    dwcOxMultHdr && typeof dwcGetNumCubosIndependientes === 'function'
+      ? dwcGetNumCubosIndependientes(cfg)
+      : 0;
   const ruta = clGetRutaChecklistLabel();
   const sistema =
     typeof etiquetaSistemaHidroponicoBreve === 'function'
@@ -2268,15 +2374,22 @@ function renderChecklistHeaderSummary() {
       ruta +
       ' guiado en ' +
       sistema +
-      '. Revisa el resumen y completa cada bloque antes de registrar la operación.';
+      (dwcOxMultHdr
+        ? '. Varios cubos: ml del paso 4 son por cubo — repite en cada uno (o mezcla en cubo auxiliar y reparte).'
+        : '. Revisa el resumen y completa cada bloque antes de registrar la operación.');
   }
   const sum = document.getElementById('checklistSummary');
   if (!sum) return;
-  const compact = [ruta, sistema, clFmtLitros(vol)].filter(Boolean).join(' · ');
+  const volPorCuboHdr = dwcOxMultHdr ? vol : null;
+  const mezclaResumen =
+    dwcOxMultHdr && volPorCuboHdr != null && Number.isFinite(volPorCuboHdr) && volPorCuboHdr > 0
+      ? '~' + Math.round(volPorCuboHdr * 10) / 10 + ' L/cubo' + (nCubosMcHdr > 0 ? ' · ' + nCubosMcHdr + ' cubos' : '')
+      : clFmtLitros(vol);
+  const compact = [ruta, sistema, mezclaResumen].filter(Boolean).join(' · ');
   const cards = [
     { k: 'Ruta', v: ruta },
     { k: 'Sistema', v: sistema },
-    { k: 'Mezcla', v: clFmtLitros(vol) },
+    { k: dwcOxMultHdr ? 'Mezcla (por cubo)' : 'Mezcla', v: mezclaResumen },
     { k: 'Nutriente', v: nut ? nut.nombre : 'Sin definir' },
     { k: 'Objetivo', v: clFmtEc(ecObj) + ' · pH ' + clFmtPhRango(phR) },
     { k: 'Diseño', v: diseno || '—' },

@@ -204,6 +204,27 @@ function getVolumenNutrientesLitros(cfg) {
     const totalL = getRdwcVolumenSolucionTotalLitros(cfg);
     if (Number.isFinite(totalL) && totalL > 0) return totalL;
   }
+  if (
+    tipoNorm === 'dwc' &&
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes'
+  ) {
+    const volTotal = getVolumenMezclaLitros(cfg);
+    const nCub =
+      typeof dwcGetNumCubosIndependientes === 'function' ? dwcGetNumCubosIndependientes(cfg) : 0;
+    if (
+      volTotal != null &&
+      Number.isFinite(volTotal) &&
+      volTotal > 0 &&
+      nCub > 0 &&
+      typeof dwcLitrosPorSitioOxigenacionMulticubo === 'function'
+    ) {
+      const pair = dwcLitrosPorSitioOxigenacionMulticubo(cfg, volTotal, nCub);
+      if (pair.vPer != null && Number.isFinite(pair.vPer) && pair.vPer > 0) {
+        return Math.round(pair.vPer * 10) / 10;
+      }
+    }
+  }
   return getVolumenMezclaLitros(cfg);
 }
 

@@ -64,9 +64,14 @@ function renderTorre() {
     } catch (e2) {}
   } else if (esDwc) {
     wrap.innerHTML = generarSVGDwc();
+    const dwcMcAria =
+      typeof dwcGetOxigenacionDiseno === 'function' &&
+      dwcGetOxigenacionDiseno(state.configTorre) === 'cubos_independientes';
     wrap.setAttribute(
       'aria-label',
-      'DWC: tapa en vista superior con macetas y esquema frontal del depósito. Toca una maceta para la ficha o usa Lista.'
+      dwcMcAria
+        ? 'DWC multivalvula: vista cenital de cada cubo con su maceta; debajo, reparto de aire. Toca una maceta para cultivo o usa Lista.'
+        : 'DWC: tapa en vista superior con macetas y esquema frontal del depósito. Toca una maceta para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);

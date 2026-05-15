@@ -1143,6 +1143,17 @@ function getSetupVolumenMezclaLitros() {
 
 function getSetupVolumenNutrientesLitros() {
   const volMezcla = getSetupVolumenMezclaLitros();
+  if (
+    typeof setupTipoInstalacion !== 'undefined' &&
+    setupTipoInstalacion === 'dwc' &&
+    typeof buildDwcDraftCfgFromSetupWizardInputs === 'function'
+  ) {
+    const draft = buildDwcDraftCfgFromSetupWizardInputs();
+    if (draft && typeof getVolumenNutrientesLitros === 'function') {
+      const vCubo = getVolumenNutrientesLitros(draft);
+      if (vCubo != null && Number.isFinite(vCubo) && vCubo > 0) return vCubo;
+    }
+  }
   if (!(typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'rdwc')) return volMezcla;
   const cfgRdwc = {
     tipoInstalacion: 'rdwc',

@@ -154,8 +154,13 @@ function renderSetupCestasVariedadGrid() {
       ' (opcional)';
   }
   if (hintEl) {
-    hintEl.textContent =
-      'Misma rejilla que verás en Cultivo: lo que elijas aquí queda en el esquema. Las cestas sin cultivo déjalas en «Vacío». Si pones variedad, al guardar usamos la fecha de hoy como trasplante al hidro (puedes cambiarla en la ficha). Los botones de arriba son solo grupos (orientan EC y resumen), no sustituyen a la variedad por cesta.';
+    const esMcGrid =
+      setupTipoInstalacion === 'dwc' &&
+      dims.filas === 1 &&
+      dims.labelFila === 'Cubo';
+    hintEl.textContent = esMcGrid
+      ? 'Una maceta por cubo: lo que elijas aquí coincide con el esquema de Cultivo. «Vacío» = cubo sin planta aún. Con variedad, fecha de hoy como trasplante (editable en la ficha).'
+      : 'Misma rejilla que verás en Cultivo: lo que elijas aquí queda en el esquema. Las cestas sin cultivo déjalas en «Vacío». Si pones variedad, al guardar usamos la fecha de hoy como trasplante al hidro (puedes cambiarla en la ficha). Los botones de arriba son solo grupos (orientan EC y resumen), no sustituyen a la variedad por cesta.';
   }
   let html = '<div class="setup-cesta-var-row setup-cesta-var-row--head">';
   html += '<span class="setup-cesta-var-rowh" aria-hidden="true"></span>';
@@ -246,15 +251,24 @@ function renderSetupPlantasGrid() {
     const ecObj = getSetupECObjetivo();
     const volMax = getSetupVolumenMaxLitros();
     const vol    = getSetupVolumenMezclaLitros();
-    const d      = calcularDosisSetup(setupNutriente, vol, ecObj);
+    const volDosisGrp =
+      typeof getSetupVolumenNutrientesLitros === 'function' ? getSetupVolumenNutrientesLitros() : vol;
+    const d      = calcularDosisSetup(setupNutriente, volDosisGrp, ecObj);
     const nut   = d.nut;
     const dosisDiv  = document.getElementById('dosisSegunCultivo');
     const dosisText = document.getElementById('dosisSegunCultivoTexto');
     if (dosisDiv && dosisText) {
       dosisDiv.classList.remove('setup-hidden');
       const orden = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B','Parte C'];
-      let txt = '📦 ' + volMax + ' L máx' + (vol < volMax - 0.05 ? ' · mezcla ' + vol + ' L' : '') +
-        ' · ⚡ EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm<br>';
+      const dwcMcGrp =
+        setupTipoInstalacion === 'dwc' &&
+        typeof dwcNormalizeOxigenacionDiseno === 'function' &&
+        dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+          'cubos_independientes';
+      const volLbl = dwcMcGrp
+        ? volMax + ' L ref. · ~' + Math.round(volDosisGrp * 10) / 10 + ' L/cubo (dosis)'
+        : volMax + ' L máx' + (vol < volMax - 0.05 ? ' · mezcla ' + vol + ' L' : '');
+      let txt = '📦 ' + volLbl + ' · ⚡ EC ' + ecObj.min + '–' + ecObj.max + ' µS/cm<br>';
       if (d.mlCalMag > 0) txt += '• CalMag: <strong>' + d.mlCalMag + ' ml</strong><br>';
       // Mostrar TODAS las partes del nutriente
       if (nut.partes === 1) {
@@ -360,7 +374,9 @@ function actualizarResumenSetup() {
   const altResNFT = isNft ? getNftAlturaBombeoEfectivaCm(draftNFT) : 0;
   const potNft =
     isNft && typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : { rimMm: null, heightMm: null };
-  const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volMez, ecObj);
+  const volDosis =
+    typeof getSetupVolumenNutrientesLitros === 'function' ? getSetupVolumenNutrientesLitros() : volMez;
+  const d      = calcularDosisSetup(window.setupNutriente || 'canna_aqua', volDosis, ecObj);
   const ordenR = (d.nut.orden && d.nut.orden.length >= d.nut.partes) ? d.nut.orden : ['Parte A','Parte B','Parte C'];
 
   let dosisHtml = '';
@@ -460,7 +476,9 @@ function actualizarResumenSetup() {
             volTxtResume +
             '</strong>' +
             geoDwcRes +
-            '<br>⚡ Aireador <strong>24 h</strong> · nivel y nutrientes en <strong>Mediciones</strong>.<br>'
+            '<br>⚡ Aireador <strong>24 h</strong> · dosis <strong>por cubo</strong> (~' +
+            (typeof volDosis === 'number' && Number.isFinite(volDosis) ? Math.round(volDosis * 10) / 10 : '—') +
+            ' L) · Mediciones en cada cubo.<br>'
           : '🫧 DWC: <strong>' +
             niveles +
             ' filas × ' +

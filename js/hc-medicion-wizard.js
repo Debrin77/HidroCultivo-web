@@ -302,9 +302,15 @@
     const tipo = String((cfg && cfg.tipoInstalacion) || 'torre').toLowerCase();
     if (tipo === 'dwc') {
       const esKratky = typeof esDwcKratky === 'function' && esDwcKratky(cfg);
+      const esMc =
+        !esKratky &&
+        typeof dwcGetOxigenacionDiseno === 'function' &&
+        dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
       box.textContent = esKratky
         ? 'DWC Kratky: prioriza temperatura y volumen. Evita sobrellenar para mantener cámara de aire.'
-        : 'DWC aireado: prioriza temperatura y pH estables; una deriva rápida suele pedir corrección hoy.';
+        : esMc
+          ? 'DWC varios cubos: mide EC/pH en cada cubo cuando puedas; anota cuál revisaste. Los cubos pueden diferir un poco.'
+          : 'DWC aireado: prioriza temperatura y pH estables; una deriva rápida suele pedir corrección hoy.';
       return;
     }
     if (tipo === 'nft') {

@@ -103,6 +103,51 @@ function dwcGetNumCubosIndependientes(cfg) {
   return Math.min(24, Math.max(1, f * col));
 }
 
+/** Bloque HTML (checklist) con la guía rápida multivalvula / varios cubos. */
+function dwcHtmlGuiaMulticuboChecklist(cfg) {
+  if (!cfg || dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') return '';
+  const n = dwcGetNumCubosIndependientes(cfg);
+  const vPer =
+    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : null;
+  const vTot = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
+  const vPerTxt =
+    vPer != null && Number.isFinite(vPer) && vPer > 0 ? String(Math.round(vPer * 10) / 10) : '—';
+  const totLine =
+    vTot != null && Number.isFinite(vTot) && vTot > 0 && vPer != null && vPer > 0 && vTot > vPer + 0.05
+      ? ' (en el sistema ~' + Math.round(vTot * 10) / 10 + ' L en total).'
+      : '.';
+  return (
+    '<div class="cl-note cl-note--dwc-mc-guide" role="status">' +
+    '<p class="cl-dwc-mc-guide-title"><strong>Varios cubos — en 4 pasos</strong></p>' +
+    '<ol class="cl-dwc-mc-guide-steps">' +
+    '<li><strong>Configura</strong> en Cultivo: cuántos cubos, medidas de <em>un cubo típico</em>, 1 maceta/cubo (toca cada maceta en el esquema).</li>' +
+    '<li><strong>PC·1:</strong> litros <em>totales</em> solo como referencia (bomba y resumen); los <strong>ml del paso 4</strong> salen de <strong>~' +
+    vPerTxt +
+    ' L por cubo</strong>' +
+    totLine +
+    '</li>' +
+    '<li><strong>Paso 4:</strong> agua → CalMag → nutrientes → pH en <strong>cada cubo</strong>. Si todos son iguales, puedes mezclar una vez en un <em>cubo auxiliar</em> del mismo volumen y repartir.</li>' +
+    '<li><strong>Mediciones:</strong> registra EC/pH <strong>por cubo</strong> cuando revises; no hace falta que coincidan al decimal.</li>' +
+    '</ol></div>'
+  );
+}
+
+/** Lista visual de cubos antes del paso 4.1 (multicubo). */
+function dwcHtmlChecklistCubosMarcadores(cfg) {
+  if (!cfg || dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') return '';
+  const n = dwcGetNumCubosIndependientes(cfg);
+  if (!n || n < 1) return '';
+  let html = '<ul class="cl-dwc-mc-cubo-marks" role="list">';
+  for (let i = 1; i <= n; i++) {
+    html +=
+      '<li><label class="cl-dwc-mc-cubo-mark"><input type="checkbox" disabled> Cubo ' +
+      i +
+      ' — agua y burbujeo OK</label></li>';
+  }
+  html += '</ul>';
+  return html;
+}
+
 function dwcAplicarMatrizCultivoMulticuboEnCfg(cfg, ids) {
   if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
   if (dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') {

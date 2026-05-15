@@ -1570,12 +1570,12 @@
             <select id="sysDwcOxigenacionDiseno" class="torre-dwc-input" aria-label="Cómo repartes el aire en DWC"
               oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
               <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
-              <option value="cubos_independientes">Varios cubos / multivalvula (cada sitio con su línea)</option>
+              <option value="cubos_independientes">Varios cubos (multivalvula) — 1 maceta por cubo</option>
             </select>
-            <p class="torre-nft-p-soft" style="margin:0.35rem 0 0">Multivalvula: indica <strong>cuántos cubos</strong>; la mezcla en la app es la <strong>suma</strong> de todos. Un depósito unido: usa la rejilla de la tapa abajo.</p>
+            <p class="torre-nft-p-soft" style="margin:0.35rem 0 0"><strong>Varios cubos:</strong> cuántos hay y medidas de <em>un cubo típico</em>. Los ml del checklist son <strong>por cubo</strong>. <strong>Un depósito:</strong> rejilla en la tapa abajo.</p>
           </div>
           <div id="sysDwcNumCubosWrap" class="setup-hidden">
-            <label class="form-label torre-dwc-lbl-mono" for="sysDwcNumCubos">Cubos instalados</label>
+            <label class="form-label torre-dwc-lbl-mono" for="sysDwcNumCubos">¿Cuántos cubos tienes?</label>
             <input type="number" id="sysDwcNumCubos" class="torre-dwc-input" min="1" max="24" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC con multivalvula"
               oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
           </div>
@@ -1964,6 +1964,19 @@
       </div>
       <div id="riegoDiaInfo" class="riego-dia-info"></div>
 
+      <div class="toldo-toggle" id="toldoToggle">
+        <div class="toldo-toggle-label" id="labelToldoRiego">
+          <span class="toldo-toggle-ico" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-umbrella"/></svg></span>
+          <span id="labelToldoRiegoText">Toldo o malla de sombra desplegada</span>
+        </div>
+        <button type="button" class="toggle-switch" id="toldoSwitch" onclick="toggleToldo()"
+          role="switch" aria-checked="false" aria-labelledby="labelToldoRiego">
+          <span class="toggle-knob" aria-hidden="true"></span>
+        </button>
+      </div>
+      <p id="riegoToldoHint" class="riego-torre-hint setup-hidden" role="note"></p>
+      <div id="riegoToldoReco" class="riego-toldo-reco setup-hidden" role="status" aria-live="polite"></div>
+
       <div id="riegoTorreSoloWrap">
       <!-- Nº plantas visible; edad solo interna (fallback si no hay fechas en torre) -->
       <div class="riego-input-grid">
@@ -1977,19 +1990,6 @@
           <p id="riegoLocalidadLine" class="riego-localidad-line" role="status" aria-live="polite"></p>
       </div>
       </div>
-
-      <!-- Toldo toggle -->
-      <div class="toldo-toggle" id="toldoToggle">
-        <div class="toldo-toggle-label" id="labelToldoRiego">
-          <span class="toldo-toggle-ico" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-umbrella"/></svg></span>
-          <span>Toldo desplegado</span>
-        </div>
-        <button type="button" class="toggle-switch" id="toldoSwitch" onclick="toggleToldo()"
-          role="switch" aria-checked="false" aria-labelledby="labelToldoRiego">
-          <span class="toggle-knob" aria-hidden="true"></span>
-        </button>
-      </div>
-      <div id="riegoToldoReco" class="riego-toldo-reco setup-hidden" role="status" aria-live="polite"></div>
 
       <details class="riego-avanzado-details" id="riegoAvanzadoDetails">
         <summary>
@@ -2981,11 +2981,12 @@
             onchange="try{var w=document.getElementById('setupDwcLitrosUtilesPorSitioWrap');if(w)w.classList.toggle('setup-hidden',(this.value||'')!=='cubos_independientes');try{dwcRefreshMulticuboDependienteUi('setup')}catch(e0){};try{updateTorreBuilder()}catch(e1){};try{refreshDwcTapHintSetup()}catch(e2){};actualizarResumenSetup()}catch(e){}"
             aria-label="DWC asistente: un depósito o cubos multivalvula">
             <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
-            <option value="cubos_independientes">Varios cubos / multivalvula (cada cubo con su línea)</option>
+            <option value="cubos_independientes">Varios cubos (multivalvula) — 1 maceta por cubo</option>
           </select>
+          <p class="setup-dwc-help" style="margin-top:0.35rem">Cada cubo tiene su depósito; comparten la bomba de aire. Toca cada maceta en el esquema para el cultivo.</p>
         </div>
         <div id="setupDwcNumCubosWrap" class="setup-hidden">
-          <label class="form-label setup-dwc-label" for="setupDwcNumCubos">Cubos instalados</label>
+          <label class="form-label setup-dwc-label" for="setupDwcNumCubos">¿Cuántos cubos?</label>
           <input type="number" id="setupDwcNumCubos" class="setup-dwc-input" min="1" max="24" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC multivalvula"
             oninput="try{updateTorreBuilder()}catch(e0){}try{refreshDwcTapHintSetup()}catch(e1){}try{actualizarResumenSetup()}catch(e2){}">
         </div>
@@ -4552,15 +4553,15 @@
   <script src="js/hc-bootstrap-onboarding.js?v=29"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-14-dwc-svg-multicubo-v3"></script>
+  <script src="js/torre-render-build.js?v=2026-05-14-dwc-svg-multicubo-v4"></script>
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=25"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=14"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=16"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-13-cultivo-reco-status"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-14-setup-exclusivo"></script>
-  <script src="js/hc-setup-calc-core.js?v=26"></script>
+  <script src="js/hc-setup-calc-core.js?v=27"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
@@ -4568,19 +4569,19 @@
   <script src="js/hc-setup-registro.js?v=5"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=11"></script>
   <script src="js/hc-setup-mediciones-logic.js?v=13"></script>
-  <script src="js/hc-medicion-wizard.js?v=5"></script>
+  <script src="js/hc-medicion-wizard.js?v=6"></script>
   <script src="js/hc-tools-pro.js?v=10"></script>
-  <script src="js/hc-setup-checklist.js?v=30"></script>
+  <script src="js/hc-setup-checklist.js?v=33"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=32"></script>
   <script src="js/calendario-logic.js?v=8"></script>
   <script src="js/meteo-forecast-meteo.js?v=13"></script>
   <script src="js/meteo-forecast-dashboard.js?v=21"></script>
-  <script src="js/riego-calculo-helpers.js?v=5"></script>
+  <script src="js/riego-calculo-helpers.js?v=6"></script>
   <script src="js/riego-calculo-calcular.js?v=5"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=6"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=9"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=10"></script>
   <script src="js/app-hc-torres-badges-notifs.js?v=28"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=12"></script>
 </body>
