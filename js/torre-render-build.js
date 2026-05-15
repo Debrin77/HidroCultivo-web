@@ -468,7 +468,7 @@ function generarSVGTorreCestasNivelHTML(n, rot) {
 /** Torre vertical con giro 3D; NFT y DWC usan diagramas propios. */
 function torreSvgEsTorreVerticalGiratoria() {
   const t = state.configTorre?.tipoInstalacion;
-  return t !== 'nft' && t !== 'dwc' && t !== 'rdwc';
+  return t !== 'nft' && t !== 'dwc' && t !== 'rdwc' && t !== 'srf';
 }
 
 /** L/A/P del depósito DWC guardados (solo dibujo / proporciones). */
@@ -2053,17 +2053,18 @@ function sincronizarTextosPanelInteraccionSistema() {
   const esNft = t === 'nft';
   const esDwc = t === 'dwc';
   const esRdwc = t === 'rdwc';
+  const esSrf = t === 'srf';
   const tit = document.getElementById('torreInteraccionTitulo');
   const modRap = document.getElementById('torreAssignModoRapidoTxt');
   const finHint = document.getElementById('torreAssignFinalizarHint');
   const btnUpd = document.getElementById('btnActualizarInstalacionSistema');
   if (tit) {
     tit.textContent = esNft ? 'Huecos en el montaje NFT'
-      : esDwc ? 'Macetas en el DWC' : esRdwc ? 'Módulos en el RDWC' : 'Cestas en la torre vertical';
+      : esDwc ? 'Macetas en el DWC' : esRdwc ? 'Módulos en el RDWC' : esSrf ? 'Plantas en la balsa SRF' : 'Cestas en la torre vertical';
   }
   if (btnUpd) {
     btnUpd.textContent = esNft ? '🔄 Actualizar NFT'
-      : esDwc ? '🔄 Actualizar DWC' : esRdwc ? '🔄 Actualizar RDWC' : '🔄 Actualizar torre';
+      : esDwc ? '🔄 Actualizar DWC' : esRdwc ? '🔄 Actualizar RDWC' : esSrf ? '🔄 Actualizar SRF' : '🔄 Actualizar torre';
   }
   if (modRap) {
     modRap.textContent = esNft
@@ -2072,6 +2073,8 @@ function sincronizarTextosPanelInteraccionSistema() {
         ? 'Modo rápido: un toque = asignar esa maceta al instante'
         : esRdwc
           ? 'Modo rápido: un toque = asignar ese módulo al instante'
+        : esSrf
+          ? 'Modo rápido: un toque = asignar esa planta al instante'
         : 'Modo rápido: un toque = asignar esa cesta al instante';
   }
   if (finHint) {
@@ -2081,6 +2084,8 @@ function sincronizarTextosPanelInteraccionSistema() {
         ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar DWC</strong> arriba si hace falta.'
         : esRdwc
           ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar RDWC</strong> arriba si hace falta.'
+        : esSrf
+          ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar SRF</strong> arriba si hace falta.'
         : 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar torre</strong> arriba si hace falta.';
   }
 }

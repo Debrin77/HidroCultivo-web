@@ -1129,6 +1129,12 @@ function getSetupVolumenMaxLitros() {
       return Math.min(800, Math.max(1, Math.round(ctl * 10) / 10));
     }
   }
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'srf') {
+    const draft =
+      typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', {}) || {} : {};
+    const cap = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(draft) : null;
+    if (cap != null && cap > 0) return Math.min(5000, Math.max(1, Math.round(cap * 10) / 10));
+  }
   return parseInt(document.getElementById('sliderVol')?.value || 20, 10);
 }
 
@@ -1410,8 +1416,8 @@ function guardarSetupYContinuar() {
       document.getElementById('setupNombreInstalacionInput')?.focus();
       return;
     }
-    if (setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc' && setupTipoInstalacion !== 'rdwc') {
-      showToast('Elige Torre, NFT, DWC o RDWC en el primer paso del asistente', true);
+    if (setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc' && setupTipoInstalacion !== 'rdwc' && setupTipoInstalacion !== 'srf') {
+      showToast('Elige Torre, NFT, DWC, RDWC o SRF en el primer paso del asistente', true);
       setupPagina = 0;
       renderSetupPage();
       return;
@@ -1421,6 +1427,7 @@ function guardarSetupYContinuar() {
   const isNft = setupTipoInstalacion === 'nft';
   const isDwc = setupTipoInstalacion === 'dwc';
   const isRdwc = setupTipoInstalacion === 'rdwc';
+  const isSrf = setupTipoInstalacion === 'srf';
   let niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
   let cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5, 10);
   let nftNvSlider = 4;
@@ -1459,8 +1466,18 @@ function guardarSetupYContinuar() {
     cestas = Math.max(1, Math.ceil(Number(cR.rdwcSites || 4) / niveles));
     vol = Math.max(1, Math.round(Number(cR.rdwcControlVolL || 40)));
   }
+  if (isSrf) {
+    const cS =
+      typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', {}) || {} : {};
+    if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(cS);
+    const grid = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(cS) : { rows: 1, cols: 8 };
+    niveles = Math.max(1, grid.rows || 1);
+    cestas = Math.max(1, grid.cols || 1);
+    const cap = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cS) : null;
+    if (cap != null && cap > 0) vol = Math.max(1, Math.round(cap));
+  }
 
-  const tipoNuevoPrevio = isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : 'torre';
+  const tipoNuevoPrevio = isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : isSrf ? 'srf' : 'torre';
 
   initTorres();
   const idxSlotGuardar = state.torreActiva || 0;
@@ -1483,7 +1500,7 @@ function guardarSetupYContinuar() {
       );
       return;
     }
-    const etiquetas = { torre: 'torre vertical', nft: 'NFT', dwc: 'DWC', rdwc: 'RDWC' };
+    const etiquetas = { torre: 'torre vertical', nft: 'NFT', dwc: 'DWC', rdwc: 'RDWC', srf: 'SRF' };
     const nomAnt = etiquetas[tipoEnSlotAntes] || tipoEnSlotAntes;
     const nomNuevo = etiquetas[tipoNuevoPrevio] || tipoNuevoPrevio;
     if (
@@ -1501,7 +1518,7 @@ function guardarSetupYContinuar() {
       return;
     }
     crearNuevaPorCambioTipo = true;
-    const pref = tipoNuevoPrevio === 'dwc' ? 'DWC' : tipoNuevoPrevio === 'nft' ? 'NFT' : tipoNuevoPrevio === 'rdwc' ? 'RDWC' : 'Torre';
+    const pref = tipoNuevoPrevio === 'dwc' ? 'DWC' : tipoNuevoPrevio === 'nft' ? 'NFT' : tipoNuevoPrevio === 'rdwc' ? 'RDWC' : tipoNuevoPrevio === 'srf' ? 'SRF' : 'Torre';
     setupNombreNuevaTorre = pref + ' ' + (state.torres.length + 1);
   }
 
@@ -1554,7 +1571,7 @@ function guardarSetupYContinuar() {
   setupData.horasLuz = horasLuzGuardar;
 
   state.configTorre = {
-    tipoInstalacion: isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : 'torre',
+    tipoInstalacion: isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : isSrf ? 'srf' : 'torre',
     tipoTorre:    'custom',
     numNiveles:   niveles,
     numCestas:    cestas,
@@ -1607,6 +1624,23 @@ function guardarSetupYContinuar() {
   };
   if (isRdwc && typeof buildRdwcConfigFromForm === 'function') {
     Object.assign(state.configTorre, buildRdwcConfigFromForm('setup', state.configTorre));
+  }
+  if (isSrf && typeof buildSrfConfigFromForm === 'function') {
+    Object.assign(state.configTorre, buildSrfConfigFromForm('setup', state.configTorre));
+    if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(state.configTorre);
+    const gridS = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(state.configTorre) : null;
+    if (gridS) {
+      state.configTorre.numNiveles = gridS.rows;
+      state.configTorre.numCestas = gridS.cols;
+    }
+    const capS = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(state.configTorre) : null;
+    if (capS != null && capS > 0) state.configTorre.volDeposito = capS;
+    if (!Array.isArray(state.configTorre.equipamiento)) state.configTorre.equipamiento = [];
+    if (srfNormalizeOxigenacionModo(state.configTorre.srfOxigenacionModo) !== 'kratky') {
+      ['difusor'].forEach((eq) => {
+        if (!state.configTorre.equipamiento.includes(eq)) state.configTorre.equipamiento.push(eq);
+      });
+    }
   }
   const ccSetup = parseFloat(String(document.getElementById('setupCalentadorConsignaC')?.value || '').replace(',', '.'));
   if (setupEquipamiento.has('calentador') && Number.isFinite(ccSetup) && ccSetup >= 10 && ccSetup <= 35) {
@@ -1751,7 +1785,7 @@ function guardarSetupYContinuar() {
     delete state.configTorre.torreBombaUsuarioCaudalLh;
     delete state.configTorre.torreBombaUsuarioPotenciaW;
   }
-  if (!isNft && !isDwc && !isRdwc) {
+  if (!isNft && !isDwc && !isRdwc && !isSrf) {
     if (typeof readTorreMontajeOrigenDesdeSetupUi === 'function' && readTorreMontajeOrigenDesdeSetupUi() === 'kit') {
       state.configTorre.torreMontajeOrigen = 'kit';
       delete state.configTorre.torreBombaUsuarioCaudalLh;
@@ -1849,7 +1883,7 @@ function guardarSetupYContinuar() {
     const nuevaTorre = {
       id: Date.now(),
       nombre: setupNombreNuevaTorre,
-      emoji: isNft ? '🪴' : isDwc ? '🫧' : EMOJIS[nTorres % EMOJIS.length],
+      emoji: isNft ? '🪴' : isDwc ? '🫧' : isSrf ? '🛶' : EMOJIS[nTorres % EMOJIS.length],
       config: { ...state.configTorre },
       torre: JSON.parse(JSON.stringify(state.torre)),
       modoActual: 'lechuga',

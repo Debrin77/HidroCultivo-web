@@ -1765,6 +1765,7 @@ function seleccionarTipoInstalacionSetup(tipo) {
   if (tipo === 'nft') setupTipoInstalacion = 'nft';
   else if (tipo === 'dwc') setupTipoInstalacion = 'dwc';
   else if (tipo === 'rdwc') setupTipoInstalacion = 'rdwc';
+  else if (tipo === 'srf') setupTipoInstalacion = 'srf';
   else setupTipoInstalacion = 'torre';
   if (setupTipoInstalacion === 'rdwc' && (!setupRdwcDraft || tipoInstalacionNormalizado(setupRdwcDraft) !== 'rdwc')) {
     const base = !setupEsNuevaTorre && tipoInstalacionNormalizado(state.configTorre || {}) === 'rdwc'
@@ -1782,7 +1783,8 @@ function refrescarSetupTipoInstalacionUI() {
   const nftCard = document.getElementById('setupCardTipoNft');
   const dwcCard = document.getElementById('setupCardTipoDwc');
   const rdwcCard = document.getElementById('setupCardTipoRdwc');
-  [torreCard, nftCard, dwcCard, rdwcCard].forEach(card => {
+  const srfCard = document.getElementById('setupCardTipoSrf');
+  [torreCard, nftCard, dwcCard, rdwcCard, srfCard].forEach(card => {
     if (!card) return;
     card.classList.remove('selected');
     card.setAttribute('aria-pressed', 'false');
@@ -1799,12 +1801,16 @@ function refrescarSetupTipoInstalacionUI() {
   } else if (setupTipoInstalacion === 'rdwc' && rdwcCard) {
     rdwcCard.classList.add('selected');
     rdwcCard.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'srf' && srfCard) {
+    srfCard.classList.add('selected');
+    srfCard.setAttribute('aria-pressed', 'true');
   }
   const inlTorre = document.getElementById('setupInlineTipoTorre');
   const inlNft = document.getElementById('setupInlineTipoNft');
   const inlDwc = document.getElementById('setupInlineTipoDwc');
   const inlRdwc = document.getElementById('setupInlineTipoRdwc');
-  [inlTorre, inlNft, inlDwc, inlRdwc].forEach(btn => {
+  const inlSrf = document.getElementById('setupInlineTipoSrf');
+  [inlTorre, inlNft, inlDwc, inlRdwc, inlSrf].forEach(btn => {
     if (!btn) return;
     btn.classList.remove('selected');
     btn.setAttribute('aria-pressed', 'false');
@@ -1821,6 +1827,9 @@ function refrescarSetupTipoInstalacionUI() {
   } else if (setupTipoInstalacion === 'rdwc' && inlRdwc) {
     inlRdwc.classList.add('selected');
     inlRdwc.setAttribute('aria-pressed', 'true');
+  } else if (setupTipoInstalacion === 'srf' && inlSrf) {
+    inlSrf.classList.add('selected');
+    inlSrf.setAttribute('aria-pressed', 'true');
   }
   const dn = document.getElementById('setupTorreDimNivel');
   const dc = document.getElementById('setupTorreDimCesta');
@@ -1846,10 +1855,11 @@ function refrescarSetupTipoInstalacionUI() {
   }
   const isNft = setupTipoInstalacion === 'nft';
   const isRdwc = setupTipoInstalacion === 'rdwc';
+  const isSrf = setupTipoInstalacion === 'srf';
   const tw = document.getElementById('setupTorreBuilderWrap');
   const nw = document.getElementById('setupNftBuilderWrap');
   if (tw) {
-    const hideTorreBuilder = isNft || isRdwc || setupTipoInstalacion === 'dwc';
+    const hideTorreBuilder = isNft || isRdwc || setupTipoInstalacion === 'dwc' || isSrf;
     tw.style.display = hideTorreBuilder ? 'none' : 'block';
   }
   if (nw) nw.classList.toggle('setup-hidden', !isNft);
@@ -1859,6 +1869,7 @@ function refrescarSetupTipoInstalacionUI() {
     t1.textContent = isNft ? '🪴 Tu montaje NFT'
       : setupTipoInstalacion === 'dwc' ? '🫧 Tu DWC'
       : isRdwc ? '🧿 Tu RDWC'
+      : isSrf ? '🛶 Tu SRF'
       : '🌿 Tu torre vertical';
   }
   if (st) {
@@ -1868,6 +1879,8 @@ function refrescarSetupTipoInstalacionUI() {
         ? 'Depósito: medidas interiores con cinta o litros en la caja; Ø de cesta en el envase. Rejilla y litros de mezcla los sugerimos; lo opcional puede quedar vacío.'
         : isRdwc
           ? 'Cuenta cubos y lee litros del depósito de control en la placa del kit. Recirculación y aire: valores por defecto o lo que ponga tu bomba; no hace falta calcular a mano.'
+        : isSrf
+          ? 'Mide el estanque (largo × ancho × profundidad útil del agua) y cuenta huecos en la balsa. Aireación y recirculación pueden quedar por defecto.'
         : 'Niveles y cestas por nivel: manual del kit o a ojo. Depósito y tubo los afinas luego en Cultivo e instalación.';
   }
   const torreFacil = document.getElementById('setupTorreQuickHint');
@@ -1882,6 +1895,8 @@ function refrescarSetupTipoInstalacionUI() {
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
   if (dwcWizard) dwcWizard.classList.toggle('setup-hidden', !(setupTipoInstalacion === 'dwc' || isRdwc));
   if (dwcWizard) dwcWizard.classList.toggle('setup-dwc-wrap--rdwc', isRdwc);
+  const srfWizard = document.getElementById('setupSrfDetalleWrap');
+  if (srfWizard) srfWizard.classList.toggle('setup-hidden', !isSrf);
   const dwcIntroSetup = document.getElementById('setupDwcIntroBloque');
   if (dwcIntroSetup) dwcIntroSetup.classList.toggle('setup-hidden', isRdwc);
   const rdwcWizard = document.getElementById('setupRdwcDetalleWrap');
@@ -1892,7 +1907,7 @@ function refrescarSetupTipoInstalacionUI() {
     try { syncSetupRdwcFieldsDesdeConfig(setupRdwcDraft || state.configTorre || {}); } catch (_) {}
   }
   const capMaxWrap = document.getElementById('setupVolCapacidadMaxWrap');
-  if (capMaxWrap) capMaxWrap.style.display = (setupTipoInstalacion === 'dwc' || isRdwc) ? 'none' : '';
+  if (capMaxWrap) capMaxWrap.style.display = (setupTipoInstalacion === 'dwc' || isRdwc || isSrf) ? 'none' : '';
   const dwcCapHint = document.getElementById('setupDwcCapacidadEstimada');
   if (dwcCapHint && setupTipoInstalacion !== 'dwc') {
     dwcCapHint.classList.add('setup-hidden');
@@ -1909,6 +1924,10 @@ function refrescarSetupTipoInstalacionUI() {
       mezLab.textContent = 'Litros útiles en depósito de control (opcional)';
       mezAyuda.textContent =
         'Vacío = hasta el máximo del depósito de control. En RDWC las dosis consideran también los litros útiles de los cubos del circuito; este campo solo acota el reservorio donde mezclas y mides.';
+    } else if (isSrf) {
+      mezLab.textContent = 'Litros útiles en el estanque (opcional)';
+      mezAyuda.textContent =
+        'Vacío = capacidad geométrica (L×A×profundidad) o volumen manual si lo indicaste. Las dosis del checklist usan esos litros de solución en el estanque común.';
     } else {
       mezLab.textContent = 'Litros de mezcla (opcional)';
       mezAyuda.textContent =
@@ -1918,6 +1937,17 @@ function refrescarSetupTipoInstalacionUI() {
   try {
     if (typeof repositionSetupVolMezclaBlock === 'function') repositionSetupVolMezclaBlock();
   } catch (_) {}
+  if (isSrf) {
+    try {
+      const draft =
+        typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', state.configTorre || {}) : {};
+      if (typeof syncSrfFormDesdeConfig === 'function') syncSrfFormDesdeConfig(draft, 'setup');
+      if (typeof renderSrfSetupPreview === 'function') {
+        renderSrfSetupPreview(document.getElementById('setupSrfPreview'), draft);
+      }
+      if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'setupSrfCalcStatus');
+    } catch (_) {}
+  }
   if (setupTipoInstalacion === 'dwc') {
     try {
       onSetupDwcMedidasInput();
@@ -2573,6 +2603,20 @@ function toggleSistemaNftMontajePanel() {
   applySistemaTipoPanelesColapsablesUI();
 }
 
+function toggleSistemaSrfPanel() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'srf') return;
+  state.configTorre.uiSistemaSrfColapsado = !state.configTorre.uiSistemaSrfColapsado;
+  guardarEstadoTorreActual();
+  saveState();
+  const body = document.getElementById('sistemaSrfAyudaBody');
+  const btn = document.getElementById('btnToggleSistemaSrf');
+  if (body && btn) {
+    const col = state.configTorre.uiSistemaSrfColapsado === true;
+    body.hidden = col;
+    btn.setAttribute('aria-expanded', col ? 'false' : 'true');
+  }
+}
+
 function toggleSistemaDwcPanel() {
   if (
     !state.configTorre ||
@@ -2795,6 +2839,9 @@ function refrescarSistemaDatosFacilesBanner(cfg) {
   } else if (tipo === 'rdwc') {
     el.textContent =
       'RDWC: cuenta cubos y lee litros del depósito de control en la placa del kit. Ø útil bajo cesta y caudales pueden quedar por defecto o con el dato de tu bomba.';
+  } else if (tipo === 'srf') {
+    el.textContent =
+      'SRF: mide el estanque (L×A×profundidad útil) y huecos en la balsa. Aireación y litros de mezcla pueden quedar orientativos hasta que los completes.';
   } else {
     el.textContent =
       'Torre vertical: niveles y cestas en el asistente o en el esquema; depósito y litros de mezcla abajo (etiqueta del depósito o cinta métrica).';
@@ -2804,6 +2851,7 @@ function refrescarSistemaDatosFacilesBanner(cfg) {
 function sincronizarSistemaNftMontajeUI() {
   const card = document.getElementById('sistemaNftMontajeCard');
   const dwcInfo = document.getElementById('sistemaDwcAyudaCard');
+  const srfInfo = document.getElementById('sistemaSrfAyudaCard');
   const torreObj = document.getElementById('sistemaTorreObjetivoCard');
   const ecphCard = document.getElementById('sistemaEcPhStrategyCard');
   const cfg = state.configTorre;
@@ -2839,6 +2887,21 @@ function sincronizarSistemaNftMontajeUI() {
       }
     } else {
       dwcInfo.style.display = 'none';
+    }
+  }
+  if (srfInfo) {
+    if (cfg && cfg.tipoInstalacion === 'srf') {
+      srfInfo.style.display = 'block';
+      try {
+        if (typeof syncSrfFormDesdeConfig === 'function') syncSrfFormDesdeConfig(cfg, 'sys');
+        if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(cfg, 'sysSrfCalcStatus');
+        const res = document.getElementById('sistemaSrfResumen');
+        if (res && typeof textoResumenSistemaSrfPanel === 'function') {
+          res.textContent = textoResumenSistemaSrfPanel(cfg);
+        }
+      } catch (_) {}
+    } else {
+      srfInfo.style.display = 'none';
     }
   }
   if (!card) {

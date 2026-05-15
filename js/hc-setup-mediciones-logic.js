@@ -162,6 +162,10 @@ function getVolumenDepositoMaxLitros(cfg) {
     const v = Number.isFinite(vCtl) && vCtl > 0 ? vCtl : vDep;
     if (Number.isFinite(v) && v > 0) return Math.min(800, Math.max(10, Math.round(v * 10) / 10));
   }
+  if (tipoNorm === 'srf' && typeof srfCapacidadLitrosDesdeConfig === 'function') {
+    const cap = srfCapacidadLitrosDesdeConfig(cfg);
+    if (cap != null && cap > 0) return Math.min(5000, Math.max(1, Math.round(cap * 10) / 10));
+  }
   if (cfg.tipoInstalacion === 'dwc' && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
     const vSafe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
     if (vSafe != null && vSafe > 0) return Math.min(800, Math.max(1, Math.round(vSafe * 10) / 10));

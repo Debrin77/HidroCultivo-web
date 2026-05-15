@@ -483,6 +483,10 @@ function litrosDepositoParaChecklist(cfg) {
     const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
     if (cap != null && cap >= 1 && cap <= 800) return cap;
   }
+  if (tipoNorm === 'srf' && typeof srfCapacidadLitrosDesdeConfig === 'function') {
+    const capS = srfCapacidadLitrosDesdeConfig(cfg);
+    if (capS != null && capS >= 1 && capS <= 5000) return capS;
+  }
   return null;
 }
 

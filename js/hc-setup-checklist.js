@@ -213,6 +213,7 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
         tCh === 'nft' ? '🪴 Primer llenado NFT — checklist'
         : tCh === 'dwc' ? (esKratkyTit ? '🫧 Primer llenado Kratky — checklist' : '🫧 Primer llenado DWC — checklist')
         : tCh === 'rdwc' ? '🔁 Primer llenado RDWC — checklist'
+        : tCh === 'srf' ? '🛶 Primer llenado SRF — checklist'
         : '🌿 Primer llenado — torre vertical — checklist';
       const titRecarga =
         tCh === 'nft' ? '🪴 Recarga NFT — checklist'
@@ -474,9 +475,10 @@ function construirTextoChecklistPreliminar() {
   const esNft = cfg.tipoInstalacion === 'nft';
   const esDwc = cfg.tipoInstalacion === 'dwc';
   const esRdwc = cfg.tipoInstalacion === 'rdwc';
+  const esSrf = cfg.tipoInstalacion === 'srf';
   const esDwcK =
     esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
-  const esTorre = !esNft && !esDwc && !esRdwc;
+  const esTorre = !esNft && !esDwc && !esRdwc && !esSrf;
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
     p1Partes.join(' + ') + '. Remover bien.' +
     (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '') +
@@ -512,7 +514,7 @@ function checklistInstalacionCompletaParaRecarga() {
   if (Number.isFinite(vm) && vm > 0 && (vm > vol + 0.01 || vm < 0.5)) return false;
   if (!cfg.nutriente || !NUTRIENTES_DB.some(n => n.id === cfg.nutriente)) return false;
   const tipo = cfg.tipoInstalacion;
-  if (tipo !== 'torre' && tipo !== 'nft' && tipo !== 'dwc' && tipo !== 'rdwc') return false;
+  if (tipo !== 'torre' && tipo !== 'nft' && tipo !== 'dwc' && tipo !== 'rdwc' && tipo !== 'srf') return false;
 
   if (cfg.checklistInstalacionConfirmada === true) return true;
 
@@ -532,6 +534,12 @@ function checklistInstalacionCompletaParaRecarga() {
       (cap != null && cap >= 1) ||
       (Number.isFinite(volManual) && volManual >= 1 && volManual <= 800);
     if (dwcVolOk) return true;
+  }
+  if (cfg.tipoInstalacion === 'srf') {
+    const capS = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cfg) : null;
+    if (capS != null && capS >= 1) return true;
+    const volManualS = Number(cfg.volDeposito);
+    if (Number.isFinite(volManualS) && volManualS >= 1 && volManualS <= 5000) return true;
   }
 
   return false;
@@ -659,6 +667,30 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
         state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
       }
     }
+  } else if (tipo === 'srf') {
+    const capS = Math.min(5000, Math.max(1, Math.round(Number(vol) * 10) / 10));
+    state.configTorre = Object.assign({}, baseComun, {
+      tipoInstalacion: 'srf',
+      srfCanalLargoCm: 120,
+      srfCanalAnchoCm: 60,
+      srfProfundidadCm: 25,
+      srfNumPlantas: 8,
+      srfFilas: 1,
+      numNiveles: 1,
+      numCestas: 8,
+      volDeposito: capS,
+    });
+    if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(state.configTorre);
+    const gridS = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(state.configTorre) : { rows: 1, cols: 8 };
+    state.configTorre.numNiveles = gridS.rows;
+    state.configTorre.numCestas = gridS.cols;
+    state.torre = [];
+    for (let n = 0; n < state.configTorre.numNiveles; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < state.configTorre.numCestas; c++) {
+        state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
+      }
+    }
   } else if (tipo === 'rdwc') {
     const ctrlVol = Math.min(800, Math.max(10, Math.round(Number(vol) * 10) / 10));
     state.configTorre = Object.assign({}, baseComun, {
@@ -781,6 +813,7 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     cfg.tipoInstalacion === 'nft' ? 'nft'
     : cfg.tipoInstalacion === 'dwc' ? 'dwc'
     : cfg.tipoInstalacion === 'rdwc' ? 'rdwc'
+    : cfg.tipoInstalacion === 'srf' ? 'srf'
     : 'torre';
   let cldVolMezclaPlaceholder = 'Vacío = hasta el máximo';
   let cldVolMezclaHint =
@@ -857,6 +890,9 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
         '<label class="checklist-dark-type-opt">' +
           '<input type="radio" name="cldTipoInst" value="rdwc"' + (tipoIni === 'rdwc' ? ' checked' : '') + '>' +
           '<span class="checklist-dark-type-opt-text">RDWC</span></label>' +
+        '<label class="checklist-dark-type-opt">' +
+          '<input type="radio" name="cldTipoInst" value="srf"' + (tipoIni === 'srf' ? ' checked' : '') + '>' +
+          '<span class="checklist-dark-type-opt-text">SRF</span></label>' +
       '</div>' +
       '<div id="cldDwcModoWrap" style="' + (tipoIni === 'dwc' ? '' : 'display:none;') + '">' +
         '<label class="checklist-dark-field-label">Modo DWC</label>' +
@@ -1019,6 +1055,9 @@ function getCLPasos() {
   const esNft = tipoInstCl === 'nft';
   const esDwc = tipoInstCl === 'dwc';
   const esRdwc = tipoInstCl === 'rdwc';
+  const esSrf = tipoInstCl === 'srf';
+  const srfKratky =
+    esSrf && typeof srfNormalizeOxigenacionModo === 'function' && srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'kratky';
   const volNutrientesTotal =
     typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : vol;
   const volRdwcTxt =
@@ -1059,7 +1098,7 @@ function getCLPasos() {
       : dwcOxMult
         ? ' Repite el mismo orden (agua → CalMag → nutrientes → pH) en <strong>cada cubo</strong>; los ml no son para toda la suma de litros.'
         : '';
-  const esTorre = !esNft && !esDwc && !esRdwc;
+  const esTorre = !esNft && !esDwc && !esRdwc && !esSrf;
   const checklistTieneCalentador = Array.isArray(cfg.equipamiento) && cfg.equipamiento.includes('calentador');
   const nftHyd = esNft ? getNftHidraulicaDesdeConfig(cfg) : null;
   const nftReco = esNft && typeof nftRecomendacionCultivoDesdeConfig === 'function'
@@ -1227,6 +1266,8 @@ function getCLPasos() {
             : ('Sensores o medidores en tu DWC (' + hwLista.join(', ') + '): mide en el depósito con mezcla homogénea; con el aireador unos minutos en marcha y sin burbujas pegadas a la sonda.'))
         : esRdwc
           ? ('Sensores o medidores en tu RDWC (' + hwLista.join(', ') + '): mide en el <strong>depósito de control</strong> con la recirculación unos minutos en marcha, solución homogénea y sin burbujas pegadas a la sonda.')
+          : esSrf
+            ? ('Sensores o medidores en tu SRF (' + hwLista.join(', ') + '): mide en el <strong>estanque común</strong> con aireador unos minutos en marcha (o superficie estable en Kratky) y solución homogénea.')
           : ('Sensores o medidores en tu torre vertical (' + hwLista.join(', ') + '): comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. El <strong>registro</strong> de esta recarga lo cierras en el paso <strong>6.4</strong> y lo verás en <strong>Mediciones</strong>.',
   }] : [];
@@ -1382,6 +1423,45 @@ function getCLPasos() {
             '<button type="button" class="btn" onclick="if(typeof aplicarRdwcRecomendacionBaseSistema===\'function\'){aplicarRdwcRecomendacionBaseSistema();}">Aplicar base RDWC según cultivo</button>' +
             '<button type="button" class="btn btn-ghost" onclick="goTab(\'sistema\')">Ir a Cultivo e instalación</button>' +
             '</div>',
+        },
+      ]
+    : [];
+  const pasosSrfCore = esSrf
+    ? [
+        {
+          id: 'S0',
+          seccion: esSrfKratky ? '🛶 SRF · Kratky' : '🛶 SRF · Aireación del estanque',
+          paso: 'S·0',
+          desc: esSrfKratky
+            ? 'Comprueba la <strong>cámara de aire</strong> bajo la balsa (~' + (cfg.srfKratkyGapCm || 8) + ' cm) y que el nivel de solución no cubra esa zona.'
+            : 'Enciende la <strong>bomba de aire</strong> y los difusores en el estanque común antes de cerrar la recarga.',
+          nota: esSrfKratky
+            ? 'Sin aireador: no llenes por encima de la base del sustrato; prioriza agua fresca (17–21 °C).'
+            : (function () {
+                const air = typeof srfRecomendarAireLpm === 'function' ? srfRecomendarAireLpm(cfg) : { reco: 8 };
+                const lpm = Number(cfg.srfAirLpm) > 0 ? cfg.srfAirLpm : air.reco;
+                return 'Referencia orientativa: ~' + lpm + ' L/min para este estanque (DO >4–5 mg/L).';
+              })(),
+        },
+        ...(cfg.srfCirculante && !esSrfKratky
+          ? [{
+              id: 'S0b',
+              seccion: null,
+              paso: 'S·0b',
+              desc: 'Si usas <strong>recirculación</strong> de solución, comprueba caudal (~' + (cfg.srfRecircLh || 400) + ' L/h) y retorno al estanque sin puntos muertos.',
+              nota: 'La mezcla nutritiva se dosifica sobre los litros útiles del estanque común.',
+            }]
+          : []),
+        {
+          id: 'S0c',
+          seccion: null,
+          paso: 'S·0c',
+          desc: 'Revisa que cada <strong>hueco de la balsa</strong> tenga net pot estable y raíces sumergidas en la solución.',
+          nota:
+            (typeof srfGetNumPlantas === 'function' ? srfGetNumPlantas(cfg) : cfg.numNiveles * cfg.numCestas) +
+            ' plantas en balsa · estanque ~' +
+            (vol || '—') +
+            ' L.',
         },
       ]
     : [];
@@ -1704,6 +1784,7 @@ function getCLPasos() {
     ...pasosTorreObjetivo,
     ...pasosDwcOxigenacion,
     ...pasosRdwcCore,
+    ...pasosSrfCore,
     ...pasoNftTuberiaRef,
     ...pasosNftExtra,
     ...(primerLlenado ? [] : pasosCubiertaDeposito),

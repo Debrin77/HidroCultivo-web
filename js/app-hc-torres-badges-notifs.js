@@ -21,6 +21,7 @@ function hcEtiquetaTipoInstalacion(tipo) {
   if (tipo === 'nft') return 'NFT';
   if (tipo === 'dwc') return 'DWC';
   if (tipo === 'rdwc') return 'RDWC';
+  if (tipo === 'srf') return 'SRF';
   return 'torre vertical';
 }
 
@@ -121,6 +122,7 @@ function hcCrearNombreInstalacionPorTipo(tipo, ordinal) {
     tipo === 'nft' ? 'NFT'
     : tipo === 'dwc' ? 'DWC'
     : tipo === 'rdwc' ? 'RDWC'
+    : tipo === 'srf' ? 'SRF'
     : 'Torre';
   return base + ' ' + ordinal;
 }
@@ -145,6 +147,9 @@ function refrescarMedirDatosFacilesBanner(cfg) {
   } else if (tipo === 'rdwc') {
     el.textContent =
       'Las dosis usan control + cubos configurados en Cultivo e instalación; aquí registras mediciones del día (EC, pH, °C, volumen al preparar o revisar la mezcla).';
+  } else if (tipo === 'srf') {
+    el.textContent =
+      'SRF: lecturas en el estanque común; el volumen es la solución útil que tienes hoy (L×A×P o litros que anotaste en Cultivo e instalación).';
   } else {
     el.textContent =
       'Torre: valores del medidor y volumen con regla o a ojo en el depósito hoy. No hace falta precisión de laboratorio: importa la tendencia día a día.';
@@ -203,6 +208,7 @@ function emojiSistemaUiPorTorre(t) {
   const tipo = tipoInstalacionNormalizado(cfg);
   if (tipo === 'rdwc') return '🧿';
   if (tipo === 'dwc') return '🫧';
+  if (tipo === 'srf') return '🛶';
   if (tipo === 'nft') return '🪴';
   return (t && t.emoji) || '🌿';
 }

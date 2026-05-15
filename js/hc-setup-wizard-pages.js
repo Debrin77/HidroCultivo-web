@@ -1193,6 +1193,9 @@ function setupBack() {
 
 /** Contenedor de vista previa DWC en el asistente (o torre/NFT genérico). */
 function getSetupPreviewElement() {
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'srf') {
+    return document.getElementById('setupSrfPreview') || document.getElementById('torrePreview');
+  }
   if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'dwc') {
     return document.getElementById('setupDwcPreview') || document.getElementById('torrePreview');
   }
@@ -1290,6 +1293,18 @@ function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
 function updateTorreBuilder() {
   if (setupTipoInstalacion === 'nft') {
     updateNftSetupPreview();
+    return;
+  }
+  if (setupTipoInstalacion === 'srf') {
+    const preview = getSetupPreviewElement();
+    if (!preview) return;
+    try {
+      const draft =
+        typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', state.configTorre || {}) : {};
+      if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(draft);
+      if (typeof renderSrfSetupPreview === 'function') renderSrfSetupPreview(preview, draft);
+      if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'setupSrfCalcStatus');
+    } catch (_) {}
     return;
   }
   const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);

@@ -311,3 +311,59 @@ function renderSrfSetupPreview(previewEl, cfg) {
   wrap.appendChild(cap);
   previewEl.appendChild(wrap);
 }
+
+function textoResumenSistemaSrfPanel(cfg) {
+  cfg = srfEnsureConfigDefaults(cfg || state.configTorre || {});
+  const n = srfGetNumPlantas(cfg);
+  const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  return n + ' plantas · estanque ~' + (cap != null ? cap + ' L' : '—');
+}
+
+function aplicarSistemaSrfDesdeFormulario() {
+  initTorres();
+  const idxAct = state.torreActiva || 0;
+  const slotAct = state.torres && state.torres[idxAct] ? state.torres[idxAct] : null;
+  const tipoPrevio = tipoInstalacionNormalizado((slotAct && slotAct.config) || state.configTorre || {});
+  if (slotAct && slotAct.config && slotAct.config.tipoInstalacion && tipoPrevio !== 'srf') {
+    showToast('Esta instalación no es SRF. Para crear un SRF nuevo usa "Nueva instalación" o el asistente.', true);
+    try {
+      syncSrfFormDesdeConfig(slotAct.config, 'sys');
+    } catch (_) {}
+    return;
+  }
+  if (typeof hcCapturarSnapshotSeguridadTorre === 'function') {
+    hcCapturarSnapshotSeguridadTorre(idxAct, 'srf-system-save');
+  }
+  const c = state.configTorre || (state.configTorre = {});
+  c.tipoInstalacion = 'srf';
+  Object.assign(c, buildSrfConfigFromForm('sys', c));
+  srfEnsureConfigDefaults(c);
+  const grid = srfDistribuirPlantas(c);
+  c.numNiveles = grid.rows;
+  c.numCestas = grid.cols;
+  const cap = srfCapacidadLitrosDesdeConfig(c);
+  if (cap != null) c.volDeposito = cap;
+  try {
+    if (typeof redimensionarMatrizTorreDwcPreservando === 'function') {
+      redimensionarMatrizTorreDwcPreservando(c, c.numNiveles, c.numCestas);
+    }
+  } catch (_) {}
+  if (c.nutriente) c.checklistInstalacionConfirmada = true;
+  c.uiSistemaSrfColapsado = true;
+  guardarEstadoTorreActual();
+  saveState();
+  aplicarConfigTorre();
+  try {
+    actualizarHeaderTorre();
+  } catch (_) {}
+  try {
+    actualizarBadgesNutriente();
+  } catch (_) {}
+  try {
+    updateDashboard();
+  } catch (_) {}
+  renderSrfCalculoStatus(c, 'sysSrfCalcStatus');
+  const res = document.getElementById('sistemaSrfResumen');
+  if (res) res.textContent = textoResumenSistemaSrfPanel(c);
+  showToast('Datos SRF guardados', false);
+}
