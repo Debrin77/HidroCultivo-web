@@ -619,7 +619,7 @@ function dwcRecoPerfilPorGrupo(grupo, objetivo) {
       cestaMinMm: 75,
       cestaMaxMm: 100,
       cestaTxt: '75–100 mm',
-      permite: false,
+      permite: true,
     };
   }
   if (esBaby) {
@@ -644,6 +644,11 @@ function dwcRecoPerfilPorGrupo(grupo, objetivo) {
   };
 }
 
+function dwcEsGrupoCestaGrande(grupo) {
+  const g = String(grupo || '').trim().toLowerCase();
+  return g === 'frutos' || g === 'fresas' || g === 'raices';
+}
+
 function dwcRecomendacionCultivoDesdeConfig(cfg) {
   cfg = cfg || state.configTorre || {};
   if (cfg.tipoInstalacion !== 'dwc') return null;
@@ -651,20 +656,36 @@ function dwcRecomendacionCultivoDesdeConfig(cfg) {
   const grupo = dwcGrupoObjetivoDesdeConfig(cfg);
   const perfil = dwcRecoPerfilPorGrupo(grupo, objetivo);
   const rimActualMm = dwcRimMmDesdeConfig(cfg);
+  const esGrande = dwcEsGrupoCestaGrande(grupo);
+  const esMulticubo =
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
   let estado = 'ok';
   let veredicto = 'Cesta dentro del rango recomendado';
-  if (!perfil.permite) {
-    estado = 'bad';
-    veredicto = 'Grupo poco recomendable para DWC estándar en un solo depósito';
-  } else if (!Number.isFinite(rimActualMm) || rimActualMm <= 0) {
+  if (!Number.isFinite(rimActualMm) || rimActualMm <= 0) {
     estado = 'warn';
-    veredicto = 'Falta diámetro de cesta para validar';
+    veredicto = esGrande
+      ? 'Indica Ø aro (orientativo ' + perfil.cestaTxt + ' para ' + perfil.etiqueta + ')'
+      : 'Falta diámetro de cesta para validar';
   } else if (rimActualMm < perfil.cestaMinMm) {
     estado = 'warn';
-    veredicto = 'Cesta pequeña para este cultivo/objetivo';
+    veredicto = esGrande
+      ? 'Cesta pequeña para ' + perfil.etiqueta + '; orientativo ' + perfil.cestaTxt
+      : 'Cesta pequeña para este cultivo/objetivo';
   } else if (rimActualMm > perfil.cestaMaxMm + 5) {
     estado = 'warn';
-    veredicto = 'Cesta sobredimensionada para esta densidad';
+    veredicto = esGrande
+      ? 'Cesta muy grande; revisa volumen por planta y soporte'
+      : 'Cesta sobredimensionada para esta densidad';
+  } else if (esGrande && !esMulticubo) {
+    estado = 'warn';
+    veredicto =
+      'Cesta adecuada (' +
+      rimActualMm +
+      ' mm); en depósito compartido vigila mezcla, raíces y volumen por planta';
+  } else if (esGrande && esMulticubo) {
+    estado = 'ok';
+    veredicto = 'Cesta adecuada para ' + perfil.etiqueta + ' (cubo dedicado por planta)';
   }
   return {
     grupo,
@@ -684,6 +705,8 @@ function dwcBuildConfigDraftForReco(scope) {
   if (rim != null) cfg.dwcNetPotRimMm = rim;
   const objEl = document.getElementById(p + 'DwcObjetivoCultivo');
   if (objEl && objEl.value) cfg.dwcObjetivoCultivo = dwcNormalizeObjetivoCultivo(objEl.value);
+  const oxEl = document.getElementById(p + 'DwcOxigenacionDiseno');
+  if (oxEl && oxEl.value) cfg.dwcOxigenacionDiseno = dwcNormalizeOxigenacionDiseno(oxEl.value);
   return cfg;
 }
 
