@@ -1215,10 +1215,14 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
     'aria-label',
     n + ' cubos independientes con multivalvula, una maceta por cubo.'
   );
-  const cols = n <= 6 ? n : Math.ceil(n / 2);
+  const grid =
+    typeof hcDistribuirFilasColumnas === 'function'
+      ? hcDistribuirFilasColumnas(n, 6)
+      : { cols: n <= 6 ? n : 6, rows: n <= 6 ? 1 : Math.ceil(n / 6) };
   const row = document.createElement('div');
-  row.className = 'dwc-setup-mc-row';
-  row.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+  row.className = 'dwc-setup-mc-grid';
+  row.style.gridTemplateColumns = 'repeat(' + grid.cols + ', minmax(0, 1fr))';
+  row.style.gridTemplateRows = 'repeat(' + grid.rows + ', auto)';
   for (let i = 0; i < n; i++) {
     const cube = document.createElement('div');
     cube.className = 'dwc-setup-mc-cube dwc-setup-mc-cube--' + forma;

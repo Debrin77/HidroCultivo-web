@@ -31,6 +31,7 @@ function hcNormalizarConfigSegunTipo(cfg) {
     { tipo: 'nft', prefijo: 'nft' },
     { tipo: 'dwc', prefijo: 'dwc' },
     { tipo: 'rdwc', prefijo: 'rdwc' },
+    { tipo: 'srf', prefijo: 'srf' },
   ];
   const removedKeys = [];
   prefixes.forEach(rule => {
@@ -193,6 +194,7 @@ function emojiMigracionPorTipoInstalacion(cfg) {
   if (cfg.tipoInstalacion === 'nft') return '🪴';
   if (cfg.tipoInstalacion === 'dwc') return '🫧';
   if (cfg.tipoInstalacion === 'rdwc') return '🧿';
+  if (cfg.tipoInstalacion === 'srf') return '🛶';
   return '🌿';
 }
 

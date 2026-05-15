@@ -3,6 +3,15 @@
  * Tras nutrientes y módulos setup. Siguiente: torre-render-main.js (renderTorre, gestos, stats).
  */
 
+/** Reparte N ítems en filas/columnas para que quepan en UI/SVG (máx. columnas por fila). */
+function hcDistribuirFilasColumnas(total, maxCols) {
+  const n = Math.max(1, parseInt(String(total != null ? total : 1), 10) || 1);
+  const maxC = Math.max(1, parseInt(String(maxCols != null ? maxCols : 6), 10) || 6);
+  const cols = Math.min(maxC, n);
+  const rows = Math.ceil(n / cols);
+  return { rows, cols };
+}
+
 // ══════════════════════════════════════════════════
 // TORRE — RENDER
 // ══════════════════════════════════════════════════
@@ -529,8 +538,12 @@ function generarSVGDwc() {
   let mcGapPlan = 16;
   let mcGapFront = 14;
   if (esMulticubo) {
-    mcCols = S_mc <= 6 ? S_mc : Math.ceil(S_mc / 2);
-    mcRows = S_mc <= 6 ? 1 : 2;
+    const mcGrid =
+      typeof hcDistribuirFilasColumnas === 'function'
+        ? hcDistribuirFilasColumnas(S_mc, 6)
+        : { cols: S_mc <= 6 ? S_mc : 6, rows: S_mc <= 6 ? 1 : Math.ceil(S_mc / 6) };
+    mcCols = mcGrid.cols;
+    mcRows = mcGrid.rows;
     mcCubeSz = S_mc <= 4 ? 78 : S_mc <= 6 ? 70 : 58;
     mcGapPlan = S_mc <= 4 ? 20 : 14;
     mcGapFront = S_mc <= 4 ? 18 : 12;
@@ -814,8 +827,7 @@ function generarSVGDwc() {
       `<rect x="${tankX}" y="${pumpTop}" width="${tankW}" height="${pumpStripH}" rx="6" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1.3"/>` +
       `<rect x="${(pumpCx - 34).toFixed(1)}" y="${(pumpTop + 4).toFixed(1)}" width="68" height="17" rx="8.5" fill="#0284c7" stroke="#0369a1" stroke-width="1.15"/>` +
       `<circle cx="${(pumpCx - 22).toFixed(1)}" cy="${(pumpTop + 12.5).toFixed(1)}" r="2.2" fill="#bae6fd" opacity="0.95"/>` +
-      `<text x="${pumpCx.toFixed(1)}" y="${(pumpTop + 16).toFixed(1)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="8.5" font-weight="900" fill="#f0f9ff" letter-spacing="0.04em">BOMBA AIRE</text>` +
-      `<text x="${pumpCx.toFixed(1)}" y="${(pumpTop + pumpStripH - 4).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" font-weight="700" fill="#0369a1">Multivalvula · salida a cada cubo</text>`;
+      `<text x="${pumpCx.toFixed(1)}" y="${(pumpTop + 16).toFixed(1)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="900" fill="#f0f9ff" letter-spacing="0.04em">BOMBA AIRE</text>`;
     tankFrontalSvg = airHeaderSvg + manifoldSvg + dropSvg + cuboSvg;
   } else if (formaDwc === 'cilindrico') {
     clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
@@ -1170,6 +1182,125 @@ function generarSVGDwc() {
 }
 
 /**
+ * SRF / DFT — balsa flotante: estanque común + lámina flotante + macetas; oxigenación o Kratky.
+ */
+function generarSVGSrf() {
+  const cfg = state.configTorre || {};
+  if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(cfg);
+  const n = typeof srfGetNumPlantas === 'function' ? srfGetNumPlantas(cfg) : Math.max(1, (cfg.numNiveles || 1) * (cfg.numCestas || 1));
+  const grid = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(cfg) : hcDistribuirFilasColumnas(n, 8);
+  const N = grid.rows;
+  const C = grid.cols;
+  const modoOx = typeof srfNormalizeOxigenacionModo === 'function' ? srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) : 'aireador';
+  const esKratky = modoOx === 'kratky';
+  const circ = !esKratky && cfg.srfCirculante !== false;
+  const volMax = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cfg) : getVolumenDepositoMaxLitros(cfg);
+  const volMez = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : volMax;
+  const volPct =
+    volMax != null && volMez != null && Number.isFinite(volMax) && Number.isFinite(volMez) && volMax > 0
+      ? Math.min(1, Math.max(0, volMez / volMax))
+      : 0.65;
+  const volPer =
+    typeof srfLitrosPorPlanta === 'function' ? srfLitrosPorPlanta(cfg) : volMax != null && n > 0 ? Math.round((volMax / n) * 10) / 10 : null;
+  const W = Math.min(560, Math.max(400, 80 + C * 52));
+  const planTop = 52;
+  const planPad = 14;
+  const planW = W - 48;
+  const planH = Math.min(220, Math.max(100, 36 + N * 44));
+  const planLeft = (W - planW) / 2;
+  const planInnerX = planLeft + planPad;
+  const planInnerY = planTop + planPad;
+  const planInnerW = planW - planPad * 2;
+  const planInnerH = planH - planPad * 2;
+  const cellW = planInnerW / Math.max(1, C);
+  const cellH = planInnerH / Math.max(1, N);
+  const Rpot = Math.max(10, Math.min(22, Math.min(cellW, cellH) * 0.34));
+  const secTop = planTop + planH + 36;
+  const canalH = 88;
+  const canalW = planW;
+  const canalX = planLeft;
+  const canalY = secTop;
+  const raftY = canalY + 8;
+  const raftH = 22;
+  const waterY = canalY + raftH + (esKratky ? Math.min(28, Number(cfg.srfKratkyGapCm) || 8) * 1.2 : 6);
+  const waterBottom = canalY + canalH - 6;
+  const ta = torreSvgAnimacionesActivas();
+  const tieneDifusor = (state.configTorre?.equipamiento?.includes('difusor') ?? true) && !esKratky;
+  const profCm = Number(cfg.srfProfundidadCm) || 25;
+  let s = `<defs>
+    <linearGradient id="srfWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>
+    <linearGradient id="srfRaft" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#e2e8f0"/></linearGradient>
+  </defs>`;
+  s += `<text x="${W / 2}" y="22" text-anchor="middle" font-family="Syne,sans-serif" font-size="15" font-weight="700" fill="#0f172a">SRF · balsa flotante</text>`;
+  s += `<text x="${W / 2}" y="38" text-anchor="middle" font-size="9.5" fill="#64748b">${n} plantas · estanque ${profCm} cm prof. · ${esKratky ? 'Kratky (cámara de aire)' : 'aireación en solución'}</text>`;
+  s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="12" fill="#0f172a" opacity="0.04" stroke="#94a3b8" stroke-width="1.2"/>`;
+  s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="url(#srfRaft)" stroke="#64748b" stroke-width="1.3"/>`;
+  for (let idx = 0; idx < n; idx++) {
+    const rn = Math.floor(idx / C);
+    const c = idx % C;
+    const cx = planInnerX + (c + 0.5) * cellW;
+    const cy = planInnerY + (rn + 0.5) * cellH;
+    const dat = state.torre && state.torre[rn] && state.torre[rn][c] ? state.torre[rn][c] : { variedad: '', fecha: '', fotos: [] };
+    const dias = dat.fecha && typeof torreDiasCicloVisual === 'function' ? torreDiasCicloVisual(dat) : 0;
+    const est = dat.variedad && typeof getEstado === 'function' ? getEstado(dat.variedad, dias) : '';
+    let fill = '#f8fafc';
+    let stroke = '#94a3b8';
+    if (dat.variedad) {
+      if (est === 'plantula') {
+        fill = '#eff6ff';
+        stroke = '#2563eb';
+      } else if (est === 'crecimiento') {
+        fill = '#f0fdf4';
+        stroke = '#15803d';
+      } else if (est === 'madurez') {
+        fill = '#fffbeb';
+        stroke = '#b45309';
+      } else {
+        fill = '#faf5ff';
+        stroke = '#7c3aed';
+      }
+    }
+    const aria = escAriaAttr('Planta ' + (idx + 1) + (dat.variedad ? ', ' + dat.variedad : ', vacía') + '. Pulsa para ficha.');
+    s += `<g data-n="${rn}" data-c="${c}" class="hc-cesta hc-cesta--interactive" role="button" tabindex="0" aria-label="${aria}">`;
+    s += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${Rpot.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+    s += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(Rpot * 1.55).toFixed(1)}" fill="rgba(0,0,0,0)" class="hc-cesta-hit" pointer-events="all"/>`;
+    s += `</g>`;
+  }
+  if (tieneDifusor) {
+    const pumpY = planTop - 18;
+    s += `<rect x="${planLeft}" y="${pumpY}" width="${planW}" height="16" rx="5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1.1"/>`;
+    s += `<text x="${(planLeft + planW / 2).toFixed(1)}" y="${(pumpY + 11).toFixed(1)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="8" font-weight="900" fill="#0369a1">BOMBA AIRE · estanque</text>`;
+  }
+  s += `<text x="${planLeft}" y="${(planTop + planH + 14).toFixed(1)}" font-size="9" fill="#64748b">Vista superior — balsa (${cfg.srfBalsaGrosorMm || 40} mm)</text>`;
+  s += `<rect x="${canalX}" y="${canalY}" width="${canalW}" height="${canalH}" rx="10" fill="#1e293b" opacity="0.06" stroke="#475569" stroke-width="1.3"/>`;
+  s += `<rect x="${(canalX + 8).toFixed(1)}" y="${raftY}" width="${(canalW - 16).toFixed(1)}" height="${raftH}" rx="4" fill="url(#srfRaft)" stroke="#94a3b8" stroke-width="1"/>`;
+  const wTop = waterBottom - (waterBottom - waterY) * volPct;
+  s += `<rect x="${(canalX + 10).toFixed(1)}" y="${wTop.toFixed(1)}" width="${(canalW - 20).toFixed(1)}" height="${(waterBottom - wTop).toFixed(1)}" fill="url(#srfWater)" opacity="0.92"/>`;
+  if (esKratky) {
+    s += `<rect x="${(canalX + 10).toFixed(1)}" y="${(raftY + raftH).toFixed(1)}" width="${(canalW - 20).toFixed(1)}" height="${(wTop - raftY - raftH).toFixed(1)}" fill="#f0f9ff" opacity="0.5" stroke="#7dd3fc" stroke-width="0.8" stroke-dasharray="3 2"/>`;
+    s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${(waterY - 4).toFixed(1)}" text-anchor="middle" font-size="8" fill="#0369a1" font-weight="700">Cámara de aire (Kratky)</text>`;
+  }
+  if (tieneDifusor) {
+    for (let ai = 0; ai < Math.min(6, Math.ceil(canalW / 70)); ai++) {
+      const ax = canalX + 30 + ai * ((canalW - 60) / Math.max(1, Math.min(6, Math.ceil(canalW / 70) - 1)));
+      s += `<ellipse cx="${ax.toFixed(1)}" cy="${(waterBottom - 8).toFixed(1)}" rx="9" ry="4" fill="#64748b" stroke="#475569" stroke-width="0.8"/>`;
+      if (ta) {
+        s += `<circle cx="${ax.toFixed(1)}" cy="${(waterBottom - 10).toFixed(1)}" r="1.2" fill="#bae6fd" opacity="0"><animate attributeName="cy" to="${(wTop + 6).toFixed(1)}" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="1.2s" repeatCount="indefinite"/></circle>`;
+      }
+    }
+  }
+  if (circ) {
+    s += `<text x="${(canalX + canalW - 12).toFixed(1)}" y="${(canalY + 14).toFixed(1)}" text-anchor="end" font-size="8" fill="#16a34a" font-weight="700">↻ ${Math.round(Number(cfg.srfRecircLh) || 400)} L/h</text>`;
+  }
+  s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${(canalY + canalH + 16).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="12" font-weight="800" fill="#0369a1">~${volMez != null ? volMez : '—'} L en estanque${volPer != null ? ' · ~' + volPer + ' L/planta' : ''}</text>`;
+  const H = canalY + canalH + 36;
+  return (
+    `<svg class="torre-svg-diagram srf-svg-diagram svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="srfDiagTitle">` +
+    `<title id="srfDiagTitle">SRF balsa flotante: ${n} plantas sobre estanque ${profCm} cm. Toca cada maceta.</title>${s}</svg>`
+  );
+}
+
+/**
  * RDWC: esquema tipo «manifold + cubos + depósito de control abajo» (recirculación).
  * Cultivo por módulo como DWC (fase, foto, arco días, nombre). Flujo sin cabezas de flecha enormes.
  */
@@ -1182,17 +1313,20 @@ function generarSVGRdwc() {
       .replace(/"/g, '&quot;');
   const cfg = state.configTorre || {};
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
-  const rows = Math.max(1, Math.min(4, parseInt(String(cfg.rdwcRows || 1), 10) || 1));
+  const rowsCfg = Math.max(1, Math.min(4, parseInt(String(cfg.rdwcRows || 1), 10) || 1));
   const sites = Math.max(2, Math.min(64, parseInt(String(cfg.rdwcSites || 4), 10) || 4));
-  const cols = Math.max(1, Math.ceil(sites / rows));
+  const colsCfg = Math.max(1, Math.ceil(sites / rowsCfg));
+  const visGrid = hcDistribuirFilasColumnas(sites, 6);
+  const visRows = visGrid.rows;
+  const visCols = visGrid.cols;
   const W = 400;
   const headerH = 56;
-  const blockW = Math.min(340, Math.max(248, 36 + cols * 54));
-  const blockH = Math.min(260, Math.max(128, 40 + rows * 74));
+  const blockW = Math.min(340, Math.max(248, 36 + visCols * 54));
+  const blockH = Math.min(280, Math.max(128, 40 + visRows * 74));
   const left = (W - blockW) / 2;
   const top = headerH + 18;
-  const cw = blockW / Math.max(1, cols);
-  const ch = blockH / Math.max(1, rows);
+  const cw = blockW / Math.max(1, visCols);
+  const ch = blockH / Math.max(1, visRows);
   const rPot = Math.max(15, Math.min(28, Math.min(cw, ch) * 0.32));
   const supY = top - 6;
   const retY = top + blockH + 6;
@@ -1237,12 +1371,13 @@ function generarSVGRdwc() {
   const retRiserX = tankX + 18;
   s += `<path d="M ${left + 12} ${retY} L ${retRiserX} ${retY} L ${retRiserX} ${tankY + tankH - 9}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
 
-  for (let rn = 0; rn < rows; rn++) {
-    const y = top + (rn + 0.5) * ch;
-    for (let c = 0; c < cols; c++) {
-      const idx = rn * cols + c;
-      if (idx >= sites) continue;
-      const x = left + (c + 0.5) * cw;
+  for (let idx = 0; idx < sites; idx++) {
+      const vr = Math.floor(idx / visCols);
+      const vc = idx % visCols;
+      const rn = Math.floor(idx / colsCfg);
+      const c = idx % colsCfg;
+      const x = left + (vc + 0.5) * cw;
+      const y = top + (vr + 0.5) * ch;
       const dat =
         state.torre && state.torre[rn] && state.torre[rn][c] ? state.torre[rn][c] : { variedad: '', fecha: '', fotos: [] };
       const dias = dat.fecha && typeof torreDiasCicloVisual === 'function' ? torreDiasCicloVisual(dat) : 0;
@@ -1351,7 +1486,6 @@ function generarSVGRdwc() {
       }
       s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.55).toFixed(1)}" fill="rgba(0,0,0,0)" class="hc-cesta-hit" pointer-events="all"/>`;
       s += `</g>`;
-    }
   }
 
   s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="14" fill="url(#rdwcTankBody)" stroke="#475569" stroke-width="1.4"/>`;

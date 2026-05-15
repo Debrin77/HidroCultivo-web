@@ -9,7 +9,7 @@
 
 let setupPagina = 0;
 let setupTipoTorre = 'custom';
-/** 'torre' | 'nft' | 'dwc' | 'rdwc' | '' (nueva instalación: hay que elegir en paso 0) */
+/** 'torre' | 'nft' | 'dwc' | 'rdwc' | 'srf' | '' (nueva instalación: hay que elegir en paso 0) */
 let setupTipoInstalacion = 'torre';
 let setupRdwcDraft = null;
 
@@ -25,7 +25,7 @@ function hcSetupClonePlain(value, fallback = null) {
 /** Normaliza tipo de instalación guardado en config. */
 function tipoInstalacionNormalizado(cfg) {
   const t = cfg && cfg.tipoInstalacion;
-  if (t === 'nft' || t === 'dwc' || t === 'rdwc' || t === 'torre') return t;
+  if (t === 'nft' || t === 'dwc' || t === 'rdwc' || t === 'srf' || t === 'torre') return t;
   return 'torre';
 }
 

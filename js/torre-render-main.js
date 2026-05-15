@@ -18,6 +18,7 @@ function renderTorre() {
   }
 
   const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esSrf = cfg.tipoInstalacion === 'srf';
 
   if (esNft) {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
@@ -72,6 +73,15 @@ function renderTorre() {
       dwcMcAria
         ? 'DWC multivalvula: vista cenital de cada cubo con su maceta; debajo, reparto de aire. Toca una maceta para cultivo o usa Lista.'
         : 'DWC: tapa en vista superior con macetas y esquema frontal del depósito. Toca una maceta para la ficha o usa Lista.'
+    );
+    try {
+      bindTorreCestas(wrap);
+    } catch (e2) {}
+  } else if (esSrf) {
+    wrap.innerHTML = typeof generarSVGSrf === 'function' ? generarSVGSrf() : '';
+    wrap.setAttribute(
+      'aria-label',
+      'SRF balsa flotante: estanque con balsa y macetas. Toca una planta para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
