@@ -1085,7 +1085,6 @@ function actualizarBadgesNutriente() {
   const dashFuente = document.getElementById('dashNutrienteFuente');
   const dashRazon = document.getElementById('dashNutrienteRazon');
   const dashAviso   = document.getElementById('dashNutrienteAviso');
-  const dashAvisoGlobal = document.getElementById('dashCambioNutrienteAviso');
   if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
   if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Cultivo e instalación o Medir';
   if (dashEstado || dashRecomendado || dashRazon || dashFuente) {
@@ -1154,19 +1153,6 @@ function actualizarBadgesNutriente() {
     } else {
       dashAviso.textContent = '';
       dashAviso.classList.add('setup-hidden');
-    }
-  }
-  if (dashAvisoGlobal) {
-    const msgGlobal =
-      typeof hcGetAvisoCambioNutrientePorFase === 'function'
-        ? hcGetAvisoCambioNutrientePorFase('inicio')
-        : null;
-    if (msgGlobal) {
-      dashAvisoGlobal.textContent = msgGlobal;
-      dashAvisoGlobal.classList.remove('setup-hidden');
-    } else {
-      dashAvisoGlobal.textContent = '';
-      dashAvisoGlobal.classList.add('setup-hidden');
     }
   }
   // Dashboard inicio — banner torre
