@@ -2930,6 +2930,30 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   dwcAplicarMatrizCultivoMulticuboEnCfg(cfg, ids);
 }
 
+/** Mueve los sliders del asistente al bloque DWC (depósito unido) o los oculta en multivalvula. */
+function dwcReparentSetupSlidersForPreview() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  const controls = document.getElementById('setupTorreBuilderControlsSlot');
+  const dwcSlot = document.getElementById('setupDwcDepUnidoControls');
+  if (!controls || !dwcSlot) return;
+  const mc =
+    dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+    'cubos_independientes';
+  dwcSlot.classList.toggle('setup-hidden', mc);
+  if (!mc && controls.parentElement !== dwcSlot) dwcSlot.appendChild(controls);
+  const dn = document.getElementById('setupTorreDimNivel');
+  const dc = document.getElementById('setupTorreDimCesta');
+  if (dn && dc) {
+    if (mc) {
+      dn.textContent = 'Cubos';
+      dc.textContent = 'Macetas por cubo';
+    } else {
+      dn.textContent = 'Filas en la tapa';
+      dc.textContent = 'Cestas por fila';
+    }
+  }
+}
+
 /** Muestra u oculta rejilla de tapa (solo depósito unido) y campo «cubos» en multivalvula. */
 function dwcRefreshMulticuboDependienteUi(which) {
   const esMc = selVal => dwcNormalizeOxigenacionDiseno(selVal) === 'cubos_independientes';
@@ -2949,6 +2973,9 @@ function dwcRefreshMulticuboDependienteUi(which) {
     if (wNc) wNc.classList.toggle('setup-hidden', !mc);
     const wBl = document.getElementById('setupDwcDepUnidoRejillaWrap');
     if (wBl) wBl.classList.toggle('setup-hidden', mc);
+    try {
+      dwcReparentSetupSlidersForPreview();
+    } catch (_) {}
   }
 }
 
@@ -3140,8 +3167,10 @@ function onDwcFormaChanged(formIds) {
     else onSetupDwcMedidasInput();
   } catch (_) {}
   try {
-    if (ids === DWC_FORM_IDS_SETUP) refreshDwcTapHintSetup();
-    else refreshDwcTapHintSistema();
+    if (ids === DWC_FORM_IDS_SETUP) {
+      refreshDwcTapHintSetup();
+      updateTorreBuilder();
+    } else refreshDwcTapHintSistema();
   } catch (_) {}
 }
 

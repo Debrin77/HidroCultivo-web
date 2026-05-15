@@ -1191,6 +1191,57 @@ function setupBack() {
   }
 }
 
+/** Contenedor de vista previa DWC en el asistente (o torre/NFT genérico). */
+function getSetupPreviewElement() {
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'dwc') {
+    return document.getElementById('setupDwcPreview') || document.getElementById('torrePreview');
+  }
+  return document.getElementById('torrePreview');
+}
+
+/** Preview multivalvula: N cubos, 1 maceta/cubo (no rejilla filas×cestas en un solo depósito). */
+function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep) {
+  previewEl.innerHTML = '';
+  previewEl.style.position = 'relative';
+  previewEl.style.height = 'auto';
+  const n = Math.min(24, Math.max(1, parseInt(String(numCubos), 10) || 1));
+  const forma = typeof dwcNormalizeDepositoForma === 'function'
+    ? dwcNormalizeDepositoForma(formaDep)
+    : String(formaDep || 'prismatico');
+  const wrap = document.createElement('div');
+  wrap.className = 'dwc-setup-mc-wrap';
+  wrap.setAttribute('role', 'img');
+  wrap.setAttribute(
+    'aria-label',
+    n + ' cubos independientes con multivalvula, una maceta por cubo.'
+  );
+  const cols = n <= 6 ? n : Math.ceil(n / 2);
+  const row = document.createElement('div');
+  row.className = 'dwc-setup-mc-row';
+  row.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+  for (let i = 0; i < n; i++) {
+    const cube = document.createElement('div');
+    cube.className = 'dwc-setup-mc-cube dwc-setup-mc-cube--' + forma;
+    const lid = document.createElement('div');
+    lid.className = 'dwc-setup-mc-lid';
+    const hole = document.createElement('div');
+    hole.className = 'dwc-setup-mc-hole';
+    lid.appendChild(hole);
+    cube.appendChild(lid);
+    const tank = document.createElement('div');
+    tank.className = 'dwc-setup-mc-tank';
+    tank.title = 'Cubo ' + (i + 1) + ' · ~' + volLitros + ' L';
+    cube.appendChild(tank);
+    row.appendChild(cube);
+  }
+  wrap.appendChild(row);
+  const cap = document.createElement('div');
+  cap.className = 'dwc-setup-lid-caption';
+  cap.textContent = n + ' cubo' + (n === 1 ? '' : 's') + ' · 1 maceta/cubo · multivalvula';
+  wrap.appendChild(cap);
+  previewEl.appendChild(wrap);
+}
+
 /** Preview asistente paso 1 — DWC: tapa vista superior con orificios en rejilla. */
 function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
   previewEl.innerHTML = '';
@@ -1284,12 +1335,21 @@ function updateTorreBuilder() {
     }
   }
 
-  const preview = document.getElementById('torrePreview');
+  const preview = getSetupPreviewElement();
   if (!preview) return;
 
   if (setupTipoInstalacion === 'dwc') {
     preview.classList.add('torre-preview--dwc');
-    renderDwcLidSetupPreview(preview, dwcNivPrev, dwcCesPrev, volDepDwc);
+    const oxB =
+      typeof dwcNormalizeOxigenacionDiseno === 'function'
+        ? dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value)
+        : 'dep_unido';
+    const formaDep = document.getElementById('setupDwcDepositoForma')?.value;
+    if (oxB === 'cubos_independientes') {
+      renderDwcMulticuboSetupPreview(preview, dwcCesPrev, volDepDwc, formaDep);
+    } else {
+      renderDwcLidSetupPreview(preview, dwcNivPrev, dwcCesPrev, volDepDwc);
+    }
     try {
       refreshDwcTapHintSetup();
     } catch (eHint) {}

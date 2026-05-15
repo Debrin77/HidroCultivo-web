@@ -2817,7 +2817,7 @@
           <div class="torre-preview" id="torrePreview"></div>
         </div>
         <!-- Controles torre -->
-        <div class="torre-controls">
+        <div id="setupTorreBuilderControlsSlot" class="torre-controls">
           <div class="torre-control-row">
             <div class="torre-control-label">
               <span id="setupTorreDimNivel">Niveles</span>
@@ -2887,14 +2887,42 @@
         <div>
           <label class="form-label setup-dwc-label" for="setupDwcDepositoForma">Forma del depósito DWC</label>
           <select id="setupDwcDepositoForma" class="setup-dwc-input"
-            onchange="try{onDwcFormaChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"
+            onchange="try{onDwcFormaChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup();updateTorreBuilder()}catch(e){}"
             aria-label="Forma geométrica del depósito DWC">
             <option value="prismatico">Cubo / prismático regular</option>
             <option value="cilindrico">Cilíndrico (cubo redondo)</option>
             <option value="troncopiramidal">Troncopiramidal / tronco-cónico</option>
           </select>
         </div>
-        <p class="setup-dwc-help">Sigue el orden del formulario: <strong>forma</strong> → <strong>medidas del líquido</strong> (interior) → cesta → modo. No hace falta volumen calculado a mano si rellenas L×A×P o Ø×P.</p>
+        <div id="setupDwcPreviewSection" class="setup-dwc-preview-section">
+          <p class="setup-dwc-preview-kicker">Vista previa del montaje</p>
+          <div class="torre-preview torre-preview--dwc" id="setupDwcPreview" role="img" aria-live="polite"></div>
+          <div id="setupDwcDepUnidoControls" class="setup-dwc-dep-unido-controls"></div>
+        </div>
+        <div id="setupDwcOxigenacionBlock">
+          <label class="form-label setup-dwc-label" for="setupDwcOxigenacionDiseno">Distribución del aire</label>
+          <select id="setupDwcOxigenacionDiseno" class="setup-dwc-input"
+            onchange="try{var w=document.getElementById('setupDwcLitrosUtilesPorSitioWrap');if(w)w.classList.toggle('setup-hidden',(this.value||'')!=='cubos_independientes');try{dwcRefreshMulticuboDependienteUi('setup')}catch(e0){};try{dwcReparentSetupSlidersForPreview()}catch(e0b){};try{updateTorreBuilder()}catch(e1){};try{refreshDwcTapHintSetup()}catch(e2){};actualizarResumenSetup()}catch(e){}"
+            aria-label="DWC asistente: un depósito o cubos multivalvula">
+            <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
+            <option value="cubos_independientes">Varios cubos (multivalvula) — 1 maceta por cubo</option>
+          </select>
+          <p class="setup-dwc-help" style="margin-top:0.35rem">Cada cubo tiene su depósito; comparten la bomba de aire. Toca cada maceta en el esquema para el cultivo.</p>
+        </div>
+        <div id="setupDwcNumCubosWrap" class="setup-hidden">
+          <label class="form-label setup-dwc-label" for="setupDwcNumCubos">¿Cuántos cubos?</label>
+          <input type="number" id="setupDwcNumCubos" class="setup-dwc-input" min="1" max="24" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC multivalvula"
+            oninput="try{updateTorreBuilder()}catch(e0){}try{refreshDwcTapHintSetup()}catch(e1){}try{actualizarResumenSetup()}catch(e2){}">
+        </div>
+        <div id="setupDwcLitrosUtilesPorSitioWrap" class="setup-hidden">
+          <label class="form-label setup-dwc-label" for="setupDwcLitrosUtilesPorSitioL">Litros útiles por cubo (L, opcional)</label>
+          <input type="number" id="setupDwcLitrosUtilesPorSitioL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="Vacío → seguro y reparto" inputmode="decimal" autocomplete="off"
+            onchange="try{actualizarResumenSetup()}catch(e){}"
+            oninput="try{actualizarResumenSetup()}catch(e){}"
+            aria-label="Litros útiles por cubo DWC multivalvula">
+          <p class="setup-dwc-help" style="margin-top:0.35rem">Vacío: la app usa el mínimo entre mezcla total ÷ cubos y el <strong>llenado seguro</strong> por cubo, con las medidas y cesta de <strong>un cubo típico</strong>.</p>
+        </div>
+        <p class="setup-dwc-help setup-dwc-help--after-preview">Indica <strong>medidas interiores del líquido</strong>, cesta y modo. La vista previa se actualiza al cambiar forma, distribución o medidas.</p>
         <div class="setup-dwc-grid-3" id="setupDwcMedidasRow">
           <div id="setupDwcMedidasLAWrap" class="setup-dwc-medidas-span2">
             <div>
@@ -2973,29 +3001,7 @@
           </select>
         </div>
         <p id="setupDwcCultivoRecoStatus" class="setup-dwc-cap-hint setup-hidden" role="status" aria-live="polite"></p>
-        <div>
-          <label class="form-label setup-dwc-label" for="setupDwcOxigenacionDiseno">Distribución del aire</label>
-          <select id="setupDwcOxigenacionDiseno" class="setup-dwc-input"
-            onchange="try{var w=document.getElementById('setupDwcLitrosUtilesPorSitioWrap');if(w)w.classList.toggle('setup-hidden',(this.value||'')!=='cubos_independientes');try{dwcRefreshMulticuboDependienteUi('setup')}catch(e0){};try{updateTorreBuilder()}catch(e1){};try{refreshDwcTapHintSetup()}catch(e2){};actualizarResumenSetup()}catch(e){}"
-            aria-label="DWC asistente: un depósito o cubos multivalvula">
-            <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
-            <option value="cubos_independientes">Varios cubos (multivalvula) — 1 maceta por cubo</option>
-          </select>
-          <p class="setup-dwc-help" style="margin-top:0.35rem">Cada cubo tiene su depósito; comparten la bomba de aire. Toca cada maceta en el esquema para el cultivo.</p>
-        </div>
-        <div id="setupDwcNumCubosWrap" class="setup-hidden">
-          <label class="form-label setup-dwc-label" for="setupDwcNumCubos">¿Cuántos cubos?</label>
-          <input type="number" id="setupDwcNumCubos" class="setup-dwc-input" min="1" max="24" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC multivalvula"
-            oninput="try{updateTorreBuilder()}catch(e0){}try{refreshDwcTapHintSetup()}catch(e1){}try{actualizarResumenSetup()}catch(e2){}">
-        </div>
-        <div id="setupDwcLitrosUtilesPorSitioWrap" class="setup-hidden">
-          <label class="form-label setup-dwc-label" for="setupDwcLitrosUtilesPorSitioL">Litros útiles por cubo (L, opcional)</label>
-          <input type="number" id="setupDwcLitrosUtilesPorSitioL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="Vacío → seguro y reparto" inputmode="decimal" autocomplete="off"
-            onchange="try{actualizarResumenSetup()}catch(e){}"
-            oninput="try{actualizarResumenSetup()}catch(e){}"
-            aria-label="Litros útiles por cubo DWC multivalvula">
-          <p class="setup-dwc-help" style="margin-top:0.35rem">Vacío: la app usa el mínimo entre mezcla total ÷ cubos y el <strong>llenado seguro</strong> por cubo (cámara de aire), con las medidas y cesta de <strong>un cubo típico</strong>.</p>
-        </div>
+        
         <div id="setupDwcDepUnidoRejillaWrap">
         <div>
           <label class="form-label setup-dwc-label" for="setupDwcRejillaPreferida">Botón principal rejilla</label>
@@ -4555,10 +4561,10 @@
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=25"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=17"></script>
+  <script src="js/hc-setup-wizard-core.js?v=26"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=18"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-13-cultivo-reco-status"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-14-setup-exclusivo"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-dwc-preview"></script>
   <script src="js/hc-setup-calc-core.js?v=27"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>

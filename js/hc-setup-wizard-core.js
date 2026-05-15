@@ -1849,15 +1849,7 @@ function refrescarSetupTipoInstalacionUI() {
   const tw = document.getElementById('setupTorreBuilderWrap');
   const nw = document.getElementById('setupNftBuilderWrap');
   if (tw) {
-    let hideTorreBuilder = isNft || isRdwc;
-    if (
-      !hideTorreBuilder &&
-      setupTipoInstalacion === 'dwc' &&
-      typeof dwcNormalizeOxigenacionDiseno === 'function'
-    ) {
-      const oxv = dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value);
-      if (oxv === 'cubos_independientes') hideTorreBuilder = true;
-    }
+    const hideTorreBuilder = isNft || isRdwc || setupTipoInstalacion === 'dwc';
     tw.style.display = hideTorreBuilder ? 'none' : 'block';
   }
   if (nw) nw.classList.toggle('setup-hidden', !isNft);
@@ -1930,6 +1922,12 @@ function refrescarSetupTipoInstalacionUI() {
     try {
       onSetupDwcMedidasInput();
     } catch (eDwcVol) {}
+    try {
+      dwcRefreshMulticuboDependienteUi('setup');
+    } catch (_) {}
+    try {
+      dwcReparentSetupSlidersForPreview();
+    } catch (_) {}
   }
   syncSetupPreviewDiagramPorTipoInstalacion();
   if (isNft) {
