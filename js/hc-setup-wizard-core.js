@@ -1388,8 +1388,20 @@ function renderRdwcSetupCalculadoUi(cfg) {
   const block = document.getElementById('setupRdwcRecoBlock');
   const val = document.getElementById('setupRdwcRecoValor');
   const hint = document.getElementById('setupRdwcRecoHint');
+  const elCtl = document.getElementById('setupRdwcRecoControlL');
+  const elCubo = document.getElementById('setupRdwcRecoCuboL');
+  const elCuboDet = document.getElementById('setupRdwcRecoCuboDetalle');
+  const elSites = document.getElementById('setupRdwcRecoSites');
+  const elCubosSum = document.getElementById('setupRdwcRecoCubosSum');
+  const elSuma = document.getElementById('setupRdwcRecoSuma');
+  const elManualNote = document.getElementById('setupRdwcRecoManualNote');
+  const elDesglose = document.getElementById('setupRdwcRecoDesglose');
   const calc =
     typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(cfg, { soloCalculado: true }) : null;
+  const bucketInfo =
+    typeof getRdwcBucketTrabajoResumen === 'function'
+      ? getRdwcBucketTrabajoResumen(cfg)
+      : null;
   const totalManual =
     typeof getRdwcVolumenSolucionTotalLitros === 'function' ? getRdwcVolumenSolucionTotalLitros(cfg) : null;
   const manualCtl = rdwcParseLitrosTrabajo(cfg.volMezclaLitros);
@@ -1397,42 +1409,60 @@ function renderRdwcSetupCalculadoUi(cfg) {
     block.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
     if (calc) {
       block.classList.add('setup-dwc-litros-solucion-block--ok');
-      val.textContent =
-        calc.totalVol +
-        ' L útiles (total circuito) · bomba ~' +
-        calc.pumpRec +
-        ' L/h · aire ~' +
-        calc.airObj +
-        ' L/min';
-      if (hint) {
-        let htxt =
-          'Agua útil total calculada: reservorio ~' +
-          calc.controlVol +
-          ' L + ' +
-          calc.sites +
-          ' cubos × ~' +
-          calc.bucketVol +
-          ' L. Recirculación mín. ~' +
-          calc.recMin +
-          ' L/h · aire mín. ~' +
-          calc.airMin +
-          ' L/min.';
-        if (manualCtl != null && totalManual != null && Math.abs(totalManual - calc.totalVol) > 0.15) {
-          htxt +=
-            ' Depósito control manual (' +
-            manualCtl +
-            ' L): total con tu medida ~' +
-            totalManual +
-            ' L (no altera la recomendación calculada arriba).';
+      const cubosSum = Math.round(calc.sites * calc.bucketVol * 10) / 10;
+      val.textContent = calc.totalVol + ' L útiles en todo el circuito';
+      if (elCtl) elCtl.textContent = String(calc.controlVol);
+      if (elCubo) elCubo.textContent = String(calc.bucketVol);
+      if (elSites) elSites.textContent = String(calc.sites);
+      if (elCubosSum) elCubosSum.textContent = String(cubosSum);
+      if (elSuma) elSuma.textContent = String(calc.totalVol);
+      if (elCuboDet) {
+        if (bucketInfo && bucketInfo.fuente === 'cesta') {
+          elCuboDet.textContent = '(' + bucketInfo.detalle + ')';
+        } else if (bucketInfo && bucketInfo.fuente === 'geometria') {
+          elCuboDet.textContent = '(' + bucketInfo.detalle + ')';
         } else {
-          htxt += ' Litros útiles en depósito control: opcional; vacío = calculado.';
+          const h = Number(cfg.rdwcNetPotHeightMm);
+          elCuboDet.textContent =
+            Number.isFinite(h) && h >= 30
+              ? '(según altura cesta ' + Math.round(h) + ' mm)'
+              : '(estimación; indica altura cesta para afinar)';
         }
-        hint.textContent = htxt;
+      }
+      if (elDesglose) elDesglose.style.display = '';
+      if (hint) {
+        hint.textContent =
+          'Bomba recirculación ~' +
+          calc.pumpRec +
+          ' L/h · aire ~' +
+          calc.airObj +
+          ' L/min (mín. recirc. ~' +
+          calc.recMin +
+          ' L/h). No hace falta multiplicar cubos a mano: la suma de arriba es el total.';
+      }
+      if (elManualNote) {
+        if (manualCtl != null && totalManual != null && Math.abs(totalManual - calc.totalVol) > 0.15) {
+          elManualNote.textContent =
+            'Has indicado ' +
+            manualCtl +
+            ' L en el depósito de control (manual). Total con tu medida: ~' +
+            totalManual +
+            ' L. El desglose calculado no cambia.';
+          elManualNote.classList.remove('setup-hidden');
+        } else {
+          elManualNote.textContent = '';
+          elManualNote.classList.add('setup-hidden');
+        }
       }
     } else {
       block.classList.add('setup-dwc-litros-solucion-block--pending');
-      val.textContent = 'Indica cubos y depósito de control';
+      val.textContent = 'Indica cubos, depósito y Ø/altura de cesta';
       if (hint) hint.textContent = '';
+      if (elDesglose) elDesglose.style.display = 'none';
+      if (elManualNote) {
+        elManualNote.textContent = '';
+        elManualNote.classList.add('setup-hidden');
+      }
     }
   }
   const compatEl = document.getElementById('setupRdwcCompatStatus');

@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-15-nft-layout-fix">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-15-rdwc-desglose">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -2919,9 +2919,15 @@
             <div class="torre-preview torre-preview--rdwc" id="setupRdwcPreview" role="img" aria-live="polite"></div>
           </div>
           <div id="setupRdwcRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
-            <p class="setup-dwc-litros-solucion-label">Resultados recomendados</p>
+            <p class="setup-dwc-litros-solucion-label">Agua útil del circuito (calculada)</p>
             <p class="setup-dwc-litros-solucion-valor" id="setupRdwcRecoValor">—</p>
+            <ul id="setupRdwcRecoDesglose" class="setup-rdwc-litros-desglose" aria-label="Desglose de litros útiles">
+              <li>Reservorio de control: <strong id="setupRdwcRecoControlL">—</strong> L</li>
+              <li>Por cubo <span id="setupRdwcRecoCuboDetalle" class="setup-rdwc-litros-desglose-sub"></span>: <strong id="setupRdwcRecoCuboL">—</strong> L × <strong id="setupRdwcRecoSites">—</strong> cubos = <strong id="setupRdwcRecoCubosSum">—</strong> L</li>
+              <li class="setup-rdwc-litros-desglose-suma">Suma (total circuito): <strong id="setupRdwcRecoSuma">—</strong> L</li>
+            </ul>
             <p class="setup-dwc-litros-solucion-hint" id="setupRdwcRecoHint"></p>
+            <p id="setupRdwcRecoManualNote" class="setup-rdwc-litros-manual-note setup-hidden" role="note"></p>
           </div>
           <p class="setup-dwc-help setup-hidden"><strong>En un vistazo:</strong> cuenta los <strong>sitios/cubos</strong> y mira en la placa del kit los <strong>litros del depósito de control</strong>. Cubo nominal, recirculación y aireación pueden quedar como vienen por defecto o con el dato de tu bomba si lo tienes a mano; no hace falta calcular caudales a mano.</p>
           <p class="setup-dwc-help">Nutrientes: sumamos <strong>útil del depósito de control + útil de cada cubo</strong>. Los litros útiles y Ø/prof. bajo cesta son <strong>opcionales</strong> si ya indicaste volumen nominal; vacíos = estimación razonable. Cultivo previsto y net pot ayudan a afinar sin medir todo a mano.</p>
@@ -4578,7 +4584,7 @@
   <script src="js/torre-render-main.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-rdwc-total-litros"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-rdwc-desglose"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-colgado"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-setup-preview"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-setup-preview"></script>
