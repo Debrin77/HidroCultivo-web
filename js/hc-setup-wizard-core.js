@@ -64,6 +64,14 @@ function restaurarSetupTorreBuilderControls() {
   } else if (previewSlot && previewSlot.nextElementSibling !== controls) {
     previewSlot.after(controls);
   }
+  if (previewSlot) {
+    previewSlot.querySelectorAll('.setup-dwc-preview-kicker, .setup-field-hint').forEach((el) => el.remove());
+  }
+  const secBomba = document.getElementById('seccionTuboBomba');
+  const wrap = document.getElementById('setupTorreBuilderWrap');
+  if (secBomba && torreBuilder && secBomba.parentElement === torreBuilder && wrap?.parentElement) {
+    wrap.parentElement.insertBefore(secBomba, wrap.nextSibling);
+  }
   try {
     if (
       typeof setupTipoInstalacion !== 'undefined' &&
@@ -97,6 +105,10 @@ function onTorreSlidersInput() {
     const vc = document.getElementById('valCestas');
     if (vn) vn.textContent = String(n);
     if (vc) vc.textContent = String(c);
+    const sn = document.getElementById('sliderNiveles');
+    const sc = document.getElementById('sliderCestas');
+    if (sn) sn.setAttribute('aria-valuenow', String(n));
+    if (sc) sc.setAttribute('aria-valuenow', String(c));
     try {
       calcularBombaRecomendadaSistema();
     } catch (_) {}
@@ -212,9 +224,19 @@ function seleccionarSetupTorreMontajeOrigen(mode) {
   const hint = document.getElementById('setupTorreMontajeOrigenHint');
   if (hint) hint.classList.toggle('setup-hidden', !kit);
   const sec = document.getElementById('seccionTuboBomba');
+  const torreSoloGraficoSliders =
+    typeof setupTipoInstalacion !== 'undefined' &&
+    setupTipoInstalacion === 'torre' &&
+    typeof setupPagina !== 'undefined' &&
+    setupPagina === 1;
   if (sec) {
-    sec.classList.remove('setup-hidden');
-    sec.style.display = 'block';
+    if (torreSoloGraficoSliders) {
+      sec.classList.add('setup-hidden');
+      sec.style.display = 'none';
+    } else {
+      sec.classList.remove('setup-hidden');
+      sec.style.display = 'block';
+    }
   }
   const userBlock = document.getElementById('setupTorreBombaUsuarioBlock');
   if (userBlock) userBlock.classList.toggle('setup-hidden', kit);

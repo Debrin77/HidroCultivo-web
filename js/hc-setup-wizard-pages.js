@@ -1420,6 +1420,10 @@ function updateTorreBuilder() {
   const elVC = document.getElementById('valCestas');
   if (elVN) elVN.textContent = String(dwcNivPrev);
   if (elVC) elVC.textContent = String(dwcCesPrev);
+  const snTorre = document.getElementById('sliderNiveles');
+  const scTorre = document.getElementById('sliderCestas');
+  if (snTorre) snTorre.setAttribute('aria-valuenow', String(dwcNivPrev));
+  if (scTorre) scTorre.setAttribute('aria-valuenow', String(dwcCesPrev));
   const elVol = document.getElementById('valVol');
   if (elVol) {
     if (setupTipoInstalacion === 'dwc' && dwcCap != null && dwcCap > 0) {

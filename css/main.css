@@ -14423,9 +14423,11 @@ button.toggle-switch:focus-visible {
   width: 100%;
   max-width: 320px;
 }
-.torre-control-label--solo-val {
-  justify-content: center;
-  margin-bottom: 4px;
+#setupTorreBuilderWrap .setup-torre-controls .torre-control-row {
+  margin-bottom: 10px;
+}
+#setupTorreBuilderWrap .setup-torre-controls .torre-control-row:last-child {
+  margin-bottom: 0;
 }
 .torre-preview {
   display: flex;
