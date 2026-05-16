@@ -622,9 +622,75 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
   return c;
 }
 
+function rdwcTieneMedidasCestaEnCfg(cfg) {
+  const c = cfg || {};
+  const h = Number(c.rdwcNetPotHeightMm);
+  const rim = Number(c.rdwcNetPotMm);
+  return (Number.isFinite(h) && h >= 30 && h <= 200) || (Number.isFinite(rim) && rim >= 40);
+}
+
+/** Estima Ø y profundidad útil del cubo a partir de litros nominales (cilindro). */
+function rdwcEstimateBucketGeometryFromNominalL(volL) {
+  const v = Math.max(5, Number(volL) || 20);
+  const diamCm = Math.max(25, Math.min(48, 28 + (v - 20) * 0.32));
+  const profCm = (v * 1000) / (Math.PI * Math.pow(diamCm / 2, 2));
+  return {
+    diamCm: Math.round(diamCm * 10) / 10,
+    profCm: Math.round(Math.min(55, Math.max(18, profCm)) * 10) / 10,
+  };
+}
+
+/** Config auxiliar DWC para llenado seguro bajo cesta en cubos RDWC. */
+function rdwcCfgParaLlenadoSeguroCubo(cfg) {
+  const c = cfg || {};
+  const cap = Math.max(5, Number(c.rdwcBucketVolL) || 20);
+  let diam = rdwcParseCm(c.rdwcBucketTrabajoDiamCm);
+  let prof = rdwcParseCm(c.rdwcBucketTrabajoProfCm);
+  if (diam == null || prof == null) {
+    const est = rdwcEstimateBucketGeometryFromNominalL(cap);
+    if (diam == null) diam = est.diamCm;
+    if (prof == null) prof = est.profCm;
+  }
+  const pseudo = {
+    tipoInstalacion: 'dwc',
+    dwcDepositoForma: 'cilindrico',
+    dwcDepositoLargoCm: diam,
+    dwcDepositoAnchoCm: diam,
+    dwcDepositoProfCm: prof,
+    dwcNetPotRimMm: Math.max(40, Math.round(Number(c.rdwcNetPotMm) || 125)),
+    volDeposito: Math.round(cap * 10) / 10,
+  };
+  const hPot = Number(c.rdwcNetPotHeightMm);
+  if (Number.isFinite(hPot) && hPot >= 30 && hPot <= 200) pseudo.dwcNetPotHeightMm = hPot;
+  if (c.sustrato) pseudo.sustrato = c.sustrato;
+  else if (typeof state !== 'undefined' && state.configTorre && state.configTorre.sustrato) {
+    pseudo.sustrato = state.configTorre.sustrato;
+  }
+  return pseudo;
+}
+
+/** Litros útiles por cubo según altura/Ø de cesta y cámara de aire (misma lógica que DWC). */
+function getRdwcBucketVolumenTrabajoSeguroLitros(cfg) {
+  if (
+    typeof getDwcVolumenSeguroMaxLitrosDesdeConfig !== 'function' ||
+    typeof dwcTieneMedidasCestaEnCfg !== 'function'
+  ) {
+    return null;
+  }
+  if (!rdwcTieneMedidasCestaEnCfg(cfg)) return null;
+  const pseudo = rdwcCfgParaLlenadoSeguroCubo(cfg);
+  if (!dwcTieneMedidasCestaEnCfg(pseudo)) return null;
+  const safe = getDwcVolumenSeguroMaxLitrosDesdeConfig(pseudo);
+  if (safe == null || !Number.isFinite(safe) || safe <= 0) return null;
+  const bucketNom = Math.max(5, Number((cfg || {}).rdwcBucketVolL) || 20);
+  return Math.min(bucketNom, Math.max(0.5, Math.round(safe * 10) / 10));
+}
+
 function getRdwcBucketVolumenTrabajoAutoLitros(cfg) {
   const c = cfg || {};
   const bucketNom = Math.max(5, Number(c.rdwcBucketVolL) || 20);
+  const seguro = getRdwcBucketVolumenTrabajoSeguroLitros(c);
+  if (seguro != null) return seguro;
   // Auto conservador: deja una cámara de aire razonable bajo la cesta si el usuario no ha afinado el dato.
   const autoL = bucketNom * 0.7;
   const out = Math.min(bucketNom, Math.max(0.5, autoL));
@@ -651,6 +717,8 @@ function getRdwcBucketVolumenTrabajoLitros(cfg) {
   if (manual != null) {
     return Math.min(bucketNom, Math.max(0.5, Math.round(manual * 10) / 10));
   }
+  const seguro = getRdwcBucketVolumenTrabajoSeguroLitros(c);
+  if (seguro != null) return seguro;
   const geom = getRdwcBucketVolumenTrabajoGeometriaLitros(c);
   if (geom != null) return geom;
   return getRdwcBucketVolumenTrabajoAutoLitros(c);
@@ -664,7 +732,12 @@ function getRdwcVolumenControlTrabajoLitros(cfg) {
   if (mix != null) {
     return Math.min(controlMax, Math.max(0.5, Math.round(mix * 10) / 10));
   }
-  return Math.round(controlMax * 10) / 10;
+  const reco =
+    typeof rdwcRecomendacionControlDesdeConfig === 'function' ? rdwcRecomendacionControlDesdeConfig(c) : null;
+  if (reco && Number.isFinite(reco.trabajoL) && reco.trabajoL > 0) {
+    return Math.min(controlMax, Math.max(0.5, Math.round(reco.trabajoL * 10) / 10));
+  }
+  return Math.round(controlMax * 0.88 * 10) / 10;
 }
 
 function getRdwcVolumenSolucionTotalLitros(cfg) {
@@ -698,10 +771,19 @@ function getRdwcBucketTrabajoResumen(cfg) {
       detalle: 'Ø ' + diam + ' cm × ' + prof + ' cm',
     };
   }
+  const seguro = getRdwcBucketVolumenTrabajoSeguroLitros(c);
+  if (seguro != null) {
+    const h = Number(c.rdwcNetPotHeightMm);
+    const detalle =
+      Number.isFinite(h) && h >= 30
+        ? 'llenado seguro · cesta ' + Math.round(h) + ' mm'
+        : 'llenado seguro según Ø cesta';
+    return { litros: seguro, fuente: 'cesta', detalle };
+  }
   return {
     litros: getRdwcBucketVolumenTrabajoLitros(c),
     fuente: 'auto',
-    detalle: 'auto ~70 % nominal',
+    detalle: 'auto ~70 % nominal (indica altura de cesta para afinar)',
   };
 }
 
@@ -1198,10 +1280,60 @@ function rdwcCalcularHidraulica(cfg) {
   };
 }
 
+function syncRdwcLitrosUtilesSugeridos(scope) {
+  const prefix = scope === 'sys' ? 'sys' : 'setup';
+  const seed =
+    scope === 'sys'
+      ? state.configTorre || {}
+      : typeof getSetupRdwcDraftSeed === 'function'
+        ? getSetupRdwcDraftSeed()
+        : setupRdwcDraft || {};
+  let c;
+  try {
+    c = buildRdwcConfigFromForm(scope, seed);
+  } catch (_) {
+    return;
+  }
+  const bucketEl = document.getElementById(prefix + 'RdwcBucketTrabajoL');
+  const controlEl = document.getElementById(prefix + 'RdwcControlTrabajoL');
+  const bucketLit = getRdwcBucketVolumenTrabajoLitros(c);
+  if (bucketEl && bucketLit != null && !String(bucketEl.value || '').trim()) {
+    bucketEl.placeholder = 'auto ~' + bucketLit + ' L';
+  }
+  const controlLit = getRdwcVolumenControlTrabajoLitros(c);
+  if (controlEl && controlLit != null && !String(controlEl.value || '').trim()) {
+    controlEl.placeholder = 'auto ~' + controlLit + ' L';
+  }
+  const hintId = scope === 'sys' ? 'sysRdwcLitrosUtilesHint' : 'setupRdwcLitrosUtilesHint';
+  const hintEl = document.getElementById(hintId);
+  if (hintEl) {
+    const h = Number(c.rdwcNetPotHeightMm);
+    const tieneCesta = rdwcTieneMedidasCestaEnCfg(c);
+    if (!tieneCesta) {
+      hintEl.textContent =
+        'Indica altura del net pot (mm) y Ø del aro para calcular litros útiles por cubo y el total de mezcla.';
+    } else if (bucketLit != null) {
+      hintEl.textContent =
+        'Litros por cubo estimados con cesta' +
+        (Number.isFinite(h) && h >= 30 ? ' (' + Math.round(h) + ' mm altura)' : '') +
+        ': ~' +
+        bucketLit +
+        ' L. Depósito control útil: ~' +
+        (controlLit != null ? controlLit : '—') +
+        ' L (o el valor que midas al llenar).';
+    } else {
+      hintEl.textContent = '';
+    }
+  }
+}
+
 function onSetupRdwcInput() {
   let c = null;
   try {
     if (typeof applySetupRdwcDesdeFormulario === 'function') c = applySetupRdwcDesdeFormulario();
+  } catch (_) {}
+  try {
+    syncRdwcLitrosUtilesSugeridos('setup');
   } catch (_) {}
   try {
     if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(c);
@@ -1275,7 +1407,9 @@ function renderRdwcCalculoStatus(cfg, elId) {
       ? ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (manual)')
       : bucketInfo.fuente === 'geometria'
         ? ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')')
-        : ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')');
+        : bucketInfo.fuente === 'cesta'
+          ? ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')')
+          : ('<strong>' + bucketInfo.litros + ' L</strong> por cubo útil (' + bucketInfo.detalle + ')');
   const cultivoTxt =
     recoCult
       ? ' · Cultivo ' +
@@ -1402,6 +1536,9 @@ function bindRdwcCompatLive(scope) {
       c2.rdwcLayout = lay && lay.value ? lay.value : c.rdwcLayout || 'line';
       renderRdwcCompatStatus(c2, 'sysRdwcCompatStatus');
       renderRdwcCalculoStatus(c2, 'sysRdwcCalcStatus');
+      try {
+        syncRdwcLitrosUtilesSugeridos('sys');
+      } catch (_) {}
     } else {
       const g = (id, fb) => {
         const el = document.getElementById(id);
@@ -3083,6 +3220,9 @@ function syncSistemaRdwcDesdeConfig(cfg) {
   bindRdwcCompatLive('sys');
   renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
   renderRdwcCalculoStatus(c, 'sysRdwcCalcStatus');
+  try {
+    syncRdwcLitrosUtilesSugeridos('sys');
+  } catch (_) {}
 }
 
 function applySetupRdwcDesdeFormulario() {
@@ -3139,6 +3279,9 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
   } catch (_) {}
   try {
     if (typeof refreshRdwcSetupPreview === 'function') refreshRdwcSetupPreview();
+  } catch (_) {}
+  try {
+    syncRdwcLitrosUtilesSugeridos('setup');
   } catch (_) {}
 }
 

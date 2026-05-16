@@ -1173,6 +1173,12 @@ function getSetupVolumenNutrientesLitros() {
       const n = parseFloat(raw);
       return Number.isFinite(n) && n > 0 ? Math.round(n * 10) / 10 : undefined;
     })(),
+    rdwcNetPotMm: Math.max(40, Math.min(200, parseInt(String(document.getElementById('setupRdwcNetPotMm')?.value || '125'), 10) || 125)),
+    rdwcNetPotHeightMm: (function() {
+      const raw = String(document.getElementById('setupRdwcNetPotHeightMm')?.value || '').trim();
+      const n = parseInt(raw, 10);
+      return Number.isFinite(n) && n >= 30 && n <= 200 ? n : undefined;
+    })(),
     rdwcControlVolL: getSetupVolumenMaxLitros(),
     volMezclaLitros: volMezcla,
   };
