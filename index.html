@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-15-dwc-mc-preview">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-15-dwc-litros">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -2993,9 +2993,6 @@
           <input type="number" id="setupDwcVolumenManualL" min="1" max="800" step="0.1" placeholder="ej. 18.0" class="setup-dwc-input" oninput="onSetupDwcMedidasInput()">
           <p id="setupDwcVolumenManualHint" class="setup-hidden setup-dwc-cap-hint" role="status"></p>
         </div>
-        <div id="setupDwcLitrosCuboBlock" class="setup-dwc-litros-cubo-block setup-hidden" role="status" aria-live="polite">
-          <p id="setupDwcCapacidadEstimada" class="setup-dwc-litros-cubo-valor"></p>
-        </div>
         <h3 class="setup-dwc-section-title">Medidas de la cesta</h3>
         <div class="setup-dwc-grid-2 setup-dwc-grid-2-top">
           <div>
@@ -3006,6 +3003,9 @@
             <label class="form-label setup-dwc-label" for="setupDwcPotHmm">Altura cesta (mm)</label>
             <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" class="setup-dwc-input" onchange="try{onSetupDwcMedidasInput();actualizarResumenSetup()}catch(e){}" oninput="try{onSetupDwcMedidasInput()}catch(e){}">
           </div>
+        </div>
+        <div id="setupDwcLitrosCuboBlock" class="setup-dwc-litros-cubo-block setup-hidden" role="status" aria-live="polite">
+          <p id="setupDwcCapacidadEstimada" class="setup-dwc-litros-cubo-valor"></p>
         </div>
         <div id="setupDwcDepUnidoExtrasWrap" class="setup-dwc-dep-unido-only">
         <div><label class="form-label setup-dwc-label" for="setupDwcModoCultivo">Modo DWC</label><select id="setupDwcModoCultivo" class="setup-dwc-input" onchange="try{onDwcModoChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"><option value="aireado">DWC aireado</option><option value="kratky">Kratky</option></select></div>
@@ -4558,7 +4558,7 @@
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=2026-05-15-dwc-mc-preview"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-mc-preview"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-litros"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-dwc-mc-preview"></script>

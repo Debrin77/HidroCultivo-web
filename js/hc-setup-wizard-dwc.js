@@ -1000,14 +1000,17 @@ function dwcLitrosPorSitioOxigenacionMulticubo(cfg, volMezclaTotal, nTotal) {
  * Litros útiles de un cubo (cámara de aire + cesta) para SVG, checklist y resumen.
  * No reparte el total del sistema entre N cubos.
  */
-function dwcLitrosUtilesPorCuboMultivalvula(cfg) {
+function dwcLitrosUtilesPorCuboMultivalvula(cfg, opts) {
+  opts = opts || {};
   cfg = cfg || state.configTorre || {};
   if (typeof dwcGetOxigenacionDiseno !== 'function' || dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') {
     return null;
   }
-  const explicit = Number(cfg.dwcLitrosUtilesPorSitioL);
-  if (Number.isFinite(explicit) && explicit >= 0.5) {
-    return Math.round(explicit * 10) / 10;
+  if (!opts.preferGeometria) {
+    const explicit = Number(cfg.dwcLitrosUtilesPorSitioL);
+    if (Number.isFinite(explicit) && explicit >= 0.5) {
+      return Math.round(explicit * 10) / 10;
+    }
   }
   if (typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
     const safe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
@@ -1016,6 +1019,65 @@ function dwcLitrosUtilesPorCuboMultivalvula(cfg) {
     }
   }
   return null;
+}
+
+/** ¿Medidas mínimas del cubo en cfg para estimar litros? */
+function dwcSetupTieneMedidasCuboEnCfg(cfg) {
+  const c = cfg || {};
+  const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
+  const P = Number(c.dwcDepositoProfCm);
+  if (!Number.isFinite(P) || P < 5 || P > 200) return false;
+  if (forma === 'cilindrico') {
+    const d = dwcDiametroInteriorCmDesdeLW(c.dwcDepositoLargoCm, c.dwcDepositoAnchoCm);
+    return d != null && d >= 5;
+  }
+  const L = Number(c.dwcDepositoLargoCm);
+  const W = Number(c.dwcDepositoAnchoCm);
+  return Number.isFinite(L) && L >= 5 && Number.isFinite(W) && W >= 5;
+}
+
+/** Estado del cálculo de L/cubo en el asistente (multiválvula). */
+function dwcSetupMulticuboLitrosEstado(cfg) {
+  if (!cfg || dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') {
+    return { litros: null, pendiente: '' };
+  }
+  if (!dwcSetupTieneMedidasCuboEnCfg(cfg)) {
+    return {
+      litros: null,
+      pendiente:
+        'Completa las medidas del cubo (Ø interior o largo×ancho, y profundidad útil del líquido) para calcular los litros.',
+    };
+  }
+  const hPot = Number(cfg.dwcNetPotHeightMm);
+  const rim = Number(cfg.dwcNetPotRimMm);
+  const tieneCesta =
+    (Number.isFinite(hPot) && hPot >= 30) || (Number.isFinite(rim) && rim >= 25);
+  const litros = dwcLitrosUtilesPorCuboMultivalvula(cfg, { preferGeometria: true });
+  if (litros != null && litros > 0) {
+    const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
+    let extra = '';
+    if (cap != null && cap > 0 && Math.abs(cap - litros) > 0.25) {
+      extra = ' (capacidad geométrica del cubo: ' + cap + ' L; llenado seguro bajo cesta).';
+    } else {
+      extra = ' (llenado seguro según altura de cesta y cámara de aire bajo la maceta).';
+    }
+    return {
+      litros,
+      pendiente: '',
+      texto:
+        litros + ' L de solución por cubo — volumen óptimo para mezclar y checklist.' + extra,
+    };
+  }
+  if (!tieneCesta) {
+    return {
+      litros: null,
+      pendiente: 'Indica diámetro y altura de la cesta para afinar el llenado seguro (litros útiles por cubo).',
+    };
+  }
+  return {
+    litros: null,
+    pendiente: 'Revisa medidas del cubo y de la cesta; no se pudo calcular el volumen útil.',
+  };
 }
 
 /**
@@ -2855,26 +2917,27 @@ function onSetupDwcMedidasInput() {
     const hint = document.getElementById('setupDwcCapacidadEstimada');
     const block = document.getElementById('setupDwcLitrosCuboBlock');
     const hidden = document.getElementById('setupDwcLitrosUtilesPorSitioL');
-    let litros = null;
+    let estado = { litros: null, pendiente: '', texto: '' };
     try {
       const draft = buildDwcDraftCfgFromSetupWizardInputs();
-      litros =
-        draft && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
-          ? dwcLitrosUtilesPorCuboMultivalvula(draft)
-          : null;
-    } catch (_) {}
-    if (litros != null && litros > 0) {
-      const L = Math.round(litros * 10) / 10;
-      if (block) block.classList.remove('setup-hidden');
-      if (hint) {
-        hint.textContent =
-          L + ' L de solución por cubo (calculado según medidas del cubo, profundidad de cesta y cámara de aire bajo la maceta).';
+      if (draft && typeof dwcSetupMulticuboLitrosEstado === 'function') {
+        estado = dwcSetupMulticuboLitrosEstado(draft);
       }
-      if (hidden) hidden.value = String(L);
-    } else {
-      if (block) block.classList.add('setup-hidden');
-      if (hint) hint.textContent = '';
-      if (hidden) hidden.value = '';
+    } catch (_) {}
+    if (block) {
+      block.classList.remove('setup-hidden');
+      block.classList.toggle('setup-dwc-litros-cubo-block--ok', estado.litros != null && estado.litros > 0);
+      block.classList.toggle('setup-dwc-litros-cubo-block--pending', !(estado.litros != null && estado.litros > 0));
+    }
+    if (hint) {
+      hint.textContent =
+        estado.litros != null && estado.litros > 0
+          ? estado.texto || estado.litros + ' L de solución por cubo.'
+          : estado.pendiente || 'Completa medidas del cubo y de la cesta.';
+    }
+    if (hidden) {
+      hidden.value =
+        estado.litros != null && estado.litros > 0 ? String(Math.round(estado.litros * 10) / 10) : '';
     }
     updateTorreBuilder();
     return;

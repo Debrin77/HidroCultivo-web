@@ -14475,6 +14475,18 @@ button.toggle-switch:focus-visible {
   color: #047857;
   line-height: 1.45;
 }
+.setup-dwc-litros-cubo-block--pending {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+.setup-dwc-litros-cubo-block--pending .setup-dwc-litros-cubo-valor {
+  color: #92400e;
+  font-weight: 600;
+}
+.setup-dwc-litros-cubo-block--ok {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+}
 .setup-dwc-dep-unido-controls {
   margin-top: 10px;
 }
