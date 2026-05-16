@@ -117,6 +117,16 @@ function onTorreSlidersInput() {
     } catch (_) {}
     return;
   }
+  const n = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10) || 5;
+  const c = parseInt(document.getElementById('sliderCestas')?.value || 5, 10) || 5;
+  const vn = document.getElementById('valNiveles');
+  const vc = document.getElementById('valCestas');
+  if (vn) vn.textContent = String(n);
+  if (vc) vc.textContent = String(c);
+  const sn = document.getElementById('sliderNiveles');
+  const sc = document.getElementById('sliderCestas');
+  if (sn) sn.setAttribute('aria-valuenow', String(n));
+  if (sc) sc.setAttribute('aria-valuenow', String(c));
   try {
     updateTorreBuilder();
   } catch (_) {}

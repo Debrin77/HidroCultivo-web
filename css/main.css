@@ -14429,6 +14429,9 @@ button.toggle-switch:focus-visible {
 #setupTorreBuilderWrap .setup-torre-controls .torre-control-row:last-child {
   margin-bottom: 0;
 }
+#setupTorreBuilderWrap .setup-torre-controls .torre-control-label {
+  margin-bottom: 6px;
+}
 .torre-preview {
   display: flex;
   flex-direction: column;
