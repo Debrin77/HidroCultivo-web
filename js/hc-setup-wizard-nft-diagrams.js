@@ -1199,6 +1199,44 @@ function seleccionarNftPotRimPreset(mm) {
   } catch (_) {}
 }
 
+/** Bloque compacto de resultados en el asistente NFT (bomba + circuito). */
+function nftRefreshSetupCalculadoUi(draft, bNft, hyd) {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') return;
+  const block = document.getElementById('setupNftRecoBlock');
+  const val = document.getElementById('setupNftRecoValor');
+  const hint = document.getElementById('setupNftRecoHint');
+  if (!val) return;
+  draft =
+    draft ||
+    (typeof buildNftDraftConfigFromSetupUi === 'function' ? buildNftDraftConfigFromSetupUi() : {});
+  bNft = bNft || (typeof getNftBombaDesdeConfig === 'function' ? getNftBombaDesdeConfig(draft) : null);
+  hyd = hyd || (typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(draft) : null);
+  const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || '8', 10) || 8;
+  if (block) {
+    block.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
+  }
+  if (bNft && Number.isFinite(bNft.caudalRecLH)) {
+    if (block) block.classList.add('setup-dwc-litros-solucion-block--ok');
+    val.textContent =
+      bNft.caudalRecLH +
+      ' L/h · ~' +
+      (bNft.potenciaRecW != null ? bNft.potenciaRecW : '—') +
+      ' W';
+    if (hint) {
+      hint.textContent =
+        (hyd ? hyd.nCh + ' tubo(s) · ' + huecos + ' huecos/tubo' : '') +
+        (bNft.volDepositoRecomendadoL != null
+          ? ' · depósito orientativo ~' + bNft.volDepositoRecomendadoL + ' L'
+          : '') +
+        '. Detalle en Consejos → NFT.';
+    }
+  } else {
+    if (block) block.classList.add('setup-dwc-litros-solucion-block--pending');
+    val.textContent = 'Ajusta tubos, huecos y depósito';
+    if (hint) hint.textContent = 'Los valores se actualizan al mover los controles del diagrama.';
+  }
+}
+
 function pintarResultadoBombaNftUI(b, volUsuarioL) {
   const el = document.getElementById('resultadoBombaNft');
   if (!el) return;

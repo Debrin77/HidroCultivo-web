@@ -1031,6 +1031,9 @@ function updateNftSetupPreview() {
   const preview = document.getElementById('nftPreview');
   if (!preview) return;
   const bNft = getNftBombaDesdeConfig(draft);
+  try {
+    if (typeof nftRefreshSetupCalculadoUi === 'function') nftRefreshSetupCalculadoUi(draft, bNft, hyd);
+  } catch (_) {}
   pintarResultadoBombaNftUI(bNft, vol);
   refrescarUIMensajeBombaUsuarioNft('setup');
   const uLh = parseFloat(String(document.getElementById('nftBombaUsuarioLh')?.value || '').replace(',', '.'));
@@ -1369,9 +1372,54 @@ function refreshDwcSetupPreview() {
   }
 }
 
+/** Vista previa RDWC en el asistente (diagrama SVG). */
+function refreshRdwcSetupPreview() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'rdwc') return;
+  const preview = document.getElementById('setupRdwcPreview');
+  if (!preview) return;
+  try {
+    let draft = {};
+    if (typeof applySetupRdwcDesdeFormulario === 'function') {
+      draft = applySetupRdwcDesdeFormulario() || {};
+    } else if (typeof setupRdwcDraft === 'object' && setupRdwcDraft) {
+      draft = setupRdwcDraft;
+    }
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(draft);
+    const sites = Math.max(2, Math.round(Number(draft.rdwcSites) || 4));
+    const rows = Math.max(1, Math.min(4, Math.round(Number(draft.rdwcRows) || 1)));
+    const cols = Math.max(1, Math.ceil(sites / rows));
+    draft.numNiveles = rows;
+    draft.numCestas = cols;
+    const prevCfg = state.configTorre;
+    const prevTorre = state.torre;
+    state.configTorre = Object.assign({}, prevCfg || {}, draft, { tipoInstalacion: 'rdwc' });
+    if (typeof redimensionarMatrizTorreDwcPreservando === 'function') {
+      redimensionarMatrizTorreDwcPreservando(state.configTorre, rows, cols);
+    }
+    if (typeof generarSVGRdwc === 'function') {
+      preview.innerHTML = generarSVGRdwc();
+      preview.classList.add('torre-preview--rdwc');
+    }
+    state.configTorre = prevCfg;
+    state.torre = prevTorre;
+  } catch (err) {
+    preview.innerHTML =
+      '<p class="setup-dwc-preview-fallback" role="status">No se pudo dibujar la vista previa RDWC.</p>';
+    try {
+      console.error('refreshRdwcSetupPreview', err);
+    } catch (_) {}
+  }
+}
+
 function updateTorreBuilder() {
   if (setupTipoInstalacion === 'nft') {
     updateNftSetupPreview();
+    return;
+  }
+  if (setupTipoInstalacion === 'rdwc') {
+    try {
+      if (typeof onSetupRdwcInput === 'function') onSetupRdwcInput();
+    } catch (_) {}
     return;
   }
   if (setupTipoInstalacion === 'srf') {

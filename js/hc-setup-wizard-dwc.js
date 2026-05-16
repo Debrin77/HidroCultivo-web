@@ -707,9 +707,15 @@ function litrosDepositoParaChecklist(cfg) {
     const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
     if (cap != null && cap >= 1 && cap <= 800) return cap;
   }
-  if (tipoNorm === 'srf' && typeof srfCapacidadLitrosDesdeConfig === 'function') {
-    const capS = srfCapacidadLitrosDesdeConfig(cfg);
-    if (capS != null && capS >= 1 && capS <= 5000) return capS;
+  if (tipoNorm === 'srf') {
+    if (typeof srfVolumenSeguroLitrosDesdeConfig === 'function') {
+      const segS = srfVolumenSeguroLitrosDesdeConfig(cfg);
+      if (segS != null && segS >= 1 && segS <= 5000) return segS;
+    }
+    if (typeof srfCapacidadLitrosDesdeConfig === 'function') {
+      const capS = srfCapacidadLitrosDesdeConfig(cfg);
+      if (capS != null && capS >= 1 && capS <= 5000) return capS;
+    }
   }
   return null;
 }

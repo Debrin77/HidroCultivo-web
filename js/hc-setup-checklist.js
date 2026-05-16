@@ -546,6 +546,9 @@ function checklistInstalacionCompletaParaRecarga() {
     if (dwcVolOk) return true;
   }
   if (cfg.tipoInstalacion === 'srf') {
+    const segS =
+      typeof srfVolumenSeguroLitrosDesdeConfig === 'function' ? srfVolumenSeguroLitrosDesdeConfig(cfg) : null;
+    if (segS != null && segS >= 1) return true;
     const capS = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cfg) : null;
     if (capS != null && capS >= 1) return true;
     const volManualS = Number(cfg.volDeposito);
@@ -684,10 +687,11 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
       srfCanalLargoCm: 120,
       srfCanalAnchoCm: 60,
       srfProfundidadCm: 25,
+      srfFilas: 2,
+      srfPlantasPorFila: 4,
       srfNumPlantas: 8,
-      srfFilas: 1,
-      numNiveles: 1,
-      numCestas: 8,
+      numNiveles: 2,
+      numCestas: 4,
       volDeposito: capS,
     });
     if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(state.configTorre);
@@ -835,6 +839,14 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     }
     cldVolMezclaHint =
       'En DWC, <strong>vacío</strong>: las dosis usan el volumen <strong>orientativo</strong> (cámara de aire y cesta), igual que Cultivo e instalación. Solo indica litros si <strong>rellenas menos</strong> que ese orientativo.';
+  }
+  if (tipoIni === 'srf' && typeof getVolumenDepositoMaxLitros === 'function') {
+    const moS = getVolumenDepositoMaxLitros(cfg);
+    if (moS != null && Number.isFinite(moS) && moS > 0) {
+      cldVolMezclaPlaceholder = 'Vacío → orientativo ~' + (Math.round(moS * 10) / 10) + ' L (aire + cesta)';
+    }
+    cldVolMezclaHint =
+      'En SRF, <strong>vacío</strong>: las dosis usan el llenado seguro del estanque común (cámara de aire hasta la base de la cesta). Solo indica litros si rellenas <strong>menos</strong> que ese orientativo.';
   }
   const aguaIni = cfg.agua || state.configAgua || 'destilada';
   const nutObjIni = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
@@ -994,7 +1006,7 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     } else if (tipoSel === 'srf') {
       lab.textContent = 'Litros útiles del estanque SRF (L)';
       hint.textContent =
-        'Volumen de solución del estanque común (L×A×P o medido). Puede ser grande; afinar balsa y plantas en Cultivo e instalación.';
+        'Llenado seguro con cámara de aire y cesta (asistente o Cultivo e instalación). Si no hay medidas de cesta, usa L×A×P o el litraje medido.';
     } else {
       lab.textContent = 'Capacidad máxima del depósito de mezcla (L)';
       hint.textContent =
@@ -1182,7 +1194,7 @@ function getCLPasos() {
   const pc1DescPaso = esRdwc
     ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
     : esSrf
-      ? 'Litros útiles del <strong>estanque común</strong> (geométricos o medidos), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Todos los huecos de la balsa comparten la misma solución; los <strong>ml del paso 4</strong> usan ese volumen.'
+      ? 'Llenado seguro del <strong>estanque común</strong> (cámara de aire + cesta del asistente, o L×A×P si faltan medidas), litros de mezcla si no llenas hasta el tope, agua y nutriente. Todos los huecos comparten la misma solución; los <strong>ml del paso 4</strong> usan ese volumen.'
     : esDwc
       ? (dwcOxMult
           ? 'Indica los <strong>litros útiles de un cubo</strong> (solución con cámara de aire bajo la cesta). Los <strong>ml del paso 4</strong> salen de ese volumen: <strong>repites en cada cubo</strong> y luego pones el aireador en marcha.'
@@ -1209,7 +1221,7 @@ function getCLPasos() {
       ? String(Math.round(vmPrimer * 10) / 10)
       : '';
   let pc1PhVolMez = 'vacío = hasta el máximo';
-  if (esDwc && !esRdwc && typeof getVolumenDepositoMaxLitros === 'function') {
+  if ((esDwc || esSrf) && !esRdwc && typeof getVolumenDepositoMaxLitros === 'function') {
     const mo = getVolumenDepositoMaxLitros(cfg);
     if (mo != null && Number.isFinite(mo) && mo > 0) {
       pc1PhVolMez = 'Vacío → orientativo ~' + String(Math.round(mo * 10) / 10) + ' L (aire + cesta)';
@@ -1233,7 +1245,7 @@ function getCLPasos() {
             : esRdwc
               ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí añades los productos y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado. Eso no significa echar todo el volumen total de golpe en el reservorio: primero se ceba y luego se completa el circuito.'
               : esSrf
-                ? ' En SRF todos los huecos comparten el <strong>mismo estanque</strong>: mide EC/pH en la solución común con aireador en marcha (o superficie estable en Kratky). El volumen orientativo sale de L×A×P o del litraje medido en Cultivo e instalación.'
+                ? ' En SRF todos los huecos comparten el <strong>mismo estanque</strong>: mide EC/pH en la solución común con aireador en marcha (o superficie estable en Kratky). El volumen orientativo es el <strong>llenado seguro</strong> (cámara de aire hasta la base de la cesta), no el geométrico completo.'
                 : ''),
       extraHtml:
         (clGuiaMcHtml || '') +
@@ -1465,9 +1477,18 @@ function getCLPasos() {
           nota: srfKratky
             ? 'Sin aireador: no llenes por encima de la base del sustrato; prioriza agua fresca (17–21 °C).'
             : (function () {
-                const air = typeof srfRecomendarAireLpm === 'function' ? srfRecomendarAireLpm(cfg) : { reco: 8 };
-                const lpm = Number(cfg.srfAirLpm) > 0 ? cfg.srfAirLpm : air.reco;
-                return 'Referencia orientativa: ~' + lpm + ' L/min para este estanque (DO >4–5 mg/L).';
+                const bomba =
+                  typeof srfRecomendarBombaAire === 'function'
+                    ? srfRecomendarBombaAire(cfg)
+                    : { lpmReco: Number(cfg.srfAirLpm) > 0 ? cfg.srfAirLpm : 8, wattsReco: 5 };
+                const lpm = Number(cfg.srfAirLpm) > 0 ? cfg.srfAirLpm : bomba.lpmReco;
+                return (
+                  'Referencia orientativa: ~' +
+                  lpm +
+                  ' L/min (~' +
+                  bomba.wattsReco +
+                  ' W) para este estanque (DO >4–5 mg/L).'
+                );
               })(),
         },
         ...(cfg.srfCirculante && !srfKratky
@@ -1484,11 +1505,22 @@ function getCLPasos() {
           seccion: null,
           paso: 'S·0c',
           desc: 'Revisa que cada <strong>hueco de la balsa</strong> tenga net pot estable y raíces sumergidas en la solución.',
-          nota:
-            (typeof srfGetNumPlantas === 'function' ? srfGetNumPlantas(cfg) : cfg.numNiveles * cfg.numCestas) +
-            ' plantas en balsa · estanque ~' +
-            (vol || '—') +
-            ' L.',
+          nota: (function () {
+            const grid =
+              typeof srfDistribuirPlantas === 'function'
+                ? srfDistribuirPlantas(cfg)
+                : { rows: cfg.numNiveles || 1, cols: cfg.numCestas || 1, total: (cfg.numNiveles || 1) * (cfg.numCestas || 1) };
+            return (
+              grid.rows +
+              '×' +
+              grid.cols +
+              ' (' +
+              grid.total +
+              ' huecos) · llenado orientativo ~' +
+              (vol || '—') +
+              ' L.'
+            );
+          })(),
         },
       ]
     : [];

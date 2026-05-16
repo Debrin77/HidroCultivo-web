@@ -2910,18 +2910,28 @@
 
       <div id="setupDwcDetalleWrap" class="setup-hidden setup-dwc-wrap">
         <div id="setupDwcIntroBloque" class="setup-hidden" aria-hidden="true"></div>
-        <div id="setupRdwcDetalleWrap" class="setup-hidden">
+        <div id="setupRdwcDetalleWrap" class="setup-hidden setup-rdwc-asistente-simple">
           <div class="setup-dwc-title">Sistema RDWC</div>
-          <p class="setup-dwc-help"><strong>En un vistazo:</strong> cuenta los <strong>sitios/cubos</strong> y mira en la placa del kit los <strong>litros del depósito de control</strong>. Cubo nominal, recirculación y aireación pueden quedar como vienen por defecto o con el dato de tu bomba si lo tienes a mano; no hace falta calcular caudales a mano.</p>
+          <p class="setup-dwc-help">Indica <strong>cubos</strong>, <strong>depósito de control</strong> y Ø de cesta. Recirculación y aire en tiempo real.</p>
+          <div id="setupRdwcPreviewSection" class="setup-dwc-preview-section setup-dwc-preview-section--diagram">
+            <p class="setup-dwc-preview-kicker">Vista previa</p>
+            <div class="torre-preview torre-preview--rdwc" id="setupRdwcPreview" role="img" aria-live="polite"></div>
+          </div>
+          <div id="setupRdwcRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+            <p class="setup-dwc-litros-solucion-label">Resultados recomendados</p>
+            <p class="setup-dwc-litros-solucion-valor" id="setupRdwcRecoValor">—</p>
+            <p class="setup-dwc-litros-solucion-hint" id="setupRdwcRecoHint"></p>
+          </div>
+          <p class="setup-dwc-help setup-hidden"><strong>En un vistazo:</strong> cuenta los <strong>sitios/cubos</strong> y mira en la placa del kit los <strong>litros del depósito de control</strong>. Cubo nominal, recirculación y aireación pueden quedar como vienen por defecto o con el dato de tu bomba si lo tienes a mano; no hace falta calcular caudales a mano.</p>
           <p class="setup-dwc-help">Nutrientes: sumamos <strong>útil del depósito de control + útil de cada cubo</strong>. Los litros útiles y Ø/prof. bajo cesta son <strong>opcionales</strong> si ya indicaste volumen nominal; vacíos = estimación razonable. Cultivo previsto y net pot ayudan a afinar sin medir todo a mano.</p>
 <div class="setup-dwc-grid-2">
-            <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcCultivoPrevisto">Cultivo previsto</label><select id="setupRdwcCultivoPrevisto" class="setup-dwc-input"><option value="">Auto según cultivos asignados / configuración</option></select></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcControlVolL">Depósito control (L máx)</label><input type="number" id="setupRdwcControlVolL" class="setup-dwc-input" min="10" max="800" step="0.5" placeholder="40"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcControlVolL">Depósito control (L máx)</label><input type="number" id="setupRdwcControlVolL" class="setup-dwc-input" min="10" max="800" step="0.5" placeholder="40" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcControlTrabajoL">Litros útiles en depósito control</label><input type="number" id="setupRdwcControlTrabajoL" class="setup-dwc-input" min="0.5" max="800" step="0.1" placeholder="vacío = hasta el máximo"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcNetPotMm" title="Diámetro del aro / net pot">Ø aro net pot (mm)</label><input type="number" id="setupRdwcNetPotMm" class="setup-dwc-input" min="40" max="200" step="1" placeholder="125" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
           </div>
           <div id="setupRdwcMontajeDiyExtra" class="setup-dwc-grid-2">
             <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="setupRdwcBucketTrabajoL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
@@ -3040,7 +3050,7 @@
       <div id="setupSrfDetalleWrap" class="setup-hidden">
         <div class="setup-dwc-title">SRF · balsa flotante</div>
         <p class="setup-dwc-help">Mide el <strong>estanque</strong>, la <strong>rejilla en la balsa</strong> (filas × plantas por fila) y la <strong>cesta</strong> (Ø y profundidad). Los litros de solución y la bomba de aire se calculan en tiempo real.</p>
-        <div id="setupSrfPreviewSection" class="setup-dwc-preview-section">
+        <div id="setupSrfPreviewSection" class="setup-dwc-preview-section setup-dwc-preview-section--diagram">
           <p class="setup-dwc-preview-kicker">Vista previa</p>
           <div class="torre-preview torre-preview--srf" id="setupSrfPreview" role="img" aria-live="polite"></div>
         </div>
@@ -3077,10 +3087,15 @@
         <div id="setupSrfCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
       </div>
 
-      <div id="setupNftBuilderWrap"<div id="setupNftBuilderWrap" class="setup-hidden">
+      <div id="setupNftBuilderWrap" class="setup-hidden setup-nft-asistente-simple">
         <div class="torre-builder">
           <div>
-            <div class="torre-preview nft-schematic-host" id="nftPreview" aria-hidden="true"></div>
+            <div class="torre-preview nft-schematic-host" id="nftPreview" aria-live="polite"></div>
+          </div>
+          <div id="setupNftRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+            <p class="setup-dwc-litros-solucion-label">Bomba y circuito (orientativo)</p>
+            <p class="setup-dwc-litros-solucion-valor" id="setupNftRecoValor">—</p>
+            <p class="setup-dwc-litros-solucion-hint" id="setupNftRecoHint"></p>
           </div>
           <div class="torre-controls">
 <div id="setupNftMontajeDiyBlock">
@@ -4554,15 +4569,15 @@
   <script src="js/hc-bootstrap-onboarding.js?v=29"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-15-srf-svg"></script>
+  <script src="js/torre-render-build.js?v=2026-05-15-setup-preview"></script>
   <script src="js/torre-render-main.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-dwc-llenado"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-setup-preview"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-colgado"></script>
-  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf4"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-dwc-llenado"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-torre-sliders"></script>
+  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-setup-preview"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-setup-preview"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-setup-preview"></script>
   <script src="js/hc-setup-calc-core.js?v=2026-05-15-torre-sistema"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
@@ -4570,10 +4585,10 @@
   <script src="js/hc-setup-historial-delete.js?v=8"></script>
   <script src="js/hc-setup-registro.js?v=5"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=11"></script>
-  <script src="js/hc-setup-mediciones-logic.js?v=14"></script>
+  <script src="js/hc-setup-mediciones-logic.js?v=2026-05-15-srf-vol"></script>
   <script src="js/hc-medicion-wizard.js?v=6"></script>
   <script src="js/hc-tools-pro.js?v=10"></script>
-  <script src="js/hc-setup-checklist.js?v=2026-05-15-d0-mc"></script>
+  <script src="js/hc-setup-checklist.js?v=2026-05-15-srf-cl"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=33"></script>
   <script src="js/calendario-logic.js?v=9"></script>

@@ -1201,7 +1201,7 @@ function generarSVGSrf() {
       : 0.65;
   const volPer =
     typeof srfLitrosPorPlanta === 'function' ? srfLitrosPorPlanta(cfg) : volMax != null && n > 0 ? Math.round((volMax / n) * 10) / 10 : null;
-  const W = Math.min(560, Math.max(400, 80 + C * 52));
+  const W = Math.min(720, Math.max(480, 120 + C * 56));
   const planTop = 52;
   const planPad = 14;
   const planW = W - 48;
@@ -1318,9 +1318,9 @@ function generarSVGRdwc() {
   const visGrid = hcDistribuirFilasColumnas(sites, 6);
   const visRows = visGrid.rows;
   const visCols = visGrid.cols;
-  const W = 400;
+  const W = Math.min(640, Math.max(440, 200 + visCols * 58));
   const headerH = 56;
-  const blockW = Math.min(340, Math.max(248, 36 + visCols * 54));
+  const blockW = Math.min(420, Math.max(260, 40 + visCols * 58));
   const blockH = Math.min(280, Math.max(128, 40 + visRows * 74));
   const left = (W - blockW) / 2;
   const top = headerH + 18;
@@ -1347,7 +1347,7 @@ function generarSVGRdwc() {
   const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
   const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
 
-  let s = `<svg viewBox="0 0 ${W} ${H}" class="torre-svg" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="rdwcDiagTitle">`;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" class="torre-svg-diagram rdwc-svg-diagram svg-centered-block" role="img" xmlns="http://www.w3.org/2000/svg" aria-labelledby="rdwcDiagTitle">`;
   s += `<title id="rdwcDiagTitle">RDWC: módulos con recirculación y depósito de control abajo. Toca un cubo para la ficha.</title>`;
   s += `<defs>
     <linearGradient id="rdwcWater" x1="0" y1="0" x2="0" y2="1">

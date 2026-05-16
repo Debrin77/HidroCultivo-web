@@ -13475,8 +13475,32 @@ button.toggle-switch:focus-visible {
   opacity: 0.35;
   box-shadow: inset 0 0 0 2px #64748b;
 }
+/* Asistente SRF / RDWC: vista previa SVG legible (no miniatura) */
+.setup-dwc-preview-section--diagram .torre-preview,
+#setupSrfPreview.torre-preview--srf,
+#setupRdwcPreview.torre-preview--rdwc {
+  width: 100%;
+  min-height: min(42vh, 320px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 4px 12px;
+  box-sizing: border-box;
+}
+.setup-dwc-preview-section--diagram .srf-svg-diagram,
+.setup-dwc-preview-section--diagram .rdwc-svg-diagram,
+#setupSrfPreview .srf-svg-diagram,
+#setupRdwcPreview .rdwc-svg-diagram,
+#setupRdwcPreview svg {
+  width: 100%;
+  max-width: min(100%, 640px);
+  min-width: min(100%, 300px);
+  height: auto;
+  min-height: min(38vh, 280px);
+}
 .torre-preview--srf { max-width: 100%; }
 .srf-svg-diagram { max-width: 100%; height: auto; }
+.torre-preview--rdwc { max-width: 100%; }
 .setup-dwc-warn-inline {
   display: block;
   margin-top: 6px;
@@ -14835,7 +14859,21 @@ button.toggle-switch:focus-visible {
   box-sizing: border-box;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.65);
 }
-.torre-preview.nft-schematic-host svg { max-width: 100%; height: auto; vertical-align: middle; }
+.torre-preview.nft-schematic-host svg {
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  min-height: min(32vh, 260px);
+  vertical-align: middle;
+}
+/* Asistente NFT: ocultar guía larga; detalle avanzado en Cultivo e instalación */
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-guide,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-circuit-note {
+  display: none;
+}
+#setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcMontajeDiyExtra {
+  display: none;
+}
 @media (max-width: 640px) {
   .torre-preview.nft-schematic-host {
     min-height: min(36vh, 380px);

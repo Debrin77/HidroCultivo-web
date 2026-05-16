@@ -1189,6 +1189,62 @@ function rdwcCalcularHidraulica(cfg) {
   };
 }
 
+function onSetupRdwcInput() {
+  let c = null;
+  try {
+    if (typeof applySetupRdwcDesdeFormulario === 'function') c = applySetupRdwcDesdeFormulario();
+  } catch (_) {}
+  try {
+    if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(c);
+  } catch (_) {}
+  try {
+    if (typeof refreshRdwcSetupPreview === 'function') refreshRdwcSetupPreview();
+  } catch (_) {}
+}
+
+function renderRdwcSetupCalculadoUi(cfg) {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'rdwc') return;
+  cfg = cfg || setupRdwcDraft || state.configTorre || {};
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
+  const block = document.getElementById('setupRdwcRecoBlock');
+  const val = document.getElementById('setupRdwcRecoValor');
+  const hint = document.getElementById('setupRdwcRecoHint');
+  const calc = typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(cfg) : null;
+  if (block && val) {
+    block.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
+    if (calc) {
+      block.classList.add('setup-dwc-litros-solucion-block--ok');
+      val.textContent =
+        calc.totalVol +
+        ' L útiles · bomba ~' +
+        calc.pumpRec +
+        ' L/h · aire ~' +
+        calc.airObj +
+        ' L/min';
+      if (hint) {
+        hint.textContent =
+          'Recirculación mín. ~' +
+          calc.recMin +
+          ' L/h · aire mín. ~' +
+          calc.airMin +
+          ' L/min. Tubos impulsión Ø' +
+          calc.tubeOutMm +
+          ' mm / retorno Ø' +
+          calc.tubeRetMm +
+          ' mm.';
+      }
+    } else {
+      block.classList.add('setup-dwc-litros-solucion-block--pending');
+      val.textContent = 'Indica cubos y depósito de control';
+      if (hint) hint.textContent = '';
+    }
+  }
+  try {
+    renderRdwcCompatStatus(cfg, 'setupRdwcCompatStatus');
+    renderRdwcCalculoStatus(cfg, 'setupRdwcCalcStatus');
+  } catch (_) {}
+}
+
 function renderRdwcCalculoStatus(cfg, elId) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -1359,6 +1415,12 @@ function bindRdwcCompatLive(scope) {
       c2.rdwcCenterSpacingCm = g('setupRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
       renderRdwcCompatStatus(c2, 'setupRdwcCompatStatus');
       renderRdwcCalculoStatus(c2, 'setupRdwcCalcStatus');
+      try {
+        if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(c2);
+      } catch (_) {}
+      try {
+        if (typeof refreshRdwcSetupPreview === 'function') refreshRdwcSetupPreview();
+      } catch (_) {}
     }
   };
   ids.forEach(id => {
@@ -2083,7 +2145,10 @@ function refrescarSetupTipoInstalacionUI() {
     const hideTorreBuilder = isNft || isRdwc || setupTipoInstalacion === 'dwc' || isSrf;
     tw.style.display = hideTorreBuilder ? 'none' : 'block';
   }
-  if (nw) nw.classList.toggle('setup-hidden', !isNft);
+  if (nw) {
+    nw.classList.toggle('setup-hidden', !isNft);
+    nw.classList.toggle('setup-nft-asistente-simple', !!isNft);
+  }
   const t1 = document.getElementById('spage1Title');
   const st = document.getElementById('spage1Subtitle');
   if (t1) {
@@ -2126,7 +2191,14 @@ function refrescarSetupTipoInstalacionUI() {
   const dwcSoloWizard = document.getElementById('setupDwcSoloBloque');
   if (dwcSoloWizard) dwcSoloWizard.classList.toggle('setup-hidden', isRdwc);
   if (isRdwc) {
-    try { syncSetupRdwcFieldsDesdeConfig(setupRdwcDraft || state.configTorre || {}); } catch (_) {}
+    try {
+      syncSetupRdwcFieldsDesdeConfig(setupRdwcDraft || state.configTorre || {});
+    } catch (_) {}
+    try {
+      if (typeof onSetupRdwcInput === 'function') onSetupRdwcInput();
+    } catch (_) {}
+    const rdwcW = document.getElementById('setupRdwcDetalleWrap');
+    if (rdwcW) rdwcW.classList.add('setup-rdwc-asistente-simple');
   }
   const capMaxWrap = document.getElementById('setupVolCapacidadMaxWrap');
   if (capMaxWrap) capMaxWrap.style.display = (setupTipoInstalacion === 'dwc' || isRdwc || isSrf) ? 'none' : '';
