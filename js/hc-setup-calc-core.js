@@ -1823,6 +1823,10 @@ function guardarSetupYContinuar() {
       }
   }
   const volEfectivo = (function () {
+    if (isSrf && typeof srfCapacidadLitrosDesdeConfig === 'function') {
+      const capS = srfCapacidadLitrosDesdeConfig(state.configTorre);
+      if (capS != null && capS > 0) return capS;
+    }
     if (!isDwc || !(Number(state.configTorre.volDeposito) > 0)) return vol;
     if (typeof getDwcVolumenMaxMezclaLitrosDesdeConfig === 'function') {
       const capM = getDwcVolumenMaxMezclaLitrosDesdeConfig(state.configTorre);
@@ -1845,12 +1849,16 @@ function guardarSetupYContinuar() {
   const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
   // Las constantes se usarán dinámicamente en evalEC y checklist
 
-  // Reinicializar torre con nueva configuración
-  state.torre = [];
-  for (let n = 0; n < niveles; n++) {
-    state.torre.push([]);
-    for (let c = 0; c < cestas; c++) {
-      state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
+  // Reinicializar matriz de plantas (SRF/DWC conservan fichas al redimensionar)
+  if ((isSrf || isDwc) && typeof redimensionarMatrizTorreDwcPreservando === 'function') {
+    redimensionarMatrizTorreDwcPreservando(state.configTorre, niveles, cestas);
+  } else {
+    state.torre = [];
+    for (let n = 0; n < niveles; n++) {
+      state.torre.push([]);
+      for (let c = 0; c < cestas; c++) {
+        state.torre[n].push({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
+      }
     }
   }
   try {

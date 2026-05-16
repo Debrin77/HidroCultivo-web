@@ -13477,6 +13477,13 @@ button.toggle-switch:focus-visible {
 }
 .torre-preview--srf { max-width: 100%; }
 .srf-svg-diagram { max-width: 100%; height: auto; }
+.setup-dwc-warn-inline {
+  display: block;
+  margin-top: 6px;
+  color: #b45309;
+  font-size: 0.9em;
+  line-height: 1.35;
+}
 .setup-tipo-icon {
   margin-bottom: 6px;
   display: flex;

@@ -1233,10 +1233,14 @@ function syncSetupVolMezclaSugeridoDwc() {
 function repositionSetupVolMezclaBlock() {
   const block = document.getElementById('setupVolMezclaBlock');
   const slotDwc = document.getElementById('setupVolMezclaSlotDwc');
+  const slotSrf = document.getElementById('setupVolMezclaSlotSrf');
   const slotDefault = document.getElementById('setupVolMezclaSlotDefault');
-  if (!block || !slotDwc || !slotDefault) return;
-  const isDwc = typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'dwc';
-  (isDwc ? slotDwc : slotDefault).appendChild(block);
+  if (!block || !slotDefault) return;
+  const t =
+    typeof setupTipoInstalacion !== 'undefined' ? setupTipoInstalacion : '';
+  if (t === 'dwc' && slotDwc) slotDwc.appendChild(block);
+  else if (t === 'srf' && slotSrf) slotSrf.appendChild(block);
+  else slotDefault.appendChild(block);
 }
 
 /** Litros útiles del depósito desde campos de la pestaña Cultivo e instalación (misma fórmula que el asistente). */
@@ -1911,7 +1915,7 @@ function dwcPersistSnapshotMaxCestasEnCfg(cfg) {
 
 /** Redimensiona la matriz DWC (filas × columnas de macetas) conservando datos donde haya hueco. */
 function redimensionarMatrizTorreDwcPreservando(cfg, nFilas, nCols) {
-  if (!cfg || cfg.tipoInstalacion !== 'dwc') return;
+  if (!cfg || (cfg.tipoInstalacion !== 'dwc' && cfg.tipoInstalacion !== 'srf')) return;
   const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, parseInt(String(nFilas), 10) || 1));
   const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, parseInt(String(nCols), 10) || 1));
   const empty = () => ({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });

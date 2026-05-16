@@ -1391,6 +1391,7 @@ function updateTorreBuilder() {
       }
       state.configTorre = prevCfg;
       if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'setupSrfCalcStatus');
+      if (typeof syncSetupVolMezclaSugeridoSrf === 'function') syncSetupVolMezclaSugeridoSrf();
     } catch (_) {}
     return;
   }

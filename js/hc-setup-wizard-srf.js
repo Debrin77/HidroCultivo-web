@@ -66,6 +66,7 @@ function srfEnsureConfigDefaults(cfg) {
   if (!Number.isFinite(Number(cfg.srfRecircLh)) || Number(cfg.srfRecircLh) <= 0) cfg.srfRecircLh = 400;
   if (!Number.isFinite(Number(cfg.srfAirLpm)) || Number(cfg.srfAirLpm) <= 0) cfg.srfAirLpm = 8;
   if (!Number.isFinite(Number(cfg.srfKratkyGapCm)) || Number(cfg.srfKratkyGapCm) <= 0) cfg.srfKratkyGapCm = 8;
+  if (!cfg.srfObjetivoCultivo) cfg.srfObjetivoCultivo = 'final';
   const grid = srfDistribuirPlantas(cfg);
   cfg.numNiveles = grid.rows;
   cfg.numCestas = grid.cols;
@@ -108,6 +109,52 @@ function srfLitrosPorPlanta(cfg) {
   const n = srfGetNumPlantas(cfg);
   if (cap == null || !n) return null;
   return Math.round((cap / n) * 10) / 10;
+}
+
+function srfNormalizeObjetivoCultivo(raw) {
+  const v = String(raw || '').trim().toLowerCase();
+  return v === 'baby' || v === 'baby_leaf' || v === 'micro' ? 'baby' : 'final';
+}
+
+/** Comprueba si L×A del estanque alcanza para la rejilla de huecos (separación + Ø cesta). */
+function srfValidarGeometriaBalsa(cfg) {
+  cfg = srfEnsureConfigDefaults(cfg || {});
+  const L = Number(cfg.srfCanalLargoCm);
+  const W = Number(cfg.srfCanalAnchoCm);
+  const sep = Number(cfg.srfEspaciamientoCm);
+  const rimCm = Number(cfg.srfNetPotMm) / 10;
+  if (!Number.isFinite(L) || !Number.isFinite(W) || L <= 0 || W <= 0) {
+    return { ok: true, hint: '' };
+  }
+  const grid = srfDistribuirPlantas(cfg);
+  const pot = Number.isFinite(rimCm) && rimCm > 0 ? rimCm : 5;
+  const needL = grid.cols > 0 ? (grid.cols - 1) * sep + pot * grid.cols : pot;
+  const needW = grid.rows > 0 ? (grid.rows - 1) * sep + pot * grid.rows : pot;
+  const margen = 1.5;
+  if (needL > L + margen || needW > W + margen) {
+    return {
+      ok: false,
+      hint:
+        'Huecos ' +
+        grid.cols +
+        '×' +
+        grid.rows +
+        ' con separación ' +
+        sep +
+        ' cm y Ø ~' +
+        Math.round(pot * 10) +
+        ' cm: la balsa necesita al menos ~' +
+        Math.round(needL * 10) / 10 +
+        '×' +
+        Math.round(needW * 10) / 10 +
+        ' cm; el estanque mide ' +
+        L +
+        '×' +
+        W +
+        ' cm.',
+    };
+  }
+  return { ok: true, hint: '' };
 }
 
 function srfAreaCanalM2(cfg) {
@@ -195,8 +242,8 @@ function srfMergeCamposFormularioEnCfg(cfg, ids) {
     const x = srfParseNum('sysSrfVolTrabajoL', 0.5, 5000, null);
     return x != null ? x : null;
   });
-  g('setupSrfObjetivoCultivo', 'srfObjetivoCultivo', (v) => String(v || '').trim());
-  g('sysSrfObjetivoCultivo', 'srfObjetivoCultivo', (v) => String(v || '').trim());
+  g('setupSrfObjetivoCultivo', 'srfObjetivoCultivo', (v) => srfNormalizeObjetivoCultivo(v));
+  g('sysSrfObjetivoCultivo', 'srfObjetivoCultivo', (v) => srfNormalizeObjetivoCultivo(v));
   g('setupSrfKratkyGapCm', 'srfKratkyGapCm', (v) => srfParseNum('setupSrfKratkyGapCm', 2, 40, cfg.srfKratkyGapCm));
   g('sysSrfKratkyGapCm', 'srfKratkyGapCm', (v) => srfParseNum('sysSrfKratkyGapCm', 2, 40, cfg.srfKratkyGapCm));
   if (cfg.srfOxigenacionModo === 'kratky') cfg.srfCirculante = false;
@@ -257,6 +304,7 @@ function srfRefreshSysFormLive() {
   } catch (_) {}
   try {
     if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'sysSrfCalcStatus');
+    if (typeof srfUpdateVolCapLabels === 'function') srfUpdateVolCapLabels(draft, 'sys');
   } catch (_) {}
   const res = document.getElementById('sistemaSrfResumen');
   if (res && typeof textoResumenSistemaSrfPanel === 'function') {
@@ -280,17 +328,120 @@ function srfRefreshOxigenacionUi(scope) {
   if (kGap) kGap.classList.toggle('setup-hidden', modo !== 'kratky');
 }
 
+function srfLitrosUtilesDesdeConfig(cfg) {
+  cfg = cfg || state.configTorre || {};
+  const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  const vMez =
+    typeof getVolumenMezclaLitros === 'function'
+      ? getVolumenMezclaLitros(cfg)
+      : Number(cfg.volMezclaLitros);
+  if (Number.isFinite(vMez) && vMez > 0) return Math.round(vMez * 10) / 10;
+  if (cap != null && cap > 0) return cap;
+  return null;
+}
+
+function srfUpdateVolCapLabels(cfg, scope) {
+  const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  const util = srfLitrosUtilesDesdeConfig(cfg);
+  const p = scope === 'sys' ? 'sysSrf' : 'setupSrf';
+  const totalEl = document.getElementById(p + 'VolTotal');
+  const utilEl = document.getElementById(p + 'VolOptimo');
+  if (totalEl) totalEl.textContent = cap != null ? cap + ' L' : '—';
+  if (utilEl) utilEl.textContent = util != null ? util + ' L' : '—';
+}
+
+function clearSetupVolMezclaSrfAutofill() {
+  const inp = document.getElementById('setupVolMezclaL');
+  if (!inp) return;
+  const prevAuto = inp.getAttribute('data-hc-srf-mezcla-auto');
+  if (prevAuto == null || prevAuto === '') return;
+  const cur = parseFloat(String(inp.value || '').trim().replace(',', '.'));
+  const autoN = parseFloat(String(prevAuto).replace(',', '.'));
+  if (Number.isFinite(cur) && Number.isFinite(autoN) && Math.abs(cur - autoN) < 0.06) {
+    inp.value = '';
+  }
+  inp.removeAttribute('data-hc-srf-mezcla-auto');
+  const trab = document.getElementById('setupSrfVolTrabajoL');
+  if (trab) {
+    const prevT = trab.getAttribute('data-hc-srf-mezcla-auto');
+    if (prevT != null && prevT !== '') {
+      const curT = parseFloat(String(trab.value || '').trim().replace(',', '.'));
+      const autoT = parseFloat(String(prevT).replace(',', '.'));
+      if (Number.isFinite(curT) && Number.isFinite(autoT) && Math.abs(curT - autoT) < 0.06) {
+        trab.value = '';
+      }
+      trab.removeAttribute('data-hc-srf-mezcla-auto');
+    }
+  }
+}
+
+/** Rellena litros útiles del estanque (setup) desde capacidad L×A×P si vacío o autocompletado. */
+function syncSetupVolMezclaSugeridoSrf() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'srf') return;
+  const draft =
+    typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', {}) || {} : {};
+  srfEnsureConfigDefaults(draft);
+  const cap = srfCapacidadLitrosDesdeConfig(draft);
+  if (cap == null || !Number.isFinite(cap) || cap <= 0) {
+    srfUpdateVolCapLabels(draft, 'setup');
+    return;
+  }
+  const vClamped = Math.round(Math.min(cap, 5000) * 10) / 10;
+  const applyAuto = (el, attr) => {
+    if (!el) return;
+    const prevAuto = el.getAttribute(attr);
+    const cur = String(el.value || '').trim().replace(',', '.');
+    const curN = cur ? parseFloat(cur) : NaN;
+    const shouldApply =
+      cur === '' ||
+      (prevAuto != null &&
+        prevAuto !== '' &&
+        Number.isFinite(curN) &&
+        Number.isFinite(Number(prevAuto)) &&
+        Math.abs(curN - Number(prevAuto)) < 0.06);
+    if (!shouldApply) return;
+    el.value = String(vClamped);
+    el.setAttribute(attr, String(vClamped));
+  };
+  applyAuto(document.getElementById('setupSrfVolTrabajoL'), 'data-hc-srf-mezcla-auto');
+  const inp = document.getElementById('setupVolMezclaL');
+  if (inp) {
+    const prevAuto = inp.getAttribute('data-hc-srf-mezcla-auto');
+    const cur = String(inp.value || '').trim().replace(',', '.');
+    const curN = cur ? parseFloat(cur) : NaN;
+    const shouldApply =
+      cur === '' ||
+      (prevAuto != null &&
+        prevAuto !== '' &&
+        Number.isFinite(curN) &&
+        Number.isFinite(Number(prevAuto)) &&
+        Math.abs(curN - Number(prevAuto)) < 0.06);
+    if (shouldApply) {
+      inp.value = String(vClamped);
+      inp.setAttribute('data-hc-srf-mezcla-auto', String(vClamped));
+      try {
+        if (typeof onSetupVolMezclaInput === 'function') onSetupVolMezclaInput();
+      } catch (_) {}
+    }
+  }
+  srfUpdateVolCapLabels(draft, 'setup');
+}
+
 function renderSrfCalculoStatus(cfg, elId) {
   const el = document.getElementById(elId);
   if (!el) return;
   cfg = srfEnsureConfigDefaults(cfg || state.configTorre || {});
+  const scope = elId && String(elId).indexOf('sys') === 0 ? 'sys' : 'setup';
+  srfUpdateVolCapLabels(cfg, scope);
   const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  const util = srfLitrosUtilesDesdeConfig(cfg);
   const n = srfGetNumPlantas(cfg);
   const per = srfLitrosPorPlanta(cfg);
   const air = srfRecomendarAireLpm(cfg);
   const grid = srfDistribuirPlantas(cfg);
   const modo = srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo);
-  el.innerHTML =
+  const geom = srfValidarGeometriaBalsa(cfg);
+  let html =
     'SRF · <strong>' +
     n +
     ' plantas</strong> en ' +
@@ -300,6 +451,7 @@ function renderSrfCalculoStatus(cfg, elId) {
     ' · estanque ~<strong>' +
     (cap != null ? cap + ' L' : '—') +
     '</strong>' +
+    (util != null && cap != null && Math.abs(util - cap) > 0.05 ? ' · útil <strong>' + util + ' L</strong>' : '') +
     (per != null ? ' (~' + per + ' L/planta)' : '') +
     ' · prof. ' +
     cfg.srfProfundidadCm +
@@ -308,6 +460,13 @@ function renderSrfCalculoStatus(cfg, elId) {
       ? ' · <strong>Kratky</strong>: cámara de aire bajo balsa (~' + cfg.srfKratkyGapCm + ' cm), sin aireador'
       : ' · aire recomendado <strong>' + air.reco + '–' + air.fuerte + ' L/min</strong> (DO &gt;4–5 mg/L)') +
     (cfg.srfCirculante ? ' · recirculación ~' + cfg.srfRecircLh + ' L/h' : '');
+  if (!geom.ok && geom.hint) {
+    html +=
+      '<br><span class="setup-dwc-warn-inline" role="note">⚠ ' +
+      geom.hint +
+      '</span>';
+  }
+  el.innerHTML = html;
 }
 
 function renderSrfSetupPreview(previewEl, cfg) {
@@ -380,6 +539,12 @@ function aplicarSistemaSrfDesdeFormulario() {
   guardarEstadoTorreActual();
   saveState();
   aplicarConfigTorre();
+  try {
+    applySistemaTipoPanelesColapsablesUI();
+  } catch (_) {}
+  try {
+    renderTorreSistemaResumenTabla(c);
+  } catch (_) {}
   try {
     actualizarHeaderTorre();
   } catch (_) {}

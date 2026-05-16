@@ -1986,6 +1986,11 @@ function seleccionarTipoInstalacionSetup(tipo) {
       if (typeof clearSetupVolMezclaDwcAutofill === 'function') clearSetupVolMezclaDwcAutofill();
     } catch (_) {}
   }
+  if (setupTipoInstalacion !== 'srf') {
+    try {
+      if (typeof clearSetupVolMezclaSrfAutofill === 'function') clearSetupVolMezclaSrfAutofill();
+    } catch (_) {}
+  }
   if (setupTipoInstalacion === 'rdwc' && (!setupRdwcDraft || tipoInstalacionNormalizado(setupRdwcDraft) !== 'rdwc')) {
     const base = !setupEsNuevaTorre && tipoInstalacionNormalizado(state.configTorre || {}) === 'rdwc'
       ? state.configTorre
@@ -2134,9 +2139,9 @@ function refrescarSetupTipoInstalacionUI() {
       mezAyuda.textContent =
         'Vacío = hasta el máximo del depósito de control. En RDWC las dosis consideran también los litros útiles de los cubos del circuito; este campo solo acota el reservorio donde mezclas y mides.';
     } else if (isSrf) {
-      mezLab.textContent = 'Litros útiles en el estanque (opcional)';
+      mezLab.textContent = 'Litros de solución en el estanque (mezcla útil)';
       mezAyuda.textContent =
-        'Vacío = capacidad geométrica (L×A×profundidad) o volumen manual si lo indicaste. Las dosis del checklist usan esos litros de solución en el estanque común.';
+        'Vacío = capacidad del estanque (L×A×profundidad útil o volumen manual). Se recalcula al cambiar medidas; edítalo si llenas a menos del tope geométrico.';
     } else {
       mezLab.textContent = 'Litros de mezcla (opcional)';
       mezAyuda.textContent =
@@ -2148,10 +2153,14 @@ function refrescarSetupTipoInstalacionUI() {
   } catch (_) {}
   if (isSrf) {
     try {
+      srfRefreshOxigenacionUi('setup');
+    } catch (_) {}
+    try {
       if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
       else if (typeof syncSrfFormDesdeConfig === 'function') {
         syncSrfFormDesdeConfig(state.configTorre || {}, 'setup');
       }
+      if (typeof syncSetupVolMezclaSugeridoSrf === 'function') syncSetupVolMezclaSugeridoSrf();
     } catch (_) {}
   }
   if (setupTipoInstalacion === 'dwc') {
@@ -2789,6 +2798,18 @@ function applySistemaTipoPanelesColapsablesUI() {
     const colD = cfg.uiSistemaDwcColapsado === true;
     dwcBody.hidden = colD;
     dwcBtn.setAttribute('aria-expanded', colD ? 'false' : 'true');
+  }
+  const srfCard = document.getElementById('sistemaSrfAyudaCard');
+  const srfBtn = document.getElementById('btnToggleSistemaSrf');
+  const srfBody = document.getElementById('sistemaSrfAyudaBody');
+  const srfRes = document.getElementById('sistemaSrfResumen');
+  if (srfCard && srfBtn && srfBody && cfg && cfg.tipoInstalacion === 'srf' && srfCard.style.display !== 'none') {
+    if (srfRes && typeof textoResumenSistemaSrfPanel === 'function') {
+      srfRes.textContent = textoResumenSistemaSrfPanel(cfg);
+    }
+    const colS = cfg.uiSistemaSrfColapsado === true;
+    srfBody.hidden = colS;
+    srfBtn.setAttribute('aria-expanded', colS ? 'false' : 'true');
   }
 }
 

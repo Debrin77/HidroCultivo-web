@@ -811,6 +811,7 @@ function updateTorreStats() {
   const esNftCfg = cfg.tipoInstalacion === 'nft';
   const esDwcCfg = cfg.tipoInstalacion === 'dwc';
   const esRdwcCfg = cfg.tipoInstalacion === 'rdwc';
+  const esSrfCfg = cfg.tipoInstalacion === 'srf';
 
   // Título torre
   renderTablaVariedades();
@@ -833,6 +834,8 @@ function updateTorreStats() {
       depEl.textContent = pref + 'Depósito DWC (capacidad y mezcla)';
     } else if (esRdwcCfg) {
       depEl.textContent = pref + 'Depósito RDWC (control y recirculación)';
+    } else if (esSrfCfg) {
+      depEl.textContent = pref + 'Estanque SRF (capacidad y mezcla)';
     } else {
       depEl.textContent = pref + 'Depósito (capacidad y mezcla)';
     }
@@ -851,6 +854,10 @@ function updateTorreStats() {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
         'En <strong>torre vertical</strong> indicas tú la <strong>capacidad máxima</strong> del depósito y, si quieres, los <strong>litros de mezcla</strong> (abajo). No se calculan automáticamente: vacío en mezcla = se usa el máximo.';
+    } else if (esSrfCfg) {
+      volHintEl.classList.remove('setup-hidden');
+      volHintEl.innerHTML =
+        'SRF: volumen del <strong>estanque común</strong> (panel SRF abajo o asistente). Las dosis usan los litros útiles que guardes; vacío en mezcla = capacidad L×A×profundidad.';
     } else {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
@@ -885,6 +892,12 @@ function updateTorreStats() {
     try {
       refreshDwcSistemaMedidasUI();
     } catch (eDwcSysUi) {}
+  }
+  if (esSrfCfg) {
+    try {
+      if (typeof syncSrfFormDesdeConfig === 'function') syncSrfFormDesdeConfig(cfg, 'sys');
+      if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(cfg, 'sysSrfCalcStatus');
+    } catch (_) {}
   }
 
   actualizarAvisoCestasSinFecha();
