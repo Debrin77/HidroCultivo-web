@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-15-dwc-preview">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-15-torre-preview">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -2900,31 +2900,28 @@
         </div>
       </div>
       <p id="setupTorreMontajeOrigenHint" class="setup-field-hint setup-hidden" role="note">Kit: niveles y cestas del manual; la app calcula la bomba orientativa. DIY: igual + puedes contrastar caudal y potencia de tu placa.</p>
-      <div class="torre-builder">
-        <!-- Preview visual -->
-        <div>
-          <div class="torre-preview" id="torrePreview"></div>
+      <div class="torre-builder setup-torre-builder">
+        <div id="setupTorrePreviewSlot" class="setup-torre-preview-slot">
+          <div class="torre-preview" id="torrePreview" role="img" aria-label="Vista previa de la torre según niveles y cestas"></div>
         </div>
-        <!-- Controles torre -->
-        <div id="setupTorreBuilderControlsSlot" class="torre-controls">
+        <div id="setupTorreBuilderControlsSlot" class="torre-controls setup-torre-controls">
           <div class="torre-control-row">
-            <div class="torre-control-label">
-              <span id="setupTorreDimNivel">Niveles</span>
+            <label class="torre-control-label torre-control-label--solo-val" for="sliderNiveles">
               <span class="torre-control-val" id="valNiveles">5</span>
-            </div>
+            </label>
             <input type="range" class="torre-slider" id="sliderNiveles"
-              min="1" max="10" value="5" oninput="onTorreSlidersInput()">
+              min="1" max="10" value="5" oninput="onTorreSlidersInput()"
+              aria-label="Niveles de la torre">
           </div>
           <div class="torre-control-row">
-            <div class="torre-control-label">
-              <span id="setupTorreDimCesta">Cestas por nivel</span>
+            <label class="torre-control-label torre-control-label--solo-val" for="sliderCestas">
               <span class="torre-control-val" id="valCestas">5</span>
-            </div>
+            </label>
             <input type="range" class="torre-slider" id="sliderCestas"
-              min="1" max="8" value="5" oninput="onTorreSlidersInput()">
+              min="1" max="8" value="5" oninput="onTorreSlidersInput()"
+              aria-label="Cestas por nivel">
           </div>
         </div>
-        <p id="setupTorreQuickHint" class="setup-field-hint setup-hidden">Torre: basta con <strong>niveles</strong> y <strong>cestas por nivel</strong> que tengas (o las del kit). Depósito, tubo y alturas las puedes retocar luego sin repetir el asistente.</p>
       </div>
       </div>
 
@@ -4574,11 +4571,11 @@
   <script src="js/torre-render-main.js?v=2026-05-15-dwc-preview"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-dwc-preview"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-torre-preview"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-preview"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-srf"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-dwc-preview"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-torre-preview"></script>
   <script src="js/hc-setup-calc-core.js?v=2026-05-15-torre-sistema"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>

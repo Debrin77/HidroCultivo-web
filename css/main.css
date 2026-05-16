@@ -14404,6 +14404,29 @@ button.toggle-switch:focus-visible {
   gap: 20px;
   align-items: center;
 }
+#setupTorreBuilderWrap .setup-torre-builder {
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+#setupTorreBuilderWrap .setup-torre-preview-slot {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+#setupTorreBuilderWrap .setup-torre-builder .torre-preview {
+  width: auto;
+  min-width: 88px;
+  min-height: 72px;
+}
+#setupTorreBuilderWrap .setup-torre-controls {
+  width: 100%;
+  max-width: 320px;
+}
+.torre-control-label--solo-val {
+  justify-content: center;
+  margin-bottom: 4px;
+}
 .torre-preview {
   display: flex;
   flex-direction: column;

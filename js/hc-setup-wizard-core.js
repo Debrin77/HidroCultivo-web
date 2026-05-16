@@ -57,11 +57,22 @@ function restaurarSetupTorreBuilderControls() {
   const torreBuilder = document.querySelector('#setupTorreBuilderWrap .torre-builder');
   if (!controls || !torreBuilder) return;
   controls.classList.remove('setup-hidden');
-  if (controls.parentElement !== torreBuilder) torreBuilder.appendChild(controls);
-  const dn = document.getElementById('setupTorreDimNivel');
-  const dc = document.getElementById('setupTorreDimCesta');
-  if (dn) dn.textContent = 'Niveles';
-  if (dc) dc.textContent = 'Cestas por nivel';
+  const previewSlot = document.getElementById('setupTorrePreviewSlot');
+  if (controls.parentElement !== torreBuilder) {
+    if (previewSlot && typeof previewSlot.after === 'function') previewSlot.after(controls);
+    else torreBuilder.appendChild(controls);
+  } else if (previewSlot && previewSlot.nextElementSibling !== controls) {
+    previewSlot.after(controls);
+  }
+  try {
+    if (
+      typeof setupTipoInstalacion !== 'undefined' &&
+      setupTipoInstalacion === 'torre' &&
+      typeof updateTorreBuilder === 'function'
+    ) {
+      updateTorreBuilder();
+    }
+  } catch (_) {}
 }
 
 function onTorreSlidersInput() {
@@ -2114,17 +2125,6 @@ function refrescarSetupTipoInstalacionUI() {
     inlSrf.classList.add('selected');
     inlSrf.setAttribute('aria-pressed', 'true');
   }
-  const dn = document.getElementById('setupTorreDimNivel');
-  const dc = document.getElementById('setupTorreDimCesta');
-  if (dn && dc) {
-    if (setupTipoInstalacion === 'dwc' || setupTipoInstalacion === 'rdwc') {
-      dn.textContent = 'Filas en la tapa';
-      dc.textContent = 'Cestas por fila';
-    } else {
-      dn.textContent = 'Niveles';
-      dc.textContent = 'Cestas por nivel';
-    }
-  }
   const cestaBlk = document.getElementById('setupBloqueTamanoCestas');
   if (cestaBlk) cestaBlk.style.display = (setupTipoInstalacion === 'dwc' || setupTipoInstalacion === 'rdwc') ? 'none' : '';
   try {
@@ -2166,8 +2166,6 @@ function refrescarSetupTipoInstalacionUI() {
           ? 'Mide el estanque (largo × ancho × profundidad útil del agua) y cuenta huecos en la balsa. Aireación y recirculación pueden quedar por defecto.'
         : 'Niveles y cestas por nivel: manual del kit o a ojo. Depósito y tubo los afinas luego en Cultivo e instalación.';
   }
-  const torreFacil = document.getElementById('setupTorreQuickHint');
-  if (torreFacil) torreFacil.classList.toggle('setup-hidden', setupTipoInstalacion !== 'torre');
   if (setupTipoInstalacion === 'torre') {
     try {
       restaurarSetupTorreBuilderControls();
