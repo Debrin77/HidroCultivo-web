@@ -13831,6 +13831,9 @@ button.toggle-switch:focus-visible {
   line-height: 1.45;
   margin: 0 0 8px;
 }
+.setup-nft-layout-help--brief {
+  display: none;
+}
 .setup-nft-layout-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -14866,10 +14869,71 @@ button.toggle-switch:focus-visible {
   min-height: min(32vh, 260px);
   vertical-align: middle;
 }
+/* Asistente NFT: columna completa (evita texto comprimido en franja lateral) */
+#setupNftBuilderWrap.setup-nft-asistente-simple .torre-builder {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  padding: 14px 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .torre-builder > * {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .torre-controls {
+  flex: 1 1 auto;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .torre-preview.nft-schematic-host {
+  min-height: min(28vh, 220px);
+}
 /* Asistente NFT: ocultar guía larga; detalle avanzado en Cultivo e instalación */
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-guide,
-#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-circuit-note {
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-circuit-note,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-help--full,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-counts-wrap > .setup-nft-layout-help {
   display: none;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-help--brief {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #334155;
+  margin: 0 0 10px;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-title {
+  font-size: 11px;
+  margin-bottom: 4px;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-wrap,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-cesta-wrap,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-channel-wrap {
+  width: 100%;
+  max-width: 100%;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-field-label {
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: normal;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-altura-hint,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-subhint {
+  font-size: 11px;
+  line-height: 1.45;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .nft-disp-btn {
+  padding: 10px 6px;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
 }
 #setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcMontajeDiyExtra {
   display: none;
@@ -14909,6 +14973,21 @@ button.toggle-switch:focus-visible {
   .torre-preview.nft-schematic-host svg {
     min-height: min(32vh, 340px);
     width: 100%;
+  }
+  #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-grid {
+    grid-template-columns: 1fr;
+  }
+  #setupNftBuilderWrap.setup-nft-asistente-simple .nft-disp-btn {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+  #setupNftBuilderWrap.setup-nft-asistente-simple .torre-control-label {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  #setupNftBuilderWrap.setup-nft-asistente-simple .torre-control-val {
+    margin-left: 0;
   }
 }
 
