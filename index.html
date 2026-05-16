@@ -1543,12 +1543,23 @@
               </div>
             </div>
             <div id="sysDwcProfWrap">
-              <label class="form-label torre-dwc-lbl-mono" for="sysDwcProfCm" title="Profundidad o altura útil del líquido (fondo → nivel máximo). Troncopiramidal: misma P para estimar L×A×P.">P útil cm</label>
-              <input type="number" id="sysDwcProfCm" class="torre-dwc-input" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Profundidad o altura útil del líquido cm"
+              <label class="form-label torre-dwc-lbl-mono" for="sysDwcProfCm">P cm</label>
+              <input type="number" id="sysDwcProfCm" class="torre-dwc-input" min="5" max="200" step="0.5" placeholder="—" inputmode="decimal" autocomplete="off" aria-label="Altura interior cm"
                 oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
             </div>
           </div>
-          <details class="torre-vol-detalles torre-sistema-details-spaced">
+          <div id="sysDwcMedidasTroncoWrap" class="setup-hidden torre-dwc-grid-3 dwc-tronco-medidas-grid">
+            <div><label class="form-label torre-dwc-lbl-mono" for="sysDwcLargoInfCm">L inf</label><input type="number" id="sysDwcLargoInfCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"></div>
+            <div><label class="form-label torre-dwc-lbl-mono" for="sysDwcAnchoInfCm">A inf</label><input type="number" id="sysDwcAnchoInfCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"></div>
+            <div><label class="form-label torre-dwc-lbl-mono" for="sysDwcLargoSupCm">L sup</label><input type="number" id="sysDwcLargoSupCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"></div>
+            <div><label class="form-label torre-dwc-lbl-mono" for="sysDwcAnchoSupCm">A sup</label><input type="number" id="sysDwcAnchoSupCm" class="torre-dwc-input" min="5" max="300" step="0.5" placeholder="—" inputmode="decimal" oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}"></div>
+            
+          </div>
+          <div id="sysDwcTroncoVolBlock" class="setup-hidden dwc-tronco-vol-block" role="status" aria-live="polite">
+            <div class="dwc-tronco-vol-row"><span class="dwc-tronco-vol-lab">Total</span><span id="sysDwcTroncoVolTotal" class="dwc-tronco-vol-val">—</span></div>
+            <div class="dwc-tronco-vol-row"><span class="dwc-tronco-vol-lab">Óptimo</span><span id="sysDwcTroncoVolOptimo" class="dwc-tronco-vol-val">—</span></div>
+          </div>
+          <details id="sysDwcVolDetallesWrap" class="torre-vol-detalles torre-sistema-details-spaced setup-hidden">
             <summary class="torre-vol-detalles-summary">Cómo calculamos el volumen útil</summary>
             <div class="torre-vol-wrap torre-vol-wrap--inner">
               <p class="torre-nft-p-soft" style="margin:0"><strong>Medidas geométricas</strong> (tapa y depósito). Prismático: ≈ L×A×P. Cilíndrico: Ø interior útil y P del líquido. <strong>Troncopiramidal:</strong> boca L×A y P del líquido ≈ prisma (estimación); si el tronco real difiere, indica litros medidos. El llenado seguro usa P y altura de cesta.</p>
@@ -3010,9 +3021,20 @@
             </div>
           </div>
           <div id="setupDwcProfWrap">
-            <label class="form-label setup-dwc-label" for="setupDwcProfCm">Prof./altura útil líquido (cm)</label>
+            <label class="form-label setup-dwc-label" for="setupDwcProfCm">P (cm)</label>
             <input type="number" id="setupDwcProfCm" min="5" max="200" step="0.5" placeholder="—" class="setup-dwc-input" oninput="try{onSetupDwcMedidasInput()}catch(e){}">
           </div>
+        </div>
+        <div id="setupDwcMedidasTroncoWrap" class="setup-hidden setup-dwc-grid-3 dwc-tronco-medidas-grid">
+          <div><label class="form-label setup-dwc-label" for="setupDwcLargoInfCm">L inf</label><input type="number" id="setupDwcLargoInfCm" min="5" max="300" step="0.5" placeholder="—" class="setup-dwc-input" oninput="try{onSetupDwcMedidasInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupDwcAnchoInfCm">A inf</label><input type="number" id="setupDwcAnchoInfCm" min="5" max="300" step="0.5" placeholder="—" class="setup-dwc-input" oninput="try{onSetupDwcMedidasInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupDwcLargoSupCm">L sup</label><input type="number" id="setupDwcLargoSupCm" min="5" max="300" step="0.5" placeholder="—" class="setup-dwc-input" oninput="try{onSetupDwcMedidasInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupDwcAnchoSupCm">A sup</label><input type="number" id="setupDwcAnchoSupCm" min="5" max="300" step="0.5" placeholder="—" class="setup-dwc-input" oninput="try{onSetupDwcMedidasInput()}catch(e){}"></div>
+          
+        </div>
+        <div id="setupDwcTroncoVolBlock" class="setup-hidden dwc-tronco-vol-block" role="status" aria-live="polite">
+          <div class="dwc-tronco-vol-row"><span class="dwc-tronco-vol-lab">Total</span><span id="setupDwcTroncoVolTotal" class="dwc-tronco-vol-val">—</span></div>
+          <div class="dwc-tronco-vol-row"><span class="dwc-tronco-vol-lab">Óptimo</span><span id="setupDwcTroncoVolOptimo" class="dwc-tronco-vol-val">—</span></div>
         </div>
         <h3 class="setup-dwc-section-title">Medidas de la cesta</h3>
         <div class="setup-dwc-grid-2 setup-dwc-grid-2-top">
@@ -3028,7 +3050,7 @@
         <div id="setupDwcLitrosSolucionBlock" class="setup-dwc-litros-solucion-block" role="status" aria-live="polite">
           <p class="setup-dwc-litros-solucion-label" id="setupDwcLitrosSolucionLabel">Litros de solución en el depósito</p>
           <p class="setup-dwc-litros-solucion-valor" id="setupDwcLitrosSolucionValor">—</p>
-          <p class="setup-dwc-litros-solucion-hint" id="setupDwcLitrosSolucionHint">Se actualiza al indicar medidas del cubo y de la cesta (llenado seguro bajo la maceta + cámara de aire).</p>
+          <p class="setup-dwc-litros-solucion-hint setup-hidden" id="setupDwcLitrosSolucionHint" aria-hidden="true"></p>
         </div>
         <div id="setupDwcDepUnidoExtrasWrap" class="setup-dwc-dep-unido-only">
         <div><label class="form-label setup-dwc-label" for="setupDwcModoCultivo">Modo DWC</label><select id="setupDwcModoCultivo" class="setup-dwc-input" onchange="try{onDwcModoChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"><option value="aireado">DWC aireado</option><option value="kratky">Kratky</option></select></div>
@@ -4568,7 +4590,7 @@
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=2026-05-15-torre-sliders"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-preview"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-tronco-vol2"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-torre-sliders"></script>

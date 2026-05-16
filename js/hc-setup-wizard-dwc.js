@@ -271,19 +271,83 @@ function dwcFormaDepositoLabel(forma) {
 }
 
 function dwcRequiereVolumenManual(forma) {
-  return dwcNormalizeDepositoForma(forma) === 'troncopiramidal';
+  return false;
 }
 
-/**
- * Troncopiramidal: boca interior (L×A) × altura útil del líquido P (cm) ≈ prisma recto;
- * útil para capacidad y llenado seguro frente a cesta cuando no hay litros medidos a mano.
- */
+/** Volumen (L) tronco de pirámide rectangular: base inferior, boca superior, altura H (cm). */
+function dwcTroncoLitrosFrustum(Li, Wi, Ls, Ws, Hcm) {
+  if (![Li, Wi, Ls, Ws, Hcm].every((x) => Number.isFinite(x))) return null;
+  if (Li < 5 || Li > 300 || Wi < 5 || Wi > 300 || Ls < 5 || Ls > 300 || Ws < 5 || Ws > 300) return null;
+  if (Hcm < 5 || Hcm > 200) return null;
+  const Ai = Li * Wi;
+  const As = Ls * Ws;
+  const v = ((Hcm / 3) * (Ai + As + Math.sqrt(Ai * As))) / 1000;
+  if (!Number.isFinite(v) || v <= 0) return null;
+  return Math.round(v * 10) / 10;
+}
+
+/** Litros hasta altura h (cm) desde el fondo del tronco. */
+function dwcTroncoLitrosHastaAlturaCm(Li, Wi, Ls, Ws, Hcm, hcm) {
+  if (!Number.isFinite(hcm) || hcm <= 0) return null;
+  if (hcm >= Hcm - 0.02) return dwcTroncoLitrosFrustum(Li, Wi, Ls, Ws, Hcm);
+  const t = hcm / Hcm;
+  const Lt = Li + (Ls - Li) * t;
+  const Wt = Wi + (Ws - Wi) * t;
+  return dwcTroncoLitrosFrustum(Li, Wi, Lt, Wt, hcm);
+}
+
+function dwcGetTroncoDimensionesDesdeConfig(cfg) {
+  const c = cfg || {};
+  const H = Number(c.dwcDepositoProfCm);
+  const Ls = Number(c.dwcDepositoLargoCm);
+  const Ws = Number(c.dwcDepositoAnchoCm);
+  let Li = Number(c.dwcTroncoLargoInfCm);
+  let Wi = Number(c.dwcTroncoAnchoInfCm);
+  if (!Number.isFinite(Li) || Li < 5) Li = Ls;
+  if (!Number.isFinite(Wi) || Wi < 5) Wi = Ws;
+  return { Li, Wi, Ls, Ws, H };
+}
+
+function dwcTroncoDimensionesCompletasEnCfg(cfg) {
+  const c = cfg || {};
+  const { Li, Wi, Ls, Ws, H } = dwcGetTroncoDimensionesDesdeConfig(c);
+  const ok = (n) => Number.isFinite(n) && n >= 5;
+  if (!ok(H) || H > 200) return false;
+  if (!ok(Ls) || Ls > 300 || !ok(Ws) || Ws > 300) return false;
+  const Li0 = Number(c.dwcTroncoLargoInfCm);
+  const Wi0 = Number(c.dwcTroncoAnchoInfCm);
+  if (!ok(Li0) || Li0 > 300 || !ok(Wi0) || Wi0 > 300) return false;
+  return dwcTroncoLitrosFrustum(Li, Wi, Ls, Ws, H) != null;
+}
+
+function dwcTroncoLitrosDesdeConfig(cfg) {
+  const { Li, Wi, Ls, Ws, H } = dwcGetTroncoDimensionesDesdeConfig(cfg);
+  return dwcTroncoLitrosFrustum(Li, Wi, Ls, Ws, H);
+}
+
+function dwcTroncoLitrosSeguroDesdeConfig(cfg) {
+  const { Li, Wi, Ls, Ws, H } = dwcGetTroncoDimensionesDesdeConfig(cfg);
+  if (!Number.isFinite(H) || H < 5) return null;
+  const hCol = _dwcAlturaColumnaLiquidoSeguraCm(cfg, H);
+  if (hCol == null || hCol <= 0) return null;
+  return dwcTroncoLitrosHastaAlturaCm(Li, Wi, Ls, Ws, H, hCol);
+}
+
+function dwcTroncoLitrosDesdeFormIds(ids) {
+  if (!ids) return null;
+  const P = _dwcParseOptCm(ids.prof, 5, 200);
+  const Ls = _dwcParseOptCm(ids.largoSup || ids.largo, 5, 300);
+  const Ws = _dwcParseOptCm(ids.anchoSup || ids.ancho, 5, 300);
+  const Li = ids.largoInf ? _dwcParseOptCm(ids.largoInf, 5, 300) : null;
+  const Wi = ids.anchoInf ? _dwcParseOptCm(ids.anchoInf, 5, 300) : null;
+  if (Li == null || Wi == null || Ls == null || Ws == null || P == null) return null;
+  return dwcTroncoLitrosFrustum(Li, Wi, Ls, Ws, P);
+}
+
+/** @deprecated Usar dwcTroncoLitrosFrustum; mantiene compatibilidad si solo hay boca. */
 function dwcTroncoLitrosDesdeLAMenosP(L, W, P) {
   if (!Number.isFinite(L) || !Number.isFinite(W) || !Number.isFinite(P)) return null;
-  if (L < 5 || L > 300 || W < 5 || W > 300 || P < 5 || P > 200) return null;
-  const litros = (L * W * P) / 1000;
-  if (!Number.isFinite(litros) || litros <= 0) return null;
-  return Math.round(litros * 10) / 10;
+  return dwcTroncoLitrosFrustum(L, W, L, W, P);
 }
 
 function _dwcParseVolManualLitros(raw) {
@@ -300,20 +364,16 @@ function getDwcVolumenManualLitrosDesdeConfig(cfg) {
  * Capacidad útil del depósito DWC (L) desde config guardada:
  * - prismático: L×A×P
  * - cilíndrico: π·(D/2)^2·P (D interior; L y W en config se guardan iguales a D)
- * - troncopiramidal: litros manuales si los indicas; si no, L×A×P (boca × altura útil del líquido, aprox. prisma)
+ * - troncopiramidal: frustum (base inf., boca sup., H); óptimo según cesta
  */
 function getDwcCapacidadLitrosDesdeConfig(cfg) {
   cfg = cfg || {};
   const forma = dwcNormalizeDepositoForma(cfg.dwcDepositoForma);
   const volManual = getDwcVolumenManualLitrosDesdeConfig(cfg);
   if (volManual != null && !dwcRequiereVolumenManual(forma)) return volManual;
-  if (dwcRequiereVolumenManual(forma)) {
+  if (forma === 'troncopiramidal') {
     if (volManual != null && volManual > 0) return volManual;
-    const L = Number(cfg.dwcDepositoLargoCm);
-    const W = Number(cfg.dwcDepositoAnchoCm);
-    const P = Number(cfg.dwcDepositoProfCm);
-    const g = dwcTroncoLitrosDesdeLAMenosP(L, W, P);
-    return g;
+    return dwcTroncoLitrosDesdeConfig(cfg);
   }
   const L = Number(cfg.dwcDepositoLargoCm);
   const W = Number(cfg.dwcDepositoAnchoCm);
@@ -401,7 +461,23 @@ function getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg) {
   const cap = getDwcCapacidadLitrosDesdeConfig(c);
   if (!Number.isFinite(cap) || cap <= 0) return null;
 
+  const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
   let Puse = Number(c.dwcDepositoProfCm);
+  if (forma === 'troncopiramidal') {
+    if (!Number.isFinite(Puse) || Puse < 5 || Puse > 200) {
+      const vm = getDwcVolumenManualLitrosDesdeConfig(c);
+      if (!Number.isFinite(vm) || vm <= 0) return null;
+      const out = Math.round(vm * 0.82 * 10) / 10;
+      return out > 0 ? out : null;
+    }
+    const seg = dwcTroncoLitrosSeguroDesdeConfig(c);
+    if (seg != null && seg > 0) {
+      if (seg >= cap - 0.02) return Math.round((cap - 0.1) * 10) / 10;
+      return seg;
+    }
+    return null;
+  }
+
   if (!Number.isFinite(Puse) || Puse < 5 || Puse > 200) {
     const L = Number(c.dwcDepositoLargoCm);
     const W = Number(c.dwcDepositoAnchoCm);
@@ -876,11 +952,9 @@ function getDwcCapacidadLitrosFromFormIds(ids) {
   const forma = dwcNormalizeDepositoForma(document.getElementById(ids.forma)?.value);
   const volManual = ids.volManual ? _dwcParseVolManualLitros(document.getElementById(ids.volManual)?.value) : null;
   if (volManual != null && !dwcRequiereVolumenManual(forma)) return volManual;
-  if (dwcRequiereVolumenManual(forma)) {
+  if (forma === 'troncopiramidal') {
     if (volManual != null && volManual > 0) return volManual;
-    const P = _dwcParseOptCm(ids.prof, 5, 200);
-    const { L, W } = dwcLargoAnchoCmEffectivosDesdeFormIds(ids);
-    return dwcTroncoLitrosDesdeLAMenosP(L, W, P);
+    return dwcTroncoLitrosDesdeFormIds(ids);
   }
   const P = _dwcParseOptCm(ids.prof, 5, 200);
   const { L, W } = dwcLargoAnchoCmEffectivosDesdeFormIds(ids);
@@ -989,6 +1063,30 @@ function dwcSetupLitrosSolucionEstado(cfg) {
 }
 
 /** Muestra litros de solución calculados en tiempo real (tras medidas de cesta). */
+function dwcRefreshTroncoVolumenUi(ids) {
+  ids = ids || DWC_FORM_IDS_SISTEMA;
+  const isSetup = ids === DWC_FORM_IDS_SETUP;
+  const block = document.getElementById(isSetup ? 'setupDwcTroncoVolBlock' : 'sysDwcTroncoVolBlock');
+  const totalEl = document.getElementById(isSetup ? 'setupDwcTroncoVolTotal' : 'sysDwcTroncoVolTotal');
+  const optEl = document.getElementById(isSetup ? 'setupDwcTroncoVolOptimo' : 'sysDwcTroncoVolOptimo');
+  if (!block || !totalEl || !optEl) return;
+  const forma = dwcNormalizeDepositoForma(document.getElementById(ids.forma)?.value);
+  if (forma !== 'troncopiramidal') {
+    block.classList.add('setup-hidden');
+    return;
+  }
+  block.classList.remove('setup-hidden');
+  const cfg = { tipoInstalacion: 'dwc' };
+  if (typeof state !== 'undefined' && state.configTorre && state.configTorre.sustrato) cfg.sustrato = state.configTorre.sustrato;
+  try {
+    dwcMergeCamposFormularioEnCfg(cfg, ids);
+  } catch (_) {}
+  const total = getDwcCapacidadLitrosDesdeConfig(cfg);
+  const opt = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
+  totalEl.textContent = total != null && total > 0 ? total + ' L' : '—';
+  optEl.textContent = opt != null && opt > 0 ? opt + ' L' : '—';
+}
+
 function dwcRefreshSetupLitrosSolucionUi() {
   const block = document.getElementById('setupDwcLitrosSolucionBlock');
   const valEl = document.getElementById('setupDwcLitrosSolucionValor');
@@ -997,6 +1095,14 @@ function dwcRefreshSetupLitrosSolucionUi() {
   if (!block || !valEl) return;
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') {
     block.classList.add('setup-hidden');
+    return;
+  }
+  const formaDraft = dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value);
+  if (formaDraft === 'troncopiramidal') {
+    block.classList.add('setup-hidden');
+    try {
+      dwcRefreshTroncoVolumenUi(DWC_FORM_IDS_SETUP);
+    } catch (_) {}
     return;
   }
   block.classList.remove('setup-hidden');
@@ -1169,6 +1275,7 @@ function dwcLitrosUtilesPorCuboMultivalvula(cfg, opts) {
 function dwcSetupTieneMedidasCuboEnCfg(cfg) {
   const c = cfg || {};
   const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
+  if (forma === 'troncopiramidal') return dwcTroncoDimensionesCompletasEnCfg(c);
   const P = Number(c.dwcDepositoProfCm);
   if (!Number.isFinite(P) || P < 5 || P > 200) return false;
   if (forma === 'cilindrico') {
@@ -2805,44 +2912,39 @@ function refreshDwcSistemaMedidasUI() {
     return;
   }
   if (volEl) {
-    const cap = getDwcCapacidadLitrosFromSistemaInputs();
     const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value || cfg.dwcDepositoForma);
-    if (cap != null && cap > 0) {
-      const cfgDraft = state.configTorre ? { ...state.configTorre } : {};
-      const { L: Ld, W: Wd } = dwcLargoAnchoCmEffectivosDesdeFormIds(DWC_FORM_IDS_SISTEMA);
-      const Pd = _dwcParseOptCm('sysDwcProfCm', 5, 200);
-      const hPotD = _dwcParseOptMm('sysDwcPotHmm', 30, 200);
-      cfgDraft.dwcDepositoForma = forma;
-      if (Ld != null) cfgDraft.dwcDepositoLargoCm = Ld;
-      if (Wd != null) cfgDraft.dwcDepositoAnchoCm = Wd;
-      if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
-      else delete cfgDraft.dwcDepositoProfCm;
-      delete cfgDraft.dwcDepositoVolManualL;
-      if (hPotD != null) cfgDraft.dwcNetPotHeightMm = hPotD;
-      const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
-      const hSustratoMm = getDwcAlturaSustratoEstimadaMm(cfgDraft);
-      volEl.style.display = 'block';
-      volEl.textContent =
-        (forma === 'troncopiramidal'
-          ? 'Volumen estimado del depósito (tronco): ~' + cap + ' L (L×A×P en la boca). '
-          : forma === 'cilindrico'
-            ? 'Volumen geométrico del depósito cilíndrico: ~' + cap + ' L (π × (Ø/2)² × prof. útil). '
-            : 'Volumen geométrico del depósito: ~' + cap + ' L (largo × ancho × prof. en cm ÷ 1000). ') +
-        (volSeguro != null
-          ? 'Con el sustrato actual (altura estimada ~' + hSustratoMm + ' mm en cesta), el llenado seguro máximo es ~' + volSeguro + ' L (deja ~0,5–1 cm bajo la base del sustrato).'
-          : 'En cultivo el nivel de solución debe quedar por debajo de la base del sustrato (reserva 0,5–1 cm).');
+    if (forma === 'troncopiramidal') {
+      volEl.style.display = 'none';
+      volEl.textContent = '';
     } else {
-      const forma = dwcNormalizeDepositoForma(document.getElementById('sysDwcDepositoForma')?.value || cfg.dwcDepositoForma);
-      if (forma === 'troncopiramidal') {
+      const cap = getDwcCapacidadLitrosFromSistemaInputs();
+      if (cap != null && cap > 0) {
+        const cfgDraft = state.configTorre ? { ...state.configTorre } : {};
+        const { L: Ld, W: Wd } = dwcLargoAnchoCmEffectivosDesdeFormIds(DWC_FORM_IDS_SISTEMA);
+        const Pd = _dwcParseOptCm('sysDwcProfCm', 5, 200);
+        const hPotD = _dwcParseOptMm('sysDwcPotHmm', 30, 200);
+        cfgDraft.dwcDepositoForma = forma;
+        if (Ld != null) cfgDraft.dwcDepositoLargoCm = Ld;
+        if (Wd != null) cfgDraft.dwcDepositoAnchoCm = Wd;
+        if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
+        else delete cfgDraft.dwcDepositoProfCm;
+        delete cfgDraft.dwcDepositoVolManualL;
+        if (hPotD != null) cfgDraft.dwcNetPotHeightMm = hPotD;
+        const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
         volEl.style.display = 'block';
         volEl.textContent =
-          'Troncopiramidal: indica L×A y profundidad útil P del líquido; con altura de cesta se calcula el llenado seguro.';
+          (forma === 'cilindrico'
+            ? 'Total ~' + cap + ' L · Óptimo ~' + (volSeguro != null ? volSeguro : '—') + ' L'
+            : 'Total ~' + cap + ' L · Óptimo ~' + (volSeguro != null ? volSeguro : '—') + ' L');
       } else {
         volEl.style.display = 'none';
         volEl.textContent = '';
       }
     }
   }
+  try {
+    dwcRefreshTroncoVolumenUi(DWC_FORM_IDS_SISTEMA);
+  } catch (_) {}
   try {
     refreshDwcTapHintSistema();
   } catch (e2) {}
@@ -3096,10 +3198,31 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   cfg.dwcDepositoForma = forma;
   if (volManual != null) cfg.dwcDepositoVolManualL = volManual;
   else delete cfg.dwcDepositoVolManualL;
-  if (L != null) cfg.dwcDepositoLargoCm = L; else delete cfg.dwcDepositoLargoCm;
-  if (W != null) cfg.dwcDepositoAnchoCm = W; else delete cfg.dwcDepositoAnchoCm;
+  if (forma !== 'troncopiramidal') {
+    if (L != null) cfg.dwcDepositoLargoCm = L;
+    else delete cfg.dwcDepositoLargoCm;
+    if (W != null) cfg.dwcDepositoAnchoCm = W;
+    else delete cfg.dwcDepositoAnchoCm;
+  }
   if (P != null) cfg.dwcDepositoProfCm = P;
   else delete cfg.dwcDepositoProfCm;
+  if (forma === 'troncopiramidal') {
+    const Li = ids.largoInf ? _dwcParseOptCm(ids.largoInf, 5, 300) : null;
+    const Wi = ids.anchoInf ? _dwcParseOptCm(ids.anchoInf, 5, 300) : null;
+    const Ls = ids.largoSup ? _dwcParseOptCm(ids.largoSup, 5, 300) : L;
+    const Ws = ids.anchoSup ? _dwcParseOptCm(ids.anchoSup, 5, 300) : W;
+    if (Li != null) cfg.dwcTroncoLargoInfCm = Li;
+    else delete cfg.dwcTroncoLargoInfCm;
+    if (Wi != null) cfg.dwcTroncoAnchoInfCm = Wi;
+    else delete cfg.dwcTroncoAnchoInfCm;
+    if (Ls != null) cfg.dwcDepositoLargoCm = Ls;
+    else delete cfg.dwcDepositoLargoCm;
+    if (Ws != null) cfg.dwcDepositoAnchoCm = Ws;
+    else delete cfg.dwcDepositoAnchoCm;
+  } else {
+    delete cfg.dwcTroncoLargoInfCm;
+    delete cfg.dwcTroncoAnchoInfCm;
+  }
   if (rim != null) cfg.dwcNetPotRimMm = rim; else delete cfg.dwcNetPotRimMm;
   if (hPot != null) cfg.dwcNetPotHeightMm = hPot; else delete cfg.dwcNetPotHeightMm;
   if (ids.objetivo) {
@@ -3358,6 +3481,10 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
     setVal(ids.ancho, c.dwcDepositoAnchoCm);
   }
   if (ids.prof) setVal(ids.prof, c.dwcDepositoProfCm != null ? c.dwcDepositoProfCm : '');
+  if (ids.largoInf) setVal(ids.largoInf, c.dwcTroncoLargoInfCm);
+  if (ids.anchoInf) setVal(ids.anchoInf, c.dwcTroncoAnchoInfCm);
+  if (ids.largoSup) setVal(ids.largoSup, c.dwcDepositoLargoCm);
+  if (ids.anchoSup) setVal(ids.anchoSup, c.dwcDepositoAnchoCm);
   if (ids.volManual) setVal(ids.volManual, c.dwcDepositoVolManualL);
   setVal(ids.rim, c.dwcNetPotRimMm);
   setVal(ids.alt, c.dwcNetPotHeightMm);
@@ -3426,16 +3553,50 @@ function toggleDwcVolumenManualUI(formIds, cfg) {
   } catch (_) {}
 }
 
+function _dwcReparentProfWrap(profWrap, targetParent, homeParent) {
+  if (!profWrap || !targetParent) return;
+  if (profWrap.parentElement !== targetParent) targetParent.appendChild(profWrap);
+  if (homeParent && !profWrap.dataset.dwcProfHomeId) profWrap.dataset.dwcProfHomeId = homeParent.id || '';
+}
+
+function _dwcSetProfLabel(profWrap, tronco) {
+  if (!profWrap) return;
+  const lab = profWrap.querySelector('label[for]');
+  if (!lab) return;
+  lab.textContent = tronco ? 'H cm' : 'P cm';
+  if (lab.classList.contains('setup-dwc-label')) lab.textContent = tronco ? 'H' : 'P (cm)';
+}
+
 function refreshDwcDepositoMedidasLayout(ids) {
   ids = ids || DWC_FORM_IDS_SISTEMA;
   const forma = dwcNormalizeDepositoForma(
     document.getElementById(ids.forma)?.value || (state.configTorre || {}).dwcDepositoForma
   );
   const isSetup = ids === DWC_FORM_IDS_SETUP;
+  const tronco = forma === 'troncopiramidal';
   const la = document.getElementById(isSetup ? 'setupDwcMedidasLAWrap' : 'sysDwcMedidasLAWrap');
   const cyl = document.getElementById(isSetup ? 'setupDwcMedidasCilWrap' : 'sysDwcMedidasCilWrap');
-  if (la) la.classList.toggle('setup-hidden', forma === 'cilindrico');
+  const trWrap = document.getElementById(isSetup ? 'setupDwcMedidasTroncoWrap' : 'sysDwcMedidasTroncoWrap');
+  const row = document.getElementById(isSetup ? 'setupDwcMedidasRow' : 'sysDwcMedidasRow');
+  const prof = document.getElementById(isSetup ? 'setupDwcProfWrap' : 'sysDwcProfWrap');
+  const det = document.getElementById(isSetup ? null : 'sysDwcVolDetallesWrap');
+  if (prof && row && !prof.dataset.dwcProfHomeId) prof.dataset.dwcProfHomeId = row.id;
+  if (row) row.classList.toggle('setup-hidden', tronco);
+  if (la) la.classList.toggle('setup-hidden', forma === 'cilindrico' || tronco);
   if (cyl) cyl.classList.toggle('setup-hidden', forma !== 'cilindrico');
+  if (trWrap) trWrap.classList.toggle('setup-hidden', !tronco);
+  if (prof) {
+    prof.classList.remove('setup-hidden');
+    const homeId = prof.dataset.dwcProfHomeId;
+    const home = homeId ? document.getElementById(homeId) : row;
+    if (tronco && trWrap) _dwcReparentProfWrap(prof, trWrap, home || row);
+    else if (home || row) _dwcReparentProfWrap(prof, home || row, home || row);
+    _dwcSetProfLabel(prof, tronco);
+  }
+  if (det) det.classList.toggle('setup-hidden', tronco);
+  try {
+    dwcRefreshTroncoVolumenUi(ids);
+  } catch (_) {}
 }
 
 function onDwcFormaChanged(formIds) {
@@ -3455,6 +3616,18 @@ function onDwcFormaChanged(formIds) {
       else if (W0 != null) seed = W0;
       if (seed != null) dIn.value = String(Math.round(seed * 10) / 10);
     }
+  }
+  if (forma === 'troncopiramidal') {
+    const seedPair = (fromId, toId) => {
+      const to = toId ? document.getElementById(toId) : null;
+      if (!to || String(to.value || '').trim()) return;
+      const v = _dwcParseOptCm(fromId, 5, 300);
+      if (v != null) to.value = String(Math.round(v * 10) / 10);
+    };
+    seedPair(ids.largo, ids.largoSup);
+    seedPair(ids.ancho, ids.anchoSup);
+    seedPair(ids.largo, ids.largoInf);
+    seedPair(ids.ancho, ids.anchoInf);
   }
   try {
     toggleDwcVolumenManualUI(ids, state.configTorre);
@@ -3477,18 +3650,9 @@ function onDwcFormaChanged(formIds) {
 function dwcValidarVolumenManualSegunForma(cfg, contexto) {
   const c = cfg || state.configTorre || {};
   const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
-  if (!dwcRequiereVolumenManual(forma)) return true;
-  const vm = getDwcVolumenManualLitrosDesdeConfig(c);
-  if (vm != null && vm > 0) return true;
-  const L = Number(c.dwcDepositoLargoCm);
-  const W = Number(c.dwcDepositoAnchoCm);
-  const P = Number(c.dwcDepositoProfCm);
-  if (dwcTroncoLitrosDesdeLAMenosP(L, W, P) != null) return true;
-  const msg =
-    contexto === 'setup'
-      ? 'Troncopiramidal: indica volumen útil medido (L) o largo × ancho × profundidad útil del líquido (cm).'
-      : 'Troncopiramidal: indica volumen útil (L) o L×A×P (cm) en el formulario DWC.';
-  showToast(msg, true);
+  if (forma !== 'troncopiramidal') return true;
+  if (dwcTroncoDimensionesCompletasEnCfg(c)) return true;
+  showToast('Troncopiramidal: completa medidas inferior, superior y altura (cm).', true);
   return false;
 }
 

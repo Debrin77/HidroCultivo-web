@@ -2754,12 +2754,15 @@ function textoResumenSistemaDwcPanel(cfg) {
         : 'prismático';
   parts.push(formaTxt);
   if (forma === 'troncopiramidal') {
-    if (L && W) {
-      parts.push(Math.round(Number(L)) + '×' + Math.round(Number(W)) + ' cm (boca)');
-    }
-    if (P) {
-      parts.push('P ' + Math.round(Number(P)) + ' cm');
-    }
+    const Li = cfg.dwcTroncoLargoInfCm;
+    const Wi = cfg.dwcTroncoAnchoInfCm;
+    if (Li && Wi) parts.push('inf ' + Math.round(Number(Li)) + '×' + Math.round(Number(Wi)));
+    if (L && W) parts.push('sup ' + Math.round(Number(L)) + '×' + Math.round(Number(W)));
+    if (P) parts.push('H ' + Math.round(Number(P)) + ' cm');
+    const vT = typeof dwcTroncoLitrosDesdeConfig === 'function' ? dwcTroncoLitrosDesdeConfig(cfg) : null;
+    const vO = typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function' ? getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg) : null;
+    if (vT != null) parts.push('~' + vT + ' L');
+    if (vO != null) parts.push('ópt. ~' + vO + ' L');
   } else if (L && W && P) {
     if (forma === 'cilindrico') {
       const dNum =
@@ -2772,20 +2775,6 @@ function textoResumenSistemaDwcPanel(cfg) {
       parts.push(
         Math.round(Number(L)) + '×' + Math.round(Number(W)) + '×' + Math.round(Number(P)) + ' cm'
       );
-    }
-  }
-  if (forma === 'troncopiramidal') {
-    const vm = Number(cfg.dwcDepositoVolManualL);
-    let g = null;
-    if (typeof dwcTroncoLitrosDesdeLAMenosP === 'function') {
-      g = dwcTroncoLitrosDesdeLAMenosP(Number(L), Number(W), Number(P));
-    }
-    if (Number.isFinite(vm) && vm > 0) {
-      parts.push('útil ~' + Math.round(vm * 10) / 10 + ' L (medido)');
-    } else if (g != null) {
-      parts.push('~' + g + ' L (L×A×P)');
-    } else {
-      parts.push('L×A×P o litros útiles');
     }
   }
   if (cfg.dwcNetPotRimMm != null && Number(cfg.dwcNetPotRimMm) > 0) {
@@ -3539,6 +3528,10 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
 const DWC_FORM_IDS_SISTEMA = {
   largo: 'sysDwcLargoCm',
   ancho: 'sysDwcAnchoCm',
+  largoInf: 'sysDwcLargoInfCm',
+  anchoInf: 'sysDwcAnchoInfCm',
+  largoSup: 'sysDwcLargoSupCm',
+  anchoSup: 'sysDwcAnchoSupCm',
   diametro: 'sysDwcDiametroCm',
   prof: 'sysDwcProfCm',
   forma: 'sysDwcDepositoForma',
@@ -3557,6 +3550,10 @@ const DWC_FORM_IDS_SISTEMA = {
 const DWC_FORM_IDS_SETUP = {
   largo: 'setupDwcLargoCm',
   ancho: 'setupDwcAnchoCm',
+  largoInf: 'setupDwcLargoInfCm',
+  anchoInf: 'setupDwcAnchoInfCm',
+  largoSup: 'setupDwcLargoSupCm',
+  anchoSup: 'setupDwcAnchoSupCm',
   diametro: 'setupDwcDiametroCm',
   prof: 'setupDwcProfCm',
   forma: 'setupDwcDepositoForma',

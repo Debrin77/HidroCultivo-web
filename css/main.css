@@ -14564,6 +14564,38 @@ button.toggle-switch:focus-visible {
   background: #ecfdf5;
   border-color: #6ee7b7;
 }
+.dwc-tronco-medidas-grid {
+  margin-bottom: 10px;
+}
+.dwc-tronco-vol-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 8px 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+.dwc-tronco-vol-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+.dwc-tronco-vol-lab {
+  font-weight: 600;
+  color: #374151;
+}
+.dwc-tronco-vol-val {
+  font-family: var(--font-hero);
+  font-size: var(--text-lg);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #16a34a;
+}
 .setup-dwc-litros-solucion-block {
   margin: 12px 0 6px;
   padding: 12px 14px;
