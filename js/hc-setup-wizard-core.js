@@ -709,13 +709,16 @@ function getRdwcBucketVolumenTrabajoGeometriaLitros(cfg) {
   return Math.min(bucketNom, Math.max(0.5, Math.round(litros * 10) / 10));
 }
 
-function getRdwcBucketVolumenTrabajoLitros(cfg) {
+function getRdwcBucketVolumenTrabajoLitros(cfg, opts) {
   const c = cfg || {};
   if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
   const bucketNom = Math.max(5, Number(c.rdwcBucketVolL) || 20);
-  const manual = rdwcParseLitrosTrabajo(c.rdwcBucketTrabajoL);
-  if (manual != null) {
-    return Math.min(bucketNom, Math.max(0.5, Math.round(manual * 10) / 10));
+  const soloCalculado = !!(opts && opts.soloCalculado);
+  if (!soloCalculado) {
+    const manual = rdwcParseLitrosTrabajo(c.rdwcBucketTrabajoL);
+    if (manual != null) {
+      return Math.min(bucketNom, Math.max(0.5, Math.round(manual * 10) / 10));
+    }
   }
   const seguro = getRdwcBucketVolumenTrabajoSeguroLitros(c);
   if (seguro != null) return seguro;
@@ -724,13 +727,16 @@ function getRdwcBucketVolumenTrabajoLitros(cfg) {
   return getRdwcBucketVolumenTrabajoAutoLitros(c);
 }
 
-function getRdwcVolumenControlTrabajoLitros(cfg) {
+function getRdwcVolumenControlTrabajoLitros(cfg, opts) {
   const c = cfg || {};
   if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
   const controlMax = Math.max(10, Number(c.rdwcControlVolL || c.volDeposito || 40));
-  const mix = rdwcParseLitrosTrabajo(c.volMezclaLitros);
-  if (mix != null) {
-    return Math.min(controlMax, Math.max(0.5, Math.round(mix * 10) / 10));
+  const soloCalculado = !!(opts && opts.soloCalculado);
+  if (!soloCalculado) {
+    const mix = rdwcParseLitrosTrabajo(c.volMezclaLitros);
+    if (mix != null) {
+      return Math.min(controlMax, Math.max(0.5, Math.round(mix * 10) / 10));
+    }
   }
   const reco =
     typeof rdwcRecomendacionControlDesdeConfig === 'function' ? rdwcRecomendacionControlDesdeConfig(c) : null;
@@ -740,6 +746,7 @@ function getRdwcVolumenControlTrabajoLitros(cfg) {
   return Math.round(controlMax * 0.88 * 10) / 10;
 }
 
+/** Agua útil total del circuito (control + cubos). Con manual si lo indicaste. */
 function getRdwcVolumenSolucionTotalLitros(cfg) {
   const c = cfg || {};
   if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
@@ -747,6 +754,19 @@ function getRdwcVolumenSolucionTotalLitros(cfg) {
   const sites = Math.max(2, Math.round(Number(c.rdwcSites) || 4));
   const controlL = getRdwcVolumenControlTrabajoLitros(c);
   const bucketL = getRdwcBucketVolumenTrabajoLitros(c);
+  if (!Number.isFinite(controlL) || controlL <= 0 || !Number.isFinite(bucketL) || bucketL <= 0) return null;
+  return Math.round((controlL + sites * bucketL) * 10) / 10;
+}
+
+/** Total calculado (cesta/geométrico): no usa litros manuales del depósito ni por cubo. */
+function getRdwcVolumenSolucionTotalCalculadoLitros(cfg) {
+  const c = cfg || {};
+  if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  const sites = Math.max(2, Math.round(Number(c.rdwcSites) || 4));
+  const opts = { soloCalculado: true };
+  const controlL = getRdwcVolumenControlTrabajoLitros(c, opts);
+  const bucketL = getRdwcBucketVolumenTrabajoLitros(c, opts);
   if (!Number.isFinite(controlL) || controlL <= 0 || !Number.isFinite(bucketL) || bucketL <= 0) return null;
   return Math.round((controlL + sites * bucketL) * 10) / 10;
 }
@@ -1219,12 +1239,13 @@ function rdwcFlowChip(estado) {
   return '<span class="cultivo-status-chip cultivo-status-chip--' + k + '">' + txt + '</span>';
 }
 
-function rdwcCalcularHidraulica(cfg) {
+function rdwcCalcularHidraulica(cfg, opts) {
   const c = cfg || {};
   if (tipoInstalacionNormalizado(c) !== 'rdwc') return null;
+  const volOpts = opts && opts.soloCalculado ? { soloCalculado: true } : undefined;
   const sites = Math.max(2, Number(c.rdwcSites) || 4);
-  const bucketVol = getRdwcBucketVolumenTrabajoLitros(c);
-  const controlVol = getRdwcVolumenControlTrabajoLitros(c);
+  const bucketVol = getRdwcBucketVolumenTrabajoLitros(c, volOpts);
+  const controlVol = getRdwcVolumenControlTrabajoLitros(c, volOpts);
   const recUser = Math.max(100, Number(c.rdwcRecirculationLh) || 1200);
   const airUser = Math.max(1, Number(c.rdwcAirLpm) || 20);
   const headM = Math.max(0, Number(c.rdwcHeadM) || 1.2);
@@ -1296,31 +1317,48 @@ function syncRdwcLitrosUtilesSugeridos(scope) {
   }
   const bucketEl = document.getElementById(prefix + 'RdwcBucketTrabajoL');
   const controlEl = document.getElementById(prefix + 'RdwcControlTrabajoL');
-  const bucketLit = getRdwcBucketVolumenTrabajoLitros(c);
-  if (bucketEl && bucketLit != null && !String(bucketEl.value || '').trim()) {
-    bucketEl.placeholder = 'auto ~' + bucketLit + ' L';
+  const calcOpts = { soloCalculado: true };
+  const bucketCalc = getRdwcBucketVolumenTrabajoLitros(c, calcOpts);
+  const controlCalc = getRdwcVolumenControlTrabajoLitros(c, calcOpts);
+  if (bucketEl && bucketCalc != null && !String(bucketEl.value || '').trim()) {
+    bucketEl.placeholder = 'auto ~' + bucketCalc + ' L';
   }
-  const controlLit = getRdwcVolumenControlTrabajoLitros(c);
-  if (controlEl && controlLit != null && !String(controlEl.value || '').trim()) {
-    controlEl.placeholder = 'auto ~' + controlLit + ' L';
+  if (controlEl && controlCalc != null && !String(controlEl.value || '').trim()) {
+    controlEl.placeholder = 'auto ~' + controlCalc + ' L';
   }
   const hintId = scope === 'sys' ? 'sysRdwcLitrosUtilesHint' : 'setupRdwcLitrosUtilesHint';
   const hintEl = document.getElementById(hintId);
   if (hintEl) {
     const h = Number(c.rdwcNetPotHeightMm);
+    const sites = Math.max(2, Math.round(Number(c.rdwcSites) || 4));
+    const totalCalc =
+      typeof getRdwcVolumenSolucionTotalCalculadoLitros === 'function'
+        ? getRdwcVolumenSolucionTotalCalculadoLitros(c)
+        : null;
+    const totalConManual =
+      typeof getRdwcVolumenSolucionTotalLitros === 'function' ? getRdwcVolumenSolucionTotalLitros(c) : null;
+    const manualCtl = rdwcParseLitrosTrabajo(c.volMezclaLitros);
     const tieneCesta = rdwcTieneMedidasCestaEnCfg(c);
     if (!tieneCesta) {
       hintEl.textContent =
-        'Indica altura del net pot (mm) y Ø del aro para calcular litros útiles por cubo y el total de mezcla.';
-    } else if (bucketLit != null) {
-      hintEl.textContent =
-        'Litros por cubo estimados con cesta' +
-        (Number.isFinite(h) && h >= 30 ? ' (' + Math.round(h) + ' mm altura)' : '') +
-        ': ~' +
-        bucketLit +
-        ' L. Depósito control útil: ~' +
-        (controlLit != null ? controlLit : '—') +
-        ' L (o el valor que midas al llenar).';
+        'Indica altura del net pot (mm) y Ø del aro para calcular el total de agua útil del circuito.';
+    } else if (totalCalc != null) {
+      let t =
+        'Total calculado del circuito: ~' +
+        totalCalc +
+        ' L (' +
+        (controlCalc != null ? controlCalc : '—') +
+        ' L reservorio + ' +
+        sites +
+        '×' +
+        (bucketCalc != null ? bucketCalc : '—') +
+        ' L/cubo).';
+      if (manualCtl != null && totalConManual != null && Math.abs(totalConManual - totalCalc) > 0.15) {
+        t += ' Si indicas ' + manualCtl + ' L en el depósito de control, el total con tu medida sería ~' + totalConManual + ' L.';
+      } else {
+        t += ' El campo «litros útiles en depósito control» es opcional: vacío = valor calculado.';
+      }
+      hintEl.textContent = t;
     } else {
       hintEl.textContent = '';
     }
@@ -1350,29 +1388,46 @@ function renderRdwcSetupCalculadoUi(cfg) {
   const block = document.getElementById('setupRdwcRecoBlock');
   const val = document.getElementById('setupRdwcRecoValor');
   const hint = document.getElementById('setupRdwcRecoHint');
-  const calc = typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(cfg) : null;
+  const calc =
+    typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(cfg, { soloCalculado: true }) : null;
+  const totalManual =
+    typeof getRdwcVolumenSolucionTotalLitros === 'function' ? getRdwcVolumenSolucionTotalLitros(cfg) : null;
+  const manualCtl = rdwcParseLitrosTrabajo(cfg.volMezclaLitros);
   if (block && val) {
     block.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
     if (calc) {
       block.classList.add('setup-dwc-litros-solucion-block--ok');
       val.textContent =
         calc.totalVol +
-        ' L útiles · bomba ~' +
+        ' L útiles (total circuito) · bomba ~' +
         calc.pumpRec +
         ' L/h · aire ~' +
         calc.airObj +
         ' L/min';
       if (hint) {
-        hint.textContent =
-          'Recirculación mín. ~' +
+        let htxt =
+          'Agua útil total calculada: reservorio ~' +
+          calc.controlVol +
+          ' L + ' +
+          calc.sites +
+          ' cubos × ~' +
+          calc.bucketVol +
+          ' L. Recirculación mín. ~' +
           calc.recMin +
           ' L/h · aire mín. ~' +
           calc.airMin +
-          ' L/min. Tubos impulsión Ø' +
-          calc.tubeOutMm +
-          ' mm / retorno Ø' +
-          calc.tubeRetMm +
-          ' mm.';
+          ' L/min.';
+        if (manualCtl != null && totalManual != null && Math.abs(totalManual - calc.totalVol) > 0.15) {
+          htxt +=
+            ' Depósito control manual (' +
+            manualCtl +
+            ' L): total con tu medida ~' +
+            totalManual +
+            ' L (no altera la recomendación calculada arriba).';
+        } else {
+          htxt += ' Litros útiles en depósito control: opcional; vacío = calculado.';
+        }
+        hint.textContent = htxt;
       }
     } else {
       block.classList.add('setup-dwc-litros-solucion-block--pending');
