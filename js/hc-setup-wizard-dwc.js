@@ -1303,44 +1303,31 @@ function dwcRecomendacionDifusorParaSistemaUI(cfg) {
   return { rec, lit };
 }
 
+/** Checklist D·0 multiválvula: solo litros de solución y caudales de aire (por cubo y bomba). */
+function dwcFormatHtmlD0MultivalvulaDatos(rec) {
+  if (!rec || rec.diseno !== 'cubos_independientes') return '';
+  const vSol = Math.round(Number(rec.volPorSitio) * 10) / 10;
+  const aireCubo = Math.round(Number(rec.caudalPorSitioReco) * 10) / 10;
+  const aireTotal = Math.round(Number(rec.reco) * 10) / 10;
+  if (!Number.isFinite(vSol) || vSol <= 0 || !Number.isFinite(aireCubo) || aireCubo <= 0) return '';
+  const total =
+    Number.isFinite(aireTotal) && aireTotal > 0 ? aireTotal : aireCubo * Math.max(1, rec.nTotal || 1);
+  return (
+    '<div class="cl-dwc-d0-datos">' +
+    '<div class="cl-dwc-d0-dato"><span class="cl-dwc-d0-dato-lab">Solución con nutrientes · por cubo</span>' +
+    '<span class="cl-dwc-d0-dato-val">' + vSol + ' L</span></div>' +
+    '<div class="cl-dwc-d0-dato"><span class="cl-dwc-d0-dato-lab">Aireación · por cubo</span>' +
+    '<span class="cl-dwc-d0-dato-val">~' + aireCubo + ' L/min</span></div>' +
+    '<div class="cl-dwc-d0-dato cl-dwc-d0-dato--total"><span class="cl-dwc-d0-dato-lab">Bomba multiválvula · total sistema</span>' +
+    '<span class="cl-dwc-d0-dato-val">~' + total + ' L/min</span></div>' +
+    '</div>';
+}
+
 function dwcFormatHtmlRecomendacionDifusorCore(rec) {
   if (!rec) return '';
   if (rec.diseno === 'cubos_independientes') {
-    const pct = Math.round((rec.multManifold - 1) * 100);
-    const fuenteTxt =
-      rec.volPorSitioFuente === 'medido'
-        ? ' Origen por sitio: <strong>valor medido</strong> que indicaste (acotado al reparto medio de la mezcla total).'
-        : rec.volPorSitioFuente === 'llenado_seguro'
-          ? ' Origen por sitio: <strong>mínimo</strong> entre mezcla repartida y <strong>llenado seguro</strong> con cámara de aire y cesta (misma lógica que un depósito único).'
-          : rec.volPorSitioFuente === 'reparto'
-            ? ' Origen por sitio: <strong>reparto</strong> de la mezcla total (por debajo del tope seguro por cubo con tus medidas).'
-            : ' Origen por sitio: equilibrio entre reparto y llenado seguro según medidas y cesta.';
-    return (
-      '<p class="dwc-dif-p dwc-dif-p-gap"><strong>Varios cubos / multivalvula</strong> (cada cubo con solución <strong>aislada</strong> y su línea de aire): <strong>' +
-      rec.nTotal +
-      '</strong> cubos · <strong>~' +
-      rec.volPorSitio +
-      ' L</strong> útiles por sitio para el cálculo (~<strong>' +
-      rec.vol +
-      ' L</strong> mezcla total en el esquema).' +
-      fuenteTxt +
-      ' Caudal orientativo en la <strong>salida de la bomba</strong> (todas las líneas en uso): <strong>' +
-      rec.min +
-      '–' +
-      rec.fuerte +
-      ' L/min</strong> (~<strong>' +
-      rec.reco +
-      ' L/min</strong> referencia; ≈<strong>' +
-      rec.caudalPorSitioReco +
-      ' L/min</strong> por sitio a ~' +
-      rec.volPorSitio +
-      ' L + <strong>+' +
-      pct +
-      '%</strong> folga reparto/válvulas).</p>' +
-      '<p class="dwc-dif-p"><strong>Salidas:</strong> al menos <strong>' +
-      rec.salidasSug +
-      '</strong> línea(s) con difusor al fondo de <em>cada</em> cubo. Comprueba en la placa el caudal a tu <strong>profundidad</strong>; el dato del fabricante suele ser el caudal <strong>total</strong> de la bomba, no por salida.</p>'
-    );
+    const compact = dwcFormatHtmlD0MultivalvulaDatos(rec);
+    if (compact) return compact;
   }
   return (
     '<p class="dwc-dif-p dwc-dif-p-gap"><strong>~' +
@@ -1473,10 +1460,16 @@ function dwcFormatSistemaDwcDifusorSoloResultado(rec, lit) {
 function refrescarDwcDifusorChecklist() {
   const el = document.getElementById('clDwcDifusorRecomendacion');
   if (!el) return;
-  const rec = dwcRecomendacionDifusorCompletaDesdeConfig(state.configTorre);
+  const cfg = state.configTorre;
+  const rec = dwcRecomendacionDifusorCompletaDesdeConfig(cfg);
+  const esMc =
+    cfg &&
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
   if (!rec) {
-    el.innerHTML =
-      '<p class="dwc-dif-empty">Completa <strong>capacidad máxima y litros de mezcla</strong> en Cultivo e instalación o en <strong>PC·1</strong> (primer llenado) para calcular bomba y difusores con tu volumen real.</p>';
+    el.innerHTML = esMc
+      ? '<p class="dwc-dif-empty">Indica <strong>litros por cubo</strong> en <strong>PC·1</strong> o en Cultivo e instalación.</p>'
+      : '<p class="dwc-dif-empty">Completa volumen del depósito en <strong>PC·1</strong> o Cultivo e instalación.</p>';
     return;
   }
   el.innerHTML = dwcFormatHtmlRecomendacionDifusorCore(rec);

@@ -1310,13 +1310,13 @@ function getCLPasos() {
           seccion: '💨 DWC — Bomba de aire y difusores',
           paso: 'D·0',
           desc: dwcOxMult
-            ? 'Enciende la <strong>bomba multiválvula</strong> (una línea de aire por cubo). En PC·1 confirmaste <strong>litros útiles por cubo</strong>; en el paso 4 los <strong>ml son para un cubo</strong> — repite en cada uno.'
+            ? 'Enciende la <strong>bomba multiválvula</strong> (una línea de aire por cubo, difusor al fondo de cada cubo).'
             : 'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Cultivo e instalación.',
           nota: dwcOxMult
-            ? 'Caudal de la <strong>bomba en conjunto</strong> (suma de cubos). Cada salida: difusor al fondo. La mezcla va <strong>en cada cubo</strong>, no en un depósito común.'
+            ? null
             : 'Referencia habitual en DWC casero: del orden de <strong>1 L/min por cada 10 L</strong> de líquido; la app ajusta un plus por cesta (más raíz) y sugiere <strong>puntos de difusión</strong> al fondo (piedra horizontal, disco o bolas microporosas). Comprueba en la <strong>bomba</strong> el caudal a tu <strong>profundidad</strong>.',
           postCamposHtml:
-            (clGuiaMcHtml || '') +
+            (dwcOxMult ? '' : clGuiaMcHtml || '') +
             '<div id="clDwcDifusorRecomendacion" class="cl-dwc-difusor-rec" role="status" aria-live="polite"></div>',
         },
         ...(dwcOxMult
