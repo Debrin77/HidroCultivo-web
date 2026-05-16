@@ -3006,11 +3006,11 @@
         <div class="setup-dwc-grid-2 setup-dwc-grid-2-top">
           <div>
             <label class="form-label setup-dwc-label" for="setupDwcPotRimMm">Diámetro cesta (mm)</label>
-            <input type="number" id="setupDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 50" class="setup-dwc-input" oninput="try{onSetupDwcMedidasInput();refreshDwcTapHintSetup()}catch(e){}" onchange="try{actualizarResumenSetup()}catch(e){}">
+            <input type="number" id="setupDwcPotRimMm" min="25" max="120" step="1" placeholder="ej. 50" class="setup-dwc-input" oninput="try{onSetupDwcCestaMedidasInput();refreshDwcTapHintSetup()}catch(e){}" onchange="try{onSetupDwcCestaMedidasInput();actualizarResumenSetup()}catch(e){}">
           </div>
           <div>
             <label class="form-label setup-dwc-label" for="setupDwcPotHmm">Altura cesta (mm)</label>
-            <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" class="setup-dwc-input" onchange="try{onSetupDwcMedidasInput();actualizarResumenSetup()}catch(e){}" oninput="try{onSetupDwcMedidasInput()}catch(e){}">
+            <input type="number" id="setupDwcPotHmm" min="30" max="200" step="1" placeholder="ej. 75" class="setup-dwc-input" onchange="try{onSetupDwcCestaMedidasInput();actualizarResumenSetup()}catch(e){}" oninput="try{onSetupDwcCestaMedidasInput()}catch(e){}">
           </div>
         </div>
         <div id="setupDwcLitrosSolucionBlock" class="setup-dwc-litros-solucion-block" role="status" aria-live="polite">
@@ -4553,7 +4553,7 @@
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=2026-05-15-dwc-llenado"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-llenado"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-cesta-litros"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf3"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-torre-sliders"></script>

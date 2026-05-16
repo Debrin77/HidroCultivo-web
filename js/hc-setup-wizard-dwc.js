@@ -410,6 +410,14 @@ function getDwcCapacidadLitrosDesdeConfig(cfg) {
   return Math.round(litros * 10) / 10;
 }
 
+/** ¿Hay Ø o altura de cesta en cfg (mínimos para calcular llenado seguro)? */
+function dwcTieneMedidasCestaEnCfg(cfg) {
+  const c = cfg || {};
+  const rim = Number(c.dwcNetPotRimMm);
+  const hPot = Number(c.dwcNetPotHeightMm);
+  return (Number.isFinite(hPot) && hPot >= 30) || (Number.isFinite(rim) && rim >= 25);
+}
+
 /** Altura estimada del sustrato dentro de la cesta net-pot (mm), según sustrato activo. */
 function getDwcAlturaSustratoEstimadaMm(cfg) {
   const c = cfg || state.configTorre || {};
@@ -503,6 +511,7 @@ function getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg) {
   const c = cfg || state.configTorre || {};
   const cap = getDwcCapacidadLitrosDesdeConfig(c);
   if (!Number.isFinite(cap) || cap <= 0) return null;
+  if (!dwcTieneMedidasCestaEnCfg(c)) return null;
 
   const forma = dwcNormalizeDepositoForma(c.dwcDepositoForma);
   let Puse = Number(c.dwcDepositoProfCm);
@@ -1069,9 +1078,15 @@ function dwcSetupLitrosSolucionEstado(cfg) {
       mc: false,
     };
   }
-  const rim = Number(cfg.dwcNetPotRimMm);
-  const hPot = Number(cfg.dwcNetPotHeightMm);
-  const tieneCesta = (Number.isFinite(hPot) && hPot >= 30) || (Number.isFinite(rim) && rim >= 25);
+  const tieneCesta = dwcTieneMedidasCestaEnCfg(cfg);
+  if (!tieneCesta) {
+    return {
+      litros: null,
+      pendiente: 'Indica diámetro y/o altura de la cesta para calcular el llenado seguro (litros).',
+      hint: '',
+      mc: false,
+    };
+  }
   const litros =
     typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function'
       ? getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg)
@@ -1092,14 +1107,6 @@ function dwcSetupLitrosSolucionEstado(cfg) {
       hint += ' Capacidad geométrica del depósito: ' + cap + ' L.';
     }
     return { litros, pendiente: '', texto: litros + ' L', hint, mc: false };
-  }
-  if (!tieneCesta) {
-    return {
-      litros: null,
-      pendiente: 'Indica diámetro y altura de la cesta para calcular el llenado seguro (litros).',
-      hint: '',
-      mc: false,
-    };
   }
   return {
     litros: null,
@@ -1195,16 +1202,22 @@ function clearSetupVolMezclaDwcAutofill() {
     inp.value = '';
   }
   inp.removeAttribute('data-hc-dwc-mezcla-auto');
+  inp.removeAttribute('data-hc-dwc-mezcla-manual');
 }
 
 /**
- * Rellena setupVolMezclaL con litros de llenado seguro (orientativo) si el campo está vacío
- * o sigue coincidiendo con la última sugerencia automática.
+ * Rellena setupVolMezclaL con litros de llenado seguro (orientativo) si el campo está vacío,
+ * está gestionado por autocompletado o forceMezcla (p. ej. al cambiar Ø/altura de cesta).
  */
-function syncSetupVolMezclaSugeridoDwc() {
+function syncSetupVolMezclaSugeridoDwc(opts) {
+  opts = opts || {};
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  try {
+    dwcRefreshSetupLitrosSolucionUi();
+  } catch (_) {}
   const inp = document.getElementById('setupVolMezclaL');
   if (!inp) return;
+  if (inp.getAttribute('data-hc-dwc-mezcla-manual') === '1' && !opts.forceMezcla) return;
   const draft = buildDwcDraftCfgFromSetupWizardInputs();
   if (!draft) return;
   const vSeg = dwcGetLitrosSolucionSetupDesdeDraft(draft);
@@ -1214,8 +1227,11 @@ function syncSetupVolMezclaSugeridoDwc() {
   const prevAuto = inp.getAttribute('data-hc-dwc-mezcla-auto');
   const cur = String(inp.value || '').trim().replace(',', '.');
   const curN = cur ? parseFloat(cur) : NaN;
+  const autoManaged = inp.hasAttribute('data-hc-dwc-mezcla-auto');
   const shouldApply =
+    !!opts.forceMezcla ||
     cur === '' ||
+    autoManaged ||
     (prevAuto != null &&
       prevAuto !== '' &&
       Number.isFinite(curN) &&
@@ -1224,9 +1240,15 @@ function syncSetupVolMezclaSugeridoDwc() {
   if (!shouldApply) return;
   inp.value = String(vClamped);
   inp.setAttribute('data-hc-dwc-mezcla-auto', String(vClamped));
+  inp.removeAttribute('data-hc-dwc-mezcla-manual');
   try {
     onSetupVolMezclaInput();
   } catch (_) {}
+}
+
+/** Recalcula litros al cambiar Ø o altura de cesta (siempre actualiza si no hay edición manual). */
+function onSetupDwcCestaMedidasInput() {
+  onSetupDwcMedidasInput({ forceMezcla: true });
 }
 
 /** Litros de mezcla del asistente: abajo del bloque DWC o junto al slider de capacidad (torre/NFT). */
@@ -3215,7 +3237,8 @@ function dwcSyncSetupLitrosUtilesHidden() {
   } catch (_) {}
 }
 
-function onSetupDwcMedidasInput() {
+function onSetupDwcMedidasInput(opts) {
+  opts = opts || {};
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
   try {
     refreshDwcDepositoMedidasLayout(DWC_FORM_IDS_SETUP);
@@ -3234,7 +3257,7 @@ function onSetupDwcMedidasInput() {
     else if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
   } catch (_) {}
   try {
-    syncSetupVolMezclaSugeridoDwc();
+    syncSetupVolMezclaSugeridoDwc(opts);
   } catch (_) {}
   onSetupVolMezclaInput();
 }

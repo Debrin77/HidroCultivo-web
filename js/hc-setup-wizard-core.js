@@ -1808,6 +1808,11 @@ function abrirSetup() {
   try {
     syncDwcFormInputsDesdeConfig(c, DWC_FORM_IDS_SETUP);
   } catch (eDwc) {}
+  if (setupTipoInstalacion === 'dwc') {
+    try {
+      if (typeof onSetupDwcMedidasInput === 'function') onSetupDwcMedidasInput({ forceMezcla: true });
+    } catch (_) {}
+  }
 
   if (tipoInstalacionNormalizado(c) === 'torre') {
     try {
@@ -2216,12 +2221,25 @@ function onSetupVolMezclaInput() {
   if (!raw) {
     try {
       el.removeAttribute('data-hc-dwc-mezcla-auto');
+      el.removeAttribute('data-hc-dwc-mezcla-manual');
     } catch (_) {}
   }
   if (raw) {
     const m = parseFloat(String(raw).replace(',', '.'));
     if (Number.isFinite(m) && m > maxL) el.value = String(maxL);
     if (Number.isFinite(m) && m > 0 && m < 0.5) el.value = '0.5';
+    if (
+      typeof setupTipoInstalacion !== 'undefined' &&
+      setupTipoInstalacion === 'dwc' &&
+      el.hasAttribute('data-hc-dwc-mezcla-auto')
+    ) {
+      const autoN = parseFloat(String(el.getAttribute('data-hc-dwc-mezcla-auto') || '').replace(',', '.'));
+      const curN = parseFloat(String(el.value || '').replace(',', '.'));
+      if (Number.isFinite(autoN) && Number.isFinite(curN) && Math.abs(curN - autoN) > 0.06) {
+        el.setAttribute('data-hc-dwc-mezcla-manual', '1');
+        el.removeAttribute('data-hc-dwc-mezcla-auto');
+      }
+    }
   }
   if (typeof setupPagina !== 'undefined' && setupPagina >= 4) renderDosisSetup();
   if (typeof setupPagina !== 'undefined' && setupPagina === 7) actualizarResumenSetup();
