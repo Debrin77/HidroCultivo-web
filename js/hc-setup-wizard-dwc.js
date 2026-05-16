@@ -445,22 +445,86 @@ function getDwcAlturaSustratoEstimadaMm(cfg) {
 }
 
 /**
- * Estima el colgado típico de la cesta (cuerpo de net pot) bajo la tapa hacia el líquido (cm).
- * Sirve para restar a la profundidad útil P: la lámina no debe llegar al sustrato (hueco ~0,5–1 cm).
+ * Estima el colgado de la cesta bajo la tapa (cm): cuerpo del net pot que cuelga en el depósito.
+ * Prioriza la altura real (mm); el Ø solo ajusta cestas muy anchas y bajas.
  */
 function _dwcColgadoCestaBajoTapaCm(cfg, Pcm) {
   const P = Number(Pcm);
   const hPotRaw = Number((cfg || {}).dwcNetPotHeightMm);
-  const hPotMm = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200 ? hPotRaw : 70;
-  const potCm = hPotMm / 10;
   const rim = Number((cfg || {}).dwcNetPotRimMm);
-  let hang = potCm * 0.38 + 1.0;
-  if (Number.isFinite(rim) && rim >= 25 && rim <= 120) {
-    const dCm = rim / 10;
-    hang = Math.min(hang, Math.max(2.0, dCm * 0.72));
+  const hasH = Number.isFinite(hPotRaw) && hPotRaw >= 30 && hPotRaw <= 200;
+  const hasRim = Number.isFinite(rim) && rim >= 25 && rim <= 120;
+  let hang;
+  if (hasH) {
+    const potCm = hPotRaw / 10;
+    const asientoTapaCm = 1.0;
+    hang = Math.max(2.0, potCm - asientoTapaCm);
+  } else if (hasRim) {
+    hang = Math.max(2.0, (rim / 10) * 1.15);
+  } else {
+    hang = 7.0;
   }
-  const capByP = Number.isFinite(P) && P > 0 ? Math.max(2.2, P * 0.48) : 12;
-  return Math.min(Math.max(2.0, hang), capByP);
+  if (hasH && hasRim) {
+    const hangAncho = Math.max(2.0, (rim / 10) * 0.85);
+    hang = Math.max(hang, hangAncho);
+  }
+  const capByP = Number.isFinite(P) && P > 0 ? Math.max(2.2, P * 0.52) : 12;
+  return Math.min(hang, capByP);
+}
+
+/** Desglose legible del llenado seguro (asistente / Cultivo e instalación). */
+function dwcDesgloseVolumenLlenadoSeguro(cfg) {
+  cfg = cfg || {};
+  const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
+  if (cap == null || cap <= 0) return null;
+  const forma = dwcNormalizeDepositoForma(cfg.dwcDepositoForma);
+  let Puse = Number(cfg.dwcDepositoProfCm);
+  if (!Number.isFinite(Puse) || Puse < 5 || Puse > 200) {
+    const L = Number(cfg.dwcDepositoLargoCm);
+    const W = Number(cfg.dwcDepositoAnchoCm);
+    if (Number.isFinite(L) && Number.isFinite(W) && L > 0 && W > 0 && cap > 0) {
+      const pEst = (cap * 1000) / (L * W);
+      if (Number.isFinite(pEst) && pEst >= 5 && pEst <= 200) Puse = pEst;
+    }
+  }
+  if (!Number.isFinite(Puse) || Puse < 5) return null;
+  const hang = _dwcColgadoCestaBajoTapaCm(cfg, Puse);
+  const gap = _dwcGapLaminaCmDesdeConfig(cfg);
+  const hCol = _dwcAlturaColumnaLiquidoSeguraCm(cfg, Puse);
+  const litros =
+    typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function'
+      ? getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg)
+      : null;
+  return {
+    forma,
+    P: Math.round(Puse * 10) / 10,
+    hang: hang != null ? Math.round(hang * 10) / 10 : null,
+    gap: gap != null ? Math.round(gap * 10) / 10 : null,
+    hCol: hCol != null ? Math.round(hCol * 10) / 10 : null,
+    cap: Math.round(cap * 10) / 10,
+    litros: litros != null ? Math.round(litros * 10) / 10 : null,
+    hPotMm: Number.isFinite(Number(cfg.dwcNetPotHeightMm)) ? Math.round(Number(cfg.dwcNetPotHeightMm)) : null,
+    rimMm: Number.isFinite(Number(cfg.dwcNetPotRimMm)) ? Math.round(Number(cfg.dwcNetPotRimMm)) : null,
+  };
+}
+
+function dwcTextoHintDesgloseLlenado(d) {
+  if (!d || d.litros == null) return '';
+  let t =
+    'P ' +
+    d.P +
+    ' cm − colgado cesta ~' +
+    d.hang +
+    ' cm − cámara aire ~' +
+    d.gap +
+    ' cm → útil ~' +
+    d.hCol +
+    ' cm de líquido';
+  if (d.hPotMm != null) t += ' (cesta ' + d.hPotMm + ' mm';
+  if (d.rimMm != null) t += (d.hPotMm != null ? ', Ø ' : '(Ø ') + d.rimMm + ' mm';
+  if (d.hPotMm != null || d.rimMm != null) t += ')';
+  t += '. Capacidad geométrica ' + d.cap + ' L.';
+  return t;
 }
 
 /**
@@ -1092,21 +1156,13 @@ function dwcSetupLitrosSolucionEstado(cfg) {
       ? getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg)
       : null;
   if (litros != null && litros > 0) {
-    const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
-    const sustratoMm =
-      typeof getDwcAlturaSustratoEstimadaMm === 'function' ? getDwcAlturaSustratoEstimadaMm(cfg) : null;
-    let hint =
-      'Volumen de llenado recomendado para mezclar nutrientes y checklist. Reserva bajo la maceta según altura/Ø de cesta';
-    if (Number.isFinite(sustratoMm)) hint += ' y sustrato (~' + sustratoMm + ' mm estimados)';
-    try {
-      const gapCm = _dwcGapLaminaCmDesdeConfig(cfg);
-      if (Number.isFinite(gapCm)) hint += '; cámara de aire orientativa ~' + dwcFmtCmComma(gapCm) + ' cm';
-    } catch (_) {}
-    hint += '.';
-    if (cap != null && cap > 0 && Math.abs(cap - litros) > 0.25) {
-      hint += ' Capacidad geométrica del depósito: ' + cap + ' L.';
+    const desglose = typeof dwcDesgloseVolumenLlenadoSeguro === 'function' ? dwcDesgloseVolumenLlenadoSeguro(cfg) : null;
+    let hint = desglose ? dwcTextoHintDesgloseLlenado(desglose) : '';
+    if (!hint) {
+      hint =
+        'Volumen de llenado seguro según profundidad útil, altura/Ø de cesta y cámara de aire bajo el sustrato.';
     }
-    return { litros, pendiente: '', texto: litros + ' L', hint, mc: false };
+    return { litros, pendiente: '', texto: litros + ' L', hint, desglose, mc: false };
   }
   return {
     litros: null,
@@ -1179,6 +1235,8 @@ function dwcRefreshSetupLitrosSolucionUi() {
       hintEl.textContent =
         st.hint ||
         'Llenado seguro según altura de cesta y cámara de aire bajo la maceta (varía con sustrato y edad de planta).';
+      hintEl.classList.remove('setup-hidden');
+      hintEl.removeAttribute('aria-hidden');
     }
   } else {
     block.classList.add('setup-dwc-litros-solucion-block--pending');
@@ -1186,6 +1244,8 @@ function dwcRefreshSetupLitrosSolucionUi() {
     if (hintEl) {
       hintEl.textContent =
         'Se calcula en tiempo real al cambiar medidas del cubo y tamaño de cesta (misma lógica que Cultivo e instalación).';
+      hintEl.classList.remove('setup-hidden');
+      hintEl.removeAttribute('aria-hidden');
     }
   }
 }
@@ -3012,11 +3072,20 @@ function refreshDwcSistemaMedidasUI() {
           dwcMergeCamposFormularioEnCfg(cfgDraft, DWC_FORM_IDS_SISTEMA);
         } catch (_) {}
         const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
+        const desg =
+          typeof dwcDesgloseVolumenLlenadoSeguro === 'function'
+            ? dwcDesgloseVolumenLlenadoSeguro(cfgDraft)
+            : null;
         volEl.style.display = 'block';
         volEl.textContent =
-          (forma === 'cilindrico'
-            ? 'Total ~' + cap + ' L · Óptimo ~' + (volSeguro != null ? volSeguro : '—') + ' L'
-            : 'Total ~' + cap + ' L · Óptimo ~' + (volSeguro != null ? volSeguro : '—') + ' L');
+          'Total ~' +
+          cap +
+          ' L · Óptimo ~' +
+          (volSeguro != null ? volSeguro : '—') +
+          ' L' +
+          (desg && desg.hang != null
+            ? ' (P ' + desg.P + ' cm, colgado ~' + desg.hang + ' cm, aire ~' + desg.gap + ' cm)'
+            : '');
       } else {
         volEl.style.display = 'none';
         volEl.textContent = '';
