@@ -14487,6 +14487,46 @@ button.toggle-switch:focus-visible {
   background: #ecfdf5;
   border-color: #6ee7b7;
 }
+.setup-dwc-litros-solucion-block {
+  margin: 12px 0 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1.5px solid #6ee7b7;
+}
+.setup-dwc-litros-solucion-label {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #065f46;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.setup-dwc-litros-solucion-valor {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  color: #047857;
+  line-height: 1.2;
+}
+.setup-dwc-litros-solucion-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #334155;
+}
+.setup-dwc-litros-solucion-block--pending {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+.setup-dwc-litros-solucion-block--pending .setup-dwc-litros-solucion-valor {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+}
+.setup-dwc-litros-solucion-block--ok .setup-dwc-litros-solucion-valor {
+  color: #047857;
+}
 .setup-dwc-dep-unido-controls {
   margin-top: 10px;
 }

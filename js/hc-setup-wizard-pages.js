@@ -1459,8 +1459,6 @@ function updateTorreBuilder() {
 function toggleUbic(tipo) {
   setupUbicacion = tipo;
   setupData.ubicacion = tipo;
-  document.getElementById('eqExterior').className = 'equip-card' + (tipo === 'exterior' ? ' selected' : '');
-  document.getElementById('eqInterior').className = 'equip-card' + (tipo === 'interior' ? ' selected' : '');
 }
 
 function toggleEquip(id) {

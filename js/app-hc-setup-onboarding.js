@@ -414,11 +414,11 @@ function actualizarResumenSetup() {
       const Wd = _dwcParseOptCm('setupDwcAnchoCm', 5, 300);
       if (Ld != null && Wd != null && Pd != null) geoDwcRes += ' · dep. ' + Ld + '×' + Wd + '×' + Pd + ' cm';
     } else {
-      const vmTr =
-        typeof _dwcParseVolManualLitros === 'function'
-          ? _dwcParseVolManualLitros(document.getElementById('setupDwcVolumenManualL')?.value)
+      const capTr =
+        typeof getDwcCapacidadLitrosFromSetupInputs === 'function'
+          ? getDwcCapacidadLitrosFromSetupInputs()
           : null;
-      if (vmTr != null) geoDwcRes += ' · dep. ~' + vmTr + ' L (tronco)';
+      if (capTr != null) geoDwcRes += ' · dep. ~' + capTr + ' L (tronco)';
     }
     const rimD = _dwcParseOptMm('setupDwcPotRimMm', 25, 120);
     const hD = _dwcParseOptMm('setupDwcPotHmm', 30, 200);

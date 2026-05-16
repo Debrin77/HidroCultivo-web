@@ -886,6 +886,124 @@ function buildDwcDraftCfgFromSetupWizardInputs() {
   return c;
 }
 
+/** Litros de llenado seguro en el asistente (depósito único o por cubo en multiválvula). */
+function dwcGetLitrosSolucionSetupDesdeDraft(draft) {
+  if (!draft) return null;
+  if (typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(draft) === 'cubos_independientes') {
+    return typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
+      ? dwcLitrosUtilesPorCuboMultivalvula(draft, { preferGeometria: true })
+      : null;
+  }
+  return typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function'
+    ? getDwcVolumenSeguroMaxLitrosDesdeConfig(draft)
+    : null;
+}
+
+/** Estado del indicador visible de litros (asistente paso Geometría). */
+function dwcSetupLitrosSolucionEstado(cfg) {
+  if (!cfg) {
+    return { litros: null, pendiente: 'Indica medidas del cubo y de la cesta.', hint: '', mc: false };
+  }
+  const mc = typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  if (mc) {
+    const st = dwcSetupMulticuboLitrosEstado(cfg);
+    const sustratoMm =
+      typeof getDwcAlturaSustratoEstimadaMm === 'function' ? getDwcAlturaSustratoEstimadaMm(cfg) : null;
+    let hint = '';
+    if (st.litros != null && st.litros > 0) {
+      hint =
+        'Llenado seguro por cubo: superficie del nutriente ~0,85 cm bajo la base del sustrato' +
+        (Number.isFinite(sustratoMm) ? ' (sustrato estimado ~' + sustratoMm + ' mm)' : '') +
+        '. Usa este valor al mezclar y en el checklist.';
+    }
+    return { litros: st.litros, pendiente: st.pendiente, texto: st.texto, hint, mc: true };
+  }
+  if (!dwcSetupTieneMedidasCuboEnCfg(cfg)) {
+    return {
+      litros: null,
+      pendiente: 'Completa Ø o largo×ancho del cubo y la profundidad útil del líquido.',
+      hint: '',
+      mc: false,
+    };
+  }
+  const rim = Number(cfg.dwcNetPotRimMm);
+  const hPot = Number(cfg.dwcNetPotHeightMm);
+  const tieneCesta = (Number.isFinite(hPot) && hPot >= 30) || (Number.isFinite(rim) && rim >= 25);
+  const litros =
+    typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function'
+      ? getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg)
+      : null;
+  if (litros != null && litros > 0) {
+    const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
+    const sustratoMm =
+      typeof getDwcAlturaSustratoEstimadaMm === 'function' ? getDwcAlturaSustratoEstimadaMm(cfg) : null;
+    let hint =
+      'Volumen de llenado recomendado para mezclar nutrientes y checklist. Reserva bajo la maceta según altura de cesta';
+    if (Number.isFinite(sustratoMm)) hint += ' y sustrato (~' + sustratoMm + ' mm estimados)';
+    hint += '.';
+    if (cap != null && cap > 0 && Math.abs(cap - litros) > 0.25) {
+      hint += ' Capacidad geométrica del depósito: ' + cap + ' L.';
+    }
+    return { litros, pendiente: '', texto: litros + ' L', hint, mc: false };
+  }
+  if (!tieneCesta) {
+    return {
+      litros: null,
+      pendiente: 'Indica diámetro y altura de la cesta para calcular el llenado seguro (litros).',
+      hint: '',
+      mc: false,
+    };
+  }
+  return {
+    litros: null,
+    pendiente: 'Revisa medidas del cubo y de la cesta; no se pudo calcular el volumen.',
+    hint: '',
+    mc: false,
+  };
+}
+
+/** Muestra litros de solución calculados en tiempo real (tras medidas de cesta). */
+function dwcRefreshSetupLitrosSolucionUi() {
+  const block = document.getElementById('setupDwcLitrosSolucionBlock');
+  const valEl = document.getElementById('setupDwcLitrosSolucionValor');
+  const labEl = document.getElementById('setupDwcLitrosSolucionLabel');
+  const hintEl = document.getElementById('setupDwcLitrosSolucionHint');
+  if (!block || !valEl) return;
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') {
+    block.classList.add('setup-hidden');
+    return;
+  }
+  block.classList.remove('setup-hidden');
+  let draft = null;
+  try {
+    draft = buildDwcDraftCfgFromSetupWizardInputs();
+  } catch (_) {}
+  const mc = draft && typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(draft) === 'cubos_independientes';
+  if (labEl) {
+    labEl.textContent = mc
+      ? 'Litros de solución por cubo (llenado seguro)'
+      : 'Litros de solución en el depósito';
+  }
+  const st = draft ? dwcSetupLitrosSolucionEstado(draft) : dwcSetupLitrosSolucionEstado(null);
+  block.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
+  if (st.litros != null && st.litros > 0) {
+    block.classList.add('setup-dwc-litros-solucion-block--ok');
+    valEl.textContent = st.litros + ' L';
+    if (hintEl) {
+      hintEl.textContent =
+        st.hint ||
+        'Llenado seguro según altura de cesta y cámara de aire bajo la maceta (varía con sustrato y edad de planta).';
+    }
+  } else {
+    block.classList.add('setup-dwc-litros-solucion-block--pending');
+    valEl.textContent = st.pendiente || 'Completa medidas del cubo y de la cesta.';
+    if (hintEl) {
+      hintEl.textContent =
+        'Se calcula en tiempo real al cambiar medidas del cubo y tamaño de cesta (misma lógica que Cultivo e instalación).';
+    }
+  }
+}
+
 /**
  * Rellena setupVolMezclaL con litros de llenado seguro (orientativo) si el campo está vacío
  * o sigue coincidiendo con la última sugerencia automática.
@@ -896,7 +1014,7 @@ function syncSetupVolMezclaSugeridoDwc() {
   if (!inp) return;
   const draft = buildDwcDraftCfgFromSetupWizardInputs();
   if (!draft) return;
-  const vSeg = getDwcVolumenSeguroMaxLitrosDesdeConfig(draft);
+  const vSeg = dwcGetLitrosSolucionSetupDesdeDraft(draft);
   if (vSeg == null || !Number.isFinite(vSeg) || vSeg <= 0) return;
   const maxL = typeof getSetupVolumenMaxLitros === 'function' ? getSetupVolumenMaxLitros() : vSeg;
   const vClamped = Math.round(Math.min(vSeg, maxL != null && maxL > 0 ? maxL : vSeg) * 10) / 10;
@@ -2672,31 +2790,23 @@ function refreshDwcSistemaMedidasUI() {
       const cfgDraft = state.configTorre ? { ...state.configTorre } : {};
       const { L: Ld, W: Wd } = dwcLargoAnchoCmEffectivosDesdeFormIds(DWC_FORM_IDS_SISTEMA);
       const Pd = _dwcParseOptCm('sysDwcProfCm', 5, 200);
-      const vm = _dwcParseVolManualLitros(document.getElementById('sysDwcVolumenManualL')?.value);
       const hPotD = _dwcParseOptMm('sysDwcPotHmm', 30, 200);
       cfgDraft.dwcDepositoForma = forma;
       if (Ld != null) cfgDraft.dwcDepositoLargoCm = Ld;
       if (Wd != null) cfgDraft.dwcDepositoAnchoCm = Wd;
       if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
       else delete cfgDraft.dwcDepositoProfCm;
-      if (vm != null) cfgDraft.dwcDepositoVolManualL = vm;
-      else delete cfgDraft.dwcDepositoVolManualL;
+      delete cfgDraft.dwcDepositoVolManualL;
       if (hPotD != null) cfgDraft.dwcNetPotHeightMm = hPotD;
       const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
       const hSustratoMm = getDwcAlturaSustratoEstimadaMm(cfgDraft);
       volEl.style.display = 'block';
       volEl.textContent =
         (forma === 'troncopiramidal'
-          ? 'Volumen util del deposito (tronco): ~' +
-            cap +
-            ' L (' +
-            (vm != null ? 'medido o L×A×P' : 'L×A×P aprox.') +
-            '). '
-          : vm != null
-            ? 'Volumen util configurado del deposito: ~' + cap + ' L (manual, sobrescribe geometria). '
+          ? 'Volumen estimado del depósito (tronco): ~' + cap + ' L (L×A×P en la boca). '
           : forma === 'cilindrico'
-            ? 'Volumen geometrico estimado del deposito cilindrico: ~' + cap + ' L (π × (Ø/2)² × prof. util). '
-            : 'Volumen geometrico estimado del deposito: ~' + cap + ' L (largo × ancho × prof. en cm ÷ 1000). ') +
+            ? 'Volumen geométrico del depósito cilíndrico: ~' + cap + ' L (π × (Ø/2)² × prof. útil). '
+            : 'Volumen geométrico del depósito: ~' + cap + ' L (largo × ancho × prof. en cm ÷ 1000). ') +
         (volSeguro != null
           ? 'Con el sustrato actual (altura estimada ~' + hSustratoMm + ' mm en cesta), el llenado seguro máximo es ~' + volSeguro + ' L (deja ~0,5–1 cm bajo la base del sustrato).'
           : 'En cultivo el nivel de solución debe quedar por debajo de la base del sustrato (reserva 0,5–1 cm).');
@@ -2705,7 +2815,7 @@ function refreshDwcSistemaMedidasUI() {
       if (forma === 'troncopiramidal') {
         volEl.style.display = 'block';
         volEl.textContent =
-          'Troncopiramidal: indica L×A y profundidad útil P del líquido (la app estima ~litros) o litros medidos a mano; con altura de cesta se calcula el llenado seguro.';
+          'Troncopiramidal: indica L×A y profundidad útil P del líquido; con altura de cesta se calcula el llenado seguro.';
       } else {
         volEl.style.display = 'none';
         volEl.textContent = '';
@@ -2902,78 +3012,38 @@ function mountDwcCestasGuiaEnPanelConsejos() {
   m.appendChild(frag);
 }
 
+/** Actualiza litros útiles por cubo (hidden) y mezcla sugerida en el asistente DWC. */
+function dwcSyncSetupLitrosUtilesHidden() {
+  const hidden = document.getElementById('setupDwcLitrosUtilesPorSitioL');
+  if (!hidden) return;
+  let litros = null;
+  try {
+    const draft = buildDwcDraftCfgFromSetupWizardInputs();
+    if (draft && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function') {
+      litros = dwcLitrosUtilesPorCuboMultivalvula(draft, { preferGeometria: true });
+    }
+    if (litros == null && draft && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
+      const safe = getDwcVolumenSeguroMaxLitrosDesdeConfig(draft);
+      if (safe != null && safe > 0) litros = Math.round(safe * 10) / 10;
+    }
+  } catch (_) {}
+  hidden.value = litros != null && litros > 0 ? String(litros) : '';
+  try {
+    dwcRefreshSetupLitrosSolucionUi();
+  } catch (_) {}
+}
+
 function onSetupDwcMedidasInput() {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
   try {
-    toggleDwcVolumenManualUI(DWC_FORM_IDS_SETUP, state.configTorre);
+    refreshDwcDepositoMedidasLayout(DWC_FORM_IDS_SETUP);
   } catch (_) {}
   try {
     actualizarResumenSetup();
   } catch (e) {}
-  const esMc =
-    dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
-    'cubos_independientes';
-  if (esMc) {
-    const hint = document.getElementById('setupDwcCapacidadEstimada');
-    const block = document.getElementById('setupDwcLitrosCuboBlock');
-    const hidden = document.getElementById('setupDwcLitrosUtilesPorSitioL');
-    let estado = { litros: null, pendiente: '', texto: '' };
-    try {
-      const draft = buildDwcDraftCfgFromSetupWizardInputs();
-      if (draft && typeof dwcSetupMulticuboLitrosEstado === 'function') {
-        estado = dwcSetupMulticuboLitrosEstado(draft);
-      }
-    } catch (_) {}
-    if (block) {
-      block.classList.remove('setup-hidden');
-      block.classList.toggle('setup-dwc-litros-cubo-block--ok', estado.litros != null && estado.litros > 0);
-      block.classList.toggle('setup-dwc-litros-cubo-block--pending', !(estado.litros != null && estado.litros > 0));
-    }
-    if (hint) {
-      hint.textContent =
-        estado.litros != null && estado.litros > 0
-          ? estado.texto || estado.litros + ' L de solución por cubo.'
-          : estado.pendiente || 'Completa medidas del cubo y de la cesta.';
-    }
-    if (hidden) {
-      hidden.value =
-        estado.litros != null && estado.litros > 0 ? String(Math.round(estado.litros * 10) / 10) : '';
-    }
-    updateTorreBuilder();
-    return;
-  }
-  const hint = document.getElementById('setupDwcCapacidadEstimada');
-  const blockDep = document.getElementById('setupDwcLitrosCuboBlock');
-  if (blockDep) blockDep.classList.add('setup-hidden');
-  const cap = getDwcCapacidadLitrosFromSetupInputs();
-  const forma = dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value);
-  const vm = _dwcParseVolManualLitros(document.getElementById('setupDwcVolumenManualL')?.value);
-  if (hint) {
-    if (cap != null && cap > 0) {
-      hint.classList.remove('setup-hidden');
-      let extraSeg = '';
-      try {
-        const draft = buildDwcDraftCfgFromSetupWizardInputs();
-        const vSeg = draft ? getDwcVolumenSeguroMaxLitrosDesdeConfig(draft) : null;
-        if (vSeg != null && vSeg > 0 && Math.abs(vSeg - cap) > 0.2) {
-          extraSeg = ' Llenado operativo orientativo (bajo cesta + aire): ~' + Math.round(vSeg * 10) / 10 + ' L.';
-        }
-      } catch (_) {}
-      hint.textContent =
-        (forma === 'troncopiramidal'
-          ? (vm != null
-              ? 'Capacidad ~' + cap + ' L (prioriza litros medidos). Con P y cesta se orienta llenado seguro y mezcla.'
-              : 'Capacidad estimada ~' + cap + ' L (L×A×P como prisma en la boca; tronco real puede variar). Ajusta con litros medidos si los tienes.')
-          : vm != null
-            ? 'Volumen util manual: ~' + cap + ' L (sobrescribe calculo geometrico).'
-          : forma === 'cilindrico'
-            ? 'Capacidad geometrica estimada: ~' + cap + ' L (cilindro: π × (Ø interior/2)² × prof. útil del líquido).'
-            : 'Capacidad geometrica estimada: ~' + cap + ' L (largo × ancho × prof. útil en cm ÷ 1000).') + extraSeg;
-    } else {
-      hint.classList.add('setup-hidden');
-      hint.textContent = '';
-    }
-  }
+  try {
+    dwcSyncSetupLitrosUtilesHidden();
+  } catch (_) {}
   updateTorreBuilder();
   try {
     syncSetupVolMezclaSugeridoDwc();
@@ -3165,6 +3235,9 @@ function dwcRefreshMulticuboDependienteUi(which) {
     try {
       updateTorreBuilder();
     } catch (_) {}
+    try {
+      dwcRefreshSetupLitrosSolucionUi();
+    } catch (_) {}
   }
 }
 
@@ -3292,27 +3365,10 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
 
 function toggleDwcVolumenManualUI(formIds, cfg) {
   const ids = formIds || DWC_FORM_IDS_SISTEMA;
-  const forma = dwcNormalizeDepositoForma(
-    document.getElementById(ids.forma)?.value || (cfg || state.configTorre || {}).dwcDepositoForma
+  const wrap = document.getElementById(
+    ids === DWC_FORM_IDS_SETUP ? 'setupDwcVolumenManualWrap' : 'sysDwcVolumenManualWrap'
   );
-  const on = dwcRequiereVolumenManual(forma);
-  const isSetup = ids === DWC_FORM_IDS_SETUP;
-  const wrap = document.getElementById(isSetup ? 'setupDwcVolumenManualWrap' : 'sysDwcVolumenManualWrap');
-  const profWrap = document.getElementById(isSetup ? 'setupDwcProfWrap' : 'sysDwcProfWrap');
-  const inp = document.getElementById(ids.volManual);
-  const help = document.getElementById(isSetup ? 'setupDwcVolumenManualHint' : 'sysDwcVolumenManualHint');
-  if (wrap) wrap.classList.remove('setup-hidden');
-  if (profWrap) profWrap.classList.remove('setup-hidden');
-  if (inp) {
-    inp.required = false;
-    inp.setAttribute('aria-required', 'false');
-  }
-  if (help) {
-    help.classList.remove('setup-hidden');
-    help.textContent = on
-      ? 'Troncopiramidal: indica L×A (boca) y profundidad/altura útil P del líquido para calcular ~litros y el llenado seguro según cesta; o solo litros medidos si prefieres (sobrescribe L×A×P).'
-      : 'Opcional: si conoces litros utiles reales, este valor sobrescribe el calculo geometrico.';
-  }
+  if (wrap) wrap.classList.add('setup-hidden');
   try {
     refreshDwcDepositoMedidasLayout(ids);
   } catch (_) {}
