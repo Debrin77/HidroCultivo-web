@@ -86,7 +86,33 @@ function dwcNormalizeOxigenacionDiseno(raw) {
 
 function dwcGetOxigenacionDiseno(cfg) {
   const c = cfg || state.configTorre || {};
-  return dwcNormalizeOxigenacionDiseno(c.dwcOxigenacionDiseno);
+  if (c.dwcOxigenacionDiseno != null && String(c.dwcOxigenacionDiseno).trim() !== '') {
+    return dwcNormalizeOxigenacionDiseno(c.dwcOxigenacionDiseno);
+  }
+  const nCub = parseInt(String(c.dwcNumCubos), 10);
+  if (Number.isFinite(nCub) && nCub >= 1) return 'cubos_independientes';
+  return 'dep_unido';
+}
+
+/**
+ * Corrige instalaciones DWC guardadas como multiválvula sin cubos explícitos pero con rejilla de tapa.
+ * @returns {boolean} si se alteró cfg
+ */
+function dwcAsegurarOxigenacionCoherenteConRejilla(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'dwc') return false;
+  if (dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') return false;
+  const nCub = parseInt(String(cfg.dwcNumCubos), 10);
+  if (Number.isFinite(nCub) && nCub >= 1) return false;
+  const nf = Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1);
+  const tieneRejilla =
+    nf > 1 ||
+    cfg.dwcRejillaModoPreferido != null ||
+    cfg.dwcTapaMarcoPorLadoMm != null ||
+    cfg.dwcTapaHuecoMm != null;
+  if (!tieneRejilla) return false;
+  cfg.dwcOxigenacionDiseno = 'dep_unido';
+  delete cfg.dwcNumCubos;
+  return true;
 }
 
 /**
@@ -3088,7 +3114,16 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   }
   if (ids.oxigenacionDiseno) {
     const elOx = document.getElementById(ids.oxigenacionDiseno);
-    cfg.dwcOxigenacionDiseno = dwcNormalizeOxigenacionDiseno(elOx && elOx.value);
+    const wrapMc = document.getElementById('sysDwcOxigenacionModeWrap');
+    const sistemaDepUnido =
+      ids === DWC_FORM_IDS_SISTEMA && wrapMc && wrapMc.classList.contains('setup-hidden');
+    if (sistemaDepUnido) {
+      cfg.dwcOxigenacionDiseno = 'dep_unido';
+    } else if (elOx && String(elOx.value || '').trim() !== '') {
+      cfg.dwcOxigenacionDiseno = dwcNormalizeOxigenacionDiseno(elOx.value);
+    } else {
+      cfg.dwcOxigenacionDiseno = dwcNormalizeOxigenacionDiseno(cfg.dwcOxigenacionDiseno);
+    }
   } else {
     cfg.dwcOxigenacionDiseno = dwcNormalizeOxigenacionDiseno(cfg.dwcOxigenacionDiseno);
   }
@@ -3173,8 +3208,19 @@ function dwcSyncSetupMontajePreview() {
 function dwcRefreshMulticuboDependienteUi(which) {
   const esMc = selVal => dwcNormalizeOxigenacionDiseno(selVal) === 'cubos_independientes';
   if (which === 'sys') {
+    const cfg = state.configTorre || {};
+    const diseno =
+      typeof dwcGetOxigenacionDiseno === 'function' ? dwcGetOxigenacionDiseno(cfg) : 'dep_unido';
+    const mc = diseno === 'cubos_independientes';
     const sel = document.getElementById('sysDwcOxigenacionDiseno');
-    const mc = esMc(sel && sel.value);
+    if (sel) {
+      if (mc) sel.value = 'cubos_independientes';
+      else sel.value = 'dep_unido';
+    }
+    const wResumen = document.getElementById('sysDwcDepUnidoModoResumen');
+    const wModeWrap = document.getElementById('sysDwcOxigenacionModeWrap');
+    if (wResumen) wResumen.classList.toggle('setup-hidden', mc);
+    if (wModeWrap) wModeWrap.classList.toggle('setup-hidden', !mc);
     const wNc = document.getElementById('sysDwcNumCubosWrap');
     if (wNc) wNc.classList.toggle('setup-hidden', !mc);
     const wRej = document.getElementById('sysDwcRejillaPreferidaWrap');
@@ -3277,6 +3323,12 @@ function dwcSincronizarTamanoCestaDesdeRim(cfg) {
 function syncDwcFormInputsDesdeConfig(c, ids) {
   if (!ids) return;
   c = c || {};
+  if (c === state.configTorre && dwcAsegurarOxigenacionCoherenteConRejilla(c)) {
+    try {
+      guardarEstadoTorreActual();
+      saveState();
+    } catch (_) {}
+  }
   if (c === state.configTorre && dwcMigrarRimLegacy44SiCestaCm50(c)) {
     try {
       guardarEstadoTorreActual();

@@ -5980,6 +5980,21 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   font-size: 12px;
   font-weight: 600;
 }
+.torre-dwc-modo-resumen {
+  margin: 8px 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+}
+.torre-dwc-modo-resumen-tit {
+  margin: 0;
+  font-size: 13px;
+  color: #14532d;
+}
+.torre-dwc-modo-resumen-txt {
+  margin: 0.25rem 0 0;
+}
 .cl-note--dwc-mc-guide {
   margin: 10px 0 12px;
   padding: 12px 14px;
