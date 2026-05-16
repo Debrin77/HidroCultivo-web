@@ -2995,24 +2995,52 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
   dwcAplicarMatrizCultivoMulticuboEnCfg(cfg, ids);
 }
 
+/** Asistente paso 1: ¿DWC multiválvula (cubos independientes)? */
+function dwcEsSetupMultivalvula() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return false;
+  return (
+    dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+    'cubos_independientes'
+  );
+}
+
 /** Mueve los sliders del asistente al bloque DWC (depósito unido) o los oculta en multivalvula. */
 function dwcReparentSetupSlidersForPreview() {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
   const controls = document.getElementById('setupTorreBuilderControlsSlot');
   const dwcSlot = document.getElementById('setupDwcDepUnidoControls');
-  if (!controls || !dwcSlot) return;
-  const mc =
-    dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
-    'cubos_independientes';
-  controls.classList.toggle('setup-hidden', mc);
-  dwcSlot.classList.toggle('setup-hidden', mc);
-  if (!mc && controls.parentElement !== dwcSlot) dwcSlot.appendChild(controls);
-  const dn = document.getElementById('setupTorreDimNivel');
-  const dc = document.getElementById('setupTorreDimCesta');
-  if (dn && dc && !mc) {
-    dn.textContent = 'Filas en la tapa';
-    dc.textContent = 'Cestas por fila';
+  if (!controls) return;
+  const mc = dwcEsSetupMultivalvula();
+  const torreBuilder = document.querySelector('#setupTorreBuilderWrap .torre-builder');
+  if (mc) {
+    controls.classList.add('setup-hidden');
+    if (dwcSlot) dwcSlot.classList.add('setup-hidden');
+    if (torreBuilder && controls.parentElement !== torreBuilder) torreBuilder.appendChild(controls);
+  } else {
+    controls.classList.remove('setup-hidden');
+    if (dwcSlot) {
+      dwcSlot.classList.remove('setup-hidden');
+      if (controls.parentElement !== dwcSlot) dwcSlot.appendChild(controls);
+    }
+    const dn = document.getElementById('setupTorreDimNivel');
+    const dc = document.getElementById('setupTorreDimCesta');
+    if (dn) dn.textContent = 'Filas en la tapa';
+    if (dc) dc.textContent = 'Cestas por fila';
   }
+}
+
+/** Refresca vista previa DWC del asistente (multiválvula vs depósito unido) y sliders. */
+function dwcSyncSetupMontajePreview() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  try {
+    dwcRefreshMulticuboDependienteUi('setup');
+  } catch (_) {}
+  try {
+    dwcReparentSetupSlidersForPreview();
+  } catch (_) {}
+  try {
+    updateTorreBuilder();
+  } catch (_) {}
 }
 
 /** Muestra u oculta rejilla de tapa (solo depósito unido) y campo «cubos» en multivalvula. */
@@ -3052,11 +3080,27 @@ function dwcRefreshMulticuboDependienteUi(which) {
         reco.textContent = '';
       }
     }
+    if (mc) {
+      const formaMc = dwcNormalizeDepositoForma(
+        document.getElementById('setupDwcDepositoForma')?.value
+      );
+      if (formaMc === 'cilindrico') {
+        const elNc = document.getElementById('setupDwcNumCubos');
+        const rawNc = elNc ? String(elNc.value || '').trim() : '';
+        const nNc = parseInt(rawNc, 10);
+        if (!rawNc || !Number.isFinite(nNc) || nNc < 1) {
+          if (elNc) elNc.value = '1';
+        }
+      }
+    }
     try {
       dwcReparentSetupSlidersForPreview();
     } catch (_) {}
     try {
       onSetupDwcMedidasInput();
+    } catch (_) {}
+    try {
+      updateTorreBuilder();
     } catch (_) {}
   }
 }
@@ -3249,9 +3293,12 @@ function onDwcFormaChanged(formIds) {
     else onSetupDwcMedidasInput();
   } catch (_) {}
   try {
+    refreshDwcDepositoMedidasLayout(ids);
+  } catch (_) {}
+  try {
     if (ids === DWC_FORM_IDS_SETUP) {
+      dwcSyncSetupMontajePreview();
       refreshDwcTapHintSetup();
-      updateTorreBuilder();
     } else refreshDwcTapHintSistema();
   } catch (_) {}
 }

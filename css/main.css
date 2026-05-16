@@ -14540,6 +14540,33 @@ button.toggle-switch:focus-visible {
   width: 52px;
   border-radius: 6px 6px 14px 14px;
 }
+.dwc-setup-mc-wrap--cilindrico .dwc-setup-mc-cube--cilindrico .dwc-setup-mc-lid {
+  border-color: #0369a1;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 0 0 2px rgba(14, 165, 233, 0.25);
+}
+.dwc-setup-mc-wrap--single {
+  padding: 4px 0 8px;
+}
+.dwc-setup-mc-wrap--single .dwc-setup-mc-grid {
+  max-width: 120px;
+}
+.dwc-setup-mc-wrap--single .dwc-setup-mc-cube--cilindrico .dwc-setup-mc-lid {
+  width: 72px;
+  height: 72px;
+}
+.dwc-setup-mc-wrap--single .dwc-setup-mc-cube--cilindrico .dwc-setup-mc-hole {
+  width: 26px;
+  height: 26px;
+}
+.dwc-setup-mc-wrap--single .dwc-setup-mc-cube--cilindrico .dwc-setup-mc-tank {
+  width: 64px;
+  height: 24px;
+}
+#setupDwcDepUnidoControls:empty {
+  display: none;
+  margin: 0;
+  padding: 0;
+}
 .setup-dwc-help--after-preview {
   margin-top: 0;
   margin-bottom: 12px;

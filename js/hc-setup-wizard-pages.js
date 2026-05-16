@@ -1212,11 +1212,14 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
     ? dwcNormalizeDepositoForma(formaDep)
     : String(formaDep || 'prismatico');
   const wrap = document.createElement('div');
-  wrap.className = 'dwc-setup-mc-wrap';
+  wrap.className = 'dwc-setup-mc-wrap dwc-setup-mc-wrap--' + forma;
+  if (forma === 'cilindrico' && n === 1) wrap.classList.add('dwc-setup-mc-wrap--single');
   wrap.setAttribute('role', 'img');
   wrap.setAttribute(
     'aria-label',
-    n + ' cubos independientes con multivalvula, una maceta por cubo.'
+    forma === 'cilindrico' && n === 1
+      ? 'Cubo cilíndrico DWC con multiválvula: una maceta.'
+      : n + ' cubos independientes con multiválvula, una maceta por cubo.'
   );
   const grid =
     typeof hcDistribuirFilasColumnas === 'function'
@@ -1244,7 +1247,10 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
   wrap.appendChild(row);
   const cap = document.createElement('div');
   cap.className = 'dwc-setup-lid-caption';
-  cap.textContent = n + ' cubo' + (n === 1 ? '' : 's') + ' · 1 maceta/cubo · multivalvula';
+  cap.textContent =
+    forma === 'cilindrico'
+      ? (n === 1 ? 'Cubo redondo · 1 maceta' : n + ' cubos redondos · 1 maceta/cubo') + ' · multiválvula'
+      : n + ' cubo' + (n === 1 ? '' : 's') + ' · 1 maceta/cubo · multiválvula';
   wrap.appendChild(cap);
   previewEl.appendChild(wrap);
 }
@@ -1311,11 +1317,21 @@ function updateTorreBuilder() {
   const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
   let dwcNivPrev = niveles;
   let dwcCesPrev = cestas;
-  if (setupTipoInstalacion === 'dwc' && typeof dwcNormalizeOxigenacionDiseno === 'function') {
-    const oxB = dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value);
-    if (oxB === 'cubos_independientes') {
+  if (setupTipoInstalacion === 'dwc') {
+    const oxB =
+      typeof dwcEsSetupMultivalvula === 'function'
+        ? dwcEsSetupMultivalvula()
+        : typeof dwcNormalizeOxigenacionDiseno === 'function' &&
+          dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+            'cubos_independientes';
+    if (oxB) {
+      const formaMc =
+        typeof dwcNormalizeDepositoForma === 'function'
+          ? dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value)
+          : 'prismatico';
       const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
-      const nn = Math.min(24, Math.max(1, Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : 4));
+      const defNc = formaMc === 'cilindrico' ? 1 : 4;
+      const nn = Math.min(24, Math.max(1, Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : defNc));
       dwcNivPrev = 1;
       dwcCesPrev = nn;
     }
@@ -1360,11 +1376,13 @@ function updateTorreBuilder() {
   if (setupTipoInstalacion === 'dwc') {
     preview.classList.add('torre-preview--dwc');
     const oxB =
-      typeof dwcNormalizeOxigenacionDiseno === 'function'
-        ? dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value)
-        : 'dep_unido';
+      typeof dwcEsSetupMultivalvula === 'function'
+        ? dwcEsSetupMultivalvula()
+        : typeof dwcNormalizeOxigenacionDiseno === 'function' &&
+          dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+            'cubos_independientes';
     const formaDep = document.getElementById('setupDwcDepositoForma')?.value;
-    if (oxB === 'cubos_independientes') {
+    if (oxB) {
       let volMc = volDepDwc;
       try {
         const draftMc =

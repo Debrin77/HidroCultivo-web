@@ -1959,10 +1959,12 @@ function refrescarSetupTipoInstalacionUI() {
       onSetupDwcMedidasInput();
     } catch (eDwcVol) {}
     try {
-      dwcRefreshMulticuboDependienteUi('setup');
-    } catch (_) {}
-    try {
-      dwcReparentSetupSlidersForPreview();
+      if (typeof dwcSyncSetupMontajePreview === 'function') dwcSyncSetupMontajePreview();
+      else {
+        dwcRefreshMulticuboDependienteUi('setup');
+        dwcReparentSetupSlidersForPreview();
+        updateTorreBuilder();
+      }
     } catch (_) {}
   }
   syncSetupPreviewDiagramPorTipoInstalacion();

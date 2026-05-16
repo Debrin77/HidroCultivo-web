@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-14-torre-dwc-vol">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-15-dwc-mc-preview">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -2936,7 +2936,7 @@
         <div>
           <label class="form-label setup-dwc-label" for="setupDwcDepositoForma">Forma del depósito DWC</label>
           <select id="setupDwcDepositoForma" class="setup-dwc-input"
-            onchange="try{onDwcFormaChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup();updateTorreBuilder()}catch(e){}"
+            onchange="try{onDwcFormaChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"
             aria-label="Forma geométrica del depósito DWC">
             <option value="prismatico">Cubo / prismático regular</option>
             <option value="cilindrico">Cilíndrico (cubo redondo)</option>
@@ -2946,7 +2946,7 @@
         <div id="setupDwcOxigenacionBlock">
           <label class="form-label setup-dwc-label" for="setupDwcOxigenacionDiseno">Distribución del aire</label>
           <select id="setupDwcOxigenacionDiseno" class="setup-dwc-input"
-            onchange="try{dwcRefreshMulticuboDependienteUi('setup')}catch(e0){};try{dwcReparentSetupSlidersForPreview()}catch(e0b){};try{updateTorreBuilder()}catch(e1){};try{refreshDwcTapHintSetup()}catch(e2){};actualizarResumenSetup()}catch(e){}"
+            onchange="try{dwcSyncSetupMontajePreview();refreshDwcTapHintSetup();actualizarResumenSetup()}catch(e){}"
             aria-label="DWC: un depósito o cubos multiválvula">
             <option value="dep_unido">Un depósito: varias macetas comparten el mismo agua</option>
             <option value="cubos_independientes">Varios cubos (multiválvula) — 1 maceta por cubo</option>
@@ -4557,11 +4557,11 @@
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=27"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-mc-simple"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-dwc-mc-preview"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-mc-preview"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-srf"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-dwc-mc-simple"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-dwc-mc-preview"></script>
   <script src="js/hc-setup-calc-core.js?v=27"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
