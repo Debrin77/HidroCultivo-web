@@ -650,6 +650,59 @@ function calcularBombaRecomendada() {
   } catch (_) {}
 }
 
+function calcularBombaRecomendadaSistema() {
+  const sliderH = document.getElementById('sysSliderAltura');
+  if (!sliderH) return;
+  const alturaM = parseFloat(sliderH.value) || 1.2;
+  const alturaEl = document.getElementById('sysValAltura');
+  if (alturaEl) alturaEl.textContent = ' ' + alturaM.toFixed(1) + 'm';
+
+  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10) || 5;
+  const cestas = parseInt(document.getElementById('sliderCestas')?.value || 5, 10) || 5;
+
+  const b =
+    typeof hcComputeTorreBombaOrientativa === 'function'
+      ? hcComputeTorreBombaOrientativa(niveles, alturaM, cestas)
+      : null;
+  if (!b) return;
+
+  const caudalMin = b.caudalMin;
+  const caudalRec = b.caudalRec;
+  const headMetros = b.headMetros;
+  const potenciaRec = b.potenciaRec;
+  const modeloRec = b.modeloRec;
+
+  const el = document.getElementById('sysResultadoBomba');
+  if (!el) return;
+  el.innerHTML =
+    '<div class="bomba-res-title">' +
+      '⚡ Bomba orientativa para tu torre' +
+    '</div>' +
+    '<div class="bomba-res-grid">' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Caudal mínimo</div>' +
+        '<div class="bomba-res-cell-val">' + caudalMin + ' L/h</div>' +
+      '</div>' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Caudal recomendado</div>' +
+        '<div class="bomba-res-cell-val">' + caudalRec + ' L/h</div>' +
+      '</div>' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Head necesario</div>' +
+        '<div class="bomba-res-cell-val">' + headMetros + 'm</div>' +
+      '</div>' +
+      '<div class="bomba-res-cell">' +
+        '<div class="bomba-res-cell-lab">Potencia mínima</div>' +
+        '<div class="bomba-res-cell-val">' + potenciaRec + 'W</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="bomba-res-foot">💡 ' + modeloRec + '</div>';
+
+  try {
+    if (typeof refrescarUIMensajeBombaUsuarioTorreSistema === 'function') refrescarUIMensajeBombaUsuarioTorreSistema();
+  } catch (_) {}
+}
+
 function seleccionarCesta(tam) {
   setupTamanoCesta = tam;
   ['38','40','50','75','100','Personalizada'].forEach(t => {

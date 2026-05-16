@@ -1203,7 +1203,7 @@
 
       <div id="sistemaTorreObjetivoCard" class="torre-card-elevated setup-hidden">
         <div class="torre-sistema-panel-kicker">Objetivo en torre vertical</div>
-        <p class="setup-field-hint torre-sistema-inline-hint">Solo orienta densidad y ciclos recomendados. Niveles y cestas los defines en el <strong>asistente</strong> o en el <strong>esquema</strong>; no hace falta calcular nada aquí.</p>
+        <p class="setup-field-hint torre-sistema-inline-hint">Solo orienta densidad y ciclos recomendados. Los <strong>niveles y cestas</strong> están en el bloque de abajo.</p>
         <div class="torre-dwc-grid-2">
           <div>
             <label class="form-label torre-dwc-lbl-mono" for="sysTorreObjetivoCultivo">Objetivo de cosecha</label>
@@ -1218,6 +1218,43 @@
             </button>
           </div>
         </div>
+      </div>
+
+      <div id="sistemaTorreMontajeCard" class="torre-card-elevated setup-hidden">
+        <div class="torre-sistema-panel-kicker">Torre vertical · niveles y bomba</div>
+        <div class="setup-nft-montaje-origen-row torre-nft-row-mb">
+          <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
+          <div class="torre-nft-grid-2-tight">
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysTorreMontajeOrigenKit" onclick="seleccionarSistemaTorreMontajeOrigen('kit')" aria-pressed="false">Kit comercial</button>
+            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn selected" id="sysTorreMontajeOrigenDiy" onclick="seleccionarSistemaTorreMontajeOrigen('diy')" aria-pressed="true">DIY / a medida</button>
+          </div>
+        </div>
+        <p id="sysTorreMontajeOrigenHint" class="torre-nft-p-note setup-hidden" role="note">Kit: niveles y cestas del manual; la app calcula la bomba orientativa. DIY: igual + puedes contrastar caudal y potencia de tu placa.</p>
+        <div id="sistemaTorreCantidadesMount" class="torre-controls torre-sistema-cantidades-mount"></div>
+        <div id="sysTorreBombaSistemaBlock" class="setup-mt-10">
+          <div class="setup-kicker setup-kicker-md setup-mb-6">Bomba de riego (orientativa)</div>
+          <div class="setup-mb-10">
+            <div class="setup-kicker setup-kicker-md setup-mb-6 setup-kicker--row">
+              <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-ruler"/></svg>
+              Altura total de la torre
+              <span id="sysValAltura" class="setup-val-altura"> 1.2m</span>
+            </div>
+            <input type="range" class="torre-slider" id="sysSliderAltura" min="0.5" max="3.0" value="1.2" step="0.1" oninput="calcularBombaRecomendadaSistema()" aria-label="Altura total de la torre en metros">
+          </div>
+          <div id="sysResultadoBomba" class="setup-box-info setup-mt-8" role="status">Ajusta niveles, cestas y altura para ver la bomba orientativa.</div>
+          <div id="sysTorreBombaUsuarioBlock" class="setup-mt-10">
+            <div class="setup-kicker setup-kicker-md setup-mb-6">Tu bomba (opcional)</div>
+            <p class="setup-field-hint setup-mb-8">Caudal nominal (L/h) y potencia (W) de la placa; se comparan con el mínimo según tu torre.</p>
+            <div class="setup-grid-2 setup-grid-gap-8">
+              <div><label class="form-label" for="sysTorreBombaUsuarioLh">Caudal placa (L/h)</label>
+                <input type="number" id="sysTorreBombaUsuarioLh" class="form-input torre-dwc-input" min="50" max="20000" step="10" placeholder="ej. 800" inputmode="decimal" oninput="try{onSistemaTorreBombaUsuarioInput()}catch(e){}" onblur="try{onSistemaTorreBombaUsuarioBlur()}catch(e){}"></div>
+              <div><label class="form-label" for="sysTorreBombaUsuarioW">Potencia (W)</label>
+                <input type="number" id="sysTorreBombaUsuarioW" class="form-input torre-dwc-input" min="1" max="500" step="1" placeholder="opcional" inputmode="numeric" oninput="try{onSistemaTorreBombaUsuarioInput()}catch(e){}" onblur="try{onSistemaTorreBombaUsuarioBlur()}catch(e){}"></div>
+            </div>
+            <div id="sysTorreBombaUsuarioMsg" class="setup-mt-6" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+        <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaTorreMontajeDesdeFormulario()">Guardar niveles y bomba</button>
       </div>
 
       <div id="sistemaEcPhStrategyCard" class="torre-card-elevated">
@@ -2862,7 +2899,7 @@
             aria-pressed="true">DIY / a medida</button>
         </div>
       </div>
-      <p id="setupTorreMontajeOrigenHint" class="setup-field-hint setup-hidden" role="note">Modo kit: aquí no afinamos tubo central ni bomba; puedes retocar depósito y dimensiones en Cultivo e instalación. Elige DIY si quieres orientación de tubo, altura y bomba (y opcionalmente validar tu placa).</p>
+      <p id="setupTorreMontajeOrigenHint" class="setup-field-hint setup-hidden" role="note">Kit: niveles y cestas del manual; la app calcula la bomba orientativa. DIY: igual + puedes contrastar caudal y potencia de tu placa.</p>
       <div class="torre-builder">
         <!-- Preview visual -->
         <div>
@@ -2876,7 +2913,7 @@
               <span class="torre-control-val" id="valNiveles">5</span>
             </div>
             <input type="range" class="torre-slider" id="sliderNiveles"
-              min="1" max="10" value="5" oninput="updateTorreBuilder()">
+              min="1" max="10" value="5" oninput="onTorreSlidersInput()">
           </div>
           <div class="torre-control-row">
             <div class="torre-control-label">
@@ -2884,7 +2921,7 @@
               <span class="torre-control-val" id="valCestas">5</span>
             </div>
             <input type="range" class="torre-slider" id="sliderCestas"
-              min="1" max="8" value="5" oninput="updateTorreBuilder()">
+              min="1" max="8" value="5" oninput="onTorreSlidersInput()">
           </div>
         </div>
         <p id="setupTorreQuickHint" class="setup-field-hint setup-hidden">Torre: basta con <strong>niveles</strong> y <strong>cestas por nivel</strong> que tengas (o las del kit). Depósito, tubo y alturas las puedes retocar luego sin repetir el asistente.</p>
@@ -3319,14 +3356,15 @@
         </div>
       </div>
 
-      <!-- Tubo y bomba — solo para torres DIY/personalizadas -->
+      <!-- Bomba orientativa torre (no se pregunta Ø tubo central) -->
       <div id="seccionTuboBomba" class="setup-hidden">
 
         <div class="setup-block-title setup-mb-8 setup-mt-4">
           <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-wrench"/></svg>
-          Tubo central y bomba
+          Bomba de riego (orientativa)
         </div>
 
+        <div id="seccionTuboDiametroOculto" class="setup-hidden" aria-hidden="true">
         <!-- Diámetro del tubo -->
         <div class="setup-mb-12">
           <div class="setup-kicker setup-kicker-md setup-mb-8">
@@ -3392,6 +3430,8 @@
           </div>
         </div>
 
+        </div>
+
         <!-- Altura de la torre -->
         <div class="setup-mb-10">
           <div class="setup-kicker setup-kicker-md setup-mb-6 setup-kicker--row">
@@ -3410,7 +3450,7 @@
 
         <!-- Resultado cálculo bomba -->
         <div id="resultadoBomba" class="setup-box-info">
-          Selecciona diámetro y altura para calcular la bomba recomendada
+          Ajusta niveles, cestas y altura para ver la bomba orientativa
         </div>
 
         <div id="setupTorreBombaUsuarioBlock" class="setup-mt-10">
@@ -4534,12 +4574,12 @@
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-setup-clean"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-torre-sistema"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-sys-dwc-dep"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-srf"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-dwc-mc-preview"></script>
-  <script src="js/hc-setup-calc-core.js?v=27"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-torre-sistema"></script>
+  <script src="js/hc-setup-calc-core.js?v=2026-05-15-torre-sistema"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
@@ -4559,7 +4599,7 @@
   <script src="js/riego-calculo-calcular.js?v=6"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=6"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=2026-05-15-setup-clean"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=2026-05-15-torre-sistema"></script>
   <script src="js/app-hc-torres-badges-notifs.js?v=28"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=12"></script>
 </body>

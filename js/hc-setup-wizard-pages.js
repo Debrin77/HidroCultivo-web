@@ -1408,8 +1408,11 @@ function updateTorreBuilder() {
 
   if (setupTipoInstalacion === 'torre') {
     try {
-      if (typeof readTorreMontajeOrigenDesdeSetupUi === 'function' && readTorreMontajeOrigenDesdeSetupUi() === 'diy') {
-        calcularBombaRecomendada();
+      calcularBombaRecomendada();
+      if (
+        typeof readTorreMontajeOrigenDesdeSetupUi === 'function' &&
+        readTorreMontajeOrigenDesdeSetupUi() === 'diy'
+      ) {
         refrescarUIMensajeBombaUsuarioTorre();
       }
     } catch (_) {}

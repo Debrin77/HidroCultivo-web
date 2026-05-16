@@ -1479,6 +1479,20 @@ function guardarSetupYContinuar() {
 
   const tipoNuevoPrevio = isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : isSrf ? 'srf' : 'torre';
 
+  if (!isNft && !isDwc && !isRdwc && !isSrf) {
+    const prevCfg = state.configTorre || {};
+    if (prevCfg.diametroTubo != null && Number(prevCfg.diametroTubo) > 0) {
+      setupDiametroTubo = Math.round(Number(prevCfg.diametroTubo));
+    } else if (!setupDiametroTubo || setupDiametroTubo < 50) {
+      setupDiametroTubo = 75;
+    }
+    const sliderAltTorrePre = document.getElementById('sliderAltura');
+    if (sliderAltTorrePre) setupAlturaTorre = parseFloat(sliderAltTorrePre.value) || setupAlturaTorre || 1.2;
+    try {
+      calcularBombaRecomendada();
+    } catch (_) {}
+  }
+
   initTorres();
   const idxSlotGuardar = state.torreActiva || 0;
   /** Guardar la instalación activa tal como está en memoria antes de que el asistente la sobrescriba. */

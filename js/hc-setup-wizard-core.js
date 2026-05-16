@@ -47,6 +47,46 @@ function readTorreMontajeOrigenDesdeSetupUi() {
   return document.getElementById('setupTorreMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
 }
 
+function readTorreMontajeOrigenDesdeSistemaUi() {
+  return document.getElementById('sysTorreMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+}
+
+/** Devuelve los sliders de niveles/cestas al asistente torre (tras DWC o pestaña Cultivo). */
+function restaurarSetupTorreBuilderControls() {
+  const controls = document.getElementById('setupTorreBuilderControlsSlot');
+  const torreBuilder = document.querySelector('#setupTorreBuilderWrap .torre-builder');
+  if (!controls || !torreBuilder) return;
+  controls.classList.remove('setup-hidden');
+  if (controls.parentElement !== torreBuilder) torreBuilder.appendChild(controls);
+  const dn = document.getElementById('setupTorreDimNivel');
+  const dc = document.getElementById('setupTorreDimCesta');
+  if (dn) dn.textContent = 'Niveles';
+  if (dc) dc.textContent = 'Cestas por nivel';
+}
+
+function onTorreSlidersInput() {
+  const controls = document.getElementById('setupTorreBuilderControlsSlot');
+  const enSistema = controls && controls.closest('#sistemaTorreMontajeCard');
+  if (enSistema) {
+    const n = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10) || 5;
+    const c = parseInt(document.getElementById('sliderCestas')?.value || 5, 10) || 5;
+    const vn = document.getElementById('valNiveles');
+    const vc = document.getElementById('valCestas');
+    if (vn) vn.textContent = String(n);
+    if (vc) vc.textContent = String(c);
+    try {
+      calcularBombaRecomendadaSistema();
+    } catch (_) {}
+    try {
+      refrescarUIMensajeBombaUsuarioTorreSistema();
+    } catch (_) {}
+    return;
+  }
+  try {
+    updateTorreBuilder();
+  } catch (_) {}
+}
+
 /**
  * Estimación orientativa de bomba para torre vertical (caudal L/h, head m, potencia W)
  * según niveles, altura y carga por cestas por nivel.
@@ -148,34 +188,197 @@ function seleccionarSetupTorreMontajeOrigen(mode) {
   }
   const hint = document.getElementById('setupTorreMontajeOrigenHint');
   if (hint) hint.classList.toggle('setup-hidden', !kit);
-  if (typeof mostrarSeccionTuboBomba === 'function') {
-    mostrarSeccionTuboBomba(!kit);
-  } else {
-    const sec = document.getElementById('seccionTuboBomba');
-    if (sec) {
-      if (kit) {
-        sec.style.display = 'none';
-        sec.classList.add('setup-hidden');
-      } else {
-        sec.classList.remove('setup-hidden');
-        sec.style.display = 'block';
-      }
-    }
+  const sec = document.getElementById('seccionTuboBomba');
+  if (sec) {
+    sec.classList.remove('setup-hidden');
+    sec.style.display = 'block';
   }
-  if (!kit) {
-    try {
-      calcularBombaRecomendada();
-    } catch (_) {}
-  } else {
+  const userBlock = document.getElementById('setupTorreBombaUsuarioBlock');
+  if (userBlock) userBlock.classList.toggle('setup-hidden', kit);
+  if (kit) {
     const msg = document.getElementById('setupTorreBombaUsuarioMsg');
     if (msg) msg.innerHTML = '';
   }
+  try {
+    calcularBombaRecomendada();
+  } catch (_) {}
   try {
     refrescarUIMensajeBombaUsuarioTorre();
   } catch (_) {}
   try {
     actualizarResumenSetup();
   } catch (_) {}
+}
+
+function seleccionarSistemaTorreMontajeOrigen(mode) {
+  const kit = mode === 'kit';
+  const bKit = document.getElementById('sysTorreMontajeOrigenKit');
+  const bDiy = document.getElementById('sysTorreMontajeOrigenDiy');
+  if (bKit) {
+    bKit.classList.toggle('selected', kit);
+    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
+  }
+  if (bDiy) {
+    bDiy.classList.toggle('selected', !kit);
+    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
+  }
+  const hint = document.getElementById('sysTorreMontajeOrigenHint');
+  if (hint) hint.classList.toggle('setup-hidden', !kit);
+  const userBlock = document.getElementById('sysTorreBombaUsuarioBlock');
+  if (userBlock) userBlock.classList.toggle('setup-hidden', kit);
+  if (kit) {
+    const msg = document.getElementById('sysTorreBombaUsuarioMsg');
+    if (msg) msg.innerHTML = '';
+  }
+  try {
+    calcularBombaRecomendadaSistema();
+  } catch (_) {}
+  try {
+    refrescarUIMensajeBombaUsuarioTorreSistema();
+  } catch (_) {}
+}
+
+function refrescarUIMensajeBombaUsuarioTorreSistema() {
+  const el = document.getElementById('sysTorreBombaUsuarioMsg');
+  if (!el) return;
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'torre') {
+    el.innerHTML = '';
+    return;
+  }
+  if (readTorreMontajeOrigenDesdeSistemaUi() === 'kit') {
+    el.innerHTML = '';
+    return;
+  }
+  const sliderH = document.getElementById('sysSliderAltura');
+  const n = parseInt(document.getElementById('sliderNiveles')?.value || state.configTorre.numNiveles || 5, 10);
+  const c = parseInt(document.getElementById('sliderCestas')?.value || state.configTorre.numCestas || 5, 10);
+  const b = hcComputeTorreBombaOrientativa(n, sliderH ? parseFloat(sliderH.value) : 1.2, c);
+  const lhRaw = document.getElementById('sysTorreBombaUsuarioLh')?.value ?? '';
+  const wRaw = document.getElementById('sysTorreBombaUsuarioW')?.value ?? '';
+  const v = validarBombaUsuarioTorreVsCalculo(b, lhRaw, wRaw);
+  el.innerHTML = v.html || '';
+}
+
+function onSistemaTorreBombaUsuarioInput() {
+  refrescarUIMensajeBombaUsuarioTorreSistema();
+}
+
+let _torreBombaSistemaBlurToastKey = '';
+function onSistemaTorreBombaUsuarioBlur() {
+  refrescarUIMensajeBombaUsuarioTorreSistema();
+  const sliderH = document.getElementById('sysSliderAltura');
+  const n = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
+  const c = parseInt(document.getElementById('sliderCestas')?.value || 5, 10);
+  const b = hcComputeTorreBombaOrientativa(n, sliderH ? parseFloat(sliderH.value) : 1.2, c);
+  const lhRaw = document.getElementById('sysTorreBombaUsuarioLh')?.value ?? '';
+  const wRaw = document.getElementById('sysTorreBombaUsuarioW')?.value ?? '';
+  const v = validarBombaUsuarioTorreVsCalculo(b, lhRaw, wRaw);
+  const key = v.tipo + '|' + lhRaw + '|' + wRaw;
+  if (v.tipo === 'error' && v.toast && key !== _torreBombaSistemaBlurToastKey) {
+    _torreBombaSistemaBlurToastKey = key;
+    showToast(v.toast, true);
+  }
+}
+
+function mountTorreCantidadesSlidersToSistema() {
+  const controls = document.getElementById('setupTorreBuilderControlsSlot');
+  const mount = document.getElementById('sistemaTorreCantidadesMount');
+  if (!controls || !mount) return;
+  controls.classList.remove('setup-hidden');
+  if (controls.parentElement !== mount) mount.appendChild(controls);
+}
+
+function sincronizarSistemaTorreMontajeUI(cfg) {
+  const card = document.getElementById('sistemaTorreMontajeCard');
+  if (!card || !cfg || cfg.tipoInstalacion !== 'torre') return;
+  mountTorreCantidadesSlidersToSistema();
+  const n = Math.max(1, Math.min(10, parseInt(String(cfg.numNiveles || 5), 10) || 5));
+  const c = Math.max(1, Math.min(8, parseInt(String(cfg.numCestas || 5), 10) || 5));
+  const sn = document.getElementById('sliderNiveles');
+  const sc = document.getElementById('sliderCestas');
+  if (sn) sn.value = String(n);
+  if (sc) sc.value = String(c);
+  const vn = document.getElementById('valNiveles');
+  const vc = document.getElementById('valCestas');
+  if (vn) vn.textContent = String(n);
+  if (vc) vc.textContent = String(c);
+  const alt = Number.isFinite(parseFloat(String(cfg.alturaTorre))) ? parseFloat(String(cfg.alturaTorre)) : 1.2;
+  const sa = document.getElementById('sysSliderAltura');
+  if (sa) sa.value = String(Math.max(0.5, Math.min(3, alt)));
+  const lhT = document.getElementById('sysTorreBombaUsuarioLh');
+  const wT = document.getElementById('sysTorreBombaUsuarioW');
+  if (lhT) {
+    lhT.value =
+      cfg.torreBombaUsuarioCaudalLh != null && cfg.torreBombaUsuarioCaudalLh !== ''
+        ? String(cfg.torreBombaUsuarioCaudalLh)
+        : '';
+  }
+  if (wT) {
+    wT.value =
+      cfg.torreBombaUsuarioPotenciaW != null && cfg.torreBombaUsuarioPotenciaW !== ''
+        ? String(cfg.torreBombaUsuarioPotenciaW)
+        : '';
+  }
+  try {
+    seleccionarSistemaTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(cfg) === 'kit' ? 'kit' : 'diy');
+  } catch (_) {}
+  try {
+    calcularBombaRecomendadaSistema();
+  } catch (_) {}
+  try {
+    refrescarUIMensajeBombaUsuarioTorreSistema();
+  } catch (_) {}
+}
+
+function aplicarSistemaTorreMontajeDesdeFormulario() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'torre') return;
+  const cfg = state.configTorre;
+  const n = Math.max(1, Math.min(10, parseInt(document.getElementById('sliderNiveles')?.value || 5, 10) || 5));
+  const c = Math.max(1, Math.min(8, parseInt(document.getElementById('sliderCestas')?.value || 5, 10) || 5));
+  cfg.numNiveles = n;
+  cfg.numCestas = c;
+  const altM = parseFloat(document.getElementById('sysSliderAltura')?.value || '');
+  if (Number.isFinite(altM)) cfg.alturaTorre = Math.max(0.5, Math.min(3, altM));
+  if (readTorreMontajeOrigenDesdeSistemaUi() === 'kit') {
+    cfg.torreMontajeOrigen = 'kit';
+    delete cfg.torreBombaUsuarioCaudalLh;
+    delete cfg.torreBombaUsuarioPotenciaW;
+  } else {
+    delete cfg.torreMontajeOrigen;
+    const lhTorre = document.getElementById('sysTorreBombaUsuarioLh');
+    const wTorre = document.getElementById('sysTorreBombaUsuarioW');
+    const uLhT = lhTorre ? parseFloat(String(lhTorre.value).replace(',', '.')) : NaN;
+    const uWT = wTorre ? parseFloat(String(wTorre.value).replace(',', '.')) : NaN;
+    if (Number.isFinite(uLhT) && uLhT > 0) cfg.torreBombaUsuarioCaudalLh = Math.round(uLhT);
+    else delete cfg.torreBombaUsuarioCaudalLh;
+    if (Number.isFinite(uWT) && uWT > 0) cfg.torreBombaUsuarioPotenciaW = Math.round(uWT);
+    else delete cfg.torreBombaUsuarioPotenciaW;
+    const bTorre = hcComputeTorreBombaOrientativa(n, cfg.alturaTorre || 1.2, c);
+    const vTorre = validarBombaUsuarioTorreVsCalculo(bTorre, lhTorre ? lhTorre.value : '', wTorre ? wTorre.value : '');
+    if (vTorre.tipo === 'error' && vTorre.toast) showToast(vTorre.toast, true);
+  }
+  const b =
+    typeof hcComputeTorreBombaOrientativa === 'function'
+      ? hcComputeTorreBombaOrientativa(n, cfg.alturaTorre || 1.2, c)
+      : null;
+  if (b) {
+    cfg.bombaCalculada = {
+      caudalMin: b.caudalMin,
+      caudalRec: b.caudalRec,
+      headMetros: b.headMetros,
+      potenciaRec: b.potenciaRec,
+      modeloRec: b.modeloRec,
+    };
+  }
+  guardarEstadoTorreActual();
+  saveState();
+  try {
+    renderTorre();
+  } catch (_) {}
+  try {
+    renderTorreSistemaResumenTabla(cfg);
+  } catch (_) {}
+  showToast('Niveles, cestas y bomba de torre guardados para esta instalación.');
 }
 
 function refrescarUIMensajeBombaUsuarioTorre() {
@@ -1659,6 +1862,30 @@ function abrirSetup() {
     syncDwcFormInputsDesdeConfig(c, DWC_FORM_IDS_SETUP);
   } catch (eDwc) {}
 
+  if (tipoInstalacionNormalizado(c) === 'torre') {
+    try {
+      restaurarSetupTorreBuilderControls();
+    } catch (_) {}
+    const nTorre = Math.max(1, Math.min(10, parseInt(String(c.numNiveles || 5), 10) || 5));
+    const cTorre = Math.max(1, Math.min(8, parseInt(String(c.numCestas || 5), 10) || 5));
+    const snTorre = document.getElementById('sliderNiveles');
+    const scTorre = document.getElementById('sliderCestas');
+    if (snTorre) snTorre.value = String(nTorre);
+    if (scTorre) scTorre.value = String(cTorre);
+    const vnTorre = document.getElementById('valNiveles');
+    const vcTorre = document.getElementById('valCestas');
+    if (vnTorre) vnTorre.textContent = String(nTorre);
+    if (vcTorre) vcTorre.textContent = String(cTorre);
+    setupDiametroTubo =
+      c.diametroTubo != null && Number(c.diametroTubo) > 0 ? Math.round(Number(c.diametroTubo)) : 75;
+    setupAntiRaices = c.antiRaices || 'tubo_interior';
+    setupAlturaTorre = Number.isFinite(parseFloat(String(c.alturaTorre))) ? parseFloat(String(c.alturaTorre)) : 1.2;
+    const saTorre = document.getElementById('sliderAltura');
+    if (saTorre) saTorre.value = String(Math.max(0.5, Math.min(3, setupAlturaTorre)));
+    const vaTorre = document.getElementById('valAltura');
+    if (vaTorre) vaTorre.textContent = ' ' + setupAlturaTorre.toFixed(1) + 'm';
+  }
+
   const latC = parseFloat(c.lat);
   const lonC = parseFloat(c.lon);
   setupCoordenadas = {
@@ -1741,8 +1968,8 @@ function iniciarConfiguracionTorre() {
 }
 
 /**
- * Oculta siempre el bloque «tubo central y bomba» y los chips Kit/DIY de torre
- * salvo en paso 1 con tipo torre vertical (donde seleccionarSetupTorreMontajeOrigen reabre DIY).
+ * Oculta chips Kit/DIY y bomba orientativa salvo en paso 1 con torre vertical
+ * (sin preguntar Ø de tubo central; niveles/cestas + altura + bomba).
  * Importante: debe ejecutarse aunque setupPagina !== 1 (antes el return temprano impedía ocultar al cambiar de tipo en otros pasos).
  */
 function aplicarSetupWizardExclusividadTorreVertical() {
@@ -1765,6 +1992,14 @@ function aplicarSetupWizardExclusividadTorreVertical() {
     return;
   }
   if (row) row.classList.remove('setup-hidden');
+  try {
+    restaurarSetupTorreBuilderControls();
+  } catch (_) {}
+  try {
+    const cTorreUi =
+      state.configTorre && tipoInstalacionNormalizado(state.configTorre) === 'torre' ? state.configTorre : {};
+    seleccionarSetupTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(cTorreUi) === 'kit' ? 'kit' : 'diy');
+  } catch (_) {}
 }
 
 function seleccionarTipoInstalacionSetup(tipo) {
@@ -1892,6 +2127,9 @@ function refrescarSetupTipoInstalacionUI() {
   const torreFacil = document.getElementById('setupTorreQuickHint');
   if (torreFacil) torreFacil.classList.toggle('setup-hidden', setupTipoInstalacion !== 'torre');
   if (setupTipoInstalacion === 'torre') {
+    try {
+      restaurarSetupTorreBuilderControls();
+    } catch (_) {}
     try {
       const cTorreUi =
         state.configTorre && tipoInstalacionNormalizado(state.configTorre) === 'torre' ? state.configTorre : {};
@@ -2852,7 +3090,7 @@ function refrescarSistemaDatosFacilesBanner(cfg) {
       'SRF: mide el estanque (L×A×profundidad útil) y huecos en la balsa. Aireación y litros de mezcla pueden quedar orientativos hasta que los completes.';
   } else {
     el.textContent =
-      'Torre vertical: niveles y cestas en el asistente o en el esquema; depósito y litros de mezcla abajo (etiqueta del depósito o cinta métrica).';
+      'Torre vertical: niveles y cestas por nivel en el bloque de abajo; altura y bomba orientativa según tu montaje (kit o DIY).';
   }
 }
 
@@ -2871,6 +3109,7 @@ function sincronizarSistemaNftMontajeUI() {
     else ecphCard.style.display = 'none';
   }
   if (cfg) syncSistemaEcPhStrategyUI();
+  const torreMontajeCard = document.getElementById('sistemaTorreMontajeCard');
   if (torreObj) {
     if (cfg && cfg.tipoInstalacion === 'torre') {
       torreObj.style.display = 'block';
@@ -2878,6 +3117,20 @@ function sincronizarSistemaNftMontajeUI() {
       if (sel) sel.value = torreGetObjetivoCultivo(cfg);
     } else {
       torreObj.style.display = 'none';
+    }
+  }
+  if (torreMontajeCard) {
+    if (cfg && cfg.tipoInstalacion === 'torre') {
+      torreMontajeCard.style.display = 'block';
+      torreMontajeCard.classList.remove('setup-hidden');
+      try {
+        sincronizarSistemaTorreMontajeUI(cfg);
+      } catch (_) {}
+    } else {
+      torreMontajeCard.style.display = 'none';
+      try {
+        restaurarSetupTorreBuilderControls();
+      } catch (_) {}
     }
   }
   if (dwcInfo) {
