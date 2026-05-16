@@ -1177,15 +1177,24 @@ function generarSVGDwc() {
 function generarSVGSrf() {
   const cfg = state.configTorre || {};
   if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(cfg);
-  const n = typeof srfGetNumPlantas === 'function' ? srfGetNumPlantas(cfg) : Math.max(1, (cfg.numNiveles || 1) * (cfg.numCestas || 1));
-  const grid = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(cfg) : hcDistribuirFilasColumnas(n, 8);
+  const grid =
+    typeof srfDistribuirPlantas === 'function'
+      ? srfDistribuirPlantas(cfg)
+      : hcDistribuirFilasColumnas(
+          Math.max(1, (cfg.numNiveles || 1) * (cfg.numCestas || 1)),
+          8
+        );
   const N = grid.rows;
   const C = grid.cols;
+  const n = grid.total;
   const modoOx = typeof srfNormalizeOxigenacionModo === 'function' ? srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) : 'aireador';
   const esKratky = modoOx === 'kratky';
   const circ = !esKratky && cfg.srfCirculante !== false;
   const volMax = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cfg) : getVolumenDepositoMaxLitros(cfg);
-  const volMez = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : volMax;
+  const volSeg =
+    typeof srfVolumenSeguroLitrosDesdeConfig === 'function' ? srfVolumenSeguroLitrosDesdeConfig(cfg) : null;
+  const volMezRaw = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : volMax;
+  const volMez = volSeg != null && volSeg > 0 ? volSeg : volMezRaw;
   const volPct =
     volMax != null && volMez != null && Number.isFinite(volMax) && Number.isFinite(volMez) && volMax > 0
       ? Math.min(1, Math.max(0, volMez / volMax))
@@ -1222,12 +1231,11 @@ function generarSVGSrf() {
     <linearGradient id="srfRaft" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#e2e8f0"/></linearGradient>
   </defs>`;
   s += `<text x="${W / 2}" y="22" text-anchor="middle" font-family="Syne,sans-serif" font-size="15" font-weight="700" fill="#0f172a">SRF · balsa flotante</text>`;
-  s += `<text x="${W / 2}" y="38" text-anchor="middle" font-size="9.5" fill="#64748b">${n} plantas · estanque ${profCm} cm prof. · ${esKratky ? 'Kratky (cámara de aire)' : 'aireación en solución'}</text>`;
+  s += `<text x="${W / 2}" y="38" text-anchor="middle" font-size="9.5" fill="#64748b">${N}×${C} rejilla (${n} huecos) · estanque ${profCm} cm · ${esKratky ? 'Kratky' : 'aireación'}</text>`;
   s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="12" fill="#0f172a" opacity="0.04" stroke="#94a3b8" stroke-width="1.2"/>`;
   s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="url(#srfRaft)" stroke="#64748b" stroke-width="1.3"/>`;
-  for (let idx = 0; idx < n; idx++) {
-    const rn = Math.floor(idx / C);
-    const c = idx % C;
+  for (let rn = 0; rn < N; rn++) {
+    for (let c = 0; c < C; c++) {
     const cx = planInnerX + (c + 0.5) * cellW;
     const cy = planInnerY + (rn + 0.5) * cellH;
     const dat = state.torre && state.torre[rn] && state.torre[rn][c] ? state.torre[rn][c] : { variedad: '', fecha: '', fotos: [] };
@@ -1250,11 +1258,12 @@ function generarSVGSrf() {
         stroke = '#7c3aed';
       }
     }
-    const aria = escAriaAttr('Planta ' + (idx + 1) + (dat.variedad ? ', ' + dat.variedad : ', vacía') + '. Pulsa para ficha.');
+    const aria = escAriaAttr('Planta fila ' + (rn + 1) + ' col ' + (c + 1) + (dat.variedad ? ', ' + dat.variedad : ', vacía') + '. Pulsa para ficha.');
     s += `<g data-n="${rn}" data-c="${c}" class="hc-cesta hc-cesta--interactive" role="button" tabindex="0" aria-label="${aria}">`;
     s += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${Rpot.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
     s += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(Rpot * 1.55).toFixed(1)}" fill="rgba(0,0,0,0)" class="hc-cesta-hit" pointer-events="all"/>`;
     s += `</g>`;
+    }
   }
   if (tieneDifusor) {
     const pumpY = planTop - 18;

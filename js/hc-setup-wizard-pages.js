@@ -1381,8 +1381,18 @@ function updateTorreBuilder() {
       const draft =
         typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', state.configTorre || {}) : {};
       if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(draft);
+      const grid =
+        typeof srfDistribuirPlantas === 'function'
+          ? srfDistribuirPlantas(draft)
+          : { rows: draft.srfFilas || 2, cols: draft.srfPlantasPorFila || 4 };
+      draft.numNiveles = grid.rows;
+      draft.numCestas = grid.cols;
       const prevCfg = state.configTorre;
+      const prevTorre = state.torre;
       state.configTorre = Object.assign({}, prevCfg || {}, draft, { tipoInstalacion: 'srf' });
+      if (typeof redimensionarMatrizTorreDwcPreservando === 'function') {
+        redimensionarMatrizTorreDwcPreservando(state.configTorre, grid.rows, grid.cols);
+      }
       if (typeof generarSVGSrf === 'function') {
         preview.innerHTML = generarSVGSrf();
         preview.classList.add('torre-preview--srf');
@@ -1390,6 +1400,7 @@ function updateTorreBuilder() {
         renderSrfSetupPreview(preview, draft);
       }
       state.configTorre = prevCfg;
+      state.torre = prevTorre;
       if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'setupSrfCalcStatus');
       if (typeof syncSetupVolMezclaSugeridoSrf === 'function') syncSetupVolMezclaSugeridoSrf();
     } catch (_) {}

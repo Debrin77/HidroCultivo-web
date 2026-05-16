@@ -3038,40 +3038,46 @@
       </div>
 
       <div id="setupSrfDetalleWrap" class="setup-hidden">
-        <div class="setup-dwc-title">SRF · balsa flotante (DFT)</div>
-        <p class="setup-dwc-help"><strong>Estanque común</strong> con solución nutritiva y <strong>balsa</strong> (poliestireno) perforada. Las raíces cuelgan en el agua. Oxigenación con <strong>bomba de aire</strong> o modo <strong>Kratky</strong> (cámara de aire bajo la balsa, sin aireador).</p>
+        <div class="setup-dwc-title">SRF · balsa flotante</div>
+        <p class="setup-dwc-help">Mide el <strong>estanque</strong>, la <strong>rejilla en la balsa</strong> (filas × plantas por fila) y la <strong>cesta</strong> (Ø y profundidad). Los litros de solución y la bomba de aire se calculan en tiempo real.</p>
         <div id="setupSrfPreviewSection" class="setup-dwc-preview-section">
           <p class="setup-dwc-preview-kicker">Vista previa</p>
           <div class="torre-preview torre-preview--srf" id="setupSrfPreview" role="img" aria-live="polite"></div>
         </div>
+        <p class="setup-dwc-section-kicker">Estanque</p>
         <div class="setup-dwc-grid-2">
-          <div><label class="form-label setup-dwc-label" for="setupSrfCanalLargoCm">Largo estanque (cm)</label><input type="number" id="setupSrfCanalLargoCm" class="setup-dwc-input" min="20" max="600" step="1" placeholder="120" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfCanalAnchoCm">Ancho estanque (cm)</label><input type="number" id="setupSrfCanalAnchoCm" class="setup-dwc-input" min="20" max="400" step="1" placeholder="60" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfProfundidadCm">Profundidad útil agua (cm)</label><input type="number" id="setupSrfProfundidadCm" class="setup-dwc-input" min="10" max="50" step="0.5" placeholder="25" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfNumPlantas">Nº plantas (huecos)</label><input type="number" id="setupSrfNumPlantas" class="setup-dwc-input" min="1" max="64" step="1" placeholder="8" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfFilas">Filas en balsa</label><input type="number" id="setupSrfFilas" class="setup-dwc-input" min="1" max="8" step="1" placeholder="1" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfObjetivoCultivo">Objetivo de cultivo</label><select id="setupSrfObjetivoCultivo" class="setup-dwc-input" onchange="try{updateTorreBuilder()}catch(e){}"><option value="final">Planta adulta</option><option value="baby">Baby leaf</option></select></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfOxigenacionModo">Oxigenación</label><select id="setupSrfOxigenacionModo" class="setup-dwc-input" onchange="try{srfRefreshOxigenacionUi('setup');updateTorreBuilder()}catch(e){}"><option value="aireador">Bomba de aire (recirculante)</option><option value="kratky">Kratky (cámara de aire, sin aireador)</option></select></div>
-          <div id="setupSrfAirWrap"><label class="form-label setup-dwc-label" for="setupSrfAirLpm">Aireación (L/min)</label><input type="number" id="setupSrfAirLpm" class="setup-dwc-input" min="0.5" max="300" step="0.5" placeholder="8" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div id="setupSrfKratkyGapWrap" class="setup-hidden"><label class="form-label setup-dwc-label" for="setupSrfKratkyGapCm">Hueco aire bajo balsa (cm)</label><input type="number" id="setupSrfKratkyGapCm" class="setup-dwc-input" min="2" max="40" step="0.5" placeholder="8" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div id="setupSrfCirculanteWrap"><label class="form-label setup-dwc-label"><input type="checkbox" id="setupSrfCirculante" checked onchange="try{srfRefreshOxigenacionUi('setup');updateTorreBuilder()}catch(e){}"> Recirculación de solución</label></div>
-          <div id="setupSrfRecircWrap"><label class="form-label setup-dwc-label" for="setupSrfRecircLh">Recirculación (L/h)</label><input type="number" id="setupSrfRecircLh" class="setup-dwc-input" min="0" max="8000" step="10" placeholder="400" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfNetPotMm">Ø aro net pot (mm)</label><input type="number" id="setupSrfNetPotMm" class="setup-dwc-input" min="25" max="120" step="1" placeholder="50" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfNetPotHeightMm">Altura cesta (mm)</label><input type="number" id="setupSrfNetPotHeightMm" class="setup-dwc-input" min="30" max="200" step="1" placeholder="75" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfEspaciamientoCm">Separación huecos (cm)</label><input type="number" id="setupSrfEspaciamientoCm" class="setup-dwc-input" min="8" max="60" step="1" placeholder="20" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfBalsaGrosorMm">Grosor balsa (mm)</label><input type="number" id="setupSrfBalsaGrosorMm" class="setup-dwc-input" min="15" max="80" step="1" placeholder="40" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfVolTrabajoL">Litros útiles en estanque</label><input type="number" id="setupSrfVolTrabajoL" class="setup-dwc-input" min="0.5" max="5000" step="0.1" placeholder="vacío = capacidad" oninput="try{updateTorreBuilder()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfVolumenManualL">Volumen manual (L, opc.)</label><input type="number" id="setupSrfVolumenManualL" class="setup-dwc-input" min="1" max="5000" step="0.1" placeholder="si difiere de L×A×P" oninput="try{updateTorreBuilder()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfCanalLargoCm">Largo estanque (cm)</label><input type="number" id="setupSrfCanalLargoCm" class="setup-dwc-input" min="20" max="600" step="1" placeholder="120" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfCanalAnchoCm">Ancho estanque (cm)</label><input type="number" id="setupSrfCanalAnchoCm" class="setup-dwc-input" min="20" max="400" step="1" placeholder="60" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfProfundidadCm">Profundidad útil agua (cm)</label><input type="number" id="setupSrfProfundidadCm" class="setup-dwc-input" min="10" max="50" step="0.5" placeholder="25" oninput="try{onSetupSrfInput()}catch(e){}"></div>
         </div>
-        <div id="setupSrfVolCapBlock" class="dwc-tronco-vol-block setup-mt-8" role="status" aria-live="polite">
-          <div class="dwc-tronco-vol-row"><span class="dwc-tronco-vol-lab">Total</span><span id="setupSrfVolTotal" class="dwc-tronco-vol-val">—</span></div>
-          <div class="dwc-tronco-vol-row"><span class="dwc-tronco-vol-lab">Útil</span><span id="setupSrfVolOptimo" class="dwc-tronco-vol-val">—</span></div>
+        <p class="setup-dwc-section-kicker">Balsa · huecos</p>
+        <div class="setup-dwc-grid-2">
+          <div><label class="form-label setup-dwc-label" for="setupSrfFilas">Filas en balsa</label><input type="number" id="setupSrfFilas" class="setup-dwc-input" min="1" max="8" step="1" placeholder="2" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfPlantasPorFila">Plantas por fila</label><input type="number" id="setupSrfPlantasPorFila" class="setup-dwc-input" min="1" max="16" step="1" placeholder="4" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+        </div>
+        <p class="setup-dwc-section-kicker">Cesta (net pot)</p>
+        <div class="setup-dwc-grid-2">
+          <div><label class="form-label setup-dwc-label" for="setupSrfNetPotMm">Diámetro cesta (mm)</label><input type="number" id="setupSrfNetPotMm" class="setup-dwc-input" min="25" max="120" step="1" placeholder="50" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfNetPotHeightMm">Profundidad cesta (mm)</label><input type="number" id="setupSrfNetPotHeightMm" class="setup-dwc-input" min="30" max="200" step="1" placeholder="75" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfObjetivoCultivo">Objetivo de cultivo</label><select id="setupSrfObjetivoCultivo" class="setup-dwc-input" onchange="try{onSetupSrfInput()}catch(e){}"><option value="final">Planta adulta</option><option value="baby">Baby leaf</option></select></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfOxigenacionModo">Oxigenación</label><select id="setupSrfOxigenacionModo" class="setup-dwc-input" onchange="try{srfRefreshOxigenacionUi('setup');onSetupSrfInput()}catch(e){}"><option value="aireador">Bomba de aire</option><option value="kratky">Kratky (sin aireador)</option></select></div>
+          <div id="setupSrfKratkyGapWrap" class="setup-hidden"><label class="form-label setup-dwc-label" for="setupSrfKratkyGapCm">Cámara de aire bajo balsa (cm)</label><input type="number" id="setupSrfKratkyGapCm" class="setup-dwc-input" min="2" max="40" step="0.5" placeholder="8" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+        </div>
+        <div id="setupSrfLitrosSolucionBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+          <p class="setup-dwc-litros-solucion-label">Litros de solución en el estanque</p>
+          <p class="setup-dwc-litros-solucion-valor" id="setupSrfLitrosSolucionValor">—</p>
+          <p class="setup-dwc-litros-solucion-hint" id="setupSrfLitrosSolucionHint"></p>
+        </div>
+        <div id="setupSrfBombaRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+          <p class="setup-dwc-litros-solucion-label">Bomba de aire recomendada</p>
+          <p class="setup-dwc-litros-solucion-valor" id="setupSrfBombaRecoValor">—</p>
+          <p class="setup-dwc-litros-solucion-hint" id="setupSrfBombaRecoHint"></p>
         </div>
         <div id="setupVolMezclaSlotSrf" class="setup-mt-8"></div>
         <div id="setupSrfCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
       </div>
 
-      <div id="setupNftBuilderWrap" class="setup-hidden">
+      <div id="setupNftBuilderWrap"<div id="setupNftBuilderWrap" class="setup-hidden">
         <div class="torre-builder">
           <div>
             <div class="torre-preview nft-schematic-host" id="nftPreview" aria-hidden="true"></div>
@@ -4548,13 +4554,13 @@
   <script src="js/hc-bootstrap-onboarding.js?v=29"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-15-dwc-preview"></script>
+  <script src="js/torre-render-build.js?v=2026-05-15-srf-svg"></script>
   <script src="js/torre-render-main.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-colgado"></script>
-  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf3"></script>
+  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf4"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-torre-sliders"></script>
   <script src="js/hc-setup-calc-core.js?v=2026-05-15-torre-sistema"></script>

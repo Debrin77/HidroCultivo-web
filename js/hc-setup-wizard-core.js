@@ -1706,6 +1706,9 @@ function abrirSetup() {
     try {
       syncSrfFormDesdeConfig(c, 'setup');
     } catch (_) {}
+    try {
+      if (typeof syncSetupVolMezclaSugeridoSrf === 'function') syncSetupVolMezclaSugeridoSrf();
+    } catch (_) {}
   }
   const snc = document.getElementById('sliderNftCanales');
   const snh = document.getElementById('sliderNftHuecos');

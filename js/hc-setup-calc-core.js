@@ -1132,6 +1132,9 @@ function getSetupVolumenMaxLitros() {
   if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'srf') {
     const draft =
       typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', {}) || {} : {};
+    const seg =
+      typeof srfVolumenSeguroLitrosDesdeConfig === 'function' ? srfVolumenSeguroLitrosDesdeConfig(draft) : null;
+    if (seg != null && seg > 0) return Math.min(5000, Math.max(1, Math.round(seg * 10) / 10));
     const cap = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(draft) : null;
     if (cap != null && cap > 0) return Math.min(5000, Math.max(1, Math.round(cap * 10) / 10));
   }
@@ -1473,8 +1476,11 @@ function guardarSetupYContinuar() {
     const grid = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(cS) : { rows: 1, cols: 8 };
     niveles = Math.max(1, grid.rows || 1);
     cestas = Math.max(1, grid.cols || 1);
+    const segS =
+      typeof srfVolumenSeguroLitrosDesdeConfig === 'function' ? srfVolumenSeguroLitrosDesdeConfig(cS) : null;
     const cap = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cS) : null;
-    if (cap != null && cap > 0) vol = Math.max(1, Math.round(cap));
+    const volSrf = segS != null && segS > 0 ? segS : cap;
+    if (volSrf != null && volSrf > 0) vol = Math.max(1, Math.round(volSrf * 10) / 10);
   }
 
   const tipoNuevoPrevio = isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : isSrf ? 'srf' : 'torre';
@@ -1647,8 +1653,13 @@ function guardarSetupYContinuar() {
       state.configTorre.numNiveles = gridS.rows;
       state.configTorre.numCestas = gridS.cols;
     }
+    const segS =
+      typeof srfVolumenSeguroLitrosDesdeConfig === 'function'
+        ? srfVolumenSeguroLitrosDesdeConfig(state.configTorre)
+        : null;
     const capS = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(state.configTorre) : null;
     if (capS != null && capS > 0) state.configTorre.volDeposito = capS;
+    if (segS != null && segS > 0) state.configTorre.volMezclaLitros = segS;
     if (!Array.isArray(state.configTorre.equipamiento)) state.configTorre.equipamiento = [];
     if (srfNormalizeOxigenacionModo(state.configTorre.srfOxigenacionModo) !== 'kratky') {
       ['difusor'].forEach((eq) => {
@@ -1823,9 +1834,16 @@ function guardarSetupYContinuar() {
       }
   }
   const volEfectivo = (function () {
-    if (isSrf && typeof srfCapacidadLitrosDesdeConfig === 'function') {
-      const capS = srfCapacidadLitrosDesdeConfig(state.configTorre);
-      if (capS != null && capS > 0) return capS;
+    if (isSrf) {
+      const segS =
+        typeof srfVolumenSeguroLitrosDesdeConfig === 'function'
+          ? srfVolumenSeguroLitrosDesdeConfig(state.configTorre)
+          : null;
+      if (segS != null && segS > 0) return segS;
+      if (typeof srfCapacidadLitrosDesdeConfig === 'function') {
+        const capS = srfCapacidadLitrosDesdeConfig(state.configTorre);
+        if (capS != null && capS > 0) return capS;
+      }
     }
     if (!isDwc || !(Number(state.configTorre.volDeposito) > 0)) return vol;
     if (typeof getDwcVolumenMaxMezclaLitrosDesdeConfig === 'function') {
@@ -1837,6 +1855,8 @@ function guardarSetupYContinuar() {
   const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
   if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < volEfectivo - 0.02) {
     state.configTorre.volMezclaLitros = Math.min(volEfectivo, Math.max(0.5, Math.round(mezParsed * 10) / 10));
+  } else if (isSrf && Number.isFinite(volEfectivo) && volEfectivo > 0) {
+    state.configTorre.volMezclaLitros = Math.round(volEfectivo * 10) / 10;
   } else {
     delete state.configTorre.volMezclaLitros;
   }

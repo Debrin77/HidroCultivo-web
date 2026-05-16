@@ -6,19 +6,12 @@ const SRF_FORM_IDS_SETUP = [
   'setupSrfCanalLargoCm',
   'setupSrfCanalAnchoCm',
   'setupSrfProfundidadCm',
-  'setupSrfNumPlantas',
   'setupSrfFilas',
-  'setupSrfOxigenacionModo',
-  'setupSrfCirculante',
-  'setupSrfRecircLh',
-  'setupSrfAirLpm',
-  'setupSrfBalsaGrosorMm',
+  'setupSrfPlantasPorFila',
   'setupSrfNetPotMm',
   'setupSrfNetPotHeightMm',
-  'setupSrfEspaciamientoCm',
-  'setupSrfVolumenManualL',
-  'setupSrfVolTrabajoL',
   'setupSrfObjetivoCultivo',
+  'setupSrfOxigenacionModo',
   'setupSrfKratkyGapCm',
 ];
 const SRF_FORM_IDS_SISTEMA = [
@@ -26,6 +19,7 @@ const SRF_FORM_IDS_SISTEMA = [
   'sysSrfCanalAnchoCm',
   'sysSrfProfundidadCm',
   'sysSrfNumPlantas',
+  'sysSrfPlantasPorFila',
   'sysSrfFilas',
   'sysSrfOxigenacionModo',
   'sysSrfCirculante',
@@ -53,10 +47,18 @@ function srfEnsureConfigDefaults(cfg) {
   if (!Number.isFinite(Number(cfg.srfCanalLargoCm)) || Number(cfg.srfCanalLargoCm) <= 0) cfg.srfCanalLargoCm = 120;
   if (!Number.isFinite(Number(cfg.srfCanalAnchoCm)) || Number(cfg.srfCanalAnchoCm) <= 0) cfg.srfCanalAnchoCm = 60;
   if (!Number.isFinite(Number(cfg.srfProfundidadCm)) || Number(cfg.srfProfundidadCm) <= 0) cfg.srfProfundidadCm = 25;
-  if (!Number.isFinite(Number(cfg.srfNumPlantas)) || Number(cfg.srfNumPlantas) < 1) cfg.srfNumPlantas = 8;
-  cfg.srfNumPlantas = Math.max(1, Math.min(64, Math.round(Number(cfg.srfNumPlantas))));
-  if (!Number.isFinite(Number(cfg.srfFilas)) || Number(cfg.srfFilas) < 1) cfg.srfFilas = 1;
+  if (!Number.isFinite(Number(cfg.srfFilas)) || Number(cfg.srfFilas) < 1) cfg.srfFilas = 2;
   cfg.srfFilas = Math.max(1, Math.min(8, Math.round(Number(cfg.srfFilas))));
+  if (!Number.isFinite(Number(cfg.srfPlantasPorFila)) || Number(cfg.srfPlantasPorFila) < 1) {
+    const legacyCols = Number(cfg.numCestas);
+    const legacyN = Number(cfg.srfNumPlantas);
+    if (Number.isFinite(legacyCols) && legacyCols >= 1) cfg.srfPlantasPorFila = Math.round(legacyCols);
+    else if (Number.isFinite(legacyN) && legacyN >= 1) {
+      cfg.srfPlantasPorFila = Math.max(1, Math.ceil(legacyN / cfg.srfFilas));
+    } else cfg.srfPlantasPorFila = 4;
+  }
+  cfg.srfPlantasPorFila = Math.max(1, Math.min(16, Math.round(Number(cfg.srfPlantasPorFila))));
+  cfg.srfNumPlantas = cfg.srfFilas * cfg.srfPlantasPorFila;
   cfg.srfOxigenacionModo = srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo);
   if (cfg.srfCirculante == null) cfg.srfCirculante = cfg.srfOxigenacionModo !== 'kratky';
   if (!Number.isFinite(Number(cfg.srfBalsaGrosorMm)) || Number(cfg.srfBalsaGrosorMm) <= 0) cfg.srfBalsaGrosorMm = 40;
@@ -74,22 +76,113 @@ function srfEnsureConfigDefaults(cfg) {
 }
 
 function srfGetNumPlantas(cfg) {
-  cfg = cfg || state.configTorre || {};
-  const n = parseInt(String(cfg.srfNumPlantas != null ? cfg.srfNumPlantas : cfg.numNiveles * cfg.numCestas), 10);
-  if (Number.isFinite(n) && n > 0) return Math.min(64, n);
-  return Math.max(1, (cfg.numNiveles || 1) * (cfg.numCestas || 1));
+  const g = srfDistribuirPlantas(cfg);
+  return g.total;
 }
 
 function srfDistribuirPlantas(cfg) {
-  const n = srfGetNumPlantas(cfg);
-  let filas = parseInt(String(cfg && cfg.srfFilas != null ? cfg.srfFilas : 0), 10);
+  cfg = cfg || {};
+  let filas = parseInt(String(cfg.srfFilas != null ? cfg.srfFilas : cfg.numNiveles || 0), 10);
+  let cols = parseInt(
+    String(cfg.srfPlantasPorFila != null ? cfg.srfPlantasPorFila : cfg.numCestas || 0),
+    10
+  );
   if (!Number.isFinite(filas) || filas < 1) {
-    const g = typeof hcDistribuirFilasColumnas === 'function' ? hcDistribuirFilasColumnas(n, 8) : { rows: 1, cols: n };
-    return { rows: g.rows, cols: g.cols, total: n };
+    const n = parseInt(String(cfg.srfNumPlantas || 0), 10);
+    if (Number.isFinite(n) && n > 0) {
+      const g = typeof hcDistribuirFilasColumnas === 'function' ? hcDistribuirFilasColumnas(n, 8) : { rows: 2, cols: 4 };
+      filas = g.rows;
+      cols = g.cols;
+    } else {
+      filas = 2;
+      cols = 4;
+    }
+  }
+  if (!Number.isFinite(cols) || cols < 1) {
+    const n = parseInt(String(cfg.srfNumPlantas || 0), 10);
+    cols = Number.isFinite(n) && n > 0 && filas > 0 ? Math.max(1, Math.ceil(n / filas)) : 4;
   }
   filas = Math.max(1, Math.min(8, filas));
-  const cols = Math.max(1, Math.ceil(n / filas));
-  return { rows: filas, cols, total: n };
+  cols = Math.max(1, Math.min(16, cols));
+  return { rows: filas, cols, total: filas * cols };
+}
+
+function srfTieneMedidasCestaEnCfg(cfg) {
+  cfg = cfg || {};
+  const rim = Number(cfg.srfNetPotMm);
+  const h = Number(cfg.srfNetPotHeightMm);
+  return (Number.isFinite(h) && h >= 30) || (Number.isFinite(rim) && rim >= 25);
+}
+
+/** Cámara de aire nutriente → base del sustrato en cesta (cm). */
+function srfGapAireCmDesdeConfig(cfg) {
+  cfg = cfg || {};
+  if (srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'kratky') {
+    const k = Number(cfg.srfKratkyGapCm);
+    if (Number.isFinite(k) && k > 0) return Math.max(2, Math.min(40, k));
+    return 8;
+  }
+  return srfNormalizeObjetivoCultivo(cfg.srfObjetivoCultivo) === 'baby' ? 0.65 : 0.95;
+}
+
+/** Parte de la cesta que cuelga bajo la balsa en el agua (cm). */
+function srfColgadoCestaEnAguaCm(cfg) {
+  cfg = cfg || {};
+  const hMm = Number(cfg.srfNetPotHeightMm);
+  const balsaMm = Number(cfg.srfBalsaGrosorMm) || 40;
+  if (Number.isFinite(hMm) && hMm >= 30) {
+    const potCm = hMm / 10;
+    const balsaCm = balsaMm / 10;
+    return Math.max(1.5, potCm - balsaCm * 0.35 - 0.8);
+  }
+  const rim = Number(cfg.srfNetPotMm);
+  if (Number.isFinite(rim) && rim >= 25) return Math.max(1.5, (rim / 10) * 1.1);
+  return null;
+}
+
+/** Litros de llenado seguro: reserva cámara de aire hasta la base de la cesta. */
+function srfVolumenSeguroLitrosDesdeConfig(cfg) {
+  cfg = cfg || {};
+  const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  const P = Number(cfg.srfProfundidadCm);
+  if (cap == null || !Number.isFinite(P) || P <= 0) return null;
+  if (!srfTieneMedidasCestaEnCfg(cfg)) return null;
+  const hang = srfColgadoCestaEnAguaCm(cfg);
+  if (hang == null) return null;
+  const gap = srfGapAireCmDesdeConfig(cfg);
+  const balsaCm = (Number(cfg.srfBalsaGrosorMm) || 40) / 10;
+  const hMin = Math.min(P * 0.18, 5);
+  const hCol = Math.min(P, Math.max(hMin, P - balsaCm * 0.85 - hang - gap));
+  const litros = cap * (hCol / P);
+  const out = Math.round(litros * 10) / 10;
+  if (!Number.isFinite(out) || out <= 0) return null;
+  if (out >= cap - 0.02) return Math.round((cap - 0.1) * 10) / 10;
+  return out;
+}
+
+function srfDesgloseVolumenLlenado(cfg) {
+  cfg = cfg || {};
+  const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  const P = Number(cfg.srfProfundidadCm);
+  if (cap == null || !Number.isFinite(P)) return null;
+  const hang = srfColgadoCestaEnAguaCm(cfg);
+  const gap = srfGapAireCmDesdeConfig(cfg);
+  const balsaCm = (Number(cfg.srfBalsaGrosorMm) || 40) / 10;
+  const hMin = Math.min(P * 0.18, 5);
+  const hCol =
+    hang != null ? Math.min(P, Math.max(hMin, P - balsaCm * 0.85 - hang - gap)) : null;
+  const litros = srfVolumenSeguroLitrosDesdeConfig(cfg);
+  return {
+    P: Math.round(P * 10) / 10,
+    balsaCm: Math.round(balsaCm * 10) / 10,
+    hang: hang != null ? Math.round(hang * 10) / 10 : null,
+    gap: Math.round(gap * 10) / 10,
+    hCol: hCol != null ? Math.round(hCol * 10) / 10 : null,
+    cap,
+    litros,
+    hPotMm: Number.isFinite(Number(cfg.srfNetPotHeightMm)) ? Math.round(Number(cfg.srfNetPotHeightMm)) : null,
+    rimMm: Number.isFinite(Number(cfg.srfNetPotMm)) ? Math.round(Number(cfg.srfNetPotMm)) : null,
+  };
 }
 
 function srfCapacidadLitrosDesdeConfig(cfg) {
@@ -176,6 +269,22 @@ function srfRecomendarAireLpm(cfg) {
   };
 }
 
+/** Caudal y potencia eléctrica orientativa de bomba de aire (acuario/hidro). */
+function srfRecomendarBombaAire(cfg) {
+  const lpm = srfRecomendarAireLpm(cfg);
+  const wattsReco = Math.max(5, Math.ceil(lpm.reco * 1.75));
+  const wattsMin = Math.max(3, Math.ceil(lpm.min * 1.5));
+  const wattsFuerte = Math.ceil(lpm.fuerte * 2);
+  return {
+    lpmMin: lpm.min,
+    lpmReco: lpm.reco,
+    lpmFuerte: lpm.fuerte,
+    wattsMin,
+    wattsReco,
+    wattsFuerte,
+  };
+}
+
 function srfParseNum(id, min, max, fallback) {
   const el = document.getElementById(id);
   if (!el) return fallback;
@@ -206,10 +315,15 @@ function srfMergeCamposFormularioEnCfg(cfg, ids) {
   g('sysSrfCanalAnchoCm', 'srfCanalAnchoCm', (v) => srfParseNum('sysSrfCanalAnchoCm', 20, 400, cfg.srfCanalAnchoCm));
   g('setupSrfProfundidadCm', 'srfProfundidadCm', (v) => srfParseNum('setupSrfProfundidadCm', 10, 50, cfg.srfProfundidadCm));
   g('sysSrfProfundidadCm', 'srfProfundidadCm', (v) => srfParseNum('sysSrfProfundidadCm', 10, 50, cfg.srfProfundidadCm));
-  g('setupSrfNumPlantas', 'srfNumPlantas', (v) => Math.round(srfParseNum('setupSrfNumPlantas', 1, 64, cfg.srfNumPlantas || 8)));
+  g('setupSrfFilas', 'srfFilas', (v) => Math.round(srfParseNum('setupSrfFilas', 1, 8, cfg.srfFilas || 2)));
+  g('sysSrfFilas', 'srfFilas', (v) => Math.round(srfParseNum('sysSrfFilas', 1, 8, cfg.srfFilas || 2)));
+  g('setupSrfPlantasPorFila', 'srfPlantasPorFila', (v) =>
+    Math.round(srfParseNum('setupSrfPlantasPorFila', 1, 16, cfg.srfPlantasPorFila || 4))
+  );
+  g('sysSrfPlantasPorFila', 'srfPlantasPorFila', (v) =>
+    Math.round(srfParseNum('sysSrfPlantasPorFila', 1, 16, cfg.srfPlantasPorFila || 4))
+  );
   g('sysSrfNumPlantas', 'srfNumPlantas', (v) => Math.round(srfParseNum('sysSrfNumPlantas', 1, 64, cfg.srfNumPlantas || 8)));
-  g('setupSrfFilas', 'srfFilas', (v) => Math.round(srfParseNum('setupSrfFilas', 1, 8, cfg.srfFilas || 1)));
-  g('sysSrfFilas', 'srfFilas', (v) => Math.round(srfParseNum('sysSrfFilas', 1, 8, cfg.srfFilas || 1)));
   g('setupSrfOxigenacionModo', 'srfOxigenacionModo', (v) => srfNormalizeOxigenacionModo(v));
   g('sysSrfOxigenacionModo', 'srfOxigenacionModo', (v) => srfNormalizeOxigenacionModo(v));
   g('setupSrfCirculante', 'srfCirculante');
@@ -247,6 +361,18 @@ function srfMergeCamposFormularioEnCfg(cfg, ids) {
   g('setupSrfKratkyGapCm', 'srfKratkyGapCm', (v) => srfParseNum('setupSrfKratkyGapCm', 2, 40, cfg.srfKratkyGapCm));
   g('sysSrfKratkyGapCm', 'srfKratkyGapCm', (v) => srfParseNum('sysSrfKratkyGapCm', 2, 40, cfg.srfKratkyGapCm));
   if (cfg.srfOxigenacionModo === 'kratky') cfg.srfCirculante = false;
+  const grid = srfDistribuirPlantas(cfg);
+  cfg.srfFilas = grid.rows;
+  cfg.srfPlantasPorFila = grid.cols;
+  cfg.srfNumPlantas = grid.total;
+  cfg.numNiveles = grid.rows;
+  cfg.numCestas = grid.cols;
+  if (srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'aireador') {
+    const bomba = srfRecomendarBombaAire(cfg);
+    if (ids === SRF_FORM_IDS_SETUP || !Number.isFinite(Number(cfg.srfAirLpm)) || Number(cfg.srfAirLpm) <= 0) {
+      cfg.srfAirLpm = bomba.lpmReco;
+    }
+  }
   srfEnsureConfigDefaults(cfg);
   return cfg;
 }
@@ -273,8 +399,10 @@ function syncSrfFormDesdeConfig(cfg, scope) {
   set('CanalLargoCm', cfg.srfCanalLargoCm);
   set('CanalAnchoCm', cfg.srfCanalAnchoCm);
   set('ProfundidadCm', cfg.srfProfundidadCm);
-  set('NumPlantas', cfg.srfNumPlantas);
   set('Filas', cfg.srfFilas);
+  set('PlantasPorFila', cfg.srfPlantasPorFila);
+  const elPpf = document.getElementById(p + 'PlantasPorFila');
+  if (!elPpf) set('NumPlantas', cfg.srfNumPlantas);
   set('OxigenacionModo', cfg.srfOxigenacionModo);
   set('Circulante', cfg.srfCirculante);
   set('RecircLh', cfg.srfRecircLh);
@@ -330,12 +458,14 @@ function srfRefreshOxigenacionUi(scope) {
 
 function srfLitrosUtilesDesdeConfig(cfg) {
   cfg = cfg || state.configTorre || {};
-  const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  const seg = srfVolumenSeguroLitrosDesdeConfig(cfg);
+  if (seg != null && seg > 0) return seg;
   const vMez =
     typeof getVolumenMezclaLitros === 'function'
       ? getVolumenMezclaLitros(cfg)
       : Number(cfg.volMezclaLitros);
   if (Number.isFinite(vMez) && vMez > 0) return Math.round(vMez * 10) / 10;
+  const cap = srfCapacidadLitrosDesdeConfig(cfg);
   if (cap != null && cap > 0) return cap;
   return null;
 }
@@ -376,17 +506,110 @@ function clearSetupVolMezclaSrfAutofill() {
 }
 
 /** Rellena litros útiles del estanque (setup) desde capacidad L×A×P si vacío o autocompletado. */
-function syncSetupVolMezclaSugeridoSrf() {
+function srfRefreshSetupCalculadoUi() {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'srf') return;
+  let draft = null;
+  try {
+    draft = buildSrfConfigFromForm('setup', {});
+    srfEnsureConfigDefaults(draft);
+  } catch (_) {}
+  const litBlock = document.getElementById('setupSrfLitrosSolucionBlock');
+  const litVal = document.getElementById('setupSrfLitrosSolucionValor');
+  const litHint = document.getElementById('setupSrfLitrosSolucionHint');
+  const bombaBlock = document.getElementById('setupSrfBombaRecoBlock');
+  const bombaVal = document.getElementById('setupSrfBombaRecoValor');
+  const bombaHint = document.getElementById('setupSrfBombaRecoHint');
+  const cap = draft ? srfCapacidadLitrosDesdeConfig(draft) : null;
+  const util = draft ? srfVolumenSeguroLitrosDesdeConfig(draft) : null;
+  const desg = draft ? srfDesgloseVolumenLlenado(draft) : null;
+  if (litBlock && litVal) {
+    litBlock.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
+    if (util != null && util > 0) {
+      litBlock.classList.add('setup-dwc-litros-solucion-block--ok');
+      litVal.textContent = util + ' L';
+      if (litHint && desg) {
+        litHint.textContent =
+          'Total geométrico ' +
+          desg.cap +
+          ' L · P ' +
+          desg.P +
+          ' cm − balsa ~' +
+          desg.balsaCm +
+          ' cm − cesta en agua ~' +
+          desg.hang +
+          ' cm − cámara aire ~' +
+          desg.gap +
+          ' cm → ~' +
+          desg.hCol +
+          ' cm útiles' +
+          (desg.hPotMm != null ? ' (cesta ' + desg.hPotMm + ' mm' + (desg.rimMm != null ? ', Ø ' + desg.rimMm + ' mm' : '') + ')' : '') +
+          '.';
+      }
+    } else if (cap != null) {
+      litBlock.classList.add('setup-dwc-litros-solucion-block--pending');
+      litVal.textContent = cap + ' L (completa cesta para llenado seguro)';
+      if (litHint) litHint.textContent = 'Indica diámetro y profundidad de la cesta.';
+    } else {
+      litBlock.classList.add('setup-dwc-litros-solucion-block--pending');
+      litVal.textContent = 'Completa medidas del estanque y de la cesta.';
+      if (litHint) litHint.textContent = '';
+    }
+  }
+  const modo = draft ? srfNormalizeOxigenacionModo(draft.srfOxigenacionModo) : 'aireador';
+  if (bombaBlock) {
+    if (modo === 'kratky') {
+      bombaBlock.classList.add('setup-hidden');
+    } else {
+      bombaBlock.classList.remove('setup-hidden');
+      const b = srfRecomendarBombaAire(draft || {});
+      if (bombaVal) {
+        bombaVal.textContent = b.lpmReco + ' L/min · ~' + b.wattsReco + ' W';
+      }
+      if (bombaHint) {
+        bombaHint.textContent =
+          'Rango orientativo ' +
+          b.lpmMin +
+          '–' +
+          b.lpmFuerte +
+          ' L/min (~' +
+          b.wattsMin +
+          '–' +
+          b.wattsFuerte +
+          ' W). DO &gt;4–5 mg/L en estanque común (~4 L/min por cada 24 m² de superficie).';
+      }
+    }
+  }
+  try {
+    if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'setupSrfCalcStatus');
+  } catch (_) {}
+}
+
+function onSetupSrfInput() {
+  try {
+    if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
+  } catch (_) {}
+  try {
+    srfRefreshSetupCalculadoUi();
+  } catch (_) {}
+  try {
+    syncSetupVolMezclaSugeridoSrf({ forceMezcla: true });
+  } catch (_) {}
+}
+
+function syncSetupVolMezclaSugeridoSrf(opts) {
+  opts = opts || {};
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'srf') return;
+  try {
+    srfRefreshSetupCalculadoUi();
+  } catch (_) {}
   const draft =
     typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', {}) || {} : {};
   srfEnsureConfigDefaults(draft);
+  const util = srfVolumenSeguroLitrosDesdeConfig(draft);
   const cap = srfCapacidadLitrosDesdeConfig(draft);
-  if (cap == null || !Number.isFinite(cap) || cap <= 0) {
-    srfUpdateVolCapLabels(draft, 'setup');
-    return;
-  }
-  const vClamped = Math.round(Math.min(cap, 5000) * 10) / 10;
+  const vSeg = util != null && util > 0 ? util : cap;
+  if (vSeg == null || !Number.isFinite(vSeg) || vSeg <= 0) return;
+  const vClamped = Math.round(Math.min(vSeg, 5000) * 10) / 10;
   const applyAuto = (el, attr) => {
     if (!el) return;
     const prevAuto = el.getAttribute(attr);
@@ -431,40 +654,31 @@ function renderSrfCalculoStatus(cfg, elId) {
   const el = document.getElementById(elId);
   if (!el) return;
   cfg = srfEnsureConfigDefaults(cfg || state.configTorre || {});
-  const scope = elId && String(elId).indexOf('sys') === 0 ? 'sys' : 'setup';
-  srfUpdateVolCapLabels(cfg, scope);
+  const grid = srfDistribuirPlantas(cfg);
   const cap = srfCapacidadLitrosDesdeConfig(cfg);
   const util = srfLitrosUtilesDesdeConfig(cfg);
-  const n = srfGetNumPlantas(cfg);
-  const per = srfLitrosPorPlanta(cfg);
-  const air = srfRecomendarAireLpm(cfg);
-  const grid = srfDistribuirPlantas(cfg);
   const modo = srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo);
-  const geom = srfValidarGeometriaBalsa(cfg);
+  const bomba = srfRecomendarBombaAire(cfg);
   let html =
-    'SRF · <strong>' +
-    n +
-    ' plantas</strong> en ' +
+    'Rejilla <strong>' +
     grid.rows +
-    '×' +
+    ' filas × ' +
     grid.cols +
-    ' · estanque ~<strong>' +
+    ' plantas/fila</strong> (' +
+    grid.total +
+    ' huecos) · estanque ~<strong>' +
     (cap != null ? cap + ' L' : '—') +
     '</strong>' +
-    (util != null && cap != null && Math.abs(util - cap) > 0.05 ? ' · útil <strong>' + util + ' L</strong>' : '') +
-    (per != null ? ' (~' + per + ' L/planta)' : '') +
-    ' · prof. ' +
-    cfg.srfProfundidadCm +
-    ' cm' +
-    (modo === 'kratky'
-      ? ' · <strong>Kratky</strong>: cámara de aire bajo balsa (~' + cfg.srfKratkyGapCm + ' cm), sin aireador'
-      : ' · aire recomendado <strong>' + air.reco + '–' + air.fuerte + ' L/min</strong> (DO &gt;4–5 mg/L)') +
-    (cfg.srfCirculante ? ' · recirculación ~' + cfg.srfRecircLh + ' L/h' : '');
-  if (!geom.ok && geom.hint) {
+    (util != null ? ' · llenado seguro <strong>' + util + ' L</strong>' : '');
+  if (modo === 'kratky') {
+    html += ' · <strong>Kratky</strong> (sin bomba de aire)';
+  } else {
     html +=
-      '<br><span class="setup-dwc-warn-inline" role="note">⚠ ' +
-      geom.hint +
-      '</span>';
+      ' · bomba ~<strong>' +
+      bomba.lpmReco +
+      ' L/min</strong>, ~<strong>' +
+      bomba.wattsReco +
+      ' W</strong>';
   }
   el.innerHTML = html;
 }
@@ -472,28 +686,30 @@ function renderSrfCalculoStatus(cfg, elId) {
 function renderSrfSetupPreview(previewEl, cfg) {
   if (!previewEl) return;
   cfg = srfEnsureConfigDefaults(cfg || {});
-  const n = srfGetNumPlantas(cfg);
   const grid = srfDistribuirPlantas(cfg);
   previewEl.innerHTML = '';
   const wrap = document.createElement('div');
   wrap.className = 'srf-setup-preview-wrap';
   wrap.setAttribute('role', 'img');
-  wrap.setAttribute('aria-label', 'Balsa flotante con ' + n + ' plantas');
+  wrap.setAttribute('aria-label', 'Balsa ' + grid.rows + ' filas por ' + grid.cols + ' plantas');
   const canal = document.createElement('div');
   canal.className = 'srf-setup-canal';
   const raft = document.createElement('div');
   raft.className = 'srf-setup-raft';
   raft.style.gridTemplateColumns = 'repeat(' + grid.cols + ', minmax(0, 1fr))';
-  for (let i = 0; i < n; i++) {
-    const h = document.createElement('div');
-    h.className = 'srf-setup-hole';
-    raft.appendChild(h);
+  raft.style.gridTemplateRows = 'repeat(' + grid.rows + ', minmax(0, 1fr))';
+  for (let r = 0; r < grid.rows; r++) {
+    for (let c = 0; c < grid.cols; c++) {
+      const h = document.createElement('div');
+      h.className = 'srf-setup-hole';
+      raft.appendChild(h);
+    }
   }
   canal.appendChild(raft);
   wrap.appendChild(canal);
   const cap = document.createElement('div');
   cap.className = 'dwc-setup-lid-caption';
-  cap.textContent = n + ' plantas · balsa ' + (cfg.srfBalsaGrosorMm || 40) + ' mm';
+  cap.textContent = grid.rows + '×' + grid.cols + ' (' + grid.total + ' huecos)';
   wrap.appendChild(cap);
   previewEl.appendChild(wrap);
 }
