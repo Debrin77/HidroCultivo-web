@@ -66,6 +66,18 @@ function restaurarSetupTorreBuilderControls() {
 
 function onTorreSlidersInput() {
   const controls = document.getElementById('setupTorreBuilderControlsSlot');
+  const enDwcSetup =
+    typeof setupTipoInstalacion !== 'undefined' &&
+    setupTipoInstalacion === 'dwc' &&
+    controls &&
+    (controls.closest('#setupDwcDepUnidoControls') || controls.closest('#setupDwcPreviewSection'));
+  if (enDwcSetup) {
+    try {
+      if (typeof refreshDwcSetupPreview === 'function') refreshDwcSetupPreview();
+      else if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
+    } catch (_) {}
+    return;
+  }
   const enSistema = controls && controls.closest('#sistemaTorreMontajeCard');
   if (enSistema) {
     const n = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10) || 5;
@@ -1885,6 +1897,32 @@ function abrirSetup() {
     const vaTorre = document.getElementById('valAltura');
     if (vaTorre) vaTorre.textContent = ' ' + setupAlturaTorre.toFixed(1) + 'm';
   }
+  if (tipoInstalacionNormalizado(c) === 'dwc') {
+    try {
+      if (typeof dwcAsegurarOxigenacionCoherenteConRejilla === 'function') dwcAsegurarOxigenacionCoherenteConRejilla(c);
+    } catch (_) {}
+    const mcDwc =
+      typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(c) === 'cubos_independientes';
+    if (mcDwc) {
+      const elNc = document.getElementById('setupDwcNumCubos');
+      const nCub = Math.max(
+        1,
+        Math.min(24, parseInt(String(c.dwcNumCubos ?? c.numCestas ?? 4), 10) || 4)
+      );
+      if (elNc) elNc.value = String(nCub);
+    } else {
+      const snD = document.getElementById('sliderNiveles');
+      const scD = document.getElementById('sliderCestas');
+      const nD = Math.max(1, Math.min(10, parseInt(String(c.numNiveles || 2), 10) || 2));
+      const cD = Math.max(1, Math.min(8, parseInt(String(c.numCestas || 3), 10) || 3));
+      if (snD) snD.value = String(nD);
+      if (scD) scD.value = String(cD);
+      const vnD = document.getElementById('valNiveles');
+      const vcD = document.getElementById('valCestas');
+      if (vnD) vnD.textContent = String(nD);
+      if (vcD) vcD.textContent = String(cD);
+    }
+  }
 
   const latC = parseFloat(c.lat);
   const lonC = parseFloat(c.lon);
@@ -1902,7 +1940,11 @@ function abrirSetup() {
   o.classList.add('open');
   renderNutrientesGrid();
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
-  else updateTorreBuilder();
+  else if (setupTipoInstalacion === 'dwc') {
+    try {
+      if (typeof dwcSyncSetupMontajePreview === 'function') dwcSyncSetupMontajePreview();
+    } catch (_) {}
+  } else updateTorreBuilder();
   try {
     if (setupTipoInstalacion === 'nft') {
       seleccionarSetupNftMontajeOrigen(hcNftMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');

@@ -531,7 +531,11 @@ function generarSVGDwc() {
     dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
   /** Posiciones de piedras (cenital x, frente y) para burbujas en modo multivalvula. */
   let dwcMcAirPts = null;
-  const S_mc = esMulticubo ? Math.max(1, N * C) : 0;
+  const S_mc = esMulticubo
+    ? typeof dwcGetNumCubosIndependientes === 'function'
+      ? Math.max(1, dwcGetNumCubosIndependientes(cfg))
+      : Math.max(1, N * C)
+    : 0;
   let mcCols = 1;
   let mcRows = 1;
   let mcCubeSz = 56;

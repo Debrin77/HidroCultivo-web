@@ -1346,7 +1346,8 @@ function dwcFormatHtmlD0MultivalvulaDatos(rec) {
     '<span class="cl-dwc-d0-dato-val">~' + aireCubo + ' L/min</span></div>' +
     '<div class="cl-dwc-d0-dato cl-dwc-d0-dato--total"><span class="cl-dwc-d0-dato-lab">Bomba multiválvula · total sistema</span>' +
     '<span class="cl-dwc-d0-dato-val">~' + total + ' L/min</span></div>' +
-    '</div>';
+    '</div>'
+  );
 }
 
 function dwcFormatHtmlRecomendacionDifusorCore(rec) {
@@ -2060,7 +2061,8 @@ function aplicarDwcRejillaDesdeSetup(modoAplicacion) {
   if (sn) sn.value = String(nf);
   if (sc) sc.value = String(nc);
   try {
-    updateTorreBuilder();
+    if (typeof refreshDwcSetupPreview === 'function') refreshDwcSetupPreview();
+    else if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
   } catch (e) {}
   try {
     refreshDwcTapHintSetup();
@@ -3063,7 +3065,10 @@ function onSetupDwcMedidasInput() {
   try {
     dwcSyncSetupLitrosUtilesHidden();
   } catch (_) {}
-  updateTorreBuilder();
+  try {
+    if (typeof refreshDwcSetupPreview === 'function') refreshDwcSetupPreview();
+    else if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
+  } catch (_) {}
   try {
     syncSetupVolMezclaSugeridoDwc();
   } catch (_) {}
@@ -3200,7 +3205,8 @@ function dwcSyncSetupMontajePreview() {
     dwcReparentSetupSlidersForPreview();
   } catch (_) {}
   try {
-    updateTorreBuilder();
+    if (typeof refreshDwcSetupPreview === 'function') refreshDwcSetupPreview();
+    else if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
   } catch (_) {}
 }
 
@@ -3272,7 +3278,8 @@ function dwcRefreshMulticuboDependienteUi(which) {
       onSetupDwcMedidasInput();
     } catch (_) {}
     try {
-      updateTorreBuilder();
+      if (typeof refreshDwcSetupPreview === 'function') refreshDwcSetupPreview();
+      else if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
     } catch (_) {}
     try {
       dwcRefreshSetupLitrosSolucionUi();

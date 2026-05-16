@@ -64,7 +64,19 @@ function renderTorre() {
       bindTorreCestas(wrap);
     } catch (e2) {}
   } else if (esDwc) {
-    wrap.innerHTML = generarSVGDwc();
+    try {
+      wrap.innerHTML = typeof generarSVGDwc === 'function' ? generarSVGDwc() : '';
+    } catch (eDwcSvg) {
+      wrap.innerHTML =
+        '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema DWC. Recarga la página (Ctrl+F5).</p>';
+      try {
+        console.error('generarSVGDwc', eDwcSvg);
+      } catch (_) {}
+    }
+    if (!wrap.innerHTML || !String(wrap.innerHTML).trim()) {
+      wrap.innerHTML =
+        '<p class="torre-svg-fallback" role="status">Esquema DWC vacío: revisa niveles/cestas o cubos en Cultivo e instalación.</p>';
+    }
     const dwcMcAria =
       typeof dwcGetOxigenacionDiseno === 'function' &&
       dwcGetOxigenacionDiseno(state.configTorre) === 'cubos_independientes';

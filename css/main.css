@@ -14590,6 +14590,15 @@ button.toggle-switch:focus-visible {
   width: 100%;
   min-height: 120px;
 }
+.setup-dwc-preview-fallback,
+.torre-svg-fallback {
+  margin: 0;
+  padding: 12px 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #92400e;
+  text-align: center;
+}
 .dwc-setup-mc-wrap {
   display: flex;
   flex-direction: column;

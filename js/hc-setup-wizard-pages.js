@@ -1296,6 +1296,81 @@ function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
   previewEl.appendChild(wrap);
 }
 
+/** Vista previa DWC del asistente (depósito unido o multiválvula); no usa el preview de torre vertical. */
+function refreshDwcSetupPreview() {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'dwc') return;
+  const preview =
+    (typeof getSetupPreviewElement === 'function' ? getSetupPreviewElement() : null) ||
+    document.getElementById('setupDwcPreview');
+  if (!preview) return;
+
+  const mc =
+    typeof dwcEsSetupMultivalvula === 'function'
+      ? dwcEsSetupMultivalvula()
+      : typeof dwcNormalizeOxigenacionDiseno === 'function' &&
+        dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+          'cubos_independientes';
+
+  let filas = 2;
+  let cols = 3;
+  if (mc) {
+    const formaMc =
+      typeof dwcNormalizeDepositoForma === 'function'
+        ? dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value)
+        : 'prismatico';
+    const defNc = formaMc === 'cilindrico' ? 1 : 4;
+    const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
+    cols = Math.min(24, Math.max(1, Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : defNc));
+    filas = 1;
+  } else {
+    filas = Math.max(1, Math.min(10, parseInt(String(document.getElementById('sliderNiveles')?.value || 2), 10) || 2));
+    cols = Math.max(1, Math.min(8, parseInt(String(document.getElementById('sliderCestas')?.value || 3), 10) || 3));
+    const vn = document.getElementById('valNiveles');
+    const vc = document.getElementById('valCestas');
+    if (vn) vn.textContent = String(filas);
+    if (vc) vc.textContent = String(cols);
+  }
+
+  let vol = parseInt(String(document.getElementById('sliderVol')?.value || 20), 10) || 20;
+  try {
+    const dwcCap = typeof getDwcCapacidadLitrosFromSetupInputs === 'function' ? getDwcCapacidadLitrosFromSetupInputs() : null;
+    if (dwcCap != null && dwcCap > 0) vol = Math.round(dwcCap * 10) / 10;
+  } catch (_) {}
+
+  preview.classList.add('torre-preview--dwc');
+  preview.classList.remove('torre-preview--srf');
+  try {
+    if (mc) {
+      let volMc = vol;
+      try {
+        const draftMc =
+          typeof buildDwcDraftCfgFromSetupWizardInputs === 'function'
+            ? buildDwcDraftCfgFromSetupWizardInputs()
+            : null;
+        const vMc =
+          draftMc && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
+            ? dwcLitrosUtilesPorCuboMultivalvula(draftMc)
+            : null;
+        if (vMc != null && vMc > 0) volMc = Math.round(vMc * 10) / 10;
+      } catch (_) {}
+      renderDwcMulticuboSetupPreview(
+        preview,
+        cols,
+        volMc,
+        document.getElementById('setupDwcDepositoForma')?.value
+      );
+    } else {
+      renderDwcLidSetupPreview(preview, filas, cols, vol);
+    }
+  } catch (err) {
+    preview.innerHTML =
+      '<p class="setup-dwc-preview-fallback" role="status">No se pudo dibujar la vista previa. Prueba Ctrl+F5 o revisa la consola del navegador.</p>';
+    try {
+      console.error('refreshDwcSetupPreview', err);
+    } catch (_) {}
+  }
+}
+
 function updateTorreBuilder() {
   if (setupTipoInstalacion === 'nft') {
     updateNftSetupPreview();
@@ -1341,8 +1416,10 @@ function updateTorreBuilder() {
   const volDepDwc =
     dwcCap != null && dwcCap > 0 ? Math.round(dwcCap * 10) / 10 : volSlider;
 
-  document.getElementById('valNiveles').textContent = dwcNivPrev;
-  document.getElementById('valCestas').textContent  = dwcCesPrev;
+  const elVN = document.getElementById('valNiveles');
+  const elVC = document.getElementById('valCestas');
+  if (elVN) elVN.textContent = String(dwcNivPrev);
+  if (elVC) elVC.textContent = String(dwcCesPrev);
   const elVol = document.getElementById('valVol');
   if (elVol) {
     if (setupTipoInstalacion === 'dwc' && dwcCap != null && dwcCap > 0) {
@@ -1374,30 +1451,12 @@ function updateTorreBuilder() {
   if (!preview) return;
 
   if (setupTipoInstalacion === 'dwc') {
-    preview.classList.add('torre-preview--dwc');
-    const oxB =
-      typeof dwcEsSetupMultivalvula === 'function'
-        ? dwcEsSetupMultivalvula()
-        : typeof dwcNormalizeOxigenacionDiseno === 'function' &&
-          dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
-            'cubos_independientes';
-    const formaDep = document.getElementById('setupDwcDepositoForma')?.value;
-    if (oxB) {
-      let volMc = volDepDwc;
+    try {
+      if (typeof refreshDwcSetupPreview === 'function') refreshDwcSetupPreview();
+    } catch (eDwcPrev) {
       try {
-        const draftMc =
-          typeof buildDwcDraftCfgFromSetupWizardInputs === 'function'
-            ? buildDwcDraftCfgFromSetupWizardInputs()
-            : null;
-        const vMc =
-          draftMc && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
-            ? dwcLitrosUtilesPorCuboMultivalvula(draftMc)
-            : null;
-        if (vMc != null && vMc > 0) volMc = Math.round(vMc * 10) / 10;
+        console.error('updateTorreBuilder dwc preview', eDwcPrev);
       } catch (_) {}
-      renderDwcMulticuboSetupPreview(preview, dwcCesPrev, volMc, formaDep);
-    } else {
-      renderDwcLidSetupPreview(preview, dwcNivPrev, dwcCesPrev, volDepDwc);
     }
     try {
       refreshDwcTapHintSetup();
