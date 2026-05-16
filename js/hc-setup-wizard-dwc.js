@@ -107,27 +107,30 @@ function dwcGetNumCubosIndependientes(cfg) {
 function dwcHtmlGuiaMulticuboChecklist(cfg) {
   if (!cfg || dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') return '';
   const n = dwcGetNumCubosIndependientes(cfg);
-  const vPer =
-    typeof getVolumenNutrientesLitros === 'function' ? getVolumenNutrientesLitros(cfg) : null;
-  const vTot = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
-  const vPerTxt =
-    vPer != null && Number.isFinite(vPer) && vPer > 0 ? String(Math.round(vPer * 10) / 10) : '—';
-  const totLine =
-    vTot != null && Number.isFinite(vTot) && vTot > 0 && vPer != null && vPer > 0 && vTot > vPer + 0.05
-      ? ' (en el sistema ~' + Math.round(vTot * 10) / 10 + ' L en total).'
-      : '.';
+  const vCubo =
+    typeof dwcLitrosUtilesPorCuboMultivalvula === 'function' ? dwcLitrosUtilesPorCuboMultivalvula(cfg) : null;
+  const explicit = Number(cfg.dwcLitrosUtilesPorSitioL);
+  const vCuboDesdeMedidas =
+    vCubo != null && Number.isFinite(vCubo) && vCubo > 0 && !(Number.isFinite(explicit) && explicit >= 0.5);
+  const vCuboTxt =
+    vCubo != null && Number.isFinite(vCubo) && vCubo > 0
+      ? String(vCubo) + ' L' + (vCuboDesdeMedidas ? ' (calculados con tus medidas de cubo)' : '')
+      : 'configura las medidas del cubo en Cultivo e instalación';
   return (
-    '<div class="cl-note cl-note--dwc-mc-guide" role="status">' +
-    '<p class="cl-dwc-mc-guide-title"><strong>Varios cubos — en 4 pasos</strong></p>' +
+    '<' + 'div class="cl-note cl-note--dwc-mc-guide" role="status">' +
+    '<p class="cl-dwc-mc-guide-title"><strong>' +
+    n +
+    ' cubos — mismo volumen en cada uno</strong></p>' +
+    '<p class="cl-dwc-mc-guide-lead">Cada cubo lleva <strong>' +
+    vCuboTxt +
+    '</strong> de solución útil (cámara de aire bajo la cesta). Los <strong>ml del paso 4</strong> son para <strong>un cubo</strong>: repites el mismo proceso en los ' +
+    n +
+    ' cubos y después enciendes el aire y plantas.</p>' +
     '<ol class="cl-dwc-mc-guide-steps">' +
-    '<li><strong>Configura</strong> en Cultivo: cuántos cubos, medidas de <em>un cubo típico</em>, 1 maceta/cubo (toca cada maceta en el esquema).</li>' +
-    '<li><strong>PC·1:</strong> litros <em>totales</em> solo como referencia (bomba y resumen); los <strong>ml del paso 4</strong> salen de <strong>~' +
-    vPerTxt +
-    ' L por cubo</strong>' +
-    totLine +
-    '</li>' +
-    '<li><strong>Paso 4:</strong> agua → CalMag → nutrientes → pH en <strong>cada cubo</strong>. Si todos son iguales, puedes mezclar una vez en un <em>cubo auxiliar</em> del mismo volumen y repartir.</li>' +
-    '<li><strong>Mediciones:</strong> registra EC/pH <strong>por cubo</strong> cuando revises; no hace falta que coincidan al decimal.</li>' +
+    '<li><strong>Cultivo e instalación:</strong> cuántos cubos, medidas de un cubo y 1 maceta por cubo.</li>' +
+    '<li><strong>PC·1:</strong> confirma <strong>litros útiles por cubo</strong> (abajo).</li>' +
+    '<li><strong>Paso 4:</strong> en <strong>cada cubo</strong> — agua → CalMag → nutrientes → pH (o mezcla en un cubo auxiliar del mismo volumen y reparte).</li>' +
+    '<li><strong>Al terminar:</strong> aireador en marcha en todos los cubos; mide EC/pH por cubo si quieres anotarlo.</li>' +
     '</ol></div>'
   );
 }
@@ -988,6 +991,28 @@ function dwcLitrosPorSitioOxigenacionMulticubo(cfg, volMezclaTotal, nTotal) {
     return { vPer, fuente };
   }
   return { vPer: avg, fuente: 'reparto' };
+}
+
+/**
+ * Litros útiles de un cubo (cámara de aire + cesta) para SVG, checklist y resumen.
+ * No reparte el total del sistema entre N cubos.
+ */
+function dwcLitrosUtilesPorCuboMultivalvula(cfg) {
+  cfg = cfg || state.configTorre || {};
+  if (typeof dwcGetOxigenacionDiseno !== 'function' || dwcGetOxigenacionDiseno(cfg) !== 'cubos_independientes') {
+    return null;
+  }
+  const explicit = Number(cfg.dwcLitrosUtilesPorSitioL);
+  if (Number.isFinite(explicit) && explicit >= 0.5) {
+    return Math.round(explicit * 10) / 10;
+  }
+  if (typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
+    const safe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
+    if (safe != null && Number.isFinite(safe) && safe > 0) {
+      return Math.round(safe * 10) / 10;
+    }
+  }
+  return null;
 }
 
 /**

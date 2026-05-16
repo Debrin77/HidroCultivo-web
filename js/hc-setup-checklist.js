@@ -219,6 +219,7 @@ function abrirChecklistDespuesDeElegirRuta(esPrimeraVez) {
         tCh === 'nft' ? '🪴 Recarga NFT — checklist'
         : tCh === 'dwc' ? (esKratkyTit ? '🫧 Recarga Kratky — checklist' : '🫧 Recarga DWC — checklist')
         : tCh === 'rdwc' ? '🔁 Recarga RDWC — checklist'
+        : tCh === 'srf' ? '🛶 Recarga SRF — checklist'
         : '🌿 Recarga — torre vertical — checklist';
       if (clRutaChecklist === 'primer_llenado') {
         clTit.textContent = titPrimer;
@@ -304,11 +305,15 @@ function generarPasosNutriente() {
     dwcOxMultNut && typeof dwcGetNumCubosIndependientes === 'function'
       ? dwcGetNumCubosIndependientes(cfg)
       : 0;
+  const volMcNut =
+    dwcOxMultNut && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
+      ? dwcLitrosUtilesPorCuboMultivalvula(cfg)
+      : vol;
   const notaDwcMulticuboNut =
-    dwcOxMultNut && vol != null && Number.isFinite(vol) && vol > 0
-      ? ' <strong>Por cubo (~' +
-        Math.round(vol * 10) / 10 +
-        ' L):</strong> repite estos ml y el orden de productos en <strong>cada</strong> depósito (' +
+    dwcOxMultNut && volMcNut != null && Number.isFinite(volMcNut) && volMcNut > 0
+      ? ' <strong>Por cubo (' +
+        Math.round(volMcNut * 10) / 10 +
+        ' L útiles):</strong> repite estos ml y el orden de productos en <strong>cada</strong> depósito (' +
         (nCubosNut > 0 ? nCubosNut + ' cubos' : 'todos los cubos') +
         '). No mezcles todo el volumen del sistema en un solo cubo. Si todos son iguales, puedes preparar la mezcla en un <strong>cubo auxiliar</strong> y repartir.'
       : dwcOxMultNut
@@ -476,13 +481,16 @@ function construirTextoChecklistPreliminar() {
   const esDwc = cfg.tipoInstalacion === 'dwc';
   const esRdwc = cfg.tipoInstalacion === 'rdwc';
   const esSrf = cfg.tipoInstalacion === 'srf';
+  const esSrfKratky =
+    esSrf && typeof srfNormalizeOxigenacionModo === 'function' && srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'kratky';
   const esDwcK =
     esDwc && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const esTorre = !esNft && !esDwc && !esRdwc && !esSrf;
   const desc = 'Preparar solución provisional en cubo (~5L) con agua destilada/ósmosis: ' +
     p1Partes.join(' + ') + '. Remover bien.' +
     (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '') +
-    (esDwc ? ' En DWC, humedece coronas/net cups o el arranque de cada maceta antes del vaciado prolongado.' : '');
+    (esDwc ? ' En DWC, humedece coronas/net cups o el arranque de cada maceta antes del vaciado prolongado.' : '') +
+    (esSrf ? ' En SRF, humedece net cups o coronas antes de llenar el estanque y colocar la balsa.' : '');
   const stockExtra = orden.slice(0, partes).join(', ');
   const phStockTxt =
     nut && (nut.id === 'campeador' || nut.id === 'campeador_hidro' || nut.id === 'campeador_fruto')
@@ -493,6 +501,7 @@ function construirTextoChecklistPreliminar() {
     ', ' + stockExtra + ', ' + phStockTxt + ', agua oxigenada 3%, esponja';
   if (esNft) p2 += ', cepillo suave o tubo flexible para canales, comprobación de pendiente';
   if (esDwc && !esDwcK) p2 += ', repuestos de difusor o piedra porosa, manguera de aire';
+  if (esSrf && !esSrfKratky) p2 += ', difusor o piedra porosa, manguera de aire';
   const ecO = getECOptimaTorre();
   const provMs = Math.min(1.2, Math.max(0.35, ((ecO.min + ecO.max) / 2000) * 0.06));
   return { descP1: desc, descP2: p2, placeholderProv: provMs.toFixed(2) };
@@ -505,15 +514,16 @@ function construirTextoChecklistPreliminar() {
 function checklistInstalacionCompletaParaRecarga() {
   const cfg = state.configTorre;
   if (!cfg || typeof cfg !== 'object') return false;
+  const tipo = cfg.tipoInstalacion;
   const vol =
     typeof litrosDepositoParaChecklist === 'function'
       ? litrosDepositoParaChecklist(cfg)
       : Number(cfg.volDeposito);
-  if (!Number.isFinite(vol) || vol < 1 || vol > 800) return false;
+  const volMaxTipo = tipo === 'srf' ? 5000 : 800;
+  if (!Number.isFinite(vol) || vol < 1 || vol > volMaxTipo) return false;
   const vm = Number(cfg.volMezclaLitros);
   if (Number.isFinite(vm) && vm > 0 && (vm > vol + 0.01 || vm < 0.5)) return false;
   if (!cfg.nutriente || !NUTRIENTES_DB.some(n => n.id === cfg.nutriente)) return false;
-  const tipo = cfg.tipoInstalacion;
   if (tipo !== 'torre' && tipo !== 'nft' && tipo !== 'dwc' && tipo !== 'rdwc' && tipo !== 'srf') return false;
 
   if (cfg.checklistInstalacionConfirmada === true) return true;
@@ -945,8 +955,9 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     const nutId = document.getElementById('cldNutriente').value;
     const mezStr = String(document.getElementById('cldVolMezcla')?.value || '').trim();
     const volMez = parseFloat(String(mezStr).replace(',', '.'));
-    if (!Number.isFinite(vol) || vol < 1 || vol > 600) {
-      showToast('Indica un volumen de depósito entre 1 y 600 L', true);
+    const volMaxOk = tipo === 'srf' ? 5000 : 600;
+    if (!Number.isFinite(vol) || vol < 1 || vol > volMaxOk) {
+      showToast('Indica un volumen de depósito entre 1 y ' + volMaxOk + ' L', true);
       return;
     }
     let mezOpt = null;
@@ -980,6 +991,10 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       lab.textContent = 'Litros del depósito de control (L)';
       hint.textContent =
         'Suele figurar en la placa del kit: reservorio donde preparas la mezcla. Afinar cubos y circuito en Cultivo e instalación.';
+    } else if (tipoSel === 'srf') {
+      lab.textContent = 'Litros útiles del estanque SRF (L)';
+      hint.textContent =
+        'Volumen de solución del estanque común (L×A×P o medido). Puede ser grande; afinar balsa y plantas en Cultivo e instalación.';
     } else {
       lab.textContent = 'Capacidad máxima del depósito de mezcla (L)';
       hint.textContent =
@@ -1076,8 +1091,8 @@ function getCLPasos() {
       ? dwcGetNumCubosIndependientes(cfg)
       : 0;
   const volPorCuboMc =
-    dwcOxMult && typeof getVolumenNutrientesLitros === 'function'
-      ? getVolumenNutrientesLitros(cfg)
+    dwcOxMult && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
+      ? dwcLitrosUtilesPorCuboMultivalvula(cfg)
       : null;
   const volTotalMc =
     dwcOxMult && typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
@@ -1087,14 +1102,11 @@ function getCLPasos() {
       : '';
   const notaDwcMulticuboNut =
     dwcOxMult && volPorCuboMc != null && Number.isFinite(volPorCuboMc) && volPorCuboMc > 0
-      ? ' Los ml son para <strong>~' +
+      ? ' Los ml son para <strong>' +
         Math.round(volPorCuboMc * 10) / 10 +
-        ' L en <strong>un cubo</strong> — repite en los ' +
+        ' L en un cubo</strong> (cámara de aire). Repite en los ' +
         (nCubosMc > 0 ? nCubosMc : 'N') +
-        ' cubos' +
-        (volTotalMc != null && Number.isFinite(volTotalMc) && volTotalMc > volPorCuboMc + 0.05
-          ? ' (referencia total ~' + Math.round(volTotalMc * 10) / 10 + ' L).' : '.') +
-        ' Si todos tienen el mismo volumen, puedes mezclar una vez en un <strong>cubo auxiliar</strong> y repartir.'
+        ' cubos antes de dar por cerrado el llenado. Misma mezcla en un <strong>cubo auxiliar</strong> del mismo volumen si todos son iguales.'
       : dwcOxMult
         ? ' Repite el mismo orden (agua → CalMag → nutrientes → pH) en <strong>cada cubo</strong>; los ml no son para toda la suma de litros.'
         : '';
@@ -1154,25 +1166,36 @@ function getCLPasos() {
 
   const aguaPrimer = cfg.agua || state.configAgua || 'destilada';
   let vMaxRawPrimer = Number(cfg.volDeposito);
+  if (dwcOxMult && volPorCuboMc != null && Number.isFinite(volPorCuboMc) && volPorCuboMc > 0) {
+    vMaxRawPrimer = volPorCuboMc;
+  }
   if (esRdwc && (!Number.isFinite(vMaxRawPrimer) || vMaxRawPrimer <= 0)) {
     if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
     vMaxRawPrimer = Number(cfg.rdwcControlVolL);
   }
   const volMaxPrimerIni = Number.isFinite(vMaxRawPrimer) && vMaxRawPrimer > 0 ? Math.round(vMaxRawPrimer) : 20;
-  const pc1SeccionTitulo = esRdwc ? '⚙️ Depósito de control, agua y nutriente' : '⚙️ Depósito, agua y nutriente';
+  const pc1SeccionTitulo = esRdwc
+    ? '⚙️ Depósito de control, agua y nutriente'
+    : esSrf
+      ? '⚙️ Estanque SRF, agua y nutriente'
+      : '⚙️ Depósito, agua y nutriente';
   const pc1DescPaso = esRdwc
     ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
+    : esSrf
+      ? 'Litros útiles del <strong>estanque común</strong> (geométricos o medidos), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Todos los huecos de la balsa comparten la misma solución; los <strong>ml del paso 4</strong> usan ese volumen.'
     : esDwc
       ? (dwcOxMult
-          ? 'Aquí anotas <strong>litros totales</strong> del sistema (orientativo). Los <strong>ml del paso 4</strong> salen de los <strong>litros de un cubo</strong> — configúralo en Cultivo (cuántos cubos + medidas de un cubo típico).'
+          ? 'Indica los <strong>litros útiles de un cubo</strong> (solución con cámara de aire bajo la cesta). Los <strong>ml del paso 4</strong> salen de ese volumen: <strong>repites en cada cubo</strong> y luego pones el aireador en marcha.'
           : 'Capacidad del depósito (geométrica o etiqueta), agua y nutriente. Los <strong>ml del paso 4</strong> usan el volumen <strong>orientativo</strong> con cámara de aire y cesta (como en Cultivo e instalación). El siguiente campo es <strong>solo</strong> si vas a llenar <strong>menos</strong> litros que ese orientativo; déjalo vacío si no.')
       : 'Capacidad máxima del depósito, litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. El volumen y la marca alimentan los cálculos de ml del paso 4.';
   const pc1LabelVolMax = esRdwc
     ? 'Litros depósito de control (L)'
-    : dwcOxMult
-      ? 'Litros totales ref. (suma cubos, L)'
-      : 'Capacidad máx. depósito (L)';
-  const pc1PhVolMax = esRdwc ? '40' : '20';
+    : esSrf
+      ? 'Litros útiles estanque (L)'
+      : dwcOxMult
+        ? 'Litros útiles por cubo (L)'
+        : 'Capacidad máx. depósito (L)';
+  const pc1PhVolMax = esRdwc ? '40' : esSrf ? '500' : '20';
   const pc1LabelVolMez = esRdwc
     ? 'Litros de mezcla en reservorio (opcional)'
     : dwcOxMult
@@ -1204,23 +1227,27 @@ function getCLPasos() {
       desc: pc1DescPaso,
       nota: 'El <strong>rango de EC</strong> por cultivos lo marcas en <strong>Cultivo e instalación</strong> (grupos de planta); en <strong>PC·2</strong> pones el <strong>EC numérico</strong> (µS/cm) objetivo de esta mezcla.' +
         (dwcOxMult
-          ? ' En varios cubos, los litros de arriba son <strong>referencia del conjunto</strong>; la mezcla nutritiva va <strong>cubo a cubo</strong> (ver guía abajo).'
+          ? ' En multiválvula, el número de arriba es <strong>por cubo</strong>, no la suma del sistema. Mezcla y dosifica <strong>cubo a cubo</strong> (ver guía abajo).'
           : esDwc
             ? ' En DWC, estos litros son de <strong>solución útil</strong> (nutrientes), no la geometría de la tapa para cestas. Si el depósito es <strong>cilíndrico</strong>, el volumen sale de <strong>Ø interior</strong> y <strong>profundidad/altura útil del líquido</strong> (Cultivo e instalación / asistente); el llenado seguro sigue usando la cesta y el sustrato. Si es <strong>troncopiramidal</strong>, indica el volumen útil medido.'
             : esRdwc
               ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí añades los productos y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado. Eso no significa echar todo el volumen total de golpe en el reservorio: primero se ceba y luego se completa el circuito.'
-              : ''),
+              : esSrf
+                ? ' En SRF todos los huecos comparten el <strong>mismo estanque</strong>: mide EC/pH en la solución común con aireador en marcha (o superficie estable en Kratky). El volumen orientativo sale de L×A×P o del litraje medido en Cultivo e instalación.'
+                : ''),
       extraHtml:
         (clGuiaMcHtml || '') +
         '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
         '<p class="cl-tabla-cultivos-hint">Ventana de consulta: ciérrala y sigue con el checklist.</p>',
       campos: [
-        { id: 'clPrimerVolMax', label: pc1LabelVolMax, type: 'number', step: '1', placeholder: pc1PhVolMax,
+        { id: 'clPrimerVolMax', label: pc1LabelVolMax, type: 'number', step: '0.1', placeholder: pc1PhVolMax,
           value: String(volMaxPrimerIni),
           _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
-        { id: 'clPrimerVolMezcla', label: pc1LabelVolMez, type: 'number', step: '0.1', placeholder: pc1PhVolMez,
+        ...(dwcOxMult ? [] : [{
+          id: 'clPrimerVolMezcla', label: pc1LabelVolMez, type: 'number', step: '0.1', placeholder: pc1PhVolMez,
           value: mezPrimerVal,
-          _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
+          _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()',
+        }]),
         { id: 'clPrimerAgua', label: 'Agua para la mezcla', type: 'select', clase: 'wide',
           opcionesVal: [
             { value: 'destilada', label: 'Destilada', selected: aguaPrimer === 'destilada' },
@@ -1283,7 +1310,7 @@ function getCLPasos() {
           seccion: '💨 DWC — Bomba de aire y difusores',
           paso: 'D·0',
           desc: dwcOxMult
-            ? 'Dimensiona la <strong>bomba multivalvula</strong> (caudal total) y <strong>una línea de aire por cubo</strong>. En PC·1 anotas litros de referencia del sistema; en el paso 4 los <strong>ml son por cubo</strong>.'
+            ? 'Enciende la <strong>bomba multiválvula</strong> (una línea de aire por cubo). En PC·1 confirmaste <strong>litros útiles por cubo</strong>; en el paso 4 los <strong>ml son para un cubo</strong> — repite en cada uno.'
             : 'Dimensiona el <strong>aireador</strong> y los <strong>difusores</strong> según los <strong>litros reales</strong> de solución (mezcla o depósito) y el <strong>número de cestas</strong> de tu rejilla. El recuadro inferior usa la misma lógica que la pestaña Cultivo e instalación.',
           nota: dwcOxMult
             ? 'Caudal de la <strong>bomba en conjunto</strong> (suma de cubos). Cada salida: difusor al fondo. La mezcla va <strong>en cada cubo</strong>, no en un depósito común.'
@@ -1430,12 +1457,12 @@ function getCLPasos() {
     ? [
         {
           id: 'S0',
-          seccion: esSrfKratky ? '🛶 SRF · Kratky' : '🛶 SRF · Aireación del estanque',
+          seccion: srfKratky ? '🛶 SRF · Kratky' : '🛶 SRF · Aireación del estanque',
           paso: 'S·0',
-          desc: esSrfKratky
+          desc: srfKratky
             ? 'Comprueba la <strong>cámara de aire</strong> bajo la balsa (~' + (cfg.srfKratkyGapCm || 8) + ' cm) y que el nivel de solución no cubra esa zona.'
             : 'Enciende la <strong>bomba de aire</strong> y los difusores en el estanque común antes de cerrar la recarga.',
-          nota: esSrfKratky
+          nota: srfKratky
             ? 'Sin aireador: no llenes por encima de la base del sustrato; prioriza agua fresca (17–21 °C).'
             : (function () {
                 const air = typeof srfRecomendarAireLpm === 'function' ? srfRecomendarAireLpm(cfg) : { reco: 8 };
@@ -1443,7 +1470,7 @@ function getCLPasos() {
                 return 'Referencia orientativa: ~' + lpm + ' L/min para este estanque (DO >4–5 mg/L).';
               })(),
         },
-        ...(cfg.srfCirculante && !esSrfKratky
+        ...(cfg.srfCirculante && !srfKratky
           ? [{
               id: 'S0b',
               seccion: null,
@@ -2247,21 +2274,37 @@ function onChecklistRecargaPrefsChanged() {
 function onPrimerLlenadoVolDesdeChecklist() {
   initTorres();
   if (!state.configTorre) state.configTorre = {};
+  const cfg = state.configTorre;
+  const esMc =
+    cfg.tipoInstalacion === 'dwc' &&
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
   const elM = document.getElementById('clPrimerVolMax');
   const elZ = document.getElementById('clPrimerVolMezcla');
   let vMax = parseFloat(String(elM && elM.value).replace(',', '.'));
   if (!Number.isFinite(vMax)) vMax = VOL_OBJETIVO;
-  vMax = Math.round(Math.max(1, Math.min(800, vMax)));
+  vMax = Math.round(Math.max(0.5, Math.min(800, vMax)) * 10) / 10;
   if (elM) elM.value = String(vMax);
-  state.configTorre.volDeposito = vMax;
-  const rawMez = elZ ? String(elZ.value || '').trim() : '';
-  const m = parseFloat(rawMez.replace(',', '.'));
-  if (rawMez !== '' && Number.isFinite(m) && m > 0 && m < vMax - 0.02) {
-    state.configTorre.volMezclaLitros = Math.min(vMax, Math.max(0.5, Math.round(m * 10) / 10));
-    if (elZ) elZ.value = String(state.configTorre.volMezclaLitros);
-  } else {
-    delete state.configTorre.volMezclaLitros;
+  if (esMc) {
+    cfg.dwcLitrosUtilesPorSitioL = vMax;
+    const nCub =
+      typeof dwcGetNumCubosIndependientes === 'function' ? dwcGetNumCubosIndependientes(cfg) : 1;
+    cfg.volDeposito = Math.round(vMax * Math.max(1, nCub) * 10) / 10;
+    delete cfg.volMezclaLitros;
     if (elZ) elZ.value = '';
+  } else {
+    state.configTorre.volDeposito = vMax;
+  }
+  if (!esMc) {
+    const rawMez = elZ ? String(elZ.value || '').trim() : '';
+    const m = parseFloat(rawMez.replace(',', '.'));
+    if (rawMez !== '' && Number.isFinite(m) && m > 0 && m < vMax - 0.02) {
+      state.configTorre.volMezclaLitros = Math.min(vMax, Math.max(0.5, Math.round(m * 10) / 10));
+      if (elZ) elZ.value = String(state.configTorre.volMezclaLitros);
+    } else {
+      delete state.configTorre.volMezclaLitros;
+      if (elZ) elZ.value = '';
+    }
   }
   guardarEstadoTorreActual();
   saveState();
@@ -2461,16 +2504,23 @@ function renderChecklistHeaderSummary() {
   }
   const sum = document.getElementById('checklistSummary');
   if (!sum) return;
-  const volPorCuboHdr = dwcOxMultHdr ? vol : null;
+  const volPorCuboHdr =
+    dwcOxMultHdr && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
+      ? dwcLitrosUtilesPorCuboMultivalvula(cfg)
+      : null;
   const mezclaResumen =
     dwcOxMultHdr && volPorCuboHdr != null && Number.isFinite(volPorCuboHdr) && volPorCuboHdr > 0
-      ? '~' + Math.round(volPorCuboHdr * 10) / 10 + ' L/cubo' + (nCubosMcHdr > 0 ? ' · ' + nCubosMcHdr + ' cubos' : '')
-      : clFmtLitros(vol);
+      ? Math.round(volPorCuboHdr * 10) / 10 +
+        ' L/cubo (según tu sistema)' +
+        (nCubosMcHdr > 0 ? ' · ' + nCubosMcHdr + ' cubos' : '')
+      : dwcOxMultHdr
+        ? 'Indica medidas del cubo en Cultivo'
+        : clFmtLitros(vol);
   const compact = [ruta, sistema, mezclaResumen].filter(Boolean).join(' · ');
   const cards = [
     { k: 'Ruta', v: ruta },
     { k: 'Sistema', v: sistema },
-    { k: dwcOxMultHdr ? 'Mezcla (por cubo)' : 'Mezcla', v: mezclaResumen },
+    { k: dwcOxMultHdr ? 'Volumen por cubo' : 'Mezcla', v: mezclaResumen },
     { k: 'Nutriente', v: nut ? nut.nombre : 'Sin definir' },
     { k: 'Objetivo', v: clFmtEc(ecObj) + ' · pH ' + clFmtPhRango(phR) },
     { k: 'Diseño', v: diseno || '—' },

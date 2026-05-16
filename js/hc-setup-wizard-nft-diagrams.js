@@ -685,6 +685,47 @@ function renderTorreSistemaResumenTabla(cfg) {
       if (eqArr.includes('difusor')) bits.push('Difusor');
       if (bits.length) rows.push(['En el esquema', bits.join(' · ')]);
     }
+  } else if (cfg.tipoInstalacion === 'srf') {
+    const cSrf = typeof srfEnsureConfigDefaults === 'function' ? srfEnsureConfigDefaults(Object.assign({}, cfg)) : cfg;
+    const nPl = typeof srfGetNumPlantas === 'function' ? srfGetNumPlantas(cSrf) : (cSrf.numNiveles || 1) * (cSrf.numCestas || 1);
+    const grid = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(cSrf) : { rows: cSrf.numNiveles || 1, cols: cSrf.numCestas || 1 };
+    const cap = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cSrf) : null;
+    const vol = getVolumenDepositoMaxLitros(cSrf);
+    const vMez = getVolumenMezclaLitros(cSrf);
+    const ox =
+      typeof srfNormalizeOxigenacionModo === 'function'
+        ? srfNormalizeOxigenacionModo(cSrf.srfOxigenacionModo)
+        : 'aireador';
+    if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
+    rows.push(['Cultivo e instalación', 'SRF (raíz flotante)']);
+    rows.push(['Plantas en balsa', String(nPl)]);
+    rows.push(['Disposición', grid.rows + ' fila(s) × ' + grid.cols + ' plantas/fila']);
+    rows.push([
+      'Estanque (L × A × P)',
+      escHtmlUi(
+        (cSrf.srfCanalLargoCm != null ? cSrf.srfCanalLargoCm : '—') +
+          ' × ' +
+          (cSrf.srfCanalAnchoCm != null ? cSrf.srfCanalAnchoCm : '—') +
+          ' × ' +
+          (cSrf.srfProfundidadCm != null ? cSrf.srfProfundidadCm : '—') +
+          ' cm'
+      ),
+    ]);
+    rows.push([
+      'Volumen útil',
+      (cap != null ? cap + ' L' : '—') +
+        (vMez != null && vol != null && vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : ''),
+    ]);
+    rows.push([
+      'Oxigenación',
+      escHtmlUi(ox === 'kratky' ? 'Kratky · cámara ~' + (cSrf.srfKratkyGapCm || 8) + ' cm' : 'Aireador ~' + (cSrf.srfAirLpm || 8) + ' L/min'),
+    ]);
+    if (cSrf.srfCirculante && ox !== 'kratky') {
+      rows.push(['Recirculación opcional', escHtmlUi('~' + (cSrf.srfRecircLh || 400) + ' L/h')]);
+    }
+    if (cSrf.srfNetPotMm != null) {
+      rows.push(['Net pot', escHtmlUi('Ø ' + cSrf.srfNetPotMm + ' mm')]);
+    }
   } else {
     const N = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || (typeof NUM_NIVELES !== 'undefined' ? NUM_NIVELES : 4);
     const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || (typeof NUM_CESTAS !== 'undefined' ? NUM_CESTAS : 5);
@@ -830,7 +871,9 @@ function renderTorreSistemaResumenTabla(cfg) {
 
 function torreSistemaResumenColapsoStorageKey() {
   const t = (state.configTorre || {}).tipoInstalacion;
-  return t === 'dwc' ? 'uiTorreSistemaResumenDwcColapsado' : 'uiTorreSistemaResumenNftColapsado';
+  if (t === 'dwc') return 'uiTorreSistemaResumenDwcColapsado';
+  if (t === 'srf') return 'uiTorreSistemaResumenSrfColapsado';
+  return 'uiTorreSistemaResumenNftColapsado';
 }
 
 function applyTorreSistemaResumenCollapseUI() {

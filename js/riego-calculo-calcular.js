@@ -356,17 +356,21 @@ async function calcularRiego(opts = {}) {
     const esNftRiego = tipoRiego === 'nft';
     const esDwcRiego = tipoRiego === 'dwc';
     const esRdwcRiego = tipoRiego === 'rdwc';
-    if (esNftRiego || esDwcRiego || esRdwcRiego) {
+    const esSrfRiego = tipoRiego === 'srf';
+    if (esNftRiego || esDwcRiego || esRdwcRiego || esSrfRiego) {
       const panelNft = document.getElementById('riegoNftPanel');
       const panelDwc = document.getElementById('riegoDwcPanel');
       const panelRdwc = document.getElementById('riegoRdwcPanel');
+      const panelSrf = document.getElementById('riegoSrfPanel');
       const climaNft = document.getElementById('riegoClimaUsadoNft');
       const climaDwc = document.getElementById('riegoClimaUsadoDwc');
       const climaRdwc = document.getElementById('riegoClimaUsadoRdwc');
+      const climaSrf = document.getElementById('riegoClimaUsadoSrf');
       const blockTorre = document.getElementById('riegoTorreResultBlock');
       if (panelNft) panelNft.classList.toggle('setup-hidden', !esNftRiego);
       if (panelDwc) panelDwc.classList.toggle('setup-hidden', !esDwcRiego);
       if (panelRdwc) panelRdwc.classList.toggle('setup-hidden', !esRdwcRiego);
+      if (panelSrf) panelSrf.classList.toggle('setup-hidden', !esSrfRiego);
       if (blockTorre) blockTorre.classList.add('setup-hidden');
 
       const precipMmN = Math.round((Number(daily.precipitation_sum?.[idx]) || 0) * 10) / 10;
@@ -405,6 +409,10 @@ async function calcularRiego(opts = {}) {
         climaRdwc.innerHTML = bloqueClima;
         climaRdwc.classList.remove('setup-hidden');
       }
+      if (esSrfRiego && climaSrf) {
+        climaSrf.innerHTML = bloqueClima;
+        climaSrf.classList.remove('setup-hidden');
+      }
 
       ['resMinON', 'resMinOFF', 'resCiclos', 'resTotalON', 'resEspaciado', 'resDutyCiclo', 'resMedioON', 'resMedioOFF', 'resMedioCiclos', 'resMedioTotal', 'resMedioDutyCiclo', 'resNocON', 'resNocOFF', 'resNocCiclos', 'resNocTotal', 'resNocEspaciado', 'resNocDuty'].forEach(id => {
         const el = document.getElementById(id);
@@ -433,7 +441,9 @@ async function calcularRiego(opts = {}) {
           ? '🪴 NFT: riego continuo — no hay bloque de intensidad solar por pulsos; el clima sirve de referencia para vigilar estrés.'
           : esRdwcRiego
             ? '🔁 RDWC: recirculación y aireación continuas — no es riego por goteo ni por impulsos como en torre; el clima solo orienta el follaje.'
-            : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.') + pieMeteo;
+            : esSrfRiego
+              ? '🛶 SRF: estanque común con aireación (o Kratky) — no hay riego por pulsos como en torre; el clima orienta toldo y estrés del follaje.'
+              : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.') + pieMeteo;
       }
       try {
         actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
@@ -446,10 +456,12 @@ async function calcularRiego(opts = {}) {
     const panelNftT = document.getElementById('riegoNftPanel');
     const panelDwcT = document.getElementById('riegoDwcPanel');
     const panelRdwcT = document.getElementById('riegoRdwcPanel');
+    const panelSrfT = document.getElementById('riegoSrfPanel');
     const blockTorreT = document.getElementById('riegoTorreResultBlock');
     if (panelNftT) panelNftT.classList.add('setup-hidden');
     if (panelDwcT) panelDwcT.classList.add('setup-hidden');
     if (panelRdwcT) panelRdwcT.classList.add('setup-hidden');
+    if (panelSrfT) panelSrfT.classList.add('setup-hidden');
     if (blockTorreT) blockTorreT.classList.remove('setup-hidden');
 
     const ciclo = riegoMinutosDesdeDemanda(

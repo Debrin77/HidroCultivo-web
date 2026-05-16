@@ -256,6 +256,34 @@ function generarEventos(fecha) {
     }
   }
 
+  // ── Mantenimiento específico SRF ────────────────────────────────────────
+  if (tCal === 'srf') {
+    if (diffDias >= 0 && diffDias % 7 === 0) {
+      eventos.push({
+        tipo: 'control',
+        icono: '🛶',
+        titulo: 'Revisión semanal SRF',
+        desc: 'Comprobar nivel del estanque, estabilidad de la balsa y que cada net pot mantenga contacto con la solución.',
+      });
+    }
+    if (diffDias >= 0 && diffDias % 14 === 0) {
+      eventos.push({
+        tipo: 'control',
+        icono: '💨',
+        titulo: 'Aireación SRF',
+        desc: 'Inspeccionar difusores y mangueras de aire: burbujeo homogéneo en todo el estanque, sin obstrucciones.',
+      });
+    }
+    if (diffDias >= 0 && diffDias % 28 === 0) {
+      eventos.push({
+        tipo: 'recarga',
+        icono: '🧪',
+        titulo: 'SRF — valorar recambio parcial o total',
+        desc: 'Con 4 semanas de uso, revisar estabilidad EC/pH y decidir recambio parcial o recarga completa según deriva y carga radicular.',
+      });
+    }
+  }
+
   // ── Mantenimiento específico RDWC ───────────────────────────────────────
   if (tCal === 'rdwc') {
     if (diffDias >= 0 && diffDias % 7 === 0) {

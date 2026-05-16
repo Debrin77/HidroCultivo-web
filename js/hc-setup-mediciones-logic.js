@@ -213,6 +213,12 @@ function getVolumenNutrientesLitros(cfg) {
     typeof dwcGetOxigenacionDiseno === 'function' &&
     dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes'
   ) {
+    if (typeof dwcLitrosUtilesPorCuboMultivalvula === 'function') {
+      const vCubo = dwcLitrosUtilesPorCuboMultivalvula(cfg);
+      if (vCubo != null && Number.isFinite(vCubo) && vCubo > 0) {
+        return vCubo;
+      }
+    }
     const volTotal = getVolumenMezclaLitros(cfg);
     const nCub =
       typeof dwcGetNumCubosIndependientes === 'function' ? dwcGetNumCubosIndependientes(cfg) : 0;

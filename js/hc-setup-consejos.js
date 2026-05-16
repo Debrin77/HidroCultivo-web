@@ -70,6 +70,11 @@ const CONSEJOS_DATA = {
     consejos: [],
     soloRdwcDoc: true,
   },
+  srf: {
+    nombre: '🛶 SRF', color: '#0369a1', bg: 'rgba(3,105,161,0.12)',
+    consejos: [],
+    soloSrfDoc: true,
+  },
   clima: {
     nombre: '🌡️ Clima', color: '#b45309', bg: 'rgba(217,119,6,0.1)',
     consejos: [
@@ -230,7 +235,7 @@ function renderDiagnostico() {
 }
 
 let consejoCatActiva = 'cultivo';
-const CONSEJOS_CAT_ORDEN_UI = ['cultivo', 'problemas', 'agua', 'clima', 'ecph', 'nft', 'dwc', 'rdwc', 'variedades'];
+const CONSEJOS_CAT_ORDEN_UI = ['cultivo', 'problemas', 'agua', 'clima', 'ecph', 'nft', 'dwc', 'rdwc', 'srf', 'variedades'];
 
 function getConsejosModoUi(cfg) {
   const c = cfg || state.configTorre || {};
@@ -704,7 +709,7 @@ function buildHtmlTablaConsejosPersonal() {
         <div class="consejo-titulo consejo-titulo--mb6">Tu tabla (volumen a medida)</div>
         <div class="consejo-ecph-note">
           Al <strong>completar el checklist de recarga</strong> (no es la primera configuración), puedes guardar aquí el nutriente y los litros del depósito.
-          Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen, para el <strong>sistema activo</strong> (Torre, NFT o DWC) en la pestaña Cultivo e instalación.
+          Verás la <strong>misma tabla</strong> que arriba (solo tu marca) pero <strong>escalada</strong> a ese volumen, para el <strong>sistema activo</strong> (torre, NFT, DWC, RDWC o SRF) en la pestaña Cultivo e instalación.
         </div>
       </div>`;
   }
@@ -891,6 +896,7 @@ function renderConsejos() {
       if (key === 'nft') return tipoInst === 'nft';
       if (key === 'dwc') return tipoInst === 'dwc';
       if (key === 'rdwc') return tipoInst === 'rdwc';
+      if (key === 'srf') return tipoInst === 'srf';
       return true;
     });
   }
@@ -1010,7 +1016,11 @@ function htmlConsejoCard(cat, c) {
 function buildConsejosNutrienteChecklistResumenHtml(nut, cfg) {
   const t = typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : 'torre';
   const sysLargo =
-    t === 'nft' ? 'NFT — canales en recirculación' : t === 'dwc' ? 'DWC — raíces en el depósito' : 'Torre vertical';
+    t === 'nft' ? 'NFT — canales en recirculación'
+    : t === 'dwc' ? 'DWC — raíces en el depósito'
+    : t === 'rdwc' ? 'RDWC — recirculación compartida'
+    : t === 'srf' ? 'SRF — raíz flotante en estanque común'
+    : 'Torre vertical';
   const sysBreve =
     typeof etiquetaSistemaHidroponicoBreve === 'function' ? etiquetaSistemaHidroponicoBreve(cfg) : t === 'nft' ? 'NFT' : t === 'dwc' ? 'DWC' : 'Torre';
 
@@ -1840,6 +1850,52 @@ function buildConsejosDwcDifusorBloque() {
   });
 }
 
+function buildConsejosSrf() {
+  const cat = CONSEJOS_DATA.srf;
+  const cfg = state.configTorre || {};
+  const cap =
+    typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(cfg) : null;
+  const n = typeof srfGetNumPlantas === 'function' ? srfGetNumPlantas(cfg) : '—';
+  const kratky =
+    typeof srfNormalizeOxigenacionModo === 'function' &&
+    srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'kratky';
+  const intro = htmlConsejoCard(cat, {
+    icono: '🛶',
+    titulo: 'SRF / DFT en esta app',
+    texto:
+      '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> las plantas van en una <strong>balsa flotante</strong> sobre un <strong>estanque común</strong>; todas comparten la misma EC y el mismo pH.</p>' +
+      '<p class="consejo-p consejo-p--tight">Tu instalación: <strong>' +
+      n +
+      ' plantas</strong>' +
+      (cap != null ? ' · estanque ~<strong>' + cap + ' L</strong>' : '') +
+      ' · modo <strong>' +
+      (kratky ? 'Kratky (cámara de aire)' : 'aireador') +
+      '</strong>.</p>' +
+      '<p class="consejo-p consejo-p--tight">Para dosis en recarga, la app usa los <strong>litros útiles del estanque</strong> (L×A×P o volumen medido en Cultivo e instalación).</p>',
+    alerta: {
+      tipo: 'info',
+      txt: 'ℹ️ Solo mezcla cultivos compatibles en el mismo estanque (como en un DWC compartido).',
+    },
+  });
+  const tres = htmlConsejoCard(cat, {
+    icono: '✅',
+    titulo: 'Montaje: 3 comprobaciones rápidas',
+    texto:
+      '<p class="consejo-p consejo-p--mb10">Antes de plantar o tras ampliar el estanque:</p>' +
+      '<ol class="consejo-proto-ol">' +
+      '<li class="consejo-proto-li"><strong>Bomba de aire</strong> por encima del nivel máximo de la solución (evita reflujo por sifón).</li>' +
+      '<li class="consejo-proto-li"><strong>Balsa:</strong> huecos alineados, net pots estables y sin hundir la placa por exceso de peso en un solo punto.</li>' +
+      '<li class="consejo-proto-li"><strong>Nivel:</strong> en Kratky deja cámara de aire bajo la balsa; con aireador, superficie activa sin cubrir la base del sustrato.</li>' +
+      '</ol>',
+    alerta: {
+      tipo: 'ok',
+      txt: '✅ En el esquema, toca la balsa o el estanque para repasar oxigenación y disposición de plantas.',
+    },
+  });
+  const netPot = buildConsejosDwcNetPotRefTabla(CONSEJOS_DATA.srf);
+  return intro + tres + netPot;
+}
+
 function buildConsejosRdwc() {
   const cat = CONSEJOS_DATA.rdwc;
   const intro = htmlConsejoCard(cat, {
@@ -2114,6 +2170,12 @@ function renderConsejosLista() {
 
   if (consejoCatActiva === 'rdwc') {
     lista.innerHTML = buildConsejosRdwc();
+    plegarTodosDesplegablesConsejosLista(lista);
+    return;
+  }
+
+  if (consejoCatActiva === 'srf') {
+    lista.innerHTML = buildConsejosSrf();
     plegarTodosDesplegablesConsejosLista(lista);
     return;
   }

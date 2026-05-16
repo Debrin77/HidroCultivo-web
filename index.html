@@ -14,8 +14,8 @@
 <meta name="apple-mobile-web-app-title" content="HidroCultivo">
 
 <!-- SEO y descripción -->
-<meta name="description" content="HidroCultivo — Hidroponía inteligente: varias instalaciones (torre, NFT, DWC), EC, pH, riego y clima por sistema.">
-<meta name="keywords" content="HidroCultivo, hidropónico, torre vertical, NFT, DWC, cultivo, EC, pH, riego, VPD, lechugas">
+<meta name="description" content="HidroCultivo — Hidroponía inteligente: varias instalaciones (torre, NFT, DWC, RDWC, SRF), EC, pH, riego y clima por sistema.">
+<meta name="keywords" content="HidroCultivo, hidropónico, torre vertical, NFT, DWC, RDWC, SRF, cultivo, EC, pH, riego, VPD, lechugas">
 <meta name="author" content="HidroCultivo">
 
 <!-- Open Graph (para compartir en redes) -->
@@ -2131,6 +2131,20 @@
           </div>
         </div>
 
+        <div id="riegoSrfPanel" class="riego-panel-dwc setup-hidden">
+          <div class="riego-panel-inner">
+            <div class="riego-panel-kicker riego-panel-kicker--dwc">
+              Estanque común (SRF / DFT)
+            </div>
+            <p class="riego-panel-lead">
+              En <strong>SRF</strong> (raíz flotante) todas las plantas comparten un <strong>estanque único</strong> bajo la balsa; la solución no se riega por pulsos como en torre vertical.
+              Vigila <strong>oxigenación</strong> (aireador o cámara de aire en Kratky), temperatura del líquido y nivel respecto a la balsa. Aquí solo tienes <strong>referencia del clima</strong> para toldo y estrés del follaje.
+            </p>
+            <div class="card-title riego-card-title-sm"><svg class="hc-ico hc-ico--title-sm" aria-hidden="true" focusable="false"><use href="#hc-i-cloud-sun"/></svg> Datos climáticos</div>
+            <div id="riegoClimaUsadoSrf" class="riego-clima-ref setup-hidden"></div>
+          </div>
+        </div>
+
         <div id="riegoTorreResultBlock">
         <div id="riegoCiclosTorreWrap">
         <div class="riego-prog-card riego-prog-card--slate">
@@ -2647,7 +2661,7 @@
     <p class="welcome-lead">HIDROCultivo centraliza tu operativa diaria para decidir mejor: <strong>configuración del sistema</strong>, <strong>asistente de mediciones</strong>, <strong>herramientas PRO</strong>, <strong>cálculo por cultivo</strong>, <strong>nutrientes populares en hidroponía</strong> y <strong>meteorología local</strong> en una experiencia única.</p>
     <div class="welcome-kpis" aria-label="Resumen de utilidad">
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-grid"/></svg><strong>1</strong> panel operativo</span>
-      <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-layers"/></svg><strong>3</strong> sistemas hidropónicos</span>
+      <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-layers"/></svg><strong>5</strong> sistemas hidropónicos</span>
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-bolt"/></svg><strong>8</strong> módulos clave</span>
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-check"/></svg>Checklist guiado</span>
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-flask"/></svg>Nutriente recomendado por cultivo y fase</span>
@@ -2656,7 +2670,7 @@
       <article class="welcome-value-card welcome-value-card--green" role="listitem">
         <div class="welcome-value-icon" aria-hidden="true">⚙️</div>
         <h3>Configuración de sistemas</h3>
-        <p>Torre, NFT o DWC con estructura consistente desde el primer día.</p>
+        <p>Torre, NFT, DWC, RDWC o SRF con estructura consistente desde el primer día.</p>
       </article>
       <article class="welcome-value-card welcome-value-card--blue" role="listitem">
         <div class="welcome-value-icon" aria-hidden="true">📝</div>
@@ -4022,7 +4036,7 @@
     <div class="modal-handle"></div>
     <div class="modal-title" id="apunteModalTitle"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-note"/></svg> Apunte en el registro</div>
     <p class="apunte-modal-intro">
-      Se guarda en la <strong>instalación activa</strong> (Torre, NFT o DWC). Indica al menos <strong>texto</strong> o <strong>un valor numérico</strong>.
+      Se guarda en la <strong>instalación activa</strong> (torre, NFT, DWC, RDWC o SRF). Indica al menos <strong>texto</strong> o <strong>un valor numérico</strong>.
     </p>
     <label for="apunteTexto" class="ctp-label">Texto</label>
     <textarea id="apunteTexto" class="form-input apunte-modal-textarea" rows="4" maxlength="4000"
@@ -4625,14 +4639,14 @@
   <script src="js/hc-bootstrap-onboarding.js?v=29"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
-  <script src="js/torre-render-build.js?v=2026-05-15-dwc-svg-air-vol"></script>
+  <script src="js/torre-render-build.js?v=2026-05-15-dwc-mc-simple"></script>
   <script src="js/torre-render-main.js?v=13"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=26"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=18"></script>
+  <script src="js/hc-setup-wizard-core.js?v=27"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=20"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-13-cultivo-reco-status"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-srf"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-dwc-preview"></script>
   <script src="js/hc-setup-calc-core.js?v=27"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
@@ -4641,17 +4655,17 @@
   <script src="js/hc-setup-historial-delete.js?v=8"></script>
   <script src="js/hc-setup-registro.js?v=5"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=11"></script>
-  <script src="js/hc-setup-mediciones-logic.js?v=13"></script>
+  <script src="js/hc-setup-mediciones-logic.js?v=14"></script>
   <script src="js/hc-medicion-wizard.js?v=6"></script>
   <script src="js/hc-tools-pro.js?v=10"></script>
-  <script src="js/hc-setup-checklist.js?v=33"></script>
+  <script src="js/hc-setup-checklist.js?v=35"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
-  <script src="js/hc-setup-consejos.js?v=32"></script>
-  <script src="js/calendario-logic.js?v=8"></script>
+  <script src="js/hc-setup-consejos.js?v=33"></script>
+  <script src="js/calendario-logic.js?v=9"></script>
   <script src="js/meteo-forecast-meteo.js?v=13"></script>
   <script src="js/meteo-forecast-dashboard.js?v=21"></script>
-  <script src="js/riego-calculo-helpers.js?v=6"></script>
-  <script src="js/riego-calculo-calcular.js?v=5"></script>
+  <script src="js/riego-calculo-helpers.js?v=7"></script>
+  <script src="js/riego-calculo-calcular.js?v=6"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=6"></script>
   <script src="js/app-hc-setup-onboarding.js?v=10"></script>

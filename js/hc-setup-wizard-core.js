@@ -323,6 +323,7 @@ function etiquetaSistemaHidroponicoBreve(cfg) {
   const t = tipoInstalacionNormalizado(cfg || {});
   if (t === 'nft') return 'NFT';
   if (t === 'rdwc') return 'RDWC';
+  if (t === 'srf') return 'SRF';
   if (t === 'dwc') {
     if (typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg || {}) === 'kratky') return 'Kratky';
     return 'DWC';
@@ -1417,10 +1418,10 @@ function nftGetObjetivoSpec(objetivo) {
 
 /** Etiquetas de nivel y plaza según tipo de instalación (índices 1-based en texto). */
 function labelsUbicacionInstalacion(tipoInstal) {
-  const t = (tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'rdwc' || tipoInstal === 'torre') ? tipoInstal : 'torre';
+  const t = (tipoInstal === 'nft' || tipoInstal === 'dwc' || tipoInstal === 'rdwc' || tipoInstal === 'srf' || tipoInstal === 'torre') ? tipoInstal : 'torre';
   return {
-    lblPlaza: t === 'nft' ? 'hueco' : t === 'dwc' ? 'maceta' : t === 'rdwc' ? 'cubo' : 'cesta',
-    lblNivel: t === 'nft' ? 'Canal' : t === 'rdwc' ? 'Fila' : 'Nivel',
+    lblPlaza: t === 'nft' ? 'hueco' : t === 'dwc' ? 'maceta' : t === 'rdwc' ? 'cubo' : t === 'srf' ? 'planta' : 'cesta',
+    lblNivel: t === 'nft' ? 'Canal' : t === 'rdwc' || t === 'srf' ? 'Fila' : 'Nivel',
   };
 }
 
@@ -1437,7 +1438,7 @@ function formatoUbicacionEnRegistro(tipoInstal, nivel1Based, plaza1Based) {
 /** Tipo de instalación para mostrar una entrada antigua: snapshot; si no, config de la torre del registro; si no, activa. */
 function tipoInstalParaEntradaRegistro(e) {
   const s = e && e.tipoInstalSnap;
-  if (s === 'nft' || s === 'dwc' || s === 'rdwc' || s === 'torre') return s;
+  if (s === 'nft' || s === 'dwc' || s === 'rdwc' || s === 'srf' || s === 'torre') return s;
   const tid = e && e.torreId;
   if (tid != null && Array.isArray(state.torres)) {
     const tr = state.torres.find(t => t.id === tid);
@@ -1550,6 +1551,11 @@ function abrirSetup() {
   setupRdwcDraft = setupTipoInstalacion === 'rdwc' ? hcSetupClonePlain(c, {}) : null;
   if (setupTipoInstalacion === 'rdwc') {
     try { syncSetupRdwcFieldsDesdeConfig(c); } catch (_) {}
+  }
+  if (setupTipoInstalacion === 'srf') {
+    try {
+      syncSrfFormDesdeConfig(c, 'setup');
+    } catch (_) {}
   }
   const snc = document.getElementById('sliderNftCanales');
   const snh = document.getElementById('sliderNftHuecos');
@@ -1725,8 +1731,8 @@ function cerrarSetup() {
 }
 
 function iniciarConfiguracionTorre() {
-  if (setupEsNuevaTorre && setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc' && setupTipoInstalacion !== 'rdwc') {
-    showToast('Elige Torre, NFT, DWC o RDWC antes de continuar', true);
+  if (setupEsNuevaTorre && setupTipoInstalacion !== 'torre' && setupTipoInstalacion !== 'nft' && setupTipoInstalacion !== 'dwc' && setupTipoInstalacion !== 'rdwc' && setupTipoInstalacion !== 'srf') {
+    showToast('Elige Torre, NFT, DWC, RDWC o SRF antes de continuar', true);
     return;
   }
   setupTipoTorre = 'custom';
