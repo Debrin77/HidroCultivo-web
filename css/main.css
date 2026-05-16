@@ -14874,6 +14874,33 @@ button.toggle-switch:focus-visible {
 #setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcMontajeDiyExtra {
   display: none;
 }
+#setupRdwcDetalleWrap.setup-rdwc-asistente-simple div:has(> #setupRdwcCultivoPrevisto),
+#setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcCompatStatus,
+#setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcCalcStatus {
+  display: none !important;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .torre-control-label {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 10px;
+  line-height: 1.35;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .torre-control-val {
+  flex: 0 0 auto;
+  font-size: var(--text-lg);
+  margin-left: auto;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .torre-controls,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-grid {
+  min-width: 0;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-dwc-label,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-field-label {
+  display: block;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: normal;
+}
 @media (max-width: 640px) {
   .torre-preview.nft-schematic-host {
     min-height: min(36vh, 380px);

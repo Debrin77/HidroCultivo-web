@@ -1392,10 +1392,22 @@ function refreshRdwcSetupPreview() {
     draft.numCestas = cols;
     const prevCfg = state.configTorre;
     const prevTorre = state.torre;
-    state.configTorre = Object.assign({}, prevCfg || {}, draft, { tipoInstalacion: 'rdwc' });
-    if (typeof redimensionarMatrizTorreDwcPreservando === 'function') {
-      redimensionarMatrizTorreDwcPreservando(state.configTorre, rows, cols);
+    state.configTorre = Object.assign({}, draft, { tipoInstalacion: 'rdwc' });
+    const emptyCell = () => ({
+      variedad: '',
+      fecha: '',
+      notas: '',
+      origenPlanta: '',
+      fotos: [],
+      fotoKeys: [],
+    });
+    const torrePreview = [];
+    for (let n = 0; n < rows; n++) {
+      const row = [];
+      for (let col = 0; col < cols; col++) row.push(emptyCell());
+      torrePreview.push(row);
     }
+    state.torre = torrePreview;
     if (typeof generarSVGRdwc === 'function') {
       preview.innerHTML = generarSVGRdwc();
       preview.classList.add('torre-preview--rdwc');

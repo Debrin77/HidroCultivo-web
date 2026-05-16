@@ -1358,17 +1358,17 @@ function generarSVGRdwc() {
     </linearGradient>
   </defs>`;
   s += `<text x="${W / 2}" y="22" text-anchor="middle" font-size="15" font-weight="700" fill="#1f2937" font-family="Syne,sans-serif">RDWC · recirculación</text>`;
-  s += `<text x="${W / 2}" y="36" text-anchor="middle" font-size="9.5" fill="#64748b">Verde = impulsión (arriba) · azul = retorno (abajo)</text>`;
+  s += `<text x="${W / 2}" y="36" text-anchor="middle" font-size="9.5" fill="#64748b">Verde = impulsión (arriba) · azul = retorno (abajo)${visRows >= 2 ? ' · bomba entre filas' : ''}</text>`;
   s += `<text x="${W / 2}" y="48" text-anchor="middle" font-size="9.5" fill="#64748b">EC/pH y mezcla en el depósito de control (debajo de los módulos)</text>`;
+  const manL = left + 12;
+  const manR = left + blockW - 12;
+  const pumpX = left + blockW / 2;
+  const pumpY = visRows >= 2 ? top + ch : top + blockH / 2;
+  const pumpR = visRows >= 2 ? 11 : 9;
+
   s += `<rect x="${left}" y="${top}" width="${blockW}" height="${blockH}" rx="14" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2"/>`;
-
-  s += `<line x1="${left + 12}" y1="${supY}" x2="${left + blockW - 12}" y2="${supY}" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
-  s += `<line x1="${left + blockW - 12}" y1="${retY}" x2="${left + 12}" y2="${retY}" stroke="#2563eb" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
-
-  const supDropX = Math.min(W - 14, Math.max(tankX + tankW - 16, left + blockW + 8));
-  s += `<path d="M ${supDropX} ${tankY + 9} L ${supDropX} ${supY - 2} L ${left + blockW - 10} ${supY - 2}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
-  const retRiserX = tankX + 18;
-  s += `<path d="M ${left + 12} ${retY} L ${retRiserX} ${retY} L ${retRiserX} ${tankY + tankH - 9}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
+  s += `<line x1="${manL}" y1="${supY}" x2="${manR}" y2="${supY}" stroke="#16a34a" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
+  s += `<line x1="${manL}" y1="${retY}" x2="${manR}" y2="${retY}" stroke="#2563eb" stroke-width="2.4" stroke-linecap="round" opacity="0.92"/>`;
 
   for (let idx = 0; idx < sites; idx++) {
       const vr = Math.floor(idx / visCols);
@@ -1486,6 +1486,11 @@ function generarSVGRdwc() {
       s += `<circle cx="${x}" cy="${y}" r="${(rPot * 1.55).toFixed(1)}" fill="rgba(0,0,0,0)" class="hc-cesta-hit" pointer-events="all"/>`;
       s += `</g>`;
   }
+
+  s += `<path d="M ${tankCx.toFixed(1)} ${tankY + 8} L ${pumpX.toFixed(1)} ${(pumpY + pumpR).toFixed(1)} L ${pumpX.toFixed(1)} ${supY}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
+  s += `<path d="M ${pumpX.toFixed(1)} ${retY} L ${pumpX.toFixed(1)} ${tankY + tankH - 8}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linejoin="round" opacity="0.9"/>`;
+  s += `<circle cx="${pumpX.toFixed(1)}" cy="${pumpY.toFixed(1)}" r="${pumpR}" fill="#fef9c3" stroke="#16a34a" stroke-width="2"/>`;
+  s += `<text x="${pumpX.toFixed(1)}" y="${(pumpY + 3.5).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" font-weight="800" fill="#15803d">BOMBA</text>`;
 
   s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="14" fill="url(#rdwcTankBody)" stroke="#475569" stroke-width="1.4"/>`;
   s += `<rect x="${tankX + 6}" y="${waterY}" width="${tankW - 12}" height="${tankY + tankH - waterY - 8}" rx="9" fill="url(#rdwcWater)" opacity="0.9"/>`;

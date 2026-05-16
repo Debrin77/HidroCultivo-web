@@ -547,16 +547,25 @@ function rdwcParseNetPotHeightMm(raw) {
   return v;
 }
 
+/** Valores por defecto del asistente RDWC (instalación nueva, sin heredar otra torre activa). */
+function hcFreshRdwcSetupDefaults() {
+  const f = { tipoInstalacion: 'rdwc' };
+  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(f);
+  delete f.rdwcCultivoPrevisto;
+  return f;
+}
+
 function getSetupRdwcDraftSeed() {
-  const base = hcSetupClonePlain(
-    setupRdwcDraft && typeof setupRdwcDraft === 'object'
-      ? setupRdwcDraft
-      : (state.configTorre || {}),
-    {}
-  ) || {};
-  base.tipoInstalacion = 'rdwc';
-  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(base);
-  return base;
+  if (typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre) {
+    return hcFreshRdwcSetupDefaults();
+  }
+  if (setupRdwcDraft && typeof setupRdwcDraft === 'object' && tipoInstalacionNormalizado(setupRdwcDraft) === 'rdwc') {
+    const base = hcSetupClonePlain(setupRdwcDraft, {}) || {};
+    base.tipoInstalacion = 'rdwc';
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(base);
+    return base;
+  }
+  return hcFreshRdwcSetupDefaults();
 }
 
 function buildRdwcConfigFromForm(scope, seedCfg) {
@@ -1204,7 +1213,7 @@ function onSetupRdwcInput() {
 
 function renderRdwcSetupCalculadoUi(cfg) {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'rdwc') return;
-  cfg = cfg || setupRdwcDraft || state.configTorre || {};
+  cfg = cfg || setupRdwcDraft || (typeof hcFreshRdwcSetupDefaults === 'function' ? hcFreshRdwcSetupDefaults() : {});
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
   const block = document.getElementById('setupRdwcRecoBlock');
   const val = document.getElementById('setupRdwcRecoValor');
@@ -1239,10 +1248,10 @@ function renderRdwcSetupCalculadoUi(cfg) {
       if (hint) hint.textContent = '';
     }
   }
-  try {
-    renderRdwcCompatStatus(cfg, 'setupRdwcCompatStatus');
-    renderRdwcCalculoStatus(cfg, 'setupRdwcCalcStatus');
-  } catch (_) {}
+  const compatEl = document.getElementById('setupRdwcCompatStatus');
+  const calcEl = document.getElementById('setupRdwcCalcStatus');
+  if (compatEl) compatEl.innerHTML = '';
+  if (calcEl) calcEl.innerHTML = '';
 }
 
 function renderRdwcCalculoStatus(cfg, elId) {
@@ -1354,9 +1363,12 @@ function bindRdwcCompatLive(scope) {
           'setupRdwcCenterSpacingCm',
         ];
   const render = () => {
-    const c = scope === 'setup'
-      ? (setupRdwcDraft || state.configTorre || {})
-      : (state.configTorre || {});
+    const c =
+      scope === 'setup'
+        ? typeof getSetupRdwcDraftSeed === 'function'
+          ? getSetupRdwcDraftSeed()
+          : setupRdwcDraft || {}
+        : state.configTorre || {};
     if (scope === 'sys') {
       const g = (id, fb) => {
         const el = document.getElementById(id);
@@ -1413,14 +1425,15 @@ function bindRdwcCompatLive(scope) {
       if (hSetup != null) c2.rdwcNetPotHeightMm = hSetup;
       else delete c2.rdwcNetPotHeightMm;
       c2.rdwcCenterSpacingCm = g('setupRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
-      renderRdwcCompatStatus(c2, 'setupRdwcCompatStatus');
-      renderRdwcCalculoStatus(c2, 'setupRdwcCalcStatus');
+      delete c2.rdwcCultivoPrevisto;
+      setupRdwcDraft = hcSetupClonePlain(c2, {});
       try {
         if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(c2);
       } catch (_) {}
       try {
         if (typeof refreshRdwcSetupPreview === 'function') refreshRdwcSetupPreview();
       } catch (_) {}
+      return;
     }
   };
   ids.forEach(id => {
@@ -2061,13 +2074,17 @@ function seleccionarTipoInstalacionSetup(tipo) {
       if (typeof clearSetupVolMezclaSrfAutofill === 'function') clearSetupVolMezclaSrfAutofill();
     } catch (_) {}
   }
-  if (setupTipoInstalacion === 'rdwc' && (!setupRdwcDraft || tipoInstalacionNormalizado(setupRdwcDraft) !== 'rdwc')) {
-    const base = !setupEsNuevaTorre && tipoInstalacionNormalizado(state.configTorre || {}) === 'rdwc'
-      ? state.configTorre
-      : { tipoInstalacion: 'rdwc' };
-    setupRdwcDraft = hcSetupClonePlain(base, {}) || {};
-    setupRdwcDraft.tipoInstalacion = 'rdwc';
-    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(setupRdwcDraft);
+  if (setupTipoInstalacion === 'rdwc') {
+    if (setupEsNuevaTorre) {
+      setupRdwcDraft = hcFreshRdwcSetupDefaults();
+    } else if (!setupRdwcDraft || tipoInstalacionNormalizado(setupRdwcDraft) !== 'rdwc') {
+      setupRdwcDraft =
+        tipoInstalacionNormalizado(state.configTorre || {}) === 'rdwc'
+          ? hcSetupClonePlain(state.configTorre, {}) || hcFreshRdwcSetupDefaults()
+          : hcFreshRdwcSetupDefaults();
+      setupRdwcDraft.tipoInstalacion = 'rdwc';
+      if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(setupRdwcDraft);
+    }
   }
   refrescarSetupTipoInstalacionUI();
 }
@@ -2192,7 +2209,14 @@ function refrescarSetupTipoInstalacionUI() {
   if (dwcSoloWizard) dwcSoloWizard.classList.toggle('setup-hidden', isRdwc);
   if (isRdwc) {
     try {
-      syncSetupRdwcFieldsDesdeConfig(setupRdwcDraft || state.configTorre || {});
+      syncSetupRdwcFieldsDesdeConfig(
+        setupRdwcDraft ||
+          (typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre
+            ? typeof hcFreshRdwcSetupDefaults === 'function'
+              ? hcFreshRdwcSetupDefaults()
+              : { tipoInstalacion: 'rdwc' }
+            : state.configTorre || {})
+      );
     } catch (_) {}
     try {
       if (typeof onSetupRdwcInput === 'function') onSetupRdwcInput();
@@ -3063,18 +3087,25 @@ function syncSistemaRdwcDesdeConfig(cfg) {
 
 function applySetupRdwcDesdeFormulario() {
   const c = buildRdwcConfigFromForm('setup', getSetupRdwcDraftSeed());
+  delete c.rdwcCultivoPrevisto;
   setupRdwcDraft = hcSetupClonePlain(c, {});
-  renderRdwcCompatStatus(c, 'setupRdwcCompatStatus');
-  renderRdwcCalculoStatus(c, 'setupRdwcCalcStatus');
+  try {
+    if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(c);
+  } catch (_) {}
   return c;
 }
 
 function syncSetupRdwcFieldsDesdeConfig(cfg) {
-  const c = hcSetupClonePlain(cfg || setupRdwcDraft || state.configTorre || {}, {}) || {};
+  let c;
+  if (typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre) {
+    c = hcSetupClonePlain(cfg && tipoInstalacionNormalizado(cfg) === 'rdwc' ? cfg : setupRdwcDraft || hcFreshRdwcSetupDefaults(), {}) || hcFreshRdwcSetupDefaults();
+  } else {
+    c = hcSetupClonePlain(cfg || setupRdwcDraft || state.configTorre || {}, {}) || {};
+  }
   c.tipoInstalacion = 'rdwc';
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
+  delete c.rdwcCultivoPrevisto;
   setupRdwcDraft = hcSetupClonePlain(c, {});
-  renderRdwcCultivoPrevistoSelect('setupRdwcCultivoPrevisto', c.rdwcCultivoPrevisto);
   const map = {
     setupRdwcSites: c.rdwcSites,
     setupRdwcRows: c.rdwcRows,
@@ -3099,8 +3130,16 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
   } catch (_) {}
   bindRdwcCompatLive('setup');
   const cFresh = setupRdwcDraft || c;
-  renderRdwcCompatStatus(cFresh, 'setupRdwcCompatStatus');
-  renderRdwcCalculoStatus(cFresh, 'setupRdwcCalcStatus');
+  const compatEl = document.getElementById('setupRdwcCompatStatus');
+  const calcEl = document.getElementById('setupRdwcCalcStatus');
+  if (compatEl) compatEl.innerHTML = '';
+  if (calcEl) calcEl.innerHTML = '';
+  try {
+    if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(cFresh);
+  } catch (_) {}
+  try {
+    if (typeof refreshRdwcSetupPreview === 'function') refreshRdwcSetupPreview();
+  } catch (_) {}
 }
 
 function aplicarSistemaRdwcDesdeFormulario() {
