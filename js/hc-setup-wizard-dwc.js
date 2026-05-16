@@ -178,6 +178,9 @@ function dwcAplicarMatrizCultivoMulticuboEnCfg(cfg, ids) {
   cfg.dwcNumCubos = n;
   cfg.numNiveles = 1;
   cfg.numCestas = n;
+  cfg.dwcModo = 'aireado';
+  cfg.dwcObjetivoCultivo = 'final';
+  cfg.dwcRejillaModoPreferido = 'objetivo';
 }
 
 function dwcGetModoCultivo(cfg) {
@@ -2845,7 +2848,40 @@ function onSetupDwcMedidasInput() {
   try {
     actualizarResumenSetup();
   } catch (e) {}
+  const esMc =
+    dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+    'cubos_independientes';
+  if (esMc) {
+    const hint = document.getElementById('setupDwcCapacidadEstimada');
+    const block = document.getElementById('setupDwcLitrosCuboBlock');
+    const hidden = document.getElementById('setupDwcLitrosUtilesPorSitioL');
+    let litros = null;
+    try {
+      const draft = buildDwcDraftCfgFromSetupWizardInputs();
+      litros =
+        draft && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
+          ? dwcLitrosUtilesPorCuboMultivalvula(draft)
+          : null;
+    } catch (_) {}
+    if (litros != null && litros > 0) {
+      const L = Math.round(litros * 10) / 10;
+      if (block) block.classList.remove('setup-hidden');
+      if (hint) {
+        hint.textContent =
+          L + ' L de solución por cubo (calculado según medidas del cubo, profundidad de cesta y cámara de aire bajo la maceta).';
+      }
+      if (hidden) hidden.value = String(L);
+    } else {
+      if (block) block.classList.add('setup-hidden');
+      if (hint) hint.textContent = '';
+      if (hidden) hidden.value = '';
+    }
+    updateTorreBuilder();
+    return;
+  }
   const hint = document.getElementById('setupDwcCapacidadEstimada');
+  const blockDep = document.getElementById('setupDwcLitrosCuboBlock');
+  if (blockDep) blockDep.classList.add('setup-hidden');
   const cap = getDwcCapacidadLitrosFromSetupInputs();
   const forma = dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value);
   const vm = _dwcParseVolManualLitros(document.getElementById('setupDwcVolumenManualL')?.value);
@@ -2968,18 +3004,14 @@ function dwcReparentSetupSlidersForPreview() {
   const mc =
     dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
     'cubos_independientes';
+  controls.classList.toggle('setup-hidden', mc);
   dwcSlot.classList.toggle('setup-hidden', mc);
   if (!mc && controls.parentElement !== dwcSlot) dwcSlot.appendChild(controls);
   const dn = document.getElementById('setupTorreDimNivel');
   const dc = document.getElementById('setupTorreDimCesta');
-  if (dn && dc) {
-    if (mc) {
-      dn.textContent = 'Cubos';
-      dc.textContent = 'Macetas por cubo';
-    } else {
-      dn.textContent = 'Filas en la tapa';
-      dc.textContent = 'Cestas por fila';
-    }
+  if (dn && dc && !mc) {
+    dn.textContent = 'Filas en la tapa';
+    dc.textContent = 'Cestas por fila';
   }
 }
 
@@ -3002,8 +3034,29 @@ function dwcRefreshMulticuboDependienteUi(which) {
     if (wNc) wNc.classList.toggle('setup-hidden', !mc);
     const wBl = document.getElementById('setupDwcDepUnidoRejillaWrap');
     if (wBl) wBl.classList.toggle('setup-hidden', mc);
+    const wExtras = document.getElementById('setupDwcDepUnidoExtrasWrap');
+    if (wExtras) wExtras.classList.toggle('setup-hidden', mc);
+    const wLit = document.getElementById('setupDwcLitrosUtilesPorSitioWrap');
+    if (wLit) wLit.classList.add('setup-hidden');
+    document.querySelectorAll('#setupDwcSoloBloque .setup-dwc-dep-unido-only').forEach(el => {
+      el.classList.toggle('setup-hidden', mc);
+    });
+    if (mc) {
+      const modo = document.getElementById('setupDwcModoCultivo');
+      const obj = document.getElementById('setupDwcObjetivoCultivo');
+      if (modo) modo.value = 'aireado';
+      if (obj) obj.value = 'final';
+      const reco = document.getElementById('setupDwcCultivoRecoStatus');
+      if (reco) {
+        reco.classList.add('setup-hidden');
+        reco.textContent = '';
+      }
+    }
     try {
       dwcReparentSetupSlidersForPreview();
+    } catch (_) {}
+    try {
+      onSetupDwcMedidasInput();
     } catch (_) {}
   }
 }

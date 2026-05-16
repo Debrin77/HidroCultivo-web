@@ -1237,7 +1237,7 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
     cube.appendChild(lid);
     const tank = document.createElement('div');
     tank.className = 'dwc-setup-mc-tank';
-    tank.title = 'Cubo ' + (i + 1) + ' · ~' + volLitros + ' L';
+    tank.title = 'Cubo ' + (i + 1) + ' · ' + volLitros + ' L útiles';
     cube.appendChild(tank);
     row.appendChild(cube);
   }
@@ -1365,7 +1365,19 @@ function updateTorreBuilder() {
         : 'dep_unido';
     const formaDep = document.getElementById('setupDwcDepositoForma')?.value;
     if (oxB === 'cubos_independientes') {
-      renderDwcMulticuboSetupPreview(preview, dwcCesPrev, volDepDwc, formaDep);
+      let volMc = volDepDwc;
+      try {
+        const draftMc =
+          typeof buildDwcDraftCfgFromSetupWizardInputs === 'function'
+            ? buildDwcDraftCfgFromSetupWizardInputs()
+            : null;
+        const vMc =
+          draftMc && typeof dwcLitrosUtilesPorCuboMultivalvula === 'function'
+            ? dwcLitrosUtilesPorCuboMultivalvula(draftMc)
+            : null;
+        if (vMc != null && vMc > 0) volMc = Math.round(vMc * 10) / 10;
+      } catch (_) {}
+      renderDwcMulticuboSetupPreview(preview, dwcCesPrev, volMc, formaDep);
     } else {
       renderDwcLidSetupPreview(preview, dwcNivPrev, dwcCesPrev, volDepDwc);
     }

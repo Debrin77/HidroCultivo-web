@@ -14454,6 +14454,27 @@ button.toggle-switch:focus-visible {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+.setup-dwc-section-title {
+  margin: 14px 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.02em;
+}
+.setup-dwc-litros-cubo-block {
+  margin: 10px 0 4px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1.5px solid #6ee7b7;
+}
+.setup-dwc-litros-cubo-valor {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #047857;
+  line-height: 1.45;
+}
 .setup-dwc-dep-unido-controls {
   margin-top: 10px;
 }

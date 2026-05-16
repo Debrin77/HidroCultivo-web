@@ -1,0 +1,12 @@
+const fs = require('fs');
+const h = fs.readFileSync(require('path').join(__dirname, '..', 'index.html'), 'utf8');
+const start = '        <motion id="setupDwcSoloBloque">'.replace(/motion/g, 'motion'.startsWith('m') ? 'motion' : 'div');
+const D = 'd' + 'iv';
+const s = `        <${D} id="setupDwcSoloBloque">`;
+const e1 = `      </${D}>\n\n      <${D} id="setupSrfDetalleWrap"`;
+const e2 = `      </${D}>\r\n\r\n      <${D} id="setupSrfDetalleWrap"`;
+console.log('start', h.indexOf(s));
+console.log('end1', h.indexOf(e1));
+console.log('end2', h.indexOf(e2));
+const near = h.indexOf('setupSrfDetalleWrap');
+console.log(JSON.stringify(h.slice(near - 60, near + 40)));
