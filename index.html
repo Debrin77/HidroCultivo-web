@@ -1222,15 +1222,7 @@
 
       <div id="sistemaTorreMontajeCard" class="torre-card-elevated setup-hidden">
         <div class="torre-sistema-panel-kicker">Torre vertical · niveles y bomba</div>
-        <div class="setup-nft-montaje-origen-row torre-nft-row-mb">
-          <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
-          <div class="torre-nft-grid-2-tight">
-            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysTorreMontajeOrigenKit" onclick="seleccionarSistemaTorreMontajeOrigen('kit')" aria-pressed="false">Kit comercial</button>
-            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn selected" id="sysTorreMontajeOrigenDiy" onclick="seleccionarSistemaTorreMontajeOrigen('diy')" aria-pressed="true">DIY / a medida</button>
-          </div>
-        </div>
-        <p id="sysTorreMontajeOrigenHint" class="torre-nft-p-note setup-hidden" role="note">Kit: niveles y cestas del manual; la app calcula la bomba orientativa. DIY: igual + puedes contrastar caudal y potencia de tu placa.</p>
-        <div id="sistemaTorreCantidadesMount" class="torre-controls torre-sistema-cantidades-mount"></div>
+<div id="sistemaTorreCantidadesMount" class="torre-controls torre-sistema-cantidades-mount"></div>
         <div id="sysTorreBombaSistemaBlock" class="setup-mt-10">
           <div class="setup-kicker setup-kicker-md setup-mb-6">Bomba de riego (orientativa)</div>
           <div class="setup-mb-10">
@@ -1308,17 +1300,7 @@
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
         <div id="sistemaNftMontajeBody" class="torre-sistema-panel-body">
-        <div class="setup-nft-montaje-origen-row torre-nft-row-mb">
-          <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
-          <div class="torre-nft-grid-2-tight">
-            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftMontajeOrigenKit" onclick="seleccionarSistemaNftMontajeOrigen('kit')"
-              aria-pressed="false">Kit comercial</button>
-            <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn selected" id="sysNftMontajeOrigenDiy" onclick="seleccionarSistemaNftMontajeOrigen('diy')"
-              aria-pressed="true">DIY / a medida</button>
-          </div>
-        </div>
-        <p id="sysNftMontajeOrigenHint" class="torre-nft-p-note setup-hidden" role="note">Modo kit: canal/tubo/bomba quedan con valores por defecto; usa el asistente solo si tu kit difiere.</p>
-        <p class="torre-nft-p">Lo mismo que en el <strong>asistente</strong>: cuenta tubos y huecos que ves, Ø de cesta del embalaje y (si sube agua) la alzada al primer tubo. Pulsa <strong>Aplicar montaje NFT</strong> al terminar.</p>
+<p class="torre-nft-p">Lo mismo que en el <strong>asistente</strong>: cuenta tubos y huecos que ves, Ø de cesta del embalaje y (si sube agua) la alzada al primer tubo. Pulsa <strong>Aplicar montaje NFT</strong> al terminar.</p>
         <div id="sysNftMontajeDiyBlock">
         <details class="torre-vol-detalles torre-sistema-details-spaced">
           <summary class="torre-vol-detalles-summary">Pasos, flujo en escalera y asistente</summary>
@@ -1473,17 +1455,7 @@
           <div id="sistemaRdwcBloque" class="setup-hidden">
             <p class="torre-nft-p"><strong>Datos mínimos:</strong> sitios/cubos visibles y <strong>litros del depósito de control</strong> en la placa del kit. Lo demás puede quedar por defecto o con lo que indique tu bomba; no hace falta calcular caudales a mano.</p>
             <p class="torre-nft-p-soft">Montaje (kits genéricos): bomba de aire por encima del nivel de solución; tubos a presión con giro suave; al separar cubos, deja ~3 cm de tubo dentro del lateral; tras el primer llenado, revisa fugas.</p>
-            <div class="setup-nft-montaje-origen-row torre-nft-row-mb">
-              <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
-              <div class="torre-nft-grid-2-tight">
-                <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysRdwcMontajeOrigenKit" onclick="seleccionarSistemaRdwcMontajeOrigen('kit')"
-                  aria-pressed="false">Kit comercial</button>
-                <button type="button" class="equip-card nft-disp-btn torre-nft-chip-btn selected" id="sysRdwcMontajeOrigenDiy" onclick="seleccionarSistemaRdwcMontajeOrigen('diy')"
-                  aria-pressed="true">DIY / a medida</button>
-              </div>
-            </div>
-            <p id="sysRdwcMontajeOrigenHint" class="torre-nft-p-note setup-hidden" role="note">Modo kit: ocultamos afinado de cubo útil, caudales e hidráulica; la app usa estimaciones y valores por defecto.</p>
-            <div class="torre-dwc-grid-2">
+<div class="torre-dwc-grid-2">
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcSites">Sitios/cubos</label><input type="number" id="sysRdwcSites" class="torre-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRows">Filas</label><input type="number" id="sysRdwcRows" class="torre-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="sysRdwcBucketVolL" class="torre-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
@@ -1696,20 +1668,22 @@
         <div id="sistemaSrfAyudaBody" class="torre-dwc-inner torre-sistema-panel-body">
           <p class="torre-nft-p"><strong>Estanque común</strong> con balsa flotante (poliestireno). Mide <strong>L × A × profundidad útil</strong> del agua y cuenta <strong>huecos en la balsa</strong>.</p>
           <div class="torre-dwc-grid-2">
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfCanalLargoCm">Largo estanque (cm)</label><input type="number" id="sysSrfCanalLargoCm" class="torre-dwc-input" min="20" max="600" step="1" placeholder="120"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfCanalAnchoCm">Ancho estanque (cm)</label><input type="number" id="sysSrfCanalAnchoCm" class="torre-dwc-input" min="20" max="400" step="1" placeholder="60"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfProfundidadCm">Profundidad útil agua (cm)</label><input type="number" id="sysSrfProfundidadCm" class="torre-dwc-input" min="10" max="50" step="0.5" placeholder="25"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfNumPlantas">Nº plantas (huecos)</label><input type="number" id="sysSrfNumPlantas" class="torre-dwc-input" min="1" max="64" step="1" placeholder="8"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfFilas">Filas en balsa</label><input type="number" id="sysSrfFilas" class="torre-dwc-input" min="1" max="8" step="1" placeholder="1"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfOxigenacionModo">Oxigenación</label><select id="sysSrfOxigenacionModo" class="torre-dwc-input" onchange="try{srfRefreshOxigenacionUi('sys')}catch(e){}"><option value="aireador">Bomba de aire</option><option value="kratky">Kratky (cámara de aire)</option></select></div>
-            <div id="sysSrfAirWrap"><label class="form-label torre-dwc-lbl-mono" for="sysSrfAirLpm">Aireación (L/min)</label><input type="number" id="sysSrfAirLpm" class="torre-dwc-input" min="0.5" max="300" step="0.5" placeholder="8"></div>
-            <div id="sysSrfKratkyGapWrap" class="setup-hidden"><label class="form-label torre-dwc-lbl-mono" for="sysSrfKratkyGapCm">Hueco aire bajo balsa (cm)</label><input type="number" id="sysSrfKratkyGapCm" class="torre-dwc-input" min="2" max="40" step="0.5" placeholder="8"></div>
-            <div id="sysSrfCirculanteWrap"><label class="form-label torre-dwc-lbl-mono"><input type="checkbox" id="sysSrfCirculante" checked onchange="try{srfRefreshOxigenacionUi('sys')}catch(e){}"> Recirculación de solución</label></div>
-            <div id="sysSrfRecircWrap"><label class="form-label torre-dwc-lbl-mono" for="sysSrfRecircLh">Recirculación (L/h)</label><input type="number" id="sysSrfRecircLh" class="torre-dwc-input" min="0" max="8000" step="10" placeholder="400"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfNetPotMm">Ø aro net pot (mm)</label><input type="number" id="sysSrfNetPotMm" class="torre-dwc-input" min="25" max="120" step="1" placeholder="50"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfBalsaGrosorMm">Grosor balsa (mm)</label><input type="number" id="sysSrfBalsaGrosorMm" class="torre-dwc-input" min="15" max="80" step="1" placeholder="40"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfVolTrabajoL">Litros útiles en estanque</label><input type="number" id="sysSrfVolTrabajoL" class="torre-dwc-input" min="0.5" max="5000" step="0.1" placeholder="vacío = capacidad"></div>
-<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfVolumenManualL">Volumen manual (L, opc.)</label><input type="number" id="sysSrfVolumenManualL" class="torre-dwc-input" min="1" max="5000" step="0.1" placeholder="si difiere de L×A×P"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfCanalLargoCm">Largo estanque (cm)</label><input type="number" id="sysSrfCanalLargoCm" class="torre-dwc-input" min="20" max="600" step="1" placeholder="120" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfCanalAnchoCm">Ancho estanque (cm)</label><input type="number" id="sysSrfCanalAnchoCm" class="torre-dwc-input" min="20" max="400" step="1" placeholder="60" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfProfundidadCm">Profundidad útil agua (cm)</label><input type="number" id="sysSrfProfundidadCm" class="torre-dwc-input" min="10" max="50" step="0.5" placeholder="25" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfNumPlantas">Nº plantas (huecos)</label><input type="number" id="sysSrfNumPlantas" class="torre-dwc-input" min="1" max="64" step="1" placeholder="8" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfFilas">Filas en balsa</label><input type="number" id="sysSrfFilas" class="torre-dwc-input" min="1" max="8" step="1" placeholder="1" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfOxigenacionModo">Oxigenación</label><select id="sysSrfOxigenacionModo" class="torre-dwc-input" onchange="try{srfRefreshOxigenacionUi('sys');srfRefreshSysFormLive()}catch(e){}"><option value="aireador">Bomba de aire</option><option value="kratky">Kratky (cámara de aire)</option></select></div>
+            <div id="sysSrfAirWrap"><label class="form-label torre-dwc-lbl-mono" for="sysSrfAirLpm">Aireación (L/min)</label><input type="number" id="sysSrfAirLpm" class="torre-dwc-input" min="0.5" max="300" step="0.5" placeholder="8" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+            <div id="sysSrfKratkyGapWrap" class="setup-hidden"><label class="form-label torre-dwc-lbl-mono" for="sysSrfKratkyGapCm">Hueco aire bajo balsa (cm)</label><input type="number" id="sysSrfKratkyGapCm" class="torre-dwc-input" min="2" max="40" step="0.5" placeholder="8" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+            <div id="sysSrfCirculanteWrap"><label class="form-label torre-dwc-lbl-mono"><input type="checkbox" id="sysSrfCirculante" checked onchange="try{srfRefreshOxigenacionUi('sys');srfRefreshSysFormLive()}catch(e){}"> Recirculación de solución</label></div>
+            <div id="sysSrfRecircWrap"><label class="form-label torre-dwc-lbl-mono" for="sysSrfRecircLh">Recirculación (L/h)</label><input type="number" id="sysSrfRecircLh" class="torre-dwc-input" min="0" max="8000" step="10" placeholder="400" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfNetPotMm">Ø aro net pot (mm)</label><input type="number" id="sysSrfNetPotMm" class="torre-dwc-input" min="25" max="120" step="1" placeholder="50" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+          <div><label class="form-label torre-dwc-lbl-mono" for="sysSrfNetPotHeightMm">Altura cesta (mm)</label><input type="number" id="sysSrfNetPotHeightMm" class="torre-dwc-input" min="30" max="200" step="1" placeholder="75" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+          <div><label class="form-label torre-dwc-lbl-mono" for="sysSrfEspaciamientoCm">Separación huecos (cm)</label><input type="number" id="sysSrfEspaciamientoCm" class="torre-dwc-input" min="8" max="60" step="1" placeholder="20" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfBalsaGrosorMm">Grosor balsa (mm)</label><input type="number" id="sysSrfBalsaGrosorMm" class="torre-dwc-input" min="15" max="80" step="1" placeholder="40" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfVolTrabajoL">Litros útiles en estanque</label><input type="number" id="sysSrfVolTrabajoL" class="torre-dwc-input" min="0.5" max="5000" step="0.1" placeholder="vacío = capacidad" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
+<div><label class="form-label torre-dwc-lbl-mono" for="sysSrfVolumenManualL">Volumen manual (L, opc.)</label><input type="number" id="sysSrfVolumenManualL" class="torre-dwc-input" min="1" max="5000" step="0.1" placeholder="si difiere de L×A×P" oninput="try{srfRefreshSysFormLive()}catch(e){}"></div>
           </div>
           <div id="sysSrfCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
           <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaSrfDesdeFormulario()">Guardar datos SRF</button>
@@ -2902,17 +2876,7 @@
       </div>
 
       <div id="setupTorreBuilderWrap">
-      <div id="setupTorreMontajeOrigenRow" class="setup-nft-montaje-origen-row setup-mb-10">
-        <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
-        <div class="setup-nft-layout-grid setup-nft-montaje-origen-chips">
-          <button type="button" class="equip-card nft-disp-btn" id="setupTorreMontajeOrigenKit" onclick="seleccionarSetupTorreMontajeOrigen('kit')"
-            aria-pressed="false">Kit comercial</button>
-          <button type="button" class="equip-card nft-disp-btn selected" id="setupTorreMontajeOrigenDiy" onclick="seleccionarSetupTorreMontajeOrigen('diy')"
-            aria-pressed="true">DIY / a medida</button>
-        </div>
-      </div>
-      <p id="setupTorreMontajeOrigenHint" class="setup-field-hint setup-hidden" role="note">Kit: niveles y cestas del manual; la app calcula la bomba orientativa. DIY: igual + puedes contrastar caudal y potencia de tu placa.</p>
-      <div class="torre-builder setup-torre-builder">
+<div class="torre-builder setup-torre-builder">
         <div id="setupTorrePreviewSlot" class="setup-torre-preview-slot">
           <div class="torre-preview" id="torrePreview" role="img" aria-label="Vista previa de la torre según niveles y cestas"></div>
         </div>
@@ -2945,17 +2909,7 @@
           <div class="setup-dwc-title">Sistema RDWC</div>
           <p class="setup-dwc-help"><strong>En un vistazo:</strong> cuenta los <strong>sitios/cubos</strong> y mira en la placa del kit los <strong>litros del depósito de control</strong>. Cubo nominal, recirculación y aireación pueden quedar como vienen por defecto o con el dato de tu bomba si lo tienes a mano; no hace falta calcular caudales a mano.</p>
           <p class="setup-dwc-help">Nutrientes: sumamos <strong>útil del depósito de control + útil de cada cubo</strong>. Los litros útiles y Ø/prof. bajo cesta son <strong>opcionales</strong> si ya indicaste volumen nominal; vacíos = estimación razonable. Cultivo previsto y net pot ayudan a afinar sin medir todo a mano.</p>
-          <div class="setup-nft-montaje-origen-row setup-mb-10">
-            <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
-            <div class="setup-nft-layout-grid setup-nft-montaje-origen-chips">
-              <button type="button" class="equip-card nft-disp-btn" id="setupRdwcMontajeOrigenKit" onclick="seleccionarSetupRdwcMontajeOrigen('kit')"
-                aria-pressed="false">Kit comercial</button>
-              <button type="button" class="equip-card nft-disp-btn selected" id="setupRdwcMontajeOrigenDiy" onclick="seleccionarSetupRdwcMontajeOrigen('diy')"
-                aria-pressed="true">DIY / a medida</button>
-            </div>
-          </div>
-          <p id="setupRdwcMontajeOrigenHint" class="setup-dwc-help setup-hidden" role="note">Modo kit: ocultamos volumen útil fino del cubo, caudales y separación; la app estimará con el nominal del cubo y valores por defecto. Elige DIY si afinas tubería o bombas.</p>
-          <div class="setup-dwc-grid-2">
+<div class="setup-dwc-grid-2">
             <div><label class="form-label setup-dwc-label" for="setupRdwcSites">Sitios/cubos</label><input type="number" id="setupRdwcSites" class="setup-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcRows">Filas</label><input type="number" id="setupRdwcRows" class="setup-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
             <div><label class="form-label setup-dwc-label" for="setupRdwcBucketVolL">Litros por cubo (nominal)</label><input type="number" id="setupRdwcBucketVolL" class="setup-dwc-input" min="5" max="200" step="0.5" placeholder="20"></div>
@@ -3061,7 +3015,7 @@
         </div>
         <div id="setupDwcDepUnidoExtrasWrap" class="setup-dwc-dep-unido-only">
         <div><label class="form-label setup-dwc-label" for="setupDwcModoCultivo">Modo DWC</label><select id="setupDwcModoCultivo" class="setup-dwc-input" onchange="try{onDwcModoChanged(DWC_FORM_IDS_SETUP);actualizarResumenSetup()}catch(e){}"><option value="aireado">DWC aireado</option><option value="kratky">Kratky</option></select></div>
-        <div><label class="form-label setup-dwc-label" for="setupDwcObjetivoCultivo">Objetivo de cultivo</label><select id="setupDwcObjetivoCultivo" class="setup-dwc-input"><option value="final">Planta adulta</option><option value="baby">Baby leaf</option></select></div>
+        <div><label class="form-label setup-dwc-label" for="setupDwcObjetivoCultivo">Objetivo de cultivo</label><select id="setupDwcObjetivoCultivo" class="setup-dwc-input" onchange="try{onSetupDwcMedidasInput()}catch(e){}"><option value="final">Planta adulta</option><option value="baby">Baby leaf</option></select></div>
         <p id="setupDwcCultivoRecoStatus" class="setup-hidden" role="status"></p>
         <div id="setupDwcDepUnidoRejillaWrap">
         <div><label class="form-label setup-dwc-label" for="setupDwcRejillaPreferida">Rejilla</label><select id="setupDwcRejillaPreferida" class="setup-dwc-input"><option value="objetivo">Por objetivo</option><option value="max">Máxima</option></select></div>
@@ -3092,12 +3046,14 @@
           <div><label class="form-label setup-dwc-label" for="setupSrfNumPlantas">Nº plantas (huecos)</label><input type="number" id="setupSrfNumPlantas" class="setup-dwc-input" min="1" max="64" step="1" placeholder="8" oninput="try{updateTorreBuilder()}catch(e){}"></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfFilas">Filas en balsa</label><input type="number" id="setupSrfFilas" class="setup-dwc-input" min="1" max="8" step="1" placeholder="1" oninput="try{updateTorreBuilder()}catch(e){}"></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfOxigenacionModo">Oxigenación</label><select id="setupSrfOxigenacionModo" class="setup-dwc-input" onchange="try{srfRefreshOxigenacionUi('setup');updateTorreBuilder()}catch(e){}"><option value="aireador">Bomba de aire (recirculante)</option><option value="kratky">Kratky (cámara de aire, sin aireador)</option></select></div>
-          <div id="setupSrfAirWrap"><label class="form-label setup-dwc-label" for="setupSrfAirLpm">Aireación (L/min)</label><input type="number" id="setupSrfAirLpm" class="setup-dwc-input" min="0.5" max="300" step="0.5" placeholder="8"></div>
-          <div id="setupSrfKratkyGapWrap" class="setup-hidden"><label class="form-label setup-dwc-label" for="setupSrfKratkyGapCm">Hueco aire bajo balsa (cm)</label><input type="number" id="setupSrfKratkyGapCm" class="setup-dwc-input" min="2" max="40" step="0.5" placeholder="8"></div>
-          <div id="setupSrfCirculanteWrap"><label class="form-label setup-dwc-label"><input type="checkbox" id="setupSrfCirculante" checked onchange="try{srfRefreshOxigenacionUi('setup')}catch(e){}"> Recirculación de solución</label></div>
-          <div id="setupSrfRecircWrap"><label class="form-label setup-dwc-label" for="setupSrfRecircLh">Recirculación (L/h)</label><input type="number" id="setupSrfRecircLh" class="setup-dwc-input" min="0" max="8000" step="10" placeholder="400"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfNetPotMm">Ø aro net pot (mm)</label><input type="number" id="setupSrfNetPotMm" class="setup-dwc-input" min="25" max="120" step="1" placeholder="50"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfBalsaGrosorMm">Grosor balsa (mm)</label><input type="number" id="setupSrfBalsaGrosorMm" class="setup-dwc-input" min="15" max="80" step="1" placeholder="40"></div>
+          <div id="setupSrfAirWrap"><label class="form-label setup-dwc-label" for="setupSrfAirLpm">Aireación (L/min)</label><input type="number" id="setupSrfAirLpm" class="setup-dwc-input" min="0.5" max="300" step="0.5" placeholder="8" oninput="try{updateTorreBuilder()}catch(e){}"></div>
+          <div id="setupSrfKratkyGapWrap" class="setup-hidden"><label class="form-label setup-dwc-label" for="setupSrfKratkyGapCm">Hueco aire bajo balsa (cm)</label><input type="number" id="setupSrfKratkyGapCm" class="setup-dwc-input" min="2" max="40" step="0.5" placeholder="8" oninput="try{updateTorreBuilder()}catch(e){}"></div>
+          <div id="setupSrfCirculanteWrap"><label class="form-label setup-dwc-label"><input type="checkbox" id="setupSrfCirculante" checked onchange="try{srfRefreshOxigenacionUi('setup');updateTorreBuilder()}catch(e){}"> Recirculación de solución</label></div>
+          <div id="setupSrfRecircWrap"><label class="form-label setup-dwc-label" for="setupSrfRecircLh">Recirculación (L/h)</label><input type="number" id="setupSrfRecircLh" class="setup-dwc-input" min="0" max="8000" step="10" placeholder="400" oninput="try{updateTorreBuilder()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfNetPotMm">Ø aro net pot (mm)</label><input type="number" id="setupSrfNetPotMm" class="setup-dwc-input" min="25" max="120" step="1" placeholder="50" oninput="try{updateTorreBuilder()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfNetPotHeightMm">Altura cesta (mm)</label><input type="number" id="setupSrfNetPotHeightMm" class="setup-dwc-input" min="30" max="200" step="1" placeholder="75" oninput="try{updateTorreBuilder()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfEspaciamientoCm">Separación huecos (cm)</label><input type="number" id="setupSrfEspaciamientoCm" class="setup-dwc-input" min="8" max="60" step="1" placeholder="20" oninput="try{updateTorreBuilder()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfBalsaGrosorMm">Grosor balsa (mm)</label><input type="number" id="setupSrfBalsaGrosorMm" class="setup-dwc-input" min="15" max="80" step="1" placeholder="40" oninput="try{updateTorreBuilder()}catch(e){}"></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfVolTrabajoL">Litros útiles en estanque</label><input type="number" id="setupSrfVolTrabajoL" class="setup-dwc-input" min="0.5" max="5000" step="0.1" placeholder="vacío = capacidad" oninput="try{updateTorreBuilder()}catch(e){}"></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfVolumenManualL">Volumen manual (L, opc.)</label><input type="number" id="setupSrfVolumenManualL" class="setup-dwc-input" min="1" max="5000" step="0.1" placeholder="si difiere de L×A×P" oninput="try{updateTorreBuilder()}catch(e){}"></div>
         </div>
@@ -3110,18 +3066,7 @@
             <div class="torre-preview nft-schematic-host" id="nftPreview" aria-hidden="true"></div>
           </div>
           <div class="torre-controls">
-            <p class="setup-field-hint setup-mb-8">Elige si tu NFT es un <strong>kit comercial</strong> (datos mínimos del embalaje) o un <strong>montaje DIY</strong> (canal, tubería y comprobación de bomba).</p>
-            <div class="setup-nft-montaje-origen-row setup-mb-10">
-              <span class="setup-nft-montaje-origen-label">Tipo de montaje</span>
-              <div class="setup-nft-layout-grid setup-nft-montaje-origen-chips">
-                <button type="button" class="equip-card nft-disp-btn" id="setupNftMontajeOrigenKit" onclick="seleccionarSetupNftMontajeOrigen('kit')"
-                  aria-pressed="false">Kit comercial</button>
-                <button type="button" class="equip-card nft-disp-btn selected" id="setupNftMontajeOrigenDiy" onclick="seleccionarSetupNftMontajeOrigen('diy')"
-                  aria-pressed="true">DIY / a medida</button>
-              </div>
-            </div>
-            <p id="setupNftMontajeOrigenHint" class="setup-field-hint setup-mb-8 setup-hidden" role="note">Modo kit: basta disposición, tubos/huecos y Ø de cesta; la app usa valores por defecto para canal y bomba. Cambia a DIY si quieres afinar lámina, tubería o validar tu bomba.</p>
-            <div id="setupNftMontajeDiyBlock">
+<div id="setupNftMontajeDiyBlock">
             <div class="setup-nft-guide">
               <div class="setup-nft-guide-title">Cómo configurarlo</div>
               <ol class="setup-nft-guide-list">
@@ -4593,13 +4538,13 @@
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
   <script src="js/torre-render-build.js?v=2026-05-15-dwc-preview"></script>
-  <script src="js/torre-render-main.js?v=2026-05-15-dwc-preview"></script>
+  <script src="js/torre-render-main.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-torre-slider-nums"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-tronco-vol3"></script>
-  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-srf"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-dwc-llenado"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-llenado"></script>
+  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf2"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-torre-sliders"></script>
   <script src="js/hc-setup-calc-core.js?v=2026-05-15-torre-sistema"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>

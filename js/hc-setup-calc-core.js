@@ -1709,11 +1709,7 @@ function guardarSetupYContinuar() {
       lhInp ? lhInp.value : '',
       wInp ? wInp.value : ''
     );
-    if (
-      vPump.tipo === 'error' &&
-      vPump.toast &&
-      !(typeof readNftMontajeOrigenDesdeSetupUi === 'function' && readNftMontajeOrigenDesdeSetupUi() === 'kit')
-    ) {
+    if (vPump.tipo === 'error' && vPump.toast) {
       showToast(vPump.toast, true);
     }
     state.configTorre.nftObjetivoCultivo =
@@ -1734,11 +1730,7 @@ function guardarSetupYContinuar() {
     } else {
       delete state.configTorre.nftNetPotHeightMm;
     }
-    if (typeof readNftMontajeOrigenDesdeSetupUi === 'function' && readNftMontajeOrigenDesdeSetupUi() === 'kit') {
-      state.configTorre.nftMontajeOrigen = 'kit';
-    } else {
-      delete state.configTorre.nftMontajeOrigen;
-    }
+    delete state.configTorre.nftMontajeOrigen;
   } else {
     delete state.configTorre.nftNumCanales;
     delete state.configTorre.nftHuecosPorCanal;
@@ -1800,20 +1792,15 @@ function guardarSetupYContinuar() {
     delete state.configTorre.torreBombaUsuarioPotenciaW;
   }
   if (!isNft && !isDwc && !isRdwc && !isSrf) {
-    if (typeof readTorreMontajeOrigenDesdeSetupUi === 'function' && readTorreMontajeOrigenDesdeSetupUi() === 'kit') {
-      state.configTorre.torreMontajeOrigen = 'kit';
-      delete state.configTorre.torreBombaUsuarioCaudalLh;
-      delete state.configTorre.torreBombaUsuarioPotenciaW;
-    } else {
-      delete state.configTorre.torreMontajeOrigen;
-      const lhTorre = document.getElementById('setupTorreBombaUsuarioLh');
-      const wTorre = document.getElementById('setupTorreBombaUsuarioW');
-      const uLhT = lhTorre ? parseFloat(String(lhTorre.value).replace(',', '.')) : NaN;
-      const uWT = wTorre ? parseFloat(String(wTorre.value).replace(',', '.')) : NaN;
-      if (Number.isFinite(uLhT) && uLhT > 0) state.configTorre.torreBombaUsuarioCaudalLh = Math.round(uLhT);
-      else delete state.configTorre.torreBombaUsuarioCaudalLh;
-      if (Number.isFinite(uWT) && uWT > 0) state.configTorre.torreBombaUsuarioPotenciaW = Math.round(uWT);
-      else delete state.configTorre.torreBombaUsuarioPotenciaW;
+    delete state.configTorre.torreMontajeOrigen;
+    const lhTorre = document.getElementById('setupTorreBombaUsuarioLh');
+    const wTorre = document.getElementById('setupTorreBombaUsuarioW');
+    const uLhT = lhTorre ? parseFloat(String(lhTorre.value).replace(',', '.')) : NaN;
+    const uWT = wTorre ? parseFloat(String(wTorre.value).replace(',', '.')) : NaN;
+    if (Number.isFinite(uLhT) && uLhT > 0) state.configTorre.torreBombaUsuarioCaudalLh = Math.round(uLhT);
+    else delete state.configTorre.torreBombaUsuarioCaudalLh;
+    if (Number.isFinite(uWT) && uWT > 0) state.configTorre.torreBombaUsuarioPotenciaW = Math.round(uWT);
+    else delete state.configTorre.torreBombaUsuarioPotenciaW;
       const sliderAltTorre = document.getElementById('sliderAltura');
       const altM = sliderAltTorre ? parseFloat(sliderAltTorre.value) : NaN;
       const bTorre =
@@ -1830,11 +1817,10 @@ function guardarSetupYContinuar() {
       const huecosTorre = niveles * cestas;
       if (huecosTorre >= 40 && !setupEquipamiento.has('difusor')) {
         showToast(
-          'Torre con muchas plantas: en DIY conviene oxigenar el depósito (p. ej. difusor) además de la circulación por el tubo.',
+          'Torre con muchas plantas: conviene oxigenar el depósito (p. ej. difusor) además de la circulación por el tubo.',
           false
         );
       }
-    }
   }
   const volEfectivo = (function () {
     if (!isDwc || !(Number(state.configTorre.volDeposito) > 0)) return vol;

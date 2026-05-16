@@ -61,6 +61,7 @@ function srfEnsureConfigDefaults(cfg) {
   if (cfg.srfCirculante == null) cfg.srfCirculante = cfg.srfOxigenacionModo !== 'kratky';
   if (!Number.isFinite(Number(cfg.srfBalsaGrosorMm)) || Number(cfg.srfBalsaGrosorMm) <= 0) cfg.srfBalsaGrosorMm = 40;
   if (!Number.isFinite(Number(cfg.srfNetPotMm)) || Number(cfg.srfNetPotMm) <= 0) cfg.srfNetPotMm = 50;
+  if (!Number.isFinite(Number(cfg.srfNetPotHeightMm)) || Number(cfg.srfNetPotHeightMm) <= 0) cfg.srfNetPotHeightMm = 75;
   if (!Number.isFinite(Number(cfg.srfEspaciamientoCm)) || Number(cfg.srfEspaciamientoCm) <= 0) cfg.srfEspaciamientoCm = 20;
   if (!Number.isFinite(Number(cfg.srfRecircLh)) || Number(cfg.srfRecircLh) <= 0) cfg.srfRecircLh = 400;
   if (!Number.isFinite(Number(cfg.srfAirLpm)) || Number(cfg.srfAirLpm) <= 0) cfg.srfAirLpm = 8;
@@ -174,6 +175,8 @@ function srfMergeCamposFormularioEnCfg(cfg, ids) {
   g('sysSrfBalsaGrosorMm', 'srfBalsaGrosorMm', (v) => srfParseNum('sysSrfBalsaGrosorMm', 15, 80, cfg.srfBalsaGrosorMm));
   g('setupSrfNetPotMm', 'srfNetPotMm', (v) => srfParseNum('setupSrfNetPotMm', 25, 120, cfg.srfNetPotMm));
   g('sysSrfNetPotMm', 'srfNetPotMm', (v) => srfParseNum('sysSrfNetPotMm', 25, 120, cfg.srfNetPotMm));
+  g('setupSrfNetPotHeightMm', 'srfNetPotHeightMm', (v) => srfParseNum('setupSrfNetPotHeightMm', 30, 200, cfg.srfNetPotHeightMm));
+  g('sysSrfNetPotHeightMm', 'srfNetPotHeightMm', (v) => srfParseNum('sysSrfNetPotHeightMm', 30, 200, cfg.srfNetPotHeightMm));
   g('setupSrfEspaciamientoCm', 'srfEspaciamientoCm', (v) => srfParseNum('setupSrfEspaciamientoCm', 8, 60, cfg.srfEspaciamientoCm));
   g('sysSrfEspaciamientoCm', 'srfEspaciamientoCm', (v) => srfParseNum('sysSrfEspaciamientoCm', 8, 60, cfg.srfEspaciamientoCm));
   g('setupSrfVolumenManualL', 'srfVolumenManualL', (v) => {
@@ -231,6 +234,7 @@ function syncSrfFormDesdeConfig(cfg, scope) {
   set('AirLpm', cfg.srfAirLpm);
   set('BalsaGrosorMm', cfg.srfBalsaGrosorMm);
   set('NetPotMm', cfg.srfNetPotMm);
+  set('NetPotHeightMm', cfg.srfNetPotHeightMm);
   set('EspaciamientoCm', cfg.srfEspaciamientoCm);
   set('VolumenManualL', cfg.srfVolumenManualL != null ? cfg.srfVolumenManualL : '');
   set('VolTrabajoL', cfg.volMezclaLitros != null ? cfg.volMezclaLitros : '');
@@ -238,6 +242,29 @@ function syncSrfFormDesdeConfig(cfg, scope) {
   set('KratkyGapCm', cfg.srfKratkyGapCm);
   srfRefreshOxigenacionUi(scope);
   return cfg;
+}
+
+/** Actualiza resumen y estado de cálculo del panel Cultivo (sin guardar). */
+function srfRefreshSysFormLive() {
+  if (!state.configTorre || state.configTorre.tipoInstalacion !== 'srf') return;
+  let draft = state.configTorre;
+  try {
+    draft =
+      typeof buildSrfConfigFromForm === 'function'
+        ? buildSrfConfigFromForm('sys', hcSetupClonePlain(state.configTorre, {}) || {})
+        : draft;
+    if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(draft);
+  } catch (_) {}
+  try {
+    if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'sysSrfCalcStatus');
+  } catch (_) {}
+  const res = document.getElementById('sistemaSrfResumen');
+  if (res && typeof textoResumenSistemaSrfPanel === 'function') {
+    res.textContent = textoResumenSistemaSrfPanel(draft);
+  }
+  try {
+    if (typeof renderTorre === 'function') renderTorre();
+  } catch (_) {}
 }
 
 function srfRefreshOxigenacionUi(scope) {

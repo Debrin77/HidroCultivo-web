@@ -982,9 +982,7 @@ function buildNftDraftConfigFromSetupUi() {
   const pot = typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : { rimMm: null, heightMm: null };
   if (pot.rimMm != null) draft.nftNetPotRimMm = pot.rimMm;
   if (pot.heightMm != null) draft.nftNetPotHeightMm = pot.heightMm;
-  if (typeof readNftMontajeOrigenDesdeSetupUi === 'function' && readNftMontajeOrigenDesdeSetupUi() === 'kit') {
-    draft.nftMontajeOrigen = 'kit';
-  }
+  delete draft.nftMontajeOrigen;
   return draft;
 }
 
@@ -1383,7 +1381,15 @@ function updateTorreBuilder() {
       const draft =
         typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', state.configTorre || {}) : {};
       if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(draft);
-      if (typeof renderSrfSetupPreview === 'function') renderSrfSetupPreview(preview, draft);
+      const prevCfg = state.configTorre;
+      state.configTorre = Object.assign({}, prevCfg || {}, draft, { tipoInstalacion: 'srf' });
+      if (typeof generarSVGSrf === 'function') {
+        preview.innerHTML = generarSVGSrf();
+        preview.classList.add('torre-preview--srf');
+      } else if (typeof renderSrfSetupPreview === 'function') {
+        renderSrfSetupPreview(preview, draft);
+      }
+      state.configTorre = prevCfg;
       if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'setupSrfCalcStatus');
     } catch (_) {}
     return;

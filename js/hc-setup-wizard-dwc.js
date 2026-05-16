@@ -456,13 +456,39 @@ function _dwcColgadoCestaBajoTapaCm(cfg, Pcm) {
 }
 
 /**
- * Altura de columna de líquido (cm) hasta la superficie segura: P − colgado − lámina de aire bajo sustrato.
- * Evita el error anterior (usar solo hPot−sustrato como si fuera toda la columna de agua).
+ * Distancia nutriente → base del sustrato (cm) para volumen de llenado:
+ * union/fallback de dwcAnalisisLlenadoDistancia (edad en fichas) o fase inicial según sustrato/objetivo.
+ */
+function _dwcGapLaminaCmDesdeConfig(cfg) {
+  cfg = cfg || {};
+  try {
+    const a = dwcAnalisisLlenadoDistancia(cfg);
+    if ((a.variant === 'union' || a.variant === 'fallback') && a.hi != null && Number.isFinite(a.hi)) {
+      return Math.max(0, Math.min(5, Number(a.hi)));
+    }
+  } catch (_) {}
+  const sKey =
+    typeof normalizaSustratoKey === 'function'
+      ? normalizaSustratoKey(cfg.sustrato || (typeof state !== 'undefined' && state.configSustrato) || 'esponja')
+      : 'esponja';
+  const esCoco = typeof dwcSustratoFamiliaCoco === 'function' ? dwcSustratoFamiliaCoco(sKey) : false;
+  let faseIni = 'recien';
+  try {
+    const obj = typeof dwcGetObjetivoCultivo === 'function' ? dwcGetObjetivoCultivo(cfg) : 'final';
+    if (obj === 'baby') faseIni = 'pequena';
+  } catch (_) {}
+  const r = dwcRangoCmPorFaseYFamilia(faseIni, esCoco);
+  const hi = r && r[1] != null ? Number(r[1]) : 0.85;
+  return Math.max(0.2, Math.min(5, hi));
+}
+
+/**
+ * Altura de columna de líquido (cm) hasta la superficie segura: P − colgado − cámara de aire (cm).
  */
 function _dwcAlturaColumnaLiquidoSeguraCm(cfg, Pcm) {
   const P = Number(Pcm);
   if (!Number.isFinite(P) || P < 5 || P > 200) return null;
-  const gapLaminaCm = 0.85;
+  const gapLaminaCm = _dwcGapLaminaCmDesdeConfig(cfg);
   const hang = _dwcColgadoCestaBajoTapaCm(cfg, P);
   const hIdeal = P - hang - gapLaminaCm;
   const hMinModelo = Math.min(P * 0.18, 5.0);
@@ -1055,8 +1081,12 @@ function dwcSetupLitrosSolucionEstado(cfg) {
     const sustratoMm =
       typeof getDwcAlturaSustratoEstimadaMm === 'function' ? getDwcAlturaSustratoEstimadaMm(cfg) : null;
     let hint =
-      'Volumen de llenado recomendado para mezclar nutrientes y checklist. Reserva bajo la maceta según altura de cesta';
+      'Volumen de llenado recomendado para mezclar nutrientes y checklist. Reserva bajo la maceta según altura/Ø de cesta';
     if (Number.isFinite(sustratoMm)) hint += ' y sustrato (~' + sustratoMm + ' mm estimados)';
+    try {
+      const gapCm = _dwcGapLaminaCmDesdeConfig(cfg);
+      if (Number.isFinite(gapCm)) hint += '; cámara de aire orientativa ~' + dwcFmtCmComma(gapCm) + ' cm';
+    } catch (_) {}
     hint += '.';
     if (cap != null && cap > 0 && Math.abs(cap - litros) > 0.25) {
       hint += ' Capacidad geométrica del depósito: ' + cap + ' L.';
@@ -1151,6 +1181,20 @@ function dwcRefreshSetupLitrosSolucionUi() {
         'Se calcula en tiempo real al cambiar medidas del cubo y tamaño de cesta (misma lógica que Cultivo e instalación).';
     }
   }
+}
+
+/** Quita litros de mezcla sugeridos por DWC al cambiar a torre/NFT/etc. */
+function clearSetupVolMezclaDwcAutofill() {
+  const inp = document.getElementById('setupVolMezclaL');
+  if (!inp) return;
+  const prevAuto = inp.getAttribute('data-hc-dwc-mezcla-auto');
+  if (prevAuto == null || prevAuto === '') return;
+  const cur = parseFloat(String(inp.value || '').trim().replace(',', '.'));
+  const autoN = parseFloat(String(prevAuto).replace(',', '.'));
+  if (Number.isFinite(cur) && Number.isFinite(autoN) && Math.abs(cur - autoN) < 0.06) {
+    inp.value = '';
+  }
+  inp.removeAttribute('data-hc-dwc-mezcla-auto');
 }
 
 /**
@@ -2936,17 +2980,11 @@ function refreshDwcSistemaMedidasUI() {
     } else {
       const cap = getDwcCapacidadLitrosFromSistemaInputs();
       if (cap != null && cap > 0) {
-        const cfgDraft = state.configTorre ? { ...state.configTorre } : {};
-        const { L: Ld, W: Wd } = dwcLargoAnchoCmEffectivosDesdeFormIds(DWC_FORM_IDS_SISTEMA);
-        const Pd = _dwcParseOptCm('sysDwcProfCm', 5, 200);
-        const hPotD = _dwcParseOptMm('sysDwcPotHmm', 30, 200);
-        cfgDraft.dwcDepositoForma = forma;
-        if (Ld != null) cfgDraft.dwcDepositoLargoCm = Ld;
-        if (Wd != null) cfgDraft.dwcDepositoAnchoCm = Wd;
-        if (Pd != null) cfgDraft.dwcDepositoProfCm = Pd;
-        else delete cfgDraft.dwcDepositoProfCm;
-        delete cfgDraft.dwcDepositoVolManualL;
-        if (hPotD != null) cfgDraft.dwcNetPotHeightMm = hPotD;
+        const cfgDraft = state.configTorre ? { ...state.configTorre } : { tipoInstalacion: 'dwc' };
+        cfgDraft.tipoInstalacion = 'dwc';
+        try {
+          dwcMergeCamposFormularioEnCfg(cfgDraft, DWC_FORM_IDS_SISTEMA);
+        } catch (_) {}
         const volSeguro = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfgDraft);
         volEl.style.display = 'block';
         volEl.textContent =
@@ -2995,11 +3033,11 @@ function refreshDwcSistemaMedidasUI() {
       oxEl.textContent =
         'Modo Kratky (sin aireador): controla mucho temperatura y volumen; mantener la cámara de aire (0,5–1 cm bajo la base del sustrato) y evitar >22°C en agua.';
       try {
-        mountDwcDistanciaLlenadoTiempoReal();
-      } catch (_) {}
-      try {
         renderDwcCultivoRecoStatus('sys');
       } catch (eRk) {}
+      try {
+        mountDwcDistanciaLlenadoTiempoReal();
+      } catch (_) {}
       return;
     }
     const par = dwcRecomendacionDifusorParaSistemaUI(cfg);

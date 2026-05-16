@@ -847,6 +847,10 @@ function updateTorreStats() {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =
         'En RDWC este bloque es el <strong>reservorio de control</strong> (suele venir en la placa del kit); para nutrientes la app suma los <strong>cubos útiles</strong> configurados arriba.';
+    } else if (cfg.tipoInstalacion === 'torre') {
+      volHintEl.classList.remove('setup-hidden');
+      volHintEl.innerHTML =
+        'En <strong>torre vertical</strong> indicas tú la <strong>capacidad máxima</strong> del depósito y, si quieres, los <strong>litros de mezcla</strong> (abajo). No se calculan automáticamente: vacío en mezcla = se usa el máximo.';
     } else {
       volHintEl.classList.remove('setup-hidden');
       volHintEl.innerHTML =

@@ -29,26 +29,39 @@ function tipoInstalacionNormalizado(cfg) {
   return 'torre';
 }
 
-/** 'kit' = comercial / caja; 'diy' = a medida (comportamiento histórico si falta clave). */
-function hcNftMontajeOrigenNormalizado(cfg) {
-  return (cfg && cfg.nftMontajeOrigen) === 'kit' ? 'kit' : 'diy';
+/** Siempre DIY/a medida (opción kit comercial retirada de la UI). */
+function hcNftMontajeOrigenNormalizado(_cfg) {
+  return 'diy';
 }
 
-function hcRdwcMontajeOrigenNormalizado(cfg) {
-  return (cfg && cfg.rdwcMontajeOrigen) === 'kit' ? 'kit' : 'diy';
+function hcRdwcMontajeOrigenNormalizado(_cfg) {
+  return 'diy';
 }
 
-/** 'kit' = comercial; 'diy' = a medida (por defecto si falta clave). */
-function hcTorreMontajeOrigenNormalizado(cfg) {
-  return (cfg && cfg.torreMontajeOrigen) === 'kit' ? 'kit' : 'diy';
+function hcTorreMontajeOrigenNormalizado(_cfg) {
+  return 'diy';
 }
 
 function readTorreMontajeOrigenDesdeSetupUi() {
-  return document.getElementById('setupTorreMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+  return 'diy';
 }
 
 function readTorreMontajeOrigenDesdeSistemaUi() {
-  return document.getElementById('sysTorreMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+  return 'diy';
+}
+
+function _hcExposeMontajeDiyBlocks() {
+  [
+    'setupNftMontajeDiyBlock',
+    'sysNftMontajeDiyBlock',
+    'setupRdwcMontajeDiyExtra',
+    'sysRdwcMontajeDiyExtra',
+    'setupTorreBombaUsuarioBlock',
+    'sysTorreBombaUsuarioBlock',
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('setup-hidden');
+  });
 }
 
 /** Devuelve los sliders de niveles/cestas al asistente torre (tras DWC o pestaña Cultivo). */
@@ -219,20 +232,8 @@ function validarBombaUsuarioTorreVsCalculo(b, lhStr, wStr) {
   return { tipo, html, toast: null };
 }
 
-function seleccionarSetupTorreMontajeOrigen(mode) {
-  const kit = mode === 'kit';
-  const bKit = document.getElementById('setupTorreMontajeOrigenKit');
-  const bDiy = document.getElementById('setupTorreMontajeOrigenDiy');
-  if (bKit) {
-    bKit.classList.toggle('selected', kit);
-    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
-  }
-  if (bDiy) {
-    bDiy.classList.toggle('selected', !kit);
-    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
-  }
-  const hint = document.getElementById('setupTorreMontajeOrigenHint');
-  if (hint) hint.classList.toggle('setup-hidden', !kit);
+function seleccionarSetupTorreMontajeOrigen(_mode) {
+  _hcExposeMontajeDiyBlocks();
   const sec = document.getElementById('seccionTuboBomba');
   const torreSoloGraficoSliders =
     typeof setupTipoInstalacion !== 'undefined' &&
@@ -248,12 +249,6 @@ function seleccionarSetupTorreMontajeOrigen(mode) {
       sec.style.display = 'block';
     }
   }
-  const userBlock = document.getElementById('setupTorreBombaUsuarioBlock');
-  if (userBlock) userBlock.classList.toggle('setup-hidden', kit);
-  if (kit) {
-    const msg = document.getElementById('setupTorreBombaUsuarioMsg');
-    if (msg) msg.innerHTML = '';
-  }
   try {
     calcularBombaRecomendada();
   } catch (_) {}
@@ -265,26 +260,8 @@ function seleccionarSetupTorreMontajeOrigen(mode) {
   } catch (_) {}
 }
 
-function seleccionarSistemaTorreMontajeOrigen(mode) {
-  const kit = mode === 'kit';
-  const bKit = document.getElementById('sysTorreMontajeOrigenKit');
-  const bDiy = document.getElementById('sysTorreMontajeOrigenDiy');
-  if (bKit) {
-    bKit.classList.toggle('selected', kit);
-    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
-  }
-  if (bDiy) {
-    bDiy.classList.toggle('selected', !kit);
-    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
-  }
-  const hint = document.getElementById('sysTorreMontajeOrigenHint');
-  if (hint) hint.classList.toggle('setup-hidden', !kit);
-  const userBlock = document.getElementById('sysTorreBombaUsuarioBlock');
-  if (userBlock) userBlock.classList.toggle('setup-hidden', kit);
-  if (kit) {
-    const msg = document.getElementById('sysTorreBombaUsuarioMsg');
-    if (msg) msg.innerHTML = '';
-  }
+function seleccionarSistemaTorreMontajeOrigen(_mode) {
+  _hcExposeMontajeDiyBlocks();
   try {
     calcularBombaRecomendadaSistema();
   } catch (_) {}
@@ -297,10 +274,6 @@ function refrescarUIMensajeBombaUsuarioTorreSistema() {
   const el = document.getElementById('sysTorreBombaUsuarioMsg');
   if (!el) return;
   if (!state.configTorre || state.configTorre.tipoInstalacion !== 'torre') {
-    el.innerHTML = '';
-    return;
-  }
-  if (readTorreMontajeOrigenDesdeSistemaUi() === 'kit') {
     el.innerHTML = '';
     return;
   }
@@ -375,7 +348,7 @@ function sincronizarSistemaTorreMontajeUI(cfg) {
         : '';
   }
   try {
-    seleccionarSistemaTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(cfg) === 'kit' ? 'kit' : 'diy');
+    seleccionarSistemaTorreMontajeOrigen('diy');
   } catch (_) {}
   try {
     calcularBombaRecomendadaSistema();
@@ -394,12 +367,8 @@ function aplicarSistemaTorreMontajeDesdeFormulario() {
   cfg.numCestas = c;
   const altM = parseFloat(document.getElementById('sysSliderAltura')?.value || '');
   if (Number.isFinite(altM)) cfg.alturaTorre = Math.max(0.5, Math.min(3, altM));
-  if (readTorreMontajeOrigenDesdeSistemaUi() === 'kit') {
-    cfg.torreMontajeOrigen = 'kit';
-    delete cfg.torreBombaUsuarioCaudalLh;
-    delete cfg.torreBombaUsuarioPotenciaW;
-  } else {
-    delete cfg.torreMontajeOrigen;
+  delete cfg.torreMontajeOrigen;
+  {
     const lhTorre = document.getElementById('sysTorreBombaUsuarioLh');
     const wTorre = document.getElementById('sysTorreBombaUsuarioW');
     const uLhT = lhTorre ? parseFloat(String(lhTorre.value).replace(',', '.')) : NaN;
@@ -443,10 +412,6 @@ function refrescarUIMensajeBombaUsuarioTorre() {
     el.innerHTML = '';
     return;
   }
-  if (typeof readTorreMontajeOrigenDesdeSetupUi === 'function' && readTorreMontajeOrigenDesdeSetupUi() === 'kit') {
-    el.innerHTML = '';
-    return;
-  }
   const sliderH = document.getElementById('sliderAltura');
   const n = parseInt(document.getElementById('sliderNiveles')?.value || 5, 10);
   const c = parseInt(document.getElementById('sliderCestas')?.value || 5, 10);
@@ -479,34 +444,19 @@ function onSetupTorreBombaUsuarioBlur() {
 }
 
 function readNftMontajeOrigenDesdeSetupUi() {
-  return document.getElementById('setupNftMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+  return 'diy';
 }
 
 function readNftMontajeOrigenDesdeSistemaUi() {
-  return document.getElementById('sysNftMontajeOrigenKit')?.classList.contains('selected') ? 'kit' : 'diy';
+  return 'diy';
 }
 
-function readRdwcMontajeOrigenDesdeForm(scope) {
-  const idKit = scope === 'sys' ? 'sysRdwcMontajeOrigenKit' : 'setupRdwcMontajeOrigenKit';
-  return document.getElementById(idKit)?.classList.contains('selected') ? 'kit' : 'diy';
+function readRdwcMontajeOrigenDesdeForm(_scope) {
+  return 'diy';
 }
 
-function seleccionarSetupNftMontajeOrigen(mode) {
-  const kit = mode === 'kit';
-  const bKit = document.getElementById('setupNftMontajeOrigenKit');
-  const bDiy = document.getElementById('setupNftMontajeOrigenDiy');
-  if (bKit) {
-    bKit.classList.toggle('selected', kit);
-    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
-  }
-  if (bDiy) {
-    bDiy.classList.toggle('selected', !kit);
-    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
-  }
-  const diyBlock = document.getElementById('setupNftMontajeDiyBlock');
-  if (diyBlock) diyBlock.classList.toggle('setup-hidden', kit);
-  const hint = document.getElementById('setupNftMontajeOrigenHint');
-  if (hint) hint.classList.toggle('setup-hidden', !kit);
+function seleccionarSetupNftMontajeOrigen(_mode) {
+  _hcExposeMontajeDiyBlocks();
   try {
     updateNftSetupPreview();
   } catch (_) {}
@@ -515,61 +465,19 @@ function seleccionarSetupNftMontajeOrigen(mode) {
   } catch (_) {}
 }
 
-function seleccionarSistemaNftMontajeOrigen(mode) {
-  const kit = mode === 'kit';
-  const bKit = document.getElementById('sysNftMontajeOrigenKit');
-  const bDiy = document.getElementById('sysNftMontajeOrigenDiy');
-  if (bKit) {
-    bKit.classList.toggle('selected', kit);
-    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
-  }
-  if (bDiy) {
-    bDiy.classList.toggle('selected', !kit);
-    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
-  }
-  const diyBlock = document.getElementById('sysNftMontajeDiyBlock');
-  if (diyBlock) diyBlock.classList.toggle('setup-hidden', kit);
-  const hint = document.getElementById('sysNftMontajeOrigenHint');
-  if (hint) hint.classList.toggle('setup-hidden', !kit);
+function seleccionarSistemaNftMontajeOrigen(_mode) {
+  _hcExposeMontajeDiyBlocks();
 }
 
-function seleccionarSetupRdwcMontajeOrigen(mode) {
-  const kit = mode === 'kit';
-  const bKit = document.getElementById('setupRdwcMontajeOrigenKit');
-  const bDiy = document.getElementById('setupRdwcMontajeOrigenDiy');
-  if (bKit) {
-    bKit.classList.toggle('selected', kit);
-    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
-  }
-  if (bDiy) {
-    bDiy.classList.toggle('selected', !kit);
-    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
-  }
-  const ex = document.getElementById('setupRdwcMontajeDiyExtra');
-  if (ex) ex.classList.toggle('setup-hidden', kit);
-  const hint = document.getElementById('setupRdwcMontajeOrigenHint');
-  if (hint) hint.classList.toggle('setup-hidden', !kit);
+function seleccionarSetupRdwcMontajeOrigen(_mode) {
+  _hcExposeMontajeDiyBlocks();
   try {
     applySetupRdwcDesdeFormulario();
   } catch (_) {}
 }
 
-function seleccionarSistemaRdwcMontajeOrigen(mode) {
-  const kit = mode === 'kit';
-  const bKit = document.getElementById('sysRdwcMontajeOrigenKit');
-  const bDiy = document.getElementById('sysRdwcMontajeOrigenDiy');
-  if (bKit) {
-    bKit.classList.toggle('selected', kit);
-    bKit.setAttribute('aria-pressed', kit ? 'true' : 'false');
-  }
-  if (bDiy) {
-    bDiy.classList.toggle('selected', !kit);
-    bDiy.setAttribute('aria-pressed', !kit ? 'true' : 'false');
-  }
-  const ex = document.getElementById('sysRdwcMontajeDiyExtra');
-  if (ex) ex.classList.toggle('setup-hidden', kit);
-  const hint = document.getElementById('sysRdwcMontajeOrigenHint');
-  if (hint) hint.classList.toggle('setup-hidden', !kit);
+function seleccionarSistemaRdwcMontajeOrigen(_mode) {
+  _hcExposeMontajeDiyBlocks();
   try {
     renderRdwcCompatStatus(state.configTorre || {}, 'sysRdwcCompatStatus');
     renderRdwcCalculoStatus(state.configTorre || {}, 'sysRdwcCalcStatus');
@@ -670,24 +578,8 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
   if (controlTrabajo != null) c.volMezclaLitros = Math.min(c.rdwcControlVolL, controlTrabajo);
   else delete c.volMezclaLitros;
   c.rdwcNetPotMm = Math.round(Math.max(40, Math.min(200, gNum(prefix + 'NetPotMm', c.rdwcNetPotMm || 125))));
-  const modo = readRdwcMontajeOrigenDesdeForm(scope);
-  if (modo === 'kit') {
-    c.rdwcMontajeOrigen = 'kit';
-    delete c.rdwcBucketTrabajoL;
-    delete c.rdwcBucketTrabajoDiamCm;
-    delete c.rdwcBucketTrabajoProfCm;
-    delete c.rdwcRecirculationLh;
-    delete c.rdwcAirLpm;
-    delete c.rdwcNetPotHeightMm;
-    delete c.rdwcCenterSpacingCm;
-    delete c.rdwcTempObjetivoC;
-    delete c.rdwcHeadM;
-    delete c.rdwcLineLenM;
-    delete c.rdwcFittings;
-    delete c.rdwcHydroMode;
-    delete c.rdwcLayout;
-  } else {
-    delete c.rdwcMontajeOrigen;
+  delete c.rdwcMontajeOrigen;
+  {
     const bucketTrabajo = rdwcParseLitrosTrabajo(document.getElementById(prefix + 'BucketTrabajoL')?.value);
     if (bucketTrabajo != null) c.rdwcBucketTrabajoL = Math.min(c.rdwcBucketVolL, bucketTrabajo);
     else delete c.rdwcBucketTrabajoL;
@@ -1990,9 +1882,9 @@ function abrirSetup() {
   } else updateTorreBuilder();
   try {
     if (setupTipoInstalacion === 'nft') {
-      seleccionarSetupNftMontajeOrigen(hcNftMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+      seleccionarSetupNftMontajeOrigen('diy');
     } else if (tipoInstalacionNormalizado(c) === 'torre') {
-      seleccionarSetupTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+      seleccionarSetupTorreMontajeOrigen('diy');
     }
   } catch (_) {}
   renderSetupPage();
@@ -2060,13 +1952,9 @@ function iniciarConfiguracionTorre() {
 function aplicarSetupWizardExclusividadTorreVertical() {
   const tipo = typeof setupTipoInstalacion !== 'undefined' ? setupTipoInstalacion : 'torre';
   const pag = typeof setupPagina !== 'undefined' ? setupPagina : 0;
-  const row = document.getElementById('setupTorreMontajeOrigenRow');
-  const hint = document.getElementById('setupTorreMontajeOrigenHint');
   const sec = document.getElementById('seccionTuboBomba');
   const mostrarBloqueTorreMontajeYTubo = tipo === 'torre' && pag === 1;
   if (!mostrarBloqueTorreMontajeYTubo) {
-    if (row) row.classList.add('setup-hidden');
-    if (hint) hint.classList.add('setup-hidden');
     if (sec) {
       sec.style.display = 'none';
       sec.classList.add('setup-hidden');
@@ -2076,23 +1964,28 @@ function aplicarSetupWizardExclusividadTorreVertical() {
     } catch (_) {}
     return;
   }
-  if (row) row.classList.remove('setup-hidden');
   try {
     restaurarSetupTorreBuilderControls();
   } catch (_) {}
   try {
-    const cTorreUi =
-      state.configTorre && tipoInstalacionNormalizado(state.configTorre) === 'torre' ? state.configTorre : {};
-    seleccionarSetupTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(cTorreUi) === 'kit' ? 'kit' : 'diy');
+    seleccionarSetupTorreMontajeOrigen('diy');
   } catch (_) {}
 }
 
 function seleccionarTipoInstalacionSetup(tipo) {
+  try {
+    _hcExposeMontajeDiyBlocks();
+  } catch (_) {}
   if (tipo === 'nft') setupTipoInstalacion = 'nft';
   else if (tipo === 'dwc') setupTipoInstalacion = 'dwc';
   else if (tipo === 'rdwc') setupTipoInstalacion = 'rdwc';
   else if (tipo === 'srf') setupTipoInstalacion = 'srf';
   else setupTipoInstalacion = 'torre';
+  if (setupTipoInstalacion !== 'dwc') {
+    try {
+      if (typeof clearSetupVolMezclaDwcAutofill === 'function') clearSetupVolMezclaDwcAutofill();
+    } catch (_) {}
+  }
   if (setupTipoInstalacion === 'rdwc' && (!setupRdwcDraft || tipoInstalacionNormalizado(setupRdwcDraft) !== 'rdwc')) {
     const base = !setupEsNuevaTorre && tipoInstalacionNormalizado(state.configTorre || {}) === 'rdwc'
       ? state.configTorre
@@ -2205,7 +2098,7 @@ function refrescarSetupTipoInstalacionUI() {
     try {
       const cTorreUi =
         state.configTorre && tipoInstalacionNormalizado(state.configTorre) === 'torre' ? state.configTorre : {};
-      seleccionarSetupTorreMontajeOrigen(hcTorreMontajeOrigenNormalizado(cTorreUi) === 'kit' ? 'kit' : 'diy');
+      seleccionarSetupTorreMontajeOrigen('diy');
     } catch (_) {}
   }
   const dwcWizard = document.getElementById('setupDwcDetalleWrap');
@@ -2255,13 +2148,10 @@ function refrescarSetupTipoInstalacionUI() {
   } catch (_) {}
   if (isSrf) {
     try {
-      const draft =
-        typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', state.configTorre || {}) : {};
-      if (typeof syncSrfFormDesdeConfig === 'function') syncSrfFormDesdeConfig(draft, 'setup');
-      if (typeof renderSrfSetupPreview === 'function') {
-        renderSrfSetupPreview(document.getElementById('setupSrfPreview'), draft);
+      if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
+      else if (typeof syncSrfFormDesdeConfig === 'function') {
+        syncSrfFormDesdeConfig(state.configTorre || {}, 'setup');
       }
-      if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'setupSrfCalcStatus');
     } catch (_) {}
   }
   if (setupTipoInstalacion === 'dwc') {
@@ -2284,7 +2174,7 @@ function refrescarSetupTipoInstalacionUI() {
       refrescarNftMontajeSubpanels();
       refrescarNftCanalesSliderEtiqueta();
       const cfgN = state.configTorre || {};
-      seleccionarSetupNftMontajeOrigen(hcNftMontajeOrigenNormalizado(cfgN) === 'kit' ? 'kit' : 'diy');
+      seleccionarSetupNftMontajeOrigen('diy');
     } catch (e) {}
   }
 }
@@ -3050,7 +2940,7 @@ function syncSistemaRdwcDesdeConfig(cfg) {
   const hm = document.getElementById('sysRdwcHydroMode');
   if (hm) hm.value = c.rdwcHydroMode || 'estandar';
   try {
-    seleccionarSistemaRdwcMontajeOrigen(hcRdwcMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+    seleccionarSistemaRdwcMontajeOrigen('diy');
   } catch (_) {}
   bindRdwcCompatLive('sys');
   renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
@@ -3091,7 +2981,7 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
     if (el) el.value = map[id] != null ? String(map[id]) : '';
   });
   try {
-    seleccionarSetupRdwcMontajeOrigen(hcRdwcMontajeOrigenNormalizado(c) === 'kit' ? 'kit' : 'diy');
+    seleccionarSetupRdwcMontajeOrigen('diy');
   } catch (_) {}
   bindRdwcCompatLive('setup');
   const cFresh = setupRdwcDraft || c;
@@ -3330,7 +3220,7 @@ function sincronizarSistemaNftMontajeUI() {
   onSistemaNftMesaMultinivelToggle();
   refrescarSistemaNftMontajeSubpanels();
   try {
-    seleccionarSistemaNftMontajeOrigen(hcNftMontajeOrigenNormalizado(cfg) === 'kit' ? 'kit' : 'diy');
+    seleccionarSistemaNftMontajeOrigen('diy');
   } catch (_) {}
   applySistemaTipoPanelesColapsablesUI();
   try {
@@ -3452,8 +3342,7 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   if (document.getElementById('sysNftDispEscalera')?.classList.contains('selected')) dispo = 'escalera';
   else if (document.getElementById('sysNftDispPared')?.classList.contains('selected')) dispo = 'pared';
   cfg.nftDisposicion = dispo;
-  if (readNftMontajeOrigenDesdeSistemaUi() === 'kit') cfg.nftMontajeOrigen = 'kit';
-  else delete cfg.nftMontajeOrigen;
+  delete cfg.nftMontajeOrigen;
   const altRaw = parseFloat(String(document.getElementById('sysNftAlturaBombeoCm')?.value || '').replace(',', '.'));
   if (Number.isFinite(altRaw) && altRaw > 0) cfg.nftAlturaBombeoCm = Math.min(500, Math.round(altRaw));
   else delete cfg.nftAlturaBombeoCm;

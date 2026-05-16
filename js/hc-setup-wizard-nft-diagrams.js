@@ -741,10 +741,20 @@ function renderTorreSistemaResumenTabla(cfg) {
       const spT = torreGetObjetivoSpec(torreGetObjetivoCultivo(cfg));
       rows.push(['Objetivo de cosecha', escHtmlUi(spT.label + ' · ' + spT.densidadTxt)]);
     }
+    const mezExplicito =
+      cfg.volMezclaLitros != null &&
+      Number.isFinite(Number(cfg.volMezclaLitros)) &&
+      Number(cfg.volMezclaLitros) > 0 &&
+      vol != null &&
+      Number(cfg.volMezclaLitros) < vol - 0.05;
     rows.push([
       'Depósito (cap. máx)',
       vol != null && Number.isFinite(vol) && vol > 0
-        ? String(vol) + ' L' + (vMez != null && Number.isFinite(vMez) && vMez < vol - 0.05 ? ' · mezcla ' + vMez + ' L' : '')
+        ? esDwcTab
+          ? String(vol) + ' L' + (mezExplicito ? ' · mezcla ' + Number(cfg.volMezclaLitros) + ' L' : '')
+          : String(vol) +
+            ' L' +
+            (mezExplicito ? ' · mezcla ' + Number(cfg.volMezclaLitros) + ' L' : ' · mezcla = máximo (manual)')
         : 'Indica litros en Torre o asistente',
     ]);
     if (esDwcTab) {
