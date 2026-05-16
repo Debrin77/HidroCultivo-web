@@ -13,6 +13,23 @@ function _dwcParseOptMm(id, min, max) {
   return v;
 }
 
+function _dwcStateCfg() {
+  return typeof state !== 'undefined' && state && state.configTorre ? state.configTorre : {};
+}
+
+function _dwcFormIdsIsSetup(ids) {
+  return !!(ids && (ids === DWC_FORM_IDS_SETUP || ids.forma === 'setupDwcDepositoForma'));
+}
+
+function _dwcParseProfCmFromIds(ids, forma) {
+  const f = forma != null ? dwcNormalizeDepositoForma(forma) : dwcNormalizeDepositoForma(document.getElementById(ids.forma)?.value);
+  if (f === 'troncopiramidal' && ids.profTronco) {
+    const pt = _dwcParseOptCm(ids.profTronco, 5, 200);
+    if (pt != null) return pt;
+  }
+  return _dwcParseOptCm(ids.prof, 5, 200);
+}
+
 /** Diámetro interior útil (cm) desde L/W guardados: iguales → D; si difieren → media (configs antiguas). */
 function dwcDiametroInteriorCmDesdeLW(lRaw, wRaw) {
   const Ln = Number(lRaw);
@@ -335,7 +352,7 @@ function dwcTroncoLitrosSeguroDesdeConfig(cfg) {
 
 function dwcTroncoLitrosDesdeFormIds(ids) {
   if (!ids) return null;
-  const P = _dwcParseOptCm(ids.prof, 5, 200);
+  const P = _dwcParseProfCmFromIds(ids, 'troncopiramidal');
   const Ls = _dwcParseOptCm(ids.largoSup || ids.largo, 5, 300);
   const Ws = _dwcParseOptCm(ids.anchoSup || ids.ancho, 5, 300);
   const Li = ids.largoInf ? _dwcParseOptCm(ids.largoInf, 5, 300) : null;
@@ -1065,7 +1082,7 @@ function dwcSetupLitrosSolucionEstado(cfg) {
 /** Muestra litros de solución calculados en tiempo real (tras medidas de cesta). */
 function dwcRefreshTroncoVolumenUi(ids) {
   ids = ids || DWC_FORM_IDS_SISTEMA;
-  const isSetup = ids === DWC_FORM_IDS_SETUP;
+  const isSetup = _dwcFormIdsIsSetup(ids);
   const block = document.getElementById(isSetup ? 'setupDwcTroncoVolBlock' : 'sysDwcTroncoVolBlock');
   const totalEl = document.getElementById(isSetup ? 'setupDwcTroncoVolTotal' : 'sysDwcTroncoVolTotal');
   const optEl = document.getElementById(isSetup ? 'setupDwcTroncoVolOptimo' : 'sysDwcTroncoVolOptimo');
@@ -3162,6 +3179,9 @@ function onSetupDwcMedidasInput() {
     refreshDwcDepositoMedidasLayout(DWC_FORM_IDS_SETUP);
   } catch (_) {}
   try {
+    dwcRefreshTroncoVolumenUi(DWC_FORM_IDS_SETUP);
+  } catch (_) {}
+  try {
     actualizarResumenSetup();
   } catch (e) {}
   try {
@@ -3191,7 +3211,7 @@ function dwcMergeCamposFormularioEnCfg(cfg, ids) {
       W = d;
     }
   }
-  const P = _dwcParseOptCm(ids.prof, 5, 200);
+  const P = _dwcParseProfCmFromIds(ids, forma);
   const volManual = ids.volManual ? _dwcParseVolManualLitros(document.getElementById(ids.volManual)?.value) : null;
   const rim = _dwcParseOptMm(ids.rim, 25, 120);
   const hPot = _dwcParseOptMm(ids.alt, 30, 200);
@@ -3481,6 +3501,7 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
     setVal(ids.ancho, c.dwcDepositoAnchoCm);
   }
   if (ids.prof) setVal(ids.prof, c.dwcDepositoProfCm != null ? c.dwcDepositoProfCm : '');
+  if (ids.profTronco) setVal(ids.profTronco, c.dwcDepositoProfCm != null ? c.dwcDepositoProfCm : '');
   if (ids.largoInf) setVal(ids.largoInf, c.dwcTroncoLargoInfCm);
   if (ids.anchoInf) setVal(ids.anchoInf, c.dwcTroncoAnchoInfCm);
   if (ids.largoSup) setVal(ids.largoSup, c.dwcDepositoLargoCm);
@@ -3540,6 +3561,12 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
       dwcRefreshMulticuboDependienteUi('sys');
     }
   } catch (_) {}
+  try {
+    refreshDwcDepositoMedidasLayout(ids);
+  } catch (_) {}
+  try {
+    dwcRefreshTroncoVolumenUi(ids);
+  } catch (_) {}
 }
 
 function toggleDwcVolumenManualUI(formIds, cfg) {
@@ -3570,9 +3597,9 @@ function _dwcSetProfLabel(profWrap, tronco) {
 function refreshDwcDepositoMedidasLayout(ids) {
   ids = ids || DWC_FORM_IDS_SISTEMA;
   const forma = dwcNormalizeDepositoForma(
-    document.getElementById(ids.forma)?.value || (state.configTorre || {}).dwcDepositoForma
+    document.getElementById(ids.forma)?.value || _dwcStateCfg().dwcDepositoForma
   );
-  const isSetup = ids === DWC_FORM_IDS_SETUP;
+  const isSetup = _dwcFormIdsIsSetup(ids);
   const tronco = forma === 'troncopiramidal';
   const la = document.getElementById(isSetup ? 'setupDwcMedidasLAWrap' : 'sysDwcMedidasLAWrap');
   const cyl = document.getElementById(isSetup ? 'setupDwcMedidasCilWrap' : 'sysDwcMedidasCilWrap');
@@ -3581,10 +3608,6 @@ function refreshDwcDepositoMedidasLayout(ids) {
   const prof = document.getElementById(isSetup ? 'setupDwcProfWrap' : 'sysDwcProfWrap');
   const det = document.getElementById(isSetup ? null : 'sysDwcVolDetallesWrap');
   if (prof && row && !prof.dataset.dwcProfHomeId) prof.dataset.dwcProfHomeId = row.id;
-  if (row) row.classList.toggle('setup-hidden', tronco);
-  if (la) la.classList.toggle('setup-hidden', forma === 'cilindrico' || tronco);
-  if (cyl) cyl.classList.toggle('setup-hidden', forma !== 'cilindrico');
-  if (trWrap) trWrap.classList.toggle('setup-hidden', !tronco);
   if (prof) {
     prof.classList.remove('setup-hidden');
     const homeId = prof.dataset.dwcProfHomeId;
@@ -3593,6 +3616,18 @@ function refreshDwcDepositoMedidasLayout(ids) {
     else if (home || row) _dwcReparentProfWrap(prof, home || row, home || row);
     _dwcSetProfLabel(prof, tronco);
   }
+  if (tronco && ids.profTronco && ids.prof) {
+    const elT = document.getElementById(ids.profTronco);
+    const elP = document.getElementById(ids.prof);
+    const rawT = elT && String(elT.value != null ? elT.value : '').trim();
+    const rawP = elP && String(elP.value != null ? elP.value : '').trim();
+    if (rawT && !rawP && elP) elP.value = elT.value;
+    else if (rawP && !rawT && elT) elT.value = elP.value;
+  }
+  if (row) row.classList.toggle('setup-hidden', tronco);
+  if (la) la.classList.toggle('setup-hidden', forma === 'cilindrico' || tronco);
+  if (cyl) cyl.classList.toggle('setup-hidden', forma !== 'cilindrico');
+  if (trWrap) trWrap.classList.toggle('setup-hidden', !tronco);
   if (det) det.classList.toggle('setup-hidden', tronco);
   try {
     dwcRefreshTroncoVolumenUi(ids);
@@ -3602,7 +3637,7 @@ function refreshDwcDepositoMedidasLayout(ids) {
 function onDwcFormaChanged(formIds) {
   const ids = formIds || DWC_FORM_IDS_SISTEMA;
   const forma = dwcNormalizeDepositoForma(
-    document.getElementById(ids.forma)?.value || (state.configTorre || {}).dwcDepositoForma
+    document.getElementById(ids.forma)?.value || _dwcStateCfg().dwcDepositoForma
   );
   if (forma === 'cilindrico' && ids.diametro) {
     const dIn = document.getElementById(ids.diametro);
@@ -3628,9 +3663,16 @@ function onDwcFormaChanged(formIds) {
     seedPair(ids.ancho, ids.anchoSup);
     seedPair(ids.largo, ids.largoInf);
     seedPair(ids.ancho, ids.anchoInf);
+    if (ids.profTronco) {
+      const elT = document.getElementById(ids.profTronco);
+      if (elT && !String(elT.value || '').trim()) {
+        const p0 = _dwcParseOptCm(ids.prof, 5, 200);
+        if (p0 != null) elT.value = String(p0);
+      }
+    }
   }
   try {
-    toggleDwcVolumenManualUI(ids, state.configTorre);
+    toggleDwcVolumenManualUI(ids, _dwcStateCfg());
   } catch (_) {}
   try {
     if (ids === DWC_FORM_IDS_SISTEMA) refreshDwcSistemaMedidasUI();
