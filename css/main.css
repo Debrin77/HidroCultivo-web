@@ -14899,6 +14899,9 @@ button.toggle-switch:focus-visible {
   min-height: min(32vh, 260px);
   vertical-align: middle;
 }
+.torre-preview.torre-preview--rdwc .rdwc-svg-diagram--hub {
+  max-width: 100%;
+}
 /* Asistente NFT: columna completa (evita texto comprimido en franja lateral) */
 #setupNftBuilderWrap.setup-nft-asistente-simple .torre-builder {
   flex-direction: column;
