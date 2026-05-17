@@ -1700,6 +1700,12 @@
             <div class="dwc-tronco-vol-row"><span class="dwc-tronco-vol-lab">Útil</span><span id="sysSrfVolOptimo" class="dwc-tronco-vol-val">—</span></div>
           </div>
           <div id="sysSrfCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
+          <p id="sysSrfCultivoRecoStatus" class="setup-dwc-reco-status setup-hidden" role="status" aria-live="polite"></p>
+          <p id="sysSrfCestaRecoStatus" class="setup-dwc-reco-status setup-hidden" role="status" aria-live="polite"></p>
+          <div class="setup-nft-aplicar-reco-row setup-mt-8">
+            <button type="button" class="btn btn-secondary btn-sm" id="sysSrfAplicarCultivoBtn" onclick="aplicarSrfRecoCultivo('sys')" disabled>Aplicar estanque (cultivo)</button>
+            <button type="button" class="btn btn-secondary btn-sm" id="sysSrfAplicarCestaBtn" onclick="aplicarSrfRecoCesta('sys')" disabled>Aplicar cesta (cultivo)</button>
+          </div>
           <button type="button" class="torre-dwc-save-btn" onclick="aplicarSistemaSrfDesdeFormulario()">Guardar datos SRF</button>
         </div>
       </div>
@@ -2691,10 +2697,10 @@
         onclick="setWelcomeTheme('dark')" aria-pressed="false">Dark</button>
     </div>
     <h2 id="welcomeGuideTitle" class="welcome-title">Controla tu cultivo hidropónico sin perderte</h2>
-    <p class="welcome-lead">HIDROCultivo centraliza tu operativa diaria para decidir mejor: <strong>configuración del sistema</strong>, <strong>asistente de mediciones</strong>, <strong>herramientas PRO</strong>, <strong>cálculo por cultivo</strong>, <strong>nutrientes populares en hidroponía</strong> y <strong>meteorología local</strong> en una experiencia única.</p>
+    <p class="welcome-lead">HIDROCultivo centraliza tu operativa diaria: <strong>cinco sistemas hidropónicos</strong> (torre, NFT, DWC, RDWC y SRF) con <strong>cálculos recomendados</strong> de volumen, cestas, bombeo y aireación; más <strong>asistente de mediciones</strong>, <strong>herramientas PRO</strong>, <strong>nutrientes por cultivo y fase</strong> y <strong>meteorología local</strong>.</p>
     <div class="welcome-kpis" aria-label="Resumen de utilidad">
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-grid"/></svg><strong>1</strong> panel operativo</span>
-      <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-layers"/></svg><strong>5</strong> sistemas hidropónicos</span>
+      <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-layers"/></svg><strong>5</strong> sistemas con cálculos guiados</span>
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-bolt"/></svg><strong>8</strong> módulos clave</span>
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-check"/></svg>Checklist guiado</span>
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-flask"/></svg>Nutriente recomendado por cultivo y fase</span>
@@ -2703,7 +2709,7 @@
       <article class="welcome-value-card welcome-value-card--green" role="listitem">
         <div class="welcome-value-icon" aria-hidden="true">⚙️</div>
         <h3>Configuración de sistemas</h3>
-        <p>Torre, NFT, DWC, RDWC o SRF con estructura consistente desde el primer día.</p>
+        <p>Torre, NFT, DWC, RDWC o SRF: geometría, litros, cestas, bomba y checklist desde el asistente.</p>
       </article>
       <article class="welcome-value-card welcome-value-card--blue" role="listitem">
         <div class="welcome-value-icon" aria-hidden="true">📝</div>
@@ -2723,7 +2729,7 @@
       <article class="welcome-value-card welcome-value-card--violet" role="listitem">
         <div class="welcome-value-icon" aria-hidden="true">📊</div>
         <h3>Cálculo según cultivos</h3>
-        <p>Soporte de decisiones según etapa, tipo de cultivo y objetivo de manejo.</p>
+        <p>Recomendaciones por cultivo, baby leaf o planta completa, y validación de cestas en cada sistema.</p>
       </article>
       <article class="welcome-value-card welcome-value-card--teal" role="listitem">
         <div class="welcome-value-icon" aria-hidden="true">💧</div>
@@ -2793,9 +2799,7 @@
     <div class="setup-page active" id="spage0">
       <div class="setup-title">Configura tu instalación</div>
       <div class="setup-subtitle">
-        Elige el tipo de sistema: <strong>torre vertical</strong>, <strong>NFT</strong>, <strong>DWC</strong>, <strong>RDWC</strong> o <strong>SRF</strong> (balsa flotante).
-        Cada uno guarda geometría, nutrientes y <strong>checklist de recarga</strong> (NFT: canales y película; DWC: depósito único; RDWC: recirculación + retorno; SRF: estanque común y balsa).
-        Puedes tener <strong>varias instalaciones mezclando tipos</strong> (por ejemplo 3 NFT en 3 pueblos, o 4 torres en el mismo balcón): cada una es independiente y guarda <strong>su municipio y clima</strong>. Cambia de activa en Inicio o en Cultivo e instalación.
+        Elige <strong>torre vertical</strong>, <strong>NFT</strong>, <strong>DWC</strong>, <strong>RDWC</strong> o <strong>SRF</strong> (balsa flotante). Cada sistema guarda geometría, nutrientes y <strong>checklist de recarga</strong> con <strong>cálculos automáticos</strong>: litros de mezcla, bomba o aireador, Ø de cesta y compatibilidad con el cultivo que selecciones. Puedes tener <strong>varias instalaciones mezclando tipos</strong>; cada una guarda <strong>su municipio y clima</strong>. Cambia de activa en Inicio o en Cultivo e instalación.
       </div>
 
       <div id="setupTipoInstalacionPanel" class="setup-tipo-panel">
@@ -3081,6 +3085,11 @@
           <div><label class="form-label setup-dwc-label" for="setupSrfFilas">Filas en balsa</label><input type="number" id="setupSrfFilas" class="setup-dwc-input" min="1" max="8" step="1" placeholder="2" oninput="try{onSetupSrfInput()}catch(e){}"></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfPlantasPorFila">Plantas por fila</label><input type="number" id="setupSrfPlantasPorFila" class="setup-dwc-input" min="1" max="16" step="1" placeholder="4" oninput="try{onSetupSrfInput()}catch(e){}"></div>
         </div>
+        <p class="setup-dwc-section-kicker">Balsa EPS</p>
+        <div class="setup-dwc-grid-2">
+          <div><label class="form-label setup-dwc-label" for="setupSrfBalsaGrosorMm">Grosor balsa (mm)</label><input type="number" id="setupSrfBalsaGrosorMm" class="setup-dwc-input" min="15" max="80" step="1" placeholder="40" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfEspaciamientoCm">Separación huecos (cm)</label><input type="number" id="setupSrfEspaciamientoCm" class="setup-dwc-input" min="8" max="60" step="1" placeholder="20" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+        </div>
         <p class="setup-dwc-section-kicker">Cesta (net pot)</p>
         <div class="setup-dwc-grid-2">
           <div><label class="form-label setup-dwc-label" for="setupSrfNetPotMm">Diámetro cesta (mm)</label><input type="number" id="setupSrfNetPotMm" class="setup-dwc-input" min="25" max="120" step="1" placeholder="50" oninput="try{onSetupSrfInput()}catch(e){}"></div>
@@ -3088,6 +3097,12 @@
           <div><label class="form-label setup-dwc-label" for="setupSrfObjetivoCultivo">Objetivo de cultivo</label><select id="setupSrfObjetivoCultivo" class="setup-dwc-input" onchange="try{onSetupSrfInput()}catch(e){}"><option value="final">Planta adulta</option><option value="baby">Baby leaf</option></select></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfOxigenacionModo">Oxigenación</label><select id="setupSrfOxigenacionModo" class="setup-dwc-input" onchange="try{srfRefreshOxigenacionUi('setup');onSetupSrfInput()}catch(e){}"><option value="aireador">Bomba de aire</option><option value="kratky">Kratky (sin aireador)</option></select></div>
           <div id="setupSrfKratkyGapWrap" class="setup-hidden"><label class="form-label setup-dwc-label" for="setupSrfKratkyGapCm">Cámara de aire bajo balsa (cm)</label><input type="number" id="setupSrfKratkyGapCm" class="setup-dwc-input" min="2" max="40" step="0.5" placeholder="8" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+        </div>
+        <p id="setupSrfCultivoRecoStatus" class="setup-dwc-reco-status setup-hidden" role="status" aria-live="polite"></p>
+        <p id="setupSrfCestaRecoStatus" class="setup-dwc-reco-status setup-hidden" role="status" aria-live="polite"></p>
+        <div class="setup-nft-aplicar-reco-row setup-mt-8">
+          <button type="button" class="btn btn-secondary btn-sm" id="setupSrfAplicarCultivoBtn" onclick="aplicarSrfRecoCultivo('setup')" disabled>Aplicar estanque (cultivo)</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="setupSrfAplicarCestaBtn" onclick="aplicarSrfRecoCesta('setup')" disabled>Aplicar cesta (cultivo)</button>
         </div>
         <div id="setupSrfLitrosSolucionBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
           <p class="setup-dwc-litros-solucion-label">Litros de solución en el estanque</p>
@@ -4604,8 +4619,9 @@
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
   <script src="js/hc-setup-wizard-core.js?v=2026-05-15-nft-asistente"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-colgado"></script>
-  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-setup-preview"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-colgado"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15"></script>
+
+  <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf-reco"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-nft-aplicar"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-nft-asistente"></script>
   <script src="js/hc-setup-calc-core.js?v=2026-05-15-rdwc-cesta-litros"></script>
@@ -4620,7 +4636,7 @@
   <script src="js/hc-tools-pro.js?v=10"></script>
   <script src="js/hc-setup-checklist.js?v=2026-05-15-srf-cl"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
-  <script src="js/hc-setup-consejos.js?v=33"></script>
+  <script src="js/hc-setup-consejos.js?v=2026-05-15-cesta-matrix"></script>
   <script src="js/calendario-logic.js?v=9"></script>
   <script src="js/meteo-forecast-meteo.js?v=13"></script>
   <script src="js/meteo-forecast-dashboard.js?v=21"></script>

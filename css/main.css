@@ -14981,7 +14981,10 @@ button.toggle-switch:focus-visible {
   line-height: 1.35;
 }
 .setup-nft-compat-status,
-#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-compat-status {
+.setup-dwc-reco-status,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-compat-status,
+#setupSrfDetalleWrap .setup-dwc-reco-status,
+#sistemaSrfAyudaBody .setup-dwc-reco-status {
   display: block;
   margin: 8px 0 0;
   padding: 8px 10px;

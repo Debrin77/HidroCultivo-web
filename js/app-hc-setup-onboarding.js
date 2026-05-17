@@ -305,9 +305,14 @@ function toggleSetupPlanta(key) {
   renderSetupPlantasGrid();
   // Recalcular dosis con los cultivos actualizados
   renderDosisSetup();
-  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'nft') {
+  if (typeof setupTipoInstalacion !== 'undefined') {
     try {
-      if (typeof renderNftCultivoRecoStatus === 'function') renderNftCultivoRecoStatus('setup');
+      if (setupTipoInstalacion === 'nft' && typeof renderNftCultivoRecoStatus === 'function') {
+        renderNftCultivoRecoStatus('setup');
+      }
+      if (setupTipoInstalacion === 'srf' && typeof renderSrfCultivoRecoStatus === 'function') {
+        renderSrfCultivoRecoStatus('setup');
+      }
     } catch (_) {}
   }
 }

@@ -6,6 +6,8 @@ const SRF_FORM_IDS_SETUP = [
   'setupSrfCanalLargoCm',
   'setupSrfCanalAnchoCm',
   'setupSrfProfundidadCm',
+  'setupSrfBalsaGrosorMm',
+  'setupSrfEspaciamientoCm',
   'setupSrfFilas',
   'setupSrfPlantasPorFila',
   'setupSrfNetPotMm',
@@ -207,6 +209,283 @@ function srfLitrosPorPlanta(cfg) {
 function srfNormalizeObjetivoCultivo(raw) {
   const v = String(raw || '').trim().toLowerCase();
   return v === 'baby' || v === 'baby_leaf' || v === 'micro' ? 'baby' : 'final';
+}
+
+function srfGrupoObjetivoDesdeConfig(cfg) {
+  return typeof hcGrupoCultivoDominanteDesdeConfig === 'function'
+    ? hcGrupoCultivoDominanteDesdeConfig(cfg)
+    : typeof nftGrupoObjetivoDesdeConfig === 'function'
+      ? nftGrupoObjetivoDesdeConfig(cfg)
+      : 'lechugas';
+}
+
+function srfRecoValoresDesdeCelda(celda) {
+  if (!celda) return null;
+  return {
+    profCm: celda.profRecoCm,
+    balsaMm: celda.balsaRecoMm,
+    rimMm: celda.rimReco,
+    heightMm: celda.heightReco,
+    sepCm: celda.sepRecoCm,
+    advierte: !!celda.advierte,
+    txt: celda.txt,
+  };
+}
+
+function srfRecoPerfilDesdeConfig(cfg) {
+  cfg = cfg || {};
+  const grupo = srfGrupoObjetivoDesdeConfig(cfg);
+  const objetivo = srfNormalizeObjetivoCultivo(cfg.srfObjetivoCultivo);
+  const celda =
+    typeof hcCultivoCestaRecoCelda === 'function'
+      ? hcCultivoCestaRecoCelda(grupo, 'srf', objetivo)
+      : null;
+  const vals = srfRecoValoresDesdeCelda(celda);
+  const gLabel =
+    (HC_CESTA_MATRIX_GRUPOS || []).find(x => x.key === grupo)?.label ||
+    (typeof nftRecoPerfilPorGrupo === 'function' ? nftRecoPerfilPorGrupo(grupo).etiqueta : grupo);
+  return {
+    grupo,
+    etiqueta: gLabel,
+    objetivo,
+    objetivoLabel: objetivo === 'baby' ? 'Baby leaf' : 'Planta completa',
+    celda,
+    profMinCm: vals && vals.profCm != null ? Math.max(10, vals.profCm - 3) : 20,
+    profMaxCm: vals && vals.profCm != null ? Math.min(50, vals.profCm + 4) : 30,
+    profRecoCm: vals ? vals.profCm : 25,
+    balsaMinMm: vals && vals.balsaMm != null ? Math.max(15, vals.balsaMm - 8) : 30,
+    balsaMaxMm: vals && vals.balsaMm != null ? Math.min(80, vals.balsaMm + 10) : 50,
+    balsaRecoMm: vals ? vals.balsaMm : 40,
+    rimMinMm: vals && vals.rimMm != null ? Math.max(25, vals.rimMm - 12) : 40,
+    rimMaxMm: vals && vals.rimMm != null ? Math.min(120, vals.rimMm + 15) : 75,
+    rimRecoMm: vals ? vals.rimMm : 50,
+    heightMinMm: vals && vals.heightMm != null ? Math.max(30, vals.heightMm - 15) : 55,
+    heightMaxMm: vals && vals.heightMm != null ? Math.min(200, vals.heightMm + 20) : 90,
+    heightRecoMm: vals ? vals.heightMm : 75,
+    sepMinCm: vals && vals.sepCm != null ? Math.max(8, vals.sepCm - 4) : 15,
+    sepMaxCm: vals && vals.sepCm != null ? Math.min(60, vals.sepCm + 8) : 25,
+    sepRecoCm: vals ? vals.sepCm : 20,
+    permite: !(vals && vals.advierte),
+    resumenTxt: celda ? celda.txt : '',
+  };
+}
+
+function srfRecomendacionCultivoDesdeConfig(cfg) {
+  cfg = cfg || state.configTorre || {};
+  if (cfg.tipoInstalacion !== 'srf') return null;
+  const perfil = srfRecoPerfilDesdeConfig(cfg);
+  const prof = Number(cfg.srfProfundidadCm);
+  const balsa = Number(cfg.srfBalsaGrosorMm);
+  const rim = Number(cfg.srfNetPotMm);
+  const height = Number(cfg.srfNetPotHeightMm);
+  const sep = Number(cfg.srfEspaciamientoCm);
+  let estado = 'ok';
+  let veredicto = 'Parámetros dentro del rango orientativo';
+  const avisos = [];
+  if (!perfil.permite) {
+    estado = 'warn';
+    avisos.push('Cultivo exigente en SRF estándar; vigila densidad y oxigenación');
+  }
+  if (Number.isFinite(prof) && prof > 0) {
+    if (prof < perfil.profMinCm) avisos.push('Profundidad baja para este cultivo');
+    else if (prof > perfil.profMaxCm) avisos.push('Profundidad alta (más volumen y aireador)');
+  } else {
+    avisos.push('Indica profundidad útil del estanque');
+  }
+  if (Number.isFinite(balsa) && balsa > 0) {
+    if (balsa < perfil.balsaMinMm) avisos.push('Balsa fina: vigila rigidez');
+    else if (balsa > perfil.balsaMaxMm) avisos.push('Balsa gruesa: menos cuelgue útil de cesta');
+  }
+  if (Number.isFinite(rim) && rim > 0) {
+    if (rim < perfil.rimMinMm) avisos.push('Cesta pequeña para el cultivo');
+    else if (rim > perfil.rimMaxMm) avisos.push('Cesta grande para la densidad habitual');
+  }
+  if (Number.isFinite(height) && height > 0) {
+    if (height < perfil.heightMinMm) avisos.push('Cesta poco profunda');
+    else if (height > perfil.heightMaxMm) avisos.push('Cesta muy alta sobre la balsa');
+  }
+  if (Number.isFinite(sep) && sep > 0) {
+    if (sep < perfil.sepMinCm) avisos.push('Separación muy cerrada');
+    else if (sep > perfil.sepMaxCm) avisos.push('Separación muy abierta');
+  }
+  if (avisos.length) {
+    estado = estado === 'ok' ? 'warn' : estado;
+    veredicto = avisos.join('; ');
+  }
+  return {
+    perfil,
+    profActualCm: Number.isFinite(prof) ? prof : null,
+    balsaActualMm: Number.isFinite(balsa) ? balsa : null,
+    rimActualMm: Number.isFinite(rim) ? rim : null,
+    heightActualMm: Number.isFinite(height) ? height : null,
+    sepActualCm: Number.isFinite(sep) ? sep : null,
+    estado,
+    veredicto,
+  };
+}
+
+function srfRecomendacionCultivoTextoCorto(cfg) {
+  const r = srfRecomendacionCultivoDesdeConfig(cfg);
+  if (!r) return '';
+  const p = r.perfil;
+  return (
+    'Cultivo: ' +
+    p.etiqueta +
+    ' · ' +
+    p.objetivoLabel +
+    ' · P ~' +
+    (p.profRecoCm != null ? p.profRecoCm : '—') +
+    ' cm · cesta Ø' +
+    (p.rimRecoMm != null ? p.rimRecoMm : '—') +
+    ' mm · ' +
+    (r.estado === 'ok' ? 'OK' : 'Revisar') +
+    '.'
+  );
+}
+
+function srfDraftParaCompatibilidad(scope) {
+  const esSetup = scope === 'setup';
+  let draft;
+  if (esSetup && typeof buildSrfConfigFromForm === 'function') {
+    draft = buildSrfConfigFromForm('setup', Object.assign({}, state.configTorre || {}));
+    if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) {
+      draft.cultivosIniciales = [...setupPlantasSeleccionadas];
+    }
+  } else if (!esSetup && typeof buildSrfConfigFromForm === 'function') {
+    draft = buildSrfConfigFromForm('sys', Object.assign({}, state.configTorre || {}));
+  } else {
+    draft = Object.assign({}, state.configTorre || {}, { tipoInstalacion: 'srf' });
+  }
+  return draft;
+}
+
+function srfRefreshAplicarRecoBtns(scope, r, hayCultivo) {
+  const p = scope === 'setup' ? 'setup' : 'sys';
+  const btnCult = document.getElementById(p + 'SrfAplicarCultivoBtn');
+  const btnCesta = document.getElementById(p + 'SrfAplicarCestaBtn');
+  const ok = !!(r && hayCultivo && r.perfil);
+  if (btnCult) btnCult.disabled = !ok;
+  if (btnCesta) btnCesta.disabled = !ok;
+}
+
+function renderSrfCompatibilidadEnEl(el, html, visible) {
+  if (!el) return;
+  if (!visible) {
+    el.innerHTML = '';
+    el.classList.add('setup-hidden');
+    return;
+  }
+  el.classList.remove('setup-hidden');
+  el.innerHTML = html;
+}
+
+function renderSrfCultivoRecoStatus(scope) {
+  const elCult = document.getElementById(scope === 'setup' ? 'setupSrfCultivoRecoStatus' : 'sysSrfCultivoRecoStatus');
+  const elCesta = document.getElementById(scope === 'setup' ? 'setupSrfCestaRecoStatus' : 'sysSrfCestaRecoStatus');
+  const esSetup = scope === 'setup';
+  if (esSetup) {
+    if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'srf') {
+      renderSrfCompatibilidadEnEl(elCult, '', false);
+      renderSrfCompatibilidadEnEl(elCesta, '', false);
+      srfRefreshAplicarRecoBtns(scope, null, false);
+      return;
+    }
+  } else if (!state.configTorre || state.configTorre.tipoInstalacion !== 'srf') {
+    renderSrfCompatibilidadEnEl(elCult, '', false);
+    renderSrfCompatibilidadEnEl(elCesta, '', false);
+    srfRefreshAplicarRecoBtns(scope, null, false);
+    return;
+  }
+  const draft = srfDraftParaCompatibilidad(scope);
+  const r = srfRecomendacionCultivoDesdeConfig(draft);
+  if (!r) {
+    renderSrfCompatibilidadEnEl(elCult, '', false);
+    renderSrfCompatibilidadEnEl(elCesta, '', false);
+    srfRefreshAplicarRecoBtns(scope, null, false);
+    return;
+  }
+  const chip = typeof rdwcCompatChipHtml === 'function' ? rdwcCompatChipHtml : () => '';
+  const esc = typeof meteoEscHtml === 'function' ? meteoEscHtml : x => String(x == null ? '' : x);
+  const hayCultivo =
+    (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) ||
+    (Array.isArray(draft.cultivosIniciales) && draft.cultivosIniciales.length > 0);
+  const p = r.perfil;
+  const profAct =
+    r.profActualCm != null ? '<strong>' + r.profActualCm + ' cm</strong>' : 'por indicar';
+  const cultivoLine = hayCultivo
+    ? esc(p.etiqueta) +
+      ' · ' +
+      esc(p.objetivoLabel) +
+      ' · P recom. <strong>' +
+      (p.profRecoCm != null ? p.profMinCm + '–' + p.profMaxCm : '—') +
+      ' cm</strong> · balsa <strong>' +
+      (p.balsaRecoMm != null ? p.balsaRecoMm : '—') +
+      ' mm</strong>'
+    : 'Elige cultivo en el asistente para validar estanque y balsa';
+  renderSrfCompatibilidadEnEl(
+    elCult,
+    '<span class="rdwc-compat-text nft-compat-line">' +
+      chip(r.estado) +
+      ' <strong>SRF vs cultivo</strong> · ' +
+      cultivoLine +
+      ' · actual ' +
+      profAct +
+      (hayCultivo ? '. <em>' + esc(r.veredicto) + '</em>' : '.') +
+      '</span>',
+    true
+  );
+  const rimAct = r.rimActualMm != null ? r.rimActualMm + ' mm' : '—';
+  renderSrfCompatibilidadEnEl(
+    elCesta,
+    '<span class="rdwc-compat-text">' +
+      chip(r.estado) +
+      ' <strong>Cesta y rejilla</strong> · Ø <strong>' +
+      (p.rimRecoMm != null ? p.rimMinMm + '–' + p.rimMaxMm : '—') +
+      ' mm</strong> (reco. ' +
+      (p.rimRecoMm != null ? p.rimRecoMm : '—') +
+      ' mm) · alt. ~' +
+      (p.heightRecoMm != null ? p.heightRecoMm : '—') +
+      ' mm · sep. ~' +
+      (p.sepRecoCm != null ? p.sepRecoCm : '—') +
+      ' cm · actual Ø ' +
+      rimAct +
+      '.</span>',
+    hayCultivo
+  );
+  srfRefreshAplicarRecoBtns(scope, r, hayCultivo);
+}
+
+function aplicarSrfRecoCultivo(scope) {
+  const draft = srfDraftParaCompatibilidad(scope);
+  const r = srfRecomendacionCultivoDesdeConfig(draft);
+  if (!r || !r.perfil) return;
+  const p = scope === 'setup' ? 'setup' : 'sys';
+  const set = (suffix, val) => {
+    const el = document.getElementById(p + 'Srf' + suffix);
+    if (el && val != null) el.value = val;
+  };
+  set('ProfundidadCm', r.perfil.profRecoCm);
+  set('BalsaGrosorMm', r.perfil.balsaRecoMm);
+  set('EspaciamientoCm', r.perfil.sepRecoCm);
+  if (scope === 'setup') onSetupSrfInput();
+  else if (typeof srfRefreshSysFormLive === 'function') srfRefreshSysFormLive();
+  if (typeof showToast === 'function') showToast('Profundidad, balsa y separación aplicadas', false);
+}
+
+function aplicarSrfRecoCesta(scope) {
+  const draft = srfDraftParaCompatibilidad(scope);
+  const r = srfRecomendacionCultivoDesdeConfig(draft);
+  if (!r || !r.perfil) return;
+  const p = scope === 'setup' ? 'setup' : 'sys';
+  const set = (suffix, val) => {
+    const el = document.getElementById(p + 'Srf' + suffix);
+    if (el && val != null) el.value = val;
+  };
+  set('NetPotMm', r.perfil.rimRecoMm);
+  set('NetPotHeightMm', r.perfil.heightRecoMm);
+  if (scope === 'setup') onSetupSrfInput();
+  else if (typeof srfRefreshSysFormLive === 'function') srfRefreshSysFormLive();
+  if (typeof showToast === 'function') showToast('Cesta recomendada aplicada', false);
 }
 
 /** Comprueba si L×A del estanque alcanza para la rejilla de huecos (separación + Ø cesta). */
@@ -433,6 +712,7 @@ function srfRefreshSysFormLive() {
   try {
     if (typeof renderSrfCalculoStatus === 'function') renderSrfCalculoStatus(draft, 'sysSrfCalcStatus');
     if (typeof srfUpdateVolCapLabels === 'function') srfUpdateVolCapLabels(draft, 'sys');
+    if (typeof renderSrfCultivoRecoStatus === 'function') renderSrfCultivoRecoStatus('sys');
   } catch (_) {}
   const res = document.getElementById('sistemaSrfResumen');
   if (res && typeof textoResumenSistemaSrfPanel === 'function') {
@@ -590,6 +870,9 @@ function onSetupSrfInput() {
   } catch (_) {}
   try {
     srfRefreshSetupCalculadoUi();
+  } catch (_) {}
+  try {
+    renderSrfCultivoRecoStatus('setup');
   } catch (_) {}
   try {
     syncSetupVolMezclaSugeridoSrf({ forceMezcla: true });

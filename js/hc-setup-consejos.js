@@ -1791,6 +1791,56 @@ function buildConsejosNftHidraulica() {
   return dyn + cultivo + formula + docWrap;
 }
 
+function buildConsejosCestasPorSistemaTabla() {
+  const cat = CONSEJOS_DATA.cultivo;
+  if (typeof hcCultivoCestaRecoCelda !== 'function' || !HC_CESTA_MATRIX_GRUPOS) {
+    return '';
+  }
+  const esc = typeof meteoEscHtml === 'function' ? meteoEscHtml : x => String(x == null ? '' : x);
+  const objetivos = [
+    { key: 'final', label: 'Planta completa' },
+    { key: 'baby', label: 'Baby leaf' },
+  ];
+  const rows = [];
+  HC_CESTA_MATRIX_GRUPOS.forEach(gr => {
+    objetivos.forEach(obj => {
+      const cells = (HC_CESTA_MATRIX_SISTEMAS || []).map(s =>
+        esc(hcCultivoCestaRecoCelda(gr.key, s.id, obj.key).txt || '—')
+      );
+      rows.push(
+        '<tr><td>' +
+          esc(gr.label) +
+          '</td><td>' +
+          esc(obj.label) +
+          '</td><td>' +
+          cells.join('</td><td>') +
+          '</td></tr>'
+      );
+    });
+  });
+  const sysHeads = (HC_CESTA_MATRIX_SISTEMAS || [])
+    .map(s => '<th scope="col">' + esc(s.label) + '</th>')
+    .join('');
+  const html =
+    '<p class="consejo-p consejo-p--tight">Referencia <strong>orientativa</strong> de Ø de cesta (net pot), canal NFT, profundidad de estanque SRF y separación entre huecos. Ajusta según variedad, clima y densidad real. La app valida tu instalación activa en el asistente y en <strong>Cultivo e instalación</strong>.</p>' +
+    '<div class="consejo-dwc-netpot-ref-scroll hc-germ-table-scroll"><table class="consejo-dwc-netpot-ref-table hc-germ-table hc-cesta-matrix-table" role="grid" aria-label="Cestas y geometría por cultivo, objetivo y sistema">' +
+    '<thead><tr><th scope="col">Grupo cultivo</th><th scope="col">Objetivo</th>' +
+    sysHeads +
+    '</tr></thead><tbody>' +
+    rows.join('') +
+    '</tbody></table></div>' +
+    '<p class="consejo-footnote">«Planta completa» = cabeza o ciclo estándar; «Baby leaf» = cosecha joven o alta densidad. En torre, el Ø suele coincidir con el tamaño de cesta del asistente (cm × 10 ≈ mm).</p>';
+  return htmlInnerConsejoCard(cat, {
+    icono: '🧺',
+    titulo: 'Cestas y geometría por cultivo y sistema',
+    html: html,
+    alerta: {
+      tipo: 'info',
+      txt: 'ℹ️ Valores de diseño habituales en hidroponía doméstica; no sustituyen la ficha del fabricante de tu macetero o balsa.',
+    },
+  });
+}
+
 function buildConsejosDwcNetPotRefTabla(catForCard) {
   const cat = catForCard || CONSEJOS_DATA.dwc;
   const html =
@@ -1892,8 +1942,40 @@ function buildConsejosSrf() {
       txt: '✅ En el esquema, toca la balsa o el estanque para repasar oxigenación y disposición de plantas.',
     },
   });
-  const netPot = buildConsejosDwcNetPotRefTabla(CONSEJOS_DATA.srf);
-  return intro + tres + netPot;
+  const recoSrf =
+    cfg.tipoInstalacion === 'srf' && typeof srfRecomendacionCultivoDesdeConfig === 'function'
+      ? srfRecomendacionCultivoDesdeConfig(cfg)
+      : null;
+  const recoCard = htmlConsejoCard(cat, {
+    icono: '📐',
+    titulo: 'SRF: estanque, balsa y cesta según cultivo',
+    texto:
+      '<p class="consejo-p consejo-p--tight">En SRF la solución es <strong>casi estática</strong> (opcional recirculación). Profundidad útil ~<strong>20–30 cm</strong> para lechugas; balsa EPS habitual <strong>25–50 mm</strong>; deja cámara de aire bajo la balsa en modo <strong>Kratky</strong> o usa <strong>bomba de aire</strong>.</p>' +
+      (recoSrf
+        ? '<p class="consejo-p consejo-p--tight">Tu instalación: <strong>' +
+          meteoEscHtml(recoSrf.perfil.etiqueta) +
+          '</strong> · ' +
+          meteoEscHtml(recoSrf.perfil.objetivoLabel) +
+          ' · orientativo: <em>' +
+          meteoEscHtml(recoSrf.perfil.resumenTxt) +
+          '</em> · ' +
+          cultivoEstadoChipHtml(recoSrf.estado) +
+          '.</p>'
+        : '<p class="consejo-p consejo-p--tight">Activa una instalación <strong>SRF</strong> y elige cultivo en el asistente para ver aquí la validación en vivo.</p>'),
+    alerta: recoSrf
+      ? {
+          tipo: recoSrf.estado === 'ok' ? 'ok' : 'warn',
+          txt:
+            recoSrf.estado === 'ok'
+              ? '✅ Parámetros alineados con la referencia de la tabla general (Consejos → Cultivo).'
+              : '⚠️ ' + recoSrf.veredicto,
+        }
+      : {
+          tipo: 'info',
+          txt: 'ℹ️ Tabla completa en Consejos → Cultivo · «Cestas y geometría por cultivo y sistema».',
+        },
+  });
+  return intro + tres + recoCard;
 }
 
 function buildConsejosRdwc() {
@@ -2190,6 +2272,7 @@ function renderConsejosLista() {
   if (consejoCatActiva === 'cultivo') {
     lista.innerHTML =
       cat.consejos.map(c => htmlConsejoCard(cat, c)).join('') +
+      (typeof buildConsejosCestasPorSistemaTabla === 'function' ? buildConsejosCestasPorSistemaTabla() : '') +
       buildConsejoCambioNutrientePorFase() +
       buildConsejoObjetivoTorreCultivo() +
       buildConsejoTablaGerminacionCultivos() +

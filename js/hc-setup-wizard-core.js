@@ -2492,6 +2492,7 @@ function refrescarSetupTipoInstalacionUI() {
         syncSrfFormDesdeConfig(state.configTorre || {}, 'setup');
       }
       if (typeof syncSetupVolMezclaSugeridoSrf === 'function') syncSetupVolMezclaSugeridoSrf();
+      if (typeof renderSrfCultivoRecoStatus === 'function') renderSrfCultivoRecoStatus('setup');
     } catch (_) {}
   }
   if (setupTipoInstalacion === 'dwc') {
