@@ -2001,6 +2001,20 @@ function dwcPersistSnapshotMaxCestasEnCfg(cfg) {
   };
 }
 
+/** Matriz de cestas/huecos vacía (asistente instalación nueva). */
+function initTorreMatrizVacia(nFilas, nCols) {
+  const nf = Math.max(1, Math.min(DWC_REJILLA_MAX_FILAS, parseInt(String(nFilas), 10) || 1));
+  const nc = Math.max(1, Math.min(DWC_REJILLA_MAX_COLS, parseInt(String(nCols), 10) || 1));
+  const empty = () => ({ variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] });
+  const nue = [];
+  for (let i = 0; i < nf; i++) {
+    const row = [];
+    for (let j = 0; j < nc; j++) row.push(empty());
+    nue.push(row);
+  }
+  state.torre = nue;
+}
+
 /** Redimensiona la matriz DWC (filas × columnas de macetas) conservando datos donde haya hueco. */
 function redimensionarMatrizTorreDwcPreservando(cfg, nFilas, nCols) {
   if (!cfg || (cfg.tipoInstalacion !== 'dwc' && cfg.tipoInstalacion !== 'srf')) return;

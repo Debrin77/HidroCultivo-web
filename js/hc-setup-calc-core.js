@@ -1476,10 +1476,21 @@ function guardarSetupYContinuar() {
     vol = Math.max(1, Math.round(Number(cR.rdwcControlVolL || 40)));
   }
   if (isSrf) {
+    if (typeof srfSetupFormularioCompleto === 'function' && !srfSetupFormularioCompleto()) {
+      showToast(
+        'Completa el bloque SRF: medidas del estanque, filas × plantas en la balsa y diámetro/profundidad de cesta.',
+        true
+      );
+      setupPagina = 1;
+      renderSetupPage();
+      return;
+    }
     const cS =
-      typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', {}) || {} : {};
+      typeof buildSrfConfigFromForm === 'function'
+        ? buildSrfConfigFromForm('setup', {}, { applyDefaults: true }) || {}
+        : {};
     if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(cS);
-    const grid = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(cS) : { rows: 1, cols: 8 };
+    const grid = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(cS) : { rows: 1, cols: 1 };
     niveles = Math.max(1, grid.rows || 1);
     cestas = Math.max(1, grid.cols || 1);
     const segS =
@@ -1652,7 +1663,7 @@ function guardarSetupYContinuar() {
     Object.assign(state.configTorre, buildRdwcConfigFromForm('setup', state.configTorre));
   }
   if (isSrf && typeof buildSrfConfigFromForm === 'function') {
-    Object.assign(state.configTorre, buildSrfConfigFromForm('setup', state.configTorre));
+    Object.assign(state.configTorre, buildSrfConfigFromForm('setup', state.configTorre, { applyDefaults: true }));
     if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(state.configTorre);
     const gridS = typeof srfDistribuirPlantas === 'function' ? srfDistribuirPlantas(state.configTorre) : null;
     if (gridS) {
@@ -1875,8 +1886,16 @@ function guardarSetupYContinuar() {
   const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
   // Las constantes se usarán dinámicamente en evalEC y checklist
 
-  // Reinicializar matriz de plantas (SRF/DWC conservan fichas al redimensionar)
-  if ((isSrf || isDwc) && typeof redimensionarMatrizTorreDwcPreservando === 'function') {
+  // Reinicializar matriz de plantas (instalación nueva = vacía; reconfiguración DWC/SRF conserva fichas)
+  if (
+    setupEsNuevaTorre &&
+    (isSrf || isDwc) &&
+    typeof initTorreMatrizVacia === 'function'
+  ) {
+    initTorreMatrizVacia(niveles, cestas);
+    state.configTorre.numNiveles = niveles;
+    state.configTorre.numCestas = cestas;
+  } else if ((isSrf || isDwc) && typeof redimensionarMatrizTorreDwcPreservando === 'function') {
     redimensionarMatrizTorreDwcPreservando(state.configTorre, niveles, cestas);
   } else {
     state.torre = [];

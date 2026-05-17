@@ -89,12 +89,16 @@ function srfDistribuirPlantas(cfg) {
     String(cfg.srfPlantasPorFila != null ? cfg.srfPlantasPorFila : cfg.numCestas || 0),
     10
   );
-  if (!Number.isFinite(filas) || filas < 1) {
+  const sinFilas = !Number.isFinite(filas) || filas < 1;
+  const sinCols = !Number.isFinite(cols) || cols < 1;
+  if (sinFilas && sinCols) {
     const n = parseInt(String(cfg.srfNumPlantas || 0), 10);
     if (Number.isFinite(n) && n > 0) {
       const g = typeof hcDistribuirFilasColumnas === 'function' ? hcDistribuirFilasColumnas(n, 8) : { rows: 2, cols: 4 };
       filas = g.rows;
       cols = g.cols;
+    } else if (cfg._srfSinRejillaExplicita) {
+      return { rows: 0, cols: 0, total: 0 };
     } else {
       filas = 2;
       cols = 4;
@@ -209,6 +213,92 @@ function srfLitrosPorPlanta(cfg) {
 function srfNormalizeObjetivoCultivo(raw) {
   const v = String(raw || '').trim().toLowerCase();
   return v === 'baby' || v === 'baby_leaf' || v === 'micro' ? 'baby' : 'final';
+}
+
+/** Instalación nueva en asistente: sin heredar otra torre activa. */
+function hcFreshSrfSetupDefaults() {
+  return { tipoInstalacion: 'srf', srfOxigenacionModo: 'aireador', srfObjetivoCultivo: 'final' };
+}
+
+function srfFormInputTieneValor(id) {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  if (el.type === 'checkbox') return true;
+  return String(el.value || '').trim() !== '';
+}
+
+/** Estanque + rejilla + cesta mínimos antes de guardar instalación nueva. */
+function srfSetupFormularioCompleto() {
+  const estanque =
+    srfFormInputTieneValor('setupSrfCanalLargoCm') &&
+    srfFormInputTieneValor('setupSrfCanalAnchoCm') &&
+    srfFormInputTieneValor('setupSrfProfundidadCm');
+  const rejilla =
+    srfFormInputTieneValor('setupSrfFilas') && srfFormInputTieneValor('setupSrfPlantasPorFila');
+  const cesta =
+    srfFormInputTieneValor('setupSrfNetPotMm') && srfFormInputTieneValor('setupSrfNetPotHeightMm');
+  return estanque && rejilla && cesta;
+}
+
+function srfSetupTieneEstanqueEnFormulario() {
+  return (
+    srfFormInputTieneValor('setupSrfCanalLargoCm') &&
+    srfFormInputTieneValor('setupSrfCanalAnchoCm') &&
+    srfFormInputTieneValor('setupSrfProfundidadCm')
+  );
+}
+
+/** Vacía el paso SRF del asistente (como NFT con sliders a cero). */
+function hcResetSrfSetupFormZero() {
+  const ids = [
+    'setupSrfCanalLargoCm',
+    'setupSrfCanalAnchoCm',
+    'setupSrfProfundidadCm',
+    'setupSrfBalsaGrosorMm',
+    'setupSrfEspaciamientoCm',
+    'setupSrfFilas',
+    'setupSrfPlantasPorFila',
+    'setupSrfNetPotMm',
+    'setupSrfNetPotHeightMm',
+    'setupSrfKratkyGapCm',
+    'setupSrfVolTrabajoL',
+  ];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const obj = document.getElementById('setupSrfObjetivoCultivo');
+  if (obj) obj.value = 'final';
+  const ox = document.getElementById('setupSrfOxigenacionModo');
+  if (ox) ox.value = 'aireador';
+  try {
+    clearSetupVolMezclaSrfAutofill();
+  } catch (_) {}
+  const litVal = document.getElementById('setupSrfLitrosSolucionValor');
+  const litHint = document.getElementById('setupSrfLitrosSolucionHint');
+  const bombaVal = document.getElementById('setupSrfBombaRecoValor');
+  const bombaHint = document.getElementById('setupSrfBombaRecoHint');
+  const litBlock = document.getElementById('setupSrfLitrosSolucionBlock');
+  const bombaBlock = document.getElementById('setupSrfBombaRecoBlock');
+  if (litBlock) litBlock.classList.add('setup-dwc-litros-solucion-block--pending');
+  if (litVal) litVal.textContent = 'Indica medidas del estanque y de la cesta';
+  if (litHint) litHint.textContent = '';
+  if (bombaBlock) bombaBlock.classList.remove('setup-hidden');
+  if (bombaVal) bombaVal.textContent = '—';
+  if (bombaHint) bombaHint.textContent = 'Se calcula al completar el estanque.';
+  const calc = document.getElementById('setupSrfCalcStatus');
+  if (calc) calc.innerHTML = '';
+  const prev = document.getElementById('setupSrfPreview');
+  if (prev) {
+    prev.innerHTML = '';
+    prev.classList.remove('torre-preview--srf');
+  }
+  try {
+    srfRefreshOxigenacionUi('setup');
+  } catch (_) {}
+  try {
+    renderSrfCultivoRecoStatus('setup');
+  } catch (_) {}
 }
 
 function srfGrupoObjetivoDesdeConfig(cfg) {
@@ -347,7 +437,11 @@ function srfDraftParaCompatibilidad(scope) {
   const esSetup = scope === 'setup';
   let draft;
   if (esSetup && typeof buildSrfConfigFromForm === 'function') {
-    draft = buildSrfConfigFromForm('setup', Object.assign({}, state.configTorre || {}));
+    const seed =
+      typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre && typeof hcFreshSrfSetupDefaults === 'function'
+        ? hcFreshSrfSetupDefaults()
+        : Object.assign({}, state.configTorre || {});
+    draft = buildSrfConfigFromForm('setup', seed, { applyDefaults: false });
     if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) {
       draft.cultivosIniciales = [...setupPlantasSeleccionadas];
     }
@@ -572,9 +666,12 @@ function srfParseNum(id, min, max, fallback) {
   return Math.min(max, Math.max(min, v));
 }
 
-function srfMergeCamposFormularioEnCfg(cfg, ids) {
+function srfMergeCamposFormularioEnCfg(cfg, ids, opts) {
   cfg = cfg || {};
   ids = ids || SRF_FORM_IDS_SISTEMA;
+  opts = opts || {};
+  const applyDefaults = opts.applyDefaults !== false;
+  const esSetupIds = ids === SRF_FORM_IDS_SETUP;
   const g = (id, key, parser) => {
     if (!ids.includes(id)) return;
     const el = document.getElementById(id);
@@ -588,16 +685,24 @@ function srfMergeCamposFormularioEnCfg(cfg, ids) {
     if (parser) cfg[key] = parser(raw, el);
     else cfg[key] = raw;
   };
-  g('setupSrfCanalLargoCm', 'srfCanalLargoCm', (v) => srfParseNum('setupSrfCanalLargoCm', 20, 600, cfg.srfCanalLargoCm));
+  g('setupSrfCanalLargoCm', 'srfCanalLargoCm', (v) =>
+    srfParseNum('setupSrfCanalLargoCm', 20, 600, applyDefaults && esSetupIds ? cfg.srfCanalLargoCm : null)
+  );
   g('sysSrfCanalLargoCm', 'srfCanalLargoCm', (v) => srfParseNum('sysSrfCanalLargoCm', 20, 600, cfg.srfCanalLargoCm));
-  g('setupSrfCanalAnchoCm', 'srfCanalAnchoCm', (v) => srfParseNum('setupSrfCanalAnchoCm', 20, 400, cfg.srfCanalAnchoCm));
+  g('setupSrfCanalAnchoCm', 'srfCanalAnchoCm', (v) =>
+    srfParseNum('setupSrfCanalAnchoCm', 20, 400, applyDefaults && esSetupIds ? cfg.srfCanalAnchoCm : null)
+  );
   g('sysSrfCanalAnchoCm', 'srfCanalAnchoCm', (v) => srfParseNum('sysSrfCanalAnchoCm', 20, 400, cfg.srfCanalAnchoCm));
-  g('setupSrfProfundidadCm', 'srfProfundidadCm', (v) => srfParseNum('setupSrfProfundidadCm', 10, 50, cfg.srfProfundidadCm));
+  g('setupSrfProfundidadCm', 'srfProfundidadCm', (v) =>
+    srfParseNum('setupSrfProfundidadCm', 10, 50, applyDefaults && esSetupIds ? cfg.srfProfundidadCm : null)
+  );
   g('sysSrfProfundidadCm', 'srfProfundidadCm', (v) => srfParseNum('sysSrfProfundidadCm', 10, 50, cfg.srfProfundidadCm));
-  g('setupSrfFilas', 'srfFilas', (v) => Math.round(srfParseNum('setupSrfFilas', 1, 8, cfg.srfFilas || 2)));
+  g('setupSrfFilas', 'srfFilas', (v) =>
+    Math.round(srfParseNum('setupSrfFilas', 1, 8, applyDefaults && esSetupIds ? cfg.srfFilas || 2 : null))
+  );
   g('sysSrfFilas', 'srfFilas', (v) => Math.round(srfParseNum('sysSrfFilas', 1, 8, cfg.srfFilas || 2)));
   g('setupSrfPlantasPorFila', 'srfPlantasPorFila', (v) =>
-    Math.round(srfParseNum('setupSrfPlantasPorFila', 1, 16, cfg.srfPlantasPorFila || 4))
+    Math.round(srfParseNum('setupSrfPlantasPorFila', 1, 16, applyDefaults && esSetupIds ? cfg.srfPlantasPorFila || 4 : null))
   );
   g('sysSrfPlantasPorFila', 'srfPlantasPorFila', (v) =>
     Math.round(srfParseNum('sysSrfPlantasPorFila', 1, 16, cfg.srfPlantasPorFila || 4))
@@ -611,13 +716,21 @@ function srfMergeCamposFormularioEnCfg(cfg, ids) {
   g('sysSrfRecircLh', 'srfRecircLh', (v) => srfParseNum('sysSrfRecircLh', 0, 8000, cfg.srfRecircLh));
   g('setupSrfAirLpm', 'srfAirLpm', (v) => srfParseNum('setupSrfAirLpm', 0.5, 300, cfg.srfAirLpm));
   g('sysSrfAirLpm', 'srfAirLpm', (v) => srfParseNum('sysSrfAirLpm', 0.5, 300, cfg.srfAirLpm));
-  g('setupSrfBalsaGrosorMm', 'srfBalsaGrosorMm', (v) => srfParseNum('setupSrfBalsaGrosorMm', 15, 80, cfg.srfBalsaGrosorMm));
+  g('setupSrfBalsaGrosorMm', 'srfBalsaGrosorMm', (v) =>
+    srfParseNum('setupSrfBalsaGrosorMm', 15, 80, applyDefaults && esSetupIds ? cfg.srfBalsaGrosorMm : null)
+  );
   g('sysSrfBalsaGrosorMm', 'srfBalsaGrosorMm', (v) => srfParseNum('sysSrfBalsaGrosorMm', 15, 80, cfg.srfBalsaGrosorMm));
-  g('setupSrfNetPotMm', 'srfNetPotMm', (v) => srfParseNum('setupSrfNetPotMm', 25, 120, cfg.srfNetPotMm));
+  g('setupSrfNetPotMm', 'srfNetPotMm', (v) =>
+    srfParseNum('setupSrfNetPotMm', 25, 120, applyDefaults && esSetupIds ? cfg.srfNetPotMm : null)
+  );
   g('sysSrfNetPotMm', 'srfNetPotMm', (v) => srfParseNum('sysSrfNetPotMm', 25, 120, cfg.srfNetPotMm));
-  g('setupSrfNetPotHeightMm', 'srfNetPotHeightMm', (v) => srfParseNum('setupSrfNetPotHeightMm', 30, 200, cfg.srfNetPotHeightMm));
+  g('setupSrfNetPotHeightMm', 'srfNetPotHeightMm', (v) =>
+    srfParseNum('setupSrfNetPotHeightMm', 30, 200, applyDefaults && esSetupIds ? cfg.srfNetPotHeightMm : null)
+  );
   g('sysSrfNetPotHeightMm', 'srfNetPotHeightMm', (v) => srfParseNum('sysSrfNetPotHeightMm', 30, 200, cfg.srfNetPotHeightMm));
-  g('setupSrfEspaciamientoCm', 'srfEspaciamientoCm', (v) => srfParseNum('setupSrfEspaciamientoCm', 8, 60, cfg.srfEspaciamientoCm));
+  g('setupSrfEspaciamientoCm', 'srfEspaciamientoCm', (v) =>
+    srfParseNum('setupSrfEspaciamientoCm', 8, 60, applyDefaults && esSetupIds ? cfg.srfEspaciamientoCm : null)
+  );
   g('sysSrfEspaciamientoCm', 'srfEspaciamientoCm', (v) => srfParseNum('sysSrfEspaciamientoCm', 8, 60, cfg.srfEspaciamientoCm));
   g('setupSrfVolumenManualL', 'srfVolumenManualL', (v) => {
     const x = srfParseNum('setupSrfVolumenManualL', 1, 5000, null);
@@ -640,27 +753,50 @@ function srfMergeCamposFormularioEnCfg(cfg, ids) {
   g('setupSrfKratkyGapCm', 'srfKratkyGapCm', (v) => srfParseNum('setupSrfKratkyGapCm', 2, 40, cfg.srfKratkyGapCm));
   g('sysSrfKratkyGapCm', 'srfKratkyGapCm', (v) => srfParseNum('sysSrfKratkyGapCm', 2, 40, cfg.srfKratkyGapCm));
   if (cfg.srfOxigenacionModo === 'kratky') cfg.srfCirculante = false;
-  const grid = srfDistribuirPlantas(cfg);
-  cfg.srfFilas = grid.rows;
-  cfg.srfPlantasPorFila = grid.cols;
-  cfg.srfNumPlantas = grid.total;
-  cfg.numNiveles = grid.rows;
-  cfg.numCestas = grid.cols;
-  if (srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'aireador') {
-    const bomba = srfRecomendarBombaAire(cfg);
-    if (ids === SRF_FORM_IDS_SETUP || !Number.isFinite(Number(cfg.srfAirLpm)) || Number(cfg.srfAirLpm) <= 0) {
-      cfg.srfAirLpm = bomba.lpmReco;
+  if (!applyDefaults && esSetupIds) {
+    cfg._srfSinRejillaExplicita = !srfFormInputTieneValor('setupSrfFilas') || !srfFormInputTieneValor('setupSrfPlantasPorFila');
+  } else {
+    delete cfg._srfSinRejillaExplicita;
+  }
+  if (applyDefaults) {
+    srfEnsureConfigDefaults(cfg);
+    const grid = srfDistribuirPlantas(cfg);
+    cfg.srfFilas = grid.rows;
+    cfg.srfPlantasPorFila = grid.cols;
+    cfg.srfNumPlantas = grid.total;
+    cfg.numNiveles = grid.rows;
+    cfg.numCestas = grid.cols;
+    if (srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'aireador') {
+      const bomba = srfRecomendarBombaAire(cfg);
+      if (ids === SRF_FORM_IDS_SETUP || !Number.isFinite(Number(cfg.srfAirLpm)) || Number(cfg.srfAirLpm) <= 0) {
+        cfg.srfAirLpm = bomba.lpmReco;
+      }
+    }
+  } else {
+    const grid = srfDistribuirPlantas(cfg);
+    if (grid.total > 0) {
+      cfg.srfFilas = grid.rows;
+      cfg.srfPlantasPorFila = grid.cols;
+      cfg.srfNumPlantas = grid.total;
+      cfg.numNiveles = grid.rows;
+      cfg.numCestas = grid.cols;
+    } else {
+      delete cfg.srfFilas;
+      delete cfg.srfPlantasPorFila;
+      delete cfg.srfNumPlantas;
+      delete cfg.numNiveles;
+      delete cfg.numCestas;
     }
   }
-  srfEnsureConfigDefaults(cfg);
+  delete cfg._srfSinRejillaExplicita;
   return cfg;
 }
 
-function buildSrfConfigFromForm(scope, seed) {
+function buildSrfConfigFromForm(scope, seed, opts) {
   const c = typeof hcSetupClonePlain === 'function' ? hcSetupClonePlain(seed || {}, {}) : { ...(seed || {}) };
   c.tipoInstalacion = 'srf';
   const ids = scope === 'sys' ? SRF_FORM_IDS_SISTEMA : SRF_FORM_IDS_SETUP;
-  srfMergeCamposFormularioEnCfg(c, ids);
+  srfMergeCamposFormularioEnCfg(c, ids, opts);
   const cap = srfCapacidadLitrosDesdeConfig(c);
   if (cap != null) c.volDeposito = cap;
   return c;
@@ -790,8 +926,9 @@ function srfRefreshSetupCalculadoUi() {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'srf') return;
   let draft = null;
   try {
-    draft = buildSrfConfigFromForm('setup', {});
-    srfEnsureConfigDefaults(draft);
+    const seed =
+      typeof hcFreshSrfSetupDefaults === 'function' ? hcFreshSrfSetupDefaults() : { tipoInstalacion: 'srf' };
+    draft = buildSrfConfigFromForm('setup', seed, { applyDefaults: false });
   } catch (_) {}
   const litBlock = document.getElementById('setupSrfLitrosSolucionBlock');
   const litVal = document.getElementById('setupSrfLitrosSolucionValor');
@@ -882,12 +1019,17 @@ function onSetupSrfInput() {
 function syncSetupVolMezclaSugeridoSrf(opts) {
   opts = opts || {};
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'srf') return;
+  if (!srfSetupTieneEstanqueEnFormulario() && !opts.forceMezcla) return;
   try {
     srfRefreshSetupCalculadoUi();
   } catch (_) {}
   const draft =
-    typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', {}) || {} : {};
-  srfEnsureConfigDefaults(draft);
+    typeof buildSrfConfigFromForm === 'function'
+      ? buildSrfConfigFromForm('setup', hcFreshSrfSetupDefaults ? hcFreshSrfSetupDefaults() : {}, { applyDefaults: false }) || {}
+      : {};
+  if (typeof srfEnsureConfigDefaults === 'function' && srfSetupFormularioCompleto()) {
+    srfEnsureConfigDefaults(draft);
+  }
   const util = srfVolumenSeguroLitrosDesdeConfig(draft);
   const cap = srfCapacidadLitrosDesdeConfig(draft);
   const vSeg = util != null && util > 0 ? util : cap;

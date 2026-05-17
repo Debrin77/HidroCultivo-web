@@ -65,6 +65,19 @@ function getSetupPlantasFilasCols() {
     const cols = Math.max(1, Math.ceil(sites / rows));
     return { filas: rows, cols, labelFila: 'Fila', labelCol: 'Sitio' };
   }
+  if (t === 'srf') {
+    const filas = parseInt(String(document.getElementById('setupSrfFilas')?.value || '').trim(), 10);
+    const cols = parseInt(String(document.getElementById('setupSrfPlantasPorFila')?.value || '').trim(), 10);
+    if (!Number.isFinite(filas) || filas < 1 || !Number.isFinite(cols) || cols < 1) {
+      return { filas: 0, cols: 0, labelFila: 'Fila', labelCol: 'Hueco' };
+    }
+    return {
+      filas: Math.max(1, Math.min(8, filas)),
+      cols: Math.max(1, Math.min(16, cols)),
+      labelFila: 'Fila',
+      labelCol: 'Hueco',
+    };
+  }
   if (t === 'dwc') {
     const oxRaw = document.getElementById('setupDwcOxigenacionDiseno')?.value;
     if (typeof dwcNormalizeOxigenacionDiseno === 'function' && dwcNormalizeOxigenacionDiseno(oxRaw) === 'cubos_independientes') {
@@ -133,6 +146,14 @@ function renderSetupCestasVariedadGrid() {
   if (!wrap || !gridHost) return;
   const dims = getSetupPlantasFilasCols();
   const total = dims.filas * dims.cols;
+  if (setupTipoInstalacion === 'srf' && total < 1) {
+    wrap.classList.remove('setup-hidden');
+    if (titleEl) titleEl.textContent = 'Cultivos en el esquema (después del asistente)';
+    gridHost.innerHTML =
+      '<p class="setup-cesta-var-too-many">Indica <strong>filas</strong> y <strong>plantas por fila</strong> en el bloque SRF. Tras guardar, asigna cada variedad en el <strong>esquema</strong> de Cultivo e instalación (como en DWC).</p>';
+    if (hintEl) hintEl.textContent = '';
+    return;
+  }
   if (total > SETUP_CESTA_VAR_MAX_CELDAS) {
     wrap.classList.remove('setup-hidden');
     if (titleEl) titleEl.textContent = 'Asignación por cesta o hueco';

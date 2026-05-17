@@ -2286,6 +2286,11 @@ function seleccionarTipoInstalacionSetup(tipo) {
   else if (tipo === 'rdwc') setupTipoInstalacion = 'rdwc';
   else if (tipo === 'srf') setupTipoInstalacion = 'srf';
   else setupTipoInstalacion = 'torre';
+  if (setupTipoInstalacion === 'srf' && setupEsNuevaTorre) {
+    try {
+      if (typeof hcResetSrfSetupFormZero === 'function') hcResetSrfSetupFormZero();
+    } catch (_) {}
+  }
   if (setupTipoInstalacion !== 'dwc') {
     try {
       if (typeof clearSetupVolMezclaDwcAutofill === 'function') clearSetupVolMezclaDwcAutofill();
@@ -2487,11 +2492,15 @@ function refrescarSetupTipoInstalacionUI() {
       srfRefreshOxigenacionUi('setup');
     } catch (_) {}
     try {
-      if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
-      else if (typeof syncSrfFormDesdeConfig === 'function') {
+      if (setupEsNuevaTorre) {
+        if (typeof hcResetSrfSetupFormZero === 'function') hcResetSrfSetupFormZero();
+      } else if (typeof syncSrfFormDesdeConfig === 'function') {
         syncSrfFormDesdeConfig(state.configTorre || {}, 'setup');
       }
-      if (typeof syncSetupVolMezclaSugeridoSrf === 'function') syncSetupVolMezclaSugeridoSrf();
+      if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
+      if (!setupEsNuevaTorre && typeof syncSetupVolMezclaSugeridoSrf === 'function') {
+        syncSetupVolMezclaSugeridoSrf();
+      }
       if (typeof renderSrfCultivoRecoStatus === 'function') renderSrfCultivoRecoStatus('setup');
     } catch (_) {}
   }

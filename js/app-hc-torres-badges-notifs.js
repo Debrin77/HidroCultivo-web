@@ -918,6 +918,9 @@ function abrirSetupNuevaTorre() {
   try {
     if (typeof hcResetNftSetupSlidersZero === 'function') hcResetNftSetupSlidersZero();
   } catch (_) {}
+  try {
+    if (typeof hcResetSrfSetupFormZero === 'function') hcResetSrfSetupFormZero();
+  } catch (_) {}
   const svNew = document.getElementById('sliderVol');
   if (svNew) svNew.value = '20';
   const svmNew = document.getElementById('setupVolMezclaL');

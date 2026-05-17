@@ -586,7 +586,14 @@ function hcNotificarCambioCultivoSistema() {
     } catch (_) {}
     const transicion = listo && !prevListo;
     if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
-    if (transicion) hcEjecutarChecklistPostSetupTrasCultivosListos();
+    const esSrf =
+      state.configTorre && String(state.configTorre.tipoInstalacion || '').toLowerCase() === 'srf';
+    if (transicion && !esSrf) hcEjecutarChecklistPostSetupTrasCultivosListos();
+    if (transicion && esSrf && typeof showToast === 'function') {
+      showToast(
+        'SRF: asigna variedad y fecha en cada hueco del esquema; luego pulsa «Continuar al checklist» cuando quieras mezclar el depósito.'
+      );
+    }
   } catch (_) {}
 }
 
@@ -708,11 +715,15 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
       typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' && torreBloqueaChecklistPorFaltaDatosCultivo();
     const sinVariedad =
       typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
+    const esSrf =
+      state.configTorre && String(state.configTorre.tipoInstalacion || '').toLowerCase() === 'srf';
     if (bloqueado || sinVariedad) {
       showToast(
-        'Completa el esquema: variedad (y en EC automático fecha de trasplante al hidro) en cada cesta que uses. La barra «Cultivo → checklist» se activa al estar listo.'
+        esSrf
+          ? 'SRF: toca cada hueco en el esquema y asigna variedad y fecha. El checklist del depósito solo cuando pulses «Continuar al checklist».'
+          : 'Completa el esquema: variedad (y en EC automático fecha de trasplante al hidro) en cada cesta que uses. La barra «Cultivo → checklist» se activa al estar listo.'
       );
-    } else {
+    } else if (!esSrf) {
       showToast(
         'Datos de cultivo listos para el checklist: en unos segundos puede abrirse el asistente del depósito, o usa «Continuar al checklist» arriba del esquema.'
       );
