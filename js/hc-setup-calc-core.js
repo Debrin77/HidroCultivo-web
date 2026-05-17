@@ -1917,7 +1917,16 @@ function guardarSetupYContinuar() {
     const nuevaTorre = {
       id: Date.now(),
       nombre: setupNombreNuevaTorre,
-      emoji: isNft ? '🪴' : isDwc ? '🫧' : isSrf ? '🛶' : EMOJIS[nTorres % EMOJIS.length],
+      emoji:
+        typeof emojiSistemaPorTipo === 'function'
+          ? emojiSistemaPorTipo(isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : isSrf ? 'srf' : 'torre')
+          : isNft
+            ? '💧'
+            : isDwc
+              ? '🫧'
+              : isSrf
+                ? '🟩'
+                : EMOJIS[nTorres % EMOJIS.length],
       config: { ...state.configTorre },
       torre: JSON.parse(JSON.stringify(state.torre)),
       modoActual: 'lechuga',

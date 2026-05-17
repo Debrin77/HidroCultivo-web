@@ -2399,7 +2399,7 @@ function refrescarSetupTipoInstalacionUI() {
     t1.textContent = isNft ? '🪴 Tu montaje NFT'
       : setupTipoInstalacion === 'dwc' ? '🫧 Tu DWC'
       : isRdwc ? '🧿 Tu RDWC'
-      : isSrf ? '🛶 Tu SRF'
+      : isSrf ? 'Tu SRF'
       : '🌿 Tu torre vertical';
   }
   if (st) {

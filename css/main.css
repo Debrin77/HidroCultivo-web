@@ -4388,7 +4388,26 @@ h1.dash-greeting {
   align-items: center;
   gap: 10px;
 }
-.dash-torre-emoji { font-size: 24px; }
+.dash-torre-emoji { font-size: 24px; display: inline-flex; align-items: center; justify-content: center; }
+.dash-torre-emoji .hc-ico--dash-torre,
+.medir-torre-emoji .hc-ico--dash-torre,
+.torre-list-emoji .hc-ico--torre-list,
+#torreActivaNombre .hc-ico--inline-torre {
+  width: 1.35em;
+  height: 1.35em;
+  vertical-align: -0.22em;
+}
+#torreActivaNombre .hc-ico--inline-torre {
+  width: 1.15em;
+  height: 1.15em;
+  margin-right: 3px;
+  vertical-align: -0.2em;
+}
+.setup-tipo-icon .hc-ico--sistema,
+.setup-inline-tipo-ico .hc-ico--sistema {
+  width: 28px;
+  height: 28px;
+}
 .dash-torre-nombre {
   font-family: var(--font-ui);
   font-size: var(--text-sm);

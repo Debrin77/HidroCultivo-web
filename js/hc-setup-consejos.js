@@ -71,7 +71,7 @@ const CONSEJOS_DATA = {
     soloRdwcDoc: true,
   },
   srf: {
-    nombre: '🛶 SRF', color: '#0369a1', bg: 'rgba(3,105,161,0.12)',
+    nombre: '🟩 SRF', color: '#0369a1', bg: 'rgba(3,105,161,0.12)',
     consejos: [],
     soloSrfDoc: true,
   },
@@ -1860,7 +1860,7 @@ function buildConsejosSrf() {
     typeof srfNormalizeOxigenacionModo === 'function' &&
     srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'kratky';
   const intro = htmlConsejoCard(cat, {
-    icono: '🛶',
+    icono: '🟩',
     titulo: 'SRF / DFT en esta app',
     texto:
       '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> las plantas van en una <strong>balsa flotante</strong> sobre un <strong>estanque común</strong>; todas comparten la misma EC y el mismo pH.</p>' +

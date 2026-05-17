@@ -195,21 +195,20 @@ function hcAppendNuevaInstalacionDesdeEstado(opts) {
 }
 
 function emojiMigracionPorTipoInstalacion(cfg) {
-  if (!cfg || !cfg.tipoInstalacion) return '🌿';
-  if (cfg.tipoInstalacion === 'nft') return '🪴';
-  if (cfg.tipoInstalacion === 'dwc') return '🫧';
-  if (cfg.tipoInstalacion === 'rdwc') return '🧿';
-  if (cfg.tipoInstalacion === 'srf') return '🛶';
+  const tipo = cfg && cfg.tipoInstalacion ? tipoInstalacionNormalizado(cfg) : '';
+  if (typeof emojiSistemaPorTipo === 'function') return emojiSistemaPorTipo(tipo || 'torre');
+  if (!tipo) return '🌿';
+  if (tipo === 'nft') return '💧';
+  if (tipo === 'dwc') return '🫧';
+  if (tipo === 'rdwc') return '♻️';
+  if (tipo === 'srf') return '🟩';
   return '🌿';
 }
 
 function emojiSistemaUiPorTorre(t) {
   const cfg = t && t.config ? t.config : null;
   const tipo = tipoInstalacionNormalizado(cfg);
-  if (tipo === 'rdwc') return '🧿';
-  if (tipo === 'dwc') return '🫧';
-  if (tipo === 'srf') return '🛶';
-  if (tipo === 'nft') return '🪴';
+  if (typeof emojiSistemaPorTipo === 'function') return emojiSistemaPorTipo(tipo);
   return (t && t.emoji) || '🌿';
 }
 
@@ -595,7 +594,15 @@ function actualizarHeaderTorre() {
   const btn = document.getElementById('torreActivaNombre');
   if (btn) {
     const nom = t && typeof t.nombre === 'string' ? t.nombre.trim() : '';
-    btn.textContent = emojiSistemaUiPorTorre(t) + ' ' + (nom || 'Instalación');
+    if (typeof hcSistemaIconMarkup === 'function') {
+      btn.innerHTML =
+        hcSistemaIconMarkup(tipoInstalacionNormalizado(t && t.config), 'hc-ico--inline-torre') +
+        ' <span class="torre-activa-nombre-text">' +
+        (nom || 'Instalación') +
+        '</span>';
+    } else {
+      btn.textContent = emojiSistemaUiPorTorre(t) + ' ' + (nom || 'Instalación');
+    }
   }
   // Mostrar/ocultar botón añadir según límite
   const btnCrear = document.getElementById('btnCrearTorre');
@@ -822,18 +829,35 @@ function renderListaTorres() {
         ? ((cfgT.numNiveles || 5) + ' filas × ' + (cfgT.numCestas || 5) + ' cestas')
         : cfgT.tipoInstalacion === 'rdwc'
           ? ((cfgT.rdwcRows || 1) + ' filas × ' + (cfgT.rdwcSites || 4) + ' sitios')
-        : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
+          : cfgT.tipoInstalacion === 'srf'
+            ? ((cfgT.numNiveles || 1) + ' filas × ' + (cfgT.numCestas || 1) + ' plantas')
+            : ((cfgT.numNiveles || 5) + 'N × ' + (cfgT.numCestas || 5) + 'C');
+    const tipoNorm = typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfgT) : 'torre';
+    const tipoTag =
+      tipoNorm === 'nft'
+        ? 'NFT'
+        : tipoNorm === 'dwc'
+          ? 'DWC'
+          : tipoNorm === 'rdwc'
+            ? 'RDWC'
+            : tipoNorm === 'srf'
+              ? 'SRF'
+              : 'Torre';
+    const listIco =
+      typeof hcSistemaIconMarkup === 'function'
+        ? hcSistemaIconMarkup(tipoNorm, 'hc-ico--torre-list')
+        : emojiSistemaUiPorTorre(t);
 
     return `<div class="torre-list-row${isActiva ? ' torre-list-row--active' : ''}">
       <button type="button" class="torre-list-main"
         onclick="cambiarTorreActiva(${i})"
         aria-pressed="${isActiva ? 'true' : 'false'}"
         aria-label="Activar ${String((t.nombre || '').trim() || 'instalación').replace(/"/g, '&quot;')}${isActiva ? ', instalación actual' : ''}">
-      <span class="torre-list-emoji" aria-hidden="true">${emojiSistemaUiPorTorre(t)}</span>
+      <span class="torre-list-emoji" aria-hidden="true">${listIco}</span>
       <span class="torre-list-body">
         <span class="torre-list-name">${(t.nombre || '').trim() || 'Instalación'}</span>
         <span class="torre-list-meta">
-          ${cfgT.tipoInstalacion === 'nft' ? '🪴 NFT · ' : cfgT.tipoInstalacion === 'dwc' ? '🫧 DWC · ' : cfgT.tipoInstalacion === 'rdwc' ? '🧿 RDWC · ' : ''}${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
+          ${tipoTag} · ${plantasCount} plantas · ${t.config ? geomTxt : '5N × 5C'}
           ${isActiva ? ' · <strong class="torre-list-active-tag">Activa</strong>' : ''}
         </span>
       </span>
@@ -1168,7 +1192,13 @@ function actualizarBadgesNutriente() {
   const dashTorreNombre = document.getElementById('dashTorreNombre');
   const dashTorreInfo   = document.getElementById('dashTorreInfo');
   const torre = getTorreActiva();
-  if (dashTorreEmoji)  dashTorreEmoji.textContent  = emojiSistemaUiPorTorre(torre);
+  if (dashTorreEmoji) {
+    if (typeof hcPintarSistemaIconoEnElemento === 'function') {
+      hcPintarSistemaIconoEnElemento(dashTorreEmoji, torre, 'hc-ico--dash-torre');
+    } else {
+      dashTorreEmoji.textContent = emojiSistemaUiPorTorre(torre);
+    }
+  }
   if (dashTorreNombre) dashTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
   if (dashTorreInfo) {
     const niv = cfg.numNiveles || 5;
@@ -1189,7 +1219,13 @@ function actualizarBadgesNutriente() {
   // Pestaña Medir — banner torre
   const medirTorreEmoji  = document.getElementById('medirTorreEmoji');
   const medirTorreNombre = document.getElementById('medirTorreNombre');
-  if (medirTorreEmoji)  medirTorreEmoji.textContent  = emojiSistemaUiPorTorre(torre);
+  if (medirTorreEmoji) {
+    if (typeof hcPintarSistemaIconoEnElemento === 'function') {
+      hcPintarSistemaIconoEnElemento(medirTorreEmoji, torre, 'hc-ico--dash-torre');
+    } else {
+      medirTorreEmoji.textContent = emojiSistemaUiPorTorre(torre);
+    }
+  }
   if (medirTorreNombre) medirTorreNombre.textContent  = (torre.nombre || '').trim() || 'Instalación';
   actualizarEstadoOperativaUI();
 
