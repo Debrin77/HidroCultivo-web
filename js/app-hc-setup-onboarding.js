@@ -42,9 +42,12 @@ function getSetupPlantasFilasCols() {
       typeof readNftMontajeFromSetupUi === 'function'
         ? readNftMontajeFromSetupUi()
         : { disposicion: 'mesa', escaleraCaras: 1, mesaMultinivel: false, mesaTubosStr: '' };
-    let nftNvSlider = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
+    let nftNvSlider = parseInt(document.getElementById('sliderNftCanales')?.value || 0, 10);
+    const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 0, 10);
+    if (nftNvSlider < 1 || huecos < 1) {
+      return { filas: 0, cols: 0, labelFila: 'Tubo', labelCol: 'Hueco' };
+    }
     let niveles = Math.max(1, Math.min(24, nftNvSlider));
-    const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
     if (mont.disposicion === 'mesa' && mont.mesaMultinivel && typeof parseNftMesaTubosPorNivelStr === 'function') {
       const tiers = parseNftMesaTubosPorNivelStr(mont.mesaTubosStr || '');
       if (tiers.length >= 2) niveles = Math.min(24, tiers.reduce((a, b) => a + b, 0));
@@ -60,8 +63,13 @@ function getSetupPlantasFilasCols() {
     };
   }
   if (t === 'rdwc') {
-    const sites = Math.max(2, Math.min(64, parseInt(String(document.getElementById('setupRdwcSites')?.value || '4'), 10) || 4));
-    const rows = Math.max(1, Math.min(4, parseInt(String(document.getElementById('setupRdwcRows')?.value || '1'), 10) || 1));
+    const sitesRaw = parseInt(String(document.getElementById('setupRdwcSites')?.value || '').trim(), 10);
+    const rowsRaw = parseInt(String(document.getElementById('setupRdwcRows')?.value || '').trim(), 10);
+    if (!Number.isFinite(sitesRaw) || sitesRaw < 2 || !Number.isFinite(rowsRaw) || rowsRaw < 1) {
+      return { filas: 0, cols: 0, labelFila: 'Fila', labelCol: 'Sitio' };
+    }
+    const sites = Math.max(2, Math.min(64, sitesRaw));
+    const rows = Math.max(1, Math.min(4, rowsRaw));
     const cols = Math.max(1, Math.ceil(sites / rows));
     return { filas: rows, cols, labelFila: 'Fila', labelCol: 'Sitio' };
   }
@@ -79,15 +87,37 @@ function getSetupPlantasFilasCols() {
     };
   }
   if (t === 'dwc') {
+    const filasD = parseInt(document.getElementById('sliderNiveles')?.value || '0', 10);
+    const colsD = parseInt(document.getElementById('sliderCestas')?.value || '0', 10);
     const oxRaw = document.getElementById('setupDwcOxigenacionDiseno')?.value;
     if (typeof dwcNormalizeOxigenacionDiseno === 'function' && dwcNormalizeOxigenacionDiseno(oxRaw) === 'cubos_independientes') {
       const nc = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
-      const nCub = Math.min(24, Math.max(1, Number.isFinite(nc) && nc >= 1 ? nc : 4));
+      if (!Number.isFinite(nc) || nc < 1) {
+        return { filas: 0, cols: 0, labelFila: 'Cubo', labelCol: 'Maceta' };
+      }
+      const nCub = Math.min(24, Math.max(1, nc));
       return { filas: 1, cols: nCub, labelFila: 'Cubo', labelCol: 'Maceta' };
     }
+    if (filasD < 1 || colsD < 1) {
+      return { filas: 0, cols: 0, labelFila: 'Fila', labelCol: 'Maceta' };
+    }
+    return {
+      filas: Math.max(1, filasD),
+      cols: Math.max(1, colsD),
+      labelFila: 'Fila',
+      labelCol: 'Maceta',
+    };
   }
-  const niveles = Math.max(1, parseInt(document.getElementById('sliderNiveles')?.value || 5, 10));
-  const cestas = Math.max(1, parseInt(document.getElementById('sliderCestas')?.value || 5, 10));
+  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 0, 10);
+  const cestas = parseInt(document.getElementById('sliderCestas')?.value || 0, 10);
+  if (niveles < 1 || cestas < 1) {
+    return {
+      filas: 0,
+      cols: 0,
+      labelFila: t === 'dwc' ? 'Fila' : 'Nivel',
+      labelCol: 'Cesta',
+    };
+  }
   return {
     filas: niveles,
     cols: cestas,
@@ -146,11 +176,23 @@ function renderSetupCestasVariedadGrid() {
   if (!wrap || !gridHost) return;
   const dims = getSetupPlantasFilasCols();
   const total = dims.filas * dims.cols;
-  if (setupTipoInstalacion === 'srf' && total < 1) {
+  if (total < 1) {
     wrap.classList.remove('setup-hidden');
     if (titleEl) titleEl.textContent = 'Cultivos en el esquema (después del asistente)';
+    const bloque =
+      setupTipoInstalacion === 'srf'
+        ? 'filas y plantas por fila en el bloque SRF'
+        : setupTipoInstalacion === 'nft'
+          ? 'tubos y huecos en el bloque NFT'
+          : setupTipoInstalacion === 'rdwc'
+            ? 'sitios y filas en el bloque RDWC'
+            : setupTipoInstalacion === 'dwc'
+              ? 'medidas del cubo, cesta y rejilla en el bloque DWC'
+              : 'niveles y cestas en la torre';
     gridHost.innerHTML =
-      '<p class="setup-cesta-var-too-many">Indica <strong>filas</strong> y <strong>plantas por fila</strong> en el bloque SRF. Tras guardar, asigna cada variedad en el <strong>esquema</strong> de Cultivo e instalación (como en DWC).</p>';
+      '<p class="setup-cesta-var-too-many">Completa <strong>' +
+      bloque +
+      '</strong>. Tras guardar, asigna cada variedad en el <strong>esquema</strong> de Cultivo e instalación.</p>';
     if (hintEl) hintEl.textContent = '';
     return;
   }

@@ -1441,6 +1441,12 @@ function guardarSetupYContinuar() {
   let cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5, 10);
   let nftNvSlider = 4;
   if (isNft) {
+    if (typeof nftSetupFormularioCompleto === 'function' && !nftSetupFormularioCompleto()) {
+      showToast('Indica tubos y huecos por tubo en el bloque NFT.', true);
+      setupPagina = 1;
+      renderSetupPage();
+      return;
+    }
     const nftMont = readNftMontajeFromSetupUi();
     if ((nftMont.disposicion === 'pared' || nftMont.disposicion === 'escalera') && nftMont.alturaBombeoCm <= 0) {
       showToast('Indica la altura de bombeo (cm) hasta el 1.º tubo: en pared y escalera es imprescindible para calcular la bomba.', true);
@@ -1462,18 +1468,44 @@ function guardarSetupYContinuar() {
   let vol       = parseInt(document.getElementById('sliderVol')?.value     || 20, 10);
   const nftPend = isNft ? parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10) : null;
   if (isDwc) {
+    if (typeof dwcSetupFormularioCompleto === 'function' && !dwcSetupFormularioCompleto()) {
+      showToast(
+        'Completa medidas del cubo, cesta (Ø y altura) y rejilla (filas × macetas) en el bloque DWC.',
+        true
+      );
+      setupPagina = 1;
+      renderSetupPage();
+      return;
+    }
     const dwcCapG = getDwcCapacidadLitrosFromSetupInputs();
     if (dwcCapG != null && dwcCapG > 0) {
       vol = Math.min(800, Math.max(1, Math.round(dwcCapG)));
     }
   }
   if (isRdwc) {
+    if (typeof rdwcSetupFormularioCompleto === 'function' && !rdwcSetupFormularioCompleto()) {
+      showToast(
+        'Completa sitios, filas, litros de cubo y depósito de control, y medidas de cesta en el bloque RDWC.',
+        true
+      );
+      setupPagina = 1;
+      renderSetupPage();
+      return;
+    }
     const cR = typeof applySetupRdwcDesdeFormulario === 'function'
       ? (applySetupRdwcDesdeFormulario() || {})
       : {};
     niveles = Math.max(1, Math.min(4, Math.round(Number(cR.rdwcRows || 1))));
     cestas = Math.max(1, Math.ceil(Number(cR.rdwcSites || 4) / niveles));
     vol = Math.max(1, Math.round(Number(cR.rdwcControlVolL || 40)));
+  }
+  if (!isNft && !isDwc && !isRdwc && !isSrf) {
+    if (typeof torreSetupFormularioCompleto === 'function' && !torreSetupFormularioCompleto()) {
+      showToast('Indica niveles, cestas por nivel y litros del depósito en la torre.', true);
+      setupPagina = 1;
+      renderSetupPage();
+      return;
+    }
   }
   if (isSrf) {
     if (typeof srfSetupFormularioCompleto === 'function' && !srfSetupFormularioCompleto()) {
@@ -1886,12 +1918,8 @@ function guardarSetupYContinuar() {
   const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
   // Las constantes se usarán dinámicamente en evalEC y checklist
 
-  // Reinicializar matriz de plantas (instalación nueva = vacía; reconfiguración DWC/SRF conserva fichas)
-  if (
-    setupEsNuevaTorre &&
-    (isSrf || isDwc) &&
-    typeof initTorreMatrizVacia === 'function'
-  ) {
+  // Reinicializar matriz de plantas (instalación nueva = vacía; reconfiguración conserva fichas)
+  if (setupEsNuevaTorre && typeof initTorreMatrizVacia === 'function') {
     initTorreMatrizVacia(niveles, cestas);
     state.configTorre.numNiveles = niveles;
     state.configTorre.numCestas = cestas;

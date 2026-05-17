@@ -1424,6 +1424,85 @@ function dwcLitrosUtilesPorCuboMultivalvula(cfg, opts) {
   return null;
 }
 
+/** Medidas de cubo, cesta y rejilla mínimas antes de guardar instalación nueva. */
+function dwcSetupFormularioCompleto() {
+  const draft = buildDwcDraftCfgFromSetupWizardInputs();
+  if (!draft || !dwcSetupTieneMedidasCuboEnCfg(draft)) return false;
+  const rim = Number(draft.dwcNetPotRimMm);
+  const h = Number(draft.dwcNetPotHeightMm);
+  const tieneCesta =
+    (Number.isFinite(h) && h >= 30) || (Number.isFinite(rim) && rim >= 25);
+  if (!tieneCesta) return false;
+  const filas = parseInt(document.getElementById('sliderNiveles')?.value || '0', 10);
+  const cols = parseInt(document.getElementById('sliderCestas')?.value || '0', 10);
+  if (filas < 1 || cols < 1) return false;
+  if (
+    typeof dwcGetOxigenacionDiseno === 'function' &&
+    dwcGetOxigenacionDiseno(draft) === 'cubos_independientes'
+  ) {
+    const nc = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
+    if (!Number.isFinite(nc) || nc < 1) return false;
+  }
+  return true;
+}
+
+/** Vacía el paso DWC del asistente (sin defaults numéricos en UI). */
+function hcResetDwcSetupFormZero() {
+  const clear = id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.type === 'checkbox') el.checked = false;
+    else if (el.tagName === 'SELECT') {
+      /* conservar primera opción del select */
+    } else el.value = '';
+  };
+  if (typeof DWC_FORM_IDS_SETUP !== 'undefined') {
+    const ids = DWC_FORM_IDS_SETUP;
+    [
+      ids.largo,
+      ids.ancho,
+      ids.largoInf,
+      ids.anchoInf,
+      ids.largoSup,
+      ids.anchoSup,
+      ids.diametro,
+      ids.prof,
+      ids.profTronco,
+      ids.volManual,
+      ids.rim,
+      ids.alt,
+      ids.numCubos,
+      ids.litrosUtilesPorSitio,
+      ids.marco,
+      ids.hueco,
+    ].forEach(clear);
+  }
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(v);
+  };
+  set('sliderNiveles', 0);
+  set('sliderCestas', 0);
+  const vN = document.getElementById('valNiveles');
+  const vC = document.getElementById('valCestas');
+  if (vN) vN.textContent = '0';
+  if (vC) vC.textContent = '0';
+  try {
+    clearSetupVolMezclaDwcAutofill();
+  } catch (_) {}
+  const block = document.getElementById('setupDwcLitrosSolucionBlock');
+  const valEl = document.getElementById('setupDwcLitrosSolucionValor');
+  if (block) block.classList.add('setup-dwc-litros-solucion-block--pending');
+  if (valEl) valEl.textContent = 'Indica medidas del cubo y de la cesta';
+  try {
+    dwcRefreshSetupLitrosSolucionUi();
+  } catch (_) {}
+  try {
+    if (typeof refreshDwcSetupPreview === 'function') refreshDwcSetupPreview();
+    else if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
+  } catch (_) {}
+}
+
 /** ¿Medidas mínimas del cubo en cfg para estimar litros? */
 function dwcSetupTieneMedidasCuboEnCfg(cfg) {
   const c = cfg || {};

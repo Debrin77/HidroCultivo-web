@@ -547,9 +547,14 @@ function rdwcParseNetPotHeightMm(raw) {
   return v;
 }
 
+/** Borrador RDWC vacío (asistente nueva instalación, sin defaults numéricos). */
+function hcFreshRdwcSetupBare() {
+  return { tipoInstalacion: 'rdwc' };
+}
+
 /** Valores por defecto del asistente RDWC (instalación nueva, sin heredar otra torre activa). */
 function hcFreshRdwcSetupDefaults() {
-  const f = { tipoInstalacion: 'rdwc' };
+  const f = hcFreshRdwcSetupBare();
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(f);
   delete f.rdwcCultivoPrevisto;
   return f;
@@ -557,7 +562,7 @@ function hcFreshRdwcSetupDefaults() {
 
 function getSetupRdwcDraftSeed() {
   if (typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre) {
-    return hcFreshRdwcSetupDefaults();
+    return hcFreshRdwcSetupBare();
   }
   if (setupRdwcDraft && typeof setupRdwcDraft === 'object' && tipoInstalacionNormalizado(setupRdwcDraft) === 'rdwc') {
     const base = hcSetupClonePlain(setupRdwcDraft, {}) || {};
@@ -627,6 +632,68 @@ function rdwcTieneMedidasCestaEnCfg(cfg) {
   const h = Number(c.rdwcNetPotHeightMm);
   const rim = Number(c.rdwcNetPotMm);
   return (Number.isFinite(h) && h >= 30 && h <= 200) || (Number.isFinite(rim) && rim >= 40);
+}
+
+function rdwcSetupFormularioCompleto() {
+  const parse = id => {
+    const n = parseFloat(String(document.getElementById(id)?.value || '').replace(',', '.'));
+    return Number.isFinite(n) ? n : NaN;
+  };
+  const sites = parse('setupRdwcSites');
+  const rows = parse('setupRdwcRows');
+  const bucketVol = parse('setupRdwcBucketVolL');
+  const controlVol = parse('setupRdwcControlVolL');
+  const rim = parse('setupRdwcNetPotMm');
+  const potH = parse('setupRdwcNetPotHeightMm');
+  const cestaOk =
+    (Number.isFinite(potH) && potH >= 30 && potH <= 200) || (Number.isFinite(rim) && rim >= 40);
+  return (
+    Number.isFinite(sites) &&
+    sites >= 2 &&
+    Number.isFinite(rows) &&
+    rows >= 1 &&
+    Number.isFinite(bucketVol) &&
+    bucketVol >= 5 &&
+    Number.isFinite(controlVol) &&
+    controlVol >= 10 &&
+    cestaOk
+  );
+}
+
+/** Vacía el paso RDWC del asistente (sin defaults en inputs). */
+function hcResetRdwcSetupFormZero() {
+  setupRdwcDraft = hcFreshRdwcSetupBare();
+  [
+    'setupRdwcSites',
+    'setupRdwcRows',
+    'setupRdwcBucketVolL',
+    'setupRdwcBucketTrabajoL',
+    'setupRdwcBucketTrabajoDiamCm',
+    'setupRdwcBucketTrabajoProfCm',
+    'setupRdwcControlVolL',
+    'setupRdwcControlTrabajoL',
+    'setupRdwcRecirculationLh',
+    'setupRdwcAirLpm',
+    'setupRdwcNetPotMm',
+    'setupRdwcNetPotHeightMm',
+    'setupRdwcCenterSpacingCm',
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const compatEl = document.getElementById('setupRdwcCompatStatus');
+  const calcEl = document.getElementById('setupRdwcCalcStatus');
+  if (compatEl) compatEl.innerHTML = '';
+  if (calcEl) calcEl.innerHTML = '';
+  try {
+    seleccionarSetupRdwcMontajeOrigen('diy');
+  } catch (_) {}
+  try {
+    bindRdwcCompatLive('setup');
+  } catch (_) {}
+  try {
+    if (typeof refreshRdwcSetupPreview === 'function') refreshRdwcSetupPreview();
+  } catch (_) {}
 }
 
 /** Estima Ø y profundidad útil del cubo a partir de litros nominales (cilindro). */
@@ -2286,9 +2353,9 @@ function seleccionarTipoInstalacionSetup(tipo) {
   else if (tipo === 'rdwc') setupTipoInstalacion = 'rdwc';
   else if (tipo === 'srf') setupTipoInstalacion = 'srf';
   else setupTipoInstalacion = 'torre';
-  if (setupTipoInstalacion === 'srf' && setupEsNuevaTorre) {
+  if (setupEsNuevaTorre && typeof hcResetSetupFormForNewInstall === 'function') {
     try {
-      if (typeof hcResetSrfSetupFormZero === 'function') hcResetSrfSetupFormZero();
+      hcResetSetupFormForNewInstall(setupTipoInstalacion);
     } catch (_) {}
   }
   if (setupTipoInstalacion !== 'dwc') {
@@ -2301,14 +2368,9 @@ function seleccionarTipoInstalacionSetup(tipo) {
       if (typeof clearSetupVolMezclaSrfAutofill === 'function') clearSetupVolMezclaSrfAutofill();
     } catch (_) {}
   }
-  if (setupTipoInstalacion === 'nft' && setupEsNuevaTorre) {
-    try {
-      if (typeof hcResetNftSetupSlidersZero === 'function') hcResetNftSetupSlidersZero();
-    } catch (_) {}
-  }
   if (setupTipoInstalacion === 'rdwc') {
     if (setupEsNuevaTorre) {
-      setupRdwcDraft = hcFreshRdwcSetupDefaults();
+      setupRdwcDraft = hcFreshRdwcSetupBare();
     } else if (!setupRdwcDraft || tipoInstalacionNormalizado(setupRdwcDraft) !== 'rdwc') {
       setupRdwcDraft =
         tipoInstalacionNormalizado(state.configTorre || {}) === 'rdwc'
@@ -2441,14 +2503,9 @@ function refrescarSetupTipoInstalacionUI() {
   if (dwcSoloWizard) dwcSoloWizard.classList.toggle('setup-hidden', isRdwc);
   if (isRdwc) {
     try {
-      syncSetupRdwcFieldsDesdeConfig(
-        setupRdwcDraft ||
-          (typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre
-            ? typeof hcFreshRdwcSetupDefaults === 'function'
-              ? hcFreshRdwcSetupDefaults()
-              : { tipoInstalacion: 'rdwc' }
-            : state.configTorre || {})
-      );
+      if (!(typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre)) {
+        syncSetupRdwcFieldsDesdeConfig(setupRdwcDraft || state.configTorre || {});
+      }
     } catch (_) {}
     try {
       if (typeof onSetupRdwcInput === 'function') onSetupRdwcInput();
@@ -2492,9 +2549,7 @@ function refrescarSetupTipoInstalacionUI() {
       srfRefreshOxigenacionUi('setup');
     } catch (_) {}
     try {
-      if (setupEsNuevaTorre) {
-        if (typeof hcResetSrfSetupFormZero === 'function') hcResetSrfSetupFormZero();
-      } else if (typeof syncSrfFormDesdeConfig === 'function') {
+      if (!setupEsNuevaTorre && typeof syncSrfFormDesdeConfig === 'function') {
         syncSrfFormDesdeConfig(state.configTorre || {}, 'setup');
       }
       if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
@@ -3372,14 +3427,15 @@ function applySetupRdwcDesdeFormulario() {
 }
 
 function syncSetupRdwcFieldsDesdeConfig(cfg) {
+  const esNueva = typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre;
   let c;
-  if (typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre) {
-    c = hcSetupClonePlain(cfg && tipoInstalacionNormalizado(cfg) === 'rdwc' ? cfg : setupRdwcDraft || hcFreshRdwcSetupDefaults(), {}) || hcFreshRdwcSetupDefaults();
+  if (esNueva) {
+    c = hcSetupClonePlain(setupRdwcDraft || hcFreshRdwcSetupBare(), {}) || hcFreshRdwcSetupBare();
   } else {
     c = hcSetupClonePlain(cfg || setupRdwcDraft || state.configTorre || {}, {}) || {};
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
   }
   c.tipoInstalacion = 'rdwc';
-  if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
   delete c.rdwcCultivoPrevisto;
   setupRdwcDraft = hcSetupClonePlain(c, {});
   const map = {

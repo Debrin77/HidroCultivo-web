@@ -916,15 +916,8 @@ function abrirSetupNuevaTorre() {
   const so = document.getElementById('setupOverlay');
   so.classList.add('open');
   try {
-    if (typeof hcResetNftSetupSlidersZero === 'function') hcResetNftSetupSlidersZero();
+    if (typeof hcResetSetupFormForNewInstall === 'function') hcResetSetupFormForNewInstall();
   } catch (_) {}
-  try {
-    if (typeof hcResetSrfSetupFormZero === 'function') hcResetSrfSetupFormZero();
-  } catch (_) {}
-  const svNew = document.getElementById('sliderVol');
-  if (svNew) svNew.value = '20';
-  const svmNew = document.getElementById('setupVolMezclaL');
-  if (svmNew) svmNew.value = '';
   renderNutrientesGrid();
   updateTorreBuilder();
   renderSetupPage();

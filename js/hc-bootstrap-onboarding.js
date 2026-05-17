@@ -484,8 +484,8 @@ function ensurePostSetupChecklistRail() {
       '</div>' +
       '<div class="hc-post-setup-rail-title">Cultivos en el esquema</div>' +
       '<p class="hc-post-setup-rail-text" id="hcPostSetupRailText">' +
-        'Desplázate al <strong>esquema más abajo</strong> y completa cada cesta: variedad, <strong>fecha de trasplante al hidro</strong> y procedencia. ' +
-        'Cuando los datos estén listos, se abre solo el <strong>checklist del depósito</strong> (misma línea visual que el asistente).' +
+        'Desplázate al <strong>esquema más abajo</strong> y completa cada cesta o hueco: variedad, <strong>fecha de trasplante al hidro</strong> y procedencia. ' +
+        'Cuando quieras mezclar el depósito, pulsa <strong>Continuar al checklist</strong>.' +
       '</p>' +
       '<p class="hc-post-setup-rail-status setup-hidden" id="hcPostSetupRailStatus" role="status"></p>' +
       '<div class="hc-post-setup-rail-actions">' +
@@ -586,12 +586,9 @@ function hcNotificarCambioCultivoSistema() {
     } catch (_) {}
     const transicion = listo && !prevListo;
     if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
-    const esSrf =
-      state.configTorre && String(state.configTorre.tipoInstalacion || '').toLowerCase() === 'srf';
-    if (transicion && !esSrf) hcEjecutarChecklistPostSetupTrasCultivosListos();
-    if (transicion && esSrf && typeof showToast === 'function') {
+    if (transicion && typeof showToast === 'function') {
       showToast(
-        'SRF: asigna variedad y fecha en cada hueco del esquema; luego pulsa «Continuar al checklist» cuando quieras mezclar el depósito.'
+        'Cultivos listos en el esquema: pulsa «Continuar al checklist» arriba del esquema cuando quieras mezclar el depósito.'
       );
     }
   } catch (_) {}
@@ -715,17 +712,13 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
       typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' && torreBloqueaChecklistPorFaltaDatosCultivo();
     const sinVariedad =
       typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
-    const esSrf =
-      state.configTorre && String(state.configTorre.tipoInstalacion || '').toLowerCase() === 'srf';
     if (bloqueado || sinVariedad) {
       showToast(
-        esSrf
-          ? 'SRF: toca cada hueco en el esquema y asigna variedad y fecha. El checklist del depósito solo cuando pulses «Continuar al checklist».'
-          : 'Completa el esquema: variedad (y en EC automático fecha de trasplante al hidro) en cada cesta que uses. La barra «Cultivo → checklist» se activa al estar listo.'
+        'Toca cada cesta o hueco en el esquema: variedad y fecha de trasplante al hidro. El checklist del depósito solo cuando pulses «Continuar al checklist».'
       );
-    } else if (!esSrf) {
+    } else {
       showToast(
-        'Datos de cultivo listos para el checklist: en unos segundos puede abrirse el asistente del depósito, o usa «Continuar al checklist» arriba del esquema.'
+        'Datos de cultivo listos: pulsa «Continuar al checklist» arriba del esquema cuando quieras mezclar el depósito.'
       );
     }
   }
