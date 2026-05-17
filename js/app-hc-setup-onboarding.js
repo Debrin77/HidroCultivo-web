@@ -305,6 +305,11 @@ function toggleSetupPlanta(key) {
   renderSetupPlantasGrid();
   // Recalcular dosis con los cultivos actualizados
   renderDosisSetup();
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'nft') {
+    try {
+      if (typeof renderNftCultivoRecoStatus === 'function') renderNftCultivoRecoStatus('setup');
+    } catch (_) {}
+  }
 }
 
 function seleccionarNumTorres(tipo) {

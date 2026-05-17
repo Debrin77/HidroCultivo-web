@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-15-nft-asistente">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-15-nft-compat">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -1374,6 +1374,7 @@
           </div>
         </div>
         <p id="sysNftCultivoRecoStatus" class="torre-nft-p-note setup-hidden" role="status" aria-live="polite"></p>
+        <p id="sysNftCestaRecoStatus" class="torre-nft-p-note setup-hidden" role="status" aria-live="polite"></p>
         <div id="sysNftRowNumCanales" class="torre-nft-row-mb">
           <label class="form-label torre-nft-label-xs" for="sysNftNumCanales">Tubos / canales (mesa o pared)</label>
           <input type="number" id="sysNftNumCanales" class="torre-nft-input-mt" min="1" max="24" step="1" placeholder="ej. 4">
@@ -3247,6 +3248,7 @@
                     oninput="try{updateNftSetupPreview()}catch(e){}; try{actualizarResumenSetup()}catch(e){}">
                 </div>
               </div>
+              <p id="setupNftCestaRecoStatus" class="setup-nft-compat-status setup-hidden" role="status" aria-live="polite"></p>
             </div>
             <div class="setup-nft-channel-wrap">
               <div class="setup-nft-layout-title">
@@ -3269,7 +3271,7 @@
                   <button type="button" class="equip-card setup-nft-chip-sm" id="nftCanalDiam110" onclick="seleccionarNftCanalDiam(110)">110</button>
                 </div>
               </div>
-              <p id="setupNftCultivoRecoStatus" class="setup-nft-subhint setup-hidden" role="status" aria-live="polite"></p>
+              <p id="setupNftCultivoRecoStatus" class="setup-nft-compat-status setup-hidden" role="status" aria-live="polite"></p>
               <div id="nftCanalRectWrap" class="setup-hidden">
                 <label for="nftCanalAnchoMm" class="setup-label-tiny">Ancho útil fondo (mm)</label>
                 <input type="number" id="nftCanalAnchoMm" min="40" max="220" value="100" inputmode="numeric"
@@ -4593,7 +4595,7 @@
   <script src="js/hc-setup-wizard-core.js?v=2026-05-15-nft-asistente"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-colgado"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-setup-preview"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-nft-asistente"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-nft-compat"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-nft-asistente"></script>
   <script src="js/hc-setup-calc-core.js?v=2026-05-15-rdwc-cesta-litros"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>

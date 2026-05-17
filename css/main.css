@@ -14961,6 +14961,23 @@ button.toggle-switch:focus-visible {
   color: #0f172a;
   line-height: 1.35;
 }
+.setup-nft-compat-status,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-compat-status {
+  display: block;
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.setup-nft-compat-status .nft-compat-line {
+  display: block;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple #setupNftCultivoRecoStatus.setup-nft-compat-status {
+  margin-top: 10px;
+}
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-help--brief {
   display: block;
   font-size: 12px;

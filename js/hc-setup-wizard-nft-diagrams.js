@@ -349,6 +349,74 @@ function nftRecoPerfilPorGrupo(grupo) {
   };
 }
 
+/** Parsea «50 mm» o «27–50 mm» del perfil de cultivo. */
+function nftParseCestaRangoMm(cestaTxt) {
+  const s = String(cestaTxt || '').trim();
+  if (!s) return null;
+  const m = s.match(/(\d{2,3})\s*(?:–|-|a)\s*(\d{2,3})/i);
+  if (m) {
+    const a = parseInt(m[1], 10);
+    const b = parseInt(m[2], 10);
+    if (Number.isFinite(a) && Number.isFinite(b)) {
+      return { min: Math.min(a, b), max: Math.max(a, b), reco: Math.round((a + b) / 2) };
+    }
+  }
+  const one = s.match(/(\d{2,3})/);
+  if (one) {
+    const v = parseInt(one[1], 10);
+    if (Number.isFinite(v)) return { min: v, max: v, reco: v };
+  }
+  return null;
+}
+
+/** Ø o ancho útil del canal de cultivo (mm). */
+function nftCanalReferenciaInteriorMm(geom) {
+  geom = geom || {};
+  if (geom.forma === 'rectangular') {
+    return Math.min(220, Math.max(40, parseInt(String(geom.anchoMm), 10) || 100));
+  }
+  return Math.min(160, Math.max(50, parseInt(String(geom.diamMm), 10) || 90));
+}
+
+/**
+ * Altura y aro de cesta coherentes con canal + lámina (~1–3 mm de película).
+ * Referencia: película fina + zona aérea en el canal (guías NFT tipo AquaLogi / Hydro4Grow);
+ * macetas ~50–76 mm habituales en tubos Ø75–110 mm.
+ */
+function nftRecomendarCestaDesdeCanal(geom, perfil) {
+  const canal = nftCanalReferenciaInteriorMm(geom);
+  const lam = Math.min(6, Math.max(2, geom.laminaMm || 3));
+  if (!Number.isFinite(canal) || canal < 50) return null;
+  const libre = Math.max(12, canal - lam);
+  let altMin = Math.max(28, Math.round(libre * 0.42));
+  let altMax = Math.min(100, Math.round(libre * 0.68));
+  let altReco = Math.round((altMin + altMax) / 2 / 5) * 5;
+  let rimMin = Math.max(25, Math.round(canal * 0.38));
+  let rimMax = Math.min(100, Math.round(canal * 0.58));
+  let rimReco = Math.min(rimMax, Math.max(rimMin, Math.round(canal * 0.52 / 5) * 5));
+  const cropRim = nftParseCestaRangoMm(perfil && perfil.cestaTxt);
+  if (cropRim) {
+    rimMin = Math.max(rimMin, cropRim.min);
+    rimMax = Math.min(rimMax, cropRim.max);
+    rimReco = Math.min(rimMax, Math.max(rimMin, cropRim.reco != null ? cropRim.reco : rimReco));
+  }
+  if (rimMin > rimMax) {
+    rimMin = cropRim ? cropRim.min : rimMin;
+    rimMax = cropRim ? cropRim.max : rimMax;
+    rimReco = Math.min(rimMax, Math.max(rimMin, rimReco));
+  }
+  return {
+    canalMm: canal,
+    laminaMm: lam,
+    altMin,
+    altMax,
+    altReco,
+    rimMin,
+    rimMax,
+    rimReco,
+  };
+}
+
 function nftGrupoObjetivoDesdeConfig(cfg) {
   cfg = cfg || state.configTorre || {};
   const cnt = {};
@@ -357,6 +425,11 @@ function nftGrupoObjetivoDesdeConfig(cfg) {
     if (!k) return;
     cnt[k] = (cnt[k] || 0) + 1;
   };
+  try {
+    if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas && setupPlantasSeleccionadas.size > 0) {
+      setupPlantasSeleccionadas.forEach(k => addG(k));
+    }
+  } catch (_) {}
   try {
     const tor = state.torre || [];
     for (let i = 0; i < tor.length; i++) {
@@ -393,13 +466,64 @@ function nftGrupoObjetivoDesdeConfig(cfg) {
   return 'lechugas';
 }
 
+function nftCestaDesdeConfig(cfg) {
+  cfg = cfg || {};
+  const rim = parseInt(String(cfg.nftNetPotRimMm ?? cfg.dwcNetPotRimMm ?? ''), 10);
+  const h = parseInt(String(cfg.nftNetPotHeightMm ?? cfg.dwcNetPotHeightMm ?? ''), 10);
+  return {
+    rimMm: Number.isFinite(rim) && rim >= 25 && rim <= 120 ? rim : null,
+    heightMm: Number.isFinite(h) && h >= 30 && h <= 200 ? h : null,
+  };
+}
+
+function nftEvaluarCestaConCanal(cfg, perfil) {
+  const geom = nftCanalGeomDesdeConfig(cfg);
+  const reco = nftRecomendarCestaDesdeCanal(geom, perfil);
+  const pot = nftCestaDesdeConfig(cfg);
+  if (!reco) {
+    return {
+      estado: 'warn',
+      veredicto: 'Indica Ø del tubo o ancho del canal y lámina de agua',
+      reco: null,
+      pot,
+    };
+  }
+  let estado = 'ok';
+  let veredicto = 'Cesta coherente con canal y lámina';
+  if (pot.rimMm != null) {
+    if (pot.rimMm < reco.rimMin - 2) {
+      estado = 'warn';
+      veredicto = 'Aro de cesta pequeño para este canal';
+    } else if (pot.rimMm > reco.rimMax + 2) {
+      estado = 'warn';
+      veredicto = 'Aro de cesta grande para el hueco en el tubo';
+    }
+  }
+  if (pot.heightMm != null) {
+    if (pot.heightMm < reco.altMin - 3) {
+      estado = estado === 'ok' ? 'warn' : estado;
+      veredicto =
+        pot.rimMm != null && estado !== 'ok'
+          ? veredicto + '; altura baja para la película'
+          : 'Altura de cesta baja para la película en el canal';
+    } else if (pot.heightMm > reco.altMax + 5) {
+      estado = estado === 'ok' ? 'warn' : estado;
+      veredicto =
+        pot.rimMm != null && estado !== 'ok'
+          ? veredicto + '; altura alta (poca zona aérea en canal)'
+          : 'Altura de cesta alta: poca zona aérea sobre la lámina';
+    }
+  }
+  return { estado, veredicto, reco, pot };
+}
+
 function nftRecomendacionCultivoDesdeConfig(cfg) {
   cfg = cfg || state.configTorre || {};
   if (cfg.tipoInstalacion !== 'nft') return null;
   const grupo = nftGrupoObjetivoDesdeConfig(cfg);
   const p = nftRecoPerfilPorGrupo(grupo);
   const geom = nftCanalGeomDesdeConfig(cfg);
-  const d = Number(geom.diamMm);
+  const d = nftCanalReferenciaInteriorMm(geom);
   let estado = 'ok';
   let veredicto = 'Dentro de rango recomendado';
   if (!p.permite) {
@@ -410,17 +534,20 @@ function nftRecomendacionCultivoDesdeConfig(cfg) {
     veredicto = 'Falta diámetro de canal';
   } else if (d < p.canalMinMm) {
     estado = 'warn';
-    veredicto = 'Canal justo para este grupo';
+    veredicto = 'Canal estrecho para este cultivo — sube el Ø del tubo';
   } else if (d > p.canalMaxMm + 15) {
     estado = 'warn';
-    veredicto = 'Canal sobredimensionado para este grupo';
+    veredicto = 'Canal muy ancho para este cultivo';
   }
+  const cesta = nftEvaluarCestaConCanal(cfg, p);
   return {
     grupo,
     perfil: p,
     diamActualMm: Number.isFinite(d) ? d : null,
+    geomForma: geom.forma,
     estado,
     veredicto,
+    cesta,
   };
 }
 
@@ -445,25 +572,17 @@ function nftRecomendacionCultivoTextoCorto(cfg) {
   );
 }
 
-function renderNftCultivoRecoStatus(scope) {
-  const elId = scope === 'setup' ? 'setupNftCultivoRecoStatus' : 'sysNftCultivoRecoStatus';
-  const el = document.getElementById(elId);
-  if (!el) return;
+function nftDraftParaCompatibilidad(scope) {
   const esSetup = scope === 'setup';
-  if (esSetup) {
-    if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') {
-      el.innerHTML = '';
-      el.classList.add('setup-hidden');
-      return;
-    }
-  } else if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') {
-    el.innerHTML = '';
-    el.classList.add('setup-hidden');
-    return;
-  }
   let draft;
   if (esSetup && typeof buildNftDraftConfigFromSetupUi === 'function') {
     draft = Object.assign({}, state.configTorre || {}, buildNftDraftConfigFromSetupUi(), { tipoInstalacion: 'nft' });
+    const potUi = typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : {};
+    if (potUi.rimMm != null) draft.nftNetPotRimMm = potUi.rimMm;
+    if (potUi.heightMm != null) draft.nftNetPotHeightMm = potUi.heightMm;
+    if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) {
+      draft.cultivosIniciales = [...setupPlantasSeleccionadas];
+    }
   } else if (!esSetup) {
     draft = Object.assign({}, state.configTorre || {}, { tipoInstalacion: 'nft' });
     const objEl = document.getElementById('sysNftObjetivoCultivo');
@@ -473,33 +592,121 @@ function renderNftCultivoRecoStatus(scope) {
   } else {
     draft = Object.assign({}, state.configTorre || {}, { tipoInstalacion: 'nft' });
   }
-  const r = typeof nftRecomendacionCultivoDesdeConfig === 'function' ? nftRecomendacionCultivoDesdeConfig(draft) : null;
-  if (!r) {
+  return draft;
+}
+
+function renderNftCompatibilidadEnEl(el, html, visible) {
+  if (!el) return;
+  if (!visible) {
     el.innerHTML = '';
     el.classList.add('setup-hidden');
     return;
   }
-  const chip = typeof rdwcCompatChipHtml === 'function' ? rdwcCompatChipHtml(r.estado) : '';
+  el.classList.remove('setup-hidden');
+  el.innerHTML = html;
+}
+
+function renderNftCultivoRecoStatus(scope) {
+  const elCanal = document.getElementById(scope === 'setup' ? 'setupNftCultivoRecoStatus' : 'sysNftCultivoRecoStatus');
+  const elCesta = document.getElementById(scope === 'setup' ? 'setupNftCestaRecoStatus' : 'sysNftCestaRecoStatus');
+  const esSetup = scope === 'setup';
+  if (esSetup) {
+    if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') {
+      renderNftCompatibilidadEnEl(elCanal, '', false);
+      renderNftCompatibilidadEnEl(elCesta, '', false);
+      return;
+    }
+  } else if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') {
+    renderNftCompatibilidadEnEl(elCanal, '', false);
+    renderNftCompatibilidadEnEl(elCesta, '', false);
+    return;
+  }
+  const draft = nftDraftParaCompatibilidad(scope);
+  const r = typeof nftRecomendacionCultivoDesdeConfig === 'function' ? nftRecomendacionCultivoDesdeConfig(draft) : null;
+  if (!r) {
+    renderNftCompatibilidadEnEl(elCanal, '', false);
+    renderNftCompatibilidadEnEl(elCesta, '', false);
+    return;
+  }
+  const chip = typeof rdwcCompatChipHtml === 'function' ? rdwcCompatChipHtml : () => '';
   const esc = typeof meteoEscHtml === 'function' ? meteoEscHtml : function (x) {
     return String(x == null ? '' : x);
   };
+  const canalLbl = r.geomForma === 'rectangular' ? 'ancho' : 'Ø';
   const dAct =
-    r.diamActualMm != null && Number.isFinite(r.diamActualMm) ? 'Ø <strong>' + r.diamActualMm + ' mm</strong>' : 'Ø por indicar';
-  el.classList.remove('setup-hidden');
-  el.innerHTML =
-    '<span class="rdwc-compat-text"><strong>Recomendación canal (tubo de cultivo)</strong> ' +
-    chip +
-    ' · ' +
-    esc(r.perfil.etiqueta) +
-    ' · rango orientativo <strong>Ø ' +
-    r.perfil.canalMinMm +
+    r.diamActualMm != null && Number.isFinite(r.diamActualMm)
+      ? canalLbl + ' <strong>' + r.diamActualMm + ' mm</strong>'
+      : canalLbl + ' por indicar';
+  const hayCultivo =
+    (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) ||
+    (Array.isArray(draft.cultivosIniciales) && draft.cultivosIniciales.length > 0);
+  const cultivoLine = hayCultivo
+    ? esc(r.perfil.etiqueta) + ' · canal ' + canalLbl + ' <strong>' + r.perfil.canalMinMm + '–' + r.perfil.canalMaxMm + ' mm</strong>'
+    : 'Elige cultivo en el asistente para validar el ' + canalLbl + ' del tubo';
+  renderNftCompatibilidadEnEl(
+    elCanal,
+    '<span class="rdwc-compat-text nft-compat-line">' +
+      chip(r.estado) +
+      ' <strong>Canal vs cultivo</strong> · ' +
+      cultivoLine +
+      ' · actual ' +
+      dAct +
+      (hayCultivo ? '. <em>' + esc(r.veredicto) + '</em>' : '.') +
+      '</span>',
+    true
+  );
+  const c = r.cesta;
+  const reco = c && c.reco;
+  if (!reco) {
+    renderNftCompatibilidadEnEl(elCesta, '', false);
+    return;
+  }
+  let cestaEstado = c.estado;
+  let cestaVer = c.veredicto;
+  const pot = c.pot || {};
+  if (pot.rimMm == null && pot.heightMm == null) {
+    cestaEstado = 'warn';
+    cestaVer = 'Indica diám. y altura de cesta para comprobar';
+  }
+  const recoTxt =
+    'aro <strong>' +
+    reco.rimMin +
     '–' +
-    r.perfil.canalMaxMm +
-    ' mm</strong> · actual ' +
-    dAct +
-    '. <em>' +
-    esc(r.veredicto) +
-    '</em> También en <strong>Consejos → NFT</strong> y en el checklist de recarga.</span>';
+    reco.rimMax +
+    ' mm</strong> (≈' +
+    reco.rimReco +
+    ') · altura <strong>' +
+    reco.altMin +
+    '–' +
+    reco.altMax +
+    ' mm</strong> (≈' +
+    reco.altReco +
+    ') · lámina ' +
+    reco.laminaMm +
+    ' mm';
+  const actParts = [];
+  if (pot.rimMm != null) actParts.push('aro ' + pot.rimMm + ' mm');
+  if (pot.heightMm != null) actParts.push('altura ' + pot.heightMm + ' mm');
+  const actTxt = actParts.length ? actParts.join(' · ') : 'sin datos';
+  renderNftCompatibilidadEnEl(
+    elCesta,
+    '<span class="rdwc-compat-text nft-compat-line">' +
+      chip(cestaEstado) +
+      ' <strong>Cesta vs canal</strong> · recomendado ' +
+      recoTxt +
+      ' · actual: ' +
+      esc(actTxt) +
+      '. <em>' +
+      esc(cestaVer) +
+      '</em></span>',
+    true
+  );
+  if (esSetup) {
+    const rimIn = document.getElementById('setupNftPotRimMm');
+    const hIn = document.getElementById('setupNftPotHmm');
+    if (rimIn && !String(rimIn.value || '').trim()) rimIn.placeholder = '≈' + reco.rimReco;
+    if (hIn && !String(hIn.value || '').trim()) hIn.placeholder = '≈' + reco.altReco;
+  }
 }
 
 /** Una sola línea de resumen NFT para #depositoTitulo, diagrama y Consejos (config activa). */
