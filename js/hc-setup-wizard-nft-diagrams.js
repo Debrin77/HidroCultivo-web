@@ -614,11 +614,13 @@ function renderNftCultivoRecoStatus(scope) {
     if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') {
       renderNftCompatibilidadEnEl(elCanal, '', false);
       renderNftCompatibilidadEnEl(elCesta, '', false);
+      nftRefreshAplicarRecoBtns(scope, null, false);
       return;
     }
   } else if (!state.configTorre || state.configTorre.tipoInstalacion !== 'nft') {
     renderNftCompatibilidadEnEl(elCanal, '', false);
     renderNftCompatibilidadEnEl(elCesta, '', false);
+    nftRefreshAplicarRecoBtns(scope, null, false);
     return;
   }
   const draft = nftDraftParaCompatibilidad(scope);
@@ -626,6 +628,7 @@ function renderNftCultivoRecoStatus(scope) {
   if (!r) {
     renderNftCompatibilidadEnEl(elCanal, '', false);
     renderNftCompatibilidadEnEl(elCesta, '', false);
+    nftRefreshAplicarRecoBtns(scope, null, false);
     return;
   }
   const chip = typeof rdwcCompatChipHtml === 'function' ? rdwcCompatChipHtml : () => '';
@@ -659,6 +662,7 @@ function renderNftCultivoRecoStatus(scope) {
   const reco = c && c.reco;
   if (!reco) {
     renderNftCompatibilidadEnEl(elCesta, '', false);
+    nftRefreshAplicarRecoBtns(scope, r, hayCultivo);
     return;
   }
   let cestaEstado = c.estado;
@@ -707,6 +711,7 @@ function renderNftCultivoRecoStatus(scope) {
     if (rimIn && !String(rimIn.value || '').trim()) rimIn.placeholder = '≈' + reco.rimReco;
     if (hIn && !String(hIn.value || '').trim()) hIn.placeholder = '≈' + reco.altReco;
   }
+  nftRefreshAplicarRecoBtns(scope, r, hayCultivo);
 }
 
 /** Una sola línea de resumen NFT para #depositoTitulo, diagrama y Consejos (config activa). */
@@ -1410,6 +1415,93 @@ function seleccionarNftPotRimPreset(mm) {
   try {
     if (typeof actualizarResumenSetup === 'function') actualizarResumenSetup();
   } catch (_) {}
+}
+
+/** Ø de tubo de cultivo estándar más cercano al valor objetivo (mm). */
+function nftCanalDiamPresetCercano(mm) {
+  const target = Math.round(Number(mm));
+  if (!Number.isFinite(target)) return 90;
+  const presets = [75, 90, 110];
+  let best = presets[1];
+  let bestD = Infinity;
+  for (let i = 0; i < presets.length; i++) {
+    const d = Math.abs(presets[i] - target);
+    if (d < bestD) {
+      bestD = d;
+      best = presets[i];
+    }
+  }
+  return best;
+}
+
+function nftRefreshAplicarRecoBtns(scope, r, hayCultivo) {
+  const btnCesta = document.getElementById(scope === 'setup' ? 'setupNftAplicarCestaBtn' : 'sysNftAplicarCestaBtn');
+  const btnCanal = document.getElementById('setupNftAplicarCanalBtn');
+  const hasCesta = !!(r && r.cesta && r.cesta.reco);
+  if (btnCesta) btnCesta.disabled = !hasCesta;
+  if (btnCanal) {
+    const showCanal = !!(hayCultivo && r && r.perfil && r.perfil.permite && scope === 'setup');
+    btnCanal.disabled = !showCanal;
+    btnCanal.classList.toggle('setup-hidden', !showCanal);
+  }
+}
+
+/** Rellena diám. y altura de cesta con la recomendación (canal + lámina + cultivo). */
+function aplicarNftCestaRecomendada(scope) {
+  scope = scope === 'sys' ? 'sys' : 'setup';
+  const draft = nftDraftParaCompatibilidad(scope);
+  const r = typeof nftRecomendacionCultivoDesdeConfig === 'function' ? nftRecomendacionCultivoDesdeConfig(draft) : null;
+  if (!r || !r.cesta || !r.cesta.reco) return;
+  const reco = r.cesta.reco;
+  if (scope === 'setup') {
+    const rimEl = document.getElementById('setupNftPotRimMm');
+    const hEl = document.getElementById('setupNftPotHmm');
+    if (rimEl) rimEl.value = String(reco.rimReco);
+    if (hEl) hEl.value = String(reco.altReco);
+    syncNftPotRimChipsFromInput();
+    try {
+      if (typeof updateNftSetupPreview === 'function') updateNftSetupPreview();
+    } catch (_) {}
+    try {
+      if (typeof actualizarResumenSetup === 'function') actualizarResumenSetup();
+    } catch (_) {}
+  } else {
+    const rimEl = document.getElementById('sysNftPotRimMm');
+    const hEl = document.getElementById('sysNftPotHmm');
+    if (rimEl) rimEl.value = String(reco.rimReco);
+    if (hEl) hEl.value = String(reco.altReco);
+    if (typeof syncSistemaNftPotRimChipsFromInput === 'function') syncSistemaNftPotRimChipsFromInput();
+    if (state.configTorre && state.configTorre.tipoInstalacion === 'nft') {
+      state.configTorre.nftNetPotRimMm = reco.rimReco;
+      state.configTorre.nftNetPotHeightMm = reco.altReco;
+    }
+    try {
+      renderNftCultivoRecoStatus('sys');
+    } catch (_) {}
+    try {
+      if (typeof renderTorre === 'function') renderTorre();
+    } catch (_) {}
+  }
+}
+
+/** Ajusta Ø/ancho del canal al rango del cultivo elegido (asistente). */
+function aplicarNftCanalRecomendado(scope) {
+  if (scope !== 'setup') return;
+  const draft = nftDraftParaCompatibilidad('setup');
+  const r = typeof nftRecomendacionCultivoDesdeConfig === 'function' ? nftRecomendacionCultivoDesdeConfig(draft) : null;
+  if (!r || !r.perfil || !r.perfil.permite) return;
+  const mid = Math.round((r.perfil.canalMinMm + r.perfil.canalMaxMm) / 2);
+  const geom = nftCanalGeomDesdeConfig(draft);
+  if (geom.forma === 'rectangular') {
+    const el = document.getElementById('nftCanalAnchoMm');
+    if (el) el.value = String(Math.min(220, Math.max(40, mid)));
+    try {
+      if (typeof updateNftSetupPreview === 'function') updateNftSetupPreview();
+    } catch (_) {}
+    return;
+  }
+  const diam = nftCanalDiamPresetCercano(mid);
+  if (typeof seleccionarNftCanalDiam === 'function') seleccionarNftCanalDiam(diam);
 }
 
 /** Bloque compacto de resultados en el asistente NFT (depósito, bomba, aireador). */

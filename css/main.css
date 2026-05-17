@@ -14978,6 +14978,16 @@ button.toggle-switch:focus-visible {
 #setupNftBuilderWrap.setup-nft-asistente-simple #setupNftCultivoRecoStatus.setup-nft-compat-status {
   margin-top: 10px;
 }
+.setup-nft-aplicar-reco-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.setup-nft-aplicar-reco-row .btn {
+  flex: 1 1 auto;
+  min-width: min(100%, 160px);
+}
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-help--brief {
   display: block;
   font-size: 12px;
