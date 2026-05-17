@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-15-rdwc-desglose">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-15-nft-asistente">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -3097,15 +3097,7 @@
 
       <div id="setupNftBuilderWrap" class="setup-hidden setup-nft-asistente-simple">
         <div class="torre-builder">
-          <div>
-            <div class="torre-preview nft-schematic-host" id="nftPreview" aria-live="polite"></div>
-          </div>
-          <div id="setupNftRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
-            <p class="setup-dwc-litros-solucion-label">Bomba y circuito (orientativo)</p>
-            <p class="setup-dwc-litros-solucion-valor" id="setupNftRecoValor">—</p>
-            <p class="setup-dwc-litros-solucion-hint" id="setupNftRecoHint"></p>
-          </div>
-          <div class="torre-controls">
+          <div class="torre-controls setup-nft-controls-top" id="setupNftControlsTop">
 <div id="setupNftMontajeDiyBlock">
             <div class="setup-nft-guide">
               <div class="setup-nft-guide-title">Cómo configurarlo</div>
@@ -3193,27 +3185,41 @@
             <div class="torre-control-row">
               <div class="torre-control-label">
                 <span id="nftCanalesLabelMain">Tubos en serpentín</span>
-                <span class="torre-control-val" id="valNftCanales">4</span>
+                <span class="torre-control-val" id="valNftCanales">0</span>
               </div>
               <input type="range" class="torre-slider" id="sliderNftCanales"
-                min="1" max="24" value="4" oninput="updateNftSetupPreview()">
+                min="0" max="24" value="0" oninput="updateNftSetupPreview()">
             </div>
             <div class="torre-control-row">
               <div class="torre-control-label">
                 Huecos por tubo <span class="setup-inline-subtle">(igual en todos)</span>
-                <span class="torre-control-val" id="valNftHuecos">8</span>
+                <span class="torre-control-val" id="valNftHuecos">0</span>
               </div>
               <input type="range" class="torre-slider" id="sliderNftHuecos"
-                min="2" max="30" value="8" oninput="updateNftSetupPreview()">
+                min="0" max="30" value="0" oninput="updateNftSetupPreview()">
             </div>
             <div class="torre-control-row">
               <div class="torre-control-label">
                 Pendiente aprox.
-                <span class="torre-control-val" id="valNftPendiente">2<span class="setup-inline-unit-percent">%</span></span>
+                <span class="torre-control-val" id="valNftPendiente">0<span class="setup-inline-unit-percent">%</span></span>
               </div>
               <input type="range" class="torre-slider" id="sliderNftPendiente"
-                min="1" max="4" value="2" step="1" oninput="updateNftSetupPreview()">
+                min="0" max="4" value="0" step="1" oninput="updateNftSetupPreview()">
             </div>
+          </div>
+          <div class="setup-nft-preview-col">
+            <div class="torre-preview nft-schematic-host" id="nftPreview" aria-live="polite"></div>
+          <div id="setupNftRecoBlock" class="setup-nft-resultados setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+            <p class="setup-dwc-litros-solucion-label">Resultados</p>
+            <dl class="setup-nft-resultados-dl">
+              <dt>Depósito impulsión</dt><dd id="setupNftRecoDeposito">—</dd>
+              <dt>Bomba 24 h</dt><dd id="setupNftRecoBomba">—</dd>
+              <dt>Aireador</dt><dd id="setupNftRecoAire">—</dd>
+            </dl>
+            <p class="setup-dwc-litros-solucion-hint setup-hidden" id="setupNftRecoHint" aria-hidden="true"></p>
+          </div>
+          </div>
+          <div class="torre-controls setup-nft-controls-rest" id="setupNftControlsRest">
             <div class="setup-nft-cesta-wrap setup-mt-10">
               <div class="setup-nft-layout-title">Cestas (net pot)</div>
               <p class="setup-nft-layout-help">
@@ -4584,11 +4590,11 @@
   <script src="js/torre-render-main.js?v=2026-05-15-dwc-llenado"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-rdwc-desglose"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-15-nft-asistente"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-dwc-colgado"></script>
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-setup-preview"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-setup-preview"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-rdwc-nft-setup"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-15-nft-asistente"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-15-nft-asistente"></script>
   <script src="js/hc-setup-calc-core.js?v=2026-05-15-rdwc-cesta-litros"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>

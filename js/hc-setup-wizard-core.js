@@ -2296,6 +2296,11 @@ function seleccionarTipoInstalacionSetup(tipo) {
       if (typeof clearSetupVolMezclaSrfAutofill === 'function') clearSetupVolMezclaSrfAutofill();
     } catch (_) {}
   }
+  if (setupTipoInstalacion === 'nft' && setupEsNuevaTorre) {
+    try {
+      if (typeof hcResetNftSetupSlidersZero === 'function') hcResetNftSetupSlidersZero();
+    } catch (_) {}
+  }
   if (setupTipoInstalacion === 'rdwc') {
     if (setupEsNuevaTorre) {
       setupRdwcDraft = hcFreshRdwcSetupDefaults();
@@ -2399,7 +2404,7 @@ function refrescarSetupTipoInstalacionUI() {
   }
   if (st) {
     st.textContent = isNft
-      ? 'Kit: disposición, canales y huecos que veas, Ø de cesta en el embalaje. DIY: cinta al tubo y alzada al 1.º tubo si sube agua; sin calcular caudales.'
+      ? 'Disposición, tubos y huecos; la app calcula depósito, bomba y aireador. Detalle en Consejos.'
       : setupTipoInstalacion === 'dwc'
         ? 'Depósito: medidas interiores con cinta o litros en la caja; Ø de cesta en el envase. Rejilla y litros de mezcla los sugerimos; lo opcional puede quedar vacío.'
         : isRdwc
@@ -2718,30 +2723,66 @@ function nftEscaleraCarasNormalizada(v) {
  * Canales hidráulicos efectivos y metadatos de montaje para cálculo y SVG.
  * @returns {{ nCh: number, nHx: number, mesaTiers?: number[], escaleraNiveles?: number, escaleraCaras?: number }}
  */
+function nftHuecosDesdeCfg(cfg) {
+  const raw = parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? ''), 10);
+  if (Number.isFinite(raw) && raw >= 0 && raw <= 30) {
+    return raw === 0 ? 0 : Math.min(30, Math.max(2, raw));
+  }
+  return 8;
+}
+
+function nftCanalesRawDesdeCfg(cfg) {
+  const raw = parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? ''), 10);
+  if (Number.isFinite(raw) && raw >= 0) return Math.min(24, raw);
+  return 4;
+}
+
 function getNftHidraulicaDesdeConfig(cfg) {
   cfg = cfg || {};
   const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
-  const hx = Math.min(30, Math.max(2, parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8), 10) || 8));
+  const hx = nftHuecosDesdeCfg(cfg);
   if (disp === 'mesa' && cfg.nftMesaMultinivel) {
     const tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr);
     if (tiers.length >= 2) {
       const sumT = tiers.reduce((a, b) => a + b, 0);
-      return { nCh: Math.min(24, Math.max(1, sumT)), nHx: hx, mesaTiers: tiers };
+      return { nCh: Math.min(24, Math.max(0, sumT)), nHx: hx, mesaTiers: tiers };
     }
   }
   if (disp === 'escalera') {
     const caras = nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras);
     let nv = parseInt(String(cfg.nftEscaleraNivelesCara ?? ''), 10);
-    if (!Number.isFinite(nv) || nv < 1) {
-      const total = parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? 4), 10) || 4;
+    if (!Number.isFinite(nv) || nv < 0) {
+      const total = nftCanalesRawDesdeCfg(cfg);
+      if (total < 1) return { nCh: 0, nHx: hx, escaleraNiveles: 0, escaleraCaras: caras };
       nv = Math.max(1, Math.ceil(total / Math.max(1, caras)));
     }
+    if (nv < 1) return { nCh: 0, nHx: hx, escaleraNiveles: 0, escaleraCaras: caras };
     nv = Math.min(12, Math.max(1, nv));
-    const nCh = Math.min(24, Math.max(1, nv * caras));
+    const nCh = Math.min(24, Math.max(0, nv * caras));
     return { nCh, nHx: hx, escaleraNiveles: nv, escaleraCaras: caras };
   }
-  const nCh = Math.min(24, Math.max(1, parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? 4), 10) || 4));
-  return { nCh, nHx: hx };
+  const nCh = nftCanalesRawDesdeCfg(cfg);
+  return { nCh: Math.max(0, nCh), nHx: hx };
+}
+
+/** Sliders NFT a 0 (asistente nueva instalación). */
+function hcResetNftSetupSlidersZero() {
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.value = String(v);
+  };
+  set('sliderNftCanales', 0);
+  set('sliderNftHuecos', 0);
+  set('sliderNftPendiente', 0);
+  const vC = document.getElementById('valNftCanales');
+  const vH = document.getElementById('valNftHuecos');
+  const vP = document.getElementById('valNftPendiente');
+  if (vC) vC.textContent = '0';
+  if (vH) vH.textContent = '0';
+  if (vP) vP.innerHTML = '0<span class="setup-inline-unit-percent">%</span>';
+  try {
+    if (typeof updateNftSetupPreview === 'function') updateNftSetupPreview();
+  } catch (_) {}
 }
 
 /** Altura estática efectiva (cm) para el cálculo de bomba: manual o estimada en mesa multinivel. */

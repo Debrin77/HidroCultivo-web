@@ -14927,8 +14927,39 @@ button.toggle-switch:focus-visible {
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-guide,
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-circuit-note,
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-help--full,
-#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-counts-wrap > .setup-nft-layout-help {
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-counts-wrap > .setup-nft-layout-help,
+#setupNftBuilderWrap.setup-nft-asistente-simple #nftBombaUsuarioWrap,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-sistema-footnote,
+#setupNftBuilderWrap.setup-nft-asistente-simple #nftTuberiaDocDetails,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-section-topline .setup-note-compact,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-section-topline .setup-note-soft,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-cesta-wrap > .setup-nft-layout-help,
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-channel-wrap > .setup-nft-layout-help,
+#setupNftBuilderWrap.setup-nft-asistente-simple #nftAlturaBombeoHint {
   display: none;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-preview-col {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-resultados-dl {
+  margin: 6px 0 0;
+  display: grid;
+  gap: 8px;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-resultados-dl dt {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-resultados-dl dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
 }
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-layout-help--brief {
   display: block;

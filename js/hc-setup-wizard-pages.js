@@ -1,6 +1,22 @@
 ﻿/** buildNftActiveDiagramSvg, preview, páginas del asistente, grid nutrientes. Tras hc-setup-wizard-nft-diagrams.js. */
+/** Placeholder del asistente NFT sin tubos/huecos definidos. */
+function buildNftSetupEmptyDiagramSvg() {
+  return (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" role="img" aria-label="Sin diagrama">' +
+    '<rect width="360" height="120" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>' +
+    '<text x="180" y="58" text-anchor="middle" font-family="system-ui,sans-serif" font-size="13" fill="#64748b">Indica tubos y huecos</text>' +
+    '<text x="180" y="78" text-anchor="middle" font-family="system-ui,sans-serif" font-size="11" fill="#94a3b8">para ver el esquema</text>' +
+    '</svg>'
+  );
+}
+
 /** Elige SVG NFT según config (mesa multinivel, escalera, serpentín mesa/pared). */
 function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
+  const nCh0 = parseInt(String(canales), 10);
+  const nHx0 = parseInt(String(huecos), 10);
+  if (!Number.isFinite(nCh0) || nCh0 < 1 || !Number.isFinite(nHx0) || nHx0 < 2) {
+    return buildNftSetupEmptyDiagramSvg();
+  }
   if (typeof HC_DIAG === 'undefined' || !HC_DIAG.nft) {
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" role="img" aria-label="Error de carga del diagrama"><text x="12" y="40" font-family="system-ui,sans-serif" font-size="13" fill="#b91c1c">Recarga forzada (Ctrl+F5) o borra caché del sitio.</text></svg>';
   }
@@ -947,15 +963,15 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
 /** Borrador de config NFT desde el asistente (paso 1) para cálculo y SVG. */
 function buildNftDraftConfigFromSetupUi() {
   const mont = readNftMontajeFromSetupUi();
-  const canalesSlider = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
-  const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
-  const pend = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
+  const canalesSlider = parseInt(document.getElementById('sliderNftCanales')?.value ?? '0', 10);
+  const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value ?? '0', 10);
+  const pend = parseInt(document.getElementById('sliderNftPendiente')?.value ?? '0', 10);
   const geom = readNftCanalGeomFromSetupUi();
   const draft = {
     tipoInstalacion: 'nft',
-    nftNumCanales: Math.max(1, Math.min(24, canalesSlider)),
-    nftHuecosPorCanal: huecos,
-    nftPendientePct: pend,
+    nftNumCanales: Number.isFinite(canalesSlider) ? Math.max(0, Math.min(24, canalesSlider)) : 0,
+    nftHuecosPorCanal: Number.isFinite(huecos) ? Math.max(0, Math.min(30, huecos)) : 0,
+    nftPendientePct: Number.isFinite(pend) && pend >= 1 ? Math.min(4, pend) : 0,
     nftTuboInteriorMm: setupNftTuboMm,
     nftDisposicion: mont.disposicion,
     nftCanalForma: geom.forma,
@@ -976,8 +992,13 @@ function buildNftDraftConfigFromSetupUi() {
   }
   if (mont.disposicion === 'escalera') {
     draft.nftEscaleraCaras = mont.escaleraCaras;
-    draft.nftEscaleraNivelesCara = Math.max(1, Math.min(12, canalesSlider));
-    draft.nftNumCanales = draft.nftEscaleraNivelesCara * mont.escaleraCaras;
+    if (Number.isFinite(canalesSlider) && canalesSlider > 0) {
+      draft.nftEscaleraNivelesCara = Math.min(12, canalesSlider);
+      draft.nftNumCanales = draft.nftEscaleraNivelesCara * mont.escaleraCaras;
+    } else {
+      draft.nftEscaleraNivelesCara = 0;
+      draft.nftNumCanales = 0;
+    }
   }
   const pot = typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : { rimMm: null, heightMm: null };
   if (pot.rimMm != null) draft.nftNetPotRimMm = pot.rimMm;
@@ -1006,9 +1027,9 @@ function refrescarNftCanalesSliderEtiqueta() {
 }
 
 function updateNftSetupPreview() {
-  const canales = parseInt(document.getElementById('sliderNftCanales')?.value || 4, 10);
-  const huecos  = parseInt(document.getElementById('sliderNftHuecos')?.value || 8, 10);
-  const pend    = parseInt(document.getElementById('sliderNftPendiente')?.value || 2, 10);
+  const canales = parseInt(document.getElementById('sliderNftCanales')?.value ?? '0', 10);
+  const huecos  = parseInt(document.getElementById('sliderNftHuecos')?.value ?? '0', 10);
+  const pend    = parseInt(document.getElementById('sliderNftPendiente')?.value ?? '0', 10);
   const vol     = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
   const elC = document.getElementById('valNftCanales');
   const elH = document.getElementById('valNftHuecos');
@@ -1017,9 +1038,12 @@ function updateNftSetupPreview() {
   refrescarNftCanalesSliderEtiqueta();
   const draft = buildNftDraftConfigFromSetupUi();
   const hyd = getNftHidraulicaDesdeConfig(draft);
-  if (elC) elC.textContent = String(hyd.nCh);
-  if (elH) elH.textContent = String(huecos);
-  if (elP) elP.innerHTML = pend + '<span class="setup-inline-unit-l">%</span>';
+  if (elC) elC.textContent = String(Number.isFinite(canales) ? canales : 0);
+  if (elH) elH.textContent = String(Number.isFinite(huecos) ? huecos : 0);
+  if (elP) {
+    elP.innerHTML =
+      (Number.isFinite(pend) ? pend : 0) + '<span class="setup-inline-unit-percent">%</span>';
+  }
   if (elV) elV.innerHTML = vol + '<span class="setup-inline-unit-l">L</span>';
   const mmHueMirror = document.getElementById('nftMesaHuecosMirror');
   if (mmHueMirror) mmHueMirror.textContent = String(huecos);
@@ -1035,19 +1059,15 @@ function updateNftSetupPreview() {
     if (typeof nftRefreshSetupCalculadoUi === 'function') nftRefreshSetupCalculadoUi(draft, bNft, hyd);
   } catch (_) {}
   pintarResultadoBombaNftUI(bNft, vol);
-  refrescarUIMensajeBombaUsuarioNft('setup');
-  const uLh = parseFloat(String(document.getElementById('nftBombaUsuarioLh')?.value || '').replace(',', '.'));
-  const uW = parseFloat(String(document.getElementById('nftBombaUsuarioW')?.value || '').replace(',', '.'));
+  const pendDraw = Number.isFinite(pend) && pend >= 1 ? pend : 2;
   const altShow = draft.nftAlturaBombeoCm != null && Number(draft.nftAlturaBombeoCm) > 0
     ? Math.round(Number(draft.nftAlturaBombeoCm))
     : getNftAlturaBombeoEfectivaCm(draft);
   preview.innerHTML =
-    buildNftActiveDiagramSvg(hyd.nCh, huecos, pend, vol, '', {
+    buildNftActiveDiagramSvg(canales, huecos, pendDraw, vol, '', {
       calentador: setupEquipamiento.has('calentador'),
       difusor: setupEquipamiento.has('difusor'),
       bombaInfo: bNft,
-      userCaudalLh: Number.isFinite(uLh) && uLh > 0 ? Math.round(uLh) : null,
-      userPotenciaW: Number.isFinite(uW) && uW > 0 ? Math.round(uW) : null,
       nftDisposicion: draft.nftDisposicion,
       nftAlturaBombeoCm: altShow > 0 ? altShow : null,
       cfgSnapshot: draft,

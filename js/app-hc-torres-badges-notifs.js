@@ -891,9 +891,9 @@ function abrirSetupNuevaTorre() {
 
   const so = document.getElementById('setupOverlay');
   so.classList.add('open');
-  document.getElementById('sliderNftCanales') && (document.getElementById('sliderNftCanales').value = '4');
-  document.getElementById('sliderNftHuecos') && (document.getElementById('sliderNftHuecos').value = '8');
-  document.getElementById('sliderNftPendiente') && (document.getElementById('sliderNftPendiente').value = '2');
+  try {
+    if (typeof hcResetNftSetupSlidersZero === 'function') hcResetNftSetupSlidersZero();
+  } catch (_) {}
   const svNew = document.getElementById('sliderVol');
   if (svNew) svNew.value = '20';
   const svmNew = document.getElementById('setupVolMezclaL');

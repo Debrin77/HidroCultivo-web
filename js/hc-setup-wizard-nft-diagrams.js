@@ -9,9 +9,13 @@
  * @param {number} [alturaBombeoCm] altura vertical desde nivel de agua / bomba hasta entrada al primer canal (0 = omitir).
  */
 function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboMm, canalGeom, alturaBombeoCm) {
-  const nCh = Math.min(Math.max(parseInt(String(nCanales), 10) || 1, 1), 24);
-  const nHx = Math.min(Math.max(parseInt(String(huecosPorCanal), 10) || 2, 2), 30);
-  const pend = Math.min(Math.max(parseInt(String(pendientePct), 10) || 2, 1), 4);
+  const nChRaw = parseInt(String(nCanales), 10);
+  const nHxRaw = parseInt(String(huecosPorCanal), 10);
+  if (!Number.isFinite(nChRaw) || nChRaw < 1 || !Number.isFinite(nHxRaw) || nHxRaw < 2) return null;
+  const nCh = Math.min(Math.max(nChRaw, 1), 24);
+  const nHx = Math.min(Math.max(nHxRaw, 2), 30);
+  const pendRaw = parseInt(String(pendientePct), 10);
+  const pend = Number.isFinite(pendRaw) && pendRaw >= 1 ? Math.min(Math.max(pendRaw, 1), 4) : 2;
   let dMm = parseInt(String(diamTuboMm), 10) || 25;
   dMm = Math.max(16, Math.min(40, dMm));
 
@@ -174,7 +178,9 @@ function refrescarDocTuberiaNftSetup() {
 function getNftBombaDesdeConfig(cfg) {
   if (!cfg || cfg.tipoInstalacion !== 'nft') return null;
   const hyd = getNftHidraulicaDesdeConfig(cfg);
-  const pend = cfg.nftPendientePct || 2;
+  if (!hyd || hyd.nCh < 1 || hyd.nHx < 2) return null;
+  const pendRaw = parseInt(String(cfg.nftPendientePct ?? ''), 10);
+  const pend = Number.isFinite(pendRaw) && pendRaw >= 1 ? pendRaw : 2;
   const dMm = cfg.nftTuboInteriorMm || 25;
   const altCm = getNftAlturaBombeoEfectivaCm(cfg);
   return calcularBombaNftParam(hyd.nCh, hyd.nHx, pend, dMm, nftCanalGeomDesdeConfig(cfg), altCm);
@@ -1199,42 +1205,71 @@ function seleccionarNftPotRimPreset(mm) {
   } catch (_) {}
 }
 
-/** Bloque compacto de resultados en el asistente NFT (bomba + circuito). */
+/** Bloque compacto de resultados en el asistente NFT (depósito, bomba, aireador). */
 function nftRefreshSetupCalculadoUi(draft, bNft, hyd) {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') return;
   const block = document.getElementById('setupNftRecoBlock');
-  const val = document.getElementById('setupNftRecoValor');
-  const hint = document.getElementById('setupNftRecoHint');
-  if (!val) return;
+  const elDep = document.getElementById('setupNftRecoDeposito');
+  const elBom = document.getElementById('setupNftRecoBomba');
+  const elAir = document.getElementById('setupNftRecoAire');
+  const valLegacy = document.getElementById('setupNftRecoValor');
+  if (!elDep && !valLegacy) return;
   draft =
     draft ||
     (typeof buildNftDraftConfigFromSetupUi === 'function' ? buildNftDraftConfigFromSetupUi() : {});
-  bNft = bNft || (typeof getNftBombaDesdeConfig === 'function' ? getNftBombaDesdeConfig(draft) : null);
   hyd = hyd || (typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(draft) : null);
-  const huecos = parseInt(document.getElementById('sliderNftHuecos')?.value || '8', 10) || 8;
+  bNft = bNft || (typeof getNftBombaDesdeConfig === 'function' ? getNftBombaDesdeConfig(draft) : null);
   if (block) {
     block.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
   }
-  if (bNft && Number.isFinite(bNft.caudalRecLH)) {
-    if (block) block.classList.add('setup-dwc-litros-solucion-block--ok');
-    val.textContent =
-      bNft.caudalRecLH +
-      ' L/h · ~' +
-      (bNft.potenciaRecW != null ? bNft.potenciaRecW : '—') +
-      ' W';
-    if (hint) {
-      hint.textContent =
-        (hyd ? hyd.nCh + ' tubo(s) · ' + huecos + ' huecos/tubo' : '') +
-        (bNft.volDepositoRecomendadoL != null
-          ? ' · depósito orientativo ~' + bNft.volDepositoRecomendadoL + ' L'
-          : '') +
-        '. Detalle en Consejos → NFT.';
-    }
-  } else {
+  const pendiente = !hyd || hyd.nCh < 1 || hyd.nHx < 2;
+  if (pendiente) {
     if (block) block.classList.add('setup-dwc-litros-solucion-block--pending');
-    val.textContent = 'Ajusta tubos, huecos y depósito';
-    if (hint) hint.textContent = 'Los valores se actualizan al mover los controles del diagrama.';
+    const dash = 'Indica tubos y huecos';
+    if (elDep) elDep.textContent = dash;
+    if (elBom) elBom.textContent = '—';
+    if (elAir) elAir.textContent = '—';
+    if (valLegacy) valLegacy.textContent = dash;
+    return;
   }
+  if (!bNft || !Number.isFinite(bNft.caudalRecLH)) {
+    if (block) block.classList.add('setup-dwc-litros-solucion-block--pending');
+    if (elDep) elDep.textContent = '—';
+    if (elBom) elBom.textContent = '—';
+    if (elAir) elAir.textContent = '—';
+    return;
+  }
+  if (block) block.classList.add('setup-dwc-litros-solucion-block--ok');
+  const geom = typeof nftCanalGeomDesdeConfig === 'function' ? nftCanalGeomDesdeConfig(draft) : {};
+  const lam = bNft.laminaMm != null ? bNft.laminaMm : geom.laminaMm;
+  const depTxt =
+    '~' +
+    bNft.volDepositoRecomendadoL +
+    ' L' +
+    (lam != null ? ' · lámina ' + lam + ' mm' : '') +
+    (bNft.volPeliculaL != null ? ' · película ~' + bNft.volPeliculaL + ' L' : '');
+  const bomTxt =
+    bNft.caudalRecLH +
+    ' L/h (mín. ' +
+    bNft.caudalMinLH +
+    ') · ~' +
+    (bNft.potenciaRecW != null ? bNft.potenciaRecW : '—') +
+    ' W · altura ≥ ' +
+    (bNft.headMetros != null ? bNft.headMetros : '—') +
+    ' m';
+  let airTxt = '—';
+  const volAir = bNft.volDepositoRecomendadoL;
+  if (volAir != null && typeof dwcCaudalAireOrientativoLmin === 'function') {
+    const a = dwcCaudalAireOrientativoLmin(volAir);
+    if (a) {
+      const w = Math.max(3, Math.ceil(a.reco * 1.75));
+      airTxt = '~' + a.reco + ' L/min · ~' + w + ' W';
+    }
+  }
+  if (elDep) elDep.textContent = depTxt;
+  if (elBom) elBom.textContent = bomTxt;
+  if (elAir) elAir.textContent = airTxt;
+  if (valLegacy) valLegacy.textContent = depTxt + ' · ' + bomTxt;
 }
 
 function pintarResultadoBombaNftUI(b, volUsuarioL) {
