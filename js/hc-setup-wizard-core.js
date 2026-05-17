@@ -898,47 +898,8 @@ function rdwcGrupoObjetivoDesdeConfig(cfg) {
   const c = cfg || {};
   const cultPrev = rdwcCultivoPrevistoDesdeConfig(c);
   if (cultPrev && cultPrev.grupo) return String(cultPrev.grupo).trim().toLowerCase();
-  try {
-    const tor = state.torre || [];
-    const count = {};
-    for (let i = 0; i < tor.length; i++) {
-      const row = tor[i] || [];
-      for (let j = 0; j < row.length; j++) {
-        const v = row[j] && row[j].variedad;
-        if (!v || typeof getCultivoDB !== 'function') continue;
-        const cult = getCultivoDB(v);
-        const g = cult && cult.grupo ? String(cult.grupo).trim().toLowerCase() : '';
-        if (!g) continue;
-        count[g] = (count[g] || 0) + 1;
-      }
-    }
-    let best = '';
-    let bestN = -1;
-    Object.keys(count).forEach(k => {
-      if (count[k] > bestN) {
-        best = k;
-        bestN = count[k];
-      }
-    });
-    if (best) return best;
-  } catch (_) {}
-  if (Array.isArray(c.cultivosIniciales) && typeof getCultivoDB === 'function') {
-    const count = {};
-    c.cultivosIniciales.forEach(v => {
-      const cult = getCultivoDB(v);
-      const g = cult && cult.grupo ? String(cult.grupo).trim().toLowerCase() : '';
-      if (!g) return;
-      count[g] = (count[g] || 0) + 1;
-    });
-    let best = '';
-    let bestN = -1;
-    Object.keys(count).forEach(k => {
-      if (count[k] > bestN) {
-        best = k;
-        bestN = count[k];
-      }
-    });
-    if (best) return best;
+  if (typeof hcGrupoCultivoDominanteDesdeConfig === 'function') {
+    return hcGrupoCultivoDominanteDesdeConfig(c);
   }
   return 'lechugas';
 }
@@ -2048,11 +2009,11 @@ const SETUP_TOTAL_PAGES = 8; // 0=bienvenida, 1=torre, 2=equipo, 3=nutrientes
 
 function abrirSetup() {
   // Reconfigurar instalación existente (no crear ranura nueva) salvo que se abra «Nuevo sistema»
+  try {
+    if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();
+  } catch (_) {}
   setupEsNuevaTorre = false;
   setupPagina = 0;
-  try {
-    if (typeof resetSetupCestaVariedadDraft === 'function') resetSetupCestaVariedadDraft();
-  } catch (_) {}
   const sh = (state.configTorre && state.configTorre.sensoresHardware) || {};
   setupData.sensoresHardware = {
     ec: !!sh.ec,
@@ -2302,6 +2263,9 @@ function cerrarSetup() {
   o.classList.remove('open');
   a11yDialogClosed(o);
   try {
+    if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();
+  } catch (_) {}
+  try {
     if (typeof scheduleTabBarCoach === 'function') scheduleTabBarCoach(500);
   } catch (_) {}
 }
@@ -2353,10 +2317,16 @@ function seleccionarTipoInstalacionSetup(tipo) {
   else if (tipo === 'rdwc') setupTipoInstalacion = 'rdwc';
   else if (tipo === 'srf') setupTipoInstalacion = 'srf';
   else setupTipoInstalacion = 'torre';
-  if (setupEsNuevaTorre && typeof hcResetSetupFormForNewInstall === 'function') {
+  if (setupEsNuevaTorre) {
+    setupPlantasSeleccionadas = new Set();
     try {
-      hcResetSetupFormForNewInstall(setupTipoInstalacion);
+      if (typeof resetSetupCestaVariedadDraft === 'function') resetSetupCestaVariedadDraft();
     } catch (_) {}
+    if (typeof hcResetSetupFormForNewInstall === 'function') {
+      try {
+        hcResetSetupFormForNewInstall(setupTipoInstalacion);
+      } catch (_) {}
+    }
   }
   if (setupTipoInstalacion !== 'dwc') {
     try {

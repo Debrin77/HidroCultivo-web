@@ -876,34 +876,18 @@ function renderListaTorres() {
 }
 
 function abrirSetupNuevaTorre() {
-  // Marcar que es una torre nueva (no reconfiguración)
+  try {
+    if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession({ keepNuevaFlag: true });
+  } catch (_) {}
   setupEsNuevaTorre = true;
-  setupNombreNuevaTorre = '';
-  if (typeof setupRdwcDraft !== 'undefined') setupRdwcDraft = null;
-
-  // Preconfigurar sliders con valores razonables para torre nueva
   setupPagina = 0;
   setupTipoInstalacion = '';
   setupTipoTorre = 'custom';
-  setupEquipamiento = new Set(['difusor','calentador','bomba','timer','medidorEC']);
+  setupEquipamiento = new Set(['difusor', 'calentador', 'bomba', 'timer', 'medidorEC']);
   refreshSetupEquipamientoCardsDesdeSet();
   const ccNew = document.getElementById('setupCalentadorConsignaC');
   if (ccNew) ccNew.value = '20';
   refreshSetupCalentadorConsignaVis();
-  setupNutriente = 'canna_aqua';
-  setupUbicacion = 'exterior';
-  setupPlantasSeleccionadas = new Set();
-  try {
-    if (typeof resetSetupCestaVariedadDraft === 'function') resetSetupCestaVariedadDraft();
-  } catch (_) {}
-  setupNumTorres = 'una'; // no relevante para nueva torre
-  setupData.sensoresHardware = { ec: false, ph: false, humedad: false };
-  setupData.consejosModoUi = 'principiante';
-
-  setupCoordenadas = { lat: null, lon: null, ciudad: '' };
-  setupData.ciudad = null;
-  setupData.lat = null;
-  setupData.lon = null;
   const c2n = document.getElementById('setupCiudad2');
   if (c2n) c2n.value = '';
   document.getElementById('ciudadResultadosSetup')?.classList.add('setup-hidden');

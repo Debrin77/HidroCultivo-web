@@ -35,6 +35,47 @@ function resetSetupCestaVariedadDraft() {
   _setupCestaVarDraftCols = 0;
 }
 
+/**
+ * Estado transitorio del asistente a cero (nueva instalación o al cerrar).
+ * No toca state.torres ni la instalación activa en memoria.
+ */
+function hcResetSetupWizardSession(opts) {
+  opts = opts || {};
+  setupPlantasSeleccionadas = new Set();
+  resetSetupCestaVariedadDraft();
+  setupNombreNuevaTorre = '';
+  setupNumTorres = 'una';
+  setupData.agua = 'destilada';
+  setupData.sustrato = 'lana';
+  setupData.ubicacion = 'exterior';
+  setupData.luz = 'led';
+  setupData.horasLuz = 16;
+  setupData.ciudad = null;
+  setupData.lat = null;
+  setupData.lon = null;
+  setupData.sensoresHardware = { ec: false, ph: false, humedad: false };
+  setupData.consejosModoUi = 'principiante';
+  setupCoordenadas = { lat: null, lon: null, ciudad: '' };
+  setupNutriente = 'canna_aqua';
+  setupUbicacion = 'exterior';
+  if (typeof setupRdwcDraft !== 'undefined') setupRdwcDraft = null;
+  try {
+    delete window._hcPostSetupPrevListo;
+    delete window._hcChecklistGuidedFlow;
+  } catch (_) {}
+  if (!opts.keepNuevaFlag) {
+    setupEsNuevaTorre = false;
+  }
+  const info = document.getElementById('setupPlantasSeleccionadas');
+  const texto = document.getElementById('setupPlantasTexto');
+  if (info) info.classList.add('setup-hidden');
+  if (texto) texto.textContent = '—';
+  const dosisDiv = document.getElementById('dosisSegunCultivo');
+  if (dosisDiv) dosisDiv.classList.add('setup-hidden');
+  const dosisText = document.getElementById('dosisSegunCultivoTexto');
+  if (dosisText) dosisText.innerHTML = '';
+}
+
 function getSetupPlantasFilasCols() {
   const t = typeof setupTipoInstalacion !== 'undefined' ? setupTipoInstalacion : 'torre';
   if (t === 'nft') {

@@ -437,13 +437,16 @@ function srfDraftParaCompatibilidad(scope) {
   const esSetup = scope === 'setup';
   let draft;
   if (esSetup && typeof buildSrfConfigFromForm === 'function') {
+    const esNueva = typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre;
     const seed =
-      typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre && typeof hcFreshSrfSetupDefaults === 'function'
+      esNueva && typeof hcFreshSrfSetupDefaults === 'function'
         ? hcFreshSrfSetupDefaults()
         : Object.assign({}, state.configTorre || {});
     draft = buildSrfConfigFromForm('setup', seed, { applyDefaults: false });
     if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) {
       draft.cultivosIniciales = [...setupPlantasSeleccionadas];
+    } else if (esNueva) {
+      delete draft.cultivosIniciales;
     }
   } else if (!esSetup && typeof buildSrfConfigFromForm === 'function') {
     draft = buildSrfConfigFromForm('sys', Object.assign({}, state.configTorre || {}));
@@ -501,8 +504,10 @@ function renderSrfCultivoRecoStatus(scope) {
   const chip = typeof rdwcCompatChipHtml === 'function' ? rdwcCompatChipHtml : () => '';
   const esc = typeof meteoEscHtml === 'function' ? meteoEscHtml : x => String(x == null ? '' : x);
   const hayCultivo =
-    (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) ||
-    (Array.isArray(draft.cultivosIniciales) && draft.cultivosIniciales.length > 0);
+    typeof hcSetupHayCultivosEnAsistente === 'function'
+      ? hcSetupHayCultivosEnAsistente(draft)
+      : (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) ||
+        (Array.isArray(draft.cultivosIniciales) && draft.cultivosIniciales.length > 0);
   const p = r.perfil;
   const profAct =
     r.profActualCm != null ? '<strong>' + r.profActualCm + ' cm</strong>' : 'por indicar';

@@ -2024,6 +2024,9 @@ function guardarSetupYContinuar() {
 
   // Cerrar asistente primero para que el paso a Cultivo / checklist sea continuo (sin solapamiento visual).
   try {
+    if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();
+  } catch (_) {}
+  try {
     if (typeof cerrarSetup === 'function') cerrarSetup();
   } catch (_) {}
   // Tras configurar: pestaña Cultivo e instalación para cultivos; el checklist se ofrece cuando el usuario confirme.

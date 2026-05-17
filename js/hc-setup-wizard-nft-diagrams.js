@@ -418,51 +418,9 @@ function nftRecomendarCestaDesdeCanal(geom, perfil) {
 }
 
 function nftGrupoObjetivoDesdeConfig(cfg) {
-  cfg = cfg || state.configTorre || {};
-  const cnt = {};
-  const addG = g => {
-    const k = String(g || '').trim().toLowerCase();
-    if (!k) return;
-    cnt[k] = (cnt[k] || 0) + 1;
-  };
-  try {
-    if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas && setupPlantasSeleccionadas.size > 0) {
-      setupPlantasSeleccionadas.forEach(k => addG(k));
-    }
-  } catch (_) {}
-  try {
-    const tor = state.torre || [];
-    for (let i = 0; i < tor.length; i++) {
-      const row = tor[i] || [];
-      for (let j = 0; j < row.length; j++) {
-        const v = row[j] && row[j].variedad;
-        if (!v) continue;
-        const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
-        if (c && c.grupo) addG(c.grupo);
-      }
-    }
-  } catch (_) {}
-  if (Array.isArray(cfg.cultivosIniciales)) {
-    for (let i = 0; i < cfg.cultivosIniciales.length; i++) {
-      const v = cfg.cultivosIniciales[i];
-      if (!v) continue;
-      const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
-      if (c && c.grupo) addG(c.grupo);
-    }
+  if (typeof hcGrupoCultivoDominanteDesdeConfig === 'function') {
+    return hcGrupoCultivoDominanteDesdeConfig(cfg);
   }
-  let best = '';
-  let bestN = -1;
-  for (const k in cnt) {
-    if (cnt[k] > bestN) {
-      bestN = cnt[k];
-      best = k;
-    }
-  }
-  if (best) return best;
-  const mk = typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
-  if (mk === 'intensivo') return 'hojas';
-  if (mk === 'mixto') return 'asiaticas';
-  if (mk === 'mini') return 'microgreens';
   return 'lechugas';
 }
 
@@ -576,12 +534,19 @@ function nftDraftParaCompatibilidad(scope) {
   const esSetup = scope === 'setup';
   let draft;
   if (esSetup && typeof buildNftDraftConfigFromSetupUi === 'function') {
-    draft = Object.assign({}, state.configTorre || {}, buildNftDraftConfigFromSetupUi(), { tipoInstalacion: 'nft' });
+    const uiDraft = buildNftDraftConfigFromSetupUi();
+    const esNueva =
+      typeof hcSetupAsistenteInstalacionNueva === 'function' && hcSetupAsistenteInstalacionNueva();
+    draft = esNueva
+      ? Object.assign({}, uiDraft, { tipoInstalacion: 'nft' })
+      : Object.assign({}, state.configTorre || {}, uiDraft, { tipoInstalacion: 'nft' });
     const potUi = typeof readNftPotCestaFromSetupUi === 'function' ? readNftPotCestaFromSetupUi() : {};
     if (potUi.rimMm != null) draft.nftNetPotRimMm = potUi.rimMm;
     if (potUi.heightMm != null) draft.nftNetPotHeightMm = potUi.heightMm;
     if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) {
       draft.cultivosIniciales = [...setupPlantasSeleccionadas];
+    } else if (esNueva) {
+      delete draft.cultivosIniciales;
     }
   } else if (!esSetup) {
     draft = Object.assign({}, state.configTorre || {}, { tipoInstalacion: 'nft' });
@@ -641,8 +606,10 @@ function renderNftCultivoRecoStatus(scope) {
       ? canalLbl + ' <strong>' + r.diamActualMm + ' mm</strong>'
       : canalLbl + ' por indicar';
   const hayCultivo =
-    (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) ||
-    (Array.isArray(draft.cultivosIniciales) && draft.cultivosIniciales.length > 0);
+    typeof hcSetupHayCultivosEnAsistente === 'function'
+      ? hcSetupHayCultivosEnAsistente(draft)
+      : (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) ||
+        (Array.isArray(draft.cultivosIniciales) && draft.cultivosIniciales.length > 0);
   const cultivoLine = hayCultivo
     ? esc(r.perfil.etiqueta) + ' · canal ' + canalLbl + ' <strong>' + r.perfil.canalMinMm + '–' + r.perfil.canalMaxMm + ' mm</strong>'
     : 'Elige cultivo en el asistente para validar el ' + canalLbl + ' del tubo';

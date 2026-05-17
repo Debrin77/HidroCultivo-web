@@ -741,46 +741,9 @@ function dwcAplicarObjetivoEcRango(ecRange, cfg, objetivo) {
 }
 
 function dwcGrupoObjetivoDesdeConfig(cfg) {
-  cfg = cfg || state.configTorre || {};
-  const cnt = {};
-  const addG = g => {
-    const k = String(g || '').trim().toLowerCase();
-    if (!k) return;
-    cnt[k] = (cnt[k] || 0) + 1;
-  };
-  try {
-    const tor = state.torre || [];
-    for (let i = 0; i < tor.length; i++) {
-      const row = tor[i] || [];
-      for (let j = 0; j < row.length; j++) {
-        const v = row[j] && row[j].variedad;
-        if (!v) continue;
-        const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
-        if (c && c.grupo) addG(c.grupo);
-      }
-    }
-  } catch (_) {}
-  if (Array.isArray(cfg.cultivosIniciales)) {
-    for (let i = 0; i < cfg.cultivosIniciales.length; i++) {
-      const v = cfg.cultivosIniciales[i];
-      if (!v) continue;
-      const c = typeof getCultivoDB === 'function' ? getCultivoDB(v) : null;
-      if (c && c.grupo) addG(c.grupo);
-    }
+  if (typeof hcGrupoCultivoDominanteDesdeConfig === 'function') {
+    return hcGrupoCultivoDominanteDesdeConfig(cfg);
   }
-  let best = '';
-  let bestN = -1;
-  for (const k in cnt) {
-    if (cnt[k] > bestN) {
-      bestN = cnt[k];
-      best = k;
-    }
-  }
-  if (best) return best;
-  const mk = typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
-  if (mk === 'mini') return 'microgreens';
-  if (mk === 'mixto') return 'asiaticas';
-  if (mk === 'intensivo') return 'hojas';
   return 'lechugas';
 }
 
@@ -934,7 +897,22 @@ function dwcRecomendacionCultivoDesdeConfig(cfg) {
 /** Borrador DWC desde formulario sistema o asistente para recomendación Ø aro vs cultivo. */
 function dwcBuildConfigDraftForReco(scope) {
   const p = scope === 'setup' ? 'setup' : 'sys';
-  const cfg = { ...(state.configTorre || {}), tipoInstalacion: 'dwc' };
+  const esNuevaSetup =
+    scope === 'setup' &&
+    typeof hcSetupAsistenteInstalacionNueva === 'function' &&
+    hcSetupAsistenteInstalacionNueva();
+  let cfg = esNuevaSetup ? { tipoInstalacion: 'dwc' } : { ...(state.configTorre || {}), tipoInstalacion: 'dwc' };
+  if (esNuevaSetup && typeof buildDwcDraftCfgFromSetupWizardInputs === 'function') {
+    try {
+      const ui = buildDwcDraftCfgFromSetupWizardInputs();
+      if (ui) cfg = Object.assign({}, ui, cfg);
+    } catch (_) {}
+  }
+  if (esNuevaSetup && typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) {
+    cfg.cultivosIniciales = [...setupPlantasSeleccionadas];
+  } else if (esNuevaSetup) {
+    delete cfg.cultivosIniciales;
+  }
   const rim = _dwcParseOptMm(p + 'DwcPotRimMm', 25, 120);
   if (rim != null) cfg.dwcNetPotRimMm = rim;
   const objEl = document.getElementById(p + 'DwcObjetivoCultivo');

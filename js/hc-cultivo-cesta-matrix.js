@@ -170,10 +170,78 @@ function hcCultivoCestaRecoCelda(grupo, sistemaId, objetivo) {
   return { txt: '—' };
 }
 
+/** true = asistente «Nueva instalación» (sin heredar otra ranura activa). */
+function hcSetupAsistenteInstalacionNueva() {
+  try {
+    return !!(typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre);
+  } catch (_) {
+    return false;
+  }
+}
+
+function hcContarGrupoDominanteDesdeClaves(keys) {
+  const cnt = {};
+  (keys || []).forEach(k => {
+    const g = String(k || '').trim().toLowerCase();
+    if (!g) return;
+    cnt[g] = (cnt[g] || 0) + 1;
+  });
+  let best = '';
+  let bestN = -1;
+  Object.keys(cnt).forEach(k => {
+    if (cnt[k] > bestN) {
+      best = k;
+      bestN = cnt[k];
+    }
+  });
+  return best;
+}
+
+/** Grupo de cultivo dominante: en instalación nueva solo paso Cultivos del asistente. */
 function hcGrupoCultivoDominanteDesdeConfig(cfg) {
-  if (typeof nftGrupoObjetivoDesdeConfig === 'function') return nftGrupoObjetivoDesdeConfig(cfg);
-  if (typeof dwcGrupoObjetivoDesdeConfig === 'function') return dwcGrupoObjetivoDesdeConfig(cfg);
+  cfg = cfg || {};
+  const claves = [];
+  try {
+    if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) {
+      setupPlantasSeleccionadas.forEach(k => claves.push(k));
+    }
+  } catch (_) {}
+  if (hcSetupAsistenteInstalacionNueva()) {
+    return hcContarGrupoDominanteDesdeClaves(claves) || 'lechugas';
+  }
+  try {
+    const tor = state.torre || [];
+    for (let i = 0; i < tor.length; i++) {
+      const row = tor[i] || [];
+      for (let j = 0; j < row.length; j++) {
+        const v = row[j] && row[j].variedad;
+        if (!v || typeof getCultivoDB !== 'function') continue;
+        const cult = getCultivoDB(v);
+        if (cult && cult.grupo) claves.push(cult.grupo);
+      }
+    }
+  } catch (_) {}
+  if (Array.isArray(cfg.cultivosIniciales)) {
+    cfg.cultivosIniciales.forEach(v => {
+      if (v) claves.push(v);
+    });
+  }
+  const best = hcContarGrupoDominanteDesdeClaves(claves);
+  if (best) return best;
+  const mk = typeof normalizeTorreModoActual === 'function' ? normalizeTorreModoActual(modoActual) : modoActual;
+  if (mk === 'intensivo') return 'hojas';
+  if (mk === 'mixto') return 'asiaticas';
+  if (mk === 'mini') return 'microgreens';
   return 'lechugas';
+}
+
+/** ¿Hay cultivos elegidos en el paso Cultivos del asistente (sin leer otra instalación)? */
+function hcSetupHayCultivosEnAsistente(draft) {
+  try {
+    if (typeof setupPlantasSeleccionadas !== 'undefined' && setupPlantasSeleccionadas.size > 0) return true;
+  } catch (_) {}
+  if (hcSetupAsistenteInstalacionNueva()) return false;
+  return !!(draft && Array.isArray(draft.cultivosIniciales) && draft.cultivosIniciales.length > 0);
 }
 
 function hcObjetivoCultivoDesdeConfig(cfg, tipo) {
