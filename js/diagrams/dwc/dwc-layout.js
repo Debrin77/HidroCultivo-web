@@ -31,9 +31,14 @@
     let mcGapFront = 14;
     if (esMulticubo) {
       const mcGrid =
-        typeof hcDistribuirFilasColumnas === 'function'
-          ? hcDistribuirFilasColumnas(S_mc, 6)
-          : { cols: S_mc <= 6 ? S_mc : 6, rows: S_mc <= 6 ? 1 : Math.ceil(S_mc / 6) };
+        typeof hcDistribuirCubosMultivalvula === 'function'
+          ? hcDistribuirCubosMultivalvula(S_mc)
+          : typeof hcDistribuirFilasColumnas === 'function'
+            ? (() => {
+                const g = hcDistribuirFilasColumnas(S_mc, 6);
+                return { rows: g.rows, cols: g.cols, colsPerRow: [g.cols] };
+              })()
+            : { cols: S_mc <= 6 ? S_mc : 6, rows: S_mc <= 6 ? 1 : 2, colsPerRow: [Math.ceil(S_mc / 2), Math.floor(S_mc / 2)] };
       mcCols = mcGrid.cols;
       mcRows = mcGrid.rows;
       mcCubeSz = S_mc <= 4 ? 78 : S_mc <= 6 ? 70 : 58;

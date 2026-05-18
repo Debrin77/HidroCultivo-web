@@ -79,7 +79,11 @@
     const cellW = planInnerW / Math.max(1, C);
     const cellH = planInnerH / Math.max(1, N);
     const Rpot = Math.max(10, Math.min(22, Math.min(cellW, cellH) * 0.34));
-    const secTop = planTop + planH + 36;
+    const planPanelTop = planTop - 8;
+    const interViewGap = 40;
+    const secTop = planTop + planH + interViewGap;
+    const viewCenitalY = planPanelTop - 8;
+    const viewFrontalY = planTop + planH + interViewGap * 0.45;
     const canalH = 92;
     const canalW = planW;
     const canalX = planLeft;
@@ -102,8 +106,8 @@
     }
     if (typeof hcDiagramViewLabelSvg === 'function') {
       s +=
-        hcDiagramViewLabelSvg(planLeft + planW / 2, planTop - 4, 'cenital', { pointerEvents: false }) +
-        hcDiagramViewLabelSvg(canalX + canalW / 2, canalY - 4, 'frontal', { pointerEvents: false });
+        hcDiagramViewLabelSvg(planLeft + planW / 2, viewCenitalY, 'cenital', { pointerEvents: false }) +
+        hcDiagramViewLabelSvg(canalX + canalW / 2, viewFrontalY, 'frontal', { pointerEvents: false });
     }
 
     s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="url(#srfRaft)" stroke="#64748b" stroke-width="1.3"/>`;
@@ -217,14 +221,15 @@
     }
 
     const volNum = volMez != null ? Math.round(volMez * 10) / 10 : null;
+    const volLabelY = canalY + canalH + 28;
     if (typeof hcDiagramVolLabelSvg === 'function') {
-      s += hcDiagramVolLabelSvg(canalX + canalW / 2, canalY + canalH + 16, volNum, { fontSize: 12, pointerEvents: false });
+      s += hcDiagramVolLabelSvg(canalX + canalW / 2, volLabelY, volNum, { fontSize: 12, pointerEvents: false });
     } else {
       const volLbl = volNum != null ? volNum + ' L' : '—';
-      s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${(canalY + canalH + 16).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="12" font-weight="800" fill="#0369a1">${volLbl}</text>`;
+      s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${volLabelY.toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="12" font-weight="800" fill="#0369a1">${volLbl}</text>`;
     }
 
-    const H = canalY + canalH + 36;
+    const H = volLabelY + 18;
     const pad = 12;
     return (
       `<svg class="torre-svg-diagram srf-svg-diagram srf-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="srfDiagTitle">` +

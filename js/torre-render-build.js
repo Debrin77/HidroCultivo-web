@@ -12,6 +12,42 @@ function hcDistribuirFilasColumnas(total, maxCols) {
   return { rows, cols };
 }
 
+/**
+ * DWC multiválvula: desde 6 cubos, dos filas equilibradas (3+3, 4+4…) para bomba central y mangueras en columna.
+ * Hasta 5 cubos: una sola fila.
+ */
+function hcDistribuirCubosMultivalvula(total) {
+  const n = Math.max(1, parseInt(String(total != null ? total : 1), 10) || 1);
+  if (n <= 5) {
+    return { rows: 1, cols: n, colsPerRow: [n] };
+  }
+  const top = Math.ceil(n / 2);
+  const bot = Math.floor(n / 2);
+  return { rows: 2, cols: Math.max(top, bot), colsPerRow: [top, bot] };
+}
+
+/** Índice de cubo → fila/columna con reparto multiválvula (filas pueden tener distinto nº de columnas). */
+function hcMultivalvulaSlotDesdeIdx(idx, layout) {
+  const i = Math.max(0, parseInt(String(idx != null ? idx : 0), 10) || 0);
+  if (!layout || !layout.colsPerRow || layout.rows === 1) {
+    const c = layout && layout.colsPerRow ? layout.colsPerRow[0] : layout ? layout.cols : 1;
+    return { row: 0, col: i, colsInRow: c };
+  }
+  if (i < layout.colsPerRow[0]) {
+    return { row: 0, col: i, colsInRow: layout.colsPerRow[0] };
+  }
+  return { row: 1, col: i - layout.colsPerRow[0], colsInRow: layout.colsPerRow[1] };
+}
+
+/** Centra una fila de cubos dentro del ancho de la fila más ancha. */
+function hcMultivalvulaRowInnerX(innerLeft, colsInRow, maxCols, cubeSz, gap) {
+  const g = Math.max(0, gap != null ? gap : 0);
+  const sz = Math.max(1, cubeSz);
+  const rowW = colsInRow * sz + Math.max(0, colsInRow - 1) * g;
+  const maxW = maxCols * sz + Math.max(0, maxCols - 1) * g;
+  return innerLeft + (maxW - rowW) / 2;
+}
+
 // ══════════════════════════════════════════════════
 // TORRE — RENDER
 // ══════════════════════════════════════════════════

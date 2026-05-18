@@ -184,6 +184,8 @@ function getVolumenDepositoMaxLitros(cfg) {
     if (cap != null && cap > 0) return Math.min(800, Math.max(1, Math.round(cap * 10) / 10));
   }
   if (instalacionPlantillaSinCapacidadDepositoUsuario(cfg)) return null;
+  /** DWC sin medidas ni vol. guardado: no usar 18 L de calibración de tablas (solo torre/NFT legacy). */
+  if (tipoNorm === 'dwc') return null;
   return VOL_OBJETIVO;
 }
 

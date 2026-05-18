@@ -1126,9 +1126,14 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
       : n + ' cubos independientes con multiválvula, una maceta por cubo.'
   );
   const grid =
-    typeof hcDistribuirFilasColumnas === 'function'
-      ? hcDistribuirFilasColumnas(n, 6)
-      : { cols: n <= 6 ? n : 6, rows: n <= 6 ? 1 : Math.ceil(n / 6) };
+    typeof hcDistribuirCubosMultivalvula === 'function'
+      ? hcDistribuirCubosMultivalvula(n)
+      : typeof hcDistribuirFilasColumnas === 'function'
+        ? (() => {
+            const g = hcDistribuirFilasColumnas(n, 6);
+            return { rows: g.rows, cols: g.cols, colsPerRow: [g.cols] };
+          })()
+        : { cols: n <= 6 ? n : Math.ceil(n / 2), rows: n <= 6 ? 1 : 2, colsPerRow: [Math.ceil(n / 2), Math.floor(n / 2)] };
   if (grid.rows > 1) wrap.classList.add('dwc-setup-mc-wrap--stacked');
   function appendMcCube(parent, idx) {
     const cube = document.createElement('div');
@@ -1152,11 +1157,13 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
     return row;
   }
   if (grid.rows > 1) {
+    const topN = grid.colsPerRow ? grid.colsPerRow[0] : Math.ceil(n / 2);
     const rowTop = makeMcRow();
     const rowBot = makeMcRow();
-    const split = grid.cols * (grid.rows - 1);
+    rowTop.style.gridTemplateColumns = 'repeat(' + topN + ', minmax(0, 1fr))';
+    rowBot.style.gridTemplateColumns = 'repeat(' + (grid.colsPerRow[1] || Math.floor(n / 2)) + ', minmax(0, 1fr))';
     for (let i = 0; i < n; i++) {
-      if (i < split) appendMcCube(rowTop, i);
+      if (i < topN) appendMcCube(rowTop, i);
       else appendMcCube(rowBot, i);
     }
     const airRow = document.createElement('div');
@@ -1380,8 +1387,14 @@ function refreshDwcSetupPreview() {
 
   let vol = esNueva ? 0 : parseInt(String(document.getElementById('sliderVol')?.value || 20), 10) || 20;
   try {
-    const dwcCap = typeof getDwcCapacidadLitrosFromSetupInputs === 'function' ? getDwcCapacidadLitrosFromSetupInputs() : null;
-    if (dwcCap != null && dwcCap > 0) vol = Math.round(dwcCap * 10) / 10;
+    const draftVol =
+      typeof buildDwcDraftCfgFromSetupWizardInputs === 'function'
+        ? buildDwcDraftCfgFromSetupWizardInputs()
+        : null;
+    const vMez =
+      draftVol && typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(draftVol) : null;
+    if (vMez != null && vMez > 0) vol = Math.round(vMez * 10) / 10;
+    else vol = 0;
   } catch (_) {}
 
   preview.classList.add('torre-preview--dwc');
