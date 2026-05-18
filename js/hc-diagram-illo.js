@@ -691,6 +691,276 @@
     );
   }
 
+  /** Misma caja de layout para tapa (plano) y alzado (mismo ancho blockW). */
+  function dwcLayoutUnificado(N, C, W) {
+    var planPad = 12;
+    var blockW = Math.min(320, Math.max(228, 28 + C * 30));
+    var planH = Math.min(200, Math.max(88, 28 + N * 30));
+    var planLeft = (W - blockW) / 2;
+    var planTop = 52;
+    var innerX = planLeft + planPad;
+    var innerY = planTop + planPad;
+    var innerW = blockW - planPad * 2;
+    var innerH = planH - planPad * 2;
+    return {
+      blockW: blockW,
+      planH: planH,
+      planLeft: planLeft,
+      planTop: planTop,
+      innerX: innerX,
+      innerY: innerY,
+      innerW: innerW,
+      innerH: innerH,
+      cellW: innerW / Math.max(1, C),
+      cellH: innerH / Math.max(1, N),
+    };
+  }
+
+  /** Plano superior: tapa + rejilla N×C (sin isometría mezclada). */
+  function dwcVistaSuperiorTapa(L, N, C, u, cfg) {
+    var s = '';
+    s +=
+      '<rect x="' +
+      f1(L.planLeft) +
+      '" y="' +
+      f1(L.planTop) +
+      '" width="' +
+      L.blockW +
+      '" height="' +
+      L.planH +
+      '" rx="12" fill="rgba(255,255,255,0.55)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>' +
+      '<rect x="' +
+      f1(L.innerX) +
+      '" y="' +
+      f1(L.innerY) +
+      '" width="' +
+      f1(L.innerW) +
+      '" height="' +
+      f1(L.innerH) +
+      '" rx="8" fill="url(#' +
+      u +
+      '-lid)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>' +
+      '<text x="' +
+      f1(L.planLeft + L.blockW / 2) +
+      '" y="' +
+      f1(L.planTop - 8) +
+      '" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="' +
+      HC_ILLO.inkSoft +
+      '" letter-spacing="0.1em">VISTA SUPERIOR · TAPA</text>';
+    for (var rn = 0; rn < N; rn++) {
+      for (var cc = 0; cc < C; cc++) {
+        var pcx = L.innerX + (cc + 0.5) * L.cellW;
+        var pcy = L.innerY + (rn + 0.5) * L.cellH;
+        var prx = Math.max(8, Math.min(18, L.cellW * 0.36, L.cellH * 0.36));
+        s += maceta({
+          n: rn,
+          c: cc,
+          cx: pcx,
+          cy: pcy,
+          rx: prx,
+          ry: prx * 0.88,
+          uid: u,
+          cfg: cfg,
+          extraClass: 'dwc-maceta',
+        });
+      }
+    }
+    if (N > 1) {
+      s +=
+        '<text x="' +
+        f1(L.planLeft + L.blockW - 8) +
+        '" y="' +
+        f1(L.planTop + L.planH - 6) +
+        '" text-anchor="end" font-size="8" fill="' +
+        HC_ILLO.inkSoft +
+        '">' +
+        N +
+        ' filas en profundidad</text>';
+    }
+    return s;
+  }
+
+  /**
+   * Alzado frontal: mismo ancho que la tapa; orificios alineados por columna con el plano.
+   */
+  function dwcVistaFrontalDeposito(L, N, C, volPct, u, ta, tieneDifusor, tieneCalentador) {
+    var sepY = L.planTop + L.planH + 32;
+    var tankH = 112;
+    var x = L.planLeft;
+    var w = L.blockW;
+    var rim = 12;
+    var innerX = x + 10;
+    var innerY = sepY + rim + 4;
+    var innerW = w - 20;
+    var innerH = tankH - rim - 10;
+    var waterTop = innerY + innerH * (1 - volPct);
+    var stoneX = innerX + innerW - 28;
+    var lidLineY = sepY + rim - 1;
+    var s = '';
+    s +=
+      '<line x1="' +
+      f1(L.planLeft) +
+      '" y1="' +
+      f1(sepY - 6) +
+      '" x2="' +
+      f1(L.planLeft + L.blockW) +
+      '" y2="' +
+      f1(sepY - 6) +
+      '" stroke="' +
+      HC_ILLO.inkSoft +
+      '" stroke-width="1" stroke-dasharray="5 4" opacity="0.5"/>' +
+      '<text x="' +
+      f1(x + w / 2) +
+      '" y="' +
+      f1(sepY + 10) +
+      '" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="' +
+      HC_ILLO.inkSoft +
+      '" letter-spacing="0.1em">PROYECCIÓN FRONTAL · DEPÓSITO</text>';
+    s +=
+      '<rect x="' +
+      f1(x) +
+      '" y="' +
+      f1(sepY) +
+      '" width="' +
+      w +
+      '" height="' +
+      rim +
+      '" rx="5" fill="url(#' +
+      u +
+      '-lid)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>';
+    s +=
+      '<rect x="' +
+      f1(x + 6) +
+      '" y="' +
+      f1(sepY + rim - 2) +
+      '" width="' +
+      (w - 12) +
+      '" height="' +
+      (tankH - rim + 4) +
+      '" rx="10" fill="url(#' +
+      u +
+      '-tank)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>';
+    s +=
+      '<clipPath id="' +
+      u +
+      '-fclip"><rect x="' +
+      f1(innerX) +
+      '" y="' +
+      f1(innerY) +
+      '" width="' +
+      innerW +
+      '" height="' +
+      innerH +
+      '" rx="6"/></clipPath>';
+    s += '<g clip-path="url(#' + u + '-fclip)">';
+    s +=
+      '<rect x="' +
+      f1(innerX) +
+      '" y="' +
+      f1(waterTop) +
+      '" width="' +
+      innerW +
+      '" height="' +
+      f1(innerY + innerH - waterTop) +
+      '" fill="url(#' +
+      u +
+      '-water)"/>';
+    for (var cc = 0; cc < C; cc++) {
+      var planCx = L.innerX + (cc + 0.5) * L.cellW;
+      var fx = innerX + ((planCx - L.innerX) / L.innerW) * innerW;
+      var neckRx = Math.max(6, Math.min(11, L.cellW * 0.28));
+      s +=
+        '<line x1="' +
+        f1(planCx) +
+        '" y1="' +
+        f1(L.planTop + L.planH) +
+        '" x2="' +
+        f1(fx) +
+        '" y2="' +
+        f1(lidLineY) +
+        '" stroke="' +
+        HC_ILLO.inkSoft +
+        '" stroke-width="0.9" stroke-dasharray="3 2" opacity="0.45"/>';
+      s +=
+        '<ellipse cx="' +
+        f1(fx) +
+        '" cy="' +
+        f1(lidLineY + 2) +
+        '" rx="' +
+        f1(neckRx) +
+        '" ry="4" fill="' +
+        HC_ILLO.pot +
+        '" stroke="' +
+        HC_ILLO.ink +
+        '" stroke-width="1.6"/>';
+      if (N >= 1) {
+        s +=
+          '<line x1="' +
+          f1(fx) +
+          '" y1="' +
+          f1(lidLineY + 5) +
+          '" x2="' +
+          f1(fx) +
+          '" y2="' +
+          f1(Math.min(waterTop + 8, innerY + innerH - 14)) +
+          '" stroke="rgba(21,128,61,0.35)" stroke-width="2" stroke-linecap="round"/>';
+      }
+    }
+    s += '</g>';
+    for (cc = 0; cc < C; cc++) {
+      var planCx2 = L.innerX + (cc + 0.5) * L.cellW;
+      var fx2 = innerX + ((planCx2 - L.innerX) / L.innerW) * innerW;
+      var neckRx2 = Math.max(6, Math.min(11, L.cellW * 0.28));
+      s +=
+        '<ellipse cx="' +
+        f1(fx2) +
+        '" cy="' +
+        f1(lidLineY + 2) +
+        '" rx="' +
+        f1(neckRx2) +
+        '" ry="4" fill="none" stroke="' +
+        HC_ILLO.lidHi +
+        '" stroke-width="1" opacity="0.8"/>';
+    }
+    if (tieneDifusor) {
+      s +=
+        '<ellipse cx="' +
+        f1(stoneX) +
+        '" cy="' +
+        f1(innerY + innerH - 8) +
+        '" rx="12" ry="5" fill="' +
+        HC_ILLO.stone +
+        '" stroke="' +
+        HC_ILLO.ink +
+        '" stroke-width="1.2"/>';
+      s += bubbles(stoneX, innerY + innerH - 12, waterTop + 6, ta, 8);
+    }
+    if (tieneCalentador) {
+      var hx = innerX + 20;
+      s +=
+        '<rect x="' +
+        f1(hx - 4) +
+        '" y="' +
+        f1(innerY + 8) +
+        '" width="8" height="' +
+        f1(innerH - 20) +
+        '" rx="4" fill="' +
+        HC_ILLO.cal +
+        '" stroke="' +
+        HC_ILLO.pumpDark +
+        '" stroke-width="1"/>';
+    }
+    return { svg: s, sepY: sepY, tankH: tankH, footY: sepY + tankH + 28 };
+  }
+
   function tankFront(x, y, w, h, volPct, u, ta, tieneDifusor, tieneCalentador) {
     var rim = 12;
     var innerX = x + 10;
@@ -709,9 +979,9 @@
       w +
       '" height="' +
       rim +
-      '" rx="5" fill="' +
-      HC_ILLO.lidHi +
-      '" stroke="' +
+      '" rx="5" fill="url(#' +
+      u +
+      '-lid)" stroke="' +
       HC_ILLO.ink +
       '" stroke-width="2"/>' +
       '<rect x="' +
@@ -729,7 +999,7 @@
       '" stroke-width="2"/>' +
       '<clipPath id="' +
       u +
-      '-fclip"><rect x="' +
+      '-fclip-simple"><rect x="' +
       f1(innerX) +
       '" y="' +
       f1(innerY) +
@@ -740,7 +1010,7 @@
       '" rx="6"/></clipPath>' +
       '<g clip-path="url(#' +
       u +
-      '-fclip)">' +
+      '-fclip-simple)">' +
       '<rect x="' +
       f1(innerX) +
       '" y="' +
@@ -938,70 +1208,56 @@
       return svgWrap('dwc-svg-diagram dwc-svg-diagram--multicubo hc-illo-dwc', W, footY + 24, u + '-title', 'DWC multiválvula', body);
     }
 
-    var iso = tankIsoPlan(planX, planY, planW, planD, u);
-    body += iso.svg;
-    body += lidOnIso(iso.lidPoly, 14, u);
-    var cellW = (planW - 28) / C;
-    var cellD = (planD - 20) / N;
-    for (var rn = 0; rn < N; rn++) {
-      for (var cc = 0; cc < C; cc++) {
-        var pcx = planX + 14 + (cc + 0.5) * cellW + cellD * 0.15;
-        var pcy = planY + 10 + (rn + 0.5) * cellD - rn * 2;
-        body += maceta({
-          n: rn,
-          c: cc,
-          cx: pcx,
-          cy: pcy,
-          rx: Math.min(15, cellW * 0.32),
-          ry: Math.min(11, cellD * 0.28),
-          uid: u,
-          cfg: cfg,
-          extraClass: 'dwc-maceta',
-        });
-      }
-    }
+    var L = dwcLayoutUnificado(N, C, W);
+    body += dwcVistaSuperiorTapa(L, N, C, u, cfg);
+    var front = dwcVistaFrontalDeposito(L, N, C, volPct, u, ta, tieneDifusor, tieneCalentador);
+    body += front.svg;
     if (tieneDifusor) {
-      body += airPump(planX + planW + planD * 0.35 + 12, planY + 8, 50, 34, u);
+      var pumpX = L.planLeft + L.blockW + 14;
+      var pumpY = L.planTop + L.planH * 0.35;
+      if (pumpX + 54 > W - 8) {
+        pumpX = L.planLeft - 58;
+      }
+      body += airPump(pumpX, pumpY, 48, 32, u);
       body +=
         '<path d="M ' +
-        f1(planX + planW + 8) +
+        f1(pumpX + (pumpX < L.planLeft ? 48 : 0)) +
         ' ' +
-        f1(planY + 22) +
-        ' Q ' +
-        f1(planX + planW + 28) +
+        f1(pumpY + 16) +
+        ' L ' +
+        f1(L.planLeft + L.blockW - 8) +
         ' ' +
-        f1(planY + 8) +
-        ' ' +
-        f1(planX + planW + 8) +
-        ' ' +
-        f1(planY + planD * 0.5) +
-        '" fill="none" stroke="#fff" stroke-width="2.2" stroke-dasharray="4 3"/>';
+        f1(L.planTop + L.planH * 0.55) +
+        '" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 3" opacity="0.85"/>';
     }
-    var sepY = planY + planD + 52;
     body +=
       '<text x="' +
       (W / 2) +
       '" y="' +
-      (sepY - 10) +
-      '" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="' +
-      HC_ILLO.inkSoft +
-      '" letter-spacing="0.12em">PROYECCIÓN FRONTAL · DEPÓSITO</text>';
-    var fY = sepY + 6;
-    var fH = 100;
-    var fX = (W - planW) / 2;
-    body += tankFront(fX, fY, planW, fH, volPct, u, ta, tieneDifusor, tieneCalentador);
-    var volY = fY + fH + 28;
-    body +=
-      '<text x="' +
-      (W / 2) +
-      '" y="' +
-      volY +
+      front.footY +
       '" text-anchor="middle" font-family="Syne,sans-serif" font-size="20" font-weight="900" fill="' +
       HC_ILLO.water1 +
       '">' +
       volEtiqueta +
       ' L</text>';
-    return svgWrap('dwc-svg-diagram hc-illo-dwc', W, volY + 16, u + '-title', 'DWC ' + N + ' por ' + C, body);
+    body +=
+      '<text x="' +
+      (W / 2) +
+      '" y="' +
+      (front.footY + 14) +
+      '" text-anchor="middle" font-size="9" fill="' +
+      HC_ILLO.inkSoft +
+      '">Mismo ancho tapa y depósito · ' +
+      C +
+      ' columnas alineadas en el corte</text>';
+    return svgWrap(
+      'dwc-svg-diagram hc-illo-dwc',
+      W,
+      front.footY + 28,
+      u + '-title',
+      'DWC ' + N + '×' + C,
+      body
+    );
   };
 
   window.hcIlloGenerarSVGSrf = function () {
