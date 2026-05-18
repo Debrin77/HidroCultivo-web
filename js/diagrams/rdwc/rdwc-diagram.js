@@ -237,7 +237,7 @@
 
     const pad = 14;
     return (
-      `<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--hub rdwc-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${W + pad * 2} ${H + pad * 2}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rdwcDiagTitle">` +
+      `<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--hub rdwc-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rdwcDiagTitle">` +
       `<title id="rdwcDiagTitle">RDWC anillo: ${sites} módulos, depósito central, recirculación. Toca un módulo para la ficha.</title>${s}</svg>`
     );
   }
@@ -348,7 +348,7 @@
 
     const pad = 14;
     return (
-      `<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${W + pad * 2} ${H + pad * 2}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rdwcDiagTitle">` +
+      `<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rdwcDiagTitle">` +
       `<title id="rdwcDiagTitle">RDWC: ${sites} módulos, recirculación y depósito de control. Toca un módulo.</title>${s}</svg>`
     );
   }

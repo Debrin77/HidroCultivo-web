@@ -1459,14 +1459,50 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   stroke-width: 2;
   fill: rgba(25, 118, 210, 0.06);
 }
+#torreSVGWrap.torre-svg-canvas svg.nft-svg-diagram--scada .nft-scada-callouts text,
+#torreSVGWrap.torre-svg-canvas svg.nft-svg-diagram--scada .dwc-scada-callout text {
+  paint-order: stroke fill;
+  stroke: var(--bg, #f5f6f8);
+  stroke-width: 2px;
+}
+html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada"] .nft-scada-bg,
+html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada"] .torre-scada-bg,
+html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada"] rect[class*="-scada-bg"] {
+  opacity: 1;
+}
+html.hc-theme-dark .dwc-scada-vp-toolbar {
+  background: rgba(30, 41, 59, 0.94);
+  border-color: #475569;
+}
+html.hc-theme-dark .dwc-scada-vp-btn {
+  background: #334155;
+  color: #e2e8f0;
+}
+html.hc-theme-dark .dwc-scada-vp-btn:active {
+  background: #1e3a5f;
+  color: #93c5fd;
+}
+html.hc-theme-dark .dwc-scada-vp-hint {
+  background: rgba(15, 23, 42, 0.92);
+  color: #cbd5e1;
+}
+html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg.nft-svg-diagram--scada .nft-scada-callouts text,
+html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada"] .dwc-scada-callout text {
+  stroke: #0f172a;
+}
+/* Zoom/pan SCADA desactivado: sin recorte ni captura de gestos en el lienzo */
 .torre-svg-canvas--dwc-scada-vp,
 #torreSVGWrap.torre-svg-canvas--dwc-scada-vp {
-  position: relative;
-  overflow: hidden;
-  touch-action: none;
-  -webkit-user-select: none;
-  user-select: none;
-  cursor: grab;
+  overflow: visible;
+  touch-action: auto;
+  cursor: default;
+}
+.dwc-scada-vp-toolbar,
+.dwc-scada-vp-hint {
+  display: none !important;
+}
+#torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada"] {
+  overflow: visible;
 }
 .torre-svg-canvas--dwc-scada-panning,
 #torreSVGWrap.torre-svg-canvas--dwc-scada-panning {

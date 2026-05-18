@@ -2584,7 +2584,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         ' canales horizontales y recorrido del agua.';
 
   return (
-    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-diagram--scroll' +
+    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-svg-diagram--scada nft-diagram--scroll' +
     (compactMesa ? ' nft-diagram--compact' : '') +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
@@ -3165,7 +3165,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
-    '<svg class="torre-svg-diagram nft-escalera-svg nft-diagram--scroll' +
+    '<svg class="torre-svg-diagram nft-escalera-svg nft-svg-diagram--scada nft-diagram--scroll' +
     (car === 1 ? ' nft-escalera--una-cara' : '') +
     (compactEsc ? ' nft-diagram--compact' : '') +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +

@@ -39,14 +39,6 @@
         );
       }
     }
-    const pad = 10;
-    if (/viewBox="0 0 /.test(s)) {
-      s = s.replace(/viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"/, function (_, w, h) {
-        const W = parseFloat(w);
-        const H = parseFloat(h);
-        return 'viewBox="' + -pad + ' ' + -pad + ' ' + (W + pad * 2) + ' ' + (H + pad * 2) + '"';
-      });
-    }
     return s;
   }
 

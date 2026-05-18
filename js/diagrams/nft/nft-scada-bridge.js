@@ -40,8 +40,7 @@
         s = s.replace(/<svg([^>]*)>/i, '<svg$1>' + injDefs);
       }
       const bg = NP.bgRect(W, H, suf);
-      const legend =
-        opts.interactive === true && s.indexOf('nft-scada-legend') < 0 ? NP.legendStrip(W, { y: 4 }) : '';
+      const legend = '';
       if (/<\/defs>/i.test(s)) {
         s = s.replace(/<\/defs>/i, '</defs>' + bg + legend);
       } else {

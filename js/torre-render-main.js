@@ -72,13 +72,6 @@ function renderTorre() {
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
-    try {
-      if (typeof bindNftScadaViewport === 'function') bindNftScadaViewport(wrap);
-    } catch (eNftVp) {
-      try {
-        console.error('bindNftScadaViewport', eNftVp);
-      } catch (_) {}
-    }
   } else if (esDwc) {
     try {
       wrap.innerHTML = typeof generarSVGDwc === 'function' ? generarSVGDwc() : '';
@@ -105,14 +98,6 @@ function renderTorre() {
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
-    try {
-      if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(wrap);
-      if (typeof bindDwcScadaViewport === 'function') bindDwcScadaViewport(wrap);
-    } catch (eDwcVp) {
-      try {
-        console.error('bindDwcScadaViewport', eDwcVp);
-      } catch (_) {}
-    }
   } else if (esSrf) {
     try {
       wrap.innerHTML = typeof generarSVGSrf === 'function' ? generarSVGSrf() : '';
@@ -130,13 +115,6 @@ function renderTorre() {
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
-    try {
-      if (typeof bindSrfScadaViewport === 'function') bindSrfScadaViewport(wrap);
-    } catch (eSrfVp) {
-      try {
-        console.error('bindSrfScadaViewport', eSrfVp);
-      } catch (_) {}
-    }
   } else if (esRdwc) {
     try {
       wrap.innerHTML = typeof generarSVGRdwc === 'function' ? generarSVGRdwc() : '';
@@ -188,14 +166,12 @@ function renderTorre() {
     } catch (e) {}
     bindTorreCestas(wrap);
     bindTorreRotFlechas(wrap);
-    try {
-      if (typeof bindTorreScadaViewport === 'function') bindTorreScadaViewport(wrap);
-    } catch (eTorreVp) {
-      try {
-        console.error('bindTorreScadaViewport', eTorreVp);
-      } catch (_) {}
-    }
   }
+
+  try {
+    if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(wrap);
+    if (typeof bindDwcScadaCestaHover === 'function') bindDwcScadaCestaHover(wrap);
+  } catch (_) {}
 
   actualizarChromePanelEsquemaPorTipo();
   sincronizarTextosPanelInteraccionSistema();

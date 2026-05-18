@@ -202,7 +202,7 @@
     const H = canalY + canalH + 36;
     const pad = 12;
     return (
-      `<svg class="torre-svg-diagram srf-svg-diagram srf-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="${-pad} ${-pad} ${W + pad * 2} ${H + pad * 2}" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="srfDiagTitle">` +
+      `<svg class="torre-svg-diagram srf-svg-diagram srf-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="srfDiagTitle">` +
       `<title id="srfDiagTitle">SRF balsa flotante: ${n} plantas, estanque ${profCm} cm. Toca cada maceta.</title>${s}</svg>`
     );
   }

@@ -432,6 +432,26 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
 
   const pumpLines = '';
 
+  let scadaCallouts = '';
+  if (interactive && typeof dwcScadaParts !== 'undefined') {
+    const SC = dwcScadaParts;
+    scadaCallouts +=
+      '<g class="nft-scada-callouts" pointer-events="none" aria-hidden="true">' +
+      SC.callout(tx + tankW + 14, tankY + tankH / 2, tx + tankW, tankY + tankH / 2, 'Depósito nutriente', {
+        anchor: 'start',
+      }) +
+      SC.callout(xSupplyOut - 6, bombaYSerp, xSupplyOut, bombaYSerp, 'Bomba · subida', { anchor: 'end' }) +
+      SC.callout(
+        (xL + xR) / 2,
+        yRow(0) - tubeH - 22,
+        (xL + padFlow + xR - padFlow) / 2,
+        yRow(0) - tubeH - 4,
+        'Manifold / canales',
+        { anchor: 'middle' }
+      ) +
+      '</g>';
+  }
+
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
     channels = '<g pointer-events="none">' + channels + '</g>';
@@ -518,6 +538,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     flowLayer +
     plants +
     tankLayer +
+    scadaCallouts +
     (!interactive ? pumpLines : '') +
     '</svg>'
   );
@@ -1099,7 +1120,7 @@ function updateNftSetupPreview() {
   preview.innerHTML = nftPrevSvg;
   try {
     if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(preview);
-    if (typeof bindNftScadaViewport === 'function') bindNftScadaViewport(preview);
+    if (typeof bindDwcScadaCestaHover === 'function') bindDwcScadaCestaHover(preview);
   } catch (_) {}
   refrescarDocTuberiaNftSetup();
 }
@@ -1384,7 +1405,7 @@ function renderDwcIlloSetupPreview(previewEl, filas, cols, volLitros, draftExtra
     previewEl.innerHTML = renderFn();
     previewEl.classList.add('torre-preview--dwc', 'hc-illo-diagram');
     try {
-      if (typeof bindDwcScadaViewport === 'function') bindDwcScadaViewport(previewEl);
+      if (typeof bindDwcScadaCestaHover === 'function') bindDwcScadaCestaHover(previewEl);
     } catch (_) {}
   } catch (err) {
     renderDwcLidSetupPreview(previewEl, filas, cols, volLitros);
@@ -1598,7 +1619,7 @@ function refreshRdwcSetupPreview() {
       preview.classList.add('torre-preview--rdwc');
       try {
         if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(preview);
-        if (typeof bindRdwcScadaViewport === 'function') bindRdwcScadaViewport(preview);
+        if (typeof bindDwcScadaCestaHover === 'function') bindDwcScadaCestaHover(preview);
       } catch (_) {}
     }
     state.configTorre = prevCfg;
@@ -1681,7 +1702,7 @@ function updateTorreBuilder() {
         preview.classList.add('torre-preview--srf');
         try {
           if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(preview);
-          if (typeof bindSrfScadaViewport === 'function') bindSrfScadaViewport(preview);
+          if (typeof bindDwcScadaCestaHover === 'function') bindDwcScadaCestaHover(preview);
         } catch (_) {}
       } else if (typeof renderSrfSetupPreview === 'function') {
         renderSrfSetupPreview(preview, draft);
