@@ -1138,7 +1138,11 @@ function getSetupVolumenMaxLitros() {
     const cap = typeof srfCapacidadLitrosDesdeConfig === 'function' ? srfCapacidadLitrosDesdeConfig(draft) : null;
     if (cap != null && cap > 0) return Math.min(5000, Math.max(1, Math.round(cap * 10) / 10));
   }
-  return parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+  const svRaw = parseInt(String(document.getElementById('sliderVol')?.value ?? '').trim(), 10);
+  const esNueva =
+    typeof hcSetupAsistenteInstalacionNueva === 'function' && hcSetupAsistenteInstalacionNueva();
+  if (esNueva && (!Number.isFinite(svRaw) || svRaw <= 0)) return 0;
+  return Number.isFinite(svRaw) && svRaw > 0 ? svRaw : 20;
 }
 
 function getSetupVolumenMezclaLitros() {

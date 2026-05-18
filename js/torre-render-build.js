@@ -877,58 +877,24 @@ function generarSVGDwc() {
       `</g>` +
       `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRb},${yb} ${xLb},${yb}" fill="none" stroke="#0ea5e9" stroke-width="1.25" opacity="0.42"/>`;
   } else {
-    const bodyTop = tankStartY + rimH;
-    const bodyBot = tankStartY + tankH - 2;
-    const dIso = Math.min(36, tankW * 0.11);
-    const isoX = dIso * 0.72;
-    const isoY = dIso * 0.42;
-    const availH = bodyBot - bodyTop - 14;
-    const availW = tankW - 14 - isoX;
-    const Lm = dep.L != null ? dep.L : 55;
-    const Wm = dep.W != null ? dep.W : 40;
-    const Pm = dep.P != null ? dep.P : 38;
-    const isCube = dep.L != null && dep.W != null && Math.abs(dep.L - dep.W) / Math.max(dep.L, dep.W) <= 0.06;
-    let fw;
-    let fh;
-    if (isCube) {
-      const side = Math.min(availW * 0.88, availH * 0.88);
-      fw = side;
-      fh = side;
-    } else {
-      const asp = Pm / Math.max(Lm, 1e-6);
-      fw = availW * 0.86;
-      fh = fw * asp;
-      if (fh > availH * 0.9) {
-        fh = availH * 0.9;
-        fw = fh / asp;
-      }
-    }
-    const fx0 = tankX + 8 + (availW + isoX - fw) / 2;
-    const fy0 = bodyTop + 8 + (availH - fh) / 2;
-    const fx1 = fx0 + fw;
-    const fy1 = fy0 + fh;
-    const xt0 = fx0 + isoX;
-    const yt0 = fy0 - isoY;
-    innerBottom = fy1;
-    waterTopY = fy0 + fh * (1 - volPct);
-    waveY = fy0 + fh * 0.36;
-    hx = fx0 + 22;
-    stoneX = fx0 + fw - 32;
-    clipPathInner = `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4"/>`;
+    clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
+    waterTopY = innerY0 + innerH0 * (1 - volPct);
+    innerBottom = innerY0 + innerH0;
+    waveY = innerY0 + innerH0 * 0.35;
+    hx = innerX0 + 22;
+    stoneX = innerX0 + innerW0 - 32;
     tankFrontalSvg =
       `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>` +
-      `<polygon points="${fx0},${fy0} ${fx1},${fy0} ${fx1 + isoX},${fy0 - isoY} ${xt0},${yt0}" fill="#eef2f7" stroke="#94a3b8" stroke-width="1.1"/>` +
-      `<polygon points="${fx1},${fy0} ${fx1 + isoX},${fy0 - isoY} ${fx1 + isoX},${fy1 - isoY} ${fx1},${fy1}" fill="#d8dee9" stroke="#94a3b8" stroke-width="1.1"/>` +
-      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4" fill="url(#dwcTankFace)" stroke="#64748b" stroke-width="1.25"/>` +
-      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4" fill="rgba(255,255,255,0.22)" stroke="none"/>` +
+      `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="8" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>` +
+      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5" fill="rgba(255,255,255,0.35)" stroke="none"/>` +
       `<g clip-path="url(#dwcTankInnerClip)">` +
-      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${Math.max(0, waterTopY - fy0).toFixed(1)}" fill="#f0f9ff" opacity="0.5"/>` +
-      `<rect x="${fx0}" y="${waterTopY.toFixed(1)}" width="${fw}" height="${(fy1 - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
+      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${Math.max(0, waterTopY - innerY0).toFixed(1)}" fill="#f0f9ff" opacity="0.5"/>` +
+      `<rect x="${innerX0}" y="${waterTopY.toFixed(1)}" width="${innerW0}" height="${(innerBottom - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
       (ta
-        ? `<path d="M ${fx0 + fw * 0.12} ${waveY} Q ${fx0 + fw / 2} ${fy0 + fh * 0.28} ${fx0 + fw * 0.88} ${fy0 + fh * 0.4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.4"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
+        ? `<path d="M ${innerX0 + 18} ${waveY} Q ${innerX0 + innerW0 / 2} ${innerY0 + innerH0 * 0.28} ${innerX0 + innerW0 - 22} ${innerY0 + innerH0 * 0.4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.4"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
         : '') +
       `</g>` +
-      `<rect x="${fx0}" y="${fy0}" width="${fw}" height="${fh}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.38"/>`;
+      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.35"/>`;
   }
 
   const dwcSvgH = Math.max(H, tankGraphicBottom + 40);

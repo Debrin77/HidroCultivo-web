@@ -1277,6 +1277,35 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
 }
 
 /** Preview asistente paso 1 — DWC: tapa vista superior con orificios en rejilla. */
+function hcRenderSetupPreviewPlaceholder(previewEl, msg) {
+  if (!previewEl) return;
+  previewEl.classList.add('torre-preview--dwc');
+  previewEl.innerHTML =
+    '<p class="setup-dwc-preview-fallback setup-dwc-preview-empty" role="status">' +
+    (msg ||
+      'Indica filas × cestas y las medidas del depósito para ver la vista previa. Cada instalación nueva parte en blanco.') +
+    '</p>';
+}
+
+function hcSetupPreviewSinDimensiones() {
+  if (typeof hcSetupAsistenteInstalacionNueva !== 'function' || !hcSetupAsistenteInstalacionNueva()) {
+    return false;
+  }
+  const mc =
+    typeof dwcEsSetupMultivalvula === 'function'
+      ? dwcEsSetupMultivalvula()
+      : typeof dwcNormalizeOxigenacionDiseno === 'function' &&
+        dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
+          'cubos_independientes';
+  if (mc) {
+    const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
+    return !Number.isFinite(nRaw) || nRaw < 1;
+  }
+  const f = parseInt(String(document.getElementById('sliderNiveles')?.value || '0'), 10);
+  const c = parseInt(String(document.getElementById('sliderCestas')?.value || '0'), 10);
+  return !Number.isFinite(f) || f < 1 || !Number.isFinite(c) || c < 1;
+}
+
 function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
   previewEl.innerHTML = '';
   previewEl.style.position = 'relative';
@@ -1309,7 +1338,10 @@ function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
   cap.textContent = filas + ' filas × ' + cols + ' cestas · tapa';
   const tank = document.createElement('div');
   tank.className = 'dwc-setup-lid-tank';
-  tank.title = 'Depósito · ~' + volLitros + ' L de solución';
+  tank.title =
+    volLitros != null && Number(volLitros) > 0
+      ? 'Depósito · ~' + volLitros + ' L de solución'
+      : 'Depósito · litros pendientes';
   tank.style.width = Math.min(side + 8, 112) + 'px';
   wrap.appendChild(plate);
   wrap.appendChild(cap);
@@ -1332,27 +1364,45 @@ function refreshDwcSetupPreview() {
         dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value) ===
           'cubos_independientes';
 
-  let filas = 2;
-  let cols = 3;
+  const esNueva =
+    typeof hcSetupAsistenteInstalacionNueva === 'function' && hcSetupAsistenteInstalacionNueva();
+  let filas = esNueva ? 0 : 2;
+  let cols = esNueva ? 0 : 3;
   if (mc) {
     const formaMc =
       typeof dwcNormalizeDepositoForma === 'function'
         ? dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value)
         : 'prismatico';
-    const defNc = formaMc === 'cilindrico' ? 1 : 4;
+    const defNc = esNueva ? 0 : formaMc === 'cilindrico' ? 1 : 4;
     const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
-    cols = Math.min(24, Math.max(1, Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : defNc));
-    filas = 1;
+    cols =
+      Number.isFinite(nRaw) && nRaw >= 1
+        ? Math.min(24, nRaw)
+        : defNc > 0
+          ? defNc
+          : 0;
+    filas = cols > 0 ? 1 : 0;
   } else {
-    filas = Math.max(1, Math.min(10, parseInt(String(document.getElementById('sliderNiveles')?.value || 2), 10) || 2));
-    cols = Math.max(1, Math.min(8, parseInt(String(document.getElementById('sliderCestas')?.value || 3), 10) || 3));
+    const fRaw = parseInt(String(document.getElementById('sliderNiveles')?.value || (esNueva ? 0 : 2)), 10);
+    const cRaw = parseInt(String(document.getElementById('sliderCestas')?.value || (esNueva ? 0 : 3)), 10);
+    filas = esNueva
+      ? Math.max(0, Math.min(10, Number.isFinite(fRaw) ? fRaw : 0))
+      : Math.max(1, Math.min(10, Number.isFinite(fRaw) ? fRaw : 2));
+    cols = esNueva
+      ? Math.max(0, Math.min(8, Number.isFinite(cRaw) ? cRaw : 0))
+      : Math.max(1, Math.min(8, Number.isFinite(cRaw) ? cRaw : 3));
     const vn = document.getElementById('valNiveles');
     const vc = document.getElementById('valCestas');
     if (vn) vn.textContent = String(filas);
     if (vc) vc.textContent = String(cols);
   }
 
-  let vol = parseInt(String(document.getElementById('sliderVol')?.value || 20), 10) || 20;
+  if (hcSetupPreviewSinDimensiones()) {
+    hcRenderSetupPreviewPlaceholder(preview);
+    return;
+  }
+
+  let vol = esNueva ? 0 : parseInt(String(document.getElementById('sliderVol')?.value || 20), 10) || 20;
   try {
     const dwcCap = typeof getDwcCapacidadLitrosFromSetupInputs === 'function' ? getDwcCapacidadLitrosFromSetupInputs() : null;
     if (dwcCap != null && dwcCap > 0) vol = Math.round(dwcCap * 10) / 10;
@@ -1398,6 +1448,17 @@ function refreshRdwcSetupPreview() {
   const preview = document.getElementById('setupRdwcPreview');
   if (!preview) return;
   try {
+    const sitesRaw = parseInt(String(document.getElementById('setupRdwcSites')?.value || '').trim(), 10);
+    const rowsRaw = parseInt(String(document.getElementById('setupRdwcRows')?.value || '').trim(), 10);
+    if (
+      (typeof hcSetupAsistenteInstalacionNueva === 'function' && hcSetupAsistenteInstalacionNueva()) &&
+      (!Number.isFinite(sitesRaw) || sitesRaw < 2 || !Number.isFinite(rowsRaw) || rowsRaw < 1)
+    ) {
+      preview.innerHTML =
+        '<p class="setup-dwc-preview-fallback setup-dwc-preview-empty" role="status">Indica sitios, filas y medidas de los cubos para ver el diagrama RDWC.</p>';
+      preview.classList.remove('torre-preview--rdwc');
+      return;
+    }
     let draft = {};
     if (typeof applySetupRdwcDesdeFormulario === 'function') {
       draft = applySetupRdwcDesdeFormulario() || {};
@@ -1458,21 +1519,55 @@ function updateTorreBuilder() {
     const preview = getSetupPreviewElement();
     if (!preview) return;
     try {
+      const esNuevaSrf =
+        typeof hcSetupAsistenteInstalacionNueva === 'function' && hcSetupAsistenteInstalacionNueva();
+      const seed =
+        esNuevaSrf && typeof hcFreshSrfSetupDefaults === 'function'
+          ? hcFreshSrfSetupDefaults()
+          : state.configTorre || {};
       const draft =
-        typeof buildSrfConfigFromForm === 'function' ? buildSrfConfigFromForm('setup', state.configTorre || {}) : {};
+        typeof buildSrfConfigFromForm === 'function'
+          ? buildSrfConfigFromForm('setup', seed, { applyDefaults: false })
+          : {};
       if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(draft);
+      const filasSrf = parseInt(String(document.getElementById('setupSrfFilas')?.value || '').trim(), 10);
+      const colsSrf = parseInt(String(document.getElementById('setupSrfPlantasPorFila')?.value || '').trim(), 10);
+      if (esNuevaSrf && (!Number.isFinite(filasSrf) || filasSrf < 1 || !Number.isFinite(colsSrf) || colsSrf < 1)) {
+        preview.innerHTML =
+          '<p class="setup-dwc-preview-fallback setup-dwc-preview-empty" role="status">Indica filas, plantas por fila y medidas del estanque para ver la vista previa SRF.</p>';
+        preview.classList.remove('torre-preview--srf');
+        return;
+      }
       const grid =
         typeof srfDistribuirPlantas === 'function'
           ? srfDistribuirPlantas(draft)
-          : { rows: draft.srfFilas || 2, cols: draft.srfPlantasPorFila || 4 };
+          : { rows: draft.srfFilas || (esNuevaSrf ? 0 : 2), cols: draft.srfPlantasPorFila || (esNuevaSrf ? 0 : 4) };
+      if (grid.rows < 1 || grid.cols < 1) {
+        preview.innerHTML =
+          '<p class="setup-dwc-preview-fallback setup-dwc-preview-empty" role="status">Indica filas, plantas por fila y medidas del estanque para ver la vista previa SRF.</p>';
+        preview.classList.remove('torre-preview--srf');
+        return;
+      }
       draft.numNiveles = grid.rows;
       draft.numCestas = grid.cols;
       const prevCfg = state.configTorre;
       const prevTorre = state.torre;
-      state.configTorre = Object.assign({}, prevCfg || {}, draft, { tipoInstalacion: 'srf' });
-      if (typeof redimensionarMatrizTorreDwcPreservando === 'function') {
-        redimensionarMatrizTorreDwcPreservando(state.configTorre, grid.rows, grid.cols);
+      const emptyCell = () => ({
+        variedad: '',
+        fecha: '',
+        notas: '',
+        origenPlanta: '',
+        fotos: [],
+        fotoKeys: [],
+      });
+      const torrePreview = [];
+      for (let n = 0; n < grid.rows; n++) {
+        const row = [];
+        for (let col = 0; col < grid.cols; col++) row.push(emptyCell());
+        torrePreview.push(row);
       }
+      state.configTorre = Object.assign({}, draft, { tipoInstalacion: 'srf' });
+      state.torre = torrePreview;
       if (typeof generarSVGSrf === 'function') {
         preview.innerHTML = generarSVGSrf();
         preview.classList.add('torre-preview--srf');
@@ -1486,8 +1581,11 @@ function updateTorreBuilder() {
     } catch (_) {}
     return;
   }
-  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || 5);
-  const cestas  = parseInt(document.getElementById('sliderCestas')?.value  || 5);
+  const esNuevaBuilder =
+    typeof hcSetupAsistenteInstalacionNueva === 'function' && hcSetupAsistenteInstalacionNueva();
+  const defSlider = esNuevaBuilder ? 0 : 5;
+  const niveles = parseInt(document.getElementById('sliderNiveles')?.value || defSlider, 10);
+  const cestas = parseInt(document.getElementById('sliderCestas')?.value || defSlider, 10);
   let dwcNivPrev = niveles;
   let dwcCesPrev = cestas;
   if (setupTipoInstalacion === 'dwc') {
@@ -1503,13 +1601,18 @@ function updateTorreBuilder() {
           ? dwcNormalizeDepositoForma(document.getElementById('setupDwcDepositoForma')?.value)
           : 'prismatico';
       const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
-      const defNc = formaMc === 'cilindrico' ? 1 : 4;
-      const nn = Math.min(24, Math.max(1, Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : defNc));
-      dwcNivPrev = 1;
+      const defNc = esNuevaBuilder ? 0 : formaMc === 'cilindrico' ? 1 : 4;
+      const nn =
+        Number.isFinite(nRaw) && nRaw >= 1
+          ? Math.min(24, nRaw)
+          : defNc > 0
+            ? defNc
+            : 0;
+      dwcNivPrev = nn > 0 ? 1 : 0;
       dwcCesPrev = nn;
     }
   }
-  const volSlider = parseInt(document.getElementById('sliderVol')?.value || 20, 10);
+  const volSlider = parseInt(document.getElementById('sliderVol')?.value || (esNuevaBuilder ? 0 : 20), 10);
   const dwcCap = getDwcCapacidadLitrosFromSetupInputs();
   const volDepDwc =
     dwcCap != null && dwcCap > 0 ? Math.round(dwcCap * 10) / 10 : volSlider;
@@ -1568,6 +1671,11 @@ function updateTorreBuilder() {
   preview.classList.remove('torre-preview--dwc');
 
   if (setupTipoInstalacion === 'torre') {
+    if (esNuevaBuilder && (niveles < 1 || cestas < 1)) {
+      preview.innerHTML =
+        '<p class="setup-dwc-preview-fallback setup-dwc-preview-empty" role="status">Indica niveles y cestas por nivel para ver la torre.</p>';
+      return;
+    }
     try {
       calcularBombaRecomendada();
       if (

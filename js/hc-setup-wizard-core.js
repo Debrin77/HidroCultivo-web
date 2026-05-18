@@ -666,6 +666,95 @@ function hcResetRdwcSetupFormZero() {
   } catch (_) {}
 }
 
+/** Sliders compartidos del asistente: min 0 = sin dimensiones (nueva instalación). */
+function hcSetSetupSlidersBlankMode(blank) {
+  const specs = [
+    ['sliderNiveles', 1, 10, 5],
+    ['sliderCestas', 1, 8, 5],
+    ['sliderVol', 5, 100, 20],
+  ];
+  specs.forEach(([id, minNorm, max, defVal]) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (blank) {
+      el.min = '0';
+      el.value = '0';
+      el.setAttribute('aria-valuemin', '0');
+      el.setAttribute('aria-valuemax', String(max));
+      el.setAttribute('aria-valuenow', '0');
+    } else {
+      el.min = String(minNorm);
+      el.setAttribute('aria-valuemin', String(minNorm));
+      el.setAttribute('aria-valuemax', String(max));
+      const cur = parseInt(String(el.value || ''), 10);
+      const next = Number.isFinite(cur) && cur >= minNorm ? cur : defVal;
+      el.value = String(next);
+      el.setAttribute('aria-valuenow', String(next));
+    }
+  });
+  const vn = document.getElementById('valNiveles');
+  const vc = document.getElementById('valCestas');
+  const vv = document.getElementById('valVol');
+  if (blank) {
+    if (vn) vn.textContent = '0';
+    if (vc) vc.textContent = '0';
+    if (vv) vv.innerHTML = '—';
+  }
+}
+
+function hcResetTorreSetupSlidersZero() {
+  hcSetSetupSlidersBlankMode(true);
+}
+
+/**
+ * Vacía formularios del asistente para una instalación nueva (sin heredar la ranura activa).
+ * @param {string} [tipo] — tipo ya elegido; si se omite, resetea todos los bloques.
+ */
+function hcResetSetupFormForNewInstall(tipo) {
+  hcResetTorreSetupSlidersZero();
+  try {
+    if (typeof hcResetNftSetupSlidersZero === 'function') hcResetNftSetupSlidersZero();
+  } catch (_) {}
+  try {
+    if (typeof hcResetDwcSetupFormZero === 'function') hcResetDwcSetupFormZero();
+  } catch (_) {}
+  try {
+    if (typeof hcResetRdwcSetupFormZero === 'function') hcResetRdwcSetupFormZero();
+  } catch (_) {}
+  try {
+    if (typeof hcResetSrfSetupFormZero === 'function') hcResetSrfSetupFormZero();
+  } catch (_) {}
+  setupRdwcDraft =
+    typeof hcFreshRdwcSetupBare === 'function' ? hcFreshRdwcSetupBare() : null;
+  const svm = document.getElementById('setupVolMezclaL');
+  if (svm) svm.value = '';
+  try {
+    if (typeof clearSetupVolMezclaDwcAutofill === 'function') clearSetupVolMezclaDwcAutofill();
+  } catch (_) {}
+  try {
+    if (typeof clearSetupVolMezclaSrfAutofill === 'function') clearSetupVolMezclaSrfAutofill();
+  } catch (_) {}
+  ['setupDwcPreview', 'setupRdwcPreview', 'setupSrfPreview'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    el.classList.remove('torre-preview--dwc', 'torre-preview--srf', 'torre-preview--rdwc');
+  });
+  const slotPrev = document.querySelector('#setupTorrePreviewSlot .torre-preview');
+  if (slotPrev) {
+    slotPrev.innerHTML = '';
+    slotPrev.classList.remove('torre-preview--dwc', 'torre-preview--srf', 'torre-preview--rdwc');
+  }
+  try {
+    if (typeof hcRenderSetupPreviewPlaceholder === 'function') {
+      const p =
+        document.getElementById('setupDwcPreview') ||
+        document.querySelector('#setupTorrePreviewSlot .torre-preview');
+      if (p && (!tipo || tipo === 'dwc' || tipo === 'torre')) hcRenderSetupPreviewPlaceholder(p);
+    }
+  } catch (_) {}
+}
+
 /** Estima Ø y profundidad útil del cubo a partir de litros nominales (cilindro). */
 function rdwcEstimateBucketGeometryFromNominalL(volL) {
   const v = Math.max(5, Number(volL) || 20);
@@ -1982,6 +2071,9 @@ function abrirSetup() {
   try {
     if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();
   } catch (_) {}
+  try {
+    hcSetSetupSlidersBlankMode(false);
+  } catch (_) {}
   setupEsNuevaTorre = false;
   setupPagina = 0;
   const sh = (state.configTorre && state.configTorre.sensoresHardware) || {};
@@ -2232,6 +2324,9 @@ function cerrarSetup() {
   const o = document.getElementById('setupOverlay');
   o.classList.remove('open');
   a11yDialogClosed(o);
+  try {
+    hcSetSetupSlidersBlankMode(false);
+  } catch (_) {}
   try {
     if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();
   } catch (_) {}

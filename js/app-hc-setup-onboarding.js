@@ -354,14 +354,14 @@ function renderSetupPlantasGrid() {
     // Mostrar EC objetivo y dosis calculadas
     const ecObj = getSetupECObjetivo();
     const volMax = getSetupVolumenMaxLitros();
-    const vol    = getSetupVolumenMezclaLitros();
+    const vol = volMax > 0 ? getSetupVolumenMezclaLitros() : 0;
     const volDosisGrp =
       typeof getSetupVolumenNutrientesLitros === 'function' ? getSetupVolumenNutrientesLitros() : vol;
     const d      = calcularDosisSetup(setupNutriente, volDosisGrp, ecObj);
     const nut   = d.nut;
     const dosisDiv  = document.getElementById('dosisSegunCultivo');
     const dosisText = document.getElementById('dosisSegunCultivoTexto');
-    if (dosisDiv && dosisText) {
+    if (dosisDiv && dosisText && volMax > 0) {
       dosisDiv.classList.remove('setup-hidden');
       const orden = (nut.orden && nut.orden.length >= nut.partes) ? nut.orden : ['Parte A','Parte B','Parte C'];
       const dwcMcGrp =
