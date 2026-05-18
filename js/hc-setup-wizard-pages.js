@@ -1081,18 +1081,26 @@ function updateNftSetupPreview() {
   const altShow = draft.nftAlturaBombeoCm != null && Number(draft.nftAlturaBombeoCm) > 0
     ? Math.round(Number(draft.nftAlturaBombeoCm))
     : getNftAlturaBombeoEfectivaCm(draft);
-  preview.innerHTML =
-    buildNftActiveDiagramSvg(canales, huecos, pendDraw, vol, '', {
-      calentador: setupEquipamiento.has('calentador'),
-      difusor: setupEquipamiento.has('difusor'),
-      bombaInfo: bNft,
-      nftDisposicion: draft.nftDisposicion,
-      nftAlturaBombeoCm: altShow > 0 ? altShow : null,
-      cfgSnapshot: draft,
-      mesaTiers: hyd.mesaTiers,
-      escaleraNiveles: hyd.escaleraNiveles,
-      escaleraCaras: hyd.escaleraCaras,
-    });
+  if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
+  let nftPrevSvg = buildNftActiveDiagramSvg(canales, huecos, pendDraw, vol, '', {
+    calentador: setupEquipamiento.has('calentador'),
+    difusor: setupEquipamiento.has('difusor'),
+    bombaInfo: bNft,
+    nftDisposicion: draft.nftDisposicion,
+    nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+    cfgSnapshot: draft,
+    mesaTiers: hyd.mesaTiers,
+    escaleraNiveles: hyd.escaleraNiveles,
+    escaleraCaras: hyd.escaleraCaras,
+  });
+  if (typeof enhanceNftDiagramScada === 'function') {
+    nftPrevSvg = enhanceNftDiagramScada(nftPrevSvg, { interactive: false });
+  }
+  preview.innerHTML = nftPrevSvg;
+  try {
+    if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(preview);
+    if (typeof bindNftScadaViewport === 'function') bindNftScadaViewport(preview);
+  } catch (_) {}
   refrescarDocTuberiaNftSetup();
 }
 
@@ -1588,6 +1596,10 @@ function refreshRdwcSetupPreview() {
     if (typeof generarSVGRdwc === 'function') {
       preview.innerHTML = generarSVGRdwc();
       preview.classList.add('torre-preview--rdwc');
+      try {
+        if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(preview);
+        if (typeof bindRdwcScadaViewport === 'function') bindRdwcScadaViewport(preview);
+      } catch (_) {}
     }
     state.configTorre = prevCfg;
     state.torre = prevTorre;
@@ -1667,6 +1679,10 @@ function updateTorreBuilder() {
       if (typeof generarSVGSrf === 'function') {
         preview.innerHTML = generarSVGSrf();
         preview.classList.add('torre-preview--srf');
+        try {
+          if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(preview);
+          if (typeof bindSrfScadaViewport === 'function') bindSrfScadaViewport(preview);
+        } catch (_) {}
       } else if (typeof renderSrfSetupPreview === 'function') {
         renderSrfSetupPreview(preview, draft);
       }

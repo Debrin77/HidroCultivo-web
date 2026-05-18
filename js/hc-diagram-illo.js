@@ -2165,6 +2165,9 @@
   };
 
   window.hcIlloGenerarSVGSrf = function () {
+    if (typeof buildSrfDiagramSvg === 'function') {
+      return buildSrfDiagramSvg();
+    }
     var cfg = (typeof state !== 'undefined' ? state.configTorre : {}) || {};
     if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(cfg);
     var grid =
@@ -2239,6 +2242,9 @@
   };
 
   window.hcIlloGenerarSVGRdwc = function () {
+    if (typeof buildRdwcDiagramSvg === 'function') {
+      return buildRdwcDiagramSvg();
+    }
     var cfg = (typeof state !== 'undefined' ? state.configTorre : {}) || {};
     if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
     var sites = Math.max(2, Math.min(64, parseInt(String(cfg.rdwcSites || 4), 10) || 4));
@@ -2321,6 +2327,9 @@
   };
 
   window.hcIlloGenerarSVGTorre = function () {
+    if (typeof buildTorreDiagramSvg === 'function') {
+      return buildTorreDiagramSvg();
+    }
     var cfg = (typeof state !== 'undefined' ? state.configTorre : {}) || {};
     var numNiveles = cfg.numNiveles || 5;
     var numCestas = cfg.numCestas || 5;

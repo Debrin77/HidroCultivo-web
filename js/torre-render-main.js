@@ -18,7 +18,7 @@ function renderTorre() {
   if (!esNft) {
     disposeNftThreeIfAny(wrap);
   }
-  if (!esDwc && typeof disposeDwcScadaViewport === 'function') {
+  if (typeof disposeDwcScadaViewport === 'function') {
     try {
       disposeDwcScadaViewport(wrap);
     } catch (_) {}
@@ -59,14 +59,26 @@ function renderTorre() {
       escaleraNiveles: hyd.escaleraNiveles,
       escaleraCaras: hyd.escaleraCaras,
     };
-    wrap.innerHTML = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
+    if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
+    let nftSvg = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
+    if (typeof enhanceNftDiagramScada === 'function') {
+      nftSvg = enhanceNftDiagramScada(nftSvg, { interactive: true });
+    }
+    wrap.innerHTML = nftSvg;
     wrap.setAttribute(
       'aria-label',
-      'NFT: esquema 2D con flujo de agua en azul. Toca un hueco para la ficha o usa Lista.'
+      'NFT: esquema SCADA con flujo de agua en azul. Toca un hueco para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
+    try {
+      if (typeof bindNftScadaViewport === 'function') bindNftScadaViewport(wrap);
+    } catch (eNftVp) {
+      try {
+        console.error('bindNftScadaViewport', eNftVp);
+      } catch (_) {}
+    }
   } else if (esDwc) {
     try {
       wrap.innerHTML = typeof generarSVGDwc === 'function' ? generarSVGDwc() : '';
@@ -102,19 +114,46 @@ function renderTorre() {
       } catch (_) {}
     }
   } else if (esSrf) {
-    wrap.innerHTML = typeof generarSVGSrf === 'function' ? generarSVGSrf() : '';
+    try {
+      wrap.innerHTML = typeof generarSVGSrf === 'function' ? generarSVGSrf() : '';
+    } catch (eSrfSvg) {
+      wrap.innerHTML =
+        '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema SRF. Recarga la página (Ctrl+F5).</p>';
+      try {
+        console.error('generarSVGSrf', eSrfSvg);
+      } catch (_) {}
+    }
     wrap.setAttribute(
       'aria-label',
-      'SRF balsa flotante: estanque con balsa y macetas. Toca una planta para la ficha o usa Lista.'
+      'SRF balsa flotante: vista superior y corte del estanque. Toca una maceta para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
+    try {
+      if (typeof bindSrfScadaViewport === 'function') bindSrfScadaViewport(wrap);
+    } catch (eSrfVp) {
+      try {
+        console.error('bindSrfScadaViewport', eSrfVp);
+      } catch (_) {}
+    }
   } else if (esRdwc) {
-    wrap.innerHTML = generarSVGRdwc();
+    try {
+      wrap.innerHTML = typeof generarSVGRdwc === 'function' ? generarSVGRdwc() : '';
+    } catch (eRdwcSvg) {
+      wrap.innerHTML =
+        '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema RDWC. Recarga la página (Ctrl+F5).</p>';
+      try {
+        console.error('generarSVGRdwc', eRdwcSvg);
+      } catch (_) {}
+    }
+    if (!wrap.innerHTML || !String(wrap.innerHTML).trim()) {
+      wrap.innerHTML =
+        '<p class="torre-svg-fallback" role="status">Esquema RDWC vacío: revisa sitios y filas en Cultivo e instalación.</p>';
+    }
     wrap.setAttribute(
       'aria-label',
-      'RDWC: módulos conectados con recirculación y depósito de control. Toca un módulo para su ficha o usa Lista.'
+      'RDWC: módulos con recirculación (verde impulsión, azul retorno) y depósito de control. Toca un módulo para su ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
@@ -122,13 +161,40 @@ function renderTorre() {
     try {
       bindRdwcLoopHelp(wrap);
     } catch (e3) {}
+    try {
+      if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(wrap);
+      if (typeof bindRdwcScadaViewport === 'function') bindRdwcScadaViewport(wrap);
+    } catch (eRdwcVp) {
+      try {
+        console.error('bindRdwcScadaViewport', eRdwcVp);
+      } catch (_) {}
+    }
   } else {
-    wrap.innerHTML = generarSVGTorre();
-    wrap.setAttribute('aria-label',
-      'Esquema de torre hidropónica. Flechas junto al depósito o deslizar para girar. Las cestas de frente responden al toque.');
-    try { initTorreGestos(wrap); } catch (e) {}
+    try {
+      wrap.innerHTML = typeof generarSVGTorre === 'function' ? generarSVGTorre() : '';
+    } catch (eTorreSvg) {
+      wrap.innerHTML =
+        '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema de torre. Recarga la página (Ctrl+F5).</p>';
+      try {
+        console.error('generarSVGTorre', eTorreSvg);
+      } catch (_) {}
+    }
+    wrap.setAttribute(
+      'aria-label',
+      'Torre hidropónica: eje central, niveles y depósito. Flechas para girar; toca una cesta de frente o usa Lista.'
+    );
+    try {
+      initTorreGestos(wrap);
+    } catch (e) {}
     bindTorreCestas(wrap);
     bindTorreRotFlechas(wrap);
+    try {
+      if (typeof bindTorreScadaViewport === 'function') bindTorreScadaViewport(wrap);
+    } catch (eTorreVp) {
+      try {
+        console.error('bindTorreScadaViewport', eTorreVp);
+      } catch (_) {}
+    }
   }
 
   actualizarChromePanelEsquemaPorTipo();

@@ -1417,6 +1417,48 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   stroke: #f5f6f8;
   stroke-width: 2.5px;
 }
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--scada,
+#setupRdwcPreview .rdwc-svg-diagram--scada {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  display: block;
+}
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--scada .hc-cesta--interactive:hover .hc-cesta-hit,
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--scada .rdwc-mod-hit:focus-visible .hc-cesta-hit {
+  stroke: #1976d2;
+  stroke-width: 2;
+  fill: rgba(25, 118, 210, 0.06);
+}
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--scada .rdwc-scada-module {
+  pointer-events: none;
+}
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--scada .rdwc-loop-help-hit {
+  cursor: help;
+}
+.torre-svg-canvas--dwc-scada-coarse svg.rdwc-svg-diagram--scada,
+#setupRdwcPreview.torre-preview--rdwc .rdwc-svg-diagram--scada {
+  min-height: min(48vh, 480px);
+}
+#torreSVGWrap.torre-svg-canvas svg.nft-svg-diagram--scada,
+#torreSVGWrap.torre-svg-canvas svg.srf-svg-diagram--scada,
+#torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram--scada {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  display: block;
+}
+.torre-svg-canvas--dwc-scada-coarse svg.nft-svg-diagram--scada,
+.torre-svg-canvas--dwc-scada-coarse svg.srf-svg-diagram--scada,
+.torre-svg-canvas--dwc-scada-coarse svg.torre-svg-diagram--scada {
+  min-height: min(48vh, 460px);
+}
+#torreSVGWrap.torre-svg-canvas svg.srf-svg-diagram--scada .hc-cesta--interactive:hover .hc-cesta-hit,
+#torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram--scada .hc-cesta--interactive:hover .hc-cesta-hit {
+  stroke: #1976d2;
+  stroke-width: 2;
+  fill: rgba(25, 118, 210, 0.06);
+}
 .torre-svg-canvas--dwc-scada-vp,
 #torreSVGWrap.torre-svg-canvas--dwc-scada-vp {
   position: relative;

@@ -61,7 +61,16 @@
       typeof tipoInstalacionNormalizado === 'function'
         ? tipoInstalacionNormalizado(state.configTorre)
         : 'dwc';
-    const vacioLbl = _ti === 'nft' ? 'Hueco vacío' : _ti === 'dwc' ? 'Maceta vacía' : 'Cesta vacía';
+    const vacioLbl =
+      _ti === 'nft'
+        ? 'Hueco vacío'
+        : _ti === 'dwc'
+          ? 'Maceta vacía'
+          : _ti === 'rdwc'
+            ? 'Módulo vacío'
+            : _ti === 'srf'
+              ? 'Hueco vacío'
+              : 'Cesta vacía';
     const variedad = dat.variedad || vacioLbl;
     const dias = dat.fecha ? Math.max(0, Math.floor((Date.now() - new Date(dat.fecha)) / 86400000)) : null;
     const fotos = (dat.fotos || []).length;
@@ -133,10 +142,15 @@
     });
   }
 
-  function bindDwcScadaViewport(wrap) {
+  function bindDiagramScadaViewport(wrap, opts) {
+    opts = opts || {};
+    const svgSel = opts.svgSelector || 'svg.dwc-svg-diagram--scada';
+    const hintCopy =
+      opts.hintText ||
+      'Desliza · pellizca zoom · doble toque restablece · toca un módulo para la ficha';
     if (!wrap) return;
     disposeDwcScadaViewport(wrap);
-    const svg = wrap.querySelector('svg.dwc-svg-diagram--scada');
+    const svg = wrap.querySelector(svgSel);
     if (!svg) return;
 
     let initial = parseViewBox(svg);
@@ -204,7 +218,7 @@
     const toolbar = document.createElement('div');
     toolbar.className = 'dwc-scada-vp-toolbar';
     toolbar.setAttribute('role', 'toolbar');
-    toolbar.setAttribute('aria-label', 'Zoom del esquema DWC');
+    toolbar.setAttribute('aria-label', 'Zoom del esquema');
     toolbar.innerHTML =
       '<button type="button" class="dwc-scada-vp-btn" data-act="out" aria-label="Alejar">−</button>' +
       '<button type="button" class="dwc-scada-vp-btn" data-act="in" aria-label="Acercar">+</button>' +
@@ -217,7 +231,9 @@
       hint.className = 'dwc-scada-vp-hint';
       hint.setAttribute('role', 'status');
       hint.innerHTML =
-        '<span>Desliza · pellizca zoom · toca maceta</span>' +
+        '<span>' +
+        hintCopy +
+        '</span>' +
         '<button type="button" class="dwc-scada-vp-hint-close" aria-label="Ocultar ayuda">×</button>';
       wrap.appendChild(hint);
       hint.querySelector('.dwc-scada-vp-hint-close').addEventListener('click', () => {
@@ -252,7 +268,14 @@
       if (t.closest('.hc-torre-rot-flecha')) return false;
       if (t.closest('.dwc-scada-vp-toolbar')) return false;
       if (t.closest('.dwc-scada-vp-hint')) return false;
-      return !!(t.closest('svg.dwc-svg-diagram--scada') || t === wrap);
+      return !!(
+        t.closest('svg.dwc-svg-diagram--scada') ||
+        t.closest('svg.rdwc-svg-diagram--scada') ||
+        t.closest('svg.nft-svg-diagram--scada') ||
+        t.closest('svg.srf-svg-diagram--scada') ||
+        t.closest('svg.torre-svg-diagram--scada') ||
+        t === wrap
+      );
     }
 
     function syncPinchStart() {
@@ -268,7 +291,7 @@
     }
 
     const pointerDown = (e) => {
-      if (!canPanTarget(e.target) && !e.target.closest('svg.dwc-svg-diagram--scada')) return;
+      if (!canPanTarget(e.target) && !e.target.closest(svgSel)) return;
       if (e.pointerType === 'mouse' && e.button !== 0) return;
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -388,7 +411,43 @@
     bindDwcScadaCestaHover(wrap);
   }
 
+  function bindDwcScadaViewport(wrap) {
+    bindDiagramScadaViewport(wrap, {
+      svgSelector: 'svg.dwc-svg-diagram--scada',
+      hintText: 'Desliza · pellizca zoom · toca maceta',
+    });
+  }
+
+  function bindRdwcScadaViewport(wrap) {
+    bindDiagramScadaViewport(wrap, { svgSelector: 'svg.rdwc-svg-diagram--scada' });
+  }
+
+  function bindNftScadaViewport(wrap) {
+    bindDiagramScadaViewport(wrap, {
+      svgSelector: 'svg.nft-svg-diagram--scada',
+      hintText:
+        'Arrastra para mover · Pellizco para zoom · Doble toque restablece · Toca un hueco NFT para la ficha',
+    });
+  }
+
+  function bindSrfScadaViewport(wrap) {
+    bindDiagramScadaViewport(wrap, { svgSelector: 'svg.srf-svg-diagram--scada' });
+  }
+
+  function bindTorreScadaViewport(wrap) {
+    bindDiagramScadaViewport(wrap, {
+      svgSelector: 'svg.torre-svg-diagram--scada',
+      hintText:
+        'Arrastra para mover · Pellizco para zoom · Flechas laterales giran la torre · Toca una cesta',
+    });
+  }
+
   global.disposeDwcScadaViewport = disposeDwcScadaViewport;
+  global.bindDiagramScadaViewport = bindDiagramScadaViewport;
   global.bindDwcScadaViewport = bindDwcScadaViewport;
+  global.bindRdwcScadaViewport = bindRdwcScadaViewport;
+  global.bindNftScadaViewport = bindNftScadaViewport;
+  global.bindSrfScadaViewport = bindSrfScadaViewport;
+  global.bindTorreScadaViewport = bindTorreScadaViewport;
   global.bindDwcScadaCestaHover = bindDwcScadaCestaHover;
 })(typeof window !== 'undefined' ? window : globalThis);
