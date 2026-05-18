@@ -488,12 +488,31 @@ function dwcSvgDepDimsDesdeCfg(cfg) {
  * DWC: tapa en vista cenital (rejilla + macetas tocables) y debajo alzado frontal
  * del depósito con solución, calentador y aireador si aplica.
  */
-/** Bomba de aire externa (referencia visual DWC). */
-function dwcSvgAirPumpExternal(px, py) {
+/** Piedras difusoras sugeridas (misma lógica que checklist DWC). */
+function dwcSvgNumPiedrasDifusor(cfg) {
+  if (typeof dwcRecomendacionDifusorCompletaDesdeConfig === 'function') {
+    const rec = dwcRecomendacionDifusorCompletaDesdeConfig(cfg);
+    if (rec && rec.salidasSug > 0) return Math.min(6, Math.max(1, rec.salidasSug));
+  }
+  return 1;
+}
+
+/** Bomba de aire externa; `numOutlets` = mangueras visibles (1 salvo varias piedras). */
+function dwcSvgAirPumpExternal(px, py, numOutlets) {
   const w = 54;
   const h = 40;
   const cx = px + w / 2;
-  return (
+  const nOut = Math.max(1, Math.min(4, numOutlets || 1));
+  const outlets = [];
+  for (let i = 0; i < nOut; i++) {
+    const t = nOut === 1 ? 0.55 : (i + 0.5) / nOut;
+    outlets.push({ x: px, y: py + 12 + t * (h - 6) });
+  }
+  let connSvg = '';
+  for (const o of outlets) {
+    connSvg += `<circle cx="${o.x.toFixed(1)}" cy="${o.y.toFixed(1)}" r="2.2" fill="#cfd8dc" stroke="#546e7a" stroke-width="0.8"/>`;
+  }
+  const svg =
     `<g class="dwc-ext-pump" filter="drop-shadow(0 3px 6px rgba(15,23,42,0.15))">` +
     `<ellipse cx="${cx.toFixed(1)}" cy="${(py + h + 8).toFixed(1)}" rx="${(w * 0.4).toFixed(1)}" ry="5" fill="rgba(15,23,42,0.12)"/>` +
     `<rect x="${(px + 5).toFixed(1)}" y="${(py + h - 3).toFixed(1)}" width="5" height="4" rx="1" fill="#263238"/>` +
@@ -501,9 +520,70 @@ function dwcSvgAirPumpExternal(px, py) {
     `<rect x="${(px + 4).toFixed(1)}" y="${(py + 14).toFixed(1)}" width="${(w - 8).toFixed(1)}" height="${(h - 10).toFixed(1)}" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>` +
     `<ellipse cx="${cx.toFixed(1)}" cy="${(py + 12).toFixed(1)}" rx="${((w - 10) / 2).toFixed(1)}" ry="13" fill="url(#dwcPumpDome)" stroke="#e65100" stroke-width="2"/>` +
     `<ellipse cx="${(cx - 8).toFixed(1)}" cy="${(py + 8).toFixed(1)}" rx="7" ry="3" fill="rgba(255,255,255,0.45)"/>` +
+    connSvg +
     `<circle cx="${cx.toFixed(1)}" cy="${(py + h * 0.52).toFixed(1)}" r="9" fill="#eceff1" stroke="#78909c" stroke-width="1.2"/>` +
     `<circle cx="${cx.toFixed(1)}" cy="${(py + h * 0.52).toFixed(1)}" r="4.5" fill="none" stroke="#90a4ae" stroke-width="0.9"/>` +
+    `</g>`;
+  return { svg, outlets, w, h };
+}
+
+/** Zona de cámara de aire (entre nivel de agua y tapa). */
+function dwcSvgCamaraAireOverlay(innerX0, innerY0, innerW0, waterTopY) {
+  const top = innerY0;
+  const bot = waterTopY;
+  if (bot - top < 8) return '';
+  const mid = (top + bot) / 2;
+  const h = bot - top;
+  return (
+    `<g class="dwc-camara-aire" pointer-events="none" aria-hidden="true">` +
+    `<rect x="${innerX0.toFixed(1)}" y="${top.toFixed(1)}" width="${innerW0.toFixed(1)}" height="${h.toFixed(1)}" fill="#e0f7fa" opacity="0.5"/>` +
+    `<rect x="${innerX0.toFixed(1)}" y="${top.toFixed(1)}" width="${innerW0.toFixed(1)}" height="${h.toFixed(1)}" fill="url(#dwcAirChamberPat)" opacity="0.4"/>` +
+    `<text x="${(innerX0 + innerW0 / 2).toFixed(1)}" y="${mid.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-family="Syne,sans-serif" font-size="7.5" font-weight="800" fill="#00695c" letter-spacing="0.05em">CÁMARA DE AIRE</text>` +
     `</g>`
+  );
+}
+
+/** Huecos de cestas en la tapa (vista frontal, alineados con cenital). */
+function dwcSvgTapaHuecosFrontal(tankX, tankY, tankW, rimH, nRows, nCols, esCilindrico, svgW) {
+  let o = '';
+  if (esCilindrico) {
+    const cx = svgW / 2;
+    const holeR = Math.min(15, tankW * 0.1);
+    const cy = tankY + rimH * 0.5;
+    o +=
+      `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${holeR.toFixed(1)}" ry="${(holeR * 0.45).toFixed(1)}" fill="#1e293b" opacity="0.55"/>` +
+      `<ellipse cx="${cx.toFixed(1)}" cy="${(cy + 1).toFixed(1)}" rx="${(holeR * 0.62).toFixed(1)}" ry="${(holeR * 0.28).toFixed(1)}" fill="#0f172a" opacity="0.65"/>`;
+    return o;
+  }
+  const holeR = Math.min(10, tankW / Math.max(2.5, nCols * 2.2));
+  for (let n = 0; n < nRows; n++) {
+    for (let c = 0; c < nCols; c++) {
+      const cx = tankX + ((c + 0.5) / nCols) * tankW;
+      const cy = nRows > 1 ? tankY + ((n + 0.5) / nRows) * rimH * 0.9 : tankY + rimH * 0.48;
+      o += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${holeR.toFixed(1)}" ry="${(holeR * 0.5).toFixed(1)}" fill="#1e293b" opacity="0.52"/>`;
+    }
+  }
+  return o;
+}
+
+/** Manguera flexible bomba → pared del depósito (curva, no línea recta). */
+function dwcSvgAirHoseCurve(x1, y1, x2, y2, strokeW, opacity) {
+  const bow = Math.max(18, Math.abs(x2 - x1) * 0.35);
+  const c1x = x1 - bow;
+  const c1y = y1;
+  const c2x = x2 + bow * 0.35;
+  const c2y = y2;
+  return (
+    `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="#f5f5f5" stroke-width="${strokeW}" stroke-linecap="round" stroke-linejoin="round" opacity="${opacity}"/>` +
+    `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="#90a4ae" stroke-width="${(strokeW - 0.8).toFixed(1)}" stroke-linecap="round" opacity="${(opacity * 0.45).toFixed(2)}"/>`
+  );
+}
+
+/** Tubería interna (pared → piedra), suave y baja en el depósito. */
+function dwcSvgAirHoseInternal(x1, y1, x2, y2) {
+  const midY = (y1 + y2) / 2;
+  return (
+    `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} Q ${(x1 - 6).toFixed(1)} ${midY.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="#b0bec5" stroke-width="1.35" stroke-linecap="round" stroke-dasharray="3 2.5" opacity="0.75"/>`
   );
 }
 
@@ -548,6 +628,10 @@ function generarSVGDwc() {
   const esMulticubo =
     typeof dwcGetOxigenacionDiseno === 'function' &&
     dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  const esCilindricoDwc = !esMulticubo && formaDwc === 'cilindrico';
+  /** Cubo redondo DWC: siempre 1 maceta; tapa = mismo diámetro que el depósito. */
+  const nDraw = esCilindricoDwc ? 1 : N;
+  const cDraw = esCilindricoDwc ? 1 : C;
   /** Posiciones de piedras (cenital x, frente y) para burbujas en modo multivalvula. */
   let dwcMcAirPts = null;
   const S_mc = esMulticubo
@@ -614,7 +698,9 @@ function generarSVGDwc() {
   const planPad = esMulticubo ? 12 : 10;
   const blockW = esMulticubo
     ? mcCols * mcCubeSz + Math.max(0, mcCols - 1) * mcGapPlan + planPad * 2
-    : Math.min(320, Math.max(228, 28 + C * 30));
+    : esCilindricoDwc
+      ? Math.min(300, Math.max(220, 220))
+      : Math.min(320, Math.max(228, 28 + cDraw * 30));
   const planLeft = (W - blockW) / 2;
   const planW = blockW;
   const mcAirBandH = esMulticubo ? 34 : 0;
@@ -624,13 +710,15 @@ function generarSVGDwc() {
   const planTop = esMulticubo ? 44 : 54;
   const planH = esMulticubo
     ? mcAirBlockH + mcRows * mcCubeSz + Math.max(0, mcRows - 1) * mcGapPlan + planPad * 2
-    : Math.min(200, 28 + N * 30);
+    : esCilindricoDwc
+      ? planW
+      : Math.min(200, 28 + nDraw * 30);
   const planInnerX = planLeft + planPad;
   const planInnerY = esMulticubo ? planTop + planPad + mcAirBlockH : planTop + planPad;
   const planInnerW = planW - planPad * 2;
   const planInnerH = planH - planPad * 2;
-  const cellW = esMulticubo ? mcCubeSz : planInnerW / C;
-  const cellH = esMulticubo ? mcCubeSz : planInnerH / N;
+  const cellW = esMulticubo ? mcCubeSz : planInnerW / cDraw;
+  const cellH = esMulticubo ? mcCubeSz : planInnerH / nDraw;
   const Rpot = esMulticubo
     ? Math.max(14, Math.min(26, mcCubeSz * 0.36))
     : Math.max(7, Math.min(20, Math.min(cellW, cellH) * 0.38));
@@ -939,6 +1027,9 @@ function generarSVGDwc() {
     <linearGradient id="dwcLidTop" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e8eef4"/>
     </linearGradient>
+    <pattern id="dwcAirChamberPat" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#4dd0e1" stroke-width="1" opacity="0.35"/>
+    </pattern>
     <clipPath id="dwcTankInnerClip">${clipPathInner}</clipPath>
     ${
       formaDwc === 'cilindrico'
@@ -1002,7 +1093,7 @@ function generarSVGDwc() {
         Number.isFinite(Lcm) &&
         Number.isFinite(Wcm)
       ) {
-        const evLid = dwcEvaluarCapestEnTapa(N, C, rimMm, Lcm, Wcm, marcoMm, huecoMm, 'cilindrico');
+        const evLid = dwcEvaluarCapestEnTapa(1, 1, rimMm, Lcm, Wcm, marcoMm, huecoMm, 'cilindrico');
         if (evLid.estado === 'no') {
           const rArm = lidRInCyl * 0.72;
           const cx = lidCxCyl;
@@ -1018,9 +1109,9 @@ function generarSVGDwc() {
     }
 
     if (formaDwc === 'cilindrico') {
-      s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidROutCyl.toFixed(2)}" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
-      s += `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidRInCyl.toFixed(2)}" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
-      s += `<g clip-path="url(#dwcLidPlanClipCyl)">`;
+      s +=
+        `<circle cx="${lidCxCyl.toFixed(2)}" cy="${lidCyCyl.toFixed(2)}" r="${lidROutCyl.toFixed(2)}" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>` +
+        `<text x="${lidCxCyl.toFixed(1)}" y="${(planTop + 14).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" font-weight="700" fill="#64748b">Tapa = depósito · 1 cesta</text>`;
     } else {
       s += `<rect x="${planLeft}" y="${planTop}" width="${planW}" height="${planH}" rx="14" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 3px 10px rgba(15,23,42,0.08))"/>`;
       s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
@@ -1046,24 +1137,25 @@ function generarSVGDwc() {
         }
       }
     }
-    for (let gi = 1; gi < C; gi++) {
-      const x = planInnerX + gi * cellW;
-      s += `<line x1="${x.toFixed(1)}" y1="${planInnerY}" x2="${x.toFixed(1)}" y2="${planInnerY + planInnerH}" stroke="#e2e8f0" stroke-width="1"/>`;
-    }
-    for (let gj = 1; gj < N; gj++) {
-      const y = planInnerY + gj * cellH;
-      s += `<line x1="${planInnerX}" y1="${y.toFixed(1)}" x2="${planInnerX + planInnerW}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>`;
+    if (!esCilindricoDwc) {
+      for (let gi = 1; gi < cDraw; gi++) {
+        const x = planInnerX + gi * cellW;
+        s += `<line x1="${x.toFixed(1)}" y1="${planInnerY}" x2="${x.toFixed(1)}" y2="${planInnerY + planInnerH}" stroke="#e2e8f0" stroke-width="1"/>`;
+      }
+      for (let gj = 1; gj < nDraw; gj++) {
+        const y = planInnerY + gj * cellH;
+        s += `<line x1="${planInnerX}" y1="${y.toFixed(1)}" x2="${planInnerX + planInnerW}" y2="${y.toFixed(1)}" stroke="#e2e8f0" stroke-width="1"/>`;
+      }
     }
 
-    for (let n = 0; n < N; n++) {
-      for (let c = 0; c < C; c++) {
-        const cx = planInnerX + (c + 0.5) * cellW;
-        const cy = planInnerY + (n + 0.5) * cellH;
+    for (let n = 0; n < nDraw; n++) {
+      for (let c = 0; c < cDraw; c++) {
+        const cx = esCilindricoDwc ? lidCxCyl : planInnerX + (c + 0.5) * cellW;
+        const cy = esCilindricoDwc ? lidCyCyl : planInnerY + (n + 0.5) * cellH;
         s += macetaSvg(n, c, cx, cy, Rpot, true);
       }
     }
     if (formaDwc === 'cilindrico') {
-      s += `</g>`;
       s += dwcLidCylNoCabenOverlay;
     }
   }
@@ -1077,6 +1169,16 @@ function generarSVGDwc() {
 
   /* ── Alzado depósito (prisma / cubo isométrico, tronco piramidal o cilindro) ── */
   s += tankFrontalSvg;
+  if (!esMulticubo) {
+    s += dwcSvgTapaHuecosFrontal(tankX, tankStartY, tankW, rimH, nDraw, cDraw, esCilindricoDwc, W);
+    if (
+      (formaDwc === 'prismatico' || esCilindricoDwc) &&
+      volPct < 0.98 &&
+      waterTopY - innerY0 >= 8
+    ) {
+      s += dwcSvgCamaraAireOverlay(innerX0, innerY0, innerW0, waterTopY);
+    }
+  }
   const stoneY = innerBottom - 10;
 
   if (tieneCalentador && !esMulticubo) {
@@ -1087,22 +1189,39 @@ function generarSVGDwc() {
   }
 
   if (tieneDifusor && !esMulticubo) {
-    const pumpX = tankX + tankW + 18;
-    const pumpY = tankStartY + 12;
-    s += dwcSvgAirPumpExternal(pumpX, pumpY);
-    s += `<path d="M ${(pumpX + 4).toFixed(1)} ${(pumpY + 28).toFixed(1)} Q ${(tankX + tankW * 0.7).toFixed(1)} ${(tankStartY + tankH * 0.5).toFixed(1)} ${stoneX.toFixed(1)} ${(stoneY - 8).toFixed(1)}" fill="none" stroke="#eceff1" stroke-width="2.2" stroke-linecap="round"/>`;
-    s += `<path d="M ${(pumpX + 8).toFixed(1)} ${(pumpY + 32).toFixed(1)} Q ${(tankX + tankW * 0.55).toFixed(1)} ${(innerBottom - 8).toFixed(1)} ${(stoneX - 28).toFixed(1)} ${stoneY.toFixed(1)}" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/>`;
-    const tubeTop = tankStartY - 4;
-    s += `<line x1="${stoneX}" y1="${tubeTop}" x2="${stoneX}" y2="${stoneY - 9}" stroke="${Dw.airLine}" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.5"/>`;
-    s += `<ellipse cx="${stoneX}" cy="${stoneY}" rx="13" ry="6.5" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="1.1"/>`;
+    const stoneN = dwcSvgNumPiedrasDifusor(cfg);
+    const pumpX = tankX + tankW + 14;
+    const pumpY = tankStartY + 14;
+    const pump = dwcSvgAirPumpExternal(pumpX, pumpY, stoneN);
+    s += pump.svg;
+    const wallX = tankX + tankW;
+    const entryBaseY = tankStartY + tankH * 0.56;
+    const entryStep = stoneN > 1 ? Math.min(16, tankH * 0.14) : 0;
+    const stonePts = [];
+    const entryYs = [];
+    for (let st = 0; st < stoneN; st++) {
+      const sx = innerX0 + ((st + 0.5) / stoneN) * innerW0;
+      stonePts.push({ x: sx, y: stoneY });
+      const entryY = entryBaseY + (st - (stoneN - 1) / 2) * entryStep;
+      entryYs.push(entryY);
+      const out = pump.outlets[st] || pump.outlets[0];
+      s += dwcSvgAirHoseCurve(out.x, out.y, wallX, entryY, stoneN === 1 ? 2.4 : 2, stoneN === 1 ? 0.95 : 0.82);
+      s += `<circle cx="${wallX.toFixed(1)}" cy="${entryY.toFixed(1)}" r="2.5" fill="#eceff1" stroke="#78909c" stroke-width="0.9"/>`;
+      s += dwcSvgAirHoseInternal(wallX - 2, entryY, sx, stoneY);
+    }
+    for (let si = 0; si < stonePts.length; si++) {
+      const sp = stonePts[si];
+      s += `<ellipse cx="${sp.x.toFixed(1)}" cy="${sp.y.toFixed(1)}" rx="13" ry="6.5" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="1.1"/>`;
+    }
     if (ta) {
       for (let i = 0; i < 8; i++) {
+        const sp = stonePts[i % stonePts.length];
         const dx = (i % 5 - 2) * 4;
         const delay = (i * 0.2).toFixed(2);
         const dur = (1.05 + i * 0.1).toFixed(2);
         const y0 = stoneY - 4;
         const y1 = waterTopY + 8;
-        s += `<circle cx="${stoneX + dx}" cy="${y0}" r="${1.4 + (i % 2) * 0.6}" fill="${Dw.bubble}" opacity="0">
+        s += `<circle cx="${(sp.x + dx).toFixed(1)}" cy="${y0}" r="${1.4 + (i % 2) * 0.6}" fill="${Dw.bubble}" opacity="0">
           <animate attributeName="cy" from="${y0}" to="${y1}" dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
           <animate attributeName="opacity" values="0;0.9;0.9;0" dur="${dur}s" begin="${delay}s" repeatCount="indefinite"/>
         </circle>`;
@@ -1162,7 +1281,11 @@ function generarSVGDwc() {
   return (
     `<svg class="${dwcSvgClass}" width="${W}" height="${dwcSvgH}" viewBox="${-pad} ${-pad} ${vbW} ${vbH}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="dwcDiagTitle">` +
     `<title id="dwcDiagTitle">DWC ${formaDwcTxt}: ${
-      esMulticubo ? S_mc + ' cubos independientes' : 'tapa superior ' + N + ' por ' + C + ' macetas'
+      esMulticubo
+        ? S_mc + ' cubos independientes'
+        : esCilindricoDwc
+          ? 'cubo redondo · 1 cesta'
+          : 'tapa superior ' + nDraw + ' por ' + cDraw + ' macetas'
     }; objetivo ${objSpec.label}. ${recoCultivo ? 'Cesta recomendada ' + recoCultivo.perfil.cestaTxt + '.' : ''}${dwcTitleMulticubo}</title>${s}</svg>`
   );
 }

@@ -2275,6 +2275,14 @@ function aplicarDwcRejillaDesdeFormularioSistema(modoAplicacion) {
     showToast('Con varios cubos no aplica la rejilla de una sola tapa: indica cuántos cubos y guarda.', true);
     return;
   }
+  if (dwcNormalizeDepositoForma(cfg.dwcDepositoForma) === 'cilindrico') {
+    redimensionarMatrizTorreDwcPreservando(cfg, 1, 1);
+    guardarEstadoTorreActual();
+    saveState();
+    aplicarConfigTorre();
+    showToast('Cubo redondo: 1 cesta (sin rejilla).');
+    return;
+  }
   const o = dwcMaxCestasDesdeConfigTorre(cfg);
   const btnMax = document.getElementById('btnDwcAplicarRejillaPrincipal');
   const btnObj = document.getElementById('btnDwcAplicarRejillaSecundaria');
@@ -3583,17 +3591,24 @@ function dwcRefreshMulticuboDependienteUi(which) {
     if (wModeWrap) wModeWrap.classList.toggle('setup-hidden', !mc);
     const wNc = document.getElementById('sysDwcNumCubosWrap');
     if (wNc) wNc.classList.toggle('setup-hidden', !mc);
+    const formaSys = dwcNormalizeDepositoForma(cfg.dwcDepositoForma);
+    const hideRejillaUnido = mc || formaSys === 'cilindrico';
     const wRej = document.getElementById('sysDwcRejillaPreferidaWrap');
-    if (wRej) wRej.classList.toggle('setup-hidden', mc);
+    if (wRej) wRej.classList.toggle('setup-hidden', hideRejillaUnido);
     const wAcc = document.getElementById('sysDwcDepUnidoRejillaAccionesWrap');
-    if (wAcc) wAcc.classList.toggle('setup-hidden', mc);
+    if (wAcc) wAcc.classList.toggle('setup-hidden', hideRejillaUnido);
   } else if (which === 'setup') {
     const sel = document.getElementById('setupDwcOxigenacionDiseno');
     const mc = esMc(sel && sel.value);
     const wNc = document.getElementById('setupDwcNumCubosWrap');
     if (wNc) wNc.classList.toggle('setup-hidden', !mc);
+    const cfgSetup = state.configTorre || {};
+    const formaSetup = dwcNormalizeDepositoForma(
+      document.getElementById('setupDwcDepositoForma')?.value || cfgSetup.dwcDepositoForma
+    );
+    const hideRejillaSetup = mc || formaSetup === 'cilindrico';
     const wBl = document.getElementById('setupDwcDepUnidoRejillaWrap');
-    if (wBl) wBl.classList.toggle('setup-hidden', mc);
+    if (wBl) wBl.classList.toggle('setup-hidden', hideRejillaSetup);
     const wExtras = document.getElementById('setupDwcDepUnidoExtrasWrap');
     if (wExtras) wExtras.classList.toggle('setup-hidden', mc);
     const wLit = document.getElementById('setupDwcLitrosUtilesPorSitioWrap');
@@ -3862,6 +3877,19 @@ function onDwcFormaChanged(formIds) {
       else if (W0 != null) seed = W0;
       if (seed != null) dIn.value = String(Math.round(seed * 10) / 10);
     }
+    const cfgCyl = state.configTorre;
+    if (
+      cfgCyl &&
+      cfgCyl.tipoInstalacion === 'dwc' &&
+      dwcGetOxigenacionDiseno(cfgCyl) !== 'cubos_independientes'
+    ) {
+      try {
+        redimensionarMatrizTorreDwcPreservando(cfgCyl, 1, 1);
+        guardarEstadoTorreActual();
+        saveState();
+        aplicarConfigTorre();
+      } catch (_) {}
+    }
   }
   if (forma === 'troncopiramidal') {
     const seedPair = (fromId, toId) => {
@@ -3897,6 +3925,9 @@ function onDwcFormaChanged(formIds) {
       dwcSyncSetupMontajePreview();
       refreshDwcTapHintSetup();
     } else refreshDwcTapHintSistema();
+  } catch (_) {}
+  try {
+    dwcRefreshMulticuboDependienteUi(ids === DWC_FORM_IDS_SETUP ? 'setup' : 'sys');
   } catch (_) {}
 }
 
