@@ -308,54 +308,24 @@ function onSistemaTorreBombaUsuarioBlur() {
   }
 }
 
-function mountTorreCantidadesSlidersToSistema() {
-  const controls = document.getElementById('setupTorreBuilderControlsSlot');
-  const mount = document.getElementById('sistemaTorreCantidadesMount');
-  if (!controls || !mount) return;
-  controls.classList.remove('setup-hidden');
-  if (controls.parentElement !== mount) mount.appendChild(controls);
+/** Niveles, cestas y bomba orientativa solo en el asistente (paso Geometría), no en Cultivo e instalación. */
+function ocultarTorreMontajeWizardEnPestanaSistema() {
+  const card = document.getElementById('sistemaTorreMontajeCard');
+  if (card) {
+    card.style.display = 'none';
+    card.classList.add('setup-hidden');
+  }
+  try {
+    restaurarSetupTorreBuilderControls();
+  } catch (_) {}
 }
 
-function sincronizarSistemaTorreMontajeUI(cfg) {
-  const card = document.getElementById('sistemaTorreMontajeCard');
-  if (!card || !cfg || cfg.tipoInstalacion !== 'torre') return;
-  mountTorreCantidadesSlidersToSistema();
-  const n = Math.max(1, Math.min(10, parseInt(String(cfg.numNiveles || 5), 10) || 5));
-  const c = Math.max(1, Math.min(8, parseInt(String(cfg.numCestas || 5), 10) || 5));
-  const sn = document.getElementById('sliderNiveles');
-  const sc = document.getElementById('sliderCestas');
-  if (sn) sn.value = String(n);
-  if (sc) sc.value = String(c);
-  const vn = document.getElementById('valNiveles');
-  const vc = document.getElementById('valCestas');
-  if (vn) vn.textContent = String(n);
-  if (vc) vc.textContent = String(c);
-  const alt = Number.isFinite(parseFloat(String(cfg.alturaTorre))) ? parseFloat(String(cfg.alturaTorre)) : 1.2;
-  const sa = document.getElementById('sysSliderAltura');
-  if (sa) sa.value = String(Math.max(0.5, Math.min(3, alt)));
-  const lhT = document.getElementById('sysTorreBombaUsuarioLh');
-  const wT = document.getElementById('sysTorreBombaUsuarioW');
-  if (lhT) {
-    lhT.value =
-      cfg.torreBombaUsuarioCaudalLh != null && cfg.torreBombaUsuarioCaudalLh !== ''
-        ? String(cfg.torreBombaUsuarioCaudalLh)
-        : '';
-  }
-  if (wT) {
-    wT.value =
-      cfg.torreBombaUsuarioPotenciaW != null && cfg.torreBombaUsuarioPotenciaW !== ''
-        ? String(cfg.torreBombaUsuarioPotenciaW)
-        : '';
-  }
-  try {
-    seleccionarSistemaTorreMontajeOrigen('diy');
-  } catch (_) {}
-  try {
-    calcularBombaRecomendadaSistema();
-  } catch (_) {}
-  try {
-    refrescarUIMensajeBombaUsuarioTorreSistema();
-  } catch (_) {}
+function mountTorreCantidadesSlidersToSistema() {
+  ocultarTorreMontajeWizardEnPestanaSistema();
+}
+
+function sincronizarSistemaTorreMontajeUI(_cfg) {
+  ocultarTorreMontajeWizardEnPestanaSistema();
 }
 
 function aplicarSistemaTorreMontajeDesdeFormulario() {
@@ -3499,7 +3469,7 @@ function refrescarSistemaDatosFacilesBanner(cfg) {
       'SRF: mide el estanque (L×A×profundidad útil) y huecos en la balsa. Aireación y litros de mezcla pueden quedar orientativos hasta que los completes.';
   } else {
     el.textContent =
-      'Torre vertical: niveles y cestas por nivel en el bloque de abajo; altura y bomba orientativa según tu montaje (kit o DIY).';
+      'Torre vertical: objetivo de cosecha y estrategia EC/pH aquí; niveles, cestas y bomba solo en el asistente de configuración o al reconfigurar la instalación.';
   }
 }
 
@@ -3530,13 +3500,12 @@ function sincronizarSistemaNftMontajeUI() {
   }
   if (torreMontajeCard) {
     if (cfg && cfg.tipoInstalacion === 'torre') {
-      torreMontajeCard.style.display = 'block';
-      torreMontajeCard.classList.remove('setup-hidden');
       try {
-        sincronizarSistemaTorreMontajeUI(cfg);
+        ocultarTorreMontajeWizardEnPestanaSistema();
       } catch (_) {}
     } else {
       torreMontajeCard.style.display = 'none';
+      torreMontajeCard.classList.add('setup-hidden');
       try {
         restaurarSetupTorreBuilderControls();
       } catch (_) {}
