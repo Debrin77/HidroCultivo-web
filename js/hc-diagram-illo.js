@@ -6,30 +6,35 @@
   'use strict';
 
   var HC_ILLO = {
-    ink: '#1e3a5f',
+    ink: '#0f2744',
     inkSoft: '#334155',
-    water0: '#38bdf8',
-    water1: '#0284c7',
-    water2: '#0369a1',
-    lid: '#475569',
-    lidHi: '#64748b',
-    lidDark: '#334155',
-    pot: '#f8fafc',
-    potRim: '#cbd5e1',
-    mesh: '#94a3b8',
-    pump: '#f97316',
-    pumpHi: '#fdba74',
-    pumpDark: '#c2410c',
-    pipe: '#2563eb',
+    water0: '#4fc3f7',
+    water1: '#0288d1',
+    water2: '#01579b',
+    waterGlass: 'rgba(79,195,247,0.35)',
+    lid: '#546e7a',
+    lidHi: '#90a4ae',
+    lidDark: '#37474f',
+    pot: '#eceff1',
+    potRim: '#ffffff',
+    potInner: '#b0bec5',
+    mesh: '#78909c',
+    pump: '#ff9800',
+    pumpHi: '#ffb74d',
+    pumpDark: '#e65100',
+    pipe: '#1976d2',
     flow: '#22c55e',
     bubble: '#ffffff',
-    stone: '#64748b',
+    stone: '#546e7a',
+    stoneHi: '#78909c',
     cal: '#fb923c',
-    bg0: '#f0f9ff',
-    bg1: '#e0f2fe',
-    bucket: '#94a3b8',
-    bucketHi: '#cbd5e1',
-    bucketRim: '#475569',
+    bg0: '#e3f2fd',
+    bg1: '#bbdefb',
+    bucket: '#42a5f5',
+    bucketHi: '#64b5f6',
+    bucketDeep: '#1565c0',
+    bucketRim: '#37474f',
+    spec: 'rgba(255,255,255,0.72)',
   };
 
   var _seq = 0;
@@ -141,14 +146,777 @@
       u +
       '-lid" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' +
       HC_ILLO.lidHi +
+      '"/><stop offset="55%" stop-color="' +
+      HC_ILLO.lid +
       '"/><stop offset="100%" stop-color="' +
       HC_ILLO.lidDark +
       '"/></linearGradient>' +
+      '<linearGradient id="' +
+      u +
+      '-tank-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' +
+      HC_ILLO.bucketHi +
+      '"/><stop offset="45%" stop-color="' +
+      HC_ILLO.bucket +
+      '"/><stop offset="100%" stop-color="' +
+      HC_ILLO.bucketDeep +
+      '"/></linearGradient>' +
+      '<linearGradient id="' +
+      u +
+      '-water-inner" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#81d4fa" stop-opacity="0.9"/><stop offset="100%" stop-color="' +
+      HC_ILLO.water1 +
+      '"/></linearGradient>' +
+      '<linearGradient id="' +
+      u +
+      '-pump-dome" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' +
+      HC_ILLO.pumpHi +
+      '"/><stop offset="100%" stop-color="' +
+      HC_ILLO.pump +
+      '"/></linearGradient>' +
+      '<pattern id="' +
+      u +
+      '-mesh" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 4 L4 0" stroke="' +
+      HC_ILLO.mesh +
+      '" stroke-width="0.45" opacity="0.35"/></pattern>' +
       '<filter id="' +
       u +
-      '-sh" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0f172a" flood-opacity="0.12"/></filter>' +
+      '-sh" x="-12%" y="-12%" width="124%" height="124%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.18"/></filter>' +
+      '<filter id="' +
+      u +
+      '-glow"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
       '</defs>'
     );
+  }
+
+  /** Punto en tapa isométrica (rejilla N×C). */
+  function dwcLidPoint(ox, oy, lidW, skX, skY, col, cols, row, rows) {
+    var tx = cols <= 1 ? 0.5 : col / (cols - 1);
+    var ty = rows <= 1 ? 0.5 : row / (rows - 1);
+    var x0 = ox;
+    var y0 = oy;
+    var x1 = ox + lidW;
+    var y1 = oy;
+    var x2 = ox + lidW + skX;
+    var y2 = oy + skY;
+    var x3 = ox + skX;
+    var y3 = oy + skY;
+    var cx =
+      (1 - tx) * (1 - ty) * x0 + tx * (1 - ty) * x1 + tx * ty * x2 + (1 - tx) * ty * x3;
+    var cy =
+      (1 - tx) * (1 - ty) * y0 + tx * (1 - ty) * y1 + tx * ty * y2 + (1 - tx) * ty * y3;
+    return { x: cx, y: cy };
+  }
+
+  /** Maceta vista superior con aro blanco y rejilla interna (estilo referencia). */
+  function netPotTop(cx, cy, r, u, n, c, cfg, extraClass) {
+    var gid = u + '-np-' + n + '-' + c;
+    var dat = cellData(n, c);
+    var aria = escAria((dat.variedad || 'Hueco vacío') + ', fila ' + (n + 1) + ' columna ' + (c + 1));
+    var s = '';
+    s +=
+      '<g id="' +
+      gid +
+      '" data-n="' +
+      n +
+      '" data-c="' +
+      c +
+      '" class="hc-cesta hc-cesta--interactive hc-illo-pot ' +
+      (extraClass || 'dwc-maceta') +
+      '" role="button" tabindex="0" aria-label="' +
+      aria +
+      '">';
+    s +=
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(cy + 1) +
+      '" rx="' +
+      f1(r + 1) +
+      '" ry="' +
+      f1(r * 0.38 + 1) +
+      '" fill="rgba(15,23,42,0.12)"/>';
+    s +=
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(cy) +
+      '" rx="' +
+      f1(r + 2.5) +
+      '" ry="' +
+      f1(r * 0.42 + 1.2) +
+      '" fill="' +
+      HC_ILLO.potRim +
+      '" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2.2"/>';
+    s +=
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(cy) +
+      '" rx="' +
+      f1(r) +
+      '" ry="' +
+      f1(r * 0.38) +
+      '" fill="' +
+      HC_ILLO.potInner +
+      '" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="1.4"/>';
+    s +=
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(cy) +
+      '" rx="' +
+      f1(r - 1) +
+      '" ry="' +
+      f1(r * 0.34) +
+      '" fill="url(#' +
+      u +
+      '-mesh)" opacity="0.85"/>';
+    var nSlats = 5;
+    for (var si = 0; si < nSlats; si++) {
+      var t = (si + 1) / (nSlats + 1);
+      var xL = cx - r * 0.72 + t * r * 1.44;
+      s +=
+        '<line x1="' +
+        f1(xL) +
+        '" y1="' +
+        f1(cy - r * 0.28) +
+        '" x2="' +
+        f1(xL) +
+        '" y2="' +
+        f1(cy + r * 0.28) +
+        '" stroke="' +
+        HC_ILLO.mesh +
+        '" stroke-width="0.9" opacity="0.7"/>';
+    }
+    s +=
+      '<ellipse cx="' +
+      f1(cx - r * 0.35) +
+      '" cy="' +
+      f1(cy - r * 0.12) +
+      '" rx="' +
+      f1(r * 0.22) +
+      '" ry="' +
+      f1(r * 0.08) +
+      '" fill="' +
+      HC_ILLO.spec +
+      '" opacity="0.55"/>';
+    s += '</g>';
+    return s;
+  }
+
+  function airStone(x, y, u, ta, scale) {
+    scale = scale || 1;
+    var rx = 14 * scale;
+    var ry = 5 * scale;
+    var s = '';
+    s +=
+      '<ellipse cx="' +
+      f1(x) +
+      '" cy="' +
+      f1(y) +
+      '" rx="' +
+      f1(rx) +
+      '" ry="' +
+      f1(ry) +
+      '" fill="' +
+      HC_ILLO.stone +
+      '" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="1.5"/>';
+    for (var pi = 0; pi < 6; pi++) {
+      var ang = (pi / 6) * Math.PI * 2;
+      s +=
+        '<circle cx="' +
+        f1(x + Math.cos(ang) * rx * 0.45) +
+        '" cy="' +
+        f1(y + Math.sin(ang) * ry * 0.35) +
+        '" r="' +
+        f1(1.2 * scale) +
+        '" fill="' +
+        HC_ILLO.stoneHi +
+        '" opacity="0.85"/>';
+    }
+    s += bubbles(x, y - 4, y - 38 * scale, ta, Math.round(9 * scale));
+    return s;
+  }
+
+  function airPumpModern(x, y, w, h, u) {
+    w = w || 56;
+    h = h || 40;
+    var cx = x + w / 2;
+    return (
+      '<g filter="url(#' +
+      u +
+      '-sh)">' +
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(y + h + 7) +
+      '" rx="' +
+      f1(w * 0.42) +
+      '" ry="5" fill="rgba(15,23,42,0.15)"/>' +
+      '<rect x="' +
+      f1(x + 4) +
+      '" y="' +
+      f1(y + h - 4) +
+      '" width="' +
+      (w - 8) +
+      '" height="6" rx="2" fill="#263238"/>' +
+      '<rect x="' +
+      f1(x + 6) +
+      '" y="' +
+      f1(y + h - 2) +
+      '" width="5" height="4" rx="1" fill="#1e293b"/>' +
+      '<rect x="' +
+      f1(x + w - 11) +
+      '" y="' +
+      f1(y + h - 2) +
+      '" width="5" height="4" rx="1" fill="#1e293b"/>' +
+      '<rect x="' +
+      f1(x + 3) +
+      '" y="' +
+      f1(y + 14) +
+      '" width="' +
+      (w - 6) +
+      '" height="' +
+      (h - 12) +
+      '" rx="5" fill="#37474f" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>' +
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(y + 12) +
+      '" rx="' +
+      f1(w / 2 - 4) +
+      '" ry="' +
+      f1(14) +
+      '" fill="url(#' +
+      u +
+      '-pump-dome)" stroke="' +
+      HC_ILLO.pumpDark +
+      '" stroke-width="2"/>' +
+      '<ellipse cx="' +
+      f1(cx - w * 0.12) +
+      '" cy="' +
+      f1(y + 8) +
+      '" rx="' +
+      f1(w * 0.18) +
+      '" ry="4" fill="' +
+      HC_ILLO.spec +
+      '" opacity="0.5"/>' +
+      '<circle cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(y + h * 0.55) +
+      '" r="' +
+      f1(Math.min(11, w * 0.16)) +
+      '" fill="#eceff1" stroke="' +
+      HC_ILLO.inkSoft +
+      '" stroke-width="1.2"/>' +
+      '<circle cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(y + h * 0.55) +
+      '" r="' +
+      f1(Math.min(6, w * 0.09)) +
+      '" fill="none" stroke="' +
+      HC_ILLO.mesh +
+      '" stroke-width="0.8" opacity="0.6"/>' +
+      '</g>'
+    );
+  }
+
+  /**
+   * Depósito DWC en vista 3/4 con frontal semitransparente (referencia: cubo azul + tapa + bomba).
+   */
+  function dwcHeroSingleTank(W, N, C, cfg, u, volPct, ta, tieneDifusor, tieneCalentador) {
+    var forma = dwcFormaIllo(cfg);
+    var skX = Math.min(52, 28 + N * 4);
+    var skY = Math.min(30, 16 + N * 3);
+    var lidW = Math.min(360, Math.max(200, 88 + C * 26));
+    var ox = (W - lidW - skX) / 2;
+    var oy = 58;
+    var tankH = Math.min(128, 96 + Math.round(N * 4));
+    var xBL = ox;
+    var yBL = oy;
+    var xBR = ox + lidW;
+    var yBR = oy;
+    var xFR = ox + lidW + skX;
+    var yFR = oy + skY;
+    var xFL = ox + skX;
+    var yFL = oy + skY;
+    var botInset = forma === 'troncopiramidal' ? Math.min(34, lidW * 0.11) : 0;
+    var xFLb = xFL + botInset;
+    var xFRb = xFR - botInset;
+    var yBotFL = yFL + tankH;
+    var yBotFR = yFR + tankH;
+    var yBotBL = yBL + tankH;
+    var yBotBR = yBR + tankH;
+    var waterY = yBotFL - tankH * (1 - volPct);
+    var s = '';
+
+    s +=
+      '<ellipse cx="' +
+      f1(ox + lidW / 2 + skX / 2) +
+      '" cy="' +
+      f1(yBotFR + 14) +
+      '" rx="' +
+      f1(lidW * 0.48) +
+      '" ry="10" fill="rgba(15,23,42,0.1)"/>';
+
+    s +=
+      '<polygon points="' +
+      f1(xBR) +
+      ',' +
+      f1(yBR) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yFR) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yBotFR) +
+      ' ' +
+      f1(xBR) +
+      ',' +
+      f1(yBotBR) +
+      '" fill="url(#' +
+      u +
+      '-tank-body)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2.2" stroke-linejoin="round"/>';
+
+    s +=
+      '<polygon points="' +
+      f1(xFL) +
+      ',' +
+      f1(yFL) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yFR) +
+      ' ' +
+      f1(xFRb) +
+      ',' +
+      f1(yBotFR) +
+      ' ' +
+      f1(xFLb) +
+      ',' +
+      f1(yBotFL) +
+      '" fill="url(#' +
+      u +
+      '-tank-body)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2.4" stroke-linejoin="round" opacity="0.92"/>';
+
+    s +=
+      '<clipPath id="' +
+      u +
+      '-hero-clip"><polygon points="' +
+      f1(xFL + 3) +
+      ',' +
+      f1(yFL + 8) +
+      ' ' +
+      f1(xFR - 3) +
+      ',' +
+      f1(yFR + 8) +
+      ' ' +
+      f1(xFRb - 3) +
+      ',' +
+      f1(yBotFR - 6) +
+      ' ' +
+      f1(xFLb + 3) +
+      ',' +
+      f1(yBotFL - 6) +
+      '"/></clipPath>';
+    s += '<g clip-path="url(#' + u + '-hero-clip)">';
+    s +=
+      '<polygon points="' +
+      f1(xFLb) +
+      ',' +
+      f1(waterY) +
+      ' ' +
+      f1(xFRb) +
+      ',' +
+      f1(waterY) +
+      ' ' +
+      f1(xFRb) +
+      ',' +
+      f1(yBotFR) +
+      ' ' +
+      f1(xFLb) +
+      ',' +
+      f1(yBotFL) +
+      '" fill="url(#' +
+      u +
+      '-water-inner)"/>';
+    if (waterY > yFL + 14) {
+      var airL = xFL + (xFLb - xFL) * ((waterY - yFL) / tankH);
+      var airR = xFR - (xFR - xFRb) * ((waterY - yFL) / tankH);
+      s +=
+        '<polygon points="' +
+        f1(xFL) +
+        ',' +
+        f1(yFL + 8) +
+        ' ' +
+        f1(xFR) +
+        ',' +
+        f1(yFR + 8) +
+        ' ' +
+        f1(airR) +
+        ',' +
+        f1(waterY) +
+        ' ' +
+        f1(airL) +
+        ',' +
+        f1(waterY) +
+        '" fill="#e1f5fe" opacity="0.75"/>';
+    }
+    var stoneN = C >= 4 ? 2 : 1;
+    for (var st = 0; st < stoneN; st++) {
+      var sx = xFLb + ((st + 1) / (stoneN + 1)) * (xFRb - xFLb);
+      if (tieneDifusor) s += airStone(sx, yBotFL - 14, u, ta, stoneN === 1 ? 1 : 0.85);
+    }
+    s += '</g>';
+
+    s +=
+      '<line x1="' +
+      f1(xFL) +
+      '" y1="' +
+      f1(yFL) +
+      '" x2="' +
+      f1(xFL) +
+      '" y2="' +
+      f1(yBotFL) +
+      '" stroke="' +
+      HC_ILLO.spec +
+      '" stroke-width="2" opacity="0.45"/>';
+    s +=
+      '<line x1="' +
+      f1(xBL) +
+      '" y1="' +
+      f1(yBL) +
+      '" x2="' +
+      f1(xFL) +
+      '" y2="' +
+      f1(yFL) +
+      '" stroke="' +
+      HC_ILLO.spec +
+      '" stroke-width="1.8" opacity="0.35"/>';
+
+    s +=
+      '<polygon points="' +
+      f1(xBL) +
+      ',' +
+      f1(yBL) +
+      ' ' +
+      f1(xBR) +
+      ',' +
+      f1(yBR) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yFR) +
+      ' ' +
+      f1(xFL) +
+      ',' +
+      f1(yFL) +
+      '" fill="url(#' +
+      u +
+      '-lid)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2.6" stroke-linejoin="round" filter="url(#' +
+      u +
+      '-sh)"/>';
+    s +=
+      '<polygon points="' +
+      f1(xBL + 4) +
+      ',' +
+      f1(yBL + 5) +
+      ' ' +
+      f1(xBR - 4) +
+      ',' +
+      f1(yBR + 5) +
+      ' ' +
+      f1(xFR - 6) +
+      ',' +
+      f1(yFR + 7) +
+      ' ' +
+      f1(xFL + 6) +
+      ',' +
+      f1(yFL + 7) +
+      '" fill="none" stroke="' +
+      HC_ILLO.lidHi +
+      '" stroke-width="1" opacity="0.5"/>';
+    if (forma === 'troncopiramidal') {
+      var tIn = 16;
+      var tBot = lidW - 32;
+      var tcx = ox + lidW / 2 + skX / 2;
+      s +=
+        '<path d="M ' +
+        f1(tcx - (lidW - 2 * tIn) / 2) +
+        ' ' +
+        f1(oy + 6) +
+        ' L ' +
+        f1(tcx + (lidW - 2 * tIn) / 2) +
+        ' ' +
+        f1(oy + 6) +
+        ' L ' +
+        f1(tcx + tBot / 2) +
+        ' ' +
+        f1(oy + skY - 4) +
+        ' L ' +
+        f1(tcx - tBot / 2) +
+        ' ' +
+        f1(oy + skY - 4) +
+        ' Z" fill="none" stroke="' +
+        HC_ILLO.inkSoft +
+        '" stroke-width="1.3" opacity="0.55"/>';
+    }
+
+    var potR = Math.max(7, Math.min(15, (lidW / C) * 0.22));
+    for (var rn = 0; rn < N; rn++) {
+      for (var cc = 0; cc < C; cc++) {
+        var pt = dwcLidPoint(ox, oy, lidW, skX, skY, cc, C, rn, N);
+        s += netPotTop(pt.x, pt.y, potR, u, rn, cc, cfg, 'dwc-maceta');
+      }
+    }
+
+    if (tieneDifusor) {
+      var pumpX = xFR + 22;
+      var pumpY = oy + skY * 0.5;
+      s += airPumpModern(pumpX, pumpY, 56, 42, u);
+      s +=
+        '<path d="M ' +
+        f1(pumpX + 4) +
+        ' ' +
+        f1(pumpY + 22) +
+        ' Q ' +
+        f1(pumpX - 28) +
+        ' ' +
+        f1(yBotFL - 20) +
+        ' ' +
+        f1(xFL + (xFR - xFL) * 0.35) +
+        ' ' +
+        f1(yBotFL - 10) +
+        '" fill="none" stroke="#eceff1" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>';
+      if (stoneN >= 2) {
+        s +=
+          '<path d="M ' +
+          f1(pumpX + 8) +
+          ' ' +
+          f1(pumpY + 24) +
+          ' Q ' +
+          f1(pumpX - 10) +
+          ' ' +
+          f1(yBotFL - 8) +
+          ' ' +
+          f1(xFL + (xFR - xFL) * 0.65) +
+          ' ' +
+          f1(yBotFL - 10) +
+          '" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" opacity="0.75"/>';
+      }
+    }
+
+    s +=
+      '<path d="M ' +
+      f1(xBL - 6) +
+      ' ' +
+      f1(yBL + tankH * 0.45) +
+      ' L ' +
+      f1(xBL - 18) +
+      ' ' +
+      f1(yBL + tankH * 0.38) +
+      ' L ' +
+      f1(xBL - 18) +
+      ' ' +
+      f1(yBL + tankH * 0.52) +
+      ' Z" fill="' +
+      HC_ILLO.pipe +
+      '" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="1.5"/>';
+    s +=
+      '<rect x="' +
+      f1(xBL - 20) +
+      '" y="' +
+      f1(yBL + tankH * 0.36) +
+      '" width="4" height="' +
+      f1(tankH * 0.18) +
+      '" rx="1" fill="' +
+      HC_ILLO.pipe +
+      '" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="1"/>';
+
+    if (tieneCalentador) {
+      s +=
+        '<rect x="' +
+        f1(xFL + 10) +
+        '" y="' +
+        f1(yFL + 16) +
+        '" width="7" height="' +
+        f1(tankH - 36) +
+        '" rx="3" fill="' +
+        HC_ILLO.cal +
+        '" stroke="' +
+        HC_ILLO.pumpDark +
+        '" stroke-width="1.2" opacity="0.9"/>';
+    }
+
+    var footY = yBotFR + 36;
+    return { svg: s, footY: footY, ox: ox, lidW: lidW, skX: skX };
+  }
+
+  /** Cubo DWC mini (multiválvula): misma familia visual, escala reducida. */
+  function dwcMiniBucket(cx, cy, bw, bh, idx, u, cfg, ta, tieneDifusor) {
+    var skX = bw * 0.22;
+    var skY = bh * 0.14;
+    var ox = cx - bw / 2;
+    var oy = cy - bh / 2 + 4;
+    var lidW = bw - 4;
+    var tankH = bh * 0.52;
+    var xBL = ox;
+    var yBL = oy;
+    var xBR = ox + lidW;
+    var xFR = ox + lidW + skX;
+    var yFR = oy + skY;
+    var xFL = ox + skX;
+    var yFL = oy + skY;
+    var yBotFL = yFL + tankH;
+    var yBotFR = yFR + tankH;
+    var s = '';
+    s +=
+      '<polygon points="' +
+      f1(xBR) +
+      ',' +
+      f1(yBL) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yFR) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yBotFR) +
+      ' ' +
+      f1(xBR) +
+      ',' +
+      f1(yBotFL) +
+      '" fill="url(#' +
+      u +
+      '-tank-body)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="1.8"/>';
+    s +=
+      '<polygon points="' +
+      f1(xFL) +
+      ',' +
+      f1(yFL) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yFR) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yBotFR) +
+      ' ' +
+      f1(xFL) +
+      ',' +
+      f1(yBotFL) +
+      '" fill="url(#' +
+      u +
+      '-water-inner)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2" opacity="0.95"/>';
+    s +=
+      '<polygon points="' +
+      f1(xBL) +
+      ',' +
+      f1(yBL) +
+      ' ' +
+      f1(xBR) +
+      ',' +
+      f1(yBL) +
+      ' ' +
+      f1(xFR) +
+      ',' +
+      f1(yFR) +
+      ' ' +
+      f1(xFL) +
+      ',' +
+      f1(yFL) +
+      '" fill="url(#' +
+      u +
+      '-lid)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>';
+    var pr = Math.min(10, bw * 0.14);
+    s += netPotTop(cx, oy + skY * 0.45, pr, u, 0, idx, cfg, 'dwc-maceta');
+    if (tieneDifusor) s += airStone(cx, yBotFL - 6, u, ta, 0.55);
+    s +=
+      '<text x="' +
+      f1(cx) +
+      '" y="' +
+      f1(yBotFR + 12) +
+      '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" font-weight="700" fill="' +
+      HC_ILLO.inkSoft +
+      '">' +
+      (idx + 1) +
+      '</text>';
+    return s;
+  }
+
+  function dwcHeroMultivalve(W, S, mcCols, mcRows, cfg, u, volEtiqueta, ta, tieneDifusor) {
+    var gap = 14;
+    var bw = Math.min(96, Math.max(72, (W - 100 - (mcCols - 1) * gap) / mcCols));
+    var bh = Math.min(108, bw * 1.12);
+    var gridW = mcCols * bw + (mcCols - 1) * gap;
+    var x0 = (W - gridW) / 2;
+    var y0 = 78;
+    var s = '';
+    s += airPumpModern(W - 88, 52, 62, 46, u);
+    s +=
+      '<rect x="' +
+      f1(W - 94) +
+      '" y="48" width="74" height="54" rx="10" fill="rgba(255,255,255,0.35)" stroke="' +
+      HC_ILLO.pumpDark +
+      '" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.85"/>';
+    s += illoText(W - 57, 66, 'BOMBA', 'section');
+    s += illoText(W - 57, 78, 'MULTIVÁLVULA', 'hint');
+    for (var idx = 0; idx < S; idx++) {
+      var fr = Math.floor(idx / mcCols);
+      var fc = idx % mcCols;
+      var bx = x0 + fc * (bw + gap) + bw / 2;
+      var by = y0 + fr * (bh + gap) + bh / 2;
+      s += dwcMiniBucket(bx, by, bw, bh, idx, u, cfg, ta, tieneDifusor);
+      if (tieneDifusor) {
+        s +=
+          '<path d="M ' +
+          f1(W - 86) +
+          ' ' +
+          f1(78) +
+          ' Q ' +
+          f1((W - 86 + bx) / 2) +
+          ' ' +
+          f1(by - bh * 0.35) +
+          ' ' +
+          f1(bx) +
+          ' ' +
+          f1(by - bh * 0.42) +
+          '" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" opacity="' +
+          (0.55 + (idx % 3) * 0.12) +
+          '"/>';
+      }
+    }
+    var footY = y0 + mcRows * (bh + gap) + 8;
+    return { svg: s, footY: footY };
   }
 
   function flowArrow(x1, y1, x2, y2) {
@@ -1372,8 +2140,8 @@
     return s;
   }
 
-  window.hcIlloGenerarSVGDwc = function () {
-    var cfg = (typeof state !== 'undefined' ? state.configTorre : {}) || {};
+  window.hcIlloGenerarSVGDwc = function (cfgOverride) {
+    var cfg = cfgOverride || (typeof state !== 'undefined' ? state.configTorre : {}) || {};
     var N = Math.max(1, Math.min(12, cfg.numNiveles || 2));
     var C = Math.max(1, Math.min(12, cfg.numCestas || 3));
     var ta = animOn();
@@ -1405,79 +2173,41 @@
       mcRows = g.rows;
     }
     var u = uid('dwc');
-    var W = esMulticubo ? Math.min(640, 120 + mcCols * 92) : Math.min(520, Math.max(400, 80 + C * 32));
+    var W = esMulticubo
+      ? Math.min(720, 140 + mcCols * 108)
+      : Math.min(560, Math.max(420, 120 + C * 28));
     var body = defsBlock(u);
     body += '<rect width="' + W + '" height="900" fill="url(#' + u + '-bg)"/>';
-    body += illoText(W / 2, 24, 'DWC · depósito ' + (esMulticubo ? 'multiválvula' : N + '×' + C), 'title');
-    body += illoText(W / 2, 40, 'Toca cada maceta para asignar cultivo', 'subtitle');
+    body += illoText(
+      W / 2,
+      26,
+      'DWC · ' + (esMulticubo ? 'multiválvula · ' + S_mc + ' cubos' : N + '×' + C + ' macetas'),
+      'title'
+    );
+    body += illoText(W / 2, 42, 'Toca cada maceta para asignar cultivo', 'subtitle');
 
     if (esMulticubo) {
-      var gap = 18;
-      var bw = Math.min(80, (W - 48 - (mcCols - 1) * gap) / mcCols);
-      var bh = 88;
-      var gridW = mcCols * bw + (mcCols - 1) * gap;
-      var x0 = (W - gridW) / 2;
-      var y0 = 68;
-      body += airPump(W - 76, y0, 48, 32, u);
-      body +=
-        '<line x1="' +
-        f1(W - 52) +
-        '" y1="' +
-        f1(y0 + 18) +
-        '" x2="' +
-        f1(W - gridW / 2 - 20) +
-        '" y2="' +
-        f1(y0 + 18) +
-        '" stroke="#fff" stroke-width="2" stroke-dasharray="4 3"/>';
-      for (var idx = 0; idx < S_mc; idx++) {
-        var fr = Math.floor(idx / mcCols);
-        var fc = idx % mcCols;
-        var bx = x0 + fc * (bw + gap) + bw / 2;
-        var by = y0 + fr * (bh + gap) + bh / 2;
-        body += bucket3d(bx, by, bw, bh, 0, idx, u, cfg, 'Cubo ' + (idx + 1));
-      }
-      var footY = y0 + mcRows * (bh + gap) + 20;
-      body +=
-        '<text x="' +
-        (W / 2) +
-        '" y="' +
-        footY +
-        '" text-anchor="middle" font-family="Syne,sans-serif" font-size="18" font-weight="900" fill="' +
-        HC_ILLO.water1 +
-        '">' +
-        volEtiqueta +
-        ' L</text>';
-      return svgWrap('dwc-svg-diagram dwc-svg-diagram--multicubo hc-illo-dwc', W, footY + 24, u + '-title', 'DWC multiválvula', body);
+      var mcScene = dwcHeroMultivalve(W, S_mc, mcCols, mcRows, cfg, u, volEtiqueta, ta, tieneDifusor);
+      body += mcScene.svg;
+      body += illoText(W / 2, mcScene.footY + 18, '~' + volEtiqueta + ' L por cubo', 'vol');
+      return svgWrap(
+        'dwc-svg-diagram dwc-svg-diagram--multicubo hc-illo-dwc hc-illo-dwc--hero',
+        W,
+        mcScene.footY + 40,
+        u + '-title',
+        'DWC multiválvula',
+        body
+      );
     }
 
-    var L = dwcLayoutUnificado(N, C, W);
-    body += dwcVistaSuperiorTapa(L, N, C, u, cfg);
-    var front = dwcVistaFrontalDeposito(L, N, C, volPct, u, ta, tieneDifusor, tieneCalentador, cfg);
-    body += front.svg;
-    if (tieneDifusor) {
-      var pumpX = L.planLeft + L.blockW + 14;
-      var pumpY = L.planTop + L.planH * 0.35;
-      if (pumpX + 54 > W - 8) {
-        pumpX = L.planLeft - 58;
-      }
-      body += airPump(pumpX, pumpY, 48, 32, u);
-      body +=
-        '<path d="M ' +
-        f1(pumpX + (pumpX < L.planLeft ? 48 : 0)) +
-        ' ' +
-        f1(pumpY + 16) +
-        ' L ' +
-        f1(L.planLeft + L.blockW - 8) +
-        ' ' +
-        f1(L.planTop + L.planH * 0.55) +
-        '" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="4 3" opacity="0.85"/>';
-    }
-    body += illoText(W / 2, front.footY, volEtiqueta + ' L', 'vol');
-    body += illoText(W / 2, front.footY + 14, 'Volumen de mezcla en el depósito', 'hint');
+    var hero = dwcHeroSingleTank(W, N, C, cfg, u, volPct, ta, tieneDifusor, tieneCalentador);
+    body += hero.svg;
+    body += illoText(W / 2, hero.footY, volEtiqueta + ' L', 'vol');
+    body += illoText(W / 2, hero.footY + 14, 'Volumen de mezcla en el depósito', 'hint');
     return svgWrap(
-      'dwc-svg-diagram hc-illo-dwc',
+      'dwc-svg-diagram hc-illo-dwc hc-illo-dwc--hero',
       W,
-      front.footY + 28,
+      hero.footY + 28,
       u + '-title',
       'DWC ' + N + '×' + C,
       body

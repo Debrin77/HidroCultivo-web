@@ -1412,6 +1412,16 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 #torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--multicubo.hc-illo-dwc {
   min-height: min(58vh, 720px);
 }
+#torreSVGWrap.torre-svg-canvas svg.hc-illo-dwc--hero,
+.torre-preview--dwc .hc-illo-dwc--hero {
+  min-height: min(52vh, 520px);
+}
+#torreSVGWrap.torre-svg-canvas svg.hc-illo-dwc--hero.dwc-svg-diagram--multicubo {
+  min-height: min(56vh, 600px);
+}
+.hc-illo-dwc--hero .hc-illo-pot:hover ellipse {
+  filter: brightness(1.06);
+}
 #torreSVGWrap.torre-svg-canvas svg.hc-illo-rdwc {
   min-height: min(56vh, 680px);
 }
