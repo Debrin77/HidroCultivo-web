@@ -2141,38 +2141,27 @@
   }
 
   /**
-   * DWC: delega en generarSVGDwc (torre-render-build.js), que es el motor probado
-   * (tapa alineada + alzado, multiválvula, macetas interactivas).
+   * DWC: delega en buildDwcDiagramSvg / generarSVGDwc (js/diagrams/dwc/dwc-diagram.js).
    */
   window.hcIlloGenerarSVGDwc = function (cfgOverride) {
-    if (typeof generarSVGDwc !== 'function') return '';
-    if (!cfgOverride) return generarSVGDwc();
-    var prevCfg = typeof state !== 'undefined' ? state.configTorre : null;
-    var prevTorre = typeof state !== 'undefined' ? state.torre : null;
-    var draft = Object.assign({ tipoInstalacion: 'dwc' }, cfgOverride);
-    var N = Math.max(1, draft.numNiveles || 1);
-    var C = Math.max(1, draft.numCestas || 1);
-    var emptyCell = function () {
-      return { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
-    };
-    var torrePreview = [];
-    for (var n = 0; n < N; n++) {
-      var row = [];
-      for (var c = 0; c < C; c++) row.push(emptyCell());
-      torrePreview.push(row);
-    }
-    if (typeof state !== 'undefined') {
-      state.configTorre = draft;
-      state.torre = torrePreview;
-    }
-    try {
-      return generarSVGDwc();
-    } finally {
-      if (typeof state !== 'undefined') {
-        state.configTorre = prevCfg;
-        state.torre = prevTorre;
+    if (typeof buildDwcDiagramSvg === 'function') {
+      if (!cfgOverride) return buildDwcDiagramSvg();
+      var draft = Object.assign({ tipoInstalacion: 'dwc' }, cfgOverride);
+      var N = Math.max(1, draft.numNiveles || 1);
+      var C = Math.max(1, draft.numCestas || 1);
+      var emptyCell = function () {
+        return { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
+      };
+      var torrePreview = [];
+      for (var n = 0; n < N; n++) {
+        var row = [];
+        for (var c = 0; c < C; c++) row.push(emptyCell());
+        torrePreview.push(row);
       }
+      return buildDwcDiagramSvg(draft, torrePreview);
     }
+    if (typeof generarSVGDwc !== 'function') return '';
+    return generarSVGDwc();
   };
 
   window.hcIlloGenerarSVGSrf = function () {
