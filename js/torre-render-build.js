@@ -527,20 +527,47 @@ function dwcSvgAirPumpExternal(px, py, numOutlets) {
   return { svg, outlets, w, h };
 }
 
-/** Zona de cámara de aire (entre nivel de agua y tapa). */
-function dwcSvgCamaraAireOverlay(innerX0, innerY0, innerW0, waterTopY) {
-  const top = innerY0;
-  const bot = waterTopY;
-  if (bot - top < 8) return '';
-  const mid = (top + bot) / 2;
-  const h = bot - top;
+/** Zona de cámara de aire (clip #dwcAirChamberClip definido en el SVG; sin etiqueta). */
+function dwcSvgCamaraAireOverlay(waterLinePts) {
   return (
-    `<g class="dwc-camara-aire" pointer-events="none" aria-hidden="true">` +
-    `<rect x="${innerX0.toFixed(1)}" y="${top.toFixed(1)}" width="${innerW0.toFixed(1)}" height="${h.toFixed(1)}" fill="#e0f7fa" opacity="0.5"/>` +
-    `<rect x="${innerX0.toFixed(1)}" y="${top.toFixed(1)}" width="${innerW0.toFixed(1)}" height="${h.toFixed(1)}" fill="url(#dwcAirChamberPat)" opacity="0.4"/>` +
-    `<text x="${(innerX0 + innerW0 / 2).toFixed(1)}" y="${mid.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-family="Syne,sans-serif" font-size="7.5" font-weight="800" fill="#00695c" letter-spacing="0.05em">CÁMARA DE AIRE</text>` +
+    `<g class="dwc-camara-aire" clip-path="url(#dwcAirChamberClip)" pointer-events="none">` +
+    `<rect x="-20" y="-20" width="800" height="600" fill="#e0f7fa" opacity="0.92"/>` +
+    `<rect x="-20" y="-20" width="800" height="600" fill="url(#dwcAirChamberPat)" opacity="0.55"/>` +
+    (waterLinePts
+      ? `<polyline points="${waterLinePts}" fill="none" stroke="#00acc1" stroke-width="2.2" stroke-linecap="round" opacity="0.95"/>`
+      : '') +
     `</g>`
   );
+}
+
+/** Manguera continua bomba → piedra (una sola línea). */
+function dwcSvgAirHosePumpToStone(xPump, yPump, wallX, entryY, stoneX, stoneY, strokeW, opacity) {
+  const bow = Math.max(16, Math.abs(wallX - xPump) * 0.34);
+  const c1x = xPump - bow;
+  const c1y = yPump;
+  const c2x = wallX + bow * 0.22;
+  const c2y = entryY;
+  const midY = (entryY + stoneY) * 0.5;
+  const c3x = wallX - Math.max(10, (wallX - stoneX) * 0.35);
+  const c3y = midY;
+  const c4x = stoneX + 6;
+  const c4y = stoneY - 4;
+  const op = opacity != null ? opacity : 0.92;
+  const sw = strokeW != null ? strokeW : 2.2;
+  const d =
+    `M ${xPump.toFixed(1)} ${yPump.toFixed(1)} ` +
+    `C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${wallX.toFixed(1)} ${entryY.toFixed(1)} ` +
+    `S ${c4x.toFixed(1)} ${c4y.toFixed(1)} ${stoneX.toFixed(1)} ${stoneY.toFixed(1)}`;
+  return (
+    `<path d="${d}" fill="none" stroke="#eceff1" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" opacity="${op}"/>` +
+    `<path d="${d}" fill="none" stroke="#78909c" stroke-width="${(sw - 0.7).toFixed(1)}" stroke-linecap="round" opacity="${(op * 0.35).toFixed(2)}"/>`
+  );
+}
+
+/** X del borde derecho del tronco a una altura y. */
+function dwcTroncoXRightAtY(tr, y) {
+  const u = (y - tr.yt) / Math.max(1e-6, tr.yb - tr.yt);
+  return tr.xRt + (tr.xRb - tr.xRt) * Math.max(0, Math.min(1, u));
 }
 
 /** Huecos de cestas en la tapa (vista frontal, alineados con cenital). */
@@ -608,6 +635,9 @@ function generarSVGDwc() {
     volMax > 0
       ? Math.min(1, Math.max(0, volTrabajo / Math.max(1, volMax)))
       : 0;
+  /** En DWC siempre hay cámara de aire bajo la tapa; el esquema reserva ese hueco. */
+  const DWC_CAMARA_AIRE_FRAC_MIN = 0.15;
+  const volPctAguaDibujo = Math.min(volPct > 0 ? volPct : 0.72, 1 - DWC_CAMARA_AIRE_FRAC_MIN);
   const tieneDifusor = state.configTorre?.equipamiento?.includes('difusor') ?? true;
   const tieneCalentador = state.configTorre?.equipamiento?.includes('calentador') ?? true;
   const objSpec =
@@ -865,9 +895,13 @@ function generarSVGDwc() {
   let hx = innerX0 + 22;
   let stoneX = innerX0 + innerW0 - 32;
   let innerBottom = innerY0 + innerH0;
-  let waterTopY = innerY0 + innerH0 * (1 - volPct);
+  let waterTopY = innerY0 + innerH0 * (1 - volPctAguaDibujo);
   let waveY = innerY0 + innerH0 * 0.35;
   const tankFaceInset = 4;
+  let dwcTroncoFront = null;
+  let airChamberClipInner = '';
+  let airChamberTopY = innerY0;
+  let airChamberWaterLine = '';
 
   if (esMulticubo) {
     const S = S_mc;
@@ -903,7 +937,7 @@ function generarSVGDwc() {
         stroke="${Dw.airLine}" stroke-width="1.4" stroke-dasharray="4 2.5" opacity="0.85"/>`;
       dropSvg += `<circle cx="${cx.toFixed(1)}" cy="${(iy - 2).toFixed(1)}" r="2" fill="#0ea5e9" stroke="#0369a1" stroke-width="0.7"/>`;
       cuboSvg += `<rect x="${x}" y="${y}" width="${miniW}" height="${miniH}" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.15"/>`;
-      const wTop = iy + ih * (1 - volPct);
+      const wTop = iy + ih * (1 - volPctAguaDibujo);
       cuboSvg += `<rect x="${ix}" y="${iy}" width="${iw}" height="${Math.max(0, wTop - iy).toFixed(1)}" fill="#f0f9ff" opacity="0.48"/>`;
       cuboSvg += `<rect x="${ix}" y="${wTop.toFixed(1)}" width="${iw}" height="${(iy + ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
       cuboSvg += `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="0.95" opacity="0.38"/>`;
@@ -930,7 +964,7 @@ function generarSVGDwc() {
     tankFrontalSvg = airHeaderSvg + dropSvg + cuboSvg;
   } else if (formaDwc === 'cilindrico') {
     clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
-    waterTopY = innerY0 + innerH0 * (1 - volPct);
+    waterTopY = innerY0 + innerH0 * (1 - volPctAguaDibujo);
     innerBottom = innerY0 + innerH0;
     waveY = innerY0 + innerH0 * 0.35;
     hx = innerX0 + 22;
@@ -940,9 +974,7 @@ function generarSVGDwc() {
       `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>` +
       `<ellipse cx="${W / 2}" cy="${tankStartY + rimH / 2}" rx="${tankW / 2}" ry="${rimH / 2}" fill="none" stroke="#475569" stroke-width="1.2" opacity="0.55"/>` +
       `<ellipse cx="${W / 2}" cy="${tankStartY + tankH + 4}" rx="${(tankW - tankFaceInset * 2) / 2}" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.35"/>` +
-      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5" fill="rgba(255,255,255,0.35)" stroke="none"/>` +
       `<g clip-path="url(#dwcTankInnerClip)">` +
-      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${Math.max(0, waterTopY - innerY0).toFixed(1)}" fill="#f0f9ff" opacity="0.5"/>` +
       `<rect x="${innerX0}" y="${waterTopY.toFixed(1)}" width="${innerW0}" height="${(innerBottom - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
       (ta
         ? `<path d="M ${innerX0 + 18} ${waveY} Q ${innerX0 + innerW0 / 2} ${innerY0 + innerH0 * 0.28} ${innerX0 + innerW0 - 22} ${innerY0 + innerH0 * 0.4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.4"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
@@ -961,7 +993,7 @@ function generarSVGDwc() {
     const xLb = cxm - wb / 2;
     const xRb = cxm + wb / 2;
     innerBottom = yb;
-    const uFill = Math.min(1, Math.max(0, volPct));
+    const uFill = Math.min(1, Math.max(0, volPctAguaDibujo));
     const ySurf = yb - (yb - yt) * uFill;
     const uS = Math.max(0, Math.min(1, (ySurf - yt) / Math.max(1e-6, yb - yt)));
     const xLs = xLt + (xLb - xLt) * uS;
@@ -971,12 +1003,15 @@ function generarSVGDwc() {
     waveY = ySurf + (yb - ySurf) * 0.38;
     hx = xLb + Math.max(16, (xRb - xLb) * 0.12);
     stoneX = xRb - Math.max(24, (xRb - xLb) * 0.2);
+    dwcTroncoFront = { xLt, xRt, xLb, xRb, yt, yb, ySurf, xLs, xRs };
+    airChamberTopY = yt;
+    airChamberClipInner = `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRs},${ySurf} ${xLs},${ySurf}"/>`;
+    airChamberWaterLine = `${xLs.toFixed(1)},${ySurf.toFixed(1)} ${xRs.toFixed(1)},${ySurf.toFixed(1)}`;
     tankFrontalSvg =
       `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>` +
       `<polygon points="${xLt},${yt - 1} ${xRt},${yt - 1} ${xRt},${yt} ${xLt},${yt}" fill="#e2e8f0" stroke="#64748b" stroke-width="1.1"/>` +
       `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRb},${yb} ${xLb},${yb}" fill="url(#dwcTankFace)" stroke="#64748b" stroke-width="1.35"/>` +
       `<g clip-path="url(#dwcTankInnerClip)">` +
-      `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRs},${ySurf} ${xLs},${ySurf}" fill="#f0f9ff" opacity="0.55"/>` +
       `<polygon points="${xLs},${ySurf} ${xRs},${ySurf} ${xRb},${yb} ${xLb},${yb}" fill="url(#dwcWaterGrad)"/>` +
       (ta
         ? `<path d="M ${xLs + (xRs - xLs) * 0.15} ${waveY} Q ${(xLs + xRs) / 2} ${waveY - 6} ${xRs - (xRs - xLs) * 0.18} ${waveY + 4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.45"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
@@ -985,7 +1020,7 @@ function generarSVGDwc() {
       `<polygon points="${xLt},${yt} ${xRt},${yt} ${xRb},${yb} ${xLb},${yb}" fill="none" stroke="#0ea5e9" stroke-width="1.25" opacity="0.42"/>`;
   } else {
     clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
-    waterTopY = innerY0 + innerH0 * (1 - volPct);
+    waterTopY = innerY0 + innerH0 * (1 - volPctAguaDibujo);
     innerBottom = innerY0 + innerH0;
     waveY = innerY0 + innerH0 * 0.35;
     hx = innerX0 + 22;
@@ -993,9 +1028,7 @@ function generarSVGDwc() {
     tankFrontalSvg =
       `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#cfd8dc" stroke="#455a64" stroke-width="1.5"/>` +
       `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankBlue)" stroke="#1565c0" stroke-width="2"/>` +
-      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="6" fill="rgba(227,242,253,0.45)" stroke="none"/>` +
       `<g clip-path="url(#dwcTankInnerClip)">` +
-      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${Math.max(0, waterTopY - innerY0).toFixed(1)}" fill="#e1f5fe" opacity="0.85"/>` +
       `<rect x="${innerX0}" y="${waterTopY.toFixed(1)}" width="${innerW0}" height="${(innerBottom - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
       (ta
         ? `<path d="M ${innerX0 + 18} ${waveY} Q ${innerX0 + innerW0 / 2} ${innerY0 + innerH0 * 0.28} ${innerX0 + innerW0 - 22} ${innerY0 + innerH0 * 0.4}" fill="none" stroke="#b3e5fc" stroke-width="1.2" opacity="0.55"><animate attributeName="opacity" values="0.25;0.65;0.25" dur="2.6s" repeatCount="indefinite"/></path>`
@@ -1005,7 +1038,16 @@ function generarSVGDwc() {
       `<line x1="${(tankX + 4).toFixed(1)}" y1="${(tankStartY + 6).toFixed(1)}" x2="${(tankX + tankW - 4).toFixed(1)}" y2="${(tankStartY + 6).toFixed(1)}" stroke="rgba(255,255,255,0.55)" stroke-width="1.5"/>`;
   }
 
+  if (!esMulticubo && !airChamberClipInner) {
+    const airH = Math.max(10, waterTopY - airChamberTopY);
+    airChamberClipInner =
+      `<rect x="${innerX0.toFixed(1)}" y="${airChamberTopY.toFixed(1)}" width="${innerW0.toFixed(1)}" height="${airH.toFixed(1)}" rx="4"/>`;
+    airChamberWaterLine =
+      `${innerX0.toFixed(1)},${waterTopY.toFixed(1)} ${(innerX0 + innerW0).toFixed(1)},${waterTopY.toFixed(1)}`;
+  }
+
   const dwcSvgH = Math.max(H, tankGraphicBottom + 40);
+  const dwcShowCamaraAire = !esMulticubo && !!airChamberClipInner;
 
   let s = '';
   s += `<defs>
@@ -1027,10 +1069,11 @@ function generarSVGDwc() {
     <linearGradient id="dwcLidTop" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e8eef4"/>
     </linearGradient>
-    <pattern id="dwcAirChamberPat" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-      <line x1="0" y1="0" x2="0" y2="8" stroke="#4dd0e1" stroke-width="1" opacity="0.35"/>
+    <pattern id="dwcAirChamberPat" width="10" height="10" patternUnits="userSpaceOnUse">
+      <circle cx="5" cy="5" r="1.2" fill="#4dd0e1" opacity="0.45"/>
     </pattern>
     <clipPath id="dwcTankInnerClip">${clipPathInner}</clipPath>
+    ${airChamberClipInner ? `<clipPath id="dwcAirChamberClip">${airChamberClipInner}</clipPath>` : ''}
     ${
       formaDwc === 'cilindrico'
         ? `<clipPath id="dwcLidPlanClipCyl"><circle cx="${(planLeft + planW / 2).toFixed(2)}" cy="${(planTop + planH / 2).toFixed(2)}" r="${Math.max(12, Math.min(planW, planH) / 2 - 1 - planPad).toFixed(2)}"/></clipPath>`
@@ -1171,21 +1214,34 @@ function generarSVGDwc() {
   s += tankFrontalSvg;
   if (!esMulticubo) {
     s += dwcSvgTapaHuecosFrontal(tankX, tankStartY, tankW, rimH, nDraw, cDraw, esCilindricoDwc, W);
-    if (
-      (formaDwc === 'prismatico' || esCilindricoDwc) &&
-      volPct < 0.98 &&
-      waterTopY - innerY0 >= 8
-    ) {
-      s += dwcSvgCamaraAireOverlay(innerX0, innerY0, innerW0, waterTopY);
-    }
   }
   const stoneY = innerBottom - 10;
 
   if (tieneCalentador && !esMulticubo) {
-    const hxCal = innerX0 + innerW0 - 16;
-    const hTop = innerBottom - 44;
-    s += `<rect x="${(hxCal - 4).toFixed(1)}" y="${hTop.toFixed(1)}" width="8" height="${(innerBottom - hTop - 4).toFixed(1)}" rx="4" fill="${Dw.calFill}" stroke="${Dw.calStroke}" stroke-width="1" opacity="0.92"/>`;
-    s += `<text x="${hxCal.toFixed(1)}" y="${(innerBottom + 10).toFixed(1)}" font-family="Inconsolata,monospace" font-size="6.5" fill="${Dw.calText}" text-anchor="middle" font-weight="800">CAL</text>`;
+    let hxCal;
+    let hTop;
+    let hH;
+    if (dwcTroncoFront) {
+      const tr = dwcTroncoFront;
+      const hBot = tr.yb - 7;
+      hH = Math.min(34, Math.max(14, hBot - tr.ySurf - 10));
+      hTop = hBot - hH;
+      if (hTop < tr.ySurf + 5) {
+        hTop = tr.ySurf + 5;
+        hH = Math.max(10, hBot - hTop);
+      }
+      const hMid = hTop + hH / 2;
+      hxCal = dwcTroncoXRightAtY(tr, hMid) - 11;
+    } else {
+      hxCal = innerX0 + innerW0 - 14;
+      hTop = Math.max(waterTopY + 6, innerBottom - 40);
+      hH = innerBottom - hTop - 5;
+    }
+    if (hH > 8) {
+      s +=
+        `<rect x="${(hxCal - 4).toFixed(1)}" y="${hTop.toFixed(1)}" width="8" height="${hH.toFixed(1)}" rx="4" fill="${Dw.calFill}" stroke="${Dw.calStroke}" stroke-width="1" opacity="0.92"/>` +
+        `<text x="${(hxCal).toFixed(1)}" y="${(hTop + hH + 10).toFixed(1)}" font-family="Inconsolata,monospace" font-size="6.5" fill="${Dw.calText}" text-anchor="middle" font-weight="800">CAL</text>`;
+    }
   }
 
   if (tieneDifusor && !esMulticubo) {
@@ -1194,20 +1250,31 @@ function generarSVGDwc() {
     const pumpY = tankStartY + 14;
     const pump = dwcSvgAirPumpExternal(pumpX, pumpY, stoneN);
     s += pump.svg;
-    const wallX = tankX + tankW;
     const entryBaseY = tankStartY + tankH * 0.56;
     const entryStep = stoneN > 1 ? Math.min(16, tankH * 0.14) : 0;
     const stonePts = [];
-    const entryYs = [];
     for (let st = 0; st < stoneN; st++) {
-      const sx = innerX0 + ((st + 0.5) / stoneN) * innerW0;
+      let sx;
+      if (dwcTroncoFront) {
+        const tr = dwcTroncoFront;
+        sx = tr.xLb + ((st + 0.5) / stoneN) * (tr.xRb - tr.xLb);
+      } else {
+        sx = innerX0 + ((st + 0.5) / stoneN) * innerW0;
+      }
       stonePts.push({ x: sx, y: stoneY });
       const entryY = entryBaseY + (st - (stoneN - 1) / 2) * entryStep;
-      entryYs.push(entryY);
+      const wallX = dwcTroncoFront ? dwcTroncoXRightAtY(dwcTroncoFront, entryY) : tankX + tankW;
       const out = pump.outlets[st] || pump.outlets[0];
-      s += dwcSvgAirHoseCurve(out.x, out.y, wallX, entryY, stoneN === 1 ? 2.4 : 2, stoneN === 1 ? 0.95 : 0.82);
-      s += `<circle cx="${wallX.toFixed(1)}" cy="${entryY.toFixed(1)}" r="2.5" fill="#eceff1" stroke="#78909c" stroke-width="0.9"/>`;
-      s += dwcSvgAirHoseInternal(wallX - 2, entryY, sx, stoneY);
+      s += dwcSvgAirHosePumpToStone(
+        out.x,
+        out.y,
+        wallX,
+        entryY,
+        sx,
+        stoneY,
+        stoneN === 1 ? 2.4 : 2,
+        stoneN === 1 ? 0.95 : 0.85
+      );
     }
     for (let si = 0; si < stonePts.length; si++) {
       const sp = stonePts[si];
@@ -1227,7 +1294,11 @@ function generarSVGDwc() {
         </circle>`;
       }
     }
-  } else if (tieneDifusor && esMulticubo && dwcMcAirPts && dwcMcAirPts.length) {
+  }
+  if (dwcShowCamaraAire) {
+    s += dwcSvgCamaraAireOverlay(airChamberWaterLine);
+  }
+  if (tieneDifusor && esMulticubo && dwcMcAirPts && dwcMcAirPts.length) {
     if (ta) {
       let bi = 0;
       for (const pt of dwcMcAirPts) {
