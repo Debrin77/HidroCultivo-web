@@ -1401,6 +1401,22 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   min-height: min(56vh, 680px);
   overflow: visible;
 }
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--scada {
+  min-height: min(58vh, 700px);
+}
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--scada .hc-cesta--interactive:hover circle {
+  filter: drop-shadow(0 0 6px rgba(25, 118, 210, 0.45));
+  stroke-width: 2.6;
+}
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--scada .hc-cesta--interactive:focus-visible circle {
+  stroke: #1976d2;
+  stroke-width: 3;
+}
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--scada .dwc-scada-callout text {
+  paint-order: stroke fill;
+  stroke: #f5f6f8;
+  stroke-width: 2.5px;
+}
 #torreSVGWrap.torre-svg-canvas svg.hc-illo-diagram {
   width: 100%;
   height: auto;
