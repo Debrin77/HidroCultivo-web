@@ -92,7 +92,7 @@ function renderTorre() {
     wrap.setAttribute(
       'aria-label',
       dwcMcAria
-        ? 'DWC multivalvula: vista cenital de cada cubo con su maceta; debajo, reparto de aire. Toca una maceta para cultivo o usa Lista.'
+        ? 'DWC multiválvula: vista cenital (arriba) y frontal (abajo). Toca una maceta para cultivo o usa Lista.'
         : 'DWC: tapa en vista superior con macetas y esquema frontal del depósito. Toca una maceta para la ficha o usa Lista.'
     );
     try {

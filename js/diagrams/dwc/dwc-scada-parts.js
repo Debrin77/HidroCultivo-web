@@ -163,10 +163,6 @@
     if (tieneDifusor) {
       o += `<ellipse cx="${f1(cx)}" cy="${f1(sy)}" rx="8" ry="4" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.9"/>`;
     }
-    o += `<text x="${f1(cx)}" y="${f1(y + h + 11)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7.5" font-weight="700" fill="${T.inkSoft}">Cubo ${idx + 1}</text>`;
-    if (volPerCubo != null) {
-      o += `<text x="${f1(cx)}" y="${f1(y + h + 21)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8" font-weight="800" fill="#0369a1">${volPerCubo} L</text>`;
-    }
     if (tieneDifusor && ta) {
       for (let bi = 0; bi < 3; bi++) {
         const dx = (bi - 1) * 3;

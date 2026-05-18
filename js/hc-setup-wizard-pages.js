@@ -76,8 +76,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     isParedSerp ? 58 : 54,
     Math.min(74, Math.floor((isParedSerp ? 840 : 820) / Math.max(nCh, 1)))
   );
-  /** Cabecera: espacio mínimo según tamaño de título (serpentín no lleva leyenda Canal/Cesta bajo el subtítulo). */
-  const topPad = Math.max(isParedSerp ? 80 : 38, hdrSerpPad.topPadMin);
+  const topPad = Math.max(isParedSerp ? 44 : 32, hdrSerpPad.topPadMin);
   const botTank = 162;
   const stairExtra = dispLayout === 'escalera' ? Math.max(0, nCh - 1) * 28 : 0;
   const H = topPad + nCh * rowStep + botTank + stairExtra;
@@ -166,8 +165,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
-  const tLabelFsSerpBase = nCh >= 10 ? 12 : nCh >= 6 ? 13 : 14;
-  const tLabelFsSerp = isParedSerp ? tLabelFsSerpBase + 2.25 : tLabelFsSerpBase;
   const cxTubeSerp = (xL + xR) / 2;
   for (let i = 0; i < nCh; i++) {
     const yRi = yRow(i);
@@ -191,22 +188,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '"' +
       peNone +
       '/>';
-    channels +=
-      '<text x="' +
-      cxTubeSerp +
-      '" y="' +
-      (yc - 6) +
-      '" text-anchor="middle" dominant-baseline="auto" font-size="' +
-      tLabelFsSerp +
-      '" class="svg-paint-order-stroke" font-weight="900" fill="' +
-      P.labelHole +
-      '" stroke="' +
-      P.textHalo +
-      '" stroke-width="0.45" stroke-opacity="0.9"' +
-      peNone +
-      '>T' +
-      (i + 1) +
-      '</text>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -215,19 +196,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
-  const bombaFsSerp = nCh >= 10 ? 9 : 10;
-  const bombaYSerp = Math.min(yRow(0) - tubeH - 16, yOutlet - 26);
-  flowLayer +=
-    '<text x="' +
-    (xSupplyOut - 3) +
-    '" y="' +
-    bombaYSerp +
-    '" text-anchor="end" font-size="' +
-    bombaFsSerp +
-    '" font-weight="800" fill="' +
-    P.bombaText +
-    '">BOMBA ↑</text>';
-
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
     dispLayout === 'pared' ? 6.2 : 5.6,
@@ -382,14 +350,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       P.calStroke +
       '" stroke-width="1.2"/>';
     tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="' + P.calGlow + '"/>';
-    tankLayer +=
-      '<text x="' +
-      hx +
-      '" y="' +
-      (tankY + tankH - 2) +
-      '" text-anchor="middle" font-size="7.5" font-weight="800" fill="' +
-      P.calText +
-      '">CAL</text>';
   }
   if (showDifusor) {
     const ax = tx + tankW - 18;
@@ -420,37 +380,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       const bx = ax + (bi % 3 - 1) * 4;
       tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="' + P.bubble + '" opacity="0.9"/>';
     }
-    tankLayer +=
-      '<text x="' +
-      ax +
-      '" y="' +
-      (tankY + tankH - 2) +
-      '" text-anchor="middle" font-size="7.5" font-weight="800" fill="' +
-      P.airText +
-      '">AIR</text>';
   }
 
   const pumpLines = '';
-
   let scadaCallouts = '';
-  if (interactive && typeof dwcScadaParts !== 'undefined') {
-    const SC = dwcScadaParts;
-    scadaCallouts +=
-      '<g class="nft-scada-callouts" pointer-events="none" aria-hidden="true">' +
-      SC.callout(tx + tankW + 14, tankY + tankH / 2, tx + tankW, tankY + tankH / 2, 'Depósito nutriente', {
-        anchor: 'start',
-      }) +
-      SC.callout(xSupplyOut - 6, bombaYSerp, xSupplyOut, bombaYSerp, 'Bomba · subida', { anchor: 'end' }) +
-      SC.callout(
-        (xL + xR) / 2,
-        yRow(0) - tubeH - 22,
-        (xL + padFlow + xR - padFlow) / 2,
-        yRow(0) - tubeH - 4,
-        'Manifold / canales',
-        { anchor: 'middle' }
-      ) +
-      '</g>';
-  }
 
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
@@ -459,32 +392,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer = '<g pointer-events="none">' + tankLayer + '</g>';
   }
 
-  const layoutFoot =
-    dispLayout === 'escalera' ? 'Escalera' : dispLayout === 'pared' ? 'Pared (zigzag)' : 'Mesa';
-  let foot =
-    'NFT ' +
-    layoutFoot +
-    ' · línea azul = agua · ' +
-    nCh +
-    ' tubos · ' +
-    huecosN +
-    ' huecos/tubo · ' +
-    pend +
-    '% pendiente';
-  if (bomb) {
-    const minV = bomb.volMinDepositoSugeridoL;
-    const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
-    if (vol < minV) {
-      foot += ' · ⚠ revisar depósito (orientativo: por debajo del mínimo útil)';
-    } else if (vol < recV) {
-      foot += ' · ⚠ revisar margen de depósito en panel';
-    }
+  const foot = vol + ' L · vista cenital';
+
+  let diagramLabels = '';
+  if (typeof hcDiagramViewLabelSvg === 'function') {
+    diagramLabels = hcDiagramViewLabelSvg(cx, 16, 'cenital', { pointerEvents: false });
   }
-  try {
-    const recoTxt = nftRecomendacionCultivoTextoCorto(cfg);
-    if (recoTxt) foot += ' · ' + recoTxt;
-  } catch (_) {}
-  foot += NFT_SVG_FOOT_ORIENT_HINT;
 
   return (
     '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll' +
@@ -499,9 +412,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '<title id="' +
     tid +
     '">' +
-    escSvgText(
-      'Diagrama NFT en serpentín: recorrido del agua desde el depósito por los tubos y retorno. ' + foot
-    ) +
+    escSvgText('NFT serpentín · ' + foot) +
     '</title>' +
     '<defs>' +
     '<linearGradient id="' +
@@ -533,6 +444,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     P.waterOp1 +
     '"/></linearGradient>' +
     '</defs>' +
+    diagramLabels +
     back +
     channels +
     flowLayer +
@@ -614,9 +526,6 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     (schFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
-  back +=
-    '<text x="' + (W0 - 8) + '" y="' + (yBot + 14) + '" text-anchor="end" fill="' + P.retornoLabel + '" font-size="8" font-weight="800">Agua retorno</text>';
-
   let tankLayer = '';
   tankLayer +=
     '<rect x="' +
@@ -644,14 +553,6 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     '" font-size="12" font-weight="900" font-family="system-ui,sans-serif">' +
     vol +
     ' L</text>';
-  tankLayer +=
-    '<text x="' +
-    volCxSch +
-    '" y="' +
-    (tankTop + tankH + 14) +
-    '" text-anchor="middle" fill="' +
-    P.depositoSub +
-    '" font-size="9" font-weight="800">Depósito · recirculación</text>';
 
   if (showCalentador) {
     const hx = tx + 16;
@@ -666,14 +567,6 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       P.calStroke +
       '" stroke-width="1.2"/>';
     tankLayer += '<circle cx="' + hx + '" cy="' + (tankTop + tankH - 40) + '" r="3.5" fill="' + P.calGlow + '"/>';
-    tankLayer +=
-      '<text x="' +
-      hx +
-      '" y="' +
-      (tankTop + tankH + 2) +
-      '" text-anchor="middle" font-size="7" font-weight="800" fill="' +
-      P.calTextSch +
-      '">CAL</text>';
   }
   if (showDifusor) {
     const ax = tx + tankW - 20;
@@ -704,14 +597,6 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       const bx = ax + (bi % 3 - 1) * 4;
       tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 6 - bi * 3) + '" r="1.6" fill="' + P.bubbleSch + '" opacity="0.85"/>';
     }
-    tankLayer +=
-      '<text x="' +
-      ax +
-      '" y="' +
-      (tankTop + tankH + 2) +
-      '" text-anchor="middle" font-size="7" font-weight="800" fill="' +
-      P.line475 +
-      '">AIR</text>';
   }
 
   let plumbing = '';
@@ -725,28 +610,6 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     '" stroke="' +
     P.pumpCircleStroke +
     '" stroke-width="1"/>';
-  plumbing +=
-    '<text x="' +
-    cx +
-    '" y="' +
-    (tankTop - 7) +
-    '" text-anchor="middle" fill="' +
-    P.pumpLetter +
-    '" font-size="10" font-weight="900">B</text>';
-  if (bomb) {
-    const txB = cx + 15;
-    const y1 = tankTop - 14;
-    plumbing +=
-      '<text x="' +
-      txB +
-      '" y="' +
-      y1 +
-      '" text-anchor="start" fill="' +
-      P.ramalText +
-      '" font-size="7" font-weight="800" font-family="system-ui,sans-serif">' +
-      'Bomba 24 h · criterio en asistente</text>';
-  }
-
   const riserY1 = tankTop;
   const riserY2 = yMan + 3;
   plumbing += '<line x1="' + cx + '" y1="' + riserY1 + '" x2="' + cx + '" y2="' + riserY2 + '" ' + pipeGrey + ' opacity="0.65"/>';
@@ -924,28 +787,17 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
     plumbing = '<g pointer-events="none">' + plumbing + '</g>';
   }
 
-  let footSub = nCh + ' canales · ' + huecosN + ' huecos/canal · ' + pend + '% pendiente';
-  if (bomb) {
-    footSub += ' · circulación 24 h · ver asistente / checklist';
-    const minV = bomb.volMinDepositoSugeridoL;
-    const recV = bomb.volDepositoRecomendadoL != null ? bomb.volDepositoRecomendadoL : minV;
-    if (vol < minV) {
-      footSub += ' · ⚠ revisar depósito (orientativo)';
-    } else if (vol < recV) {
-      footSub += ' · ⚠ margen depósito: ver panel';
-    }
+  let schLabels = '';
+  if (typeof hcDiagramViewLabelSvg === 'function') {
+    schLabels = hcDiagramViewLabelSvg(cxTitle, 18, 'frontal', { pointerEvents: false });
   }
-  try {
-    const recoTxt2 = nftRecomendacionCultivoTextoCorto(EO.cfgSnapshot || {});
-    if (recoTxt2) footSub += ' · ' + recoTxt2;
-  } catch (_) {}
 
   return (
     '<svg class="torre-svg-diagram nft-diagram--scroll svg-fit-block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + Wsvg + ' ' + H + '" width="100%" ' +
       'preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
       tid +
       '">' +
-      '<title id="' + tid + '">NFT: circuito de agua desde el depósito a los canales y retorno; tubos con huecos de plantación</title>' +
+      '<title id="' + tid + '">NFT esquema · ' + vol + ' L · vista frontal</title>' +
       '<defs>' +
       '<linearGradient id="' +
       gidFilm +
@@ -976,25 +828,11 @@ function buildNftSchematicSvg(canales, huecos, pendPct, volL, svgIdSuffix, equip
       P.filmWaterOp1 +
       '"/></linearGradient>' +
       '</defs>' +
-      '<text x="' +
-      cxTitle +
-      '" y="22" text-anchor="middle" fill="' +
-      P.schematicTitle +
-      '" font-size="10.5" font-weight="800" font-family="system-ui,Segoe UI,sans-serif">' +
-      'Bomba · subida → manifold → canales (pendiente) → retorno al depósito</text>' +
+      schLabels +
       back +
       tankLayer +
       chParts.join('') +
       plumbing +
-      '<text x="' +
-      cxTitle +
-      '" y="' +
-      (H - 6) +
-      '" text-anchor="middle" fill="' +
-      P.schematicFoot +
-      '" font-size="8.5" font-weight="700" font-family="system-ui,sans-serif">' +
-      footSub +
-      '</text>' +
       '</svg>'
   );
 }
@@ -1291,11 +1129,8 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
     typeof hcDistribuirFilasColumnas === 'function'
       ? hcDistribuirFilasColumnas(n, 6)
       : { cols: n <= 6 ? n : 6, rows: n <= 6 ? 1 : Math.ceil(n / 6) };
-  const row = document.createElement('div');
-  row.className = 'dwc-setup-mc-grid';
-  row.style.gridTemplateColumns = 'repeat(' + grid.cols + ', minmax(0, 1fr))';
-  row.style.gridTemplateRows = 'repeat(' + grid.rows + ', auto)';
-  for (let i = 0; i < n; i++) {
+  if (grid.rows > 1) wrap.classList.add('dwc-setup-mc-wrap--stacked');
+  function appendMcCube(parent, idx) {
     const cube = document.createElement('div');
     cube.className = 'dwc-setup-mc-cube dwc-setup-mc-cube--' + forma;
     const lid = document.createElement('div');
@@ -1306,11 +1141,40 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
     cube.appendChild(lid);
     const tank = document.createElement('div');
     tank.className = 'dwc-setup-mc-tank';
-    tank.title = 'Cubo ' + (i + 1) + ' · ' + volLitros + ' L útiles';
+    tank.title = 'Cubo ' + (idx + 1) + ' · ' + volLitros + ' L útiles';
     cube.appendChild(tank);
-    row.appendChild(cube);
+    parent.appendChild(cube);
   }
-  wrap.appendChild(row);
+  function makeMcRow() {
+    const row = document.createElement('div');
+    row.className = 'dwc-setup-mc-grid';
+    row.style.gridTemplateColumns = 'repeat(' + grid.cols + ', minmax(0, 1fr))';
+    return row;
+  }
+  if (grid.rows > 1) {
+    const rowTop = makeMcRow();
+    const rowBot = makeMcRow();
+    const split = grid.cols * (grid.rows - 1);
+    for (let i = 0; i < n; i++) {
+      if (i < split) appendMcCube(rowTop, i);
+      else appendMcCube(rowBot, i);
+    }
+    const airRow = document.createElement('div');
+    airRow.className = 'dwc-setup-mc-air-row';
+    airRow.setAttribute('aria-hidden', 'true');
+    const pump = document.createElement('div');
+    pump.className = 'dwc-setup-mc-air-pump';
+    pump.title = 'Bomba de aire · reparto equitativo';
+    airRow.appendChild(pump);
+    wrap.appendChild(rowTop);
+    wrap.appendChild(airRow);
+    wrap.appendChild(rowBot);
+  } else {
+    const row = makeMcRow();
+    row.style.gridTemplateRows = 'repeat(' + grid.rows + ', auto)';
+    for (let i = 0; i < n; i++) appendMcCube(row, i);
+    wrap.appendChild(row);
+  }
   const cap = document.createElement('div');
   cap.className = 'dwc-setup-lid-caption';
   cap.textContent =

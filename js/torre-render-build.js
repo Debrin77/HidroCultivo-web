@@ -622,8 +622,6 @@ function _buildTorreSvgLegacy() {
   // ── ROCIADOR ──────────────────────────────────────────────────────────────
   s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="24" ry="11"
     fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>`;
-  s += `<text x="${CX}" y="${ejeTop+4}" font-family="Inconsolata,monospace" font-size="6.5" font-weight="800"
-    fill="#64748b" text-anchor="middle" letter-spacing="0.24em">IRR</text>`;
   // Gotas (solo con animación)
   if (ta) {
     const gotas = [-20,-10,0,10,20];
@@ -654,10 +652,6 @@ function _buildTorreSvgLegacy() {
       s += `<rect x="${bodyX+2}" y="${bodyY+2}" width="${TORRE_W-4}" height="${bodyH-4}" rx="16"
         fill="url(#torreGlowGrad)" opacity="1"/>`;
     }
-
-    // Etiqueta nivel
-    s += `<text x="${bodyX-10}" y="${ny+4}" font-family="Syne,sans-serif" font-size="10" font-weight="800"
-      fill="${activo ? '#166534' : '#94a3b8'}" text-anchor="end" letter-spacing="0.06em">N${n+1}</text>`;
 
     if (!activo) continue;
 
@@ -693,15 +687,20 @@ function _buildTorreSvgLegacy() {
         : volCap != null
           ? Math.round(Number(volCap) * 10) / 10
           : null;
-  const subCapTorre =
-    volCap != null &&
-    volTorreLitros != null &&
-    volTorreLitros < volCap - 0.05
-      ? ' · máx ' + Math.round(volCap * 10) / 10 + ' L'
-      : '';
-  const volTorreTexto = volTorreLitros != null ? volTorreLitros + ' L' + subCapTorre : '—';
-  s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
-    font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreTexto}</text>`;
+  if (typeof hcDiagramVolLabelSvg === 'function') {
+    s += hcDiagramVolLabelSvg(CX, DEP_Y + DEP_H + 30, volTorreLitros, {
+      fill: aguaCol,
+      fontSize: 20,
+      pointerEvents: false,
+    });
+  } else {
+    const volTorreTexto = volTorreLitros != null ? volTorreLitros + ' L' : '—';
+    s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
+      font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreTexto}</text>`;
+  }
+  if (typeof hcDiagramViewLabelSvg === 'function') {
+    s += hcDiagramViewLabelSvg(CX, 16, 'frontal', { pointerEvents: false, fill: '#475569' });
+  }
 
   // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {
@@ -714,9 +713,6 @@ function _buildTorreSvgLegacy() {
     s += `<circle cx="${hx}" cy="${DEP_Y+DEP_H-44}" r="4" fill="#fbbf24">
       ${ta ? `<animate attributeName="opacity" from="0.6" to="1" dur="1.5s" repeatCount="indefinite" direction="alternate"/>` : ''}
     </circle>`;
-    s += `<text x="${hx}" y="${DEP_Y+DEP_H-50}" font-family="Inconsolata,monospace" font-size="6.5" text-anchor="middle" fill="#c2410c" font-weight="800" letter-spacing="0.08em">ΔT</text>`;
-    s += `<text x="${hx}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
-      font-size="8" fill="#ea580c" text-anchor="middle" font-weight="600">CAL</text>`;
   }
 
   // ── DIFUSOR DE AIRE ───────────────────────────────────────────────────────
@@ -753,8 +749,6 @@ function _buildTorreSvgLegacy() {
       });
     }
 
-    s += `<text x="${ax}" y="${DEP_Y+DEP_H+14}" font-family="Inconsolata,monospace"
-      font-size="8" fill="#6b7280" text-anchor="middle" font-weight="600">AIR</text>`;
   }
 
 

@@ -2901,21 +2901,21 @@
         <div id="setupTorreBuilderControlsSlot" class="torre-controls setup-torre-controls">
           <div class="torre-control-row">
             <div class="torre-control-label">
-              Niveles
+              <span id="setupTorreDimNivel">Filas</span>
               <span class="torre-control-val" id="valNiveles" aria-live="polite">5</span>
             </div>
             <input type="range" class="torre-slider" id="sliderNiveles"
               min="1" max="10" value="5" oninput="onTorreSlidersInput()"
-              aria-label="Niveles de la torre" aria-valuemin="1" aria-valuemax="10" aria-valuenow="5">
+              aria-label="Filas en la tapa" aria-valuemin="1" aria-valuemax="10" aria-valuenow="5">
           </div>
           <div class="torre-control-row">
             <div class="torre-control-label">
-              Cestas por nivel
+              <span id="setupTorreDimCesta">Cestas por fila</span>
               <span class="torre-control-val" id="valCestas" aria-live="polite">5</span>
             </div>
             <input type="range" class="torre-slider" id="sliderCestas"
               min="1" max="8" value="5" oninput="onTorreSlidersInput()"
-              aria-label="Cestas por nivel" aria-valuemin="1" aria-valuemax="8" aria-valuenow="5">
+              aria-label="Cestas por fila" aria-valuemin="1" aria-valuemax="8" aria-valuenow="5">
           </div>
         </div>
       </div>
@@ -2929,17 +2929,6 @@
           <div id="setupRdwcPreviewSection" class="setup-dwc-preview-section setup-dwc-preview-section--diagram">
             <p class="setup-dwc-preview-kicker">Vista previa</p>
             <div class="torre-preview torre-preview--rdwc" id="setupRdwcPreview" role="img" aria-live="polite"></div>
-          </div>
-          <div id="setupRdwcRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
-            <p class="setup-dwc-litros-solucion-label">Agua útil del circuito (calculada)</p>
-            <p class="setup-dwc-litros-solucion-valor" id="setupRdwcRecoValor">—</p>
-            <ul id="setupRdwcRecoDesglose" class="setup-rdwc-litros-desglose" aria-label="Desglose de litros útiles">
-              <li>Reservorio de control: <strong id="setupRdwcRecoControlL">—</strong> L</li>
-              <li>Por cubo <span id="setupRdwcRecoCuboDetalle" class="setup-rdwc-litros-desglose-sub"></span>: <strong id="setupRdwcRecoCuboL">—</strong> L × <strong id="setupRdwcRecoSites">—</strong> cubos = <strong id="setupRdwcRecoCubosSum">—</strong> L</li>
-              <li class="setup-rdwc-litros-desglose-suma">Suma (total circuito): <strong id="setupRdwcRecoSuma">—</strong> L</li>
-            </ul>
-            <p class="setup-dwc-litros-solucion-hint" id="setupRdwcRecoHint"></p>
-            <p id="setupRdwcRecoManualNote" class="setup-rdwc-litros-manual-note setup-hidden" role="note"></p>
           </div>
           <p class="setup-dwc-help setup-hidden"><strong>En un vistazo:</strong> cuenta los <strong>sitios/cubos</strong> y mira en la placa del kit los <strong>litros del depósito de control</strong>. Cubo nominal, recirculación y aireación pueden quedar como vienen por defecto o con el dato de tu bomba si lo tienes a mano; no hace falta calcular caudales a mano.</p>
           <p class="setup-dwc-help">Nutrientes: sumamos <strong>útil del depósito de control + útil de cada cubo</strong>. Los litros útiles y Ø/prof. bajo cesta son <strong>opcionales</strong> si ya indicaste volumen nominal; vacíos = estimación razonable. Cultivo previsto y net pot ayudan a afinar sin medir todo a mano.</p>
@@ -2964,6 +2953,17 @@
           </div>
           <p id="setupRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
           <div id="setupRdwcCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
+          <div id="setupRdwcRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+            <p class="setup-dwc-litros-solucion-label">Agua útil del circuito (calculada)</p>
+            <p class="setup-dwc-litros-solucion-valor" id="setupRdwcRecoValor">—</p>
+            <ul id="setupRdwcRecoDesglose" class="setup-rdwc-litros-desglose" aria-label="Desglose de litros útiles">
+              <li>Reservorio de control: <strong id="setupRdwcRecoControlL">—</strong> L</li>
+              <li>Por cubo <span id="setupRdwcRecoCuboDetalle" class="setup-rdwc-litros-desglose-sub"></span>: <strong id="setupRdwcRecoCuboL">—</strong> L × <strong id="setupRdwcRecoSites">—</strong> cubos = <strong id="setupRdwcRecoCubosSum">—</strong> L</li>
+              <li class="setup-rdwc-litros-desglose-suma">Suma (total circuito): <strong id="setupRdwcRecoSuma">—</strong> L</li>
+            </ul>
+            <p class="setup-dwc-litros-solucion-hint" id="setupRdwcRecoHint"></p>
+            <p id="setupRdwcRecoManualNote" class="setup-rdwc-litros-manual-note setup-hidden" role="note"></p>
+          </div>
         </div>
         <div id="setupDwcSoloBloque">
         <div>
@@ -3201,6 +3201,18 @@
                 </p>
               </div>
             </div>
+            <div class="setup-nft-preview-col">
+              <div class="torre-preview nft-schematic-host" id="nftPreview" aria-live="polite"></div>
+              <div id="setupNftRecoBlock" class="setup-nft-resultados setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+                <p class="setup-dwc-litros-solucion-label">Resultados</p>
+                <dl class="setup-nft-resultados-dl">
+                  <dt>Depósito impulsión</dt><dd id="setupNftRecoDeposito">—</dd>
+                  <dt>Bomba 24 h</dt><dd id="setupNftRecoBomba">—</dd>
+                  <dt>Aireador</dt><dd id="setupNftRecoAire">—</dd>
+                </dl>
+                <p class="setup-dwc-litros-solucion-hint setup-hidden" id="setupNftRecoHint" aria-hidden="true"></p>
+              </div>
+            </div>
             <div class="setup-nft-counts-wrap">
               <div class="setup-nft-counts-title">Cantidades en el diagrama</div>
               <p class="setup-nft-layout-help">Misma sección de tubo y huecos alineados en todo el esquema. La <strong>línea azul</strong> es el agua: subida desde la bomba al <strong>primer tubo</strong> (en A, reparto en T en el vértice), recorrido en <strong>zigzag</strong> entre extremos de cada peldaño y <strong>retorno al depósito</strong> desde el último tubo de cada cara.</p>
@@ -3229,18 +3241,6 @@
               <input type="range" class="torre-slider" id="sliderNftPendiente"
                 min="0" max="4" value="0" step="1" oninput="updateNftSetupPreview()">
             </div>
-          </div>
-          <div class="setup-nft-preview-col">
-            <div class="torre-preview nft-schematic-host" id="nftPreview" aria-live="polite"></div>
-          <div id="setupNftRecoBlock" class="setup-nft-resultados setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
-            <p class="setup-dwc-litros-solucion-label">Resultados</p>
-            <dl class="setup-nft-resultados-dl">
-              <dt>Depósito impulsión</dt><dd id="setupNftRecoDeposito">—</dd>
-              <dt>Bomba 24 h</dt><dd id="setupNftRecoBomba">—</dd>
-              <dt>Aireador</dt><dd id="setupNftRecoAire">—</dd>
-            </dl>
-            <p class="setup-dwc-litros-solucion-hint setup-hidden" id="setupNftRecoHint" aria-hidden="true"></p>
-          </div>
           </div>
           <div class="torre-controls setup-nft-controls-rest" id="setupNftControlsRest">
             <div class="setup-nft-cesta-wrap setup-mt-10">
@@ -4614,6 +4614,7 @@
   <script src="js/hc-bootstrap-onboarding.js?v=2026-05-15-dwc-tronco-setup"></script>
   <script src="js/hc-bootstrap-init-nav.js?v=20"></script>
   <script src="js/hc-diagram-palette.js?v=2"></script>
+  <script src="js/diagrams/hc-diagram-labels.js?v=2026-05-18-labels"></script>
   <script src="js/hc-diagram-illo.js?v=2026-05-15-dwc-legacy"></script>
   <script src="js/diagrams/dwc/dwc-scada-tokens.js?v=2026-05-15-scada2"></script>
   <script src="js/diagrams/dwc/dwc-scada-parts.js?v=2026-05-15-scada2"></script>

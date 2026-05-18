@@ -14736,7 +14736,7 @@ button.toggle-switch:focus-visible {
 #setupTorreBuilderWrap .setup-torre-builder {
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
 }
 #setupTorreBuilderWrap .setup-torre-preview-slot {
   width: 100%;
@@ -14849,14 +14849,14 @@ button.toggle-switch:focus-visible {
   box-shadow: inset 0 -4px 8px rgba(0, 0, 0, 0.12);
 }
 .setup-dwc-preview-section {
-  margin: 12px 0 14px;
-  padding: 12px;
+  margin: 6px 0 8px;
+  padding: 8px 10px;
   border-radius: 12px;
   background: #f8fafc;
   border: 1.5px solid #e2e8f0;
 }
 .setup-dwc-preview-kicker {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   font-size: 11px;
   font-weight: 800;
   color: #0369a1;
@@ -14999,7 +14999,16 @@ button.toggle-switch:focus-visible {
   display: none;
 }
 .setup-dwc-dep-unido-controls {
-  margin-top: 10px;
+  margin-top: 4px;
+}
+.setup-dwc-dep-unido-controls .torre-control-row {
+  margin-bottom: 6px;
+}
+.setup-dwc-dep-unido-controls .torre-control-row:last-child {
+  margin-bottom: 0;
+}
+.setup-dwc-dep-unido-controls .torre-control-label {
+  margin-bottom: 4px;
 }
 .setup-dwc-dep-unido-controls.setup-hidden {
   display: none;
@@ -15017,6 +15026,35 @@ button.toggle-switch:focus-visible {
   line-height: 1.45;
   color: #92400e;
   text-align: center;
+}
+.dwc-setup-mc-wrap--stacked {
+  gap: 6px;
+}
+.dwc-setup-mc-air-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+}
+.dwc-setup-mc-air-pump {
+  width: 54px;
+  height: 40px;
+  border-radius: 8px 8px 6px 6px;
+  background: linear-gradient(180deg, #fb923c 0%, #ea580c 42%, #37474f 58%, #263238 100%);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.18);
+  position: relative;
+}
+.dwc-setup-mc-air-pump::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  transform: translateX(-50%);
+  width: 38px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #fff7ed, #fdba74);
+  border: 2px solid #c2410c;
 }
 .dwc-setup-mc-wrap {
   display: flex;
@@ -15237,6 +15275,10 @@ button.toggle-switch:focus-visible {
   width: 100%;
   max-width: 100%;
   min-width: 0;
+  margin: 4px 0 10px;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple #setupNftMontajeDiyBlock .setup-nft-counts-wrap {
+  margin-top: 2px;
 }
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-resultados-dl {
   margin: 6px 0 0;

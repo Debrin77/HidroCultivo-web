@@ -130,9 +130,6 @@
         }
       }
     }
-    if (idx != null) {
-      o += `<text x="${f1(cx)}" y="${f1(y - 4)}" text-anchor="middle" font-size="8.5" font-weight="800" fill="${T.inkSoft}">${idx}</text>`;
-    }
     o += `</g>`;
     return o;
   }
@@ -162,22 +159,24 @@
         }
       }
     }
-    o += `<text x="${f1(x + w / 2)}" y="${f1(y - 8)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="10" font-weight="800" fill="${T.title}">Depósito de control</text>`;
     if (volLabel != null) {
-      o += `<text x="${f1(x + w / 2)}" y="${f1(y + h - 10)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="900" fill="${T.waterDeep}">${volLabel}</text>`;
+      const volOnly = String(volLabel).replace(/\s*mezcla\s*$/i, '').trim();
+      if (typeof hcDiagramVolLabelSvg === 'function') {
+        o += hcDiagramVolLabelSvg(x + w / 2, y + h - 10, volOnly, { fill: T.waterDeep, fontSize: 12, pointerEvents: false });
+      } else {
+        o += `<text x="${f1(x + w / 2)}" y="${f1(y + h - 10)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="900" fill="${T.waterDeep}">${volOnly}</text>`;
+      }
     }
     return o;
   }
 
   function recircPump(cx, cy, r, label) {
     const T = tokens();
-    label = label || 'RECIRC';
     return (
       `<g class="rdwc-scada-pump">` +
       `<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${r + 3}" fill="rgba(255,152,0,0.15)"/>` +
       `<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${r}" fill="url(#rdwcPumpDome)" stroke="${T.pumpDark}" stroke-width="2"/>` +
       `<ellipse cx="${f1(cx - r * 0.35)}" cy="${f1(cy - r * 0.4)}" rx="${(r * 0.45).toFixed(1)}" ry="${(r * 0.2).toFixed(1)}" fill="rgba(255,255,255,0.45)"/>` +
-      `<text x="${f1(cx)}" y="${f1(cy + 3.5)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="${Math.max(6, r * 0.55).toFixed(1)}" font-weight="800" fill="#fff">${label}</text>` +
       `</g>`
     );
   }

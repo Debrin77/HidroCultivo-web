@@ -64,7 +64,8 @@
         : volMax != null && n > 0
           ? Math.round((volMax / n) * 10) / 10
           : null;
-    const W = Math.min(720, Math.max(480, 120 + C * 56));
+    const tieneDifusorPlan = (state.configTorre?.equipamiento?.includes('difusor') ?? true) && !esKratky;
+    const W = Math.min(780, Math.max(480, 120 + C * 56) + (tieneDifusorPlan ? 72 : 0));
     const headerH = 48;
     const planTop = headerH + 8;
     const planPad = 14;
@@ -96,11 +97,13 @@
     let s = srfScadaDefs();
     s += `<rect width="${W}" height="900" fill="url(#srfScadaBg)"/>`;
     if (SP) {
-      s += SP.header(W, 'SRF · balsa flotante', N + '×' + C + ' · estanque ' + profCm + ' cm · ' + (esKratky ? 'Kratky' : 'aireación'));
       s += SP.sectionPanel(planLeft - 8, planTop - 8, planW + 16, planH + 16, 14);
-      s += SP.sectionLabel(planLeft, planTop - 2, 'VISTA SUPERIOR — BALSA (' + balsaMm + ' mm)');
       s += SP.sectionPanel(canalX - 8, canalY - 8, canalW + 16, canalH + 20, 12);
-      s += SP.sectionLabel(canalX, canalY - 2, 'CORTE ESTANQUE');
+    }
+    if (typeof hcDiagramViewLabelSvg === 'function') {
+      s +=
+        hcDiagramViewLabelSvg(planLeft + planW / 2, planTop - 4, 'cenital', { pointerEvents: false }) +
+        hcDiagramViewLabelSvg(canalX + canalW / 2, canalY - 4, 'frontal', { pointerEvents: false });
     }
 
     s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="url(#srfRaft)" stroke="#64748b" stroke-width="1.3"/>`;
@@ -161,12 +164,6 @@
       }
     }
 
-    if (tieneDifusor) {
-      const pumpY = planTop - 18;
-      s += `<rect x="${planLeft}" y="${pumpY}" width="${planW}" height="16" rx="5" fill="#e0f2fe" stroke="#38bdf8" stroke-width="1.1"/>`;
-      s += `<text x="${(planLeft + planW / 2).toFixed(1)}" y="${(pumpY + 11).toFixed(1)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="8" font-weight="900" fill="#0369a1">BOMBA AIRE · estanque</text>`;
-    }
-
     s += `<rect x="${(canalX + 8).toFixed(1)}" y="${raftY}" width="${(canalW - 16).toFixed(1)}" height="${raftH}" rx="4" fill="url(#srfRaft)" stroke="#94a3b8" stroke-width="1"/>`;
     const wTop = waterBottom - (waterBottom - waterY) * volPct;
     s += `<rect x="${(canalX + 10).toFixed(1)}" y="${wTop.toFixed(1)}" width="${(canalW - 20).toFixed(1)}" height="${(waterBottom - wTop).toFixed(1)}" fill="url(#srfWater)" opacity="0.92"/>`;
@@ -174,36 +171,64 @@
 
     if (esKratky) {
       s += `<rect x="${(canalX + 10).toFixed(1)}" y="${(raftY + raftH).toFixed(1)}" width="${(canalW - 20).toFixed(1)}" height="${(wTop - raftY - raftH).toFixed(1)}" fill="#f0f9ff" opacity="0.5" stroke="#7dd3fc" stroke-width="0.8" stroke-dasharray="3 2"/>`;
-      s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${(waterY - 4).toFixed(1)}" text-anchor="middle" font-size="8" fill="#0369a1" font-weight="700">Cámara de aire (Kratky)</text>`;
     }
 
     if (tieneDifusor) {
       const nStones = Math.min(6, Math.ceil(canalW / 70));
+      const stoneYs = [];
       for (let ai = 0; ai < nStones; ai++) {
         const ax =
           canalX + 30 + ai * ((canalW - 60) / Math.max(1, nStones - 1 || 1));
-        s += `<ellipse cx="${ax.toFixed(1)}" cy="${(waterBottom - 8).toFixed(1)}" rx="9" ry="4" fill="#64748b" stroke="#475569" stroke-width="0.8"/>`;
+        const stoneY = waterBottom - 8;
+        stoneYs.push({ ax, stoneY });
+        s += `<ellipse cx="${ax.toFixed(1)}" cy="${stoneY.toFixed(1)}" rx="9" ry="4" fill="#64748b" stroke="#475569" stroke-width="0.8"/>`;
         if (ta) {
-          s += `<circle cx="${ax.toFixed(1)}" cy="${(waterBottom - 10).toFixed(1)}" r="1.2" fill="#bae6fd" opacity="0"><animate attributeName="cy" to="${(wTop + 6).toFixed(1)}" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="1.2s" repeatCount="indefinite"/></circle>`;
+          s += `<circle cx="${ax.toFixed(1)}" cy="${(stoneY - 2).toFixed(1)}" r="1.2" fill="#bae6fd" opacity="0"><animate attributeName="cy" to="${(wTop + 6).toFixed(1)}" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="1.2s" repeatCount="indefinite"/></circle>`;
+        }
+      }
+      const pumpW = 54;
+      const pumpH = 40;
+      const pumpX = canalX + canalW + 14;
+      const pumpY = canalY + (canalH - pumpH) / 2;
+      const pumpCx = pumpX + pumpW / 2;
+      const pumpOutX = pumpX;
+      const pumpOutY = pumpY + pumpH * 0.55;
+      if (typeof dwcSvgAirPumpExternal === 'function') {
+        const pumpMc = dwcSvgAirPumpExternal(pumpX, pumpY, 1);
+        s += pumpMc.svg;
+      } else {
+        s +=
+          `<g class="srf-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">` +
+          `<rect x="${(pumpX + 4).toFixed(1)}" y="${(pumpY + 14).toFixed(1)}" width="${(pumpW - 8).toFixed(1)}" height="${(pumpH - 10).toFixed(1)}" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.5"/>` +
+          `<ellipse cx="${pumpCx.toFixed(1)}" cy="${(pumpY + 12).toFixed(1)}" rx="${((pumpW - 10) / 2).toFixed(1)}" ry="12" fill="#fb923c" stroke="#c2410c" stroke-width="2"/>` +
+          `</g>`;
+      }
+      if (stoneYs.length) {
+        const mid = stoneYs[Math.floor(stoneYs.length / 2)];
+        const hoseD = `M ${pumpOutX.toFixed(1)} ${pumpOutY.toFixed(1)} L ${(canalX + canalW - 6).toFixed(1)} ${pumpOutY.toFixed(1)} L ${(canalX + canalW - 6).toFixed(1)} ${mid.stoneY.toFixed(1)} L ${mid.ax.toFixed(1)} ${mid.stoneY.toFixed(1)}`;
+        s +=
+          `<path d="${hoseD}" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>` +
+          `<path d="${hoseD}" fill="none" stroke="#90a4ae" stroke-width="1" stroke-linecap="round" opacity="0.35"/>`;
+        for (const st of stoneYs) {
+          const branch = `M ${mid.ax.toFixed(1)} ${mid.stoneY.toFixed(1)} L ${st.ax.toFixed(1)} ${st.stoneY.toFixed(1)}`;
+          s += `<path d="${branch}" fill="none" stroke="#cfd8dc" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>`;
         }
       }
     }
 
-    if (circ) {
-      s += `<text x="${(canalX + canalW - 12).toFixed(1)}" y="${(canalY + 14).toFixed(1)}" text-anchor="end" font-size="8" fill="#16a34a" font-weight="700">↻ ${recLh} L/h</text>`;
+    const volNum = volMez != null ? Math.round(volMez * 10) / 10 : null;
+    if (typeof hcDiagramVolLabelSvg === 'function') {
+      s += hcDiagramVolLabelSvg(canalX + canalW / 2, canalY + canalH + 16, volNum, { fontSize: 12, pointerEvents: false });
+    } else {
+      const volLbl = volNum != null ? volNum + ' L' : '—';
+      s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${(canalY + canalH + 16).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="12" font-weight="800" fill="#0369a1">${volLbl}</text>`;
     }
-
-    const volLbl =
-      volMez != null
-        ? '~' + (Math.round(volMez * 10) / 10) + ' L en estanque' + (volPer != null ? ' · ~' + volPer + ' L/planta' : '')
-        : '—';
-    s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${(canalY + canalH + 16).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="12" font-weight="800" fill="#0369a1">${volLbl}</text>`;
 
     const H = canalY + canalH + 36;
     const pad = 12;
     return (
       `<svg class="torre-svg-diagram srf-svg-diagram srf-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="srfDiagTitle">` +
-      `<title id="srfDiagTitle">SRF balsa flotante: ${n} plantas, estanque ${profCm} cm. Toca cada maceta.</title>${s}</svg>`
+      `<title id="srfDiagTitle">SRF · ${volNum != null ? volNum + ' L' : '—'} · vista cenital y frontal</title>${s}</svg>`
     );
   }
 

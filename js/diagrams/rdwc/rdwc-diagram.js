@@ -174,9 +174,13 @@
     let s = rdwcScadaDefs();
     s += `<rect width="${W}" height="${H}" fill="url(#rdwcScadaBg)"/>`;
     if (RP && SP) {
-      s += RP.header(W, 'RDWC · anillo cerrado', sites + ' módulos · ' + volLbl);
       s += RP.sectionPanel(24, headerH - 6, W - 48, H - headerH - 20, 14);
-      s += RP.sectionLabel(32, headerH + 4, 'CIRCUITO DE RECIRCULACIÓN');
+    }
+    if (typeof hcDiagramViewLabelSvg === 'function') {
+      s += hcDiagramViewLabelSvg(W / 2, 16, 'cenital', { pointerEvents: false });
+    }
+    if (typeof hcDiagramVolLabelSvg === 'function') {
+      s += hcDiagramVolLabelSvg(W / 2, 32, volLbl, { fontSize: 11, pointerEvents: false });
     }
 
     s += `<ellipse cx="${cx}" cy="${cy}" rx="${(R + 36).toFixed(1)}" ry="${((R + 36) * 0.78).toFixed(1)}" fill="#f1f5f9" stroke="#cfd8dc" stroke-width="1"/>`;
@@ -226,19 +230,16 @@
       s += RP.returnPath(`M ${cx.toFixed(1)} ${(cy + retRy).toFixed(1)} L ${cx.toFixed(1)} ${(tankY + tankH - 8).toFixed(1)}`, ta, 2);
       s += RP.recircPump(cx, pumpY, 11, 'RECIRC');
       s += RP.controlTank(tankX, tankY, tankW, tankH, pct, tieneCalentador, false, ta, volLbl);
-      s += RP.callout(W - 28, cy, tankX + tankW, tankY + tankH / 2, 'Depósito control', { anchor: 'end' });
-      s += RP.callout(cx + 40, pumpY, cx + 14, pumpY, 'Bomba recirc.', { anchor: 'start' });
     } else {
       s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="12" fill="url(#rdwcTankBody)" stroke="#475569"/>`;
     }
 
     s += rdwcLoopHelpHit(cx + R * 0.55, H - 22);
-    s += `<text x="${cx}" y="${H - 10}" text-anchor="middle" font-size="9.5" fill="#64748b">Recirc. ${recLh} L/h · Aire ${airLpm} L/min</text>`;
 
     const pad = 14;
     return (
       `<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--hub rdwc-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rdwcDiagTitle">` +
-      `<title id="rdwcDiagTitle">RDWC anillo: ${sites} módulos, depósito central, recirculación. Toca un módulo para la ficha.</title>${s}</svg>`
+      `<title id="rdwcDiagTitle">RDWC · ${volLbl} · vista cenital</title>${s}</svg>`
     );
   }
 
@@ -289,15 +290,16 @@
     let s = rdwcScadaDefs();
     s += `<rect width="${W}" height="${H}" fill="url(#rdwcScadaBg)"/>`;
     if (RP && SP) {
-      s += RP.header(
-        W,
-        'RDWC · recirculación',
-        'Verde = impulsión · Azul = retorno · EC/pH en depósito de control'
-      );
       s += RP.sectionPanel(left - 10, top - 12, blockW + 20, blockH + 24, 12);
       s += RP.sectionPanel(tankX - 10, tankY - 10, tankW + 20, tankH + 36, 12);
-      s += RP.sectionLabel(left, top - 4, 'MÓDULOS DE CULTIVO');
-      s += RP.sectionLabel(tankX, tankY - 4, 'DEPÓSITO DE CONTROL');
+    }
+    if (typeof hcDiagramViewLabelSvg === 'function') {
+      s +=
+        hcDiagramViewLabelSvg(W / 2, 16, 'cenital', { pointerEvents: false }) +
+        hcDiagramViewLabelSvg(W / 2, tankY + tankH + 22, 'frontal', { pointerEvents: false });
+    }
+    if (typeof hcDiagramVolLabelSvg === 'function') {
+      s += hcDiagramVolLabelSvg(W / 2, 32, volLbl, { fontSize: 11, pointerEvents: false });
     }
 
     if (RP) {
@@ -333,23 +335,17 @@
       s += RP.returnPath(`M ${pumpX.toFixed(1)} ${retY} L ${pumpX.toFixed(1)} ${tankY + tankH - 8}`, ta, 2.2);
       s += RP.recircPump(pumpX, pumpY, pumpR, 'BOMBA');
       s += RP.controlTank(tankX, tankY, tankW, tankH, pct, tieneCalentador, tieneDifusor, ta, volLbl);
-      s += RP.callout(tankCx, tankY - 18, tankCx, tankY, 'Depósito de control', { anchor: 'middle' });
-      s += RP.callout(pumpX + 50, pumpY, pumpX + 18, pumpY, 'Bomba recirculación', { anchor: 'start' });
-      s += RP.callout(left - 8, supY - 6, manL, supY, 'Impulsión', { anchor: 'end' });
-      s += RP.callout(left - 8, retY + 6, manL, retY, 'Retorno', { anchor: 'end' });
     } else {
       s += `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="14" fill="url(#rdwcTankBody)"/>`;
       s += `<circle cx="${pumpX}" cy="${pumpY}" r="${pumpR}" fill="#fef9c3" stroke="#16a34a" stroke-width="2"/>`;
     }
 
     s += rdwcLoopHelpHit(W / 2 - 120, H - 22);
-    s += `<text x="${W / 2}" y="${H - 28}" text-anchor="middle" font-size="10" fill="#475569">Tuberías en anillo cerrado · aire principal en cada módulo</text>`;
-    s += `<text x="${W / 2}" y="${H - 12}" text-anchor="middle" font-size="10" fill="#475569">Recirc. ${recLh} L/h · Aire ${airLpm} L/min</text>`;
 
     const pad = 14;
     return (
       `<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="rdwcDiagTitle">` +
-      `<title id="rdwcDiagTitle">RDWC: ${sites} módulos, recirculación y depósito de control. Toca un módulo.</title>${s}</svg>`
+      `<title id="rdwcDiagTitle">RDWC · ${volLbl} · vista cenital y frontal</title>${s}</svg>`
     );
   }
 

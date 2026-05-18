@@ -1552,7 +1552,7 @@
       '-lid)" stroke="' +
       HC_ILLO.ink +
       '" stroke-width="2"/>' +
-      illoText(L.planLeft + L.blockW / 2, L.planTop + 14, 'VISTA SUPERIOR · TAPA', 'section');
+      illoText(L.planLeft + L.blockW / 2, L.planTop + 14, 'Vista cenital', 'section');
     var formaPlan = dwcFormaIllo(cfg);
     if (formaPlan === 'troncopiramidal') {
       var topIn = 14;
@@ -1615,7 +1615,6 @@
       }
     }
     if (N > 1) {
-      s += illoText(L.planLeft + L.blockW - 10, L.planTop + L.planH - 8, N + ' filas en profundidad', 'hint', 'end');
     }
     return s;
   }
@@ -1641,7 +1640,7 @@
     var clipInner = '';
     var troncoG = null;
     var s = '';
-    s += illoText(x + w / 2, sepY - 10, 'PROYECCIÓN FRONTAL · DEPÓSITO', 'section');
+    s += illoText(x + w / 2, sepY - 10, 'Vista frontal', 'section');
     s +=
       '<line x1="' +
       f1(L.planLeft) +
