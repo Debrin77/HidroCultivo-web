@@ -1375,6 +1375,9 @@ function renderDwcIlloSetupPreview(previewEl, filas, cols, volLitros, draftExtra
           };
     previewEl.innerHTML = renderFn();
     previewEl.classList.add('torre-preview--dwc', 'hc-illo-diagram');
+    try {
+      if (typeof bindDwcScadaViewport === 'function') bindDwcScadaViewport(previewEl);
+    } catch (_) {}
   } catch (err) {
     renderDwcLidSetupPreview(previewEl, filas, cols, volLitros);
     try {

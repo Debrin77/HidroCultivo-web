@@ -131,6 +131,68 @@
     );
   }
 
+  /** Cubo multiválvula en alzado con cara lateral y tapa (pseudo-3D). */
+  function mcCuboFront3d(x, y, w, h, volPctAgua, tieneDifusor, Dw, idx, volPerCubo, ta) {
+    const T = tokens();
+    const depth = Math.min(14, Math.max(6, w * 0.12));
+    const ix = x + 5;
+    const iy = y + 12;
+    const iw = w - 10;
+    const ih = h - 18;
+    const cx = x + w / 2;
+    const airFrac = 0.15;
+    const fillU = Math.min(1 - airFrac, Math.max(0, volPctAgua));
+    const wTop = iy + ih * (1 - fillU);
+    const sy = iy + ih - 4;
+    const topY = y + 4;
+    const rightX = x + w;
+    const sideD =
+      `M ${f1(rightX)} ${f1(topY + depth * 0.4)} L ${f1(rightX + depth)} ${f1(topY)} L ${f1(rightX + depth)} ${f1(y + h - 4)} L ${f1(rightX)} ${f1(y + h)} Z`;
+    const topD =
+      `M ${f1(x)} ${f1(topY)} L ${f1(rightX)} ${f1(topY + depth * 0.4)} L ${f1(rightX + depth)} ${f1(topY)} L ${f1(x + depth)} ${f1(topY - depth * 0.45)} Z`;
+    let o =
+      `<g class="dwc-scada-mc-cubo">` +
+      `<path d="${sideD}" fill="${T.tankFace}" stroke="${T.tank}" stroke-width="1" opacity="0.9"/>` +
+      `<path d="${topD}" fill="${T.lid}" stroke="${T.tank}" stroke-width="1"/>` +
+      `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="url(#dwcMcCuboShell)" stroke="${T.tank}" stroke-width="1.3" filter="drop-shadow(0 4px 10px rgba(15,23,42,0.12))"/>` +
+      `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="5" fill="rgba(224,247,250,0.78)" stroke="none"/>` +
+      `<rect x="${f1(ix + 2)}" y="${iy}" width="${f1(Math.max(4, iw * 0.2))}" height="${ih}" rx="3" fill="rgba(255,255,255,0.4)"/>` +
+      `<rect x="${ix}" y="${wTop.toFixed(1)}" width="${iw}" height="${(iy + ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
+      `<line x1="${ix}" y1="${wTop.toFixed(1)}" x2="${ix + iw}" y2="${wTop.toFixed(1)}" stroke="#00acc1" stroke-width="1.5" opacity="0.75"/>` +
+      `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="5" fill="none" stroke="#0ea5e9" stroke-width="0.95" opacity="0.45"/>`;
+    if (tieneDifusor) {
+      o += `<ellipse cx="${f1(cx)}" cy="${f1(sy)}" rx="8" ry="4" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.9"/>`;
+    }
+    o += `<text x="${f1(cx)}" y="${f1(y + h + 11)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7.5" font-weight="700" fill="${T.inkSoft}">Cubo ${idx + 1}</text>`;
+    if (volPerCubo != null) {
+      o += `<text x="${f1(cx)}" y="${f1(y + h + 21)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8" font-weight="800" fill="#0369a1">${volPerCubo} L</text>`;
+    }
+    if (tieneDifusor && ta) {
+      for (let bi = 0; bi < 3; bi++) {
+        const dx = (bi - 1) * 3;
+        const y0 = sy - 3;
+        const y1 = wTop + 5;
+        o += `<circle cx="${f1(cx + dx)}" cy="${y0}" r="1.2" fill="${Dw.bubble}" opacity="0">
+          <animate attributeName="cy" from="${y0}" to="${y1}" dur="1.2s" begin="${(bi * 0.15).toFixed(2)}s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;0.85;0" dur="1.2s" begin="${(bi * 0.15).toFixed(2)}s" repeatCount="indefinite"/>
+        </circle>`;
+      }
+    }
+    o += `</g>`;
+    return { svg: o, cx, stoneY: sy, waterTop: wTop, iy };
+  }
+
+  /** Cubo cenital con borde 3D ligero. */
+  function mcCuboPlan3d(bx, by, size) {
+    const T = tokens();
+    const d = Math.min(9, size * 0.12);
+    return (
+      isoTopFace(bx, by, size, 8, d) +
+      `<rect x="${f1(bx)}" y="${f1(by)}" width="${size}" height="${size}" rx="11" fill="url(#dwcLidTop)" stroke="${T.tank}" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.08))"/>` +
+      `<rect x="${f1(bx + 5)}" y="${f1(by + 5)}" width="${f1(size - 10)}" height="${f1(size - 10)}" rx="7" fill="${T.panelInner}" stroke="#e2e8f0" stroke-width="1"/>`
+    );
+  }
+
   global.dwcScadaParts = {
     f1: f1,
     tokens: tokens,
@@ -143,5 +205,7 @@
     isoTopFace: isoTopFace,
     scadaDefs: scadaDefs,
     plantAccent: plantAccent,
+    mcCuboFront3d: mcCuboFront3d,
+    mcCuboPlan3d: mcCuboPlan3d,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

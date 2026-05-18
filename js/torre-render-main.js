@@ -6,6 +6,8 @@ function renderTorre() {
   const cfg = state.configTorre || {};
   const esNft = cfg.tipoInstalacion === 'nft';
   const esRdwc = cfg.tipoInstalacion === 'rdwc';
+  const esDwc = cfg.tipoInstalacion === 'dwc';
+  const esSrf = cfg.tipoInstalacion === 'srf';
 
   const chk = document.getElementById('torreChkAnimSuaves');
   if (chk) chk.checked = state.configTorre?.torreAnimSvg !== false;
@@ -16,9 +18,11 @@ function renderTorre() {
   if (!esNft) {
     disposeNftThreeIfAny(wrap);
   }
-
-  const esDwc = cfg.tipoInstalacion === 'dwc';
-  const esSrf = cfg.tipoInstalacion === 'srf';
+  if (!esDwc && typeof disposeDwcScadaViewport === 'function') {
+    try {
+      disposeDwcScadaViewport(wrap);
+    } catch (_) {}
+  }
 
   if (esNft) {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
@@ -89,6 +93,14 @@ function renderTorre() {
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
+    try {
+      if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(wrap);
+      if (typeof bindDwcScadaViewport === 'function') bindDwcScadaViewport(wrap);
+    } catch (eDwcVp) {
+      try {
+        console.error('bindDwcScadaViewport', eDwcVp);
+      } catch (_) {}
+    }
   } else if (esSrf) {
     wrap.innerHTML = typeof generarSVGSrf === 'function' ? generarSVGSrf() : '';
     wrap.setAttribute(

@@ -1417,6 +1417,110 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   stroke: #f5f6f8;
   stroke-width: 2.5px;
 }
+.torre-svg-canvas--dwc-scada-vp,
+#torreSVGWrap.torre-svg-canvas--dwc-scada-vp {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grab;
+}
+.torre-svg-canvas--dwc-scada-panning,
+#torreSVGWrap.torre-svg-canvas--dwc-scada-panning {
+  cursor: grabbing;
+}
+.torre-svg-canvas--dwc-scada-pinching {
+  cursor: zoom-in;
+}
+.dwc-scada-vp-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  display: flex;
+  gap: 6px;
+  padding: 5px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #cfd8dc;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.12);
+}
+.dwc-scada-vp-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 10px;
+  background: #eceff1;
+  color: #37474f;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.dwc-scada-vp-btn:active {
+  background: #bbdefb;
+  color: #0d47a1;
+}
+@media (hover: hover) {
+  .dwc-scada-vp-btn:hover {
+    background: #e3f2fd;
+    color: #1565c0;
+  }
+}
+.dwc-scada-vp-btn--reset {
+  font-size: 16px;
+}
+.dwc-scada-vp-hint {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(38, 50, 56, 0.88);
+  color: #eceff1;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.35;
+  pointer-events: auto;
+}
+.dwc-scada-vp-hint--hidden {
+  display: none;
+}
+.dwc-scada-vp-hint-close {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.torre-svg-canvas--dwc-scada-coarse svg.dwc-svg-diagram--scada {
+  min-height: min(52vh, 520px);
+}
+@media (max-width: 520px) {
+  .dwc-scada-vp-toolbar {
+    top: 4px;
+    right: 4px;
+  }
+  .dwc-scada-vp-hint {
+    font-size: 10px;
+    bottom: 4px;
+  }
+}
 #torreSVGWrap.torre-svg-canvas svg.hc-illo-diagram {
   width: 100%;
   height: auto;

@@ -546,7 +546,13 @@ function generarSVGDwc() {
       }</circle>`;
       o += `<text x="${(cx + r - 2).toFixed(1)}" y="${(cy - r + 6).toFixed(1)}" font-size="7" text-anchor="middle" fill="white">✓</text>`;
     }
-    o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r * 1.55).toFixed(1)}"
+    const hitMult =
+      SC &&
+      (window.innerWidth < 768 ||
+        (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches))
+        ? 1.95
+        : 1.55;
+    o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r * hitMult).toFixed(1)}"
       fill="rgba(0,0,0,0)" stroke="none" pointer-events="all" class="hc-cesta-hit"/>`;
     o += `</g>`;
     return o;
@@ -607,7 +613,10 @@ function generarSVGDwc() {
       const fc = idx % fCols;
       const x = row0X + fc * (miniW + gapMc);
       const y = yGrid0 + fr * (miniH + gapMc + 8);
-      const cubo = dwcSvgMcCuboFront(x, y, miniW, miniH, volPctAguaDibujo, tieneDifusor, Dw, idx, volPerCuboMc, ta);
+      const cubo =
+        SC && SC.mcCuboFront3d
+          ? SC.mcCuboFront3d(x, y, miniW, miniH, volPctAguaDibujo, tieneDifusor, Dw, idx, volPerCuboMc, ta)
+          : dwcSvgMcCuboFront(x, y, miniW, miniH, volPctAguaDibujo, tieneDifusor, Dw, idx, volPerCuboMc, ta);
       cuboSvg += cubo.svg;
       if (tieneDifusor) {
         dwcMcAirPts.push({ cx: cubo.cx, stoneY: cubo.stoneY, waterTop: cubo.waterTop });
@@ -798,9 +807,10 @@ function generarSVGDwc() {
       const cy = by + mcCubeSz / 2;
       const rPot = Math.max(16, Math.min(28, mcCubeSz * 0.4));
       mcPlanTargets.push({ cx, cy });
-      cubesPlanSvg +=
-        `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${mcCubeSz}" height="${mcCubeSz}" rx="11" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.07))"/>` +
-        `<rect x="${(bx + 5).toFixed(1)}" y="${(by + 5).toFixed(1)}" width="${(mcCubeSz - 10).toFixed(1)}" height="${(mcCubeSz - 10).toFixed(1)}" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+      cubesPlanSvg += SC && SC.mcCuboPlan3d
+        ? SC.mcCuboPlan3d(bx, by, mcCubeSz)
+        : `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${mcCubeSz}" height="${mcCubeSz}" rx="11" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.07))"/>` +
+          `<rect x="${(bx + 5).toFixed(1)}" y="${(by + 5).toFixed(1)}" width="${(mcCubeSz - 10).toFixed(1)}" height="${(mcCubeSz - 10).toFixed(1)}" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
       cubesPlanSvg += macetaSvg(0, idx, cx, cy, rPot, true);
     }
     if (tieneDifusor) {
