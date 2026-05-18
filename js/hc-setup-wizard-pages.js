@@ -1324,7 +1324,7 @@ function hcSetupPreviewSinDimensiones() {
 
 /** Vista previa DWC en asistente: diagrama ilustrado (cenital + alzado), coherente con pestaña Sistema. */
 function renderDwcIlloSetupPreview(previewEl, filas, cols, volLitros, draftExtra) {
-  if (typeof hcIlloGenerarSVGDwc !== 'function') {
+  if (typeof generarSVGDwc !== 'function' && typeof hcIlloGenerarSVGDwc !== 'function') {
     renderDwcLidSetupPreview(previewEl, filas, cols, volLitros);
     return;
   }
@@ -1365,7 +1365,15 @@ function renderDwcIlloSetupPreview(previewEl, filas, cols, volLitros, draftExtra
   state.configTorre = draft;
   state.torre = torrePreview;
   try {
-    previewEl.innerHTML = hcIlloGenerarSVGDwc();
+    const renderFn =
+      typeof hcIlloGenerarSVGDwc === 'function'
+        ? function () {
+            return hcIlloGenerarSVGDwc(draft);
+          }
+        : function () {
+            return generarSVGDwc();
+          };
+    previewEl.innerHTML = renderFn();
     previewEl.classList.add('torre-preview--dwc', 'hc-illo-diagram');
   } catch (err) {
     renderDwcLidSetupPreview(previewEl, filas, cols, volLitros);

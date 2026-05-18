@@ -2140,78 +2140,39 @@
     return s;
   }
 
+  /**
+   * DWC: delega en generarSVGDwc (torre-render-build.js), que es el motor probado
+   * (tapa alineada + alzado, multiválvula, macetas interactivas).
+   */
   window.hcIlloGenerarSVGDwc = function (cfgOverride) {
-    var cfg = cfgOverride || (typeof state !== 'undefined' ? state.configTorre : {}) || {};
-    var N = Math.max(1, Math.min(12, cfg.numNiveles || 2));
-    var C = Math.max(1, Math.min(12, cfg.numCestas || 3));
-    var ta = animOn();
-    var volMax = typeof getVolumenDepositoMaxLitros === 'function' ? getVolumenDepositoMaxLitros(cfg) : null;
-    var volTrabajo = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
-    var volEtiqueta =
-      volTrabajo != null && Number.isFinite(volTrabajo) ? Math.round(volTrabajo * 10) / 10 : '—';
-    var volPct =
-      volMax != null && volTrabajo != null && volMax > 0
-        ? Math.min(1, Math.max(0, volTrabajo / volMax))
-        : 0.55;
-    var tieneDifusor = cfg.equipamiento ? cfg.equipamiento.indexOf('difusor') >= 0 : true;
-    var tieneCalentador = cfg.equipamiento ? cfg.equipamiento.indexOf('calentador') >= 0 : true;
-    var esMulticubo =
-      typeof dwcGetOxigenacionDiseno === 'function' && dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
-    var S_mc = esMulticubo
-      ? typeof dwcGetNumCubosIndependientes === 'function'
-        ? Math.max(1, dwcGetNumCubosIndependientes(cfg))
-        : N * C
-      : 0;
-    var mcCols = 1;
-    var mcRows = 1;
-    if (esMulticubo) {
-      var g =
-        typeof hcDistribuirFilasColumnas === 'function'
-          ? hcDistribuirFilasColumnas(S_mc, 6)
-          : { cols: S_mc, rows: 1 };
-      mcCols = g.cols;
-      mcRows = g.rows;
+    if (typeof generarSVGDwc !== 'function') return '';
+    if (!cfgOverride) return generarSVGDwc();
+    var prevCfg = typeof state !== 'undefined' ? state.configTorre : null;
+    var prevTorre = typeof state !== 'undefined' ? state.torre : null;
+    var draft = Object.assign({ tipoInstalacion: 'dwc' }, cfgOverride);
+    var N = Math.max(1, draft.numNiveles || 1);
+    var C = Math.max(1, draft.numCestas || 1);
+    var emptyCell = function () {
+      return { variedad: '', fecha: '', notas: '', origenPlanta: '', fotos: [], fotoKeys: [] };
+    };
+    var torrePreview = [];
+    for (var n = 0; n < N; n++) {
+      var row = [];
+      for (var c = 0; c < C; c++) row.push(emptyCell());
+      torrePreview.push(row);
     }
-    var u = uid('dwc');
-    var W = esMulticubo
-      ? Math.min(720, 140 + mcCols * 108)
-      : Math.min(560, Math.max(420, 120 + C * 28));
-    var body = defsBlock(u);
-    body += '<rect width="' + W + '" height="900" fill="url(#' + u + '-bg)"/>';
-    body += illoText(
-      W / 2,
-      26,
-      'DWC · ' + (esMulticubo ? 'multiválvula · ' + S_mc + ' cubos' : N + '×' + C + ' macetas'),
-      'title'
-    );
-    body += illoText(W / 2, 42, 'Toca cada maceta para asignar cultivo', 'subtitle');
-
-    if (esMulticubo) {
-      var mcScene = dwcHeroMultivalve(W, S_mc, mcCols, mcRows, cfg, u, volEtiqueta, ta, tieneDifusor);
-      body += mcScene.svg;
-      body += illoText(W / 2, mcScene.footY + 18, '~' + volEtiqueta + ' L por cubo', 'vol');
-      return svgWrap(
-        'dwc-svg-diagram dwc-svg-diagram--multicubo hc-illo-dwc hc-illo-dwc--hero',
-        W,
-        mcScene.footY + 40,
-        u + '-title',
-        'DWC multiválvula',
-        body
-      );
+    if (typeof state !== 'undefined') {
+      state.configTorre = draft;
+      state.torre = torrePreview;
     }
-
-    var hero = dwcHeroSingleTank(W, N, C, cfg, u, volPct, ta, tieneDifusor, tieneCalentador);
-    body += hero.svg;
-    body += illoText(W / 2, hero.footY, volEtiqueta + ' L', 'vol');
-    body += illoText(W / 2, hero.footY + 14, 'Volumen de mezcla en el depósito', 'hint');
-    return svgWrap(
-      'dwc-svg-diagram hc-illo-dwc hc-illo-dwc--hero',
-      W,
-      hero.footY + 28,
-      u + '-title',
-      'DWC ' + N + '×' + C,
-      body
-    );
+    try {
+      return generarSVGDwc();
+    } finally {
+      if (typeof state !== 'undefined') {
+        state.configTorre = prevCfg;
+        state.torre = prevTorre;
+      }
+    }
   };
 
   window.hcIlloGenerarSVGSrf = function () {
