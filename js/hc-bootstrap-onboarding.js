@@ -118,7 +118,19 @@ function tryShowTabBarCoachDeferred(attempt) {
   try { document.body.classList.add('hc-tab-coach-open'); } catch (_) {}
 }
 
+function hcDebeEvitarReabrirAsistenteTrasSetup() {
+  try {
+    const ts = window._hcSetupWizardCompletadoTs;
+    return typeof ts === 'number' && Date.now() - ts < 12000;
+  } catch (_) {
+    return false;
+  }
+}
+
 function scheduleTabBarCoach(delayMs) {
+  if (typeof hcDebeEvitarReabrirAsistenteTrasSetup === 'function' && hcDebeEvitarReabrirAsistenteTrasSetup()) {
+    return;
+  }
   let dismissed = false;
   try { dismissed = localStorage.getItem(HC_TAB_BAR_COACH_KEY) === '1'; } catch (_) {}
   if (dismissed) return;
@@ -154,6 +166,11 @@ function dismissTabBarCoach() {
       if (so && so.classList.contains('open')) return;
     } catch (_) {}
     // No forzar de nuevo el asistente si ya hay instalación guardada (p. ej. tras configurar y cerrar flujos).
+    try {
+      if (typeof hcDebeEvitarReabrirAsistenteTrasSetup === 'function' && hcDebeEvitarReabrirAsistenteTrasSetup()) {
+        return;
+      }
+    } catch (_) {}
     try {
       if (typeof hcEsPrimeraVezAsistenteInstalacion === 'function' && !hcEsPrimeraVezAsistenteInstalacion()) {
         return;

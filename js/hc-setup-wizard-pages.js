@@ -1097,11 +1097,9 @@ function updateNftSetupPreview() {
 }
 
 function renderSetupPage() {
-  // Si es nueva torre y estamos en spage7 (¿más de una torre?), saltarlo
-  if (setupEsNuevaTorre && setupPagina === 7) {
-    // spage7 no tiene sentido para nueva torre — guardamos directamente
-    guardarSetupYContinuar();
-    return;
+  // Instalación nueva: el último paso es cultivos (6); nunca mostrar spage7 (resumen/«varias torres»).
+  if (setupEsNuevaTorre && setupPagina > SETUP_TOTAL_PAGES - 2) {
+    setupPagina = SETUP_TOTAL_PAGES - 2;
   }
 
   // Ocultar todas las páginas
@@ -1324,6 +1322,62 @@ function hcSetupPreviewSinDimensiones() {
   return !Number.isFinite(f) || f < 1 || !Number.isFinite(c) || c < 1;
 }
 
+/** Vista previa DWC en asistente: diagrama ilustrado (cenital + alzado), coherente con pestaña Sistema. */
+function renderDwcIlloSetupPreview(previewEl, filas, cols, volLitros, draftExtra) {
+  if (typeof hcIlloGenerarSVGDwc !== 'function') {
+    renderDwcLidSetupPreview(previewEl, filas, cols, volLitros);
+    return;
+  }
+  previewEl.innerHTML = '';
+  previewEl.style.position = 'relative';
+  previewEl.style.height = 'auto';
+  const prevCfg = state.configTorre;
+  const prevTorre = state.torre;
+  let draft = draftExtra || {};
+  if (!draftExtra && typeof buildDwcDraftCfgFromSetupWizardInputs === 'function') {
+    try {
+      draft = buildDwcDraftCfgFromSetupWizardInputs() || {};
+    } catch (_) {}
+  }
+  draft = Object.assign({ tipoInstalacion: 'dwc' }, draft);
+  draft.numNiveles = Math.max(1, filas);
+  draft.numCestas = Math.max(1, cols);
+  if (typeof setupEquipamiento !== 'undefined' && setupEquipamiento) {
+    draft.equipamiento = [...setupEquipamiento];
+  }
+  if (volLitros != null && Number(volLitros) > 0) {
+    draft.volDeposito = volLitros;
+  }
+  const emptyCell = () => ({
+    variedad: '',
+    fecha: '',
+    notas: '',
+    origenPlanta: '',
+    fotos: [],
+    fotoKeys: [],
+  });
+  const torrePreview = [];
+  for (let n = 0; n < draft.numNiveles; n++) {
+    const row = [];
+    for (let c = 0; c < draft.numCestas; c++) row.push(emptyCell());
+    torrePreview.push(row);
+  }
+  state.configTorre = draft;
+  state.torre = torrePreview;
+  try {
+    previewEl.innerHTML = hcIlloGenerarSVGDwc();
+    previewEl.classList.add('torre-preview--dwc', 'hc-illo-diagram');
+  } catch (err) {
+    renderDwcLidSetupPreview(previewEl, filas, cols, volLitros);
+    try {
+      console.error('renderDwcIlloSetupPreview', err);
+    } catch (_) {}
+  } finally {
+    state.configTorre = prevCfg;
+    state.torre = prevTorre;
+  }
+}
+
 function renderDwcLidSetupPreview(previewEl, filas, cols, volLitros) {
   previewEl.innerHTML = '';
   previewEl.style.position = 'relative';
@@ -1442,14 +1496,27 @@ function refreshDwcSetupPreview() {
             : null;
         if (vMc != null && vMc > 0) volMc = Math.round(vMc * 10) / 10;
       } catch (_) {}
-      renderDwcMulticuboSetupPreview(
-        preview,
-        cols,
-        volMc,
-        document.getElementById('setupDwcDepositoForma')?.value
-      );
+      let draftMc = null;
+      try {
+        draftMc =
+          typeof buildDwcDraftCfgFromSetupWizardInputs === 'function'
+            ? buildDwcDraftCfgFromSetupWizardInputs()
+            : null;
+      } catch (_) {}
+      if (typeof hcIlloGenerarSVGDwc === 'function' && draftMc) {
+        draftMc.numNiveles = 1;
+        draftMc.numCestas = cols;
+        renderDwcIlloSetupPreview(preview, 1, cols, volMc, draftMc);
+      } else {
+        renderDwcMulticuboSetupPreview(
+          preview,
+          cols,
+          volMc,
+          document.getElementById('setupDwcDepositoForma')?.value
+        );
+      }
     } else {
-      renderDwcLidSetupPreview(preview, filas, cols, vol);
+      renderDwcIlloSetupPreview(preview, filas, cols, vol);
     }
   } catch (err) {
     preview.innerHTML =

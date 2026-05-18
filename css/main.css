@@ -1428,6 +1428,47 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   stroke: #22c55e;
   stroke-width: 3px;
 }
+.hc-illo-diagram text.hc-illo-label {
+  paint-order: normal;
+  stroke: none;
+}
+.hc-illo-diagram text.hc-illo-label--title {
+  font-family: Syne, sans-serif;
+  font-size: clamp(14px, 3.2vw, 17px);
+  font-weight: 900;
+  fill: #1e3a5f;
+}
+.hc-illo-diagram text.hc-illo-label--subtitle {
+  font-size: clamp(9px, 2vw, 11px);
+  font-weight: 600;
+  fill: #64748b;
+}
+.hc-illo-diagram text.hc-illo-label--section {
+  font-family: Syne, sans-serif;
+  font-size: clamp(8px, 1.8vw, 10px);
+  font-weight: 800;
+  fill: #475569;
+  letter-spacing: 0.08em;
+}
+.hc-illo-diagram text.hc-illo-label--vol {
+  font-family: Syne, sans-serif;
+  font-size: clamp(16px, 3.8vw, 20px);
+  font-weight: 900;
+  fill: #0284c7;
+}
+.hc-illo-diagram text.hc-illo-label--hint {
+  font-size: clamp(7px, 1.6vw, 9px);
+  font-weight: 600;
+  fill: #64748b;
+}
+.hc-illo-diagram .hc-illo-pot .hc-illo-progress {
+  filter: drop-shadow(0 0 1.5px rgba(15, 23, 42, 0.55));
+}
+.hc-illo-diagram .hc-illo-pot .hc-illo-dias {
+  paint-order: normal;
+  stroke: none;
+  filter: drop-shadow(0 0 1px rgba(15, 23, 42, 0.45));
+}
 #torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--multicubo {
   min-height: min(62vh, 760px);
 }

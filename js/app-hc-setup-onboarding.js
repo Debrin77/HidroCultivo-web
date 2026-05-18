@@ -66,6 +66,9 @@ function hcResetSetupWizardSession(opts) {
   if (!opts.keepNuevaFlag) {
     setupEsNuevaTorre = false;
   }
+  if (!opts.keepPagina) {
+    setupPagina = 0;
+  }
   const info = document.getElementById('setupPlantasSeleccionadas');
   const texto = document.getElementById('setupPlantasTexto');
   if (info) info.classList.add('setup-hidden');

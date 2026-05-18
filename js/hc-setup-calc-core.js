@@ -1670,6 +1670,11 @@ function guardarSetupYContinuar() {
     consejosModoUi: setupData.consejosModoUi === 'avanzado' ? 'avanzado' : 'principiante',
     torreObjetivoCultivo:
       ((state.configTorre && state.configTorre.torreObjetivoCultivo) || 'final'),
+  };
+  try {
+    delete state.configTorre.hcPlantillaAutogenerada;
+  } catch (_) {}
+  Object.assign(state.configTorre, {
     ...(isRdwc
       ? {
           rdwcSites: Math.max(2, Math.min(64, parseInt(String(document.getElementById('setupRdwcSites')?.value || '4'), 10) || 4)),
@@ -1694,7 +1699,7 @@ function guardarSetupYContinuar() {
           })(),
         }
       : {}),
-  };
+  });
   if (isRdwc && typeof buildRdwcConfigFromForm === 'function') {
     Object.assign(state.configTorre, buildRdwcConfigFromForm('setup', state.configTorre));
   }
@@ -1826,6 +1831,8 @@ function guardarSetupYContinuar() {
       typeof dwcValidarVolumenManualSegunForma === 'function' &&
       !dwcValidarVolumenManualSegunForma(state.configTorre, 'setup')
     ) {
+      setupPagina = 1;
+      renderSetupPage();
       return;
     }
     dwcSincronizarTamanoCestaDesdeRim(state.configTorre);
@@ -2028,7 +2035,13 @@ function guardarSetupYContinuar() {
 
   // Cerrar asistente primero para que el paso a Cultivo / checklist sea continuo (sin solapamiento visual).
   try {
+    window._hcSetupWizardCompletadoTs = Date.now();
+  } catch (_) {}
+  try {
     if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();
+  } catch (_) {}
+  try {
+    setupPagina = 0;
   } catch (_) {}
   try {
     if (typeof cerrarSetup === 'function') cerrarSetup();
