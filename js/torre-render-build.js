@@ -488,6 +488,142 @@ function dwcSvgDepDimsDesdeCfg(cfg) {
  * DWC: tapa en vista cenital (rejilla + macetas tocables) y debajo alzado frontal
  * del depósito con solución, calentador y aireador si aplica.
  */
+/** Proporción alto/diámetro del cubo cilíndrico DWC (siempre alto > ancho en el dibujo). */
+function dwcCilindricoAspectoDesdeCfg(cfg, dep) {
+  const c = cfg || {};
+  const d = dep || {};
+  let diamCm = null;
+  if (d.L != null && d.W != null) diamCm = (d.L + d.W) / 2;
+  else {
+    const L = Number(c.dwcDepositoLargoCm);
+    const W = Number(c.dwcDepositoAnchoCm);
+    if (Number.isFinite(L) && Number.isFinite(W) && L > 0 && W > 0) diamCm = (L + W) / 2;
+    else if (Number.isFinite(L) && L > 0) diamCm = L;
+    else if (Number.isFinite(W) && W > 0) diamCm = W;
+  }
+  if (diamCm == null || diamCm < 5) diamCm = 40;
+  let profCm = d.P != null ? d.P : Number(c.dwcDepositoProfCm);
+  if (!Number.isFinite(profCm) || profCm < 5) profCm = diamCm * 1.35;
+  const aspectH = Math.max(1.22, Math.min(2.1, profCm / diamCm));
+  return { diamCm, profCm, aspectH };
+}
+
+/** Radio maceta en tapa cilíndrica (cesta grande, proporcional al Ø net pot). */
+function dwcSvgCilindricoMacetaR(planW, planPad, cfg) {
+  const lidR = Math.max(12, planW / 2 - 1 - planPad);
+  const rimMm = Number(cfg && cfg.dwcNetPotRimMm);
+  let frac = 0.44;
+  if (Number.isFinite(rimMm) && rimMm > 0) {
+    const diamMm = (planW / 220) * 400;
+    frac = Math.min(0.52, Math.max(0.36, (rimMm / Math.max(diamMm, 80)) * 1.15));
+  }
+  return Math.max(24, Math.min(40, lidR * frac));
+}
+
+/** Alzado frontal depósito cilíndrico (más alto que ancho). */
+function dwcSvgCilindricoAlzado(
+  tankX,
+  tankStartY,
+  tankW,
+  tankH,
+  rimH,
+  innerX0,
+  innerY0,
+  innerW0,
+  innerH0,
+  waterTopY,
+  innerBottom,
+  waveY,
+  ta,
+  tankFaceInset
+) {
+  const cx = tankX + tankW / 2;
+  const rx = (tankW - tankFaceInset * 2) / 2;
+  const yCap = tankStartY + rimH / 2;
+  const yTop = tankStartY + rimH - 2;
+  const yBot = tankStartY + tankH;
+  return (
+    `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>` +
+    `<ellipse cx="${cx.toFixed(1)}" cy="${yCap.toFixed(1)}" rx="${(tankW / 2).toFixed(1)}" ry="${(rimH / 2).toFixed(1)}" fill="none" stroke="#475569" stroke-width="1.1" opacity="0.5"/>` +
+    `<rect x="${(tankX + tankFaceInset).toFixed(1)}" y="${yTop.toFixed(1)}" width="${(tankW - tankFaceInset * 2).toFixed(1)}" height="${(yBot - yTop).toFixed(1)}" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>` +
+    `<ellipse cx="${cx.toFixed(1)}" cy="${yTop.toFixed(1)}" rx="${rx.toFixed(1)}" ry="9" fill="#b3e5fc" stroke="#64748b" stroke-width="1"/>` +
+    `<ellipse cx="${cx.toFixed(1)}" cy="${yBot.toFixed(1)}" rx="${rx.toFixed(1)}" ry="11" fill="#81d4fa" stroke="#64748b" stroke-width="1.1" opacity="0.85"/>` +
+    `<g clip-path="url(#dwcTankInnerClip)">` +
+    `<rect x="${innerX0.toFixed(1)}" y="${waterTopY.toFixed(1)}" width="${innerW0.toFixed(1)}" height="${(innerBottom - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
+    (ta
+      ? `<path d="M ${(innerX0 + 14).toFixed(1)} ${waveY.toFixed(1)} Q ${(innerX0 + innerW0 / 2).toFixed(1)} ${(innerY0 + innerH0 * 0.3).toFixed(1)} ${(innerX0 + innerW0 - 14).toFixed(1)} ${(innerY0 + innerH0 * 0.38).toFixed(1)}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.45"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
+      : '') +
+    `</g>` +
+    `<rect x="${innerX0.toFixed(1)}" y="${innerY0.toFixed(1)}" width="${innerW0.toFixed(1)}" height="${innerH0.toFixed(1)}" rx="8" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.38"/>`
+  );
+}
+
+/** Manguera cenital hub → cubo (multiválvula). */
+function dwcSvgMcHosePlan(hx, hy, tx, ty) {
+  const mx = (hx + tx) / 2;
+  const my = (hy + ty) / 2;
+  const bow = Math.max(8, Math.hypot(tx - hx, ty - hy) * 0.12);
+  const c1x = hx + (tx - hx) * 0.2;
+  const c1y = hy - bow;
+  const c2x = tx - (tx - hx) * 0.2;
+  const c2y = ty - bow * 0.35;
+  const d = `M ${hx.toFixed(1)} ${hy.toFixed(1)} C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`;
+  return (
+    `<path d="${d}" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" opacity="0.95"/>` +
+    `<path d="${d}" fill="none" stroke="#90a4ae" stroke-width="1.1" stroke-linecap="round" opacity="0.4"/>`
+  );
+}
+
+/** Distribuidor / multiválvula (vista cenital). */
+function dwcSvgMcManifoldHub(cx, cy) {
+  return (
+    `<g class="dwc-mc-hub" aria-hidden="true">` +
+    `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="11" fill="#eceff1" stroke="#78909c" stroke-width="1.2"/>` +
+    `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4" fill="#b0bec5" stroke="#546e7a" stroke-width="0.8"/>` +
+    `<line x1="${(cx - 9).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx + 9).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="#90a4ae" stroke-width="1.5" stroke-linecap="round"/>` +
+    `<line x1="${cx.toFixed(1)}" y1="${(cy - 9).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy + 9).toFixed(1)}" stroke="#90a4ae" stroke-width="1.5" stroke-linecap="round"/>` +
+    `</g>`
+  );
+}
+
+/** Cubo individual multiválvula (alzado, más alto que ancho). */
+function dwcSvgMcCuboFront(x, y, w, h, volPctAgua, tieneDifusor, Dw, idx, volPerCubo, ta) {
+  const ix = x + 5;
+  const iy = y + 12;
+  const iw = w - 10;
+  const ih = h - 18;
+  const cx = x + w / 2;
+  const airFrac = 0.15;
+  const fillU = Math.min(1 - airFrac, Math.max(0, volPctAgua));
+  const wTop = iy + ih * (1 - fillU);
+  const sy = iy + ih - 4;
+  let o =
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" fill="#f8fafc" stroke="#64748b" stroke-width="1.25" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.08))"/>` +
+    `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="5" fill="rgba(224,247,250,0.65)" stroke="none"/>` +
+    `<rect x="${ix}" y="${wTop.toFixed(1)}" width="${iw}" height="${(iy + ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
+    `<line x1="${ix}" y1="${wTop.toFixed(1)}" x2="${(ix + iw)}" y2="${wTop.toFixed(1)}" stroke="#00acc1" stroke-width="1.4" opacity="0.7"/>` +
+    `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="5" fill="none" stroke="#0ea5e9" stroke-width="0.9" opacity="0.4"/>`;
+  if (tieneDifusor) {
+    o += `<ellipse cx="${cx.toFixed(1)}" cy="${sy}" rx="8" ry="4" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.9"/>`;
+  }
+  o += `<text x="${cx.toFixed(1)}" y="${(y + h + 11).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7.5" font-weight="700" fill="#64748b">Cubo ${idx + 1}</text>`;
+  if (volPerCubo != null) {
+    o += `<text x="${cx.toFixed(1)}" y="${(y + h + 21).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8" font-weight="800" fill="#0369a1">${volPerCubo} L</text>`;
+  }
+  if (tieneDifusor && ta) {
+    for (let bi = 0; bi < 3; bi++) {
+      const dx = (bi - 1) * 3;
+      const y0 = sy - 3;
+      const y1 = wTop + 5;
+      o += `<circle cx="${(cx + dx).toFixed(1)}" cy="${y0}" r="1.2" fill="${Dw.bubble}" opacity="0">
+        <animate attributeName="cy" from="${y0}" to="${y1}" dur="1.2s" begin="${(bi * 0.15).toFixed(2)}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0.85;0" dur="1.2s" begin="${(bi * 0.15).toFixed(2)}s" repeatCount="indefinite"/>
+      </circle>`;
+    }
+  }
+  return { svg: o, cx, stoneY: sy, waterTop: wTop, iy };
+}
+
 /** Piedras difusoras sugeridas (misma lógica que checklist DWC). */
 function dwcSvgNumPiedrasDifusor(cfg) {
   if (typeof dwcRecomendacionDifusorCompletaDesdeConfig === 'function') {
@@ -722,36 +858,38 @@ function generarSVGDwc() {
   const W = esMulticubo
     ? Math.min(620, Math.max(480, 72 + mcCols * (mcCubeSz + mcGapPlan)))
     : 460;
-  const H = esMulticubo ? 668 : 548;
+  const H = esMulticubo ? 720 : esCilindricoDwc ? 620 : 548;
 
   /* Mismo ancho exterior para tapa (cenital) y depósito (frente), alineados. */
   const planPad = esMulticubo ? 12 : 10;
+  const dep = dwcSvgDepDimsDesdeCfg(cfg);
+  const cilAspect = esCilindricoDwc ? dwcCilindricoAspectoDesdeCfg(cfg, dep) : null;
   const blockW = esMulticubo
     ? mcCols * mcCubeSz + Math.max(0, mcCols - 1) * mcGapPlan + planPad * 2
-    : esCilindricoDwc
-      ? Math.min(300, Math.max(220, 220))
+    : esCilindricoDwc && cilAspect
+      ? Math.min(280, Math.max(200, Math.round(170 + cilAspect.diamCm * 0.85)))
       : Math.min(320, Math.max(228, 28 + cDraw * 30));
   const planLeft = (W - blockW) / 2;
   const planW = blockW;
-  const mcAirBandH = esMulticubo ? 34 : 0;
-  const mcAirGapH = esMulticubo ? 22 : 0;
-  const mcManifoldH = esMulticubo ? 12 : 0;
-  const mcAirBlockH = mcAirBandH + mcAirGapH + mcManifoldH;
+  const mcAirBlockH = 0;
   const planTop = esMulticubo ? 44 : 54;
   const planH = esMulticubo
-    ? mcAirBlockH + mcRows * mcCubeSz + Math.max(0, mcRows - 1) * mcGapPlan + planPad * 2
+    ? mcRows * mcCubeSz + Math.max(0, mcRows - 1) * mcGapPlan + planPad * 2
     : esCilindricoDwc
       ? planW
       : Math.min(200, 28 + nDraw * 30);
   const planInnerX = planLeft + planPad;
-  const planInnerY = esMulticubo ? planTop + planPad + mcAirBlockH : planTop + planPad;
+  const planInnerY = planTop + planPad;
   const planInnerW = planW - planPad * 2;
   const planInnerH = planH - planPad * 2;
   const cellW = esMulticubo ? mcCubeSz : planInnerW / cDraw;
   const cellH = esMulticubo ? mcCubeSz : planInnerH / nDraw;
-  const Rpot = esMulticubo
-    ? Math.max(14, Math.min(26, mcCubeSz * 0.36))
+  let Rpot = esMulticubo
+    ? Math.max(16, Math.min(28, mcCubeSz * 0.4))
     : Math.max(7, Math.min(20, Math.min(cellW, cellH) * 0.38));
+  if (esCilindricoDwc) {
+    Rpot = dwcSvgCilindricoMacetaR(planW, planPad, cfg);
+  }
 
   function macetaSvg(n, c, cx, cy, r, topView) {
     const dat =
@@ -879,13 +1017,15 @@ function generarSVGDwc() {
   const planBottom = planTop + planH;
   const tankStartY = planBottom + 48;
   const tankW = blockW;
-  const tankH = 108;
+  let tankH = 108;
+  if (esCilindricoDwc && cilAspect) {
+    tankH = Math.round(Math.max(142, Math.min(215, tankW * cilAspect.aspectH)));
+  }
   /** Borde inferior del bloque frontal (depósito único o rejilla de cubos). */
   let tankGraphicBottom = tankStartY + tankH;
   const tankX = planLeft;
   const rimH = 14;
   const innerPad = 10;
-  const dep = dwcSvgDepDimsDesdeCfg(cfg);
   const innerX0 = tankX + innerPad;
   const innerY0 = tankStartY + rimH + 4;
   const innerW0 = tankW - innerPad * 2;
@@ -908,60 +1048,46 @@ function generarSVGDwc() {
     const fCols = mcCols;
     const fRows = mcRows;
     const gapMc = mcGapFront;
-    const pumpStripH = 26;
-    const pumpTop = tankStartY;
+    const mcPumpZoneH = 50;
     const pumpCx = tankX + tankW / 2;
-    const yGrid0 = pumpTop + pumpStripH + 10;
+    const pumpTop = tankStartY;
+    const yGrid0 = pumpTop + mcPumpZoneH;
     const rowPadX = 10;
-    const miniH = fRows > 1 ? 52 : 58;
-    const rowW = tankW - 2 * rowPadX;
-    const miniW = Math.min(88, Math.max(42, (rowW - (fCols - 1) * gapMc) / fCols));
+    const miniW = Math.min(82, Math.max(44, (tankW - 2 * rowPadX - (fCols - 1) * gapMc) / fCols));
+    const miniH = Math.round(miniW * 1.28);
     const rowTotalW = fCols * miniW + (fCols - 1) * gapMc;
     const row0X = tankX + (tankW - rowTotalW) / 2;
-    const gridBlockH = fRows * miniH + Math.max(0, fRows - 1) * (gapMc + 6);
-    let dropSvg = '';
+    const gridBlockH = fRows * miniH + Math.max(0, fRows - 1) * (gapMc + 8);
     let cuboSvg = '';
+    let hoseSvg = '';
     dwcMcAirPts = [];
-    const airDropFromY = pumpTop + pumpStripH;
+    const pumpMc = dwcSvgAirPumpExternal(pumpCx - 27, pumpTop + 2, 1);
+    const manifoldY = pumpTop + pumpMc.h + 10;
+    const hubOutY = manifoldY + 2;
     for (let idx = 0; idx < S; idx++) {
       const fr = Math.floor(idx / fCols);
       const fc = idx % fCols;
       const x = row0X + fc * (miniW + gapMc);
-      const y = yGrid0 + fr * (miniH + gapMc + 6);
-      const ix = x + 4;
-      const iy = y + 10;
-      const iw = miniW - 8;
-      const ih = miniH - 16;
-      const cx = ix + iw / 2;
-      dropSvg += `<line x1="${cx.toFixed(1)}" y1="${airDropFromY.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(iy - 1).toFixed(1)}"
-        stroke="${Dw.airLine}" stroke-width="1.4" stroke-dasharray="4 2.5" opacity="0.85"/>`;
-      dropSvg += `<circle cx="${cx.toFixed(1)}" cy="${(iy - 2).toFixed(1)}" r="2" fill="#0ea5e9" stroke="#0369a1" stroke-width="0.7"/>`;
-      cuboSvg += `<rect x="${x}" y="${y}" width="${miniW}" height="${miniH}" rx="6" fill="#f8fafc" stroke="#64748b" stroke-width="1.15"/>`;
-      const wTop = iy + ih * (1 - volPctAguaDibujo);
-      cuboSvg += `<rect x="${ix}" y="${iy}" width="${iw}" height="${Math.max(0, wTop - iy).toFixed(1)}" fill="#f0f9ff" opacity="0.48"/>`;
-      cuboSvg += `<rect x="${ix}" y="${wTop.toFixed(1)}" width="${iw}" height="${(iy + ih - wTop).toFixed(1)}" fill="url(#dwcWaterGrad)"/>`;
-      cuboSvg += `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" rx="4" fill="none" stroke="#0ea5e9" stroke-width="0.95" opacity="0.38"/>`;
-      const sy = iy + ih - 3;
+      const y = yGrid0 + fr * (miniH + gapMc + 8);
+      const cubo = dwcSvgMcCuboFront(x, y, miniW, miniH, volPctAguaDibujo, tieneDifusor, Dw, idx, volPerCuboMc, ta);
+      cuboSvg += cubo.svg;
       if (tieneDifusor) {
-        cuboSvg += `<ellipse cx="${cx}" cy="${sy}" rx="7" ry="3.6" fill="${Dw.airStoneFill}" stroke="${Dw.airStoneStroke}" stroke-width="0.85"/>`;
-        dwcMcAirPts.push({ cx, stoneY: sy, waterTop: wTop });
-      }
-      cuboSvg += `<text x="${cx.toFixed(1)}" y="${(y + miniH + 10).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7.5" font-weight="700" fill="#64748b">Cubo ${idx + 1}</text>`;
-      if (volPerCuboMc != null) {
-        cuboSvg += `<text x="${cx.toFixed(1)}" y="${(y + miniH + 20).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8" font-weight="800" fill="#0369a1">${volPerCuboMc} L útiles</text>`;
+        dwcMcAirPts.push({ cx: cubo.cx, stoneY: cubo.stoneY, waterTop: cubo.waterTop });
+        const entryY = cubo.iy - 2;
+        const hoseD =
+          `M ${pumpCx.toFixed(1)} ${hubOutY.toFixed(1)} L ${pumpCx.toFixed(1)} ${manifoldY.toFixed(1)} L ${cubo.cx.toFixed(1)} ${manifoldY.toFixed(1)} L ${cubo.cx.toFixed(1)} ${entryY.toFixed(1)} L ${cubo.cx.toFixed(1)} ${cubo.stoneY.toFixed(1)}`;
+        hoseSvg +=
+          `<path d="${hoseD}" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>` +
+          `<path d="${hoseD}" fill="none" stroke="#90a4ae" stroke-width="1" stroke-linecap="round" opacity="0.35"/>`;
       }
     }
+    hoseSvg +=
+      `<line x1="${row0X.toFixed(1)}" y1="${manifoldY.toFixed(1)}" x2="${(row0X + rowTotalW).toFixed(1)}" y2="${manifoldY.toFixed(1)}" stroke="#cfd8dc" stroke-width="3.5" stroke-linecap="round" opacity="0.95"/>` +
+      dwcSvgMcManifoldHub(pumpCx, manifoldY);
     innerBottom = yGrid0 + gridBlockH + 6;
-    waterTopY = innerBottom - 20;
-    waveY = waterTopY;
-    hx = tankX + tankW - 22;
-    stoneX = row0X + miniW / 2;
-    tankGraphicBottom = Math.max(tankStartY + tankH, innerBottom + 10);
+    tankGraphicBottom = Math.max(tankStartY + mcPumpZoneH, innerBottom + 14);
     clipPathInner = `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${(tankGraphicBottom - tankStartY).toFixed(1)}" rx="2"/>`;
-    const airHeaderSvg =
-      `<rect x="${tankX}" y="${pumpTop}" width="${tankW}" height="${pumpStripH}" rx="6" fill="#dbeafe" stroke="#38bdf8" stroke-width="1.3"/>` +
-      `<text x="${pumpCx.toFixed(1)}" y="${(pumpTop + pumpStripH * 0.62).toFixed(1)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="900" fill="#0c4a6e" letter-spacing="0.07em">BOMBA DE AIRE</text>`;
-    tankFrontalSvg = airHeaderSvg + dropSvg + cuboSvg;
+    tankFrontalSvg = cuboSvg + hoseSvg + pumpMc.svg;
   } else if (formaDwc === 'cilindrico') {
     clipPathInner = `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5"/>`;
     waterTopY = innerY0 + innerH0 * (1 - volPctAguaDibujo);
@@ -969,18 +1095,22 @@ function generarSVGDwc() {
     waveY = innerY0 + innerH0 * 0.35;
     hx = innerX0 + 22;
     stoneX = innerX0 + innerW0 - 32;
-    tankFrontalSvg =
-      `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${rimH}" rx="5" fill="#f1f5f9" stroke="#64748b" stroke-width="1.3"/>` +
-      `<rect x="${tankX + tankFaceInset}" y="${tankStartY + rimH - 2}" width="${tankW - tankFaceInset * 2}" height="${tankH - rimH + 6}" rx="10" fill="url(#dwcTankFace)" stroke="#94a3b8" stroke-width="1.2"/>` +
-      `<ellipse cx="${W / 2}" cy="${tankStartY + rimH / 2}" rx="${tankW / 2}" ry="${rimH / 2}" fill="none" stroke="#475569" stroke-width="1.2" opacity="0.55"/>` +
-      `<ellipse cx="${W / 2}" cy="${tankStartY + tankH + 4}" rx="${(tankW - tankFaceInset * 2) / 2}" ry="10" fill="none" stroke="#94a3b8" stroke-width="1.1" opacity="0.35"/>` +
-      `<g clip-path="url(#dwcTankInnerClip)">` +
-      `<rect x="${innerX0}" y="${waterTopY.toFixed(1)}" width="${innerW0}" height="${(innerBottom - waterTopY).toFixed(1)}" fill="url(#dwcWaterGrad)"/>` +
-      (ta
-        ? `<path d="M ${innerX0 + 18} ${waveY} Q ${innerX0 + innerW0 / 2} ${innerY0 + innerH0 * 0.28} ${innerX0 + innerW0 - 22} ${innerY0 + innerH0 * 0.4}" fill="none" stroke="#bae6fd" stroke-width="1" opacity="0.4"><animate attributeName="opacity" values="0.2;0.55;0.2" dur="2.6s" repeatCount="indefinite"/></path>`
-        : '') +
-      `</g>` +
-      `<rect x="${innerX0}" y="${innerY0}" width="${innerW0}" height="${innerH0}" rx="5" fill="none" stroke="#0ea5e9" stroke-width="1.2" opacity="0.35"/>`;
+    tankFrontalSvg = dwcSvgCilindricoAlzado(
+      tankX,
+      tankStartY,
+      tankW,
+      tankH,
+      rimH,
+      innerX0,
+      innerY0,
+      innerW0,
+      innerH0,
+      waterTopY,
+      innerBottom,
+      waveY,
+      ta,
+      tankFaceInset
+    );
   } else if (formaDwc === 'troncopiramidal') {
     const padT = 8;
     const yt = tankStartY + rimH + 6;
@@ -1091,11 +1221,11 @@ function generarSVGDwc() {
 
   let dwcLidCylNoCabenOverlay = '';
   if (esMulticubo) {
-    const airPlanY = planTop + 6;
-    const airPlanCx = planLeft + planW / 2;
-    const airDropOriginY = airPlanY + mcAirBandH;
-    let airPlanDrops = '';
+    const hubCx = planLeft + planW / 2;
+    const hubCy = planTop + planH / 2;
     let cubesPlanSvg = '';
+    let hosesPlanSvg = '';
+    const mcPlanTargets = [];
     for (let idx = 0; idx < S_mc; idx++) {
       const row = Math.floor(idx / mcCols);
       const col = idx % mcCols;
@@ -1103,19 +1233,21 @@ function generarSVGDwc() {
       const by = planInnerY + row * (mcCubeSz + mcGapPlan);
       const cx = bx + mcCubeSz / 2;
       const cy = by + mcCubeSz / 2;
-      const rPot = Math.max(14, Math.min(26, mcCubeSz * 0.36));
-      airPlanDrops += `<line x1="${cx.toFixed(1)}" y1="${airDropOriginY.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(by - 1).toFixed(1)}" stroke="#64748b" stroke-width="1.15" stroke-dasharray="3 2" opacity="0.7"/>`;
-      airPlanDrops += `<circle cx="${cx.toFixed(1)}" cy="${(by - 2).toFixed(1)}" r="1.6" fill="#0ea5e9" stroke="#0369a1" stroke-width="0.6"/>`;
-      cubesPlanSvg += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${mcCubeSz}" height="${mcCubeSz}" rx="11" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.07))"/>`;
-      cubesPlanSvg += `<rect x="${(bx + 6).toFixed(1)}" y="${(by + 6).toFixed(1)}" width="${(mcCubeSz - 12).toFixed(1)}" height="${(mcCubeSz - 12).toFixed(1)}" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+      const rPot = Math.max(16, Math.min(28, mcCubeSz * 0.4));
+      mcPlanTargets.push({ cx, cy, by });
+      cubesPlanSvg +=
+        `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${mcCubeSz}" height="${mcCubeSz}" rx="11" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.07))"/>` +
+        `<rect x="${(bx + 5).toFixed(1)}" y="${(by + 5).toFixed(1)}" width="${(mcCubeSz - 10).toFixed(1)}" height="${(mcCubeSz - 10).toFixed(1)}" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
       cubesPlanSvg += macetaSvg(0, idx, cx, cy, rPot, true);
     }
-    s +=
-      `<rect x="${planLeft}" y="${airPlanY}" width="${planW}" height="${mcAirBandH}" rx="6" fill="#dbeafe" stroke="#38bdf8" stroke-width="1.2"/>` +
-      `<text x="${airPlanCx.toFixed(1)}" y="${(airPlanY + mcAirBandH * 0.58).toFixed(1)}" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="900" fill="#0c4a6e" letter-spacing="0.06em">BOMBA DE AIRE</text>` +
-      `<text x="${airPlanCx.toFixed(1)}" y="${(airPlanY + mcAirBandH * 0.88).toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="7" font-weight="600" fill="#475569">Una línea por cubo</text>` +
-      airPlanDrops +
-      cubesPlanSvg;
+    const hubOutY = hubCy + 14;
+    if (tieneDifusor) {
+      for (const t of mcPlanTargets) {
+        hosesPlanSvg += dwcSvgMcHosePlan(hubCx, hubOutY, t.cx, t.by - 2);
+      }
+    }
+    const pumpPlan = dwcSvgAirPumpExternal(hubCx - 27, hubCy - 22, 1);
+    s += cubesPlanSvg + hosesPlanSvg + dwcSvgMcManifoldHub(hubCx, hubCy + 10) + pumpPlan.svg;
   } else {
     if (formaDwc === 'cilindrico') {
       const rimMm = Number(cfg.dwcNetPotRimMm);
