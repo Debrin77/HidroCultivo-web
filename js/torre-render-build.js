@@ -489,6 +489,15 @@ function dwcSvgDepDimsDesdeCfg(cfg) {
  * del depósito con solución, calentador y aireador si aplica.
  */
 function generarSVGDwc() {
+  if (typeof hcIlloGenerarSVGDwc === 'function') {
+    try {
+      return hcIlloGenerarSVGDwc();
+    } catch (eIlloDwc) {
+      try {
+        console.error('hcIlloGenerarSVGDwc', eIlloDwc);
+      } catch (_) {}
+    }
+  }
   const cfg = state.configTorre || {};
   const N = Math.max(1, Math.min(12, cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES));
   const C = Math.max(1, Math.min(12, cfg.numCestas || window.NUM_CESTAS_ACTIVO || NUM_CESTAS));
@@ -1141,6 +1150,15 @@ function generarSVGDwc() {
  * SRF / DFT — balsa flotante: estanque común + lámina flotante + macetas; oxigenación o Kratky.
  */
 function generarSVGSrf() {
+  if (typeof hcIlloGenerarSVGSrf === 'function') {
+    try {
+      return hcIlloGenerarSVGSrf();
+    } catch (eIlloSrf) {
+      try {
+        console.error('hcIlloGenerarSVGSrf', eIlloSrf);
+      } catch (_) {}
+    }
+  }
   const cfg = state.configTorre || {};
   if (typeof srfEnsureConfigDefaults === 'function') srfEnsureConfigDefaults(cfg);
   const grid =
@@ -1452,6 +1470,15 @@ function generarSVGRdwcHub(cfg) {
  * Cultivo por módulo como DWC (fase, foto, arco días, nombre). Flujo sin cabezas de flecha enormes.
  */
 function generarSVGRdwc() {
+  if (typeof hcIlloGenerarSVGRdwc === 'function') {
+    try {
+      return hcIlloGenerarSVGRdwc();
+    } catch (eIlloRdwc) {
+      try {
+        console.error('hcIlloGenerarSVGRdwc', eIlloRdwc);
+      } catch (_) {}
+    }
+  }
   const escSvg = (t) =>
     String(t || '')
       .replace(/&/g, '&amp;')
@@ -1690,6 +1717,15 @@ function generarSVGRdwc() {
 }
 
 function generarSVGTorre() {
+  if (typeof hcIlloGenerarSVGTorre === 'function') {
+    try {
+      return hcIlloGenerarSVGTorre();
+    } catch (eIlloTorre) {
+      try {
+        console.error('hcIlloGenerarSVGTorre', eIlloTorre);
+      } catch (_) {}
+    }
+  }
   // Usar configuración REAL de la torre activa
   const cfg = state.configTorre || {};
   const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;

@@ -3070,28 +3070,37 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       let ariaTxt = 'Canal T' + (R.g + 1) + ', hueco ' + (j + 1) + ', ' + (dat.variedad ? cultivoNombreLista(cult, dat.variedad) : 'vacío');
       if (dias !== null) ariaTxt += ', día ' + dias;
       ariaTxt += '. Pulsa para ficha o asignar cultivo.';
-      if (interactive) {
+      if (typeof hcIlloNftHuecoLayer === 'function') {
+        plants += hcIlloNftHuecoLayer(gx, gy, hr, R.g, j, dat, cult, interactive, null, {
+          compact: compactEsc,
+          numBelow: true,
+          numShow: j + 1,
+          slotAlong: slotAlongR,
+        });
+      } else if (interactive) {
         plants +=
           '<g class="hc-cesta hc-nft-hueco" data-n="' + R.g + '" data-c="' + j + '" role="button" tabindex="0" aria-label="' +
           escAriaAttr(ariaTxt) +
           '">';
-      }
-      plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="' + (interactive ? '1.35' : '1.1') + '"/>';
-      if (isMulti) {
-        plants +=
-          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2"/>';
-      }
-      if (isEd) {
-        plants +=
-          '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
-      }
-      plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactEsc);
-      plants += nftSvgHuecoNumBelowHole(gx, gy, hr, j + 1, Math.max(7, holeNumFsEsc - 0.75), compactEsc);
-      if (interactive) {
+        plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="1.35"/>';
+        if (isMulti) {
+          plants +=
+            '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3.5).toFixed(2) + '" fill="none" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="3 2"/>';
+        }
+        if (isEd) {
+          plants +=
+            '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + (hr + 3).toFixed(2) + '" fill="none" stroke="#22c55e" stroke-width="1.25"/>';
+        }
+        plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactEsc);
+        plants += nftSvgHuecoNumBelowHole(gx, gy, hr, j + 1, Math.max(7, holeNumFsEsc - 0.75), compactEsc);
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongR);
         plants +=
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + ptrR.toFixed(2) + '" fill="rgba(0,0,0,0.001)" pointer-events="all"/>';
         plants += '</g>';
+      } else {
+        plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="1.1"/>';
+        plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactEsc);
+        plants += nftSvgHuecoNumBelowHole(gx, gy, hr, j + 1, Math.max(7, holeNumFsEsc - 0.75), compactEsc);
       }
     }
   }
