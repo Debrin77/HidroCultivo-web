@@ -109,52 +109,53 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const flowSt = 'stroke="' + P.flow + '" fill="none" ' + flowDash;
 
   /**
-   * Dos columnas en C: alimentación sale abajo del depósito y sube por el eje más EXTERIOR (más a la izquierda);
-   * retorno en el eje más INTERIOR (pegado al sistema) y entra arriba al depósito — xSupplyOut < xReturnIn → sin cruces.
+   * Serpentín (mesa / pared): alimentación por pasillo izquierdo y salida del depósito en ese lado;
+   * retorno por pasillo derecho y entrada al depósito en el lado opuesto — sin cruzar trazos.
    */
-  const xReturnIn = Math.max(22, Math.min(xL - 4, tx - 12));
-  const xSupplyOut = Math.max(12, xReturnIn - 20);
+  const xFeedCorridor = 18;
+  const xReturnCorridor = Wsvg - 18;
+  const xTankFeed = tx + 12;
+  const xTankReturn = tx + tankW - 12;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const xPump = tx + 14;
-  const yOutlet = tankY + tankH - 18;
-  const yInlet = tankY + 22;
+  const yOutlet = tankY + tankH - 16;
+  const yInlet = tankY + 16;
 
   let flowD = '';
   flowD += 'M ' + xPump + ' ' + yPump;
-  flowD += ' L ' + (tx + 6) + ' ' + yPump;
-  flowD += ' L ' + (tx + 6) + ' ' + yOutlet;
-  flowD += ' L ' + tx + ' ' + yOutlet;
-  flowD += ' L ' + xSupplyOut + ' ' + yOutlet;
-  flowD += ' L ' + xSupplyOut + ' ' + yRow(0);
+  flowD += ' L ' + xTankFeed + ' ' + yPump;
+  flowD += ' L ' + xTankFeed + ' ' + yOutlet;
+  flowD += ' L ' + xFeedCorridor + ' ' + yOutlet;
+  flowD += ' L ' + xFeedCorridor + ' ' + yRow(0);
   flowD += ' L ' + (xL + padFlow) + ' ' + yRow(0);
   for (let i = 0; i < nCh; i++) {
     const y = yRow(i);
     if (i % 2 === 0) {
       flowD += ' L ' + (xR - padFlow) + ' ' + y;
-      if (i < nCh - 1) flowD += ' L ' + (xR - padFlow) + ' ' + yRow(i + 1);
+      if (i < nCh - 1) {
+        flowD += ' L ' + xReturnCorridor + ' ' + y;
+        flowD += ' L ' + xReturnCorridor + ' ' + yRow(i + 1);
+        flowD += ' L ' + (xR - padFlow) + ' ' + yRow(i + 1);
+      }
     } else {
       flowD += ' L ' + (xL + padFlow) + ' ' + y;
-      if (i < nCh - 1) flowD += ' L ' + (xL + padFlow) + ' ' + yRow(i + 1);
+      if (i < nCh - 1) {
+        flowD += ' L ' + xFeedCorridor + ' ' + y;
+        flowD += ' L ' + xFeedCorridor + ' ' + yRow(i + 1);
+        flowD += ' L ' + (xL + padFlow) + ' ' + yRow(i + 1);
+      }
     }
   }
   const yLast = yRow(nCh - 1);
   const endsRightSerp = (nCh - 1) % 2 === 0;
-  const retMargSerp = endsRightSerp ? xR + 14 : xL - 14;
-  let yDuctRun = yLast + tubeH / 2 + 14;
-  if (yDuctRun > tankY - 8) yDuctRun = Math.max(yLast + tubeH / 2 + 8, tankY - 10);
-
-  flowD += ' L ' + retMargSerp + ' ' + yLast;
-  if (endsRightSerp) {
-    flowD += ' L ' + retMargSerp + ' ' + yDuctRun;
-    flowD += ' L ' + xReturnIn + ' ' + yDuctRun;
-  } else {
-    if (retMargSerp !== xReturnIn) flowD += ' L ' + xReturnIn + ' ' + yLast;
-  }
-  flowD += ' L ' + xReturnIn + ' ' + yInlet;
-  flowD += ' L ' + (tx + 4) + ' ' + yInlet;
-  flowD += ' L ' + (tx + 6) + ' ' + yInlet;
-  flowD += ' L ' + (tx + 6) + ' ' + yPump;
-  flowD += ' L ' + xPump + ' ' + yPump;
+  const xEndLast = endsRightSerp ? xR - padFlow : xL + padFlow;
+  flowD += ' L ' + xEndLast + ' ' + yLast;
+  flowD += ' L ' + xReturnCorridor + ' ' + yLast;
+  let yDuctRun = yLast + tubeH / 2 + 12;
+  if (yDuctRun > tankY - 6) yDuctRun = tankY - 8;
+  flowD += ' L ' + xReturnCorridor + ' ' + yDuctRun;
+  flowD += ' L ' + xTankReturn + ' ' + yDuctRun;
+  flowD += ' L ' + xTankReturn + ' ' + yInlet;
 
   let back = '';
   back +=
