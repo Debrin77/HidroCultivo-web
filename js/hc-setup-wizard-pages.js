@@ -39,6 +39,13 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     nv = Math.min(12, Math.max(1, nv));
     return buildNftEscaleraDiagramSvg(nv, caras, huecos, pendPct, volL, svgIdSuffix, equipOpts);
   }
+  if (
+    disp === 'pared' &&
+    EO.interactive === true &&
+    typeof buildNftParedIllustrationSvg === 'function'
+  ) {
+    return buildNftParedIllustrationSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts);
+  }
   return buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts);
 }
 

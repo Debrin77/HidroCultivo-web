@@ -1640,9 +1640,11 @@ function actualizarChromePanelEsquemaPorTipo() {
       const dEt =
         dN === 'pared' ? 'pared' : dN === 'escalera' ? 'escalera' : 'mesa';
       intro.innerHTML =
-        '<strong>NFT</strong> · ' +
-        dEt +
-        '. Agua en <strong>azul discontinuo</strong> (si animaciones activas). <strong>Toca hueco</strong> o <strong>Lista</strong>. Altura al 1.º canal: asistente o montaje arriba.';
+        dN === 'pared'
+          ? '<strong>NFT pared</strong> · vista ilustrada (tubos en la pared, depósito abajo). <strong>Toca un hueco</strong> para la ficha o <strong>Lista</strong> para todas las plazas.'
+          : '<strong>NFT</strong> · ' +
+            dEt +
+            '. Agua en <strong>azul discontinuo</strong> (si animaciones activas). <strong>Toca hueco</strong> o <strong>Lista</strong>. Altura al 1.º canal: asistente o montaje arriba.';
     } else if (esDwc) {
       intro.innerHTML =
         '<strong>DWC</strong>: tapa arriba, depósito abajo. <strong>Toca maceta</strong> o usa <strong>Lista</strong>.';

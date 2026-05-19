@@ -61,13 +61,19 @@ function renderTorre() {
     };
     if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
     let nftSvg = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
-    if (typeof enhanceNftDiagramScada === 'function') {
+    const esParedIllo =
+      nftDisposicionNormalizada(cfg.nftDisposicion) === 'pared' &&
+      String(nftSvg).indexOf('nft-pared-illustration') >= 0;
+    if (!esParedIllo && typeof enhanceNftDiagramScada === 'function') {
       nftSvg = enhanceNftDiagramScada(nftSvg, { interactive: true });
     }
     wrap.innerHTML = nftSvg;
+    wrap.classList.toggle('torre-svg-canvas--nft-pared-illo', esParedIllo);
     wrap.setAttribute(
       'aria-label',
-      'NFT: esquema SCADA con flujo de agua en azul. Toca un hueco para la ficha o usa Lista.'
+      esParedIllo
+        ? 'NFT en pared: vista ilustrada. Toca un hueco para la ficha del cultivo o usa Lista.'
+        : 'NFT: esquema SCADA con flujo de agua en azul. Toca un hueco para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
