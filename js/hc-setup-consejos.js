@@ -1342,7 +1342,7 @@ function buildConsejoObjetivoTorreCultivo() {
       '</strong> · ' +
       meteoEscHtml(sp.cicloTxt) +
       '.',
-    alerta: { tipo: 'info', txt: 'ℹ️ Puedes cambiarlo en Cultivo e instalación → Objetivo en torre vertical.' },
+    alerta: { tipo: 'info', txt: 'ℹ️ Puedes cambiarlo en el checklist de recarga (paso objetivo de torre) o al reconfigurar en el asistente.' },
   });
 }
 

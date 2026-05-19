@@ -557,8 +557,8 @@ function actualizarPostSetupChecklistRail() {
     if (bloqueadoUi) {
       const sinNinguna = sinVariedad;
       st.textContent = sinNinguna
-        ? 'Indica al menos un cultivo en el esquema; luego completa fechas si usas EC automático. Al estar listo, el checklist se abre solo.'
-        : 'Revisa las cestas con cultivo: falta fecha u origen según lo que marques en cada ficha. Cuando quede listo, el checklist se abrirá solo.';
+        ? 'Elige cultivo arriba y tócalo en cada cesta del esquema (o selecciona varias y «Aplicar a selección»). Luego «Finalizar asignación».'
+        : 'Revisa las cestas con cultivo: falta fecha u origen si usas EC automático. Cuando esté listo, «Finalizar asignación» o «Continuar al checklist».';
       st.classList.remove('setup-hidden');
     } else {
       st.textContent = '';
@@ -605,8 +605,38 @@ function hcNotificarCambioCultivoSistema() {
     if (typeof actualizarPostSetupChecklistRail === 'function') actualizarPostSetupChecklistRail();
     if (transicion && typeof showToast === 'function') {
       showToast(
-        'Cultivos listos en el esquema: pulsa «Continuar al checklist» arriba del esquema cuando quieras mezclar el depósito.'
+        'Cultivos listos: pulsa «Finalizar asignación» o «Continuar al checklist» cuando quieras mezclar el depósito.'
       );
+    }
+  } catch (_) {}
+}
+
+/** Tras el asistente: preselecciona una variedad del grupo elegido en el paso Cultivos. */
+function hcPreseleccionarVariedadAssignPostSetup() {
+  try {
+    const sel = document.getElementById('torreAssignVariedad');
+    if (!sel || typeof CULTIVOS_DB === 'undefined') return;
+    const cfg = state.configTorre || {};
+    const grupo =
+      typeof hcGrupoCultivoDominanteDesdeConfig === 'function'
+        ? hcGrupoCultivoDominanteDesdeConfig(cfg)
+        : Array.isArray(cfg.cultivosIniciales) && cfg.cultivosIniciales[0]
+          ? cfg.cultivosIniciales[0]
+          : '';
+    if (!grupo) return;
+    const cult = CULTIVOS_DB.find(c => String(c.grupo || '').toLowerCase() === String(grupo).toLowerCase());
+    if (cult && cult.nombre) sel.value = cult.nombre;
+  } catch (_) {}
+}
+
+/** Pregunta checklist ahora / más tarde tras asignar cultivos (flujo post-asistente). */
+function hcPreguntarChecklistPostSetupSiListo() {
+  try {
+    if (!state || !state.hcPostSetupChecklistPendiente) return;
+    if (typeof _hcPostSetupListoParaChecklistGuiado !== 'function' || !_hcPostSetupListoParaChecklistGuiado()) return;
+    if (document.getElementById('checklistPreguntaOverlay')) return;
+    if (typeof preguntarIniciarChecklist === 'function') {
+      preguntarIniciarChecklist();
     }
   } catch (_) {}
 }
@@ -675,35 +705,6 @@ function hcAccionChecklistPostSetupDesdeSistema() {
   hcEjecutarChecklistPostSetupTrasCultivosListos();
 }
 
-function hcAbrirPrimeraFichaCultivoTrasWizard() {
-  try {
-    if (!state || !state.hcPostSetupChecklistPendiente) return;
-    const so = document.getElementById('setupOverlay');
-    if (so && so.classList.contains('open')) return;
-    if (typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' && !torreBloqueaChecklistPorFaltaDatosCultivo()) {
-      return;
-    }
-    if (typeof getNivelesActivos !== 'function' || typeof openModal !== 'function') return;
-    const niveles = getNivelesActivos();
-    for (let i = 0; i < niveles.length; i++) {
-      const n = niveles[i];
-      const row = state.torre[n];
-      if (!row || !row.length) continue;
-      for (let j = 0; j < row.length; j++) {
-        const c = row[j];
-        if (!c) continue;
-        const vOk = String(c.variedad || '').trim();
-        const ms = c.fecha ? new Date(c.fecha).getTime() : NaN;
-        const fechaOk = Number.isFinite(ms);
-        if (!vOk || !fechaOk) {
-          openModal(n, j);
-          return;
-        }
-      }
-    }
-  } catch (_) {}
-}
-
 function iniciarFlujoSistemaAntesChecklistPostSetup() {
   try {
     if (typeof goTab === 'function') goTab('sistema');
@@ -711,6 +712,16 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
   setTimeout(() => {
     ensurePostSetupChecklistRail();
     actualizarPostSetupChecklistRail();
+    try {
+      if (typeof setTorreInteraccionModo === 'function') {
+        setTorreInteraccionModo('asignar', { skipTutorial: true, desdePostSetup: true });
+      }
+    } catch (_) {}
+    try {
+      if (typeof hcPreseleccionarVariedadAssignPostSetup === 'function') {
+        hcPreseleccionarVariedadAssignPostSetup();
+      }
+    } catch (_) {}
     try {
       if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
     } catch (_) {}
@@ -720,24 +731,15 @@ function iniciarFlujoSistemaAntesChecklistPostSetup() {
         torreWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } catch (_) {}
-  }, 120);
-  setTimeout(() => {
-    hcAbrirPrimeraFichaCultivoTrasWizard();
-  }, 520);
-  if (typeof showToast === 'function') {
-    const bloqueado =
-      typeof torreBloqueaChecklistPorFaltaDatosCultivo === 'function' && torreBloqueaChecklistPorFaltaDatosCultivo();
-    const sinVariedad =
-      typeof torreTieneAlgunaVariedadAsignada === 'function' && !torreTieneAlgunaVariedadAsignada();
-    if (bloqueado || sinVariedad) {
-      showToast(
-        'Toca cada cesta o hueco en el esquema: variedad y fecha de trasplante al hidro. El checklist del depósito solo cuando pulses «Continuar al checklist».'
-      );
-    } else {
-      showToast(
-        'Datos de cultivo listos: pulsa «Continuar al checklist» arriba del esquema cuando quieras mezclar el depósito.'
-      );
+    const assignPanel = document.getElementById('torreAssignPanel');
+    if (assignPanel && typeof assignPanel.scrollIntoView === 'function') {
+      assignPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
+  }, 120);
+  if (typeof showToast === 'function') {
+    showToast(
+      'Asigna el cultivo en cada cesta o hueco del esquema (modo «Asignar cultivo»). Al terminar, pulsa «Finalizar asignación» para abrir el checklist o posponerlo.'
+    );
   }
 }
 

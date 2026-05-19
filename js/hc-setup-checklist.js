@@ -1550,7 +1550,7 @@ function getCLPasos() {
           sp.densidadTxt +
           '</strong> · ' +
           sp.cicloTxt +
-          '. Puedes cambiarlo con el desplegable de este paso o en <strong>Cultivo e instalación</strong>. ' +
+          '. Puedes cambiarlo con el desplegable de este paso (o al reconfigurar en el asistente). ' +
           'Para alinear EC/pH de <strong>Medir</strong> con cada cesta, indica <strong>variedad</strong>, ' +
           '<strong>fecha de trasplante al hidro</strong> (día 0 en el sistema) y <strong>procedencia</strong> (vivero vs germinación propia).'
         );

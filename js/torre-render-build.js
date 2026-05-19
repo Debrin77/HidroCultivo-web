@@ -1348,7 +1348,7 @@ function abrirTutorialTorrePestanaSiPrimeraVez(opts) {
         '<div class="tut-callout tut-callout--green">' +
           '<strong class="tut-strong-green">Instalación activa</strong> · Arriba eliges el tipo de montaje (Torre/NFT/DWC), cambias nombre y ubicación.</div>' +
         '<div class="tut-callout tut-callout--blue">' +
-          '<strong class="tut-strong-blue">Estrategia EC/pH</strong> · Aquí defines Auto o Manual y el nivel de intensidad para recomendaciones.</div>' +
+          '<strong class="tut-strong-blue">Estrategia EC/pH</strong> · En torre: asistente de configuración y checklist de recarga (no en esta pestaña).</div>' +
         '<div class="tut-callout tut-callout--amber">' +
           '<strong class="tut-strong-amber">Montaje por tipo</strong> · Si es NFT o DWC, revisa primero sus bloques de montaje/depósito y guarda.</div>' +
         '<div class="tut-callout tut-callout--muted">' +
@@ -1499,7 +1499,8 @@ function abrirTutorialEditarCultivo(opts) {
   a11yDialogOpened(overlay);
 }
 
-function setTorreInteraccionModo(m) {
+function setTorreInteraccionModo(m, opts) {
+  const o = opts && typeof opts === 'object' ? opts : {};
   torreInteraccionModo = m;
   const edEx = document.getElementById('torreEditarExtra');
   if (edEx) edEx.style.display = m === 'editar' ? 'block' : 'none';
@@ -1618,6 +1619,11 @@ function finalizarAsignacionCultivos() {
   showToast('✅ Asignación finalizada · modo edición (' + pieFin + ')');
   try {
     if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+  } catch (_) {}
+  try {
+    if (state && state.hcPostSetupChecklistPendiente && typeof hcPreguntarChecklistPostSetupSiListo === 'function') {
+      setTimeout(() => hcPreguntarChecklistPostSetupSiListo(), 320);
+    }
   } catch (_) {}
 }
 

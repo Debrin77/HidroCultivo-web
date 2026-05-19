@@ -3564,7 +3564,7 @@ function refrescarSistemaDatosFacilesBanner(cfg) {
       'SRF: mide el estanque (L×A×profundidad útil) y huecos en la balsa. Aireación y litros de mezcla pueden quedar orientativos hasta que los completes.';
   } else {
     el.textContent =
-      'Torre vertical: objetivo de cosecha y estrategia EC/pH aquí; niveles, cestas y bomba solo en el asistente de configuración o al reconfigurar la instalación.';
+      'Torre vertical: objetivo de cosecha y estrategia EC/pH en el asistente de configuración y en el checklist de recarga; aquí solo instalación, plantas y montaje ya aplicado.';
   }
 }
 
@@ -3578,20 +3578,27 @@ function sincronizarSistemaNftMontajeUI() {
   try {
     refrescarSistemaDatosFacilesBanner(cfg);
   } catch (eBan) {}
+  const tipoInst =
+    cfg && typeof tipoInstalacionNormalizado === 'function'
+      ? tipoInstalacionNormalizado(cfg)
+      : cfg && cfg.tipoInstalacion;
+  const ocultarEcPhObjetivoTorreEnSistema = tipoInst === 'torre';
   if (ecphCard) {
-    if (cfg) ecphCard.style.display = 'block';
-    else ecphCard.style.display = 'none';
+    const mostrarEcPh = cfg && !ocultarEcPhObjetivoTorreEnSistema;
+    ecphCard.style.display = mostrarEcPh ? 'block' : 'none';
+    ecphCard.classList.toggle('setup-hidden', !mostrarEcPh);
+    ecphCard.hidden = !mostrarEcPh;
   }
-  if (cfg) syncSistemaEcPhStrategyUI();
+  if (cfg && !ocultarEcPhObjetivoTorreEnSistema) {
+    try {
+      syncSistemaEcPhStrategyUI();
+    } catch (_) {}
+  }
   const torreMontajeCard = document.getElementById('sistemaTorreMontajeCard');
   if (torreObj) {
-    if (cfg && cfg.tipoInstalacion === 'torre') {
-      torreObj.style.display = 'block';
-      const sel = document.getElementById('sysTorreObjetivoCultivo');
-      if (sel) sel.value = torreGetObjetivoCultivo(cfg);
-    } else {
-      torreObj.style.display = 'none';
-    }
+    torreObj.style.display = 'none';
+    torreObj.classList.add('setup-hidden');
+    torreObj.hidden = true;
   }
   if (torreMontajeCard) {
     if (cfg && cfg.tipoInstalacion === 'torre') {
