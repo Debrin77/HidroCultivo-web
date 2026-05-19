@@ -1075,6 +1075,9 @@ function sincronizarTextosPanelInteraccionSistema() {
           ? 'Modo rápido: un toque = asignar esa planta al instante'
         : 'Modo rápido: un toque = asignar esa cesta al instante';
   }
+  try {
+    sincronizarTorreAssignNftAtajos();
+  } catch (_) {}
   if (finHint) {
     finHint.innerHTML = esNft
       ? 'Vuelve a <strong>Editar ficha</strong> y usa <strong>Actualizar NFT</strong> arriba si hace falta.'
@@ -1095,8 +1098,12 @@ function actualizarTorreAssignAyuda() {
     el.textContent = '';
     return;
   }
+  sincronizarTorreAssignNftAtajos();
   const t = tipoInstalacionNormalizado(state.configTorre);
   const esNft = t === 'nft';
+  const esParedIllo =
+    esNft &&
+    nftDisposicionNormalizada(state.configTorre?.nftDisposicion) === 'pared';
   const esDwc = t === 'dwc';
   const esRdwc = t === 'rdwc';
   if (torreAsignarInstantaneo) {
@@ -1109,7 +1116,9 @@ function actualizarTorreAssignAyuda() {
         : 'Cultivo y fecha → <strong>tocar cestas</strong> visibles (gira la torre si hace falta). Luego <strong>Finalizar asignación</strong>.';
   } else {
     el.innerHTML = esNft
-      ? 'Marca varios <strong>huecos</strong> (marca ámbar en esquema o lista). <strong>Vuelve a tocar</strong> uno marcado para quitarlo. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
+      ? esParedIllo
+        ? 'Vista ilustrada: <strong>anillo ámbar</strong> al marcar macetas. Usa <strong>Marcar todos</strong>, <strong>Marcar tubo</strong> o <strong>Aplicar a TODO</strong> abajo. Luego <strong>Finalizar asignación</strong>.'
+        : 'Marca varios <strong>huecos</strong> (marca ámbar en esquema o lista). <strong>Vuelve a tocar</strong> uno marcado para quitarlo. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
       : esDwc
         ? 'Marca varias <strong>macetas</strong> (marca ámbar). <strong>Vuelve a tocar</strong> una marcada para quitarla. Luego <strong>Aplicar a selección</strong> → <strong>Finalizar asignación</strong>. También <strong>Limpiar selección</strong>.'
         : esRdwc
@@ -1529,10 +1538,116 @@ function setTorreInteraccionModo(m, opts) {
   actualizarTorreAssignAyuda();
   actualizarTorreEditarAyuda();
   actualizarBarraMultiSel();
+  sincronizarTorreAssignNftAtajos();
   renderTorre();
   if (m === 'asignar') {
     setTimeout(() => abrirTutorialAsignarCultivo({ force: false }), 320);
   }
+}
+
+function sincronizarTorreAssignNftAtajos() {
+  const box = document.getElementById('torreAssignNftAtajos');
+  if (!box) return;
+  const esNft = tipoInstalacionNormalizado(state.configTorre) === 'nft';
+  const asignar = torreInteraccionModo === 'asignar';
+  box.classList.toggle('setup-hidden', !(esNft && asignar));
+  const sel = document.getElementById('torreAssignNftTuboSel');
+  if (!sel || !esNft) return;
+  const hyd =
+    typeof getNftHidraulicaDesdeConfig === 'function'
+      ? getNftHidraulicaDesdeConfig(state.configTorre || {})
+      : { nCh: state.configTorre?.numNiveles || 1 };
+  const nCh = Math.max(1, hyd.nCh || 1);
+  const prev = sel.value;
+  sel.innerHTML = '';
+  for (let i = 0; i < nCh; i++) {
+    const o = document.createElement('option');
+    o.value = String(i);
+    o.textContent = 'Tubo ' + (i + 1);
+    sel.appendChild(o);
+  }
+  if (prev !== '' && parseInt(prev, 10) < nCh) sel.value = prev;
+}
+
+function nftAsignarSeleccionarTodosHuecos() {
+  if (torreInteraccionModo !== 'asignar') return;
+  const cfg = state.configTorre || {};
+  if (tipoInstalacionNormalizado(cfg) !== 'nft') return;
+  const hyd = typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : { nCh: 1 };
+  const hx = Math.max(1, parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 1), 10) || 1);
+  torreAsignarInstantaneo = false;
+  const inst = document.getElementById('torreAssignInstant');
+  if (inst) inst.checked = false;
+  torreCestasMultiSel.clear();
+  for (let i = 0; i < hyd.nCh; i++) {
+    for (let j = 0; j < hx; j++) torreCestasMultiSel.add(i + ',' + j);
+  }
+  actualizarBarraMultiSel();
+  actualizarTorreAssignAyuda();
+  renderTorre();
+  showToast('Marcados todos los huecos (' + torreCestasMultiSel.size + '). Pulsa Aplicar a selección.');
+}
+
+function nftAsignarSeleccionarTuboDesdeSelect() {
+  const sel = document.getElementById('torreAssignNftTuboSel');
+  if (!sel) return;
+  nftAsignarSeleccionarTubo(parseInt(sel.value, 10));
+}
+
+function nftAsignarSeleccionarTubo(tuboIndex) {
+  if (torreInteraccionModo !== 'asignar') return;
+  const cfg = state.configTorre || {};
+  if (tipoInstalacionNormalizado(cfg) !== 'nft') return;
+  const ti = parseInt(String(tuboIndex), 10);
+  if (!Number.isFinite(ti) || ti < 0) return;
+  const hyd = typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : { nCh: 1 };
+  if (ti >= hyd.nCh) {
+    showToast('Tubo no válido', true);
+    return;
+  }
+  const hx = Math.max(1, parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 1), 10) || 1);
+  torreAsignarInstantaneo = false;
+  const inst = document.getElementById('torreAssignInstant');
+  if (inst) inst.checked = false;
+  torreCestasMultiSel.clear();
+  for (let j = 0; j < hx; j++) torreCestasMultiSel.add(ti + ',' + j);
+  actualizarBarraMultiSel();
+  actualizarTorreAssignAyuda();
+  renderTorre();
+  showToast('Marcado tubo ' + (ti + 1) + ' (' + hx + ' huecos). Pulsa Aplicar a selección.');
+}
+
+function aplicarCultivoATodosLosHuecosNft() {
+  if (torreInteraccionModo !== 'asignar') return;
+  const cfg = state.configTorre || {};
+  if (tipoInstalacionNormalizado(cfg) !== 'nft') return;
+  const v = document.getElementById('torreAssignVariedad')?.value?.trim();
+  if (!v) {
+    showToast('Elige primero el cultivo en la lista de arriba', true);
+    return;
+  }
+  const hyd = typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : { nCh: 1 };
+  const hx = Math.max(1, parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 1), 10) || 1);
+  let n = 0;
+  for (let i = 0; i < hyd.nCh; i++) {
+    for (let j = 0; j < hx; j++) {
+      aplicarCultivoACestaUna(i, j, v);
+      n++;
+    }
+  }
+  torreCestasMultiSel.clear();
+  saveState();
+  renderTorre();
+  updateTorreStats();
+  calcularRotacion();
+  setTimeout(renderCompatGrid, 50);
+  try {
+    if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
+  } catch (_) {}
+  actualizarBarraMultiSel();
+  showToast(
+    '🌱 ' + cultivoNombreLista(getCultivoDB(v), v) + ' en los ' + n + ' huecos (todos los tubos)'
+  );
 }
 
 function aplicarCultivoACestaUna(n, c, variedad) {

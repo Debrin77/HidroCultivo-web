@@ -1782,6 +1782,19 @@
                 <span id="torreAssignModoRapidoTxt">Modo rápido: un toque = asignar esa cesta al instante</span>
               </label>
             </div>
+            <div id="torreAssignNftAtajos" class="torre-assign-nft-atajos setup-hidden" aria-label="Atajos NFT">
+              <div class="form-label torre-assign-label-sub">3 · Ámbito (mismo cultivo)</div>
+              <div class="torre-assign-atajos-row">
+                <button type="button" class="btn btn-ghost torre-assign-btn" onclick="nftAsignarSeleccionarTodosHuecos()">Marcar todos los huecos</button>
+                <label class="torre-assign-tubo-sel">
+                  <span class="sr-only">Tubo</span>
+                  <select id="torreAssignNftTuboSel" class="form-select" aria-label="Elegir tubo"></select>
+                  <button type="button" class="btn btn-ghost torre-assign-btn" onclick="nftAsignarSeleccionarTuboDesdeSelect()">Marcar tubo</button>
+                </label>
+                <button type="button" class="btn btn-primary torre-assign-btn" onclick="aplicarCultivoATodosLosHuecosNft()">Aplicar a TODO ahora</button>
+              </div>
+              <p class="torre-assign-atajos-hint">Marca macetas con <strong>anillo ámbar</strong> y pulsa <em>Aplicar a selección</em>, o <em>Aplicar a TODO</em> con el cultivo de arriba.</p>
+            </div>
             <div id="torreAssignMultiBar" class="torre-assign-multibar setup-hidden">
               <span id="torreAssignCount" class="torre-assign-count"></span>
               <button type="button" id="torreBtnAplicarSeleccion" class="btn btn-primary torre-assign-btn"

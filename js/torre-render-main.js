@@ -78,6 +78,8 @@ function renderTorre() {
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
+    const nftHint = document.getElementById('torreNftDiagramHint');
+    if (nftHint) nftHint.classList.toggle('setup-hidden', esParedIllo);
   } else if (esDwc) {
     try {
       wrap.innerHTML = typeof generarSVGDwc === 'function' ? generarSVGDwc() : '';

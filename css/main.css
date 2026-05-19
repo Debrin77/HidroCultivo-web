@@ -1810,10 +1810,43 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
 #torreSVGWrap.torre-svg-canvas svg.nft-pared-illustration .hc-cesta circle:first-of-type {
   filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.2));
 }
-#torreSVGWrap.torre-svg-canvas svg.nft-pared-illustration .hc-cesta--interactive:hover circle:first-of-type,
-#torreSVGWrap.torre-svg-canvas svg.nft-pared-illustration .hc-nft-hueco:focus-visible > circle:first-of-type {
-  stroke-width: 2;
+#torreSVGWrap.torre-svg-canvas svg.nft-pared-illustration .hc-illo-nft-hole.hc-cesta--interactive:hover ellipse:first-of-type,
+#torreSVGWrap.torre-svg-canvas svg.nft-pared-illustration .hc-illo-nft-hole:focus-visible ellipse:first-of-type {
+  stroke-width: 2.6;
   stroke: #15803d;
+}
+#torreSVGWrap.torre-svg-canvas svg.nft-pared-illustration .hc-illo-nft-hole ellipse[stroke="#f59e0b"] {
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.55));
+}
+.torre-assign-nft-atajos {
+  margin: 10px 0 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(240, 253, 244, 0.75);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.torre-assign-atajos-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.torre-assign-tubo-sel {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.torre-assign-tubo-sel .form-select {
+  min-width: 6.5rem;
+}
+.torre-assign-atajos-hint {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.35;
 }
 #torreSVGWrap.torre-svg-canvas svg.nft-serpentine--pared {
   min-height: min(42vh, 480px);

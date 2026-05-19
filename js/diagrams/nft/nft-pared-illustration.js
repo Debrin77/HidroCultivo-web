@@ -40,6 +40,7 @@
     const xL = marginX;
     const xR = W0 - marginX;
     const tubeH = 17;
+    const tubeVisH = 22;
     const padFlow = 14;
     const tankY = H - botTank + 4;
     const tankH = 102;
@@ -67,7 +68,7 @@
     const Wsvg = altBadgeSerp.canvasW;
     const yRow = (i) => topPad + i * rowStep + Math.floor(rowStep / 2);
     const spanTube = xR - xL - 2 * padFlow;
-    const hr = Math.max(6.2, Math.min(13.2, (spanTube / Math.max(huecosN - 1, 1)) * 0.51));
+    const hr = Math.max(7.5, Math.min(15, (spanTube / Math.max(huecosN - 1, 1)) * 0.58));
     const holeNumFsSerp = (nCh >= 10 ? 8.5 : nCh >= 6 ? 9.25 : 10) + 0.85;
     const compactSerp = nCh * huecosN > 20;
 
@@ -82,6 +83,7 @@
       topPad,
       rowStep,
       tubeH,
+      tubeVisH,
       padFlow,
       tankY,
       tankH,
@@ -101,16 +103,73 @@
     };
   }
 
+  /** Tubería PVC gris en zigzag por los laterales (decorativa, sin líneas azules de esquema). */
+  function buildPlumbingZigzag(L) {
+    const m = 11;
+    const xPL = L.xL - m;
+    const xPR = L.xR + m;
+    let s = '<g class="nft-pi-plumbing" pointer-events="none">';
+    const pipeSt =
+      'stroke="#e2e8f0" stroke-width="4.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"';
+    const pipeInner = 'stroke="#cbd5e1" stroke-width="2.2" fill="none" stroke-linecap="round"';
+    for (let i = 0; i < L.nCh - 1; i++) {
+      const yA = L.yRow(i);
+      const yB = L.yRow(i + 1);
+      const l2r = i % 2 === 0;
+      const xA = l2r ? L.xR - L.padFlow + 4 : L.xL + L.padFlow - 4;
+      const xVert = l2r ? xPR : xPL;
+      const xB = l2r ? L.xR - L.padFlow + 4 : L.xL + L.padFlow - 4;
+      s += '<path d="M ' + fq(xA) + ' ' + fq(yA) + ' L ' + fq(xVert) + ' ' + fq(yA) + ' L ' + fq(xVert) + ' ' + fq(yB) + ' L ' + fq(xB) + ' ' + fq(yB) + '" ' + pipeSt + '/>';
+      s += '<path d="M ' + fq(xA) + ' ' + fq(yA) + ' L ' + fq(xVert) + ' ' + fq(yA) + ' L ' + fq(xVert) + ' ' + fq(yB) + ' L ' + fq(xB) + ' ' + fq(yB) + '" ' + pipeInner + '/>';
+    }
+    const yBot = L.yRow(L.nCh - 1);
+    const yTank = L.tankY + 8;
+    s +=
+      '<path d="M ' +
+      fq(xPL) +
+      ' ' +
+      fq(yBot) +
+      ' L ' +
+      fq(xPL) +
+      ' ' +
+      fq(yTank) +
+      ' L ' +
+      fq(L.tx + 14) +
+      ' ' +
+      fq(yTank) +
+      '" ' +
+      pipeSt +
+      '/>';
+    s +=
+      '<path d="M ' +
+      fq(L.tx + L.tankW - 14) +
+      ' ' +
+      fq(yTank) +
+      ' L ' +
+      fq(xPR) +
+      ' ' +
+      fq(yTank) +
+      ' L ' +
+      fq(xPR) +
+      ' ' +
+      fq(yBot) +
+      '" ' +
+      pipeSt +
+      '/>';
+    s += '</g>';
+    return s;
+  }
+
   function buildDecor(L, suf) {
     const gidWall = 'nftPiWall' + suf;
     const gidCh = 'nftPiCh' + suf;
+    const gidLed = 'nftPiLed' + suf;
     const gidTk = 'nftPiTk' + suf;
     const gidAq = 'nftPiAq' + suf;
-    const P = typeof HC_DIAG !== 'undefined' && HC_DIAG.nft ? HC_DIAG.nft : {};
-    const wallTop = L.topPad - 18;
-    const wallBot = L.yRow(L.nCh - 1) + L.tubeH + 28;
-    const wallX = L.xL - 22;
-    const wallW = L.xR - L.xL + 44;
+    const wallTop = L.topPad - 22;
+    const wallBot = L.yRow(L.nCh - 1) + L.tubeVisH + 36;
+    const wallX = L.xL - 28;
+    const wallW = L.xR - L.xL + 56;
 
     let s = '';
     s +=
@@ -118,37 +177,42 @@
       '<linearGradient id="' +
       gidWall +
       '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="#e8ecf1"/>' +
-      '<stop offset="55%" stop-color="#d5dce6"/>' +
-      '<stop offset="100%" stop-color="#c5ced9"/></linearGradient>' +
+      '<stop offset="0%" stop-color="#f1f5f9"/>' +
+      '<stop offset="100%" stop-color="#dbe3ed"/></linearGradient>' +
       '<linearGradient id="' +
       gidCh +
-      '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="#5eb8e8"/>' +
-      '<stop offset="45%" stop-color="#0284c7"/>' +
-      '<stop offset="100%" stop-color="#0369a1"/></linearGradient>' +
+      '" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0%" stop-color="#a67c52"/>' +
+      '<stop offset="40%" stop-color="#7a5230"/>' +
+      '<stop offset="100%" stop-color="#5c3d22"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidLed +
+      '" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0%" stop-color="#f9a8d4" stop-opacity="0.15"/>' +
+      '<stop offset="50%" stop-color="#e879f9" stop-opacity="0.55"/>' +
+      '<stop offset="100%" stop-color="#f9a8d4" stop-opacity="0.15"/></linearGradient>' +
       '<linearGradient id="' +
       gidTk +
       '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="#22c55e"/>' +
-      '<stop offset="100%" stop-color="#15803d"/></linearGradient>' +
+      '<stop offset="0%" stop-color="#334155"/>' +
+      '<stop offset="100%" stop-color="#1e293b"/></linearGradient>' +
       '<linearGradient id="' +
       gidAq +
       '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.85"/>' +
-      '<stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.75"/></linearGradient>' +
+      '<stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9"/>' +
+      '<stop offset="100%" stop-color="#0284c7" stop-opacity="0.85"/></linearGradient>' +
       '<filter id="nftPiSh' +
       suf +
       '" x="-8%" y="-8%" width="116%" height="116%">' +
-      '<feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#0f172a" flood-opacity="0.18"/></filter>' +
+      '<feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.22"/></filter>' +
       '</defs>';
 
     s +=
-      '<rect class="nft-pi-sky" width="' +
+      '<rect class="nft-pi-room" width="' +
       L.Wsvg +
       '" height="' +
       L.H +
-      '" fill="#eef2f7" pointer-events="none"/>';
+      '" fill="#f8fafc" pointer-events="none"/>';
 
     s +=
       '<rect class="nft-pi-wall" x="' +
@@ -159,56 +223,94 @@
       fq(wallW) +
       '" height="' +
       fq(wallBot - wallTop) +
-      '" rx="14" fill="url(#' +
+      '" rx="10" fill="url(#' +
       gidWall +
-      ')" stroke="#94a3b8" stroke-width="1.2" pointer-events="none"/>';
+      ')" stroke="#94a3b8" stroke-width="1" pointer-events="none"/>';
 
     s +=
       '<line x1="' +
-      fq(L.xL - 14) +
+      fq(L.xL - 18) +
       '" y1="' +
-      fq(wallTop + 8) +
+      fq(wallTop + 6) +
       '" x2="' +
-      fq(L.xL - 14) +
+      fq(L.xL - 18) +
       '" y2="' +
-      fq(wallBot - 6) +
-      '" stroke="#64748b" stroke-width="3.5" stroke-linecap="round" opacity="0.35" pointer-events="none"/>';
+      fq(wallBot - 4) +
+      '" stroke="#475569" stroke-width="5" stroke-linecap="round" opacity="0.45" pointer-events="none"/>';
     s +=
       '<line x1="' +
-      fq(L.xR + 14) +
+      fq(L.xR + 18) +
       '" y1="' +
-      fq(wallTop + 8) +
+      fq(wallTop + 6) +
       '" x2="' +
-      fq(L.xR + 14) +
+      fq(L.xR + 18) +
       '" y2="' +
-      fq(wallBot - 6) +
-      '" stroke="#64748b" stroke-width="3.5" stroke-linecap="round" opacity="0.35" pointer-events="none"/>';
+      fq(wallBot - 4) +
+      '" stroke="#475569" stroke-width="5" stroke-linecap="round" opacity="0.45" pointer-events="none"/>';
 
     for (let i = 0; i < L.nCh; i++) {
       const yRi = L.yRow(i);
-      const yc = yRi - L.tubeH / 2;
-      const bracketY = yRi + L.tubeH / 2 + 4;
+      const yc = yRi - L.tubeVisH * 0.35;
+      const ledY = yc - 10;
       s +=
-        '<line x1="' +
-        fq(L.xL - 10) +
-        '" y1="' +
+        '<rect x="' +
+        (L.xL - 6) +
+        '" y="' +
+        ledY +
+        '" width="' +
+        (L.xR - L.xL + 12) +
+        '" height="5" rx="2.5" fill="url(#' +
+        gidLed +
+        ')" opacity="0.85" pointer-events="none"/>';
+      s +=
+        '<rect x="' +
+        (L.xL - 4) +
+        '" y="' +
+        (ledY - 18) +
+        '" width="' +
+        (L.xR - L.xL + 8) +
+        '" height="20" fill="#fdf4ff" opacity="0.35" pointer-events="none"/>';
+
+      const bracketY = yRi + L.tubeVisH * 0.42;
+      s +=
+        '<path d="M ' +
+        fq(L.xL - 16) +
+        ' ' +
         fq(bracketY) +
-        '" x2="' +
-        fq(L.xR + 10) +
-        '" y2="' +
+        ' L ' +
+        fq(L.xL - 4) +
+        ' ' +
+        fq(bracketY - 5) +
+        ' L ' +
+        fq(L.xL - 4) +
+        ' ' +
+        fq(bracketY + 5) +
+        ' Z" fill="#64748b" opacity="0.5" pointer-events="none"/>';
+      s +=
+        '<path d="M ' +
+        fq(L.xR + 16) +
+        ' ' +
         fq(bracketY) +
-        '" stroke="#64748b" stroke-width="2.2" stroke-linecap="round" opacity="0.28" pointer-events="none"/>';
+        ' L ' +
+        fq(L.xR + 4) +
+        ' ' +
+        fq(bracketY - 5) +
+        ' L ' +
+        fq(L.xR + 4) +
+        ' ' +
+        fq(bracketY + 5) +
+        ' Z" fill="#64748b" opacity="0.5" pointer-events="none"/>';
 
       s +=
         '<rect x="' +
-        fq(L.xL + 1) +
+        fq(L.xL + 2) +
         '" y="' +
-        fq(yc + 2) +
+        fq(yc + 3) +
         '" width="' +
-        fq(L.xR - L.xL - 2) +
+        fq(L.xR - L.xL - 4) +
         '" height="' +
-        L.tubeH +
-        '" rx="10" fill="#0c4a6e" opacity="0.22" pointer-events="none"/>';
+        L.tubeVisH +
+        '" rx="12" fill="#3d2814" opacity="0.35" pointer-events="none"/>';
       s +=
         '<rect x="' +
         L.xL +
@@ -217,23 +319,74 @@
         '" width="' +
         (L.xR - L.xL) +
         '" height="' +
-        L.tubeH +
-        '" rx="11" fill="url(#' +
+        L.tubeVisH +
+        '" rx="12" fill="url(#' +
         gidCh +
-        ')" stroke="#075985" stroke-width="1.15" filter="url(#nftPiSh' +
+        ')" stroke="#4a3220" stroke-width="1.2" filter="url(#nftPiSh' +
         suf +
         ')" pointer-events="none"/>';
       s +=
         '<line x1="' +
         L.xL +
         '" y1="' +
-        yc +
+        (yc + 3) +
         '" x2="' +
         L.xR +
         '" y2="' +
-        yc +
-        '" stroke="#bae6fd" stroke-width="1.1" opacity="0.65" pointer-events="none"/>';
+        (yc + 3) +
+        '" stroke="#c4a574" stroke-width="1.4" opacity="0.75" pointer-events="none"/>';
+
+      const capR = 7;
+      s +=
+        '<circle cx="' +
+        (L.xL + 2) +
+        '" cy="' +
+        yRi +
+        '" r="' +
+        capR +
+        '" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" pointer-events="none"/>';
+      s +=
+        '<circle cx="' +
+        (L.xR - 2) +
+        '" cy="' +
+        yRi +
+        '" r="' +
+        capR +
+        '" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" pointer-events="none"/>';
+
+      if (i === L.nCh - 1) {
+        const wY = yc + L.tubeVisH * 0.55;
+        s +=
+          '<rect x="' +
+          L.xL +
+          '" y="' +
+          wY +
+          '" width="' +
+          (L.xR - L.xL) +
+          '" height="' +
+          (L.tubeVisH * 0.42) +
+          '" fill="#0ea5e9" opacity="0.35" pointer-events="none"/>';
+        for (let bi = 0; bi < 6; bi++) {
+          s +=
+            '<circle cx="' +
+            (L.xL + 20 + bi * ((L.xR - L.xL - 40) / 5)) +
+            '" cy="' +
+            (wY + 6 + (bi % 2) * 3) +
+            '" r="1.8" fill="#e0f2fe" opacity="0.9" pointer-events="none"/>';
+        }
+      }
+
+      s +=
+        '<text x="' +
+        (L.xL - 24) +
+        '" y="' +
+        (yRi + 4) +
+        '" text-anchor="end" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#64748b" pointer-events="none">T' +
+        (i + 1) +
+        '</text>';
     }
+
+    s += buildPlumbingZigzag(L);
 
     s +=
       '<rect x="' +
@@ -285,28 +438,52 @@
         '" width="10" height="30" rx="5" fill="#f97316" stroke="#c2410c" stroke-width="1.1" pointer-events="none"/>';
     }
     if (L.showDifusor) {
-      const ax = L.tx + L.tankW - 18;
-      const ay = L.tankY + L.tankH - 16;
+      const ax = L.tx + L.tankW - 22;
+      const ay = L.tankY + L.tankH - 18;
       s +=
         '<ellipse cx="' +
         ax +
         '" cy="' +
         ay +
-        '" rx="12" ry="6.5" fill="#94a3b8" stroke="#64748b" stroke-width="1.1" pointer-events="none"/>';
-      for (let bi = 0; bi < 4; bi++) {
+        '" rx="14" ry="7" fill="#64748b" stroke="#475569" stroke-width="1.2" pointer-events="none"/>';
+      s +=
+        '<line x1="' +
+        ax +
+        '" y1="' +
+        (L.tankY - 4) +
+        '" x2="' +
+        ax +
+        '" y2="' +
+        (ay - 10) +
+        '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3 2" pointer-events="none"/>';
+      for (let bi = 0; bi < 7; bi++) {
         s +=
           '<circle cx="' +
-          (ax + (bi % 2) * 3 - 1) +
+          (ax + (bi % 3 - 1) * 4) +
           '" cy="' +
-          (ay - 8 - bi * 3) +
-          '" r="1.5" fill="#e2e8f0" opacity="0.9" pointer-events="none"/>';
+          (ay - 10 - bi * 4) +
+          '" r="2" fill="#f1f5f9" opacity="0.95" pointer-events="none"/>';
       }
     }
+    const px = L.tx + 22;
+    const py = L.waterTop + L.waterH * 0.55;
+    s +=
+      '<circle cx="' +
+      px +
+      '" cy="' +
+      py +
+      '" r="9" fill="#475569" stroke="#334155" stroke-width="1.2" pointer-events="none"/>';
+    s +=
+      '<text x="' +
+      px +
+      '" y="' +
+      (py + 3) +
+      '" text-anchor="middle" font-size="8" fill="#e2e8f0" font-family="system-ui,sans-serif" pointer-events="none">⬆</text>';
 
     s +=
       '<text class="nft-pi-caption" x="' +
       (L.Wsvg / 2) +
-      '" y="28" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#475569" pointer-events="none">NFT en pared · vista ilustrada</text>';
+      '" y="28" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#475569" pointer-events="none">NFT en pared · toca cada maceta para cultivo y ficha</text>';
 
     return { html: s, gidCh: gidCh };
   }
@@ -321,7 +498,7 @@
       for (let j = 0; j < L.huecosN; j++) {
         const t = L.huecosN <= 1 ? 0.5 : j / (L.huecosN - 1);
         const gx = rtl ? L.xR - L.padFlow - t * L.spanTube : L.xL + L.padFlow + t * L.spanTube;
-        const gy = y - L.tubeH * 0.55;
+        const gy = y - L.tubeVisH * 0.92;
         const numShow = j + 1;
         let dat = { variedad: '', fecha: '' };
         if (interactive && global.state && global.state.torre[i] && global.state.torre[i][j]) {
