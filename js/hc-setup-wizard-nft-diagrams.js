@@ -1806,6 +1806,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const altBadgeMM = nftAlturaBadgeBesideTank(altCmLbl, tx, tankY, tankW, tankH, W0, legHintMM);
   const Wsvg = altBadgeMM.canvasW;
   const cxTitle = Wsvg / 2;
+  const xTankFeedMM = tx + 12;
+  const xTankReturnMM = tx + tankW - 12;
+  const yInletMM = tankY + 16;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const rowInner = xR - xL - 2 * padFlow;
   const geoms = [];
@@ -1947,17 +1950,18 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
   };
-  let flowD = 'M ' + fqPath(xRiser) + ' ' + fqPath(yPump);
+  const xPumpMM = tx + 14;
+  const yOutletMM = tankY + tankH - 16;
+  let flowD = 'M ' + fqPath(xPumpMM) + ' ' + fqPath(yPump);
+  flowD += ' L ' + fqPath(xTankFeedMM) + ' ' + fqPath(yPump);
+  flowD += ' L ' + fqPath(xTankFeedMM) + ' ' + fqPath(yOutletMM);
+  flowD += ' L ' + fqPath(xRiser) + ' ' + fqPath(yOutletMM);
   let flowLastX = xRiser;
-  let flowLastY = yPump;
+  let flowLastY = yOutletMM;
   if (nTiers > 1 && hydSeq.length) {
     const er = compactMesa ? 12 : 16;
-    const flowRunoff = compactMesa ? 16 : 22;
-    const xRunoffMm = function (exitX) {
-      return exitX < cxTitle ? xL + 4 + flowRunoff : Wsvg - (xL + 4 + flowRunoff);
-    };
     let lx = xRiser;
-    let ly = yPump;
+    let ly = yOutletMM;
     const Lto = function (x, y) {
       flowD += ' L ' + fqPath(x) + ' ' + fqPath(y);
       lx = x;
@@ -2018,12 +2022,11 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         const Gp = geomByG[hydSeq[i - 1]];
         const tierJump = Gp.t !== Gc.t;
         if (tierJump) {
-          const xr = xRunoffMm(lx);
-          if (Math.abs(lx - xr) > 0.8) {
-            Lto(xr, ly);
+          if (Math.abs(lx - xC) > 0.8) {
+            Lto(xC, ly);
           }
           if (Math.abs(ly - yIn) > 0.8) {
-            Lto(xr, yIn);
+            Lto(xC, yIn);
           }
           if (Math.abs(lx - xIn) > 0.8) {
             Lto(xIn, yIn);
@@ -2057,6 +2060,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     flowLastX = lx;
     flowLastY = ly;
   } else {
+    const flowMarginMm1 = 10;
     for (let i = 0; i < hydSeq.length; i++) {
       const Gcur = geomByG[hydSeq[i]];
       const H = mmShelf(Gcur);
@@ -2064,20 +2068,25 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       const xIn = l2r ? H.x0 : H.x1;
       const xOut = l2r ? H.x1 : H.x0;
       if (i === 0) {
-        flowD += ' L ' + xRiser + ' ' + H.yC;
-        flowD += ' L ' + xIn + ' ' + H.yC;
-        flowD += ' L ' + xOut + ' ' + H.yC;
+        flowD += ' L ' + fqPath(xRiser) + ' ' + fqPath(H.yC);
+        flowD += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
+        flowD += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
       } else {
         const Gprev = geomByG[hydSeq[i - 1]];
         const P = mmShelf(Gprev);
-        const prevOut = (i - 1) % 2 === 0 ? P.x1 : P.x0;
+        const prevL2r = (i - 1) % 2 === 0;
+        const prevOut = prevL2r ? P.x1 : P.x0;
+        const xDrop = prevL2r ? P.x1 + flowMarginMm1 : P.x0 - flowMarginMm1;
         if (Math.abs(H.yC - P.yC) > 0.5) {
-          flowD += ' L ' + prevOut + ' ' + H.yC;
+          flowD += ' L ' + fqPath(xDrop) + ' ' + fqPath(P.yC);
+          flowD += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
+        } else if (Math.abs(prevOut - xIn) > 0.5) {
+          flowD += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
         }
-        if (Math.abs(prevOut - xIn) > 0.5) {
-          flowD += ' L ' + xIn + ' ' + H.yC;
+        if (Math.abs(prevOut - xIn) > 0.5 || Math.abs(H.yC - P.yC) <= 0.5) {
+          flowD += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
         }
-        flowD += ' L ' + xOut + ' ' + H.yC;
+        flowD += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
       }
     }
     if (hydSeq.length) {
@@ -2090,15 +2099,15 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   }
   const Glast = hydSeq.length ? geomByG[hydSeq[hydSeq.length - 1]] : null;
   const lm = Glast ? mmShelf(Glast) : { yC: topPad + tierRowH / 2, x0: xL, x1: xR };
-  const retMargMM = flowLastX >= W0 / 2 ? xR + 14 : xL - 14;
   const retYJoin = nTiers > 1 && hydSeq.length ? flowLastY : lm.yC;
-  const yDuctMm = tankY + tankH + 10;
-  const ductTowardRiserXMm = xRiser <= tx + tankW * 0.42 ? tx + tankW - 12 : tx + 12;
-  flowD += ' L ' + fqPath(retMargMM) + ' ' + fqPath(retYJoin);
-  flowD += ' L ' + fqPath(retMargMM) + ' ' + fqPath(yDuctMm);
-  flowD += ' L ' + fqPath(ductTowardRiserXMm) + ' ' + fqPath(yDuctMm);
-  flowD += ' L ' + fqPath(xRiser) + ' ' + fqPath(tankY + 10);
-  flowD += ' L ' + fqPath(xRiser) + ' ' + fqPath(yPump);
+  const xReturnRiserMM = Math.min(Wsvg - 14, xR + 12);
+  let yDuctMm = retYJoin + (compactMesa ? 12 : 16);
+  if (yDuctMm > tankY - 6) yDuctMm = tankY - 8;
+  flowD += ' L ' + fqPath(flowLastX) + ' ' + fqPath(retYJoin);
+  flowD += ' L ' + fqPath(xReturnRiserMM) + ' ' + fqPath(retYJoin);
+  flowD += ' L ' + fqPath(xReturnRiserMM) + ' ' + fqPath(yDuctMm);
+  flowD += ' L ' + fqPath(xTankReturnMM) + ' ' + fqPath(yDuctMm);
+  flowD += ' L ' + fqPath(xTankReturnMM) + ' ' + fqPath(yInletMM);
 
   let back =
     '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
@@ -2590,8 +2599,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     alturaBadgeMinTier: 2,
   });
   const Wsvg = altBadgeEsc.canvasW;
-  const xFeedCorridor = 18;
-  const xReturnCorridor = Wsvg - 18;
+  const flowMarginEsc = 8;
+  const xLegDrainL = cx - baseHalf - 10;
+  const xLegDrainR = cx + baseHalf + 10;
   const cxTitle = Wsvg / 2;
   const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
 
@@ -2678,20 +2688,32 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       LtoEsc(tx, ty);
     }
   };
-  const nftEscAppendRunsZigzag = function (runList, xDropWhenEvenEndsRight, xDropWhenOddEndsRight) {
+  const nftEscAppendRunsZigzag = function (runList, outerSide) {
+    const xDropAt = function (R) {
+      return outerSide === 'R' ? R.xR - padFlow + flowMarginEsc : R.xL + padFlow - flowMarginEsc;
+    };
     for (let i = 0; i < runList.length; i++) {
       const R = runList[i];
+      const Rn = i < runList.length - 1 ? runList[i + 1] : null;
       const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
       const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
       orthoKneeEsc(xS, R.y);
       orthoKneeEsc(xE, R.y);
-      if (i < runList.length - 1) {
-        const endsRight = !R.rtl;
-        const xDrop = endsRight ? xDropWhenEvenEndsRight : xDropWhenOddEndsRight;
+      if (Rn) {
+        const xDrop = xDropAt(R);
+        const xNextS = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
         orthoKneeEsc(xDrop, R.y);
-        orthoKneeEsc(xDrop, runList[i + 1].y);
+        orthoKneeEsc(xDrop, Rn.y);
+        orthoKneeEsc(xNextS, Rn.y);
       }
     }
+  };
+  const nftEscDrainAlongLeg = function (xLeg, xTankX) {
+    orthoKneeEsc(xLeg, ly);
+    const yBase = ladderBot + 6;
+    orthoKneeEsc(xLeg, yBase);
+    orthoKneeEsc(xTankX, yBase);
+    orthoKneeEsc(xTankX, yInlet);
   };
 
   if (runs.length) {
@@ -2701,47 +2723,32 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       orthoKneeEsc(xTankFeed, yOutlet);
       orthoKneeEsc(xSupplyRiser, yOutlet);
       orthoKneeEsc(xSupplyRiser, yManifold);
-      nftEscAppendRunsZigzag(runs.slice(0, nv), xReturnCorridor, xFeedCorridor);
-      const RlastL = runs[nv - 1];
-      const xEndL = RlastL.rtl ? RlastL.xL + padFlow : RlastL.xR - padFlow;
-      orthoKneeEsc(xEndL, RlastL.y);
-      orthoKneeEsc(Math.min(xEndL, xFeedCorridor + 8), RlastL.y);
-      let yDuctL = RlastL.y + tubeH / 2 + 10;
-      if (yDuctL > tankY - 6) yDuctL = tankY - 8;
-      orthoKneeEsc(xFeedCorridor, RlastL.y);
-      orthoKneeEsc(xFeedCorridor, yDuctL);
-      orthoKneeEsc(xTankFeed, yDuctL);
-      orthoKneeEsc(xTankFeed, yInlet);
+      const R0L = runs[0];
+      const xInL0 = R0L.xR - padFlow;
+      orthoKneeEsc(xInL0, yManifold);
+      orthoKneeEsc(xInL0, R0L.y);
+      nftEscAppendRunsZigzag(runs.slice(0, nv), 'L');
+      nftEscDrainAlongLeg(xLegDrainL, xTankFeed);
 
       flowD += ' M ' + fqPathEsc(xSupplyRiser) + ' ' + fqPathEsc(yManifold);
       lx = xSupplyRiser;
       ly = yManifold;
-      nftEscAppendRunsZigzag(runs.slice(nv), xReturnCorridor, xFeedCorridor);
-      const RlastR = runs[runs.length - 1];
-      const xEndR = RlastR.rtl ? RlastR.xL + padFlow : RlastR.xR - padFlow;
-      orthoKneeEsc(xEndR, RlastR.y);
-      orthoKneeEsc(Math.max(xEndR, xReturnCorridor - 8), RlastR.y);
-      let yDuctR = RlastR.y + tubeH / 2 + 10;
-      if (yDuctR > tankY - 6) yDuctR = tankY - 8;
-      orthoKneeEsc(xReturnCorridor, RlastR.y);
-      orthoKneeEsc(xReturnCorridor, yDuctR);
-      orthoKneeEsc(xTankReturn, yDuctR);
-      orthoKneeEsc(xTankReturn, yInlet);
+      const R0R = runs[nv];
+      const xInR0 = R0R.xL + padFlow;
+      orthoKneeEsc(xInR0, yManifold);
+      orthoKneeEsc(xInR0, R0R.y);
+      nftEscAppendRunsZigzag(runs.slice(nv), 'R');
+      nftEscDrainAlongLeg(xLegDrainR, xTankReturn);
     } else {
+      const backX = cx + 44;
       orthoKneeEsc(xTankFeed, yPump);
       orthoKneeEsc(xTankFeed, yOutlet);
-      orthoKneeEsc(xFeedCorridor, yOutlet);
-      orthoKneeEsc(xFeedCorridor, runs[0].y);
-      nftEscAppendRunsZigzag(runs, xReturnCorridor, xFeedCorridor);
-      const Rlast = runs[runs.length - 1];
-      const xEnd = Rlast.rtl ? Rlast.xL + padFlow : Rlast.xR - padFlow;
-      orthoKneeEsc(xEnd, Rlast.y);
-      orthoKneeEsc(xReturnCorridor, Rlast.y);
-      let yDuct = Rlast.y + tubeH / 2 + 10;
-      if (yDuct > tankY - 6) yDuct = tankY - 8;
-      orthoKneeEsc(xReturnCorridor, yDuct);
-      orthoKneeEsc(xTankReturn, yDuct);
-      orthoKneeEsc(xTankReturn, yInlet);
+      orthoKneeEsc(xLegDrainL, yOutlet);
+      orthoKneeEsc(xLegDrainL, runs[0].y);
+      const xIn0 = runs[0].rtl ? runs[0].xR - padFlow : runs[0].xL + padFlow;
+      orthoKneeEsc(xIn0, runs[0].y);
+      nftEscAppendRunsZigzag(runs, 'L');
+      nftEscDrainAlongLeg(backX + 8, xTankReturn);
     }
   }
 
