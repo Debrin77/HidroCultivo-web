@@ -2036,6 +2036,11 @@ function guardarSetupYContinuar() {
   // Cerrar asistente primero para que el paso a Cultivo / checklist sea continuo (sin solapamiento visual).
   try {
     window._hcSetupWizardCompletadoTs = Date.now();
+    window._hcPostSetupChecklistPreguntaMostrada = false;
+    if (typeof _clearTabCoachRetryTimer === 'function') _clearTabCoachRetryTimer();
+    const tabCoach = document.getElementById('hcTabBarCoach');
+    if (tabCoach) tabCoach.classList.add('setup-hidden');
+    document.body.classList.remove('hc-tab-coach-open');
   } catch (_) {}
   try {
     if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();

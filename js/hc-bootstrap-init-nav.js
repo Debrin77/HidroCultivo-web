@@ -396,7 +396,11 @@ function goTab(tab) {
     renderTorre();
     renderCompatGrid();
     calcularRotacion();
-    setTimeout(() => abrirTutorialTorrePestanaSiPrimeraVez(), 520);
+    const postSetupCultivos =
+      typeof state !== 'undefined' && state && state.hcPostSetupChecklistPendiente;
+    if (!postSetupCultivos) {
+      setTimeout(() => abrirTutorialTorrePestanaSiPrimeraVez(), 520);
+    }
   }
   if (tab === 'historial') { histDatos = null; cargarHistorial(); }
   if (tab === 'consejos') renderConsejos();

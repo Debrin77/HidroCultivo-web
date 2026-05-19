@@ -120,6 +120,11 @@ function tryShowTabBarCoachDeferred(attempt) {
 
 function hcDebeEvitarReabrirAsistenteTrasSetup() {
   try {
+    if (state && state.hcPostSetupChecklistPendiente) return true;
+    if (state && state.configTorre && state.configTorre.checklistInstalacionConfirmada === true) {
+      const ts = window._hcSetupWizardCompletadoTs;
+      if (typeof ts === 'number' && Date.now() - ts < 300000) return true;
+    }
     const ts = window._hcSetupWizardCompletadoTs;
     return typeof ts === 'number' && Date.now() - ts < 12000;
   } catch (_) {
@@ -170,6 +175,9 @@ function dismissTabBarCoach() {
       if (typeof hcDebeEvitarReabrirAsistenteTrasSetup === 'function' && hcDebeEvitarReabrirAsistenteTrasSetup()) {
         return;
       }
+    } catch (_) {}
+    try {
+      if (state && state.hcPostSetupChecklistPendiente) return;
     } catch (_) {}
     try {
       if (typeof hcEsPrimeraVezAsistenteInstalacion === 'function' && !hcEsPrimeraVezAsistenteInstalacion()) {
@@ -354,9 +362,22 @@ function tabBarCoachYaDescartado() {
 
 function lanzarSetupOChecklistSiCorresponde() {
   if (!hcEsPrimeraVezAsistenteInstalacion()) return;
+  try {
+    if (typeof hcDebeEvitarReabrirAsistenteTrasSetup === 'function' && hcDebeEvitarReabrirAsistenteTrasSetup()) {
+      return;
+    }
+  } catch (_) {}
+  try {
+    if (state && state.hcPostSetupChecklistPendiente) return;
+  } catch (_) {}
   // Tras la bienvenida: primero el coach de la barra («Entendido»); al cerrarlo se abre el asistente (ver dismissTabBarCoach).
   if (tabBarCoachYaDescartado()) {
     setTimeout(() => {
+      try {
+        const so = document.getElementById('setupOverlay');
+        if (so && so.classList.contains('open')) return;
+      } catch (_) {}
+      if (typeof hcDebeEvitarReabrirAsistenteTrasSetup === 'function' && hcDebeEvitarReabrirAsistenteTrasSetup()) return;
       if (typeof abrirSetup === 'function') abrirSetup();
     }, 450);
   }
@@ -633,8 +654,10 @@ function hcPreseleccionarVariedadAssignPostSetup() {
 function hcPreguntarChecklistPostSetupSiListo() {
   try {
     if (!state || !state.hcPostSetupChecklistPendiente) return;
+    if (window._hcPostSetupChecklistPreguntaMostrada) return;
     if (typeof _hcPostSetupListoParaChecklistGuiado !== 'function' || !_hcPostSetupListoParaChecklistGuiado()) return;
     if (document.getElementById('checklistPreguntaOverlay')) return;
+    window._hcPostSetupChecklistPreguntaMostrada = true;
     if (typeof preguntarIniciarChecklist === 'function') {
       preguntarIniciarChecklist();
     }

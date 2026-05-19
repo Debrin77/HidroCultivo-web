@@ -1540,7 +1540,8 @@ function setTorreInteraccionModo(m, opts) {
   actualizarBarraMultiSel();
   sincronizarTorreAssignNftAtajos();
   renderTorre();
-  if (m === 'asignar') {
+  const skipTut = o.skipTutorial === true || o.desdePostSetup === true;
+  if (m === 'asignar' && !skipTut) {
     setTimeout(() => abrirTutorialAsignarCultivo({ force: false }), 320);
   }
 }
@@ -1736,7 +1737,12 @@ function finalizarAsignacionCultivos() {
     if (typeof hcNotificarCambioCultivoSistema === 'function') hcNotificarCambioCultivoSistema();
   } catch (_) {}
   try {
-    if (state && state.hcPostSetupChecklistPendiente && typeof hcPreguntarChecklistPostSetupSiListo === 'function') {
+    if (
+      state &&
+      state.hcPostSetupChecklistPendiente &&
+      !window._hcPostSetupChecklistPreguntaMostrada &&
+      typeof hcPreguntarChecklistPostSetupSiListo === 'function'
+    ) {
       setTimeout(() => hcPreguntarChecklistPostSetupSiListo(), 320);
     }
   } catch (_) {}

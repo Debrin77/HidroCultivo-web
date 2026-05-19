@@ -2331,7 +2331,13 @@ function cerrarSetup() {
     if (typeof hcResetSetupWizardSession === 'function') hcResetSetupWizardSession();
   } catch (_) {}
   try {
-    if (typeof scheduleTabBarCoach === 'function') scheduleTabBarCoach(500);
+    if (
+      typeof scheduleTabBarCoach === 'function' &&
+      !(state && state.hcPostSetupChecklistPendiente) &&
+      !(typeof hcDebeEvitarReabrirAsistenteTrasSetup === 'function' && hcDebeEvitarReabrirAsistenteTrasSetup())
+    ) {
+      scheduleTabBarCoach(500);
+    }
   } catch (_) {}
 }
 
