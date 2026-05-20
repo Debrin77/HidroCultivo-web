@@ -1965,10 +1965,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
   };
-  let flowSupplyD = 'M ' + fqPath(xPumpMM) + ' ' + fqPath(yPump);
-  flowSupplyD += ' L ' + fqPath(xTankFeedMM) + ' ' + fqPath(yPump);
-  flowSupplyD += ' L ' + fqPath(xTankFeedMM) + ' ' + fqPath(yOutletMM);
-  flowSupplyD += ' L ' + fqPath(xFeedRiserMM) + ' ' + fqPath(yOutletMM);
+  let supplyTailSvg = '';
   let flowLastX = xFeedRiserMM;
   let flowLastY = yOutletMM;
   if (nTiers > 1 && hydSeq.length) {
@@ -1976,12 +1973,12 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     let lx = xFeedRiserMM;
     let ly = yOutletMM;
     const Lto = function (x, y) {
-      flowSupplyD += ' L ' + fqPath(x) + ' ' + fqPath(y);
+      supplyTailSvg += ' L ' + fqPath(x) + ' ' + fqPath(y);
       lx = x;
       ly = y;
     };
     const Arc = function (ex, ey, sw) {
-      flowSupplyD += ' A ' + fqPath(er) + ' ' + fqPath(er) + ' 0 0 ' + sw + ' ' + fqPath(ex) + ' ' + fqPath(ey);
+      supplyTailSvg += ' A ' + fqPath(er) + ' ' + fqPath(er) + ' 0 0 ' + sw + ' ' + fqPath(ex) + ' ' + fqPath(ey);
       lx = ex;
       ly = ey;
     };
@@ -2081,9 +2078,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       const xIn = l2r ? H.x0 : H.x1;
       const xOut = l2r ? H.x1 : H.x0;
       if (i === 0) {
-        flowSupplyD += ' L ' + fqPath(xFeedRiserMM) + ' ' + fqPath(H.yC);
-        flowSupplyD += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
-        flowSupplyD += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
+        supplyTailSvg += ' L ' + fqPath(xFeedRiserMM) + ' ' + fqPath(H.yC);
+        supplyTailSvg += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
+        supplyTailSvg += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
       } else {
         const Gprev = geomByG[hydSeq[i - 1]];
         const P = mmShelf(Gprev);
@@ -2091,15 +2088,15 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         const prevOut = prevL2r ? P.x1 : P.x0;
         const xDrop = prevL2r ? P.x1 + flowMarginMm1 : P.x0 - flowMarginMm1;
         if (Math.abs(H.yC - P.yC) > 0.5) {
-          flowSupplyD += ' L ' + fqPath(xDrop) + ' ' + fqPath(P.yC);
-          flowSupplyD += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
+          supplyTailSvg += ' L ' + fqPath(xDrop) + ' ' + fqPath(P.yC);
+          supplyTailSvg += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
         } else if (Math.abs(prevOut - xIn) > 0.5) {
-          flowSupplyD += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
+          supplyTailSvg += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
         }
         if (Math.abs(prevOut - xIn) > 0.5 || Math.abs(H.yC - P.yC) <= 0.5) {
-          flowSupplyD += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
+          supplyTailSvg += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
         }
-        flowSupplyD += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
+        supplyTailSvg += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
       }
     }
     if (hydSeq.length) {
@@ -2121,26 +2118,31 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         ? true
         : xExitMM > (xL + xR) / 2
       : false;
-  const flowReturnD =
-    typeof nftBuildReturnPathFromExit === 'function'
-      ? nftBuildReturnPathFromExit({
+  const hydMm =
+    typeof nftHydraulicMesaMultinivel === 'function'
+      ? nftHydraulicMesaMultinivel({
+          kind: 'mesa_multinivel',
+          ports: portsMM,
+          xPump: xPumpMM,
+          yPump: yPump,
+          xFeedRiser: xFeedRiserMM,
+          supplyTailSvg: supplyTailSvg,
           xExit: xExitMM,
           yExit: yExitMM,
           xL: xL,
           xR: xR,
-          padFlow: padFlow,
           flowMargin: flowMarginMM,
           oddTubes: oddTubesMM,
-          xFeedRiser: xFeedRiserMM,
           xReturnRiser: xReturnRiserMM,
           Wsvg: Wsvg,
           tankY: tankY,
-          ports: portsMM,
           tubeH: lm.thick || (compactMesa ? 14 : 18),
           ductDrop: compactMesa ? 12 : 16,
           endsRight: endsRightMM,
         })
-      : '';
+      : { supplyD: '', returnD: '' };
+  const flowSupplyD = hydMm.supplyD || '';
+  const flowReturnD = hydMm.returnD || '';
 
   const flowMarkMM =
     typeof nftSvgFlowMarkerDefs === 'function' ? nftSvgFlowMarkerDefs('MM' + suf) : { supplyId: 'a', returnId: 'b', defs: '' };
@@ -2775,171 +2777,45 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const chGrad0Esc = HC_DIAG.nft.canalGrad0;
   const chGrad1Esc = HC_DIAG.nft.canalGrad1;
   const chColEsc = HC_DIAG.nft.canalStroke;
-  const fqPathEsc = function (v) {
-    const n = Math.round(Number(v) * 100) / 100;
-    return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
-  };
   const erEsc = compactEsc ? 10 : 14;
-
-  const makeNftFlowWriter = function (initial) {
-    let d = initial || '';
-    let lx = 0;
-    let ly = 0;
-    const set = function (x, y) {
-      lx = x;
-      ly = y;
-    };
-    const Lto = function (x, y) {
-      d += ' L ' + fqPathEsc(x) + ' ' + fqPathEsc(y);
-      set(x, y);
-    };
-    const Mto = function (x, y) {
-      d += ' M ' + fqPathEsc(x) + ' ' + fqPathEsc(y);
-      set(x, y);
-    };
-    const Arc = function (ex, ey, sw) {
-      d +=
-        ' A ' + fqPathEsc(erEsc) + ' ' + fqPathEsc(erEsc) + ' 0 0 ' + sw + ' ' + fqPathEsc(ex) + ' ' + fqPathEsc(ey);
-      set(ex, ey);
-    };
-    const ortho = function (tx, ty) {
-      if (Math.abs(lx - tx) < 0.8 && Math.abs(ly - ty) < 0.8) return;
-      if (Math.abs(lx - tx) < 0.8) {
-        Lto(tx, ty);
-        return;
-      }
-      if (Math.abs(ly - ty) < 0.8) {
-        Lto(tx, ty);
-        return;
-      }
-      const sx = tx > lx ? 1 : -1;
-      const sy = ty > ly ? 1 : -1;
-      if (Math.abs(ty - ly) > erEsc && Math.abs(tx - lx) > erEsc) {
-        Lto(lx, ty - sy * erEsc);
-        const swK = sx > 0 ? (sy > 0 ? 1 : 0) : sy > 0 ? 0 : 1;
-        Arc(lx + sx * erEsc, ty, swK);
-        Lto(tx, ty);
-      } else {
-        Lto(lx, ty);
-        Lto(tx, ty);
-      }
-    };
-    const zigzag = function (runList, outerSide) {
-      const xDropAt = function (R) {
-        return outerSide === 'R' ? R.xR - padFlow + flowMarginEsc : R.xL + padFlow - flowMarginEsc;
-      };
-      for (let i = 0; i < runList.length; i++) {
-        const R = runList[i];
-        const Rn = i < runList.length - 1 ? runList[i + 1] : null;
-        const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
-        const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
-        ortho(xS, R.y);
-        ortho(xE, R.y);
-        if (Rn) {
-          const xDrop = xDropAt(R);
-          const xNextS = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
-          ortho(xDrop, R.y);
-          ortho(xDrop, Rn.y);
-          ortho(xNextS, Rn.y);
-        }
-      }
-    };
-    const drainToTank = function (xFrom, yFrom, xLeg, xTankX) {
-      ortho(xLeg, yFrom);
-      const yBase = ladderBot + 8;
-      ortho(xLeg, yBase);
-      ortho(xTankX, yBase);
-      ortho(xTankX, yInlet);
-    };
-    return { path: function () {
-      return d;
-    }, ortho: ortho, zigzag: zigzag, drainToTank: drainToTank, Mto: Mto, Lto: Lto, set: set };
-  };
-
-  const faceInnerX = function (R, face) {
-    return face === 'L' ? R.xR - padFlow : R.xL + padFlow;
-  };
-  const faceOuterX = function (R, face) {
-    return face === 'L' ? R.xL + padFlow : R.xR - padFlow;
-  };
-  const exitEndX = function (R, face, towardCenter) {
-    return towardCenter ? faceInnerX(R, face) : faceOuterX(R, face);
-  };
-
-  let flowSupplyD = 'M ' + fqPathEsc(xPump) + ' ' + fqPathEsc(yPump);
-  let flowReturnD = '';
-
-  if (runs.length) {
-    if (car === 2) {
-      const runsL = runs.slice(0, nv);
-      const runsR = runs.slice(nv);
-      const yManifold = yEscManifold2;
-      const retAlCentro = !odd2;
-      const sup = makeNftFlowWriter(flowSupplyD);
-      sup.set(xPump, yPump);
-      sup.ortho(xTankFeed, yPump);
-      sup.ortho(xTankFeed, yOutlet);
-      sup.ortho(xSupplyRiser, yOutlet);
-      sup.ortho(xSupplyRiser, yManifold);
-      const R0L = runsL[0];
-      sup.ortho(faceInnerX(R0L, 'L'), yManifold);
-      sup.ortho(faceInnerX(R0L, 'L'), R0L.y);
-      sup.ortho(faceOuterX(R0L, 'L'), R0L.y);
-      sup.zigzag(runsL, 'L');
-      flowSupplyD = sup.path();
-
-      const retL = makeNftFlowWriter('');
-      const RnL = runsL[nv - 1];
-      const xEndL = exitEndX(RnL, 'L', retAlCentro);
-      retL.Mto(xEndL, RnL.y);
-      retL.set(xEndL, RnL.y);
-      retL.drainToTank(xEndL, RnL.y, retAlCentro ? cx : faceOuterX(RnL, 'L'), retAlCentro ? xTankReturnCenter : xTankReturnL);
-      flowReturnD = retL.path();
-
-      const supR = makeNftFlowWriter('');
-      supR.Mto(xSupplyRiser, yManifold);
-      supR.set(xSupplyRiser, yManifold);
-      const R0R = runsR[0];
-      supR.ortho(faceInnerX(R0R, 'R'), yManifold);
-      supR.ortho(faceInnerX(R0R, 'R'), R0R.y);
-      supR.ortho(faceOuterX(R0R, 'R'), R0R.y);
-      supR.zigzag(runsR, 'R');
-      flowSupplyD += supR.path();
-
-      const retR = makeNftFlowWriter('');
-      const RnR = runsR[nv - 1];
-      const xEndR = exitEndX(RnR, 'R', retAlCentro);
-      retR.Mto(xEndR, RnR.y);
-      retR.set(xEndR, RnR.y);
-      retR.drainToTank(xEndR, RnR.y, retAlCentro ? cx : faceOuterX(RnR, 'R'), retAlCentro ? xTankReturnCenter : xTankReturnR);
-      flowReturnD += retR.path();
-    } else {
-      const backX = cx + 44;
-      const sup1 = makeNftFlowWriter(flowSupplyD);
-      sup1.set(xPump, yPump);
-      sup1.ortho(xTankFeed, yPump);
-      sup1.ortho(xTankFeed, yOutlet);
-      sup1.ortho(xLegSupplyL, yOutlet);
-      sup1.ortho(xLegSupplyL, runs[0].y);
-      const R0 = runs[0];
-      sup1.ortho(faceInnerX(R0, 'L'), R0.y);
-      sup1.ortho(faceOuterX(R0, 'L'), R0.y);
-      sup1.zigzag(runs, 'L');
-      flowSupplyD = sup1.path();
-
-      const Rn = runs[nv - 1];
-      const xExit1 = Rn.rtl ? Rn.xL + padFlow : Rn.xR - padFlow;
-      const ret1 = makeNftFlowWriter('');
-      ret1.Mto(xExit1, Rn.y);
-      ret1.set(xExit1, Rn.y);
-      if (oddEsc) {
-        ret1.drainToTank(xExit1, Rn.y, backX + 8, xTankReturn);
-      } else {
-        ret1.drainToTank(xExit1, Rn.y, xLegReturnEven, xTankReturn);
-      }
-      flowReturnD = ret1.path();
-    }
-  }
+  const backXEsc = cx + 44;
+  const hydEsc =
+    typeof nftHydraulicEscalera === 'function'
+      ? nftHydraulicEscalera({
+          kind: 'escalera',
+          car: car,
+          nv: nv,
+          runs: runs,
+          xPump: xPump,
+          yPump: yPump,
+          xTankFeed: xTankFeed,
+          yOutlet: yOutlet,
+          yInlet: yInlet,
+          xSupplyRiser: xSupplyRiser,
+          yManifold: yEscManifold2,
+          retAlCentro: !odd2,
+          cx: cx,
+          xTankReturnCenter: xTankReturnCenter,
+          xTankReturnL: xTankReturnL,
+          xTankReturnR: xTankReturnR,
+          padFlow: padFlow,
+          flowMargin: flowMarginEsc,
+          cornerRadius: erEsc,
+          oddEsc: oddEsc,
+          xLegSupplyL: xLegSupplyL,
+          xLegReturnEven: xLegReturnEven,
+          backX: backXEsc,
+          xTankReturn: xTankReturn,
+          ladderBot: ladderBot,
+          tx: tx,
+          tankW: tankW,
+          tankY: tankY,
+          tankH: tankH,
+          ports: escPorts,
+        })
+      : { supplyD: '', returnD: '' };
+  const flowSupplyD = hydEsc.supplyD || '';
+  const flowReturnD = hydEsc.returnD || '';
 
   let flowTankPortsEsc = '';
   if (esc2Cara) {
