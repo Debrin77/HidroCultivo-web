@@ -699,7 +699,11 @@ function riegoPctCicloPlanta(cesta, edadSemManual) {
   const s = Math.max(0.05, Math.min(24, Number(edadSemManual) || 4));
   let pct;
   if (cestaTieneFechaValida(cesta.fecha)) {
-    pct = getDias(cesta.fecha) / diasTot;
+    const dias =
+      typeof getDiasEfectivosCicloBiologico === 'function'
+        ? getDiasEfectivosCicloBiologico(cesta, cult, Date.now())
+        : getDias(cesta.fecha);
+    pct = dias / diasTot;
   } else {
     pct = (s * 7) / diasTot;
   }
