@@ -57,6 +57,8 @@ function renderTorre() {
       nftAlturaBombeoCm: altShow > 0 ? altShow : null,
       ubicacion: cfg.ubicacion,
       cfgSnapshot: cfg,
+      volCapL: volRawMax,
+      volMezL: volRawMez,
       mesaTiers: hyd.mesaTiers,
       escaleraNiveles: hyd.escaleraNiveles,
       escaleraCaras: hyd.escaleraCaras,
@@ -72,7 +74,7 @@ function renderTorre() {
       'aria-label',
       esPared
         ? 'NFT en pared: tubos marrones, flujo del agua y depósito. Toca un hueco para la ficha o usa Lista.'
-        : 'NFT: esquema con flujo de agua. Toca un hueco para la ficha o usa Lista.'
+        : 'NFT: alimentación (sale abajo del depósito) y retorno (entra arriba). Toca un hueco para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
@@ -82,7 +84,7 @@ function renderTorre() {
       nftHint.classList.remove('setup-hidden');
       if (esPared) {
         nftHint.innerHTML =
-          'NFT pared: <strong class="fw-800">línea marrón</strong> = recorrido del agua (sale y vuelve al depósito). Toca <strong class="fw-800">hueco</strong> o <strong class="fw-800">Lista</strong>.';
+          'NFT pared: <strong class="fw-800">línea continua</strong> = alimentación (sale abajo del depósito); <strong class="fw-800">línea corta</strong> = retorno (entra arriba). Toca <strong class="fw-800">hueco</strong> o <strong class="fw-800">Lista</strong>.';
       }
     }
   } else if (esDwc) {
