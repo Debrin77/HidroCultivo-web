@@ -232,12 +232,8 @@ function renderTorreMedirDiagram() {
   }
 
   const src = document.getElementById('torreSVGWrap');
-  let html = src && src.innerHTML ? String(src.innerHTML).trim() : '';
+  const html = src && src.innerHTML ? String(src.innerHTML).trim() : '';
   if (!html || html.indexOf('<svg') < 0 || src.querySelector('.torre-loading-placeholder')) {
-    if (typeof renderTorre === 'function') renderTorre();
-    html = src && src.innerHTML ? String(src.innerHTML).trim() : '';
-  }
-  if (!html || html.indexOf('<svg') < 0) {
     section.classList.add('setup-hidden');
     medirWrap.innerHTML = '';
     return;

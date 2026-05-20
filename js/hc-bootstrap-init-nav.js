@@ -391,7 +391,7 @@ function goTab(tab) {
   if (tab === 'mediciones') {
     cargarUltimaMedicion();
     initConfigUI();
-    if (typeof renderTorre === 'function') renderTorre();
+    if (typeof renderTorreMedirDiagram === 'function') renderTorreMedirDiagram();
   }
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') { cargarMeteo(); window._meteoObsoleto = false; }
