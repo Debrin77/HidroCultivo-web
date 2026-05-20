@@ -2604,6 +2604,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const Wsvg = altBadgeEsc.canvasW;
   const flowMarginEsc = 8;
   const xLegDrainL = cx - baseHalf - 10;
+  const xLegSupplyL = xLegDrainL - 18;
+  const xLegReturnEven = xLegDrainL - 9;
   const xLegDrainR = cx + baseHalf + 10;
   const cxTitle = Wsvg / 2;
   const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
@@ -2751,15 +2753,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const backX = cx + 44;
       orthoKneeEsc(xTankFeed, yPump);
       orthoKneeEsc(xTankFeed, yOutlet);
-      orthoKneeEsc(xLegDrainL, yOutlet);
-      orthoKneeEsc(xLegDrainL, runs[0].y);
+      orthoKneeEsc(oddEsc ? xLegDrainL : xLegSupplyL, yOutlet);
+      orthoKneeEsc(oddEsc ? xLegDrainL : xLegSupplyL, runs[0].y);
       const xIn0 = runs[0].rtl ? runs[0].xR - padFlow : runs[0].xL + padFlow;
       orthoKneeEsc(xIn0, runs[0].y);
       nftEscAppendRunsZigzag(runs, 'L');
       if (oddEsc) {
         nftEscDrainAlongLeg(backX + 8, xTankReturn);
       } else {
-        nftEscDrainAlongLeg(xLegDrainL, xTankReturn);
+        nftEscDrainAlongLeg(xLegReturnEven, xTankReturn);
       }
     }
   }

@@ -2829,6 +2829,14 @@ function nftEscaleraCarasNormalizada(v) {
  * Canales hidráulicos efectivos y metadatos de montaje para cálculo y SVG.
  * @returns {{ nCh: number, nHx: number, mesaTiers?: number[], escaleraNiveles?: number, escaleraCaras?: number }}
  */
+/** NFT ya definido en asistente (tubos/huecos): no repetir montaje ni EC/pH en Cultivo e instalación. */
+function nftInstalacionYaConfigurada(cfg) {
+  if (!cfg || cfg.tipoInstalacion !== 'nft') return false;
+  const nCh = parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? ''), 10);
+  const hx = parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? ''), 10);
+  return Number.isFinite(nCh) && nCh >= 1 && Number.isFinite(hx) && hx >= 2;
+}
+
 function nftHuecosDesdeCfg(cfg) {
   const raw = parseInt(String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? ''), 10);
   if (Number.isFinite(raw) && raw >= 0 && raw <= 30) {
@@ -3589,13 +3597,14 @@ function sincronizarSistemaNftMontajeUI() {
       ? tipoInstalacionNormalizado(cfg)
       : cfg && cfg.tipoInstalacion;
   const ocultarEcPhObjetivoTorreEnSistema = tipoInst === 'torre';
+  const nftYaListo = cfg && nftInstalacionYaConfigurada(cfg);
   if (ecphCard) {
-    const mostrarEcPh = cfg && !ocultarEcPhObjetivoTorreEnSistema;
+    const mostrarEcPh = cfg && !ocultarEcPhObjetivoTorreEnSistema && !nftYaListo;
     ecphCard.style.display = mostrarEcPh ? 'block' : 'none';
     ecphCard.classList.toggle('setup-hidden', !mostrarEcPh);
     ecphCard.hidden = !mostrarEcPh;
   }
-  if (cfg && !ocultarEcPhObjetivoTorreEnSistema) {
+  if (cfg && !ocultarEcPhObjetivoTorreEnSistema && !nftYaListo) {
     try {
       syncSistemaEcPhStrategyUI();
     } catch (_) {}
@@ -3660,6 +3669,18 @@ function sincronizarSistemaNftMontajeUI() {
   }
   if (!cfg || cfg.tipoInstalacion !== 'nft') {
     card.style.display = 'none';
+    card.classList.add('setup-hidden');
+    card.hidden = true;
+    try {
+      renderNftCultivoRecoStatus('sys');
+    } catch (_) {}
+    applySistemaTipoPanelesColapsablesUI();
+    return;
+  }
+  if (nftInstalacionYaConfigurada(cfg)) {
+    card.style.display = 'none';
+    card.classList.add('setup-hidden');
+    card.hidden = true;
     try {
       renderNftCultivoRecoStatus('sys');
     } catch (_) {}
@@ -3667,6 +3688,8 @@ function sincronizarSistemaNftMontajeUI() {
     return;
   }
   card.style.display = 'block';
+  card.classList.remove('setup-hidden');
+  card.hidden = false;
   const dispN = nftDisposicionNormalizada(cfg.nftDisposicion);
   seleccionarSistemaNftDisposicion(dispN);
   const altInp = document.getElementById('sysNftAlturaBombeoCm');

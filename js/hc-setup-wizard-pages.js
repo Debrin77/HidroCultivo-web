@@ -374,8 +374,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const yOutlet = tankY + tankH - 16;
   const yInlet = tankY + 16;
   const flowMargin = 10;
-  const xFeedRiser = Math.max(14, xL - flowMargin);
-  const xReturnRiser = oddTubes ? Math.min(Wsvg - 14, xR + flowMargin) : xFeedRiser;
+  const riserSep = 16;
+  const xFeedRiser = Math.max(12, xL - flowMargin - (oddTubes ? 0 : riserSep));
+  const xDrainRiserEven = Math.max(xFeedRiser + 10, xL - 4);
+  const xReturnRiser = oddTubes ? Math.min(Wsvg - 14, xR + flowMargin) : xDrainRiserEven;
 
   let flowD = '';
   flowD += 'M ' + xPump + ' ' + yPump;
@@ -410,7 +412,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const returnSep = brownNft ? 28 : 12;
   let yDuctRun = yLast + tubeH / 2 + returnSep;
   if (yDuctRun > tankY - 10) yDuctRun = tankY - 12;
-  const xRiserRet = oddTubes ? xReturnRiser : xFeedRiser;
+  const xRiserRet = oddTubes ? xReturnRiser : xDrainRiserEven;
   if (brownNft && oddTubes) {
     const xJog =
       endsRightSerp ? Math.min(xReturnRiser, xR + flowMargin + 14) : Math.max(xFeedRiser, xL - flowMargin - 14);
