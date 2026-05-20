@@ -2574,13 +2574,16 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const tx = (W0 - tankW) / 2;
   const waterTop = tankY + 6;
   const waterH = tankH - 16;
-  const xTankFeed = tx + 12;
-  const xTankReturn = tx + tankW - 12;
+  const esc1Cara = car === 1;
+  const oddEsc = nv % 2 === 1;
+  const escPorts = esc1Cara ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv) : null;
+  const xTankFeed = escPorts ? escPorts.xFeed : tx + 12;
+  const xTankReturn = escPorts ? escPorts.xReturn : tx + tankW - 12;
   const xSupplyRiser = cx;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const xPump = tx + 14;
-  const yOutlet = tankY + tankH - 16;
-  const yInlet = tankY + 16;
+  const yOutlet = escPorts ? escPorts.yOutlet : tankY + tankH - 16;
+  const yInlet = escPorts ? escPorts.yInlet : tankY + 16;
   let tubeH = car === 2 ? Math.min(22, 17 + Math.min(6, huecosN * 0.45)) : Math.min(32, 24 + Math.min(8, huecosN * 0.55));
   if (escFew) {
     tubeH = Math.round(tubeH * (car === 2 ? 1.06 : 1.08));
@@ -2646,7 +2649,12 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="' + HC_DIAG.nft.flow + '" fill="none" ' + flowDash;
+  const brownEsc1 = esc1Cara;
+  const flowColEsc = brownEsc1 ? '#b45309' : HC_DIAG.nft.flow;
+  const flowSt = 'stroke="' + flowColEsc + '" fill="none" ' + flowDash;
+  const chGrad0Esc = brownEsc1 ? '#e8d4b8' : HC_DIAG.nft.canalGrad0;
+  const chGrad1Esc = brownEsc1 ? '#c9a66b' : HC_DIAG.nft.canalGrad1;
+  const chColEsc = brownEsc1 ? '#92400e' : '#0369a1';
   const fqPathEsc = function (v) {
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
@@ -2748,7 +2756,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const xIn0 = runs[0].rtl ? runs[0].xR - padFlow : runs[0].xL + padFlow;
       orthoKneeEsc(xIn0, runs[0].y);
       nftEscAppendRunsZigzag(runs, 'L');
-      nftEscDrainAlongLeg(backX + 8, xTankReturn);
+      if (oddEsc) {
+        nftEscDrainAlongLeg(backX + 8, xTankReturn);
+      } else {
+        nftEscDrainAlongLeg(xLegDrainL, xTankReturn);
+      }
     }
   }
 
@@ -2830,7 +2842,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       tubeH +
       '" rx="8" fill="url(#' +
       gidCh +
-      ')" stroke="#0369a1" stroke-width="' +
+      ')" stroke="' +
+      chColEsc +
+      '" stroke-width="' +
       chStrokeEsc +
       '"' +
       peNone +
@@ -2908,14 +2922,21 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   }
 
-  let tankLayer = '';
-  tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
-  tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  const tankTorreEsc =
+    esc1Cara && typeof nftSvgTankTorreStyle === 'function'
+      ? nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, vol, { animate: true })
+      : null;
+  let tankLayer = tankTorreEsc ? tankTorreEsc.html : '';
+  if (!tankTorreEsc) {
+    tankLayer += '<rect x="' + tx + '" y="' + tankY + '" width="' + tankW + '" height="' + tankH + '" rx="12" fill="url(#' + gidTank + ')" stroke="#14532d" stroke-width="1.3"/>';
+    tankLayer += '<rect x="' + (tx + 4) + '" y="' + waterTop + '" width="' + (tankW - 8) + '" height="' + waterH + '" rx="8" fill="url(#' + gidAqua + ')" opacity="0.9"/>';
+  }
   tankLayer += altBadgeEsc.html;
   const volTextY = tankY + Math.floor(tankH / 2) + 5;
   const volCxEsc = tx + tankW / 2;
+  const volFillEsc = tankTorreEsc ? tankTorreEsc.volTextFill : '#fff';
   tankLayer +=
-    '<text x="' + volCxEsc + '" y="' + volTextY + '" text-anchor="middle" fill="#fff" font-size="' + volFsEsc + '" font-weight="900" font-family="system-ui,sans-serif">' +
+    '<text x="' + volCxEsc + '" y="' + volTextY + '" text-anchor="middle" fill="' + volFillEsc + '" font-size="' + volFsEsc + '" font-weight="900" font-family="system-ui,sans-serif">' +
     vol +
     ' L</text>';
   if (showCalentador) {
@@ -2925,15 +2946,19 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="#fbbf24"/>';
   }
   if (showDifusor) {
-    const ax = tx + tankW - 18;
-    const ay = tankY + tankH - 16;
-    tankLayer +=
-      '<line x1="' + ax + '" y1="' + (tankY - 2) + '" x2="' + ax + '" y2="' + (ay - 12) + '" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
-    tankLayer +=
-      '<ellipse cx="' + ax + '" cy="' + ay + '" rx="13" ry="7" fill="#94a3b8" stroke="#64748b" stroke-width="1.2"/>';
-    for (let bi = 0; bi < 5; bi++) {
-      const bx = ax + (bi % 3 - 1) * 4;
-      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="#bfdbfe" opacity="0.9"/>';
+    if (esc1Cara && typeof nftSvgAireadorEnSuelo === 'function') {
+      tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, HC_DIAG.nft);
+    } else {
+      const ax = tx + tankW - 18;
+      const ay = tankY + tankH - 16;
+      tankLayer +=
+        '<line x1="' + ax + '" y1="' + (tankY - 2) + '" x2="' + ax + '" y2="' + (ay - 12) + '" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
+      tankLayer +=
+        '<ellipse cx="' + ax + '" cy="' + ay + '" rx="13" ry="7" fill="#94a3b8" stroke="#64748b" stroke-width="1.2"/>';
+      for (let bi = 0; bi < 5; bi++) {
+        const bx = ax + (bi % 3 - 1) * 4;
+        tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="#bfdbfe" opacity="0.9"/>';
+      }
     }
   }
 
@@ -2976,30 +3001,30 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     gidCh +
     '" x1="0" y1="0" x2="0" y2="1">' +
     '<stop offset="0%" stop-color="' +
-    HC_DIAG.nft.canalGrad0 +
+    chGrad0Esc +
     '"/><stop offset="100%" stop-color="' +
-    HC_DIAG.nft.canalGrad1 +
+    chGrad1Esc +
     '"/></linearGradient>' +
-    '<linearGradient id="' +
-    gidTank +
-    '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="' +
-    HC_DIAG.nft.tankGrad0 +
-    '"/><stop offset="100%" stop-color="' +
-    HC_DIAG.nft.tankGrad1 +
-    '"/></linearGradient>' +
-    '<linearGradient id="' +
-    gidAqua +
-    '" x1="0" y1="0" x2="0" y2="1">' +
-    '<stop offset="0%" stop-color="' +
-    HC_DIAG.nft.waterGrad0 +
-    '" stop-opacity="' +
-    HC_DIAG.nft.waterOp0 +
-    '"/><stop offset="100%" stop-color="' +
-    HC_DIAG.nft.waterGrad1 +
-    '" stop-opacity="' +
-    HC_DIAG.nft.waterOp1 +
-    '"/></linearGradient>' +
+    (tankTorreEsc ? tankTorreEsc.defs : '') +
+    (tankTorreEsc
+      ? ''
+      : '<linearGradient id="' +
+        gidTank +
+        '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' +
+        HC_DIAG.nft.tankGrad0 +
+        '"/><stop offset="100%" stop-color="' +
+        HC_DIAG.nft.tankGrad1 +
+        '"/></linearGradient><linearGradient id="' +
+        gidAqua +
+        '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' +
+        HC_DIAG.nft.waterGrad0 +
+        '" stop-opacity="' +
+        HC_DIAG.nft.waterOp0 +
+        '"/><stop offset="100%" stop-color="' +
+        HC_DIAG.nft.waterGrad1 +
+        '" stop-opacity="' +
+        HC_DIAG.nft.waterOp1 +
+        '"/></linearGradient>') +
     '</defs>' +
     escViewLabel +
     frame +
