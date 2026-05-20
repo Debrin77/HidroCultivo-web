@@ -438,9 +438,7 @@
     }
     if (L.showDifusor && typeof global.nftSvgAireadorEnSuelo === 'function') {
       const P = typeof HC_DIAG !== 'undefined' && HC_DIAG.nft ? HC_DIAG.nft : {};
-      const ax = L.tx + L.tankW - 22;
-      const ay = L.tankY + L.tankH - 16;
-      s += global.nftSvgAireadorEnSuelo(L.tx, L.tankY, L.tankW, L.tankH, ax, ay, P);
+      s += global.nftSvgAireadorEnSuelo(L.tx, L.tankY, L.tankW, L.tankH, P);
     }
     const px = L.tx + 22;
     const py = L.waterTop + L.waterH * 0.55;

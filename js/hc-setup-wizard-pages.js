@@ -92,14 +92,16 @@ function nftSvgBurbujaAnimada(cx, ySuperficie, yPiedra, bi, fill) {
   );
 }
 
-/** Bomba de aire en suelo, al lado de la piedra difusora (misma banda lateral). */
-function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, piedraX, piedraY, P, canvasW) {
+/** Bomba de aire en suelo, separada del depósito; manguera a la piedra difusora (dentro del agua, borde derecho). */
+function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, P) {
+  const gapFromTank = 16;
   const sueloY = tankY + tankH;
   const pumpW = 28;
   const pumpH = 22;
-  const Wlim = canvasW != null && Number.isFinite(canvasW) ? canvasW : tx + tankW + 48;
-  const pumpX = Math.min(Wlim - pumpW - 4, piedraX + 14);
+  const pumpX = tx + tankW + gapFromTank;
   const pumpY = sueloY - pumpH;
+  const piedraX = tx + tankW - 14;
+  const piedraY = tankY + tankH - 12;
   let s = '';
   s +=
     '<rect x="' +
@@ -122,18 +124,18 @@ function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, piedraX, piedraY, P, can
     (pumpH - 8) +
     '" rx="2" fill="#475569" opacity="0.9"/>';
   const hoseY = sueloY - 4;
-  const hoseMidX = (pumpX + piedraX) / 2;
+  const hoseKneeX = piedraX + 8;
   s +=
     '<path d="M ' +
     pumpX +
     ' ' +
     (pumpY + 7) +
     ' L ' +
-    hoseMidX +
+    hoseKneeX +
     ' ' +
     (pumpY + 7) +
     ' L ' +
-    hoseMidX +
+    hoseKneeX +
     ' ' +
     hoseY +
     ' L ' +
@@ -222,7 +224,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const legTierSerp = nftDiagramLegibilityHint(legHintSerp);
   const volFsSerp = nftTankVolumeFontSize(vol, legTierSerp);
   const altBadgeSerp = nftAlturaBadgeBesideTank(altCmSerp, tx, tankY, tankW, tankH, W0, legHintSerp);
-  const Wsvg = altBadgeSerp.canvasW;
+  let Wsvg = altBadgeSerp.canvasW;
+  if (showDifusor) {
+    const minWAir = tx + tankW + 16 + 28 + 12;
+    if (minWAir > Wsvg) Wsvg = minWAir;
+  }
 
   const yRow = i =>
     topPad + i * rowStep + Math.floor(rowStep / 2) + (dispLayout === 'escalera' ? i * 14 : 0);
@@ -504,9 +510,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="' + P.calGlow + '"/>';
   }
   if (showDifusor) {
-    const ax = tx + tankW - 22;
-    const ay = tankY + tankH - 16;
-    tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, ax, ay, P, Wsvg);
+    tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, P);
   }
 
   let flowTankPorts = '';
