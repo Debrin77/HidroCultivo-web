@@ -160,7 +160,7 @@
     return s;
   }
 
-  function buildDecor(L, suf) {
+  function buildDecor(L, suf, equipOpts) {
     const gidWall = 'nftPiWall' + suf;
     const gidCh = 'nftPiCh' + suf;
     const gidLed = 'nftPiLed' + suf;
@@ -248,28 +248,35 @@
       fq(wallBot - 4) +
       '" stroke="#475569" stroke-width="5" stroke-linecap="round" opacity="0.45" pointer-events="none"/>';
 
+    const esInterior =
+      typeof global.nftCfgEsInterior === 'function'
+        ? global.nftCfgEsInterior(equipOpts || {})
+        : false;
+
     for (let i = 0; i < L.nCh; i++) {
       const yRi = L.yRow(i);
       const yc = yRi - L.tubeVisH * 0.35;
-      const ledY = yc - 10;
-      s +=
-        '<rect x="' +
-        (L.xL - 6) +
-        '" y="' +
-        ledY +
-        '" width="' +
-        (L.xR - L.xL + 12) +
-        '" height="5" rx="2.5" fill="url(#' +
-        gidLed +
-        ')" opacity="0.85" pointer-events="none"/>';
-      s +=
-        '<rect x="' +
-        (L.xL - 4) +
-        '" y="' +
-        (ledY - 18) +
-        '" width="' +
-        (L.xR - L.xL + 8) +
-        '" height="20" fill="#fdf4ff" opacity="0.35" pointer-events="none"/>';
+      if (esInterior) {
+        const ledY = yc - 10;
+        s +=
+          '<rect x="' +
+          (L.xL - 6) +
+          '" y="' +
+          ledY +
+          '" width="' +
+          (L.xR - L.xL + 12) +
+          '" height="5" rx="2.5" fill="url(#' +
+          gidLed +
+          ')" opacity="0.85" pointer-events="none"/>';
+        s +=
+          '<rect x="' +
+          (L.xL - 4) +
+          '" y="' +
+          (ledY - 18) +
+          '" width="' +
+          (L.xR - L.xL + 8) +
+          '" height="20" fill="#fdf4ff" opacity="0.35" pointer-events="none"/>';
+      }
 
       const bracketY = yRi + L.tubeVisH * 0.42;
       s +=
@@ -376,14 +383,6 @@
         }
       }
 
-      s +=
-        '<text x="' +
-        (L.xL - 24) +
-        '" y="' +
-        (yRi + 4) +
-        '" text-anchor="end" font-family="system-ui,sans-serif" font-size="10" font-weight="700" fill="#64748b" pointer-events="none">T' +
-        (i + 1) +
-        '</text>';
     }
 
     s += buildPlumbingZigzag(L);
@@ -437,33 +436,11 @@
         (L.tankY + L.tankH - 36) +
         '" width="10" height="30" rx="5" fill="#f97316" stroke="#c2410c" stroke-width="1.1" pointer-events="none"/>';
     }
-    if (L.showDifusor) {
+    if (L.showDifusor && typeof global.nftSvgAireadorEnSuelo === 'function') {
+      const P = typeof HC_DIAG !== 'undefined' && HC_DIAG.nft ? HC_DIAG.nft : {};
       const ax = L.tx + L.tankW - 22;
-      const ay = L.tankY + L.tankH - 18;
-      s +=
-        '<ellipse cx="' +
-        ax +
-        '" cy="' +
-        ay +
-        '" rx="14" ry="7" fill="#64748b" stroke="#475569" stroke-width="1.2" pointer-events="none"/>';
-      s +=
-        '<line x1="' +
-        ax +
-        '" y1="' +
-        (L.tankY - 4) +
-        '" x2="' +
-        ax +
-        '" y2="' +
-        (ay - 10) +
-        '" stroke="#94a3b8" stroke-width="2" stroke-dasharray="3 2" pointer-events="none"/>';
-      for (let bi = 0; bi < 7; bi++) {
-        s +=
-          '<circle cx="' +
-          (ax + (bi % 3 - 1) * 4) +
-          '" cy="' +
-          (ay - 10 - bi * 4) +
-          '" r="2" fill="#f1f5f9" opacity="0.95" pointer-events="none"/>';
-      }
+      const ay = L.tankY + L.tankH - 16;
+      s += global.nftSvgAireadorEnSuelo(L.tx, L.tankY, L.tankW, L.tankH, ax, ay, P);
     }
     const px = L.tx + 22;
     const py = L.waterTop + L.waterH * 0.55;
@@ -474,16 +451,27 @@
       py +
       '" r="9" fill="#475569" stroke="#334155" stroke-width="1.2" pointer-events="none"/>';
     s +=
-      '<text x="' +
+      '<path d="M ' +
       px +
-      '" y="' +
-      (py + 3) +
-      '" text-anchor="middle" font-size="8" fill="#e2e8f0" font-family="system-ui,sans-serif" pointer-events="none">⬆</text>';
-
-    s +=
-      '<text class="nft-pi-caption" x="' +
-      (L.Wsvg / 2) +
-      '" y="28" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" font-weight="600" fill="#475569" pointer-events="none">NFT en pared · toca cada maceta para cultivo y ficha</text>';
+      ' ' +
+      (py - 4) +
+      ' L ' +
+      px +
+      ' ' +
+      (py + 2) +
+      ' M ' +
+      (px - 3) +
+      ' ' +
+      (py - 1) +
+      ' L ' +
+      px +
+      ' ' +
+      (py - 4) +
+      ' L ' +
+      (px + 3) +
+      ' ' +
+      (py - 1) +
+      '" stroke="#e2e8f0" stroke-width="1.4" fill="none" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"/>';
 
     return { html: s, gidCh: gidCh };
   }
@@ -514,7 +502,8 @@
         if (typeof global.hcIlloNftHuecoLayer === 'function') {
           plants += global.hcIlloNftHuecoLayer(gx, gy, L.hr, i, j, dat, cult, interactive, P, {
             compact: L.compactSerp,
-            numBelow: true,
+            numBelow: false,
+            sinTexto: true,
             numShow: numShow,
             extraDy: 5,
             slotAlong: slotAlongRow,
@@ -576,7 +565,7 @@
     const tid = 'nftPiTitle' + suf;
     const L = computeParedLayout(canales, huecos, volL, equipOpts);
     const P = typeof HC_DIAG !== 'undefined' && HC_DIAG.nft ? HC_DIAG.nft : {};
-    const decor = buildDecor(L, suf);
+    const decor = buildDecor(L, suf, equipOpts);
     let plants = buildPlants(L, P, interactive);
 
     if (interactive) {

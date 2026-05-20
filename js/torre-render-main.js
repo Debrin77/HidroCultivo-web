@@ -45,6 +45,7 @@ function renderTorre() {
         ? Math.round(Number(cfg.nftAlturaBombeoCm))
         : getNftAlturaBombeoEfectivaCm(cfg);
     disposeNftThreeIfAny(wrap);
+    const esPared = nftDisposicionNormalizada(cfg.nftDisposicion) === 'pared';
     const svgOpts = {
       calentador: eqArr?.includes('calentador') ?? true,
       difusor: eqArr?.includes('difusor') ?? true,
@@ -54,6 +55,7 @@ function renderTorre() {
       userPotenciaW: cfg.nftBombaUsuarioPotenciaW || null,
       nftDisposicion: cfg.nftDisposicion,
       nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+      ubicacion: cfg.ubicacion,
       cfgSnapshot: cfg,
       mesaTiers: hyd.mesaTiers,
       escaleraNiveles: hyd.escaleraNiveles,
@@ -61,25 +63,28 @@ function renderTorre() {
     };
     if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
     let nftSvg = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
-    const esParedIllo =
-      nftDisposicionNormalizada(cfg.nftDisposicion) === 'pared' &&
-      String(nftSvg).indexOf('nft-pared-illustration') >= 0;
-    if (!esParedIllo && typeof enhanceNftDiagramScada === 'function') {
+    if (typeof enhanceNftDiagramScada === 'function') {
       nftSvg = enhanceNftDiagramScada(nftSvg, { interactive: true });
     }
     wrap.innerHTML = nftSvg;
-    wrap.classList.toggle('torre-svg-canvas--nft-pared-illo', esParedIllo);
+    wrap.classList.remove('torre-svg-canvas--nft-pared-illo');
     wrap.setAttribute(
       'aria-label',
-      esParedIllo
-        ? 'NFT en pared: vista ilustrada. Toca un hueco para la ficha del cultivo o usa Lista.'
-        : 'NFT: esquema SCADA con flujo de agua en azul. Toca un hueco para la ficha o usa Lista.'
+      esPared
+        ? 'NFT en pared: tubos marrones, flujo del agua y depósito. Toca un hueco para la ficha o usa Lista.'
+        : 'NFT: esquema con flujo de agua. Toca un hueco para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
     } catch (e2) {}
     const nftHint = document.getElementById('torreNftDiagramHint');
-    if (nftHint) nftHint.classList.toggle('setup-hidden', esParedIllo);
+    if (nftHint) {
+      nftHint.classList.remove('setup-hidden');
+      if (esPared) {
+        nftHint.innerHTML =
+          'NFT pared: <strong class="fw-800">línea marrón</strong> = recorrido del agua (sale y vuelve al depósito). Toca <strong class="fw-800">hueco</strong> o <strong class="fw-800">Lista</strong>.';
+      }
+    }
   } else if (esDwc) {
     try {
       wrap.innerHTML = typeof generarSVGDwc === 'function' ? generarSVGDwc() : '';

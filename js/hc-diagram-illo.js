@@ -1321,41 +1321,44 @@
         (onGreyLid ? '0.95' : '0.55') +
         '"/>';
     }
-    if (cultEmoji) {
-      var emFs = Math.min(16, Math.max(10, rx * 0.95));
-      out +=
-        '<text x="' +
-        f1(cx) +
-        '" y="' +
-        f1(cy + (topView ? 1 : -2)) +
-        '" text-anchor="middle" dominant-baseline="central" font-size="' +
-        emFs +
-        '" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,sans-serif">' +
-        cultEmoji +
-        '</text>';
-    }
-    var subY = cy + ry + (topView ? 10 : 14);
-    if (dias > 0 && dat.variedad) {
-      var diasFill = onGreyLid ? '#ffffff' : stroke;
-      out +=
-        '<text class="hc-illo-dias" x="' +
-        f1(cx) +
-        '" y="' +
-        f1(subY) +
-        '" font-family="Inconsolata,monospace" font-size="7.5" font-weight="800" fill="' +
-        diasFill +
-        '" text-anchor="middle">' +
-        dias +
-        'd</text>';
-    } else if (!cultEmoji) {
-      out +=
-        '<text x="' +
-        f1(cx) +
-        '" y="' +
-        f1(cy + 3) +
-        '" font-family="Inconsolata,monospace" font-size="8" fill="' +
-        HC_ILLO.mesh +
-        '" text-anchor="middle">·</text>';
+    var textoEnMaceta = !o.sinTexto || isSelected || isMulti;
+    if (textoEnMaceta) {
+      if (cultEmoji) {
+        var emFs = Math.min(16, Math.max(10, rx * 0.95));
+        out +=
+          '<text x="' +
+          f1(cx) +
+          '" y="' +
+          f1(cy + (topView ? 1 : -2)) +
+          '" text-anchor="middle" dominant-baseline="central" font-size="' +
+          emFs +
+          '" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,sans-serif">' +
+          cultEmoji +
+          '</text>';
+      }
+      var subY = cy + ry + (topView ? 10 : 14);
+      if (dias > 0 && dat.variedad) {
+        var diasFill = onGreyLid ? '#ffffff' : stroke;
+        out +=
+          '<text class="hc-illo-dias" x="' +
+          f1(cx) +
+          '" y="' +
+          f1(subY) +
+          '" font-family="Inconsolata,monospace" font-size="7.5" font-weight="800" fill="' +
+          diasFill +
+          '" text-anchor="middle">' +
+          dias +
+          'd</text>';
+      } else if (!cultEmoji && !o.sinTexto) {
+        out +=
+          '<text x="' +
+          f1(cx) +
+          '" y="' +
+          f1(cy + 3) +
+          '" font-family="Inconsolata,monospace" font-size="8" fill="' +
+          HC_ILLO.mesh +
+          '" text-anchor="middle">·</text>';
+      }
     }
     out +=
       '<ellipse cx="' +
@@ -2417,6 +2420,23 @@
     var compact = !!opts.compact;
     var numShow = opts.numShow != null ? opts.numShow : j + 1;
     if (!interactive) {
+      if (opts.sinTexto) {
+        return (
+          '<ellipse cx="' +
+          f1(gx) +
+          '" cy="' +
+          gy +
+          '" rx="' +
+          f1(hr) +
+          '" ry="' +
+          f1(hr * 0.88) +
+          '" fill="' +
+          HC_ILLO.pot +
+          '" stroke="' +
+          HC_ILLO.ink +
+          '" stroke-width="2"/>'
+        );
+      }
       var em =
         dat && dat.variedad && typeof cultivoEmoji === 'function' ? cultivoEmoji(cult) : '';
       var s =
@@ -2449,6 +2469,23 @@
         s += nftSvgHuecoNumBelowHole(gx, gy, hr, numShow, Math.max(7, hr * 0.55), compact, opts.extraDy || 0);
       }
       return s;
+    }
+    if (opts.sinTexto) {
+      return maceta({
+        n: i,
+        c: j,
+        cx: gx,
+        cy: gy,
+        rx: hr,
+        ry: hr * 0.88,
+        uid: u,
+        cfg: typeof state !== 'undefined' ? state.configTorre : {},
+        topView: true,
+        dat: dat,
+        label: 'Canal T' + (i + 1) + ', hueco ' + (j + 1),
+        extraClass: 'hc-nft-hueco hc-illo-nft-hole',
+        sinTexto: true,
+      });
     }
     var out = maceta({
       n: i,

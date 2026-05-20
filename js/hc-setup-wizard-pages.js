@@ -39,14 +39,129 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     nv = Math.min(12, Math.max(1, nv));
     return buildNftEscaleraDiagramSvg(nv, caras, huecos, pendPct, volL, svgIdSuffix, equipOpts);
   }
-  if (
-    disp === 'pared' &&
-    EO.interactive === true &&
-    typeof buildNftParedIllustrationSvg === 'function'
-  ) {
-    return buildNftParedIllustrationSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts);
-  }
   return buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts);
+}
+
+function nftCfgEsInterior(EO) {
+  const cfg = (EO && EO.cfgSnapshot) || {};
+  const u = EO && EO.ubicacion != null ? EO.ubicacion : cfg.ubicacion;
+  return String(u || 'exterior').toLowerCase() === 'interior';
+}
+
+/** Burbujas en depósito (animadas si torreSvgAnimacionesActivas). */
+function nftSvgBurbujaAnimada(cx, ySuperficie, yPiedra, bi, fill) {
+  const animOn = typeof torreSvgAnimacionesActivas === 'function' && torreSvgAnimacionesActivas();
+  const y0 = yPiedra - 5 - (bi % 2) * 2;
+  const y1 = Math.max(ySuperficie + 3, y0 - 14 - bi * 2);
+  if (!animOn) {
+    return (
+      '<circle cx="' +
+      cx +
+      '" cy="' +
+      y0 +
+      '" r="1.8" fill="' +
+      fill +
+      '" opacity="0.88"/>'
+    );
+  }
+  const delay = (bi * 0.17).toFixed(2);
+  const dur = '1.4';
+  return (
+    '<circle cx="' +
+    cx +
+    '" cy="' +
+    y0 +
+    '" r="1.8" fill="' +
+    fill +
+    '" opacity="0">' +
+    '<animate attributeName="cy" from="' +
+    y0 +
+    '" to="' +
+    y1 +
+    '" dur="' +
+    dur +
+    's" begin="' +
+    delay +
+    's" repeatCount="indefinite" calcMode="linear"/>' +
+    '<animate attributeName="opacity" values="0;0.92;0" dur="' +
+    dur +
+    's" begin="' +
+    delay +
+    's" repeatCount="indefinite"/>' +
+    '</circle>'
+  );
+}
+
+/** Bomba de aire en suelo (misma base que depósito) + manguera a piedra difusora. */
+function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, piedraX, piedraY, P) {
+  const sueloY = tankY + tankH;
+  const pumpW = 28;
+  const pumpH = 22;
+  const pumpX = Math.max(8, tx - pumpW - 12);
+  const pumpY = sueloY - pumpH;
+  let s = '';
+  s +=
+    '<rect x="' +
+    pumpX +
+    '" y="' +
+    pumpY +
+    '" width="' +
+    pumpW +
+    '" height="' +
+    pumpH +
+    '" rx="4" fill="#334155" stroke="#1e293b" stroke-width="1.3"/>';
+  s +=
+    '<rect x="' +
+    (pumpX + 5) +
+    '" y="' +
+    (pumpY + 4) +
+    '" width="' +
+    (pumpW - 10) +
+    '" height="' +
+    (pumpH - 8) +
+    '" rx="2" fill="#475569" opacity="0.9"/>';
+  const hoseY = sueloY - 4;
+  const hoseStartX = pumpX + pumpW;
+  s +=
+    '<path d="M ' +
+    hoseStartX +
+    ' ' +
+    (pumpY + 7) +
+    ' L ' +
+    (hoseStartX + 8) +
+    ' ' +
+    (pumpY + 7) +
+    ' L ' +
+    (hoseStartX + 8) +
+    ' ' +
+    hoseY +
+    ' L ' +
+    piedraX +
+    ' ' +
+    hoseY +
+    ' L ' +
+    piedraX +
+    ' ' +
+    piedraY +
+    '" fill="none" stroke="' +
+    P.airLine +
+    '" stroke-width="2.2" stroke-linejoin="round" opacity="0.95"/>';
+  s +=
+    '<ellipse cx="' +
+    piedraX +
+    '" cy="' +
+    piedraY +
+    '" rx="13" ry="7" fill="' +
+    P.airStoneFill +
+    '" stroke="' +
+    P.airStoneStroke +
+    '" stroke-width="1.2"/>';
+  const ySurf = tankY + 8;
+  for (let bi = 0; bi < 6; bi++) {
+    const bx = piedraX + (bi % 3 - 1) * 4;
+    s += nftSvgBurbujaAnimada(bx, ySurf, piedraY, bi, P.bubble);
+  }
+  return s;
 }
 
 /**
@@ -171,8 +286,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '<path d="' +
     flowD +
     '" stroke="' +
-    P.flowGhost +
-    '" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
+    flowGhostCol +
+    '" stroke-width="' +
+    (isParedSerp ? '5' : '4') +
+    '" fill="none" opacity="' +
+    (isParedSerp ? '0.62' : '0.45') +
+    '" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
   const cxTubeSerp = (xL + xR) / 2;
@@ -192,17 +311,29 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '" rx="11" fill="url(#' +
       gidCh +
       ')" stroke="' +
-      P.canalStroke +
+      chStroke +
       '" stroke-width="' +
       serpChStroke +
       '"' +
       peNone +
       '/>';
+    if (isParedSerp) {
+      channels +=
+        '<line x1="' +
+        xL +
+        '" y1="' +
+        (yc + 2) +
+        '" x2="' +
+        xR +
+        '" y2="' +
+        (yc + 2) +
+        '" stroke="#c4a574" stroke-width="1.2" opacity="0.7" pointer-events="none"/>';
+    }
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
   let flowLayer =
-    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
+    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="' + flowW + '" opacity="0.98"' +
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
@@ -250,7 +381,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       if (typeof hcIlloNftHuecoLayer === 'function') {
         plants += hcIlloNftHuecoLayer(gx, gy, hr, i, j, dat, cult, interactive, P, {
           compact: compactSerp,
-          numBelow: true,
+          numBelow: false,
+          sinTexto: true,
           numShow: numShow,
           extraDy: isParedSerp ? 5 : 3,
           slotAlong: slotAlongRow,
@@ -285,32 +417,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
             P.ringEdit +
             '" stroke-width="1.25"/>';
         }
-        plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactSerp);
-        plants += nftSvgHuecoNumBelowHole(
-          gx,
-          gy,
-          hr,
-          numShow,
-          Math.max(7, holeNumFsSerp - 0.75),
-          compactSerp,
-          isParedSerp ? 5 : 3
-        );
         const ptrR = nftHuecoPointerRadius(hr, true, slotAlongRow);
         plants +=
           '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + ptrR.toFixed(2) + '" fill="rgba(0,0,0,0.001)" pointer-events="all"/>';
         plants += '</g>';
       } else {
         plants += '<circle cx="' + gx.toFixed(2) + '" cy="' + gy + '" r="' + hr.toFixed(2) + '" fill="' + col.bg + '" stroke="' + col.border + '" stroke-width="1.1"/>';
-        plants += nftSvgHuecoEmojiOnly(dat, cult, gx, gy, hr, compactSerp);
-        plants += nftSvgHuecoNumBelowHole(
-          gx,
-          gy,
-          hr,
-          numShow,
-          Math.max(7, holeNumFsSerp - 0.75),
-          compactSerp,
-          isParedSerp ? 5 : 3
-        );
       }
     }
   }
@@ -362,34 +474,60 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="' + P.calGlow + '"/>';
   }
   if (showDifusor) {
-    const ax = tx + tankW - 18;
+    const ax = tx + tankW - 22;
     const ay = tankY + tankH - 16;
-    tankLayer +=
-      '<line x1="' +
-      ax +
-      '" y1="' +
-      (tankY - 2) +
-      '" x2="' +
-      ax +
-      '" y2="' +
-      (ay - 12) +
-      '" stroke="' +
-      P.airLine +
-      '" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
-    tankLayer +=
-      '<ellipse cx="' +
-      ax +
+    tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, ax, ay, P);
+  }
+
+  let flowTankPorts = '';
+  if (isParedSerp) {
+    flowTankPorts +=
+      '<g class="nft-flow-ports" pointer-events="none">' +
+      '<circle cx="' +
+      xTankFeed +
       '" cy="' +
-      ay +
-      '" rx="13" ry="7" fill="' +
-      P.airStoneFill +
+      yOutlet +
+      '" r="5.5" fill="' +
+      flowCol +
+      '" stroke="#fef3c7" stroke-width="1.4"/>' +
+      '<circle cx="' +
+      xTankReturn +
+      '" cy="' +
+      yInlet +
+      '" r="5.5" fill="' +
+      flowCol +
+      '" stroke="#fef3c7" stroke-width="1.4"/>' +
+      '<path d="M ' +
+      (xTankFeed - 7) +
+      ' ' +
+      yOutlet +
+      ' L ' +
+      xTankFeed +
+      ' ' +
+      yOutlet +
+      ' L ' +
+      (xTankFeed + 7) +
+      ' ' +
+      yOutlet +
       '" stroke="' +
-      P.airStoneStroke +
-      '" stroke-width="1.2"/>';
-    for (let bi = 0; bi < 5; bi++) {
-      const bx = ax + (bi % 3 - 1) * 4;
-      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="' + P.bubble + '" opacity="0.9"/>';
-    }
+      flowCol +
+      '" stroke-width="2" fill="none" opacity="0.9"/>' +
+      '<path d="M ' +
+      (xTankReturn - 7) +
+      ' ' +
+      yInlet +
+      ' L ' +
+      xTankReturn +
+      ' ' +
+      yInlet +
+      ' L ' +
+      (xTankReturn + 7) +
+      ' ' +
+      yInlet +
+      '" stroke="' +
+      flowCol +
+      '" stroke-width="2" fill="none" opacity="0.9"/>' +
+      '</g>';
   }
 
   const pumpLines = '';
@@ -400,14 +538,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     channels = '<g pointer-events="none">' + channels + '</g>';
     flowLayer = '<g pointer-events="none">' + flowLayer + '</g>';
     tankLayer = '<g pointer-events="none">' + tankLayer + '</g>';
+    if (flowTankPorts) flowTankPorts = '<g pointer-events="none">' + flowTankPorts + '</g>';
   }
 
   const foot = vol + ' L · vista cenital';
-
-  let diagramLabels = '';
-  if (typeof hcDiagramViewLabelSvg === 'function') {
-    diagramLabels = hcDiagramViewLabelSvg(cx, 16, 'cenital', { pointerEvents: false });
-  }
 
   return (
     '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll' +
@@ -429,9 +563,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     gidCh +
     '" x1="0" y1="0" x2="0" y2="1">' +
     '<stop offset="0%" stop-color="' +
-    P.canalGrad0 +
+    chGrad0 +
     '"/><stop offset="100%" stop-color="' +
-    P.canalGrad1 +
+    chGrad1 +
     '"/></linearGradient>' +
     '<linearGradient id="' +
     gidTank +
@@ -454,12 +588,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     P.waterOp1 +
     '"/></linearGradient>' +
     '</defs>' +
-    diagramLabels +
     back +
     channels +
     flowLayer +
     plants +
     tankLayer +
+    flowTankPorts +
     scadaCallouts +
     (!interactive ? pumpLines : '') +
     '</svg>'

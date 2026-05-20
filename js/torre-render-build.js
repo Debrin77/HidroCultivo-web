@@ -1762,7 +1762,7 @@ function actualizarChromePanelEsquemaPorTipo() {
         dN === 'pared' ? 'pared' : dN === 'escalera' ? 'escalera' : 'mesa';
       intro.innerHTML =
         dN === 'pared'
-          ? '<strong>NFT pared</strong> · vista ilustrada (tubos en la pared, depósito abajo). <strong>Toca un hueco</strong> para la ficha o <strong>Lista</strong> para todas las plazas.'
+          ? '<strong>NFT pared</strong> · tubos marrones, <strong>flujo del agua</strong> (línea discontinua) y depósito con aireador. <strong>Toca un hueco</strong> o <strong>Lista</strong>.'
           : '<strong>NFT</strong> · ' +
             dEt +
             '. Agua en <strong>azul discontinuo</strong> (si animaciones activas). <strong>Toca hueco</strong> o <strong>Lista</strong>. Altura al 1.º canal: asistente o montaje arriba.';
