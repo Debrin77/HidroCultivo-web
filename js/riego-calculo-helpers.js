@@ -102,7 +102,168 @@ function meteoclimaticFactorNocDesdeMc(mc, tNocMod, rhNocMod, dTempPlanta, dNocF
 // ══════════════════════════════════════════════════
 
 let toldoDesplegado = false;
+let riegoTipoSombra = 'media';
+let riegoSombraAuto = true;
 let diaRiego = 'hoy'; // 'hoy' o 'manana'
+
+/** Perfiles de sombra: fracción de UV/ET₀ que llega al follaje; ΔT zona planta (°C). `media` ≈ toldo legacy. */
+const RIEGO_SOMBRA_PERFILES = {
+  ligera: {
+    uvRest: 0.62,
+    et0Rest: 0.82,
+    dTemp: -1.0,
+    label: 'Malla ligera',
+    hint: '~30 % sombra — prioriza luz; plántulas y hierbas secas.',
+    pct: 30,
+  },
+  media: {
+    uvRest: 0.38,
+    et0Rest: 0.52,
+    dTemp: -2.0,
+    label: 'Malla media',
+    hint: '~50 % sombra — equilibrio habitual (tomate en flor, lechugas en verano).',
+    pct: 50,
+  },
+  fuerte: {
+    uvRest: 0.28,
+    et0Rest: 0.45,
+    dTemp: -2.6,
+    label: 'Toldo o malla densa',
+    hint: '~65 % sombra — olas de calor; no dejar plántulas a sombra total todo el día.',
+    pct: 65,
+  },
+};
+
+const RIEGO_SOMBRA_ORDEN = { ligera: 1, media: 2, fuerte: 3 };
+
+function riegoNormalizarTipoSombra(v) {
+  const k = String(v == null ? '' : v).trim().toLowerCase();
+  return RIEGO_SOMBRA_PERFILES[k] ? k : 'media';
+}
+
+function riegoSombraMaxTipo(a, b) {
+  const ta = riegoNormalizarTipoSombra(a);
+  const tb = riegoNormalizarTipoSombra(b);
+  return RIEGO_SOMBRA_ORDEN[ta] >= RIEGO_SOMBRA_ORDEN[tb] ? ta : tb;
+}
+
+/**
+ * Tipo de sombra recomendado para una planta (malla ligera ≠ toldo denso en la práctica).
+ */
+function riegoSombraTipoParaCultivo(cult, pct, dias) {
+  if (!cult) return 'ligera';
+  const g = cult.grupo || 'lechugas';
+  const id = cult.id || '';
+  const p = Math.max(0, Number(pct) || 0);
+  let fase = null;
+  if (cult.fases && typeof cultivoFaseDesdeDias === 'function') {
+    const fd = cultivoFaseDesdeDias(cult, dias, { desdeTrasplante: true });
+    if (fd && fd.key) fase = fd.key;
+  }
+  if (g === 'frutos' || g === 'fresas') {
+    if (fase === 'plantula' || fase === 'germinacion' || p < 0.12) return 'ligera';
+    if (fase === 'floracion' || fase === 'fructificacion') return 'media';
+    if (fase === 'prefloracion' || p >= 0.35) return 'media';
+    return 'ligera';
+  }
+  if (g === 'lechugas') {
+    if (p < 0.18) return 'ligera';
+    if (id === 'mantecosa' || id === 'iceberg' || id === 'trocadero') return 'media';
+    if (id === 'lolorrosso' || id === 'hojaroble') return p > 0.4 ? 'media' : 'ligera';
+    return p > 0.35 ? 'media' : 'ligera';
+  }
+  if (g === 'hojas') {
+    if (id === 'berros' || id === 'lechuga_agua') return 'media';
+    if (id === 'espinaca') return p > 0.3 ? 'media' : 'ligera';
+    return p > 0.4 ? 'media' : 'ligera';
+  }
+  if (g === 'hierbas') {
+    if (id === 'romero' || id === 'tomillo' || id === 'lavanda' || id === 'oregano') return 'ligera';
+    if (id === 'albahaca' || id === 'cilantro') return p > 0.25 ? 'media' : 'ligera';
+    if (id === 'menta') return 'media';
+    return 'ligera';
+  }
+  if (g === 'asiaticas') return p < 0.22 ? 'ligera' : 'media';
+  if (g === 'microgreens') return 'ligera';
+  if (g === 'raices') return p < 0.35 ? 'ligera' : 'media';
+  return 'ligera';
+}
+
+/** Lista por planta + tipo máximo recomendado según cultivos en torre */
+function riegoSombraResumenPorCultivos(edadSemManual) {
+  const filas = [];
+  let tipoMax = null;
+  getNivelesActivos().forEach(nv => {
+    (state.torre[nv] || []).forEach(c => {
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
+      const cult = getCultivoDB(c.variedad);
+      if (!cult) return;
+      const pct = riegoPctCicloPlanta(c, edadSemManual);
+      const dias =
+        typeof getDiasEfectivosCicloRiego === 'function'
+          ? getDiasEfectivosCicloRiego(c, cult, Date.now())
+          : getDias(c.fecha);
+      const tipo = riegoSombraTipoParaCultivo(cult, pct, dias);
+      tipoMax = tipoMax ? riegoSombraMaxTipo(tipoMax, tipo) : tipo;
+      const perf = RIEGO_SOMBRA_PERFILES[tipo];
+      filas.push({
+        nombre: cult.nombre || cult.id,
+        emoji: cult.emoji || '',
+        tipo,
+        label: perf.label,
+        pct: perf.pct,
+      });
+    });
+  });
+  return { filas, tipoMax: tipoMax || 'media' };
+}
+
+function riegoSombraTipoDesdeClima(fuerte, suave, ctx) {
+  if (!fuerte && !suave) return null;
+  if (ctx && ctx.hayPlántulaReciente && !ctx.hayFlorFruto) {
+    return fuerte ? 'ligera' : 'ligera';
+  }
+  if (ctx && ctx.soloHierbaSeca) {
+    return fuerte ? 'media' : 'ligera';
+  }
+  if (fuerte) {
+    return ctx && ctx.hayFlorFruto ? 'media' : 'fuerte';
+  }
+  return 'ligera';
+}
+
+/** Señales de clima del día para combinar con cultivos (toldo / tipo sombra) */
+function riegoClimaOptsParaToldo(edadSemManual, tempMax, uvIdxRaw) {
+  const ctx = riegoToldoContextoCultivo(edadSemManual);
+  const umb = riegoToldoUmbralesReco(ctx.sensibilidad, ctx);
+  const tMax = Number(tempMax);
+  const uv = Number(uvIdxRaw);
+  let fuerte = false;
+  let suave = false;
+  if (Number.isFinite(uv)) {
+    if (uv >= umb.uvFuerte) fuerte = true;
+    else if (uv >= umb.uvSuave) suave = true;
+  }
+  if (Number.isFinite(tMax)) {
+    if (tMax >= umb.tFuerte) fuerte = true;
+    else if (tMax >= umb.tSuave) suave = true;
+    else if (tMax >= umb.tUvCombo && Number.isFinite(uv) && uv >= umb.uvCombo) suave = true;
+  }
+  return { fuerte, suave, ctx };
+}
+
+/** Tipo efectivo: manual, o auto (máx. cultivo + clima del día) */
+function riegoGetTipoSombraEfectivo(edadSemManual, climaOpts) {
+  if (!toldoDesplegado) return null;
+  const manual = riegoNormalizarTipoSombra(riegoTipoSombra);
+  if (!riegoSombraAuto) return manual;
+  const res = riegoSombraResumenPorCultivos(edadSemManual);
+  let tipo = res.tipoMax;
+  const co = climaOpts || {};
+  const tClima = riegoSombraTipoDesdeClima(!!co.fuerte, !!co.suave, co.ctx);
+  if (tClima) tipo = riegoSombraMaxTipo(tipo, tClima);
+  return tipo;
+}
 
 function setDiaRiego(dia) {
   diaRiego = dia;
@@ -176,11 +337,15 @@ function riegoPersistirPreferencias() {
   if (!state.configTorre) state.configTorre = {};
   if (!state.configTorre.riego) state.configTorre.riego = {};
   state.configTorre.riego.toldo = !!toldoDesplegado;
+  state.configTorre.riego.tipoSombra = riegoNormalizarTipoSombra(riegoTipoSombra);
+  state.configTorre.riego.sombraAuto = riegoSombraAuto !== false;
   state.configTorre.riego.diaRiego = diaRiego === 'manana' ? 'manana' : 'hoy';
   const tIdx = state.torreActiva || 0;
   if (!state.torres[tIdx]) state.torres[tIdx] = {};
   if (!state.torres[tIdx].riego) state.torres[tIdx].riego = {};
   state.torres[tIdx].riego.toldo = !!toldoDesplegado;
+  state.torres[tIdx].riego.tipoSombra = state.configTorre.riego.tipoSombra;
+  state.torres[tIdx].riego.sombraAuto = state.configTorre.riego.sombraAuto;
   state.torres[tIdx].riego.diaRiego = state.configTorre.riego.diaRiego;
   try {
     saveState();
@@ -193,6 +358,10 @@ function riegoCargarToldoDesdeConfig() {
   const slotR = state.torres && state.torres[state.torreActiva || 0] && state.torres[state.torreActiva || 0].riego;
   if (cfgR && cfgR.toldo !== undefined) toldoDesplegado = !!cfgR.toldo;
   else if (slotR && slotR.toldo !== undefined) toldoDesplegado = !!slotR.toldo;
+  const tipoRaw = (cfgR && cfgR.tipoSombra) || (slotR && slotR.tipoSombra);
+  if (tipoRaw) riegoTipoSombra = riegoNormalizarTipoSombra(tipoRaw);
+  const autoRaw = cfgR && cfgR.sombraAuto !== undefined ? cfgR.sombraAuto : slotR && slotR.sombraAuto;
+  if (autoRaw !== undefined) riegoSombraAuto = !!autoRaw;
   const dia =
     (cfgR && (cfgR.diaRiego === 'hoy' || cfgR.diaRiego === 'manana') && cfgR.diaRiego) ||
     (slotR && (slotR.diaRiego === 'hoy' || slotR.diaRiego === 'manana') && slotR.diaRiego) ||
@@ -207,6 +376,86 @@ function riegoAplicarToldoUI() {
     sw.className = 'toggle-switch' + (toldoDesplegado ? ' on' : '');
     sw.setAttribute('aria-checked', toldoDesplegado ? 'true' : 'false');
   }
+  const wrap = document.getElementById('riegoSombraWrap');
+  if (wrap) wrap.classList.toggle('setup-hidden', !toldoDesplegado);
+  const sel = document.getElementById('riegoTipoSombra');
+  if (sel) sel.value = riegoNormalizarTipoSombra(riegoTipoSombra);
+  const cb = document.getElementById('riegoSombraAuto');
+  if (cb) cb.checked = riegoSombraAuto !== false;
+  if (sel) sel.disabled = riegoSombraAuto !== false;
+}
+
+function riegoOnSombraAutoChange() {
+  const cb = document.getElementById('riegoSombraAuto');
+  riegoSombraAuto = !!(cb && cb.checked);
+  riegoAplicarToldoUI();
+  riegoPersistirPreferencias();
+  riegoActualizarPanelSombraCultivos();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
+}
+
+function riegoOnTipoSombraChange() {
+  const sel = document.getElementById('riegoTipoSombra');
+  if (sel) riegoTipoSombra = riegoNormalizarTipoSombra(sel.value);
+  riegoPersistirPreferencias();
+  riegoActualizarPanelSombraCultivos();
+  if (document.getElementById('tab-riego')?.classList.contains('active')) calcularRiego();
+}
+
+/** Lista por cultivo y hint del selector de tipo de sombra */
+function riegoActualizarPanelSombraCultivos(edadSemManual, tipoEfectivo, climaOpts) {
+  const ul = document.getElementById('riegoSombraPorCultivo');
+  const hint = document.getElementById('riegoSombraTipoHint');
+  const edadSem =
+    Number.isFinite(Number(edadSemManual))
+      ? Number(edadSemManual)
+      : parseFloat(document.getElementById('riegoEdad')?.value, 10) || 4;
+  const res = riegoSombraResumenPorCultivos(edadSem);
+  const tipoEff =
+    tipoEfectivo ||
+    (toldoDesplegado
+      ? riegoGetTipoSombraEfectivo(edadSem, climaOpts)
+      : null);
+  if (ul) {
+    if (res.filas.length === 0) {
+      ul.classList.add('setup-hidden');
+      ul.innerHTML = '';
+    } else {
+      ul.classList.remove('setup-hidden');
+      ul.innerHTML = res.filas
+        .map(
+          f =>
+            '<li>' +
+            (f.emoji ? f.emoji + ' ' : '') +
+            '<strong>' +
+            (typeof escHtmlUi === 'function' ? escHtmlUi(f.nombre) : f.nombre) +
+            '</strong>: ' +
+            f.label +
+            ' (~' +
+            f.pct +
+            ' %)</li>'
+        )
+        .join('');
+    }
+  }
+  if (hint) {
+    const perf = tipoEff ? RIEGO_SOMBRA_PERFILES[tipoEff] : null;
+    if (!toldoDesplegado) {
+      hint.textContent =
+        res.filas.length > 0
+          ? 'Activa la sombra en el cálculo para aplicar el perfil recomendado por cultivo.'
+          : '';
+    } else if (riegoSombraAuto && perf) {
+      hint.textContent =
+        'En uso (automático): ' + perf.label + ' — ' + perf.hint;
+    } else if (perf) {
+      hint.textContent = 'En uso (manual): ' + perf.label + ' — ' + perf.hint;
+    } else {
+      hint.textContent = '';
+    }
+  }
+  const sel = document.getElementById('riegoTipoSombra');
+  if (sel && riegoSombraAuto && tipoEff) sel.value = tipoEff;
 }
 
 function actualizarRiegoToldoCopy(esModoClima) {
@@ -216,14 +465,14 @@ function actualizarRiegoToldoCopy(esModoClima) {
   const esInterior = ubic === 'interior';
   if (label) {
     label.textContent = esModoClima
-      ? 'Toldo / malla de sombra (protección follaje y depósito)'
-      : 'Toldo o malla de sombra desplegada';
+      ? 'Sombra en el cálculo (malla o toldo; tipo por cultivo)'
+      : 'Sombra activa en el cálculo (malla o toldo)';
   }
   if (hint) {
     if (esModoClima) {
       hint.textContent = esInterior
         ? 'En interior el toldo suele no aplicarse; actívalo solo si usas malla frente a ventanas o lámparas muy intensas.'
-        : 'El riego del sistema es continuo; el toldo ajusta la referencia climática (UV, estrés térmico) para decidir sombra en plantas y depósito.';
+        : 'El tipo de sombra (ligera / media / densa) cambia UV y calor en el modelo; la lista inferior indica qué conviene por cada cultivo.';
       hint.classList.remove('setup-hidden');
     } else {
       hint.classList.add('setup-hidden');
@@ -317,6 +566,7 @@ function toggleToldo() {
   toldoDesplegado = !toldoDesplegado;
   riegoAplicarToldoUI();
   riegoPersistirPreferencias();
+  riegoActualizarPanelSombraCultivos();
   calcularRiego();
 }
 
@@ -328,39 +578,233 @@ function ocultarRiegoToldoRecoUI() {
 }
 
 /**
- * Recomendación explícita de toldo/sombra según T máx y UV del día calculado;
- * permite activar el toldo en el modelo sin buscar el interruptor.
+ * Sensibilidad al sol/calor (0.3–1) según cultivos y edad en torre.
+ * Floración/fruto y lechugas de engorde → más pronto toldo; plántula joven → más luz; romero/tomillo → más tolerancia.
  */
-function actualizarRiegoToldoRecoUI(esInterior, tempMax, uvIdxRaw) {
+function riegoToldoContextoCultivo(edadSemManual) {
+  let n = 0;
+  let sensMax = 0;
+  let hayFlorFruto = false;
+  let hayPlántulaReciente = false;
+  let hayHierbaSeca = false;
+  let soloHierbaSeca = true;
+  getNivelesActivos().forEach(nv => {
+    (state.torre[nv] || []).forEach(c => {
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
+      const cult = getCultivoDB(c.variedad);
+      if (!cult) return;
+      n++;
+      const g = cult.grupo || 'lechugas';
+      const pct = riegoPctCicloPlanta(c, edadSemManual);
+      const dias =
+        typeof getDiasEfectivosCicloRiego === 'function'
+          ? getDiasEfectivosCicloRiego(c, cult, Date.now())
+          : getDias(c.fecha);
+      let sens = 0.55;
+      const id = cult.id || '';
+      if (g === 'frutos' || g === 'fresas') {
+        sens = 0.88;
+        soloHierbaSeca = false;
+        if (cult.fases && typeof cultivoFaseDesdeDias === 'function') {
+          const fd = cultivoFaseDesdeDias(cult, dias, { desdeTrasplante: true });
+          if (fd && (fd.key === 'floracion' || fd.key === 'fructificacion')) {
+            sens = 1.0;
+            hayFlorFruto = true;
+          } else if (fd && (fd.key === 'plantula' || fd.key === 'germinacion') || pct < 0.14) {
+            sens = 0.5;
+            if (pct < 0.2) hayPlántulaReciente = true;
+          } else if (fd && fd.key === 'prefloracion') {
+            sens = 0.92;
+          }
+        }
+      } else if (g === 'lechugas') {
+        sens = pct < 0.2 ? 0.52 : 0.72;
+        soloHierbaSeca = false;
+        if (id === 'mantecosa' || id === 'iceberg' || id === 'trocadero') sens = Math.max(sens, 0.8);
+        if (id === 'lolorrosso' || id === 'hojaroble') sens = Math.min(sens, 0.68);
+      } else if (g === 'hojas') {
+        sens = 0.72;
+        soloHierbaSeca = false;
+        if (id === 'espinaca' || id === 'berros') sens = 0.88;
+      } else if (g === 'hierbas') {
+        if (id === 'romero' || id === 'tomillo' || id === 'lavanda' || id === 'oregano') {
+          sens = 0.38;
+          hayHierbaSeca = true;
+        } else {
+          sens = 0.78;
+          soloHierbaSeca = false;
+          if (id === 'albahaca' || id === 'cilantro') sens = 0.9;
+        }
+      } else if (g === 'asiaticas') {
+        sens = pct < 0.25 ? 0.5 : 0.68;
+        soloHierbaSeca = false;
+      } else if (g === 'microgreens') {
+        sens = 0.42;
+      } else if (g === 'raices') {
+        sens = 0.48;
+        soloHierbaSeca = false;
+      }
+      sensMax = Math.max(sensMax, sens);
+    });
+  });
+  if (n === 0) {
+    return { n: 0, sensibilidad: 0.65, hayFlorFruto: false, hayPlántulaReciente: false, hayHierbaSeca: false, soloHierbaSeca: false };
+  }
+  if (!hayHierbaSeca) soloHierbaSeca = false;
+  return {
+    n,
+    sensibilidad: Math.round(sensMax * 100) / 100,
+    hayFlorFruto,
+    hayPlántulaReciente,
+    hayHierbaSeca,
+    soloHierbaSeca: soloHierbaSeca && hayHierbaSeca,
+  };
+}
+
+/** Umbrales UV/T (más bajos = recomendar toldo antes) según sensibilidad del cultivo */
+function riegoToldoUmbralesReco(sensibilidad, ctx) {
+  const s = Math.max(0.3, Math.min(1, Number(sensibilidad) || 0.65));
+  const u = {
+    uvFuerte: Math.round((8 - s * 1.6) * 10) / 10,
+    uvSuave: Math.round((6 - s * 1.4) * 10) / 10,
+    tFuerte: Math.round(34 - s * 4),
+    tSuave: Math.round(30 - s * 3.5),
+    tUvCombo: Math.round(28 - s * 2.5),
+    uvCombo: Math.round(5 - s * 1.2),
+  };
+  if (ctx && ctx.hayPlántulaReciente && !ctx.hayFlorFruto) {
+    u.uvFuerte = Math.min(u.uvFuerte + 1.5, 9.5);
+    u.uvSuave = Math.min(u.uvSuave + 1, 8);
+    u.tFuerte = Math.min(u.tFuerte + 3, 36);
+    u.tSuave = Math.min(u.tSuave + 2, 34);
+  }
+  if (ctx && ctx.soloHierbaSeca) {
+    u.uvFuerte = Math.min(u.uvFuerte + 1, 10);
+    u.uvSuave = Math.min(u.uvSuave + 0.8, 9);
+    u.tFuerte = Math.min(u.tFuerte + 2, 36);
+  }
+  return u;
+}
+
+/**
+ * Recomendación explícita de toldo/sombra: previsión (T máx, UV) + sensibilidad por cultivo y edad en torre.
+ */
+function actualizarRiegoToldoRecoUI(esInterior, tempMax, uvIdxRaw, edadSemManual) {
   const el = document.getElementById('riegoToldoReco');
   if (!el) return;
   if (esInterior) {
     ocultarRiegoToldoRecoUI();
     return;
   }
+  const edadSem =
+    Number.isFinite(Number(edadSemManual))
+      ? Number(edadSemManual)
+      : parseFloat(document.getElementById('riegoEdad')?.value, 10) || 4;
+  const ctx = riegoToldoContextoCultivo(edadSem);
+  const umb = riegoToldoUmbralesReco(ctx.sensibilidad, ctx);
   const tMax = Number(tempMax);
   const uv = Number(uvIdxRaw);
   let fuerte = false;
   let suave = false;
   if (Number.isFinite(uv)) {
-    if (uv >= 8) fuerte = true;
-    else if (uv >= 6) suave = true;
+    if (uv >= umb.uvFuerte) fuerte = true;
+    else if (uv >= umb.uvSuave) suave = true;
   }
   if (Number.isFinite(tMax)) {
-    if (tMax >= 34) fuerte = true;
-    else if (tMax >= 30) suave = true;
-    else if (tMax >= 28 && Number.isFinite(uv) && uv >= 5) suave = true;
+    if (tMax >= umb.tFuerte) fuerte = true;
+    else if (tMax >= umb.tSuave) suave = true;
+    else if (tMax >= umb.tUvCombo && Number.isFinite(uv) && uv >= umb.uvCombo) suave = true;
   }
   if (!fuerte && !suave) {
     ocultarRiegoToldoRecoUI();
+    riegoActualizarPanelSombraCultivos(edadSem, null, { fuerte, suave, ctx });
     return;
   }
-  const recomHtml = fuerte
-    ? 'Hoy conviene <strong>toldo o malla de sombra</strong> (p. ej. 30–50&nbsp;%) para moderar calor y radiación en el follaje.'
-    : 'Conviene <strong>sombra parcial o malla ligera</strong> en las horas centrales.';
+  const tipoClima = riegoSombraTipoDesdeClima(fuerte, suave, ctx);
+  const resCult = riegoSombraResumenPorCultivos(edadSem);
+  const tipoReco = riegoSombraMaxTipo(resCult.tipoMax, tipoClima || resCult.tipoMax);
+  const perfReco = RIEGO_SOMBRA_PERFILES[tipoReco];
+  let recomHtml =
+    'Hoy conviene <strong>' +
+    perfReco.label.toLowerCase() +
+    '</strong> (~' +
+    perfReco.pct +
+    ' % sombra)';
+  if (tipoReco === 'ligera') {
+    recomHtml += ', sobre todo en horas centrales';
+  } else if (tipoReco === 'fuerte') {
+    recomHtml += ' durante la franja más calurosa';
+  } else {
+    recomHtml += ' en las horas de mayor radiación';
+  }
+  recomHtml += '.';
+  if (ctx.hayFlorFruto) {
+    recomHtml +=
+      ' Con <strong>floración o fruto</strong> suele bastar malla media; evita toldo cerrado todo el día (hojas enrolladas, lacias).';
+  } else if (ctx.hayPlántulaReciente) {
+    recomHtml +=
+      ' Plántulas recién trasplantadas: prioriza <strong>malla ligera</strong> solo al mediodía; necesitan luz el resto del día.';
+  } else if (ctx.soloHierbaSeca) {
+    recomHtml +=
+      ' Hierbas secas: con calor extremo valora malla ligera; no hace falta toldo denso salvo olas de calor.';
+  }
+  let listaCult = '';
+  if (resCult.filas.length > 0 && resCult.filas.length <= 8) {
+    listaCult =
+      '<ul class="riego-sombra-cultivos">' +
+      resCult.filas
+        .map(
+          f =>
+            '<li>' +
+            (f.emoji ? f.emoji + ' ' : '') +
+            (typeof escHtmlUi === 'function' ? escHtmlUi(f.nombre) : f.nombre) +
+            ' → ' +
+            f.label +
+            '</li>'
+        )
+        .join('') +
+      '</ul>';
+  } else if (resCult.filas.length > 8) {
+    listaCult =
+      '<p class="riego-toldo-reco__sub">Recomendación global: <strong>' +
+      perfReco.label +
+      '</strong> (la planta más sensible al sol marca el mínimo).</p>';
+  }
+  let subTxt =
+    'Clima del día (T máx ' +
+    (Number.isFinite(tMax) ? Math.round(tMax) : '—') +
+    ' °C, UV ' +
+    (Number.isFinite(uv) ? Math.round(uv * 10) / 10 : '—') +
+    ').';
+  if (ctx.n > 0) {
+    subTxt +=
+      ' Umbrales ajustados a tus ' +
+      ctx.n +
+      ' planta' +
+      (ctx.n === 1 ? '' : 's') +
+      ' (sensibilidad ' +
+      Math.round(ctx.sensibilidad * 100) +
+      ' %).';
+    if (ctx.hayFlorFruto) subTxt += ' Frutos/fresas en flor o fruto → más prudente con el sol.';
+    else if (ctx.hayPlántulaReciente) subTxt += ' Plántulas jóvenes → no sombrear todo el día sin necesidad.';
+  } else {
+    subTxt += ' Sin fechas en torre: umbrales de referencia (lechuga media).';
+  }
+  riegoActualizarPanelSombraCultivos(edadSem, null, { fuerte, suave, ctx });
   if (toldoDesplegado) {
+    const tipoAct = riegoGetTipoSombraEfectivo(edadSem, { fuerte, suave, ctx });
+    const perfAct = RIEGO_SOMBRA_PERFILES[tipoAct || 'media'];
     el.innerHTML =
-      '<div class="riego-toldo-reco__inner"><p class="riego-toldo-reco__p">✓ Toldo/sombra <strong>activo</strong> en el cálculo; encaja con las condiciones previstas de hoy.</p></div>';
+      '<div class="riego-toldo-reco__inner"><p class="riego-toldo-reco__p">✓ Sombra <strong>activa</strong>: ' +
+      perfAct.label +
+      ' (~' +
+      perfAct.pct +
+      ' %). ' +
+      (riegoSombraAuto ? 'Modo automático según cultivos y clima.' : 'Tipo elegido manualmente.') +
+      '</p>' +
+      (ctx.n > 0 ? '<p class="riego-toldo-reco__sub">' + subTxt + '</p>' : '') +
+      listaCult +
+      '</div>';
     el.classList.remove('setup-hidden');
     return;
   }
@@ -369,18 +813,32 @@ function actualizarRiegoToldoRecoUI(esInterior, tempMax, uvIdxRaw) {
     '<p class="riego-toldo-reco__p">📌 <strong>Recomendación:</strong> ' +
     recomHtml +
     '</p>' +
-    '<p class="riego-toldo-reco__sub">Basado en temperatura máxima e índice UV de la previsión del día elegido.</p>' +
-    '<button type="button" class="btn btn-secondary riego-toldo-reco__btn" onclick="activarToldoRecomendado()">Activar toldo/sombra en el cálculo</button>' +
+    listaCult +
+    '<p class="riego-toldo-reco__sub">' +
+    subTxt +
+    '</p>' +
+    '<button type="button" class="btn btn-secondary riego-toldo-reco__btn" onclick="activarToldoRecomendado(\'' +
+    tipoReco +
+    '\')">Activar ' +
+    perfReco.label.toLowerCase() +
+    ' en el cálculo</button>' +
     '</div>';
   el.classList.remove('setup-hidden');
 }
 
-function activarToldoRecomendado() {
+function activarToldoRecomendado(tipoSugerido) {
   if (!toldoDesplegado) {
     toldoDesplegado = true;
     riegoAplicarToldoUI();
-    riegoPersistirPreferencias();
   }
+  if (tipoSugerido) {
+    riegoTipoSombra = riegoNormalizarTipoSombra(tipoSugerido);
+    riegoSombraAuto = true;
+    const cb = document.getElementById('riegoSombraAuto');
+    if (cb) cb.checked = true;
+  }
+  riegoPersistirPreferencias();
+  riegoActualizarPanelSombraCultivos();
   calcularRiego({ manual: true });
 }
 
@@ -501,6 +959,9 @@ function sincronizarInputsRiego() {
   syncRiegoAvanzadoUI();
 
   actualizarAvisoCestasSinFecha();
+  try {
+    riegoActualizarPanelSombraCultivos();
+  } catch (_) {}
 }
 
 
@@ -533,10 +994,16 @@ function calcularFactorEdad() {
       if (!cestaCuentaParaRiegoYMetricas(c)) return;
       const cultivo = getCultivoDB(c.variedad);
       const dias =
-        typeof getDiasEfectivosCicloBiologico === 'function'
-          ? getDiasEfectivosCicloBiologico(c, cultivo, Date.now())
-          : getDias(c.fecha);
-      const diasTotal = cultivo?.dias || 45;
+        typeof getDiasEfectivosCicloRiego === 'function'
+          ? getDiasEfectivosCicloRiego(c, cultivo, Date.now())
+          : typeof getDiasEfectivosCicloBiologico === 'function'
+            ? getDiasEfectivosCicloBiologico(c, cultivo, Date.now())
+            : getDias(c.fecha);
+      const diasBase = cultivo?.dias || 45;
+      const diasTotal =
+        typeof torreGetDiasCosechaObjetivo === 'function'
+          ? torreGetDiasCosechaObjetivo(diasBase, state.configTorre || {})
+          : diasBase;
       const pct = dias / diasTotal; // 0 = recién trasplantada, 1 = lista para cosechar
       // Factor: plántula(0-20%) → 0.5, crecimiento(20-60%) → 1.0, madurez(60%+) → 1.4
       let factor;
@@ -657,16 +1124,31 @@ function riegoMargenSeguridadDinamico(params) {
  * Toldo / malla de sombra: menos radiación en el dosel → UV y ET₀ efectivos menores y algo menos de calor
  * en la zona de planta (VPD). Factores orientativos (mallas típicas ~50–70 % atenuación).
  */
-function riegoAjustesToldoActivos(uvMax, et0Day, toldoActivo) {
+function riegoAjustesToldoActivos(uvMax, et0Day, toldoActivo, tipoSombra, edadSemManual, climaOpts) {
   if (!toldoActivo) {
-    return { uvEfectivo: uvMax, et0Efectivo: et0Day, deltaTempZonaPlanta: 0 };
+    return {
+      uvEfectivo: uvMax,
+      et0Efectivo: et0Day,
+      deltaTempZonaPlanta: 0,
+      tipoSombra: null,
+      sombraPct: 0,
+    };
   }
-  const uvEfectivo = Math.max(0, Math.round(uvMax * 0.38 * 100) / 100);
+  const tipo = riegoGetTipoSombraEfectivo(edadSemManual, climaOpts) || riegoNormalizarTipoSombra(tipoSombra);
+  const perf = RIEGO_SOMBRA_PERFILES[tipo] || RIEGO_SOMBRA_PERFILES.media;
+  const uvEfectivo = Math.max(0, Math.round(uvMax * perf.uvRest * 100) / 100);
   let et0Efectivo = et0Day;
   if (et0Day != null && typeof et0Day === 'number' && et0Day > 0) {
-    et0Efectivo = Math.round(et0Day * 0.52 * 100) / 100;
+    et0Efectivo = Math.round(et0Day * perf.et0Rest * 100) / 100;
   }
-  return { uvEfectivo, et0Efectivo, deltaTempZonaPlanta: -2 };
+  return {
+    uvEfectivo,
+    et0Efectivo,
+    deltaTempZonaPlanta: perf.dTemp,
+    tipoSombra: tipo,
+    sombraPct: perf.pct,
+    sombraLabel: perf.label,
+  };
 }
 
 /** Edad: prioriza medias por fechas en torre; si faltan, usa semanas del formulario */
@@ -690,8 +1172,20 @@ function calcularFactorEdadRiego(edadSemManual) {
 }
 
 /**
- * Días de ciclo para Kc de riego: vivero en ficha, o estimación en frutos/fresas
- * recién trasplantados si el origen no se rellenó (misma idea que EC/pH).
+ * Máx. días en torre (sin marcar origen) para inferir plug de vivero en Kc/riego.
+ * No aplica a lechugas/asiáticas (muchas se siembran en el sistema).
+ */
+const RIEGO_LIMITE_INFERIR_VIVERO_POR_GRUPO = {
+  frutos: 42,
+  fresas: 42,
+  hojas: 34,
+  hierbas: 38,
+  raices: 30,
+};
+
+/**
+ * Días de ciclo para Kc de riego: vivero en ficha, o estimación si el origen no se rellenó
+ * (misma idea que EC/pH; ver cultivos-db HC_DIAS_VIVERO_*).
  */
 function getDiasEfectivosCicloRiego(cesta, cultivo, refFinMs) {
   if (!cesta || !cesta.fecha) return 0;
@@ -707,6 +1201,7 @@ function getDiasEfectivosCicloRiego(cesta, cultivo, refFinMs) {
       ? normalizarOrigenPlanta(cesta.origenPlanta)
       : '';
   if (origen === 'vivero') return dias;
+  if (origen === 'germinacion') return dias;
   const ms = new Date(cesta.fecha).getTime();
   const soloTorre = Number.isFinite(ms)
     ? Math.max(0, Math.floor((fin - ms) / 86400000))
@@ -717,7 +1212,8 @@ function getDiasEfectivosCicloRiego(cesta, cultivo, refFinMs) {
       ? getDiasPlantonViveroEstimado(cultivo)
       : 0;
   const g = cultivo && cultivo.grupo;
-  if (offset > 0 && (g === 'frutos' || g === 'fresas') && soloTorre <= offset + 28) {
+  const lim = g && RIEGO_LIMITE_INFERIR_VIVERO_POR_GRUPO[g];
+  if (offset > 0 && lim && soloTorre <= lim) {
     return soloTorre + offset;
   }
   return dias;
@@ -766,7 +1262,8 @@ function riegoResumenEdadKcTorre(edadSemManual) {
           ? normalizarOrigenPlanta(c.origenPlanta)
           : '';
       const g = cult && cult.grupo;
-      if ((g === 'frutos' || g === 'fresas') && origen !== 'vivero' && eff > solo) {
+      const lim = g && RIEGO_LIMITE_INFERIR_VIVERO_POR_GRUPO[g];
+      if (lim && origen !== 'vivero' && origen !== 'germinacion' && eff > solo) {
         conInferencia++;
         if (!origen) sinOrigenVivero++;
       }
@@ -789,23 +1286,137 @@ function riegoResumenEdadKcTorre(edadSemManual) {
 }
 
 /**
- * Kc operativo (FAO-56 simplificado): tramos inicio / desarrollo / mediados / final
- * sobre cultivo de referencia tipo hortaliza de hoja; ajuste por grupo.
+ * Ajuste fino por variedad (1.0 = solo grupo + fase).
+ * Referencias orientativas: FAO-56 Kc por etapa; Ohio State / UGA hidroponía
+ * (tomate y pepino Kc mediados-altos y sensibles a déficit en floración);
+ * lechuga Kc menor; hierbas mediterráneas más secas; berros y acuáticas más hídricas.
  */
-function riegoKcDesdePctYGrupo(pct, grupo) {
-  const g = grupo || 'lechugas';
+const RIEGO_KC_MULT_VARIEDAD = {
+  berros: 1.12,
+  lechuga_agua: 1.1,
+  rucula: 1.04,
+  iceberg: 1.03,
+  espinaca: 0.94,
+  acelga: 1.02,
+  col_rizada: 1.02,
+  tomate: 1.05,
+  tomate_cherry: 1.04,
+  tomate_colgar: 1.04,
+  pimiento: 1.04,
+  pimiento_picante: 1.05,
+  pepino: 1.1,
+  pepino_largo: 1.1,
+  pepino_corto: 1.08,
+  pepino_mini: 1.06,
+  calabacin: 1.06,
+  fresa: 1.1,
+  freson: 1.08,
+  albahaca: 1.08,
+  menta: 1.1,
+  cilantro: 1.06,
+  cebollino: 1.02,
+  eneldo: 1.0,
+  perejil: 0.96,
+  romero: 0.8,
+  tomillo: 0.82,
+  oregano: 0.84,
+  lavanda: 0.78,
+  zanahoria: 0.88,
+  rabano: 0.92,
+  microgreens_mezcla: 0.58,
+  girasol_micro: 0.56,
+};
+
+/** Multiplicador Kc por fase fenológica (catálogo con `fases`) */
+const RIEGO_KC_MULT_FASE = {
+  germinacion: 0.9,
+  plantula: 0.93,
+  vegetativo: 1.0,
+  prefloracion: 1.04,
+  floracion: 1.08,
+  fructificacion: 1.1,
+};
+
+/**
+ * Kc operativo (FAO-56 simplificado): tramos inicio / desarrollo / mediados / final
+ * sobre hortaliza de hoja de referencia; grupo, variedad y fase fenológica.
+ */
+function riegoKcOperativo(pct, cultivo, cesta) {
+  const cult = cultivo || { grupo: 'lechugas' };
+  const g = cult.grupo || 'lechugas';
+  const p = Math.max(0, Math.min(1.2, Number(pct) || 0));
   let k;
-  if (pct < 0.12) k = 0.32 + (pct / 0.12) * (0.62 - 0.32);
-  else if (pct < 0.35) k = 0.62 + ((pct - 0.12) / 0.23) * (0.95 - 0.62);
-  else if (pct < 0.85) k = 0.95 + ((pct - 0.35) / 0.5) * (1.06 - 0.95);
-  else k = 1.06 - Math.min(0.22, ((pct - 0.85) / 0.2) * 0.22);
+  if (p < 0.12) k = 0.32 + (p / 0.12) * (0.62 - 0.32);
+  else if (p < 0.35) k = 0.62 + ((p - 0.12) / 0.23) * (0.95 - 0.62);
+  else if (p < 0.85) k = 0.95 + ((p - 0.35) / 0.5) * (1.06 - 0.95);
+  else k = 1.06 - Math.min(0.22, ((p - 0.85) / 0.2) * 0.22);
   k = Math.max(0.3, Math.min(1.1, k));
-  const mult = {
-    lechugas: 1.0, hojas: 1.02, asiaticas: 0.98, hierbas: 0.84,
-    frutos: 1.16, fresas: 1.06, raices: 0.76, microgreens: 0.64, otros: 0.94
+  const multGrupo = {
+    lechugas: 1.0,
+    hojas: 1.03,
+    asiaticas: 0.98,
+    hierbas: 0.86,
+    frutos: 1.18,
+    fresas: 1.1,
+    raices: 0.78,
+    microgreens: 0.62,
+    otros: 0.94,
   };
-  k *= mult[g] ?? 1;
-  return Math.max(0.28, Math.min(1.32, k));
+  k *= multGrupo[g] ?? 1;
+  const id = cult.id;
+  if (id && RIEGO_KC_MULT_VARIEDAD[id] != null) {
+    k *= RIEGO_KC_MULT_VARIEDAD[id];
+  }
+  let faseKey = null;
+  if (
+    cesta &&
+    cult.fases &&
+    typeof cultivoFaseDesdeDias === 'function' &&
+    typeof getDiasEfectivosCicloRiego === 'function'
+  ) {
+    const diasEff = getDiasEfectivosCicloRiego(cesta, cult, Date.now());
+    const fd = cultivoFaseDesdeDias(cult, diasEff, { desdeTrasplante: true });
+    if (fd && fd.key) {
+      faseKey = fd.key;
+      const mf = RIEGO_KC_MULT_FASE[faseKey];
+      if (mf != null) k *= mf;
+    }
+  }
+  const maxK =
+    faseKey && (faseKey === 'floracion' || faseKey === 'fructificacion') &&
+    (g === 'frutos' || g === 'fresas')
+      ? 1.42
+      : 1.35;
+  return Math.max(0.28, Math.min(maxK, k));
+}
+
+/**
+ * Refuerzo suave del índice de demanda si hay frutos/fresas en prefloración o más
+ * (floración = mayor transpiración y sensibilidad al déficit en hidroponía).
+ */
+function riegoMultDemandaFaseFenologicaTorre() {
+  let mult = 1;
+  getNivelesActivos().forEach(nv => {
+    (state.torre[nv] || []).forEach(c => {
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
+      const cult = getCultivoDB(c.variedad);
+      if (!cult || !cult.fases || typeof cultivoFaseDesdeDias !== 'function') return;
+      const g = cult.grupo;
+      if (g !== 'frutos' && g !== 'fresas') return;
+      const dias = getDiasEfectivosCicloRiego(c, cult, Date.now());
+      const fd = cultivoFaseDesdeDias(cult, dias, { desdeTrasplante: true });
+      if (!fd || !fd.key) return;
+      if (fd.key === 'prefloracion') mult = Math.max(mult, 1.02);
+      if (fd.key === 'floracion') mult = Math.max(mult, 1.05);
+      if (fd.key === 'fructificacion') mult = Math.max(mult, 1.06);
+    });
+  });
+  return mult;
+}
+
+/** Compatibilidad: solo grupo, sin ficha */
+function riegoKcDesdePctYGrupo(pct, grupo) {
+  return riegoKcOperativo(pct, { grupo: grupo || 'lechugas' }, null);
 }
 
 /** Kc medio en torre (ponderado por planta); sin plantas → lechuga y edad del formulario */
@@ -817,14 +1428,14 @@ function calcularKcMedioRiego(edadSemManual) {
       if (!cestaCuentaParaRiegoYMetricas(c)) return;
       const cult = getCultivoDB(c.variedad) || { dias: 45, grupo: 'lechugas' };
       const pct = riegoPctCicloPlanta(c, edadSemManual);
-      sum += riegoKcDesdePctYGrupo(pct, cult.grupo || 'lechugas');
+      sum += riegoKcOperativo(pct, cult, c);
       n++;
     });
   });
   const s = Math.max(0.05, Math.min(24, Number(edadSemManual) || 4));
   if (n === 0) {
     const pct = Math.max(0, Math.min(1.15, (s * 7) / 45));
-    const kc = riegoKcDesdePctYGrupo(pct, 'lechugas');
+    const kc = riegoKcOperativo(pct, { grupo: 'lechugas' }, null);
     return { kc: Math.round(kc * 1000) / 1000, nPlantasKc: 0 };
   }
   return { kc: Math.round((sum / n) * 1000) / 1000, nPlantasKc: n };

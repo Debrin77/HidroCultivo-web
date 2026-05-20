@@ -255,7 +255,18 @@ async function calcularRiego(opts = {}) {
     }
 
     const toldoAct = toldoDesplegado;
-    const adjToldo = riegoAjustesToldoActivos(uvMax, et0Day, toldoAct);
+    const climaToldoOpts =
+      typeof riegoClimaOptsParaToldo === 'function'
+        ? riegoClimaOptsParaToldo(edadSem, tempMax, uvMax)
+        : null;
+    const adjToldo = riegoAjustesToldoActivos(
+      uvMax,
+      et0Day,
+      toldoAct,
+      null,
+      edadSem,
+      climaToldoOpts
+    );
     const uvEfectivo = adjToldo.uvEfectivo;
     const et0Riego = adjToldo.et0Efectivo;
     const dTempPlanta = adjToldo.deltaTempZonaPlanta;
@@ -330,6 +341,10 @@ async function calcularRiego(opts = {}) {
     }
     if (tipoRiego === 'torre') {
       demandaDia = Math.max(0.48, Math.min(1.58, demandaDia * multObjetivoTorre));
+      if (typeof riegoMultDemandaFaseFenologicaTorre === 'function') {
+        demandaDia *= riegoMultDemandaFaseFenologicaTorre();
+        demandaDia = Math.max(0.48, Math.min(1.58, demandaDia));
+      }
     }
 
     if (!esInterior && tipoRiego === 'torre' && mcNear) {
@@ -446,7 +461,7 @@ async function calcularRiego(opts = {}) {
               : '💧 DWC: oxigenación continua — no hay bloque de intensidad solar por pulsos como en torre; el clima resume tu ubicación.') + pieMeteo;
       }
       try {
-        actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
+        actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax, edadSem);
       } catch (_) {}
       document.getElementById('riegoLoader').classList.add('setup-hidden');
       document.getElementById('riegoResultado').classList.remove('setup-hidden');
@@ -519,6 +534,10 @@ async function calcularRiego(opts = {}) {
     }
     if (tipoRiego === 'torre') {
       demandaMed = Math.max(0.48, Math.min(1.58, demandaMed * multObjetivoTorre));
+      if (typeof riegoMultDemandaFaseFenologicaTorre === 'function') {
+        demandaMed *= riegoMultDemandaFaseFenologicaTorre();
+        demandaMed = Math.max(0.48, Math.min(1.58, demandaMed));
+      }
     }
 
     if (!esInterior && tipoRiego === 'torre' && factorMcDiaRiego !== 1) {
@@ -846,15 +865,24 @@ async function calcularRiego(opts = {}) {
             rk.sinOrigenVivero +
             ' cesta' +
             (rk.sinOrigenVivero === 1 ? '' : 's') +
-            ' de fruto sin «Origen: vivero» se estimaron ~' +
-            (rk.conInferencia === rk.sinOrigenVivero ? 'esos' : 'algunos') +
-            ' días de plug. Marca <strong>Origen → Vivero</strong> en Cultivo e instalación para alinear EC y riego.</span>';
+            ' sin «Origen: vivero»: se sumaron días estimados de plug al calcular la edad. Marca <strong>Origen → Vivero</strong> en Cultivo e instalación para alinear EC y riego.</span>';
         }
         if (rk.kc < 0.9) {
           lineaEdadKc +=
-            '<br><span class="riego-clima-nota-peq">⚠️ Kc bajo → pulsos ON cortos. Revisa fechas 03/05/2026 y origen vivero; recarga con <strong>Ctrl+F5</strong> tras actualizar la app.</span>';
+            '<br><span class="riego-clima-nota-peq">⚠️ Kc bajo → pulsos ON cortos. Revisa fechas y origen vivero; recarga con <strong>Ctrl+F5</strong> tras actualizar la app.</span>';
         }
       }
+    }
+    if (toldoAct && adjToldo.sombraLabel && tipoRiego === 'torre') {
+      lineaEdadKc +=
+        (lineaEdadKc ? '' : '<br>') +
+        '<span class="riego-clima-meta-line">☂️ Sombra en cálculo: <strong>' +
+        escHtmlUi(adjToldo.sombraLabel) +
+        '</strong> (~' +
+        adjToldo.sombraPct +
+        ' % · UV efectiva reducida). ' +
+        (riegoSombraAuto ? 'Tipo automático por cultivo y clima.' : 'Tipo manual.') +
+        '</span>';
     }
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
@@ -899,11 +927,18 @@ async function calcularRiego(opts = {}) {
       mcRiegoFactorNoc: factorMcNocRiego !== 1 ? Math.round(factorMcNocRiego * 1000) / 1000 : null,
       objetivoTorreCultivo: tipoRiego === 'torre' ? objetivoTorre : null,
       multObjetivoTorre: tipoRiego === 'torre' ? Math.round(multObjetivoTorre * 100) / 100 : null,
+      tipoSombra: adjToldo.tipoSombra || null,
+      sombraPct: adjToldo.sombraPct || 0,
+      sombraLabel: adjToldo.sombraLabel || null,
+      sombraAuto: !!riegoSombraAuto,
     };
     saveState();
 
     try {
-      actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax);
+      if (typeof riegoActualizarPanelSombraCultivos === 'function') {
+        riegoActualizarPanelSombraCultivos(edadSem, adjToldo.tipoSombra, climaToldoOpts);
+      }
+      actualizarRiegoToldoRecoUI(esInterior, tempMax, uvMax, edadSem);
     } catch (_) {}
 
     document.getElementById('riegoLoader').classList.add('setup-hidden');

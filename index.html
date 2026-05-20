@@ -2056,12 +2056,29 @@
       <div class="toldo-toggle" id="toldoToggle">
         <div class="toldo-toggle-label" id="labelToldoRiego">
           <span class="toldo-toggle-ico" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-umbrella"/></svg></span>
-          <span id="labelToldoRiegoText">Toldo o malla de sombra desplegada</span>
+          <span id="labelToldoRiegoText">Sombra activa en el cálculo (malla o toldo)</span>
         </div>
         <button type="button" class="toggle-switch" id="toldoSwitch" onclick="toggleToldo()"
           role="switch" aria-checked="false" aria-labelledby="labelToldoRiego">
           <span class="toggle-knob" aria-hidden="true"></span>
         </button>
+      </div>
+      <div id="riegoSombraWrap" class="riego-sombra-wrap setup-hidden">
+        <div class="riego-sombra-auto-row">
+          <label class="riego-sombra-auto-label">
+            <input type="checkbox" id="riegoSombraAuto" checked onchange="riegoOnSombraAutoChange()">
+            Sugerir tipo según cultivos y clima del día
+          </label>
+        </div>
+        <label class="riego-sombra-tipo-label" for="riegoTipoSombra">Tipo de sombra en el cálculo</label>
+        <select id="riegoTipoSombra" class="riego-sombra-select" onchange="riegoOnTipoSombraChange()"
+          aria-describedby="riegoSombraPorCultivo riegoSombraTipoHint">
+          <option value="ligera">Malla ligera (~30 % sombra)</option>
+          <option value="media" selected>Malla media (~50 % sombra)</option>
+          <option value="fuerte">Toldo o malla densa (~65 % sombra)</option>
+        </select>
+        <p id="riegoSombraTipoHint" class="riego-torre-hint"></p>
+        <ul id="riegoSombraPorCultivo" class="riego-sombra-cultivos setup-hidden" aria-live="polite"></ul>
       </div>
       <p id="riegoToldoHint" class="riego-torre-hint setup-hidden" role="note"></p>
       <div id="riegoToldoReco" class="riego-toldo-reco setup-hidden" role="status" aria-live="polite"></div>
@@ -4680,8 +4697,8 @@
   <script src="js/calendario-logic.js?v=9"></script>
   <script src="js/meteo-forecast-meteo.js?v=13"></script>
   <script src="js/meteo-forecast-dashboard.js?v=21"></script>
-  <script src="js/riego-calculo-helpers.js?v=2026-05-20-vivero-kc"></script>
-  <script src="js/riego-calculo-calcular.js?v=2026-05-20-vivero-kc"></script>
+  <script src="js/riego-calculo-helpers.js?v=2026-05-20-sombra-cultivo"></script>
+  <script src="js/riego-calculo-calcular.js?v=2026-05-20-sombra-cultivo"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=6"></script>
   <script src="js/app-hc-setup-onboarding.js?v=2026-05-15-dwc-tronco-setup"></script>

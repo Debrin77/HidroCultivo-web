@@ -496,11 +496,18 @@ function guardarEstadoTorreActual() {
     nPlantas: Number.isFinite(nRaw) && nRaw >= 1 ? nRaw : (Number.isFinite(prevR.nPlantas) && prevR.nPlantas >= 1 ? prevR.nPlantas : 15),
     edadSem: Number.isFinite(eRaw) && eRaw > 0 ? eRaw : (Number.isFinite(prevR.edadSem) && prevR.edadSem > 0 ? prevR.edadSem : 4),
     toldo: toldoDesplegado,
+    tipoSombra:
+      typeof riegoNormalizarTipoSombra === 'function'
+        ? riegoNormalizarTipoSombra(riegoTipoSombra)
+        : riegoTipoSombra,
+    sombraAuto: riegoSombraAuto !== false,
     diaRiego: diaRiego,
   };
   if (!state.configTorre) state.configTorre = {};
   if (!state.configTorre.riego) state.configTorre.riego = {};
   state.configTorre.riego.toldo = !!toldoDesplegado;
+  state.configTorre.riego.tipoSombra = state.torres[idx].riego.tipoSombra;
+  state.configTorre.riego.sombraAuto = state.torres[idx].riego.sombraAuto;
   state.configTorre.riego.diaRiego = diaRiego === 'manana' ? 'manana' : 'hoy';
   return true;
 }

@@ -7067,6 +7067,52 @@ html.hc-theme-dark .quick-btn[data-quick-icon="asistentepro"] .hc-ico--ion-quick
   background: rgba(251,191,36,0.2);
 }
 
+/* Tipo de sombra (malla / toldo) — riego torre */
+.riego-sombra-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.riego-sombra-auto-row { margin-bottom: 10px; }
+.riego-sombra-auto-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--white);
+  cursor: pointer;
+}
+.riego-sombra-auto-label input { margin-top: 3px; flex-shrink: 0; }
+.riego-sombra-tipo-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.riego-sombra-select {
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--white);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.riego-sombra-select:disabled { opacity: 0.55; }
+.riego-sombra-cultivos {
+  margin: 8px 0 0;
+  padding: 0 0 0 18px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.riego-sombra-cultivos li { margin-bottom: 4px; }
+.riego-sombra-cultivos strong { color: var(--white); font-weight: 600; }
+
 /* Toldo toggle */
 .toldo-toggle {
   display: flex;
