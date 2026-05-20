@@ -689,6 +689,40 @@ function calcularFactorEdadRiego(edadSemManual) {
   return Math.round((facTorre * 0.55 + facIn * 0.45) * 100) / 100;
 }
 
+/**
+ * Días de ciclo para Kc de riego: vivero en ficha, o estimación en frutos/fresas
+ * recién trasplantados si el origen no se rellenó (misma idea que EC/pH).
+ */
+function getDiasEfectivosCicloRiego(cesta, cultivo, refFinMs) {
+  if (!cesta || !cesta.fecha) return 0;
+  const fin = Number.isFinite(refFinMs) ? refFinMs : Date.now();
+  let dias = 0;
+  if (typeof getDiasEfectivosCicloBiologico === 'function') {
+    dias = getDiasEfectivosCicloBiologico(cesta, cultivo, fin);
+  } else if (typeof getDias === 'function') {
+    dias = getDias(cesta.fecha);
+  }
+  const origen =
+    typeof normalizarOrigenPlanta === 'function'
+      ? normalizarOrigenPlanta(cesta.origenPlanta)
+      : '';
+  if (origen === 'vivero') return dias;
+  const ms = new Date(cesta.fecha).getTime();
+  const soloTorre = Number.isFinite(ms)
+    ? Math.max(0, Math.floor((fin - ms) / 86400000))
+    : dias;
+  if (dias > soloTorre) return dias;
+  const offset =
+    typeof getDiasPlantonViveroEstimado === 'function'
+      ? getDiasPlantonViveroEstimado(cultivo)
+      : 0;
+  const g = cultivo && cultivo.grupo;
+  if (offset > 0 && (g === 'frutos' || g === 'fresas') && soloTorre <= offset + 28) {
+    return soloTorre + offset;
+  }
+  return dias;
+}
+
 /** Avance del ciclo 0–1+ (trasplante → cosecha) por planta */
 function riegoPctCicloPlanta(cesta, edadSemManual) {
   const cult = getCultivoDB(cesta.variedad) || { dias: 45, grupo: 'lechugas' };
@@ -700,14 +734,58 @@ function riegoPctCicloPlanta(cesta, edadSemManual) {
   let pct;
   if (cestaTieneFechaValida(cesta.fecha)) {
     const dias =
-      typeof getDiasEfectivosCicloBiologico === 'function'
-        ? getDiasEfectivosCicloBiologico(cesta, cult, Date.now())
+      typeof getDiasEfectivosCicloRiego === 'function'
+        ? getDiasEfectivosCicloRiego(cesta, cult, Date.now())
         : getDias(cesta.fecha);
     pct = dias / diasTot;
   } else {
     pct = (s * 7) / diasTot;
   }
   return Math.max(0, Math.min(1.2, pct));
+}
+
+/** Texto breve de edad/Kc usados en riego (diagnóstico en pestaña Riego). */
+function riegoResumenEdadKcTorre(edadSemManual) {
+  let n = 0;
+  let minD = Infinity;
+  let maxD = 0;
+  let sinOrigenVivero = 0;
+  let conInferencia = 0;
+  getNivelesActivos().forEach(nv => {
+    (state.torre[nv] || []).forEach(c => {
+      if (!cestaCuentaParaRiegoYMetricas(c)) return;
+      const cult = getCultivoDB(c.variedad);
+      const solo =
+        typeof getDias === 'function' ? getDias(c.fecha) : 0;
+      const eff = getDiasEfectivosCicloRiego(c, cult, Date.now());
+      n++;
+      if (eff < minD) minD = eff;
+      if (eff > maxD) maxD = eff;
+      const origen =
+        typeof normalizarOrigenPlanta === 'function'
+          ? normalizarOrigenPlanta(c.origenPlanta)
+          : '';
+      const g = cult && cult.grupo;
+      if ((g === 'frutos' || g === 'fresas') && origen !== 'vivero' && eff > solo) {
+        conInferencia++;
+        if (!origen) sinOrigenVivero++;
+      }
+    });
+  });
+  if (n === 0) return null;
+  const { kc } = calcularKcMedioRiego(edadSemManual);
+  const fase = typeof riegoFaseCultivoLabel === 'function'
+    ? riegoFaseCultivoLabel(edadSemManual)
+    : '';
+  return {
+    n,
+    minD: Number.isFinite(minD) ? minD : 0,
+    maxD,
+    kc,
+    fase,
+    conInferencia,
+    sinOrigenVivero,
+  };
 }
 
 /**

@@ -819,10 +819,48 @@ async function calcularRiego(opts = {}) {
       ? '<br>🌙 Nocturno (interior): VPD sala ~' + vpdNocTxt + ' kPa · demanda rel. ~' + demNocTxt + ' (sin ET₀/viento exterior en el índice). · ' + facNocAguaDifTxt
       : '<br>🌙 Nocturno (21–07 h): ~' + tempNocTxt + ' °C · ' + rhNocTxt + '% HR · VPD ~' + vpdNocTxt + ' kPa · viento máx. horario ~' + windNocTxt + ' km/h · Σ ET₀ noche ~' + et0NocTxt + ' mm · demanda rel. ~' + demNocTxt + '. · ' + facNocAguaDifTxt;
     const lineaMcRiego = meteoclimaticFormatLineaHtml(mcNear) + (mcRiegoLineaAjuste || '');
+    let lineaEdadKc = '';
+    if (
+      tipoRiego === 'torre' &&
+      typeof riegoResumenEdadKcTorre === 'function'
+    ) {
+      const rk = riegoResumenEdadKcTorre(edadSem);
+      if (rk) {
+        const rangoD =
+          rk.minD === rk.maxD
+            ? String(rk.minD) + ' d'
+            : rk.minD + '–' + rk.maxD + ' d';
+        lineaEdadKc =
+          '<br><span class="riego-clima-meta-line">🌱 Edad para riego (torre + vivero si aplica): <strong>' +
+          rangoD +
+          '</strong> · Kc medio <strong>' +
+          rk.kc +
+          '</strong> · fase <strong>' +
+          escHtmlUi(rk.fase) +
+          '</strong> · ' +
+          nPlantas +
+          ' plantas.</span>';
+        if (rk.sinOrigenVivero > 0) {
+          lineaEdadKc +=
+            '<br><span class="riego-clima-nota-peq">ℹ️ En ' +
+            rk.sinOrigenVivero +
+            ' cesta' +
+            (rk.sinOrigenVivero === 1 ? '' : 's') +
+            ' de fruto sin «Origen: vivero» se estimaron ~' +
+            (rk.conInferencia === rk.sinOrigenVivero ? 'esos' : 'algunos') +
+            ' días de plug. Marca <strong>Origen → Vivero</strong> en Cultivo e instalación para alinear EC y riego.</span>';
+        }
+        if (rk.kc < 0.9) {
+          lineaEdadKc +=
+            '<br><span class="riego-clima-nota-peq">⚠️ Kc bajo → pulsos ON cortos. Revisa fechas 03/05/2026 y origen vivero; recarga con <strong>Ctrl+F5</strong> tras actualizar la app.</span>';
+        }
+      }
+    }
     document.getElementById('riegoClimaUsado').innerHTML =
       '<strong class="u-text-white">' + etiquetaDia + '</strong><br>' + lineaClima + lineaTramo1315 +
       lineaNocClima +
       lineaMcRiego +
+      lineaEdadKc +
       '<br><span class="riego-clima-meta-line">📆 Día en el modelo: <strong>' + fechaModTxt +
       '</strong> · VPD ~' + vpdDiaTxt + ' / ~' + vpdMedTxt + ' kPa (24 h vs ventana dinámica de mayor intensidad solar + pico radiación) · Demanda rel. ' +
       demDiaTxt + ' / ' + demMedTxt + ' (general / intensidad solar).</span>' +
