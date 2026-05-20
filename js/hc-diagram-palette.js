@@ -4,11 +4,11 @@
  */
 var HC_DIAG = {
   nft: {
-    flow: '#1d4ed8',
-    flowGhost: '#cbd5e1',
-    canalStroke: '#0369a1',
-    canalGrad0: '#bae6fd',
-    canalGrad1: '#7dd3fc',
+    flow: '#b45309',
+    flowGhost: '#d97706',
+    canalStroke: '#92400e',
+    canalGrad0: '#e8d4b8',
+    canalGrad1: '#c9a66b',
     tankGrad0: '#4ade80',
     tankGrad1: '#166534',
     tankStroke: '#14532d',

@@ -1945,7 +1945,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const padHuecoAlong = 8;
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="' + HC_DIAG.nft.flow + '" fill="none" ' + flowDash;
+  const Pmm = HC_DIAG.nft;
+  const flowSt = 'stroke="' + Pmm.flow + '" fill="none" ' + flowDash;
+  const flowGhostMM = Pmm.flowGhost;
   const fqPath = function (v) {
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
@@ -2110,7 +2112,11 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   flowD += ' L ' + fqPath(xTankReturnMM) + ' ' + fqPath(yInletMM);
 
   let back =
-    '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
+    '<path d="' +
+    flowD +
+    '" stroke="' +
+    flowGhostMM +
+    '" stroke-width="5" fill="none" opacity="0.62" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
   const peNoneCh = interactive ? ' pointer-events="none"' : '';
@@ -2136,7 +2142,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         rxV +
         '" fill="url(#' +
         gidCh +
-        ')" stroke="#0369a1" stroke-width="1.05"' +
+        ')" stroke="' +
+        HC_DIAG.nft.canalStroke +
+        '" stroke-width="1.05"' +
         peNoneCh +
         '/>';
       channels +=
@@ -2167,7 +2175,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
         rxR +
         '" fill="url(#' +
         gidCh +
-        ')" stroke="#0369a1" stroke-width="1.05"' +
+        ')" stroke="' +
+        HC_DIAG.nft.canalStroke +
+        '" stroke-width="1.05"' +
         peNoneCh +
         '/>';
       channels +=
@@ -2187,7 +2197,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
   let flowLayer =
-    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
+    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="3.4" opacity="0.98"' +
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
@@ -2485,7 +2495,10 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
  * Una cara: pasillo izq. (alimentación desde salida izq. del depósito), zigzag
  * en tubos, retorno por pasillo dcho. al depósito.
  * Dos caras: subida central por el eje de la escalera (T en el vértice), zigzag
- * en cada cara; retorno izq. y dcho. del depósito (cada cara al su lado).
+ * Dos caras: una subida central → T superior → cada tubo de arriba; serpentín hacia abajo
+ * por el extremo alejado del centro (izq. en hoja izq., dcha. en hoja dcha.).
+ * Peldaños pares: retorno al depósito por el lado que mira al centro (entrada arriba, centro).
+ * Peldaños impares: retorno lateral del depósito (izq./dcha. según hoja).
  *
  * Referencias generales NFT (pendiente, recirculación, retorno al depósito):
  * p. ej. Atlas Scientific — How to Build a Nutrient Film Technique (NFT) System;
@@ -2575,10 +2588,16 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const waterTop = tankY + 6;
   const waterH = tankH - 16;
   const esc1Cara = car === 1;
+  const esc2Cara = car === 2;
   const oddEsc = nv % 2 === 1;
+  const odd2 = esc2Cara && oddEsc;
+  const xTankC = tx + Math.round(tankW / 2);
   const escPorts = esc1Cara ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv) : null;
-  const xTankFeed = escPorts ? escPorts.xFeed : tx + 12;
+  const xTankFeed = esc2Cara ? xTankC : escPorts ? escPorts.xFeed : tx + 12;
   const xTankReturn = escPorts ? escPorts.xReturn : tx + tankW - 12;
+  const xTankReturnL = tx + 14;
+  const xTankReturnR = tx + tankW - 14;
+  const xTankReturnCenter = xTankC;
   const xSupplyRiser = cx;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const xPump = tx + 14;
@@ -2651,12 +2670,13 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const brownEsc1 = esc1Cara;
-  const flowColEsc = brownEsc1 ? '#b45309' : HC_DIAG.nft.flow;
+  const Pesc = HC_DIAG.nft;
+  const flowColEsc = Pesc.flow;
+  const flowGhostEsc = Pesc.flowGhost;
   const flowSt = 'stroke="' + flowColEsc + '" fill="none" ' + flowDash;
-  const chGrad0Esc = brownEsc1 ? '#e8d4b8' : HC_DIAG.nft.canalGrad0;
-  const chGrad1Esc = brownEsc1 ? '#c9a66b' : HC_DIAG.nft.canalGrad1;
-  const chColEsc = brownEsc1 ? '#92400e' : '#0369a1';
+  const chGrad0Esc = Pesc.canalGrad0;
+  const chGrad1Esc = Pesc.canalGrad1;
+  const chColEsc = Pesc.canalStroke;
   const fqPathEsc = function (v) {
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
@@ -2718,9 +2738,18 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       }
     }
   };
-  const nftEscDrainAlongLeg = function (xLeg, xTankX) {
+  const nftEscFaceInnerX = function (R, face) {
+    return face === 'L' ? R.xR - padFlow : R.xL + padFlow;
+  };
+  const nftEscFaceOuterX = function (R, face) {
+    return face === 'L' ? R.xL + padFlow : R.xR - padFlow;
+  };
+  const nftEscRouteEndForReturn = function (R, face, towardCenter) {
+    orthoKneeEsc(towardCenter ? nftEscFaceInnerX(R, face) : nftEscFaceOuterX(R, face), R.y);
+  };
+  const nftEscDrainToTank = function (xLeg, xTankX) {
     orthoKneeEsc(xLeg, ly);
-    const yBase = ladderBot + 6;
+    const yBase = ladderBot + 8;
     orthoKneeEsc(xLeg, yBase);
     orthoKneeEsc(xTankX, yBase);
     orthoKneeEsc(xTankX, yInlet);
@@ -2728,27 +2757,46 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   if (runs.length) {
     if (car === 2) {
+      const runsL = runs.slice(0, nv);
+      const runsR = runs.slice(nv);
       const yManifold = yEscManifold2;
+      const retAlCentro = !odd2;
+
+      orthoKneeEsc(xPump, yPump);
       orthoKneeEsc(xTankFeed, yPump);
       orthoKneeEsc(xTankFeed, yOutlet);
       orthoKneeEsc(xSupplyRiser, yOutlet);
       orthoKneeEsc(xSupplyRiser, yManifold);
-      const R0L = runs[0];
-      const xInL0 = R0L.xR - padFlow;
-      orthoKneeEsc(xInL0, yManifold);
-      orthoKneeEsc(xInL0, R0L.y);
-      nftEscAppendRunsZigzag(runs.slice(0, nv), 'L');
-      nftEscDrainAlongLeg(xLegDrainL, xTankFeed);
+
+      const R0L = runsL[0];
+      orthoKneeEsc(nftEscFaceInnerX(R0L, 'L'), yManifold);
+      orthoKneeEsc(nftEscFaceInnerX(R0L, 'L'), R0L.y);
+      orthoKneeEsc(nftEscFaceOuterX(R0L, 'L'), R0L.y);
+      nftEscAppendRunsZigzag(runsL, 'L');
+      const RnL = runsL[nv - 1];
+      nftEscRouteEndForReturn(RnL, 'L', retAlCentro);
+      if (retAlCentro) {
+        nftEscDrainToTank(cx, xTankReturnCenter);
+      } else {
+        nftEscDrainToTank(nftEscFaceOuterX(RnL, 'L'), xTankReturnL);
+      }
 
       flowD += ' M ' + fqPathEsc(xSupplyRiser) + ' ' + fqPathEsc(yManifold);
       lx = xSupplyRiser;
       ly = yManifold;
-      const R0R = runs[nv];
-      const xInR0 = R0R.xL + padFlow;
-      orthoKneeEsc(xInR0, yManifold);
-      orthoKneeEsc(xInR0, R0R.y);
-      nftEscAppendRunsZigzag(runs.slice(nv), 'R');
-      nftEscDrainAlongLeg(xLegDrainR, xTankReturn);
+
+      const R0R = runsR[0];
+      orthoKneeEsc(nftEscFaceInnerX(R0R, 'R'), yManifold);
+      orthoKneeEsc(nftEscFaceInnerX(R0R, 'R'), R0R.y);
+      orthoKneeEsc(nftEscFaceOuterX(R0R, 'R'), R0R.y);
+      nftEscAppendRunsZigzag(runsR, 'R');
+      const RnR = runsR[nv - 1];
+      nftEscRouteEndForReturn(RnR, 'R', retAlCentro);
+      if (retAlCentro) {
+        nftEscDrainToTank(cx, xTankReturnCenter);
+      } else {
+        nftEscDrainToTank(nftEscFaceOuterX(RnR, 'R'), xTankReturnR);
+      }
     } else {
       const backX = cx + 44;
       orthoKneeEsc(xTankFeed, yPump);
@@ -2759,11 +2807,47 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       orthoKneeEsc(xIn0, runs[0].y);
       nftEscAppendRunsZigzag(runs, 'L');
       if (oddEsc) {
-        nftEscDrainAlongLeg(backX + 8, xTankReturn);
+        nftEscDrainToTank(backX + 8, xTankReturn);
       } else {
-        nftEscDrainAlongLeg(xLegReturnEven, xTankReturn);
+        nftEscDrainToTank(xLegReturnEven, xTankReturn);
       }
     }
+  }
+
+  let flowTankPortsEsc = '';
+  if (esc2Cara) {
+    flowTankPortsEsc +=
+      '<g class="nft-flow-ports" pointer-events="none">' +
+      '<circle cx="' +
+      xTankFeed +
+      '" cy="' +
+      yOutlet +
+      '" r="5.5" fill="' +
+      flowColEsc +
+      '" stroke="#fef3c7" stroke-width="1.4"/>' +
+      (odd2
+        ? '<circle cx="' +
+          xTankReturnL +
+          '" cy="' +
+          yInlet +
+          '" r="5.5" fill="' +
+          flowColEsc +
+          '" stroke="#fef3c7" stroke-width="1.4"/>' +
+          '<circle cx="' +
+          xTankReturnR +
+          '" cy="' +
+          yInlet +
+          '" r="5.5" fill="' +
+          flowColEsc +
+          '" stroke="#fef3c7" stroke-width="1.4"/>'
+        : '<circle cx="' +
+          xTankReturnCenter +
+          '" cy="' +
+          yInlet +
+          '" r="5.5" fill="' +
+          flowColEsc +
+          '" stroke="#fef3c7" stroke-width="1.4"/>') +
+      '</g>';
   }
 
   let frame = '';
@@ -2813,7 +2897,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   let back =
-    '<path d="' + flowD + '" stroke="#cbd5e1" stroke-width="4" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
+    '<path d="' +
+    flowD +
+    '" stroke="' +
+    flowGhostEsc +
+    '" stroke-width="5" fill="none" opacity="0.62" stroke-linecap="round" stroke-linejoin="round"/>';
 
   const nRunsEsc = runs.length;
   const tLabelFsEsc = compactEsc ? 14.25 : 16.5;
@@ -2855,7 +2943,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
   let flowLayer =
-    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="2.2" opacity="0.95"' +
+    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="3.4" opacity="0.98"' +
     (nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
       : '/>');
@@ -2973,6 +3061,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     flowLayer = '<g pointer-events="none">' + flowLayer + '</g>';
     channelLabels = '<g pointer-events="none">' + channelLabels + '</g>';
     tankLayer = '<g pointer-events="none">' + tankLayer + pumpLines + '</g>';
+    if (flowTankPortsEsc) flowTankPortsEsc = '<g pointer-events="none">' + flowTankPortsEsc + '</g>';
   }
 
   const nTot = runs.length;
@@ -2984,7 +3073,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   return (
     '<svg class="torre-svg-diagram nft-escalera-svg nft-svg-diagram--scada nft-diagram--scroll' +
-    (car === 1 ? ' nft-escalera--una-cara' : '') +
+    (car === 1 ? ' nft-escalera--una-cara' : ' nft-escalera--dos-caras') +
     (compactEsc ? ' nft-diagram--compact' : '') +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
@@ -3036,6 +3125,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     plants +
     channelLabels +
     tankLayer +
+    flowTankPortsEsc +
     (!interactive ? pumpLines : '') +
     '</svg>'
   );

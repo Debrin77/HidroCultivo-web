@@ -310,7 +310,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const vol = Math.min(200, Math.max(5, parseInt(String(volL), 10) || 20));
 
   const isParedSerp = dispLayout === 'pared';
-  const brownNft = true;
   const oddTubes = nCh % 2 === 1;
   const W0 = nftDiagramCanvasW0();
   const compactSerpHeader = nCh * huecosN > 20;
@@ -353,12 +352,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
 
   const P = HC_DIAG.nft;
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowCol = brownNft ? '#b45309' : P.flow;
-  const flowGhostCol = brownNft ? '#d97706' : P.flowGhost || '#cbd5e1';
-  const flowW = brownNft ? 3.4 : 2.5;
-  const chStroke = brownNft ? '#92400e' : P.canalStroke || '#0369a1';
-  const chGrad0 = brownNft ? '#e8d4b8' : P.canalGrad0;
-  const chGrad1 = brownNft ? '#c9a66b' : P.canalGrad1;
+  const flowCol = P.flow;
+  const flowGhostCol = P.flowGhost || '#d97706';
+  const flowW = 3.4;
+  const chStroke = P.canalStroke || '#92400e';
+  const chGrad0 = P.canalGrad0;
+  const chGrad1 = P.canalGrad1;
   const flowSt = 'stroke="' + flowCol + '" fill="none" ' + flowDash;
 
   /**
@@ -409,11 +408,11 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const endsRightSerp = (nCh - 1) % 2 === 0;
   const xEndLast = endsRightSerp ? xR - padFlow : xL + padFlow;
   flowD += ' L ' + xEndLast + ' ' + yLast;
-  const returnSep = brownNft ? 28 : 12;
+  const returnSep = 28;
   let yDuctRun = yLast + tubeH / 2 + returnSep;
   if (yDuctRun > tankY - 10) yDuctRun = tankY - 12;
   const xRiserRet = oddTubes ? xReturnRiser : xDrainRiserEven;
-  if (brownNft && oddTubes) {
+  if (oddTubes) {
     const xJog =
       endsRightSerp ? Math.min(xReturnRiser, xR + flowMargin + 14) : Math.max(xFeedRiser, xL - flowMargin - 14);
     flowD += ' L ' + xJog + ' ' + yLast;
@@ -433,9 +432,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '" stroke="' +
     flowGhostCol +
     '" stroke-width="' +
-    (brownNft ? '5' : '4') +
-    '" fill="none" opacity="' +
-    (brownNft ? '0.62' : '0.45') +
+    '5" fill="none" opacity="0.62' +
     '" stroke-linecap="round" stroke-linejoin="round"/>';
 
   let channels = '';
@@ -462,32 +459,30 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '"' +
       peNone +
       '/>';
-    if (brownNft) {
-      channels +=
-        '<line x1="' +
-        xL +
-        '" y1="' +
-        (yc + 2) +
-        '" x2="' +
-        xR +
-        '" y2="' +
-        (yc + 2) +
-        '" stroke="' +
-        chGrad1 +
-        '" stroke-width="1.3" opacity="0.85" pointer-events="none"/>';
-      channels +=
-        '<line x1="' +
-        xL +
-        '" y1="' +
-        (yc + tubeH - 3) +
-        '" x2="' +
-        xR +
-        '" y2="' +
-        (yc + tubeH - 3) +
-        '" stroke="' +
-        chGrad0 +
-        '" stroke-width="1.1" opacity="0.55" pointer-events="none"/>';
-    }
+    channels +=
+      '<line x1="' +
+      xL +
+      '" y1="' +
+      (yc + 2) +
+      '" x2="' +
+      xR +
+      '" y2="' +
+      (yc + 2) +
+      '" stroke="' +
+      chGrad1 +
+      '" stroke-width="1.3" opacity="0.85" pointer-events="none"/>';
+    channels +=
+      '<line x1="' +
+      xL +
+      '" y1="' +
+      (yc + tubeH - 3) +
+      '" x2="' +
+      xR +
+      '" y2="' +
+      (yc + tubeH - 3) +
+      '" stroke="' +
+      chGrad0 +
+      '" stroke-width="1.1" opacity="0.55" pointer-events="none"/>';
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
@@ -622,8 +617,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   }
 
   let flowTankPorts = '';
-  if (brownNft) {
-    flowTankPorts +=
+  flowTankPorts +=
       '<g class="nft-flow-ports" pointer-events="none">' +
       '<circle cx="' +
       xTankFeed +
@@ -670,7 +664,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       flowCol +
       '" stroke-width="2" fill="none" opacity="0.9"/>' +
       '</g>';
-  }
 
   const pumpLines = '';
   let scadaCallouts = '';
