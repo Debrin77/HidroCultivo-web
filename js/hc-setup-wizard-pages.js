@@ -228,7 +228,13 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
 
   const P = HC_DIAG.nft;
   const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowSt = 'stroke="' + P.flow + '" fill="none" ' + flowDash;
+  const flowCol = isParedSerp ? '#b45309' : P.flow;
+  const flowGhostCol = isParedSerp ? '#d97706' : P.flowGhost || '#cbd5e1';
+  const flowW = isParedSerp ? 3.4 : 2.5;
+  const chStroke = isParedSerp ? '#92400e' : P.canalStroke || '#0369a1';
+  const chGrad0 = isParedSerp ? '#e8c9a0' : P.canalGrad0;
+  const chGrad1 = isParedSerp ? '#c4a574' : P.canalGrad1;
+  const flowSt = 'stroke="' + flowCol + '" fill="none" ' + flowDash;
 
   /**
    * Serpentín (mesa / pared): un solo circuito en serie por extremos de tubo (sin colector paralelo).
@@ -541,7 +547,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     if (flowTankPorts) flowTankPorts = '<g pointer-events="none">' + flowTankPorts + '</g>';
   }
 
-  const foot = vol + ' L · vista cenital';
+  const foot = vol + ' L';
 
   return (
     '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll' +

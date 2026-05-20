@@ -204,6 +204,61 @@ function renderTorre() {
   try {
     sincronizarSistemaNftMontajeUI();
   } catch (e) {}
+  try {
+    renderTorreMedirDiagram();
+  } catch (_) {}
+}
+
+/** Copia el esquema de Cultivo e instalación a la pestaña Medir (misma instalación activa). */
+function renderTorreMedirDiagram() {
+  const section = document.getElementById('medirInstalacionEsquema');
+  const medirWrap = document.getElementById('medirDiagramWrap');
+  if (!section || !medirWrap) return;
+
+  const cfg = state.configTorre || {};
+  if (cfg.operativa === false) {
+    section.classList.add('setup-hidden');
+    medirWrap.innerHTML = '';
+    return;
+  }
+
+  const tipo = cfg.tipoInstalacion;
+  const conEsquema =
+    !tipo || tipo === 'torre' || tipo === 'nft' || tipo === 'dwc' || tipo === 'srf' || tipo === 'rdwc';
+  if (!conEsquema) {
+    section.classList.add('setup-hidden');
+    medirWrap.innerHTML = '';
+    return;
+  }
+
+  const src = document.getElementById('torreSVGWrap');
+  let html = src && src.innerHTML ? String(src.innerHTML).trim() : '';
+  if (!html || html.indexOf('<svg') < 0 || src.querySelector('.torre-loading-placeholder')) {
+    if (typeof renderTorre === 'function') renderTorre();
+    html = src && src.innerHTML ? String(src.innerHTML).trim() : '';
+  }
+  if (!html || html.indexOf('<svg') < 0) {
+    section.classList.add('setup-hidden');
+    medirWrap.innerHTML = '';
+    return;
+  }
+
+  section.classList.remove('setup-hidden');
+  medirWrap.innerHTML = html;
+  medirWrap.className = 'torre-svg-canvas medir-diagram-canvas';
+  if (src && src.classList.contains('torre-svg-canvas--nft-pared-illo')) {
+    medirWrap.classList.add('torre-svg-canvas--nft-pared-illo');
+  }
+  if (tipo === 'nft' || tipo === 'dwc' || tipo === 'srf' || tipo === 'rdwc' || !tipo || tipo === 'torre') {
+    try {
+      bindTorreCestas(medirWrap);
+    } catch (_) {}
+  }
+  if (tipo === 'rdwc') {
+    try {
+      bindRdwcLoopHelp(medirWrap);
+    } catch (_) {}
+  }
 }
 
 function bindRdwcLoopHelp(wrap) {

@@ -388,7 +388,11 @@ function goTab(tab) {
   try {
     actualizarTabContextHints(tab);
   } catch (_) {}
-  if (tab === 'mediciones') { cargarUltimaMedicion(); initConfigUI(); }
+  if (tab === 'mediciones') {
+    cargarUltimaMedicion();
+    initConfigUI();
+    if (typeof renderTorre === 'function') renderTorre();
+  }
   if (tab === 'inicio') updateDashboard();
   if (tab === 'meteo') { cargarMeteo(); window._meteoObsoleto = false; }
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = null; renderCalendario(); }
