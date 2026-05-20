@@ -134,19 +134,32 @@ function nftSvgTankFillPct(volL, opts) {
   return 0.87;
 }
 
+var NFT_FLOW_SUPPLY = '#2563eb';
+var NFT_FLOW_RETURN = '#16a34a';
+
 function nftSvgFlowMarkerDefs(suf) {
-  const id = 'nftFlowArr' + suf;
+  const idSup = 'nftArrSup' + suf;
+  const idRet = 'nftArrRet' + suf;
   return {
-    id: id,
+    supplyId: idSup,
+    returnId: idRet,
     defs:
       '<marker id="' +
-      id +
+      idSup +
       '" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">' +
-      '<path d="M0 0 L10 5 L0 10 z" fill="#b45309"/></marker>',
+      '<path d="M0 0 L10 5 L0 10 z" fill="' +
+      NFT_FLOW_SUPPLY +
+      '"/></marker>' +
+      '<marker id="' +
+      idRet +
+      '" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">' +
+      '<path d="M0 0 L10 5 L0 10 z" fill="' +
+      NFT_FLOW_RETURN +
+      '"/></marker>',
   };
 }
 
-/** Leyenda mínima: alimentación vs retorno. */
+/** Leyenda: azul = alimentación, verde = retorno al depósito. */
 function nftSvgFlowLegend(x, y) {
   return (
     '<g class="nft-flow-legend" transform="translate(' +
@@ -154,11 +167,98 @@ function nftSvgFlowLegend(x, y) {
     ',' +
     y +
     ')" pointer-events="none" aria-hidden="true">' +
-    '<text font-size="10" fill="#78350f" font-family="system-ui,sans-serif" font-weight="600">' +
-    '<tspan x="0" dy="11">━━ Sale abajo del depósito · sube · recorre tubos</tspan>' +
-    '<tspan x="0" dy="12">╌╌ Retorno · entra arriba al depósito</tspan>' +
-    '</text></g>'
+    '<line x1="0" y1="6" x2="22" y2="6" stroke="' +
+    NFT_FLOW_SUPPLY +
+    '" stroke-width="3" stroke-linecap="round"/>' +
+    '<text x="26" y="9" font-size="10" fill="#1e40af" font-family="system-ui,sans-serif" font-weight="600">Alimentación: sale abajo · sube · tubo superior → serpentín</text>' +
+    '<line x1="0" y1="22" x2="22" y2="22" stroke="' +
+    NFT_FLOW_RETURN +
+    '" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round"/>' +
+    '<text x="26" y="25" font-size="10" fill="#166534" font-family="system-ui,sans-serif" font-weight="600">Retorno: último tubo → entra arriba al depósito</text>' +
+    '</g>'
   );
+}
+
+/**
+ * Serpentín en serie (pared/mesa): salida depósito (izq. abajo) → riser → tubo 1 (arriba) → zigzag bajando
+ * con U por el lado exterior → retorno al puerto superior del depósito (izq. si par, der. si impar).
+ */
+function nftBuildSerpentineFlowPaths(p) {
+  const nCh = p.nCh;
+  const yRow = p.yRow;
+  const xL = p.xL;
+  const xR = p.xR;
+  const padFlow = p.padFlow;
+  const flowMargin = p.flowMargin;
+  const oddTubes = p.oddTubes;
+  const xPump = p.xPump;
+  const yPump = p.yPump;
+  const tx = p.tx;
+  const tankW = p.tankW;
+  const tankY = p.tankY;
+  const tankH = p.tankH;
+  const Wsvg = p.Wsvg;
+  const tubeH = p.tubeH;
+
+  const ports = nftSvgTankPorts(tx, tankW, tankY, tankH, nCh);
+  const riserSep = 16;
+  const xFeedRiser = Math.max(12, xL - flowMargin - (oddTubes ? 0 : riserSep));
+  const xDrainRiserEven = Math.max(xFeedRiser + 10, Math.min(xL - 4, xFeedRiser + 14));
+  const xReturnRiser = oddTubes ? Math.min(Wsvg - 14, xR + flowMargin) : xDrainRiserEven;
+
+  let supplyD = 'M ' + xPump + ' ' + yPump;
+  supplyD += ' L ' + ports.xFeed + ' ' + yPump;
+  supplyD += ' L ' + ports.xFeed + ' ' + ports.yOutlet;
+  supplyD += ' L ' + xFeedRiser + ' ' + ports.yOutlet;
+  supplyD += ' L ' + xFeedRiser + ' ' + yRow(0);
+
+  for (let i = 0; i < nCh; i++) {
+    const y = yRow(i);
+    const l2r = i % 2 === 0;
+    const xIn = l2r ? xL + padFlow : xR - padFlow;
+    const xOut = l2r ? xR - padFlow : xL + padFlow;
+    supplyD += ' L ' + xIn + ' ' + y;
+    supplyD += ' L ' + xOut + ' ' + y;
+    if (i < nCh - 1) {
+      const xDrop = l2r ? xR - padFlow + flowMargin : xL + padFlow - flowMargin;
+      const l2rN = (i + 1) % 2 === 0;
+      const xNextIn = l2rN ? xL + padFlow : xR - padFlow;
+      supplyD += ' L ' + xDrop + ' ' + y;
+      supplyD += ' L ' + xDrop + ' ' + yRow(i + 1);
+      supplyD += ' L ' + xNextIn + ' ' + yRow(i + 1);
+    }
+  }
+
+  const yLast = yRow(nCh - 1);
+  const endsRight = (nCh - 1) % 2 === 0;
+  const xExitSerp = endsRight ? xR - padFlow : xL + padFlow;
+
+  let returnD = 'M ' + xExitSerp + ' ' + yLast;
+  let yDuctRun = yLast + tubeH / 2 + 28;
+  if (yDuctRun > tankY - 10) yDuctRun = tankY - 12;
+
+  if (oddTubes) {
+    const xJog = endsRight
+      ? Math.min(xReturnRiser + 8, xR + flowMargin + 20)
+      : Math.max(xReturnRiser - 8, xFeedRiser - 10);
+    returnD += ' L ' + xJog + ' ' + yLast;
+    returnD += ' L ' + xJog + ' ' + yDuctRun;
+    returnD += ' L ' + xReturnRiser + ' ' + yDuctRun;
+  } else {
+    returnD += ' L ' + xReturnRiser + ' ' + yLast;
+    returnD += ' L ' + xReturnRiser + ' ' + yDuctRun;
+  }
+  returnD += ' L ' + ports.xReturn + ' ' + yDuctRun;
+  returnD += ' L ' + ports.xReturn + ' ' + ports.yInlet;
+
+  return {
+    supplyD: supplyD,
+    returnD: returnD,
+    ports: ports,
+    xFeedRiser: xFeedRiser,
+    xReturnRiser: xReturnRiser,
+    xExitSerp: xExitSerp,
+  };
 }
 
 /** Puertos depósito NFT (pared / mesa / escalera 1 cara): impar = izq. abajo + der. arriba; par = ambos a la izquierda. */
@@ -435,73 +535,45 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
    * Tubos impares: salida depósito izq. (abajo) → subida al tubo superior; retorno der. (arriba).
    * Tubos pares: entrada y salida solo en lateral izquierdo (abajo / arriba), sin cruces.
    */
-  const tankPorts = nftSvgTankPorts(tx, tankW, tankY, tankH, nCh);
-  const xTankFeed = tankPorts.xFeed;
-  const xTankReturn = tankPorts.xReturn;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const xPump = tx + 14;
-  const yOutlet = tankY + tankH - 16;
-  const yInlet = tankY + 16;
   const flowMargin = 10;
-  const riserSep = 16;
-  const xFeedRiser = Math.max(12, xL - flowMargin - (oddTubes ? 0 : riserSep));
-  const xDrainRiserEven = Math.max(xFeedRiser + 10, xL - 4);
-  const xReturnRiser = oddTubes ? Math.min(Wsvg - 14, xR + flowMargin) : xDrainRiserEven;
-  const xLane = xFeedRiser;
-
-  let flowSupplyD = '';
-  flowSupplyD += 'M ' + xPump + ' ' + yPump;
-  flowSupplyD += ' L ' + xTankFeed + ' ' + yPump;
-  flowSupplyD += ' L ' + xTankFeed + ' ' + yOutlet;
-  flowSupplyD += ' L ' + xLane + ' ' + yOutlet;
-  flowSupplyD += ' L ' + xLane + ' ' + yRow(0);
-  for (let i = 0; i < nCh; i++) {
-    const y = yRow(i);
-    const l2r = i % 2 === 0;
-    const xIn = l2r ? xL + padFlow : xR - padFlow;
-    const xOut = l2r ? xR - padFlow : xL + padFlow;
-    flowSupplyD += ' L ' + xIn + ' ' + y;
-    flowSupplyD += ' L ' + xOut + ' ' + y;
-    if (i < nCh - 1) {
-      flowSupplyD += ' L ' + xLane + ' ' + y;
-      flowSupplyD += ' L ' + xLane + ' ' + yRow(i + 1);
-    }
-  }
-  const yLast = yRow(nCh - 1);
-  const endsRightSerp = (nCh - 1) % 2 === 0;
-  const xEndLast = endsRightSerp ? xR - padFlow : xL + padFlow;
-
-  let flowReturnD = '';
-  flowReturnD += 'M ' + xEndLast + ' ' + yLast;
-  const returnSep = 28;
-  let yDuctRun = yLast + tubeH / 2 + returnSep;
-  if (yDuctRun > tankY - 10) yDuctRun = tankY - 12;
-  const xRiserRet = oddTubes ? xReturnRiser : xDrainRiserEven;
-  if (oddTubes) {
-    const xJog =
-      endsRightSerp ? Math.min(xReturnRiser, xR + flowMargin + 14) : Math.max(xFeedRiser, xL - flowMargin - 14);
-    flowReturnD += ' L ' + xJog + ' ' + yLast;
-    flowReturnD += ' L ' + xJog + ' ' + yDuctRun;
-    flowReturnD += ' L ' + xRiserRet + ' ' + yDuctRun;
-  } else {
-    flowReturnD += ' L ' + xRiserRet + ' ' + yLast;
-    flowReturnD += ' L ' + xRiserRet + ' ' + yDuctRun;
-  }
-  flowReturnD += ' L ' + xTankReturn + ' ' + yDuctRun;
-  flowReturnD += ' L ' + xTankReturn + ' ' + yInlet;
+  const flowPaths = nftBuildSerpentineFlowPaths({
+    nCh: nCh,
+    yRow: yRow,
+    xL: xL,
+    xR: xR,
+    padFlow: padFlow,
+    flowMargin: flowMargin,
+    oddTubes: oddTubes,
+    xPump: xPump,
+    yPump: yPump,
+    tx: tx,
+    tankW: tankW,
+    tankY: tankY,
+    tankH: tankH,
+    Wsvg: Wsvg,
+    tubeH: tubeH,
+  });
+  const flowSupplyD = flowPaths.supplyD;
+  const flowReturnD = flowPaths.returnD;
+  const tankPorts = flowPaths.ports;
+  const xTankFeed = tankPorts.xFeed;
+  const xTankReturn = tankPorts.xReturn;
+  const yOutlet = tankPorts.yOutlet;
+  const yInlet = tankPorts.yInlet;
 
   const flowMark = nftSvgFlowMarkerDefs(suf);
-  const mk = flowMark.id;
   const flowDashSupply = 'stroke-dasharray="11 9"';
-  const flowDashReturn = 'stroke-dasharray="7 8"';
+  const flowDashReturn = 'stroke-dasharray="8 7"';
   const pathGhost =
-    ' stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.5" stroke-width="5"';
+    ' stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.45" stroke-width="5"';
 
   let back = '';
   back +=
-    '<path d="' + flowSupplyD + '" stroke="' + flowGhostCol + '"' + pathGhost + '/>';
+    '<path d="' + flowSupplyD + '" stroke="' + NFT_FLOW_SUPPLY + '"' + pathGhost + '/>';
   back +=
-    '<path d="' + flowReturnD + '" stroke="' + flowGhostCol + '"' + pathGhost + '/>';
+    '<path d="' + flowReturnD + '" stroke="' + NFT_FLOW_RETURN + '"' + pathGhost + '/>';
 
   let channels = '';
   const cxTubeSerp = (xL + xR) / 2;
@@ -561,23 +633,25 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '<path class="nft-flow-supply" d="' +
     flowSupplyD +
     '" stroke="' +
-    flowCol +
+    NFT_FLOW_SUPPLY +
     '" fill="none" ' +
     flowDashSupply +
     ' stroke-width="' +
     flowW +
     '" opacity="0.98" marker-end="url(#' +
-    mk +
+    flowMark.supplyId +
     ')"' +
     animTag +
     '<path class="nft-flow-return" d="' +
     flowReturnD +
-    '" stroke="#92400e" fill="none" ' +
+    '" stroke="' +
+    NFT_FLOW_RETURN +
+    '" fill="none" ' +
     flowDashReturn +
     ' stroke-width="' +
-    (flowW - 0.4) +
-    '" opacity="0.95" marker-end="url(#' +
-    mk +
+    flowW +
+    '" opacity="0.98" marker-end="url(#' +
+    flowMark.returnId +
     ')"' +
     animTag;
   let flowLegend = nftSvgFlowLegend(12, Math.max(8, topPad - 6));
@@ -731,14 +805,14 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '" cy="' +
       yOutlet +
       '" r="5.5" fill="' +
-      flowCol +
+      NFT_FLOW_SUPPLY +
       '" stroke="#fef3c7" stroke-width="1.4"/>' +
       '<circle cx="' +
       xTankReturn +
       '" cy="' +
       yInlet +
       '" r="5.5" fill="' +
-      flowCol +
+      NFT_FLOW_RETURN +
       '" stroke="#fef3c7" stroke-width="1.4"/>' +
       '<path d="M ' +
       (xTankFeed - 7) +
@@ -753,7 +827,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       ' ' +
       yOutlet +
       '" stroke="' +
-      flowCol +
+      NFT_FLOW_RETURN +
       '" stroke-width="2" fill="none" opacity="0.9"/>' +
       '<path d="M ' +
       (xTankReturn - 7) +
@@ -768,7 +842,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       ' ' +
       yInlet +
       '" stroke="' +
-      flowCol +
+      NFT_FLOW_RETURN +
       '" stroke-width="2" fill="none" opacity="0.9"/>' +
       '</g>';
 

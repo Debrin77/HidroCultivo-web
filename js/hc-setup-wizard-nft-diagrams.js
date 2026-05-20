@@ -2696,91 +2696,106 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   }
 
-  const flowDash = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const Pesc = HC_DIAG.nft;
-  const flowColEsc = Pesc.flow;
-  const flowGhostEsc = Pesc.flowGhost;
-  const flowSt = 'stroke="' + flowColEsc + '" fill="none" ' + flowDash;
-  const chGrad0Esc = Pesc.canalGrad0;
-  const chGrad1Esc = Pesc.canalGrad1;
-  const chColEsc = Pesc.canalStroke;
+  const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
+  const F_RET = typeof NFT_FLOW_RETURN !== 'undefined' ? NFT_FLOW_RETURN : '#16a34a';
+  const flowDashSup = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowDashRet = 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
+  const chGrad0Esc = HC_DIAG.nft.canalGrad0;
+  const chGrad1Esc = HC_DIAG.nft.canalGrad1;
+  const chColEsc = HC_DIAG.nft.canalStroke;
   const fqPathEsc = function (v) {
     const n = Math.round(Number(v) * 100) / 100;
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
   };
   const erEsc = compactEsc ? 10 : 14;
-  let flowD = 'M ' + fqPathEsc(xPump) + ' ' + fqPathEsc(yPump);
-  let lx = xPump;
-  let ly = yPump;
-  const LtoEsc = function (x, y) {
-    flowD += ' L ' + fqPathEsc(x) + ' ' + fqPathEsc(y);
-    lx = x;
-    ly = y;
-  };
-  const ArcEsc = function (ex, ey, sw) {
-    flowD +=
-      ' A ' + fqPathEsc(erEsc) + ' ' + fqPathEsc(erEsc) + ' 0 0 ' + sw + ' ' + fqPathEsc(ex) + ' ' + fqPathEsc(ey);
-    lx = ex;
-    ly = ey;
-  };
-  const orthoKneeEsc = function (tx, ty) {
-    if (Math.abs(lx - tx) < 0.8 && Math.abs(ly - ty) < 0.8) return;
-    if (Math.abs(lx - tx) < 0.8) {
-      LtoEsc(tx, ty);
-      return;
-    }
-    if (Math.abs(ly - ty) < 0.8) {
-      LtoEsc(tx, ty);
-      return;
-    }
-    const sx = tx > lx ? 1 : -1;
-    const sy = ty > ly ? 1 : -1;
-    if (Math.abs(ty - ly) > erEsc && Math.abs(tx - lx) > erEsc) {
-      LtoEsc(lx, ty - sy * erEsc);
-      const swK = sx > 0 ? (sy > 0 ? 1 : 0) : sy > 0 ? 0 : 1;
-      ArcEsc(lx + sx * erEsc, ty, swK);
-      LtoEsc(tx, ty);
-    } else {
-      LtoEsc(lx, ty);
-      LtoEsc(tx, ty);
-    }
-  };
-  const nftEscAppendRunsZigzag = function (runList, outerSide) {
-    const xDropAt = function (R) {
-      return outerSide === 'R' ? R.xR - padFlow + flowMarginEsc : R.xL + padFlow - flowMarginEsc;
+
+  const makeNftFlowWriter = function (initial) {
+    let d = initial || '';
+    let lx = 0;
+    let ly = 0;
+    const set = function (x, y) {
+      lx = x;
+      ly = y;
     };
-    for (let i = 0; i < runList.length; i++) {
-      const R = runList[i];
-      const Rn = i < runList.length - 1 ? runList[i + 1] : null;
-      const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
-      const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
-      orthoKneeEsc(xS, R.y);
-      orthoKneeEsc(xE, R.y);
-      if (Rn) {
-        const xDrop = xDropAt(R);
-        const xNextS = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
-        orthoKneeEsc(xDrop, R.y);
-        orthoKneeEsc(xDrop, Rn.y);
-        orthoKneeEsc(xNextS, Rn.y);
+    const Lto = function (x, y) {
+      d += ' L ' + fqPathEsc(x) + ' ' + fqPathEsc(y);
+      set(x, y);
+    };
+    const Mto = function (x, y) {
+      d += ' M ' + fqPathEsc(x) + ' ' + fqPathEsc(y);
+      set(x, y);
+    };
+    const Arc = function (ex, ey, sw) {
+      d +=
+        ' A ' + fqPathEsc(erEsc) + ' ' + fqPathEsc(erEsc) + ' 0 0 ' + sw + ' ' + fqPathEsc(ex) + ' ' + fqPathEsc(ey);
+      set(ex, ey);
+    };
+    const ortho = function (tx, ty) {
+      if (Math.abs(lx - tx) < 0.8 && Math.abs(ly - ty) < 0.8) return;
+      if (Math.abs(lx - tx) < 0.8) {
+        Lto(tx, ty);
+        return;
       }
-    }
+      if (Math.abs(ly - ty) < 0.8) {
+        Lto(tx, ty);
+        return;
+      }
+      const sx = tx > lx ? 1 : -1;
+      const sy = ty > ly ? 1 : -1;
+      if (Math.abs(ty - ly) > erEsc && Math.abs(tx - lx) > erEsc) {
+        Lto(lx, ty - sy * erEsc);
+        const swK = sx > 0 ? (sy > 0 ? 1 : 0) : sy > 0 ? 0 : 1;
+        Arc(lx + sx * erEsc, ty, swK);
+        Lto(tx, ty);
+      } else {
+        Lto(lx, ty);
+        Lto(tx, ty);
+      }
+    };
+    const zigzag = function (runList, outerSide) {
+      const xDropAt = function (R) {
+        return outerSide === 'R' ? R.xR - padFlow + flowMarginEsc : R.xL + padFlow - flowMarginEsc;
+      };
+      for (let i = 0; i < runList.length; i++) {
+        const R = runList[i];
+        const Rn = i < runList.length - 1 ? runList[i + 1] : null;
+        const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+        const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+        ortho(xS, R.y);
+        ortho(xE, R.y);
+        if (Rn) {
+          const xDrop = xDropAt(R);
+          const xNextS = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
+          ortho(xDrop, R.y);
+          ortho(xDrop, Rn.y);
+          ortho(xNextS, Rn.y);
+        }
+      }
+    };
+    const drainToTank = function (xFrom, yFrom, xLeg, xTankX) {
+      ortho(xLeg, yFrom);
+      const yBase = ladderBot + 8;
+      ortho(xLeg, yBase);
+      ortho(xTankX, yBase);
+      ortho(xTankX, yInlet);
+    };
+    return { path: function () {
+      return d;
+    }, ortho: ortho, zigzag: zigzag, drainToTank: drainToTank, Mto: Mto, Lto: Lto, set: set };
   };
-  const nftEscFaceInnerX = function (R, face) {
+
+  const faceInnerX = function (R, face) {
     return face === 'L' ? R.xR - padFlow : R.xL + padFlow;
   };
-  const nftEscFaceOuterX = function (R, face) {
+  const faceOuterX = function (R, face) {
     return face === 'L' ? R.xL + padFlow : R.xR - padFlow;
   };
-  const nftEscRouteEndForReturn = function (R, face, towardCenter) {
-    orthoKneeEsc(towardCenter ? nftEscFaceInnerX(R, face) : nftEscFaceOuterX(R, face), R.y);
+  const exitEndX = function (R, face, towardCenter) {
+    return towardCenter ? faceInnerX(R, face) : faceOuterX(R, face);
   };
-  const nftEscDrainToTank = function (xLeg, xTankX) {
-    orthoKneeEsc(xLeg, ly);
-    const yBase = ladderBot + 8;
-    orthoKneeEsc(xLeg, yBase);
-    orthoKneeEsc(xTankX, yBase);
-    orthoKneeEsc(xTankX, yInlet);
-  };
+
+  let flowSupplyD = 'M ' + fqPathEsc(xPump) + ' ' + fqPathEsc(yPump);
+  let flowReturnD = '';
 
   if (runs.length) {
     if (car === 2) {
@@ -2788,56 +2803,69 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const runsR = runs.slice(nv);
       const yManifold = yEscManifold2;
       const retAlCentro = !odd2;
-
-      orthoKneeEsc(xPump, yPump);
-      orthoKneeEsc(xTankFeed, yPump);
-      orthoKneeEsc(xTankFeed, yOutlet);
-      orthoKneeEsc(xSupplyRiser, yOutlet);
-      orthoKneeEsc(xSupplyRiser, yManifold);
-
+      const sup = makeNftFlowWriter(flowSupplyD);
+      sup.set(xPump, yPump);
+      sup.ortho(xTankFeed, yPump);
+      sup.ortho(xTankFeed, yOutlet);
+      sup.ortho(xSupplyRiser, yOutlet);
+      sup.ortho(xSupplyRiser, yManifold);
       const R0L = runsL[0];
-      orthoKneeEsc(nftEscFaceInnerX(R0L, 'L'), yManifold);
-      orthoKneeEsc(nftEscFaceInnerX(R0L, 'L'), R0L.y);
-      orthoKneeEsc(nftEscFaceOuterX(R0L, 'L'), R0L.y);
-      nftEscAppendRunsZigzag(runsL, 'L');
+      sup.ortho(faceInnerX(R0L, 'L'), yManifold);
+      sup.ortho(faceInnerX(R0L, 'L'), R0L.y);
+      sup.ortho(faceOuterX(R0L, 'L'), R0L.y);
+      sup.zigzag(runsL, 'L');
+      flowSupplyD = sup.path();
+
+      const retL = makeNftFlowWriter('');
       const RnL = runsL[nv - 1];
-      nftEscRouteEndForReturn(RnL, 'L', retAlCentro);
-      if (retAlCentro) {
-        nftEscDrainToTank(cx, xTankReturnCenter);
-      } else {
-        nftEscDrainToTank(nftEscFaceOuterX(RnL, 'L'), xTankReturnL);
-      }
+      const xEndL = exitEndX(RnL, 'L', retAlCentro);
+      retL.Mto(xEndL, RnL.y);
+      retL.set(xEndL, RnL.y);
+      retL.drainToTank(xEndL, RnL.y, retAlCentro ? cx : faceOuterX(RnL, 'L'), retAlCentro ? xTankReturnCenter : xTankReturnL);
+      flowReturnD = retL.path();
 
-      flowD += ' M ' + fqPathEsc(xSupplyRiser) + ' ' + fqPathEsc(yManifold);
-      lx = xSupplyRiser;
-      ly = yManifold;
-
+      const supR = makeNftFlowWriter('');
+      supR.Mto(xSupplyRiser, yManifold);
+      supR.set(xSupplyRiser, yManifold);
       const R0R = runsR[0];
-      orthoKneeEsc(nftEscFaceInnerX(R0R, 'R'), yManifold);
-      orthoKneeEsc(nftEscFaceInnerX(R0R, 'R'), R0R.y);
-      orthoKneeEsc(nftEscFaceOuterX(R0R, 'R'), R0R.y);
-      nftEscAppendRunsZigzag(runsR, 'R');
+      supR.ortho(faceInnerX(R0R, 'R'), yManifold);
+      supR.ortho(faceInnerX(R0R, 'R'), R0R.y);
+      supR.ortho(faceOuterX(R0R, 'R'), R0R.y);
+      supR.zigzag(runsR, 'R');
+      flowSupplyD += supR.path();
+
+      const retR = makeNftFlowWriter('');
       const RnR = runsR[nv - 1];
-      nftEscRouteEndForReturn(RnR, 'R', retAlCentro);
-      if (retAlCentro) {
-        nftEscDrainToTank(cx, xTankReturnCenter);
-      } else {
-        nftEscDrainToTank(nftEscFaceOuterX(RnR, 'R'), xTankReturnR);
-      }
+      const xEndR = exitEndX(RnR, 'R', retAlCentro);
+      retR.Mto(xEndR, RnR.y);
+      retR.set(xEndR, RnR.y);
+      retR.drainToTank(xEndR, RnR.y, retAlCentro ? cx : faceOuterX(RnR, 'R'), retAlCentro ? xTankReturnCenter : xTankReturnR);
+      flowReturnD += retR.path();
     } else {
       const backX = cx + 44;
-      orthoKneeEsc(xTankFeed, yPump);
-      orthoKneeEsc(xTankFeed, yOutlet);
-      orthoKneeEsc(oddEsc ? xLegDrainL : xLegSupplyL, yOutlet);
-      orthoKneeEsc(oddEsc ? xLegDrainL : xLegSupplyL, runs[0].y);
-      const xIn0 = runs[0].rtl ? runs[0].xR - padFlow : runs[0].xL + padFlow;
-      orthoKneeEsc(xIn0, runs[0].y);
-      nftEscAppendRunsZigzag(runs, 'L');
+      const sup1 = makeNftFlowWriter(flowSupplyD);
+      sup1.set(xPump, yPump);
+      sup1.ortho(xTankFeed, yPump);
+      sup1.ortho(xTankFeed, yOutlet);
+      sup1.ortho(xLegSupplyL, yOutlet);
+      sup1.ortho(xLegSupplyL, runs[0].y);
+      const R0 = runs[0];
+      sup1.ortho(faceInnerX(R0, 'L'), R0.y);
+      sup1.ortho(faceOuterX(R0, 'L'), R0.y);
+      sup1.zigzag(runs, 'L');
+      flowSupplyD = sup1.path();
+
+      const Rn = runs[nv - 1];
+      const xExit1 = Rn.rtl ? Rn.xL + padFlow : Rn.xR - padFlow;
+      const ret1 = makeNftFlowWriter('');
+      ret1.Mto(xExit1, Rn.y);
+      ret1.set(xExit1, Rn.y);
       if (oddEsc) {
-        nftEscDrainToTank(backX + 8, xTankReturn);
+        ret1.drainToTank(xExit1, Rn.y, backX + 8, xTankReturn);
       } else {
-        nftEscDrainToTank(xLegReturnEven, xTankReturn);
+        ret1.drainToTank(xExit1, Rn.y, xLegReturnEven, xTankReturn);
       }
+      flowReturnD = ret1.path();
     }
   }
 
@@ -2850,7 +2878,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '" cy="' +
       yOutlet +
       '" r="5.5" fill="' +
-      flowColEsc +
+      F_SUP +
       '" stroke="#fef3c7" stroke-width="1.4"/>' +
       (odd2
         ? '<circle cx="' +
@@ -2858,21 +2886,21 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           '" cy="' +
           yInlet +
           '" r="5.5" fill="' +
-          flowColEsc +
+          F_RET +
           '" stroke="#fef3c7" stroke-width="1.4"/>' +
           '<circle cx="' +
           xTankReturnR +
           '" cy="' +
           yInlet +
           '" r="5.5" fill="' +
-          flowColEsc +
+          F_RET +
           '" stroke="#fef3c7" stroke-width="1.4"/>'
         : '<circle cx="' +
           xTankReturnCenter +
           '" cy="' +
           yInlet +
           '" r="5.5" fill="' +
-          flowColEsc +
+          F_RET +
           '" stroke="#fef3c7" stroke-width="1.4"/>') +
       '</g>';
   }
@@ -2923,12 +2951,13 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '<line x1="' + (cx - baseHalf - 10) + '" y1="' + ladderBot + '" x2="' + backX + '" y2="' + ladderBot + '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.9"/>';
   }
 
+  const flowMarkEsc =
+    typeof nftSvgFlowMarkerDefs === 'function' ? nftSvgFlowMarkerDefs('Esc' + suf) : { supplyId: 'a', returnId: 'b', defs: '' };
+  let flowLegendEsc =
+    typeof nftSvgFlowLegend === 'function' ? nftSvgFlowLegend(12, Math.max(8, topPad - 6)) : '';
   let back =
-    '<path d="' +
-    flowD +
-    '" stroke="' +
-    flowGhostEsc +
-    '" stroke-width="5" fill="none" opacity="0.62" stroke-linecap="round" stroke-linejoin="round"/>';
+    '<path d="' + flowSupplyD + '" stroke="' + F_SUP + '" stroke-width="5" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<path d="' + flowReturnD + '" stroke="' + F_RET + '" stroke-width="5" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
 
   const nRunsEsc = runs.length;
   const tLabelFsEsc = compactEsc ? 14.25 : 16.5;
@@ -2969,11 +2998,31 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   const nftFlowAnim = torreSvgAnimacionesActivas();
-  let flowLayer =
-    '<path d="' + flowD + '" ' + flowSt + ' stroke-width="3.4" opacity="0.98"' +
-    (nftFlowAnim
+  const animEsc =
+    nftFlowAnim
       ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
-      : '/>');
+      : '/>';
+  let flowLayer =
+    '<path class="nft-flow-supply" d="' +
+    flowSupplyD +
+    '" stroke="' +
+    F_SUP +
+    '" fill="none" ' +
+    flowDashSup +
+    ' stroke-width="3.4" opacity="0.98" marker-end="url(#' +
+    flowMarkEsc.supplyId +
+    ')"' +
+    animEsc +
+    '<path class="nft-flow-return" d="' +
+    flowReturnD +
+    '" stroke="' +
+    F_RET +
+    '" fill="none" ' +
+    flowDashRet +
+    ' stroke-width="3.4" opacity="0.98" marker-end="url(#' +
+    flowMarkEsc.returnId +
+    ')"' +
+    animEsc;
 
   let channelLabels = '';
   const plantTopPadEsc = compactEsc ? 10 : 13;
@@ -3147,8 +3196,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
         '" stop-opacity="' +
         HC_DIAG.nft.waterOp1 +
         '"/></linearGradient>') +
+    flowMarkEsc.defs +
     '</defs>' +
     escViewLabel +
+    flowLegendEsc +
     frame +
     back +
     channels +
