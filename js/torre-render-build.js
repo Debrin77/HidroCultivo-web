@@ -307,6 +307,7 @@ function torreOnCestaActivada(n, c) {
         return;
       }
       aplicarCultivoACestaUna(n, c, v);
+      torreDiagramHuecoFocus = { nivel: n, cesta: c };
       saveState();
       renderTorre();
       updateTorreStats();
@@ -333,13 +334,16 @@ function torreOnCestaActivada(n, c) {
         }
         torreCestasMultiSel.add(k);
       }
+      torreDiagramHuecoFocus = { nivel: n, cesta: c };
       actualizarBarraMultiSel();
       mostrarBarraSeleccionCesta(n, c);
       renderTorre();
     }
   } else {
+    torreDiagramHuecoFocus = { nivel: n, cesta: c };
     mostrarBarraSeleccionCesta(n, c);
     openModal(n, c);
+    renderTorre();
   }
 }
 

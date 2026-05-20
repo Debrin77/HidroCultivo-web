@@ -108,7 +108,16 @@ function initApp() {
   reconciliarSlotTorreActivaAntesDeCargar();
   cargarEstadoTorre(state.torreActiva || 0);
   applyBootCollapsedUI();
-  renderTorre();
+  try {
+    renderTorre();
+  } catch (eRenderTorre) {
+    try {
+      console.error('renderTorre en initApp', eRenderTorre);
+    } catch (_) {}
+  }
+  try {
+    if (typeof renderTorreMedirDiagram === 'function') renderTorreMedirDiagram();
+  } catch (_) {}
   updateTorreStats();
   updateDashboard();
   initConfigUI();

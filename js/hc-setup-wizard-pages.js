@@ -92,12 +92,13 @@ function nftSvgBurbujaAnimada(cx, ySuperficie, yPiedra, bi, fill) {
   );
 }
 
-/** Bomba de aire en suelo (misma base que depósito) + manguera a piedra difusora. */
-function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, piedraX, piedraY, P) {
+/** Bomba de aire en suelo, al lado de la piedra difusora (misma banda lateral). */
+function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, piedraX, piedraY, P, canvasW) {
   const sueloY = tankY + tankH;
   const pumpW = 28;
   const pumpH = 22;
-  const pumpX = Math.max(8, tx - pumpW - 12);
+  const Wlim = canvasW != null && Number.isFinite(canvasW) ? canvasW : tx + tankW + 48;
+  const pumpX = Math.min(Wlim - pumpW - 4, piedraX + 14);
   const pumpY = sueloY - pumpH;
   let s = '';
   s +=
@@ -121,18 +122,18 @@ function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, piedraX, piedraY, P) {
     (pumpH - 8) +
     '" rx="2" fill="#475569" opacity="0.9"/>';
   const hoseY = sueloY - 4;
-  const hoseStartX = pumpX + pumpW;
+  const hoseMidX = (pumpX + piedraX) / 2;
   s +=
     '<path d="M ' +
-    hoseStartX +
+    pumpX +
     ' ' +
     (pumpY + 7) +
     ' L ' +
-    (hoseStartX + 8) +
+    hoseMidX +
     ' ' +
     (pumpY + 7) +
     ' L ' +
-    (hoseStartX + 8) +
+    hoseMidX +
     ' ' +
     hoseY +
     ' L ' +
@@ -231,9 +232,9 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const flowCol = isParedSerp ? '#b45309' : P.flow;
   const flowGhostCol = isParedSerp ? '#d97706' : P.flowGhost || '#cbd5e1';
   const flowW = isParedSerp ? 3.4 : 2.5;
-  const chStroke = isParedSerp ? '#92400e' : P.canalStroke || '#0369a1';
-  const chGrad0 = isParedSerp ? '#e8c9a0' : P.canalGrad0;
-  const chGrad1 = isParedSerp ? '#c4a574' : P.canalGrad1;
+  const chStroke = P.canalStroke || '#0369a1';
+  const chGrad0 = P.canalGrad0;
+  const chGrad1 = P.canalGrad1;
   const flowSt = 'stroke="' + flowCol + '" fill="none" ' + flowDash;
 
   /**
@@ -280,10 +281,19 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const endsRightSerp = (nCh - 1) % 2 === 0;
   const xEndLast = endsRightSerp ? xR - padFlow : xL + padFlow;
   flowD += ' L ' + xEndLast + ' ' + yLast;
-  flowD += ' L ' + xReturnRiser + ' ' + yLast;
-  let yDuctRun = yLast + tubeH / 2 + 12;
-  if (yDuctRun > tankY - 6) yDuctRun = tankY - 8;
-  flowD += ' L ' + xReturnRiser + ' ' + yDuctRun;
+  const returnSep = isParedSerp ? 28 : 12;
+  let yDuctRun = yLast + tubeH / 2 + returnSep;
+  if (yDuctRun > tankY - 10) yDuctRun = tankY - 12;
+  if (isParedSerp) {
+    const xJog =
+      endsRightSerp ? Math.min(xReturnRiser, xR + flowMargin + 14) : Math.max(xFeedRiser, xL - flowMargin - 14);
+    flowD += ' L ' + xJog + ' ' + yLast;
+    flowD += ' L ' + xJog + ' ' + yDuctRun;
+    flowD += ' L ' + xReturnRiser + ' ' + yDuctRun;
+  } else {
+    flowD += ' L ' + xReturnRiser + ' ' + yLast;
+    flowD += ' L ' + xReturnRiser + ' ' + yDuctRun;
+  }
   flowD += ' L ' + xTankReturn + ' ' + yDuctRun;
   flowD += ' L ' + xTankReturn + ' ' + yInlet;
 
@@ -333,7 +343,21 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
         xR +
         '" y2="' +
         (yc + 2) +
-        '" stroke="#c4a574" stroke-width="1.2" opacity="0.7" pointer-events="none"/>';
+        '" stroke="' +
+        chGrad1 +
+        '" stroke-width="1.3" opacity="0.85" pointer-events="none"/>';
+      channels +=
+        '<line x1="' +
+        xL +
+        '" y1="' +
+        (yc + tubeH - 3) +
+        '" x2="' +
+        xR +
+        '" y2="' +
+        (yc + tubeH - 3) +
+        '" stroke="' +
+        chGrad0 +
+        '" stroke-width="1.1" opacity="0.55" pointer-events="none"/>';
     }
   }
 
@@ -482,7 +506,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   if (showDifusor) {
     const ax = tx + tankW - 22;
     const ay = tankY + tankH - 16;
-    tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, ax, ay, P);
+    tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, ax, ay, P, Wsvg);
   }
 
   let flowTankPorts = '';

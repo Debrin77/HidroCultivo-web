@@ -744,7 +744,9 @@ function closeModal(e) {
   if (!e || e.target === mo) {
     mo.classList.remove('open');
     editingCesta = null;
+    torreDiagramHuecoFocus = null;
     a11yDialogClosed(mo);
+    if (typeof renderTorre === 'function') renderTorre();
   }
 }
 

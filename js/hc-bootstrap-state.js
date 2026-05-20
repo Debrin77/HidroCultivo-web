@@ -8,6 +8,8 @@
 // Variables globales — declaradas ANTES de loadState
 let currentTab = 'inicio';
 let editingCesta = null;
+/** Hueco/maceta tocado en el esquema (emoji visible hasta cerrar modal o cambiar). */
+let torreDiagramHuecoFocus = null;
 /** 'editar' = abrir ficha · 'asignar' = colocar cultivo en cestas (tras elegirlo) */
 let torreInteraccionModo = 'editar';
 /** false = por defecto: marcar varias cestas y «Aplicar a selección». true = cada toque aplica ya. */

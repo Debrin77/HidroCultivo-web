@@ -1121,9 +1121,11 @@
     var cultEmoji =
       cult && cult.emoji
         ? String(cult.emoji)
-        : est && typeof getEmoji === 'function'
-          ? getEmoji(est)
-          : '';
+        : dat.variedad && typeof cultivoEmoji === 'function'
+          ? cultivoEmoji(cult)
+          : est && typeof getEmoji === 'function'
+            ? getEmoji(est)
+            : '';
     var diasBase = typeof DIAS_COSECHA !== 'undefined' && DIAS_COSECHA[dat.variedad] ? DIAS_COSECHA[dat.variedad] : 50;
     var diasT =
       typeof torreGetDiasCosechaObjetivo === 'function'
@@ -1131,16 +1133,22 @@
         : diasBase;
     var pct = dat.variedad ? Math.min(100, Math.round((dias / diasT) * 100)) : 0;
     var isSelected =
-      typeof window.editingCesta !== 'undefined' &&
+      typeof editingCesta !== 'undefined' &&
       editingCesta &&
       editingCesta.nivel === n &&
       editingCesta.cesta === c;
+    var isFocused =
+      typeof torreDiagramHuecoFocus !== 'undefined' &&
+      torreDiagramHuecoFocus &&
+      torreDiagramHuecoFocus.nivel === n &&
+      torreDiagramHuecoFocus.cesta === c;
     var multiKey = n + ',' + c;
     var isMulti =
       typeof torreInteraccionModo !== 'undefined' &&
       torreInteraccionModo === 'asignar' &&
       typeof torreCestasMultiSel !== 'undefined' &&
       torreCestasMultiSel.has(multiKey);
+    var tieneCultivo = !!(dat && dat.variedad);
     var fotos = (dat.fotos || []).filter(function (f) {
       return f && f.data;
     });
@@ -1186,6 +1194,9 @@
       '" role="button" tabindex="0" aria-label="' +
       aria +
       '">';
+    var potFill = tieneCultivo ? '#fffbeb' : HC_ILLO.pot;
+    var potStroke = tieneCultivo ? stroke : HC_ILLO.ink;
+    var potSw = tieneCultivo ? 2 : 2.4;
     out +=
       '<ellipse cx="' +
       f1(cx) +
@@ -1196,10 +1207,12 @@
       '" ry="' +
       f1(ry) +
       '" fill="' +
-      HC_ILLO.pot +
+      potFill +
       '" stroke="' +
-      HC_ILLO.ink +
-      '" stroke-width="2.4"/>';
+      potStroke +
+      '" stroke-width="' +
+      potSw +
+      '"/>';
     var mx = cx - rx * 0.55;
     var my0 = cy - ry * 0.35;
     var my1 = cy + ry * 0.35;
@@ -1249,7 +1262,7 @@
         f1(ry + 4) +
         '" fill="none" stroke="#f59e0b" stroke-width="2.4" stroke-dasharray="4 3"/>';
     }
-    if (isSelected) {
+    if (isSelected || isFocused) {
       out +=
         '<ellipse cx="' +
         f1(cx) +
@@ -1321,10 +1334,13 @@
         (onGreyLid ? '0.95' : '0.55') +
         '"/>';
     }
-    var textoEnMaceta = !o.sinTexto || isSelected || isMulti;
+    var textoEnMaceta = !o.sinTexto || isSelected || isMulti || isFocused || tieneCultivo;
     if (textoEnMaceta) {
       if (cultEmoji) {
-        var emFs = Math.min(16, Math.max(10, rx * 0.95));
+        var emFs = tieneCultivo ? Math.min(14, Math.max(9, rx * 0.82)) : Math.min(16, Math.max(10, rx * 0.95));
+        if (isSelected || isMulti || isFocused) {
+          emFs = Math.min(22, Math.max(14, rx * 1.12));
+        }
         out +=
           '<text x="' +
           f1(cx) +
@@ -1332,7 +1348,7 @@
           f1(cy + (topView ? 1 : -2)) +
           '" text-anchor="middle" dominant-baseline="central" font-size="' +
           emFs +
-          '" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,sans-serif">' +
+          '" font-family="Segoe UI Emoji,Apple Color Emoji,Noto Color Emoji,sans-serif" pointer-events="none">' +
           cultEmoji +
           '</text>';
       }
@@ -2329,9 +2345,7 @@
   };
 
   window.hcIlloGenerarSVGTorre = function () {
-    if (typeof buildTorreDiagramSvg === 'function') {
-      return buildTorreDiagramSvg();
-    }
+    /* No llamar buildTorreDiagramSvg: torre-diagram.js ya delega aquí (bucle infinito). */
     var cfg = (typeof state !== 'undefined' ? state.configTorre : {}) || {};
     var numNiveles = cfg.numNiveles || 5;
     var numCestas = cfg.numCestas || 5;
