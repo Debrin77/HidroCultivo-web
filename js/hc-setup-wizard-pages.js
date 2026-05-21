@@ -203,6 +203,115 @@ function nftBuildReturnPathFromExit(p) {
   return '';
 }
 
+/**
+ * Capas SVG de flujo NFT unificadas (ghost + trazos + leyenda + puertos) para todos los montajes.
+ * @param {{ supplyD: string, returnD: string, ports?: object }} flowPaths
+ */
+function nftHydraulicFlowSvgBundle(flowPaths, suf, opts) {
+  const o = opts || {};
+  const supplyD = flowPaths.supplyD || '';
+  const returnD = flowPaths.returnD || '';
+  const ports = flowPaths.ports;
+  const flowW = o.strokeWidth != null ? o.strokeWidth : 3.4;
+  const legendX = o.legendX != null ? o.legendX : 12;
+  const legendY = o.legendY != null ? o.legendY : 8;
+  const showLegend = o.showLegend !== false;
+  const showPorts = o.showPorts !== false && ports;
+  const mark = nftSvgFlowMarkerDefs(suf);
+  const pathGhost =
+    ' stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.45" stroke-width="5"';
+  const flowDashSupply = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowDashRet = 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
+  const anim =
+    o.animate !== false && typeof torreSvgAnimacionesActivas === 'function' && torreSvgAnimacionesActivas();
+  const animTag = anim
+    ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
+    : '/>';
+
+  let back =
+    '<path d="' + supplyD + '" stroke="' + NFT_FLOW_SUPPLY + '"' + pathGhost + '/>' +
+    '<path d="' + returnD + '" stroke="' + NFT_FLOW_RETURN + '"' + pathGhost + '/>';
+  let flowLayer =
+    '<path class="nft-flow-supply" d="' +
+    supplyD +
+    '" stroke="' +
+    NFT_FLOW_SUPPLY +
+    '" fill="none" ' +
+    flowDashSupply +
+    ' stroke-width="' +
+    flowW +
+    '" opacity="0.98" marker-end="url(#' +
+    mark.supplyId +
+    ')"' +
+    animTag +
+    '<path class="nft-flow-return" d="' +
+    returnD +
+    '" stroke="' +
+    NFT_FLOW_RETURN +
+    '" fill="none" ' +
+    flowDashRet +
+    ' stroke-width="' +
+    flowW +
+    '" opacity="0.98" marker-end="url(#' +
+    mark.returnId +
+    ')"' +
+    animTag;
+  let flowLegend = showLegend ? nftSvgFlowLegend(legendX, legendY) : '';
+  let flowTankPorts = '';
+  if (showPorts) {
+    flowTankPorts =
+      '<g class="nft-flow-ports" pointer-events="none">' +
+      '<circle cx="' +
+      ports.xFeed +
+      '" cy="' +
+      ports.yOutlet +
+      '" r="5.5" fill="' +
+      NFT_FLOW_SUPPLY +
+      '" stroke="#fef3c7" stroke-width="1.4"/>' +
+      '<circle cx="' +
+      ports.xReturn +
+      '" cy="' +
+      ports.yInlet +
+      '" r="5.5" fill="' +
+      NFT_FLOW_RETURN +
+      '" stroke="#fef3c7" stroke-width="1.4"/>' +
+      (o.portTicks !== false
+        ? '<path d="M ' +
+          (ports.xFeed - 7) +
+          ' ' +
+          ports.yOutlet +
+          ' L ' +
+          ports.xFeed +
+          ' ' +
+          ports.yOutlet +
+          ' L ' +
+          (ports.xFeed + 7) +
+          ' ' +
+          ports.yOutlet +
+          '" stroke="' +
+          NFT_FLOW_SUPPLY +
+          '" stroke-width="2" fill="none" opacity="0.9"/>' +
+          '<path d="M ' +
+          (ports.xReturn - 7) +
+          ' ' +
+          ports.yInlet +
+          ' L ' +
+          ports.xReturn +
+          ' ' +
+          ports.yInlet +
+          ' L ' +
+          (ports.xReturn + 7) +
+          ' ' +
+          ports.yInlet +
+          '" stroke="' +
+          NFT_FLOW_RETURN +
+          '" stroke-width="2" fill="none" opacity="0.9"/>'
+        : '') +
+      '</g>';
+  }
+  return { back: back, flowLayer: flowLayer, flowLegend: flowLegend, flowTankPorts: flowTankPorts, flowMark: mark };
+}
+
 /** Puertos depósito NFT (pared / mesa / escalera 1 cara): impar = izq. abajo + der. arriba; par = ambos a la izquierda. */
 function nftSvgTankPorts(tx, tankW, tankY, tankH, nTubos) {
   const odd = (parseInt(String(nTubos), 10) || 0) % 2 === 1;
@@ -505,17 +614,17 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const yOutlet = tankPorts.yOutlet;
   const yInlet = tankPorts.yInlet;
 
-  const flowMark = nftSvgFlowMarkerDefs(suf);
-  const flowDashSupply = 'stroke-dasharray="11 9"';
-  const flowDashReturn = 'stroke-dasharray="8 7"';
-  const pathGhost =
-    ' stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.45" stroke-width="5"';
-
-  let back = '';
-  back +=
-    '<path d="' + flowSupplyD + '" stroke="' + NFT_FLOW_SUPPLY + '"' + pathGhost + '/>';
-  back +=
-    '<path d="' + flowReturnD + '" stroke="' + NFT_FLOW_RETURN + '"' + pathGhost + '/>';
+  const flowSvg =
+    typeof nftHydraulicFlowSvgBundle === 'function'
+      ? nftHydraulicFlowSvgBundle(flowPaths, suf, {
+          legendX: 12,
+          legendY: Math.max(8, topPad - 6),
+          strokeWidth: flowW,
+        })
+      : null;
+  const flowMark = flowSvg ? flowSvg.flowMark : nftSvgFlowMarkerDefs(suf);
+  let back = flowSvg ? flowSvg.back : '';
+  let flowLegend = flowSvg ? flowSvg.flowLegend : nftSvgFlowLegend(12, Math.max(8, topPad - 6));
 
   let channels = '';
   const cxTubeSerp = (xL + xR) / 2;
@@ -567,36 +676,8 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       '" stroke-width="1.1" opacity="0.55" pointer-events="none"/>';
   }
 
-  const nftFlowAnim = torreSvgAnimacionesActivas();
-  const animTag = nftFlowAnim
-    ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
-    : '/>';
-  let flowLayer =
-    '<path class="nft-flow-supply" d="' +
-    flowSupplyD +
-    '" stroke="' +
-    NFT_FLOW_SUPPLY +
-    '" fill="none" ' +
-    flowDashSupply +
-    ' stroke-width="' +
-    flowW +
-    '" opacity="0.98" marker-end="url(#' +
-    flowMark.supplyId +
-    ')"' +
-    animTag +
-    '<path class="nft-flow-return" d="' +
-    flowReturnD +
-    '" stroke="' +
-    NFT_FLOW_RETURN +
-    '" fill="none" ' +
-    flowDashReturn +
-    ' stroke-width="' +
-    flowW +
-    '" opacity="0.98" marker-end="url(#' +
-    flowMark.returnId +
-    ')"' +
-    animTag;
-  let flowLegend = nftSvgFlowLegend(12, Math.max(8, topPad - 6));
+  let flowLayer = flowSvg ? flowSvg.flowLayer : '';
+  let flowTankPorts = flowSvg ? flowSvg.flowTankPorts : '';
   const spanTube = xR - xL - 2 * padFlow;
   const hr = Math.max(
     dispLayout === 'pared' ? 6.2 : 5.6,
@@ -738,55 +819,6 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   if (showDifusor) {
     tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, P);
   }
-
-  let flowTankPorts = '';
-  flowTankPorts +=
-      '<g class="nft-flow-ports" pointer-events="none">' +
-      '<circle cx="' +
-      xTankFeed +
-      '" cy="' +
-      yOutlet +
-      '" r="5.5" fill="' +
-      NFT_FLOW_SUPPLY +
-      '" stroke="#fef3c7" stroke-width="1.4"/>' +
-      '<circle cx="' +
-      xTankReturn +
-      '" cy="' +
-      yInlet +
-      '" r="5.5" fill="' +
-      NFT_FLOW_RETURN +
-      '" stroke="#fef3c7" stroke-width="1.4"/>' +
-      '<path d="M ' +
-      (xTankFeed - 7) +
-      ' ' +
-      yOutlet +
-      ' L ' +
-      xTankFeed +
-      ' ' +
-      yOutlet +
-      ' L ' +
-      (xTankFeed + 7) +
-      ' ' +
-      yOutlet +
-      '" stroke="' +
-      NFT_FLOW_RETURN +
-      '" stroke-width="2" fill="none" opacity="0.9"/>' +
-      '<path d="M ' +
-      (xTankReturn - 7) +
-      ' ' +
-      yInlet +
-      ' L ' +
-      xTankReturn +
-      ' ' +
-      yInlet +
-      ' L ' +
-      (xTankReturn + 7) +
-      ' ' +
-      yInlet +
-      '" stroke="' +
-      NFT_FLOW_RETURN +
-      '" stroke-width="2" fill="none" opacity="0.9"/>' +
-      '</g>';
 
   const pumpLines = '';
   let scadaCallouts = '';

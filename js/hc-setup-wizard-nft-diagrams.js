@@ -1957,219 +1957,55 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
 
   const padHuecoAlong = 8;
 
-  const F_SUP_MM = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
-  const F_RET_MM = typeof NFT_FLOW_RETURN !== 'undefined' ? NFT_FLOW_RETURN : '#16a34a';
-  const flowDashSupMM = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowDashRetMM = 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
-  const fqPath = function (v) {
-    const n = Math.round(Number(v) * 100) / 100;
-    return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
-  };
-  let supplyTailSvg = '';
-  let flowLastX = xFeedRiserMM;
-  let flowLastY = yOutletMM;
-  if (nTiers > 1 && hydSeq.length) {
-    const er = compactMesa ? 12 : 16;
-    let lx = xFeedRiserMM;
-    let ly = yOutletMM;
-    const Lto = function (x, y) {
-      supplyTailSvg += ' L ' + fqPath(x) + ' ' + fqPath(y);
-      lx = x;
-      ly = y;
-    };
-    const Arc = function (ex, ey, sw) {
-      supplyTailSvg += ' A ' + fqPath(er) + ' ' + fqPath(er) + ' 0 0 ' + sw + ' ' + fqPath(ex) + ' ' + fqPath(ey);
-      lx = ex;
-      ly = ey;
-    };
-    const orthoKnee = function (tx, ty) {
-      if (Math.abs(lx - tx) < 0.8 && Math.abs(ly - ty) < 0.8) return;
-      if (Math.abs(lx - tx) < 0.8) {
-        Lto(tx, ty);
-        return;
-      }
-      if (Math.abs(ly - ty) < 0.8) {
-        Lto(tx, ty);
-        return;
-      }
-      const sx = tx > lx ? 1 : -1;
-      const sy = ty > ly ? 1 : -1;
-      if (Math.abs(ty - ly) > er && Math.abs(tx - lx) > er) {
-        Lto(lx, ty - sy * er);
-        const swK = sx > 0 ? (sy > 0 ? 1 : 0) : sy > 0 ? 0 : 1;
-        Arc(lx + sx * er, ty, swK);
-        Lto(tx, ty);
-      } else {
-        Lto(lx, ty);
-        Lto(tx, ty);
-      }
-    };
-    for (let i = 0; i < hydSeq.length; i++) {
-      const Gc = geomByG[hydSeq[i]];
-      const Lc = mesaMultinivelHoleLayout(Gc);
-      const xC = Lc.xC;
-      const yT = Lc.yTop;
-      const yB = Lc.yBot;
-      const Gn = i + 1 < hydSeq.length ? geomByG[hydSeq[i + 1]] : null;
-      const xNext = Gn ? mesaMultinivelHoleLayout(Gn).xC : null;
-      let dir;
-      if (Gn) {
-        dir = xNext >= xC - 0.5 ? 1 : -1;
-      } else if (i > 0) {
-        const xPrev = mesaMultinivelHoleLayout(geomByG[hydSeq[i - 1]]).xC;
-        dir = xC >= xPrev - 0.5 ? 1 : -1;
-      } else {
-        dir = 1;
-      }
-      const up = i % 2 === 0;
-      const xIn = xC - dir * er;
-      const xOut = xC + dir * er;
-      const yIn = up ? yB : yT;
-      if (i === 0) {
-        Lto(xFeedRiserMM, yB);
-        Lto(xIn, yB);
-      } else {
-        const Gp = geomByG[hydSeq[i - 1]];
-        const tierJump = Gp.t !== Gc.t;
-        if (tierJump) {
-          if (Math.abs(lx - xC) > 0.8) {
-            Lto(xC, ly);
-          }
-          if (Math.abs(ly - yIn) > 0.8) {
-            Lto(xC, yIn);
-          }
-          if (Math.abs(lx - xIn) > 0.8) {
-            Lto(xIn, yIn);
-          }
-        } else {
-          orthoKnee(xIn, yIn);
-        }
-      }
-      if (up) {
-        if (dir > 0) {
-          Arc(xC, yB - er, 0);
-          Lto(xC, yT + er);
-          Arc(xOut, yT, 1);
-        } else {
-          Arc(xC, yB - er, 1);
-          Lto(xC, yT + er);
-          Arc(xOut, yT, 0);
-        }
-      } else {
-        if (dir > 0) {
-          Arc(xC, yT + er, 1);
-          Lto(xC, yB - er);
-          Arc(xOut, yB, 0);
-        } else {
-          Arc(xC, yT + er, 0);
-          Lto(xC, yB - er);
-          Arc(xOut, yB, 1);
-        }
-      }
-    }
-    flowLastX = lx;
-    flowLastY = ly;
-  } else {
-    const flowMarginMm1 = 10;
-    for (let i = 0; i < hydSeq.length; i++) {
-      const Gcur = geomByG[hydSeq[i]];
-      const H = mmShelf(Gcur);
-      const l2r = i % 2 === 0;
-      const xIn = l2r ? H.x0 : H.x1;
-      const xOut = l2r ? H.x1 : H.x0;
-      if (i === 0) {
-        supplyTailSvg += ' L ' + fqPath(xFeedRiserMM) + ' ' + fqPath(H.yC);
-        supplyTailSvg += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
-        supplyTailSvg += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
-      } else {
-        const Gprev = geomByG[hydSeq[i - 1]];
-        const P = mmShelf(Gprev);
-        const prevL2r = (i - 1) % 2 === 0;
-        const prevOut = prevL2r ? P.x1 : P.x0;
-        const xDrop = prevL2r ? P.x1 + flowMarginMm1 : P.x0 - flowMarginMm1;
-        if (Math.abs(H.yC - P.yC) > 0.5) {
-          supplyTailSvg += ' L ' + fqPath(xDrop) + ' ' + fqPath(P.yC);
-          supplyTailSvg += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
-        } else if (Math.abs(prevOut - xIn) > 0.5) {
-          supplyTailSvg += ' L ' + fqPath(xDrop) + ' ' + fqPath(H.yC);
-        }
-        if (Math.abs(prevOut - xIn) > 0.5 || Math.abs(H.yC - P.yC) <= 0.5) {
-          supplyTailSvg += ' L ' + fqPath(xIn) + ' ' + fqPath(H.yC);
-        }
-        supplyTailSvg += ' L ' + fqPath(xOut) + ' ' + fqPath(H.yC);
-      }
-    }
-    if (hydSeq.length) {
-      const Gl = geomByG[hydSeq[hydSeq.length - 1]];
-      const Hl = mmShelf(Gl);
-      const ll2r = (hydSeq.length - 1) % 2 === 0;
-      flowLastX = ll2r ? Hl.x1 : Hl.x0;
-      flowLastY = Hl.yC;
-    }
-  }
   const Glast = hydSeq.length ? geomByG[hydSeq[hydSeq.length - 1]] : null;
   const lm = Glast ? mmShelf(Glast) : { yC: topPad + tierRowH / 2, x0: xL, x1: xR, thick: 18 };
-  const retYJoin = nTiers > 1 && hydSeq.length ? flowLastY : lm.yC;
-  const xExitMM = hydSeq.length ? flowLastX : xFeedRiserMM;
-  const yExitMM = hydSeq.length ? retYJoin : lm.yC;
-  const endsRightMM =
-    hydSeq.length > 0
-      ? (hydSeq.length - 1) % 2 === 0 && nTiers <= 1
-        ? true
-        : xExitMM > (xL + xR) / 2
-      : false;
+  const hydMmSpec = {
+    kind: 'mesa_multinivel',
+    ports: portsMM,
+    xPump: xPumpMM,
+    yPump: yPump,
+    xFeedRiser: xFeedRiserMM,
+    xL: xL,
+    xR: xR,
+    flowMargin: flowMarginMM,
+    oddTubes: oddTubesMM,
+    xReturnRiser: xReturnRiserMM,
+    Wsvg: Wsvg,
+    tankY: tankY,
+    tubeH: lm.thick || (compactMesa ? 14 : 18),
+    ductDrop: compactMesa ? 12 : 16,
+    cornerRadius: 0,
+  };
+  if (nTiers > 1 && hydSeq.length) {
+    hydMmSpec.mesaColumns = {
+      hydSeq: hydSeq,
+      geomByG: geomByG,
+      layoutFn: mesaMultinivelHoleLayout,
+      er: compactMesa ? 12 : 16,
+    };
+  } else if (hydSeq.length) {
+    hydMmSpec.mesaRow = {
+      hydSeq: hydSeq,
+      geomByG: geomByG,
+      shelfFn: mmShelf,
+      flowMargin: 10,
+    };
+  }
   const hydMm =
-    typeof nftHydraulicMesaMultinivel === 'function'
-      ? nftHydraulicMesaMultinivel({
-          kind: 'mesa_multinivel',
-          ports: portsMM,
-          xPump: xPumpMM,
-          yPump: yPump,
-          xFeedRiser: xFeedRiserMM,
-          supplyTailSvg: supplyTailSvg,
-          xExit: xExitMM,
-          yExit: yExitMM,
-          xL: xL,
-          xR: xR,
-          flowMargin: flowMarginMM,
-          oddTubes: oddTubesMM,
-          xReturnRiser: xReturnRiserMM,
-          Wsvg: Wsvg,
-          tankY: tankY,
-          tubeH: lm.thick || (compactMesa ? 14 : 18),
-          ductDrop: compactMesa ? 12 : 16,
-          endsRight: endsRightMM,
+    typeof nftHydraulicMesaMultinivel === 'function' ? nftHydraulicMesaMultinivel(hydMmSpec) : { supplyD: '', returnD: '', ports: portsMM };
+  const flowPathsMm = { supplyD: hydMm.supplyD || '', returnD: hydMm.returnD || '', ports: portsMM };
+  const flowSvgMm =
+    typeof nftHydraulicFlowSvgBundle === 'function'
+      ? nftHydraulicFlowSvgBundle(flowPathsMm, 'MM' + suf, {
+          legendX: 12,
+          legendY: Math.max(8, topPad - 6),
+          strokeWidth: 3.4,
         })
-      : { supplyD: '', returnD: '' };
-  const flowSupplyD = hydMm.supplyD || '';
-  const flowReturnD = hydMm.returnD || '';
-
-  const flowMarkMM =
-    typeof nftSvgFlowMarkerDefs === 'function' ? nftSvgFlowMarkerDefs('MM' + suf) : { supplyId: 'a', returnId: 'b', defs: '' };
-  let flowLegendMM =
-    typeof nftSvgFlowLegend === 'function' ? nftSvgFlowLegend(12, Math.max(8, topPad - 6)) : '';
-
-  let back =
-    '<path d="' + flowSupplyD + '" stroke="' + F_SUP_MM + '" stroke-width="5" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<path d="' + flowReturnD + '" stroke="' + F_RET_MM + '" stroke-width="5" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
-
-  let flowTankPortsMM =
-    '<g class="nft-flow-ports" pointer-events="none">' +
-    '<circle cx="' +
-    xTankFeedMM +
-    '" cy="' +
-    yOutletMM +
-    '" r="5.5" fill="' +
-    F_SUP_MM +
-    '" stroke="#fef3c7" stroke-width="1.4"/>' +
-    '<circle cx="' +
-    xTankReturnMM +
-    '" cy="' +
-    yInletMM +
-    '" r="5.5" fill="' +
-    F_RET_MM +
-    '" stroke="#fef3c7" stroke-width="1.4"/>' +
-    '</g>';
+      : null;
+  const flowMarkMM = flowSvgMm ? flowSvgMm.flowMark : { supplyId: 'a', returnId: 'b', defs: '' };
+  let back = flowSvgMm ? flowSvgMm.back : '';
+  let flowLegendMM = flowSvgMm ? flowSvgMm.flowLegend : '';
+  let flowTankPortsMM = flowSvgMm ? flowSvgMm.flowTankPorts : '';
 
   let channels = '';
   const peNoneCh = interactive ? ' pointer-events="none"' : '';
@@ -2248,32 +2084,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     }
   }
 
-  const nftFlowAnim = torreSvgAnimacionesActivas();
-  const animMM =
-    nftFlowAnim
-      ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
-      : '/>';
-  let flowLayer =
-    '<path class="nft-flow-supply" d="' +
-    flowSupplyD +
-    '" stroke="' +
-    F_SUP_MM +
-    '" fill="none" ' +
-    flowDashSupMM +
-    ' stroke-width="3.4" opacity="0.98" marker-end="url(#' +
-    flowMarkMM.supplyId +
-    ')"' +
-    animMM +
-    '<path class="nft-flow-return" d="' +
-    flowReturnD +
-    '" stroke="' +
-    F_RET_MM +
-    '" fill="none" ' +
-    flowDashRetMM +
-    ' stroke-width="3.4" opacity="0.98" marker-end="url(#' +
-    flowMarkMM.returnId +
-    ')"' +
-    animMM;
+  let flowLayer = flowSvgMm ? flowSvgMm.flowLayer : '';
   const slotDenom = Math.max(1, huecosN - 1);
   const holeNumFsMM = nGeomMM >= 14 ? 9.5 : nGeomMM >= 8 ? 10 : 10.75;
   let plants = '';
@@ -2772,8 +2583,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
   const F_RET = typeof NFT_FLOW_RETURN !== 'undefined' ? NFT_FLOW_RETURN : '#16a34a';
-  const flowDashSup = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowDashRet = 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
   const chGrad0Esc = HC_DIAG.nft.canalGrad0;
   const chGrad1Esc = HC_DIAG.nft.canalGrad1;
   const chColEsc = HC_DIAG.nft.canalStroke;
@@ -2814,8 +2623,28 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           ports: escPorts,
         })
       : { supplyD: '', returnD: '' };
-  const flowSupplyD = hydEsc.supplyD || '';
-  const flowReturnD = hydEsc.returnD || '';
+  const flowPathsEsc = {
+    supplyD: hydEsc.supplyD || '',
+    returnD: hydEsc.returnD || '',
+    ports: escPorts || {
+      xFeed: xTankFeed,
+      xReturn: xTankReturn,
+      yOutlet: yOutlet,
+      yInlet: yInlet,
+    },
+  };
+  const flowSvgEsc =
+    typeof nftHydraulicFlowSvgBundle === 'function'
+      ? nftHydraulicFlowSvgBundle(flowPathsEsc, 'Esc' + suf, {
+          legendX: 12,
+          legendY: Math.max(8, hdrEscDraw.topPadMin - 6),
+          strokeWidth: 3.4,
+          showPorts: false,
+        })
+      : null;
+  const flowMarkEsc = flowSvgEsc ? flowSvgEsc.flowMark : { supplyId: 'a', returnId: 'b', defs: '' };
+  let flowLegendEsc = flowSvgEsc ? flowSvgEsc.flowLegend : '';
+  let back = flowSvgEsc ? flowSvgEsc.back : '';
 
   let flowTankPortsEsc = '';
   if (esc2Cara) {
@@ -2917,14 +2746,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '<line x1="' + (cx - baseHalf - 10) + '" y1="' + ladderBot + '" x2="' + backX + '" y2="' + ladderBot + '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.9"/>';
   }
 
-  const flowMarkEsc =
-    typeof nftSvgFlowMarkerDefs === 'function' ? nftSvgFlowMarkerDefs('Esc' + suf) : { supplyId: 'a', returnId: 'b', defs: '' };
-  let flowLegendEsc =
-    typeof nftSvgFlowLegend === 'function' ? nftSvgFlowLegend(12, Math.max(8, topPad - 6)) : '';
-  let back =
-    '<path d="' + flowSupplyD + '" stroke="' + F_SUP + '" stroke-width="5" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>' +
-    '<path d="' + flowReturnD + '" stroke="' + F_RET + '" stroke-width="5" fill="none" opacity="0.45" stroke-linecap="round" stroke-linejoin="round"/>';
-
   const nRunsEsc = runs.length;
   const tLabelFsEsc = compactEsc ? 14.25 : 16.5;
   const rungSpan = rungOut + rungIn;
@@ -2963,32 +2784,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '/>';
   }
 
-  const nftFlowAnim = torreSvgAnimacionesActivas();
-  const animEsc =
-    nftFlowAnim
-      ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
-      : '/>';
-  let flowLayer =
-    '<path class="nft-flow-supply" d="' +
-    flowSupplyD +
-    '" stroke="' +
-    F_SUP +
-    '" fill="none" ' +
-    flowDashSup +
-    ' stroke-width="3.4" opacity="0.98" marker-end="url(#' +
-    flowMarkEsc.supplyId +
-    ')"' +
-    animEsc +
-    '<path class="nft-flow-return" d="' +
-    flowReturnD +
-    '" stroke="' +
-    F_RET +
-    '" fill="none" ' +
-    flowDashRet +
-    ' stroke-width="3.4" opacity="0.98" marker-end="url(#' +
-    flowMarkEsc.returnId +
-    ')"' +
-    animEsc;
+  let flowLayer = flowSvgEsc ? flowSvgEsc.flowLayer : '';
 
   let channelLabels = '';
   const plantTopPadEsc = compactEsc ? 10 : 13;

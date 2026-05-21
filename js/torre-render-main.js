@@ -74,7 +74,7 @@ function renderTorre() {
       'aria-label',
       esPared
         ? 'NFT en pared: tubos marrones, flujo del agua y depósito. Toca un hueco para la ficha o usa Lista.'
-        : 'NFT: alimentación (sale abajo del depósito) y retorno (entra arriba). Toca un hueco para la ficha o usa Lista.'
+        : 'NFT: trazo azul alimentación, trazo verde retorno al depósito. Toca un hueco para la ficha o usa Lista.'
     );
     try {
       bindTorreCestas(wrap);
@@ -84,7 +84,7 @@ function renderTorre() {
       nftHint.classList.remove('setup-hidden');
       if (esPared) {
         nftHint.innerHTML =
-          'NFT pared: <strong class="fw-800">línea continua</strong> = alimentación (sale abajo del depósito); <strong class="fw-800">línea corta</strong> = retorno (entra arriba). Toca <strong class="fw-800">hueco</strong> o <strong class="fw-800">Lista</strong>.';
+          'NFT pared: <strong class="fw-800" style="color:#2563eb">azul</strong> = alimentación; <strong class="fw-800" style="color:#16a34a">verde</strong> = retorno al depósito. Toca <strong class="fw-800">hueco</strong> o <strong class="fw-800">Lista</strong>.';
       }
     }
   } else if (esDwc) {
