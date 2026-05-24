@@ -1376,6 +1376,18 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 #medirDiagramWrap.torre-svg-canvas {
   max-height: min(56vh, 720px);
 }
+#medirDiagramWrap.medir-diagram-canvas--nft-mesa-illo {
+  max-height: min(62vh, 780px);
+  pointer-events: none;
+}
+#medirDiagramWrap.medir-diagram-canvas--nft-mesa-illo svg.nft-mesa-medir-illustration {
+  min-height: min(42vh, 480px);
+  filter: drop-shadow(0 3px 12px rgba(15, 23, 42, 0.08));
+}
+#medirDiagramWrap.medir-diagram-canvas--nft-mesa-illo .hc-cesta,
+#medirDiagramWrap.medir-diagram-canvas--nft-mesa-illo .torre-anim-label {
+  display: none;
+}
 .medir-instalacion-esquema {
   margin: 0.65rem 0 1.1rem;
 }

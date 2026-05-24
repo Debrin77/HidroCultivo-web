@@ -211,6 +211,10 @@ function renderTorre() {
   } catch (_) {}
 }
 
+var MEDIR_ESQUEMA_HINT_DEFAULT =
+  'Tubos, recorrido del agua, entradas al depósito y bomba de aire (si la tienes). Toca una maceta para ver cultivo y días.';
+var MEDIR_ESQUEMA_HINT_NFT_MESA_ILLO = 'Vista ilustrada orientativa. Cultivos en la tabla inferior.';
+
 /** Copia el esquema de Cultivo e instalación a la pestaña Medir (misma instalación activa). */
 function renderTorreMedirDiagram() {
   const section = document.getElementById('medirInstalacionEsquema');
@@ -218,6 +222,9 @@ function renderTorreMedirDiagram() {
   if (!section || !medirWrap) return;
 
   const cfg = state.configTorre || {};
+  const hintEl = section.querySelector('.medir-esquema-hint');
+  if (hintEl) hintEl.textContent = MEDIR_ESQUEMA_HINT_DEFAULT;
+
   if (cfg.operativa === false) {
     section.classList.add('setup-hidden');
     medirWrap.innerHTML = '';
@@ -231,6 +238,16 @@ function renderTorreMedirDiagram() {
     section.classList.add('setup-hidden');
     medirWrap.innerHTML = '';
     return;
+  }
+
+  if (tipo === 'nft' && typeof renderNftMedirIllustration === 'function') {
+    try {
+      if (renderNftMedirIllustration(cfg, medirWrap)) {
+        section.classList.remove('setup-hidden');
+        if (hintEl) hintEl.textContent = MEDIR_ESQUEMA_HINT_NFT_MESA_ILLO;
+        return;
+      }
+    } catch (_) {}
   }
 
   const src = document.getElementById('torreSVGWrap');
