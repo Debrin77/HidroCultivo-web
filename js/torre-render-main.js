@@ -212,10 +212,9 @@ function renderTorre() {
 }
 
 var MEDIR_ESQUEMA_HINT_DEFAULT =
-  'Tubos, recorrido del agua, entradas al depósito y bomba de aire (si la tienes). Toca una maceta para ver cultivo y días.';
-var MEDIR_ESQUEMA_HINT_NFT_MESA_ILLO = 'Vista ilustrada orientativa. Cultivos en la tabla inferior.';
+  'Mismo esquema que en Cultivo e instalación: tubos, recorrido del agua (azul/verde) y equipos. Toca un hueco para ver cultivo y días.';
 
-/** Copia el esquema de Cultivo e instalación a la pestaña Medir (misma instalación activa). */
+/** Mismo SVG técnico que Cultivo e instalación (#torreSVGWrap), solo lectura visual opcional en Medir. */
 function renderTorreMedirDiagram() {
   const section = document.getElementById('medirInstalacionEsquema');
   const medirWrap = document.getElementById('medirDiagramWrap');
@@ -240,19 +239,39 @@ function renderTorreMedirDiagram() {
     return;
   }
 
-  if (tipo === 'nft' && typeof renderNftMedirIllustration === 'function') {
+  let html = '';
+  const src = document.getElementById('torreSVGWrap');
+  if (src && src.innerHTML) html = String(src.innerHTML).trim();
+
+  if ((!html || html.indexOf('<svg') < 0) && tipo === 'nft' && typeof buildNftActiveDiagramSvg === 'function') {
     try {
-      if (renderNftMedirIllustration(cfg, medirWrap)) {
-        section.classList.remove('setup-hidden');
-        if (hintEl) hintEl.textContent = MEDIR_ESQUEMA_HINT_NFT_MESA_ILLO;
-        return;
+      const hyd = getNftHidraulicaDesdeConfig(cfg);
+      const hx = cfg.nftHuecosPorCanal ?? cfg.numCestas ?? 8;
+      const pend = cfg.nftPendientePct ?? 2;
+      const vol =
+        typeof getVolumenMezclaLitros === 'function' && getVolumenMezclaLitros(cfg) > 0
+          ? getVolumenMezclaLitros(cfg)
+          : getVolumenDepositoMaxLitros(cfg) || 18;
+      const eqArr = cfg.equipamiento || [];
+      let nftSvg = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'MedirMirror', {
+        calentador: eqArr.includes('calentador'),
+        difusor: eqArr.includes('difusor'),
+        interactive: true,
+        cfgSnapshot: cfg,
+        nftDisposicion: cfg.nftDisposicion,
+        mesaTiers: hyd.mesaTiers,
+        escaleraNiveles: hyd.escaleraNiveles,
+        escaleraCaras: hyd.escaleraCaras,
+      });
+      if (typeof enhanceNftDiagramScada === 'function') {
+        nftSvg = enhanceNftDiagramScada(nftSvg, { interactive: true });
       }
+      html = nftSvg;
     } catch (_) {}
   }
 
-  const src = document.getElementById('torreSVGWrap');
-  const html = src && src.innerHTML ? String(src.innerHTML).trim() : '';
-  if (!html || html.indexOf('<svg') < 0 || src.querySelector('.torre-loading-placeholder')) {
+  if (!html && src && src.innerHTML) html = String(src.innerHTML).trim();
+  if (!html || html.indexOf('<svg') < 0 || (src && src.querySelector('.torre-loading-placeholder'))) {
     section.classList.add('setup-hidden');
     medirWrap.innerHTML = '';
     return;
@@ -261,9 +280,7 @@ function renderTorreMedirDiagram() {
   section.classList.remove('setup-hidden');
   medirWrap.innerHTML = html;
   medirWrap.className = 'torre-svg-canvas medir-diagram-canvas';
-  if (src && src.classList.contains('torre-svg-canvas--nft-pared-illo')) {
-    medirWrap.classList.add('torre-svg-canvas--nft-pared-illo');
-  }
+  medirWrap.classList.remove('medir-diagram-canvas--nft-mesa-illo');
   if (tipo === 'nft' || tipo === 'dwc' || tipo === 'srf' || tipo === 'rdwc' || !tipo || tipo === 'torre') {
     try {
       bindTorreCestas(medirWrap);
