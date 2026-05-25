@@ -1,6 +1,6 @@
 /**
- * NFT mesa: vista ilustrada isométrica para pestaña Medir (solo lectura).
- * Generada desde config guardada; no sustituye el esquema técnico del asistente.
+ * NFT mesa: vista ilustrada 2D para pestaña Medir (solo lectura).
+ * Sin IA: SVG paramétrico en coordenadas de píxeles (mismo criterio que nft-pared-illustration).
  */
 (function (global) {
   'use strict';
@@ -17,21 +17,10 @@
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
   }
 
-  /** Proyección isométrica: eje X → derecha-abajo, Y → izquierda-abajo, Z → arriba. */
-  function iso(x, y, z, O, sc) {
-    const ox = O.x;
-    const oy = O.y;
-    const s = sc != null ? sc : 1;
-    return {
-      x: ox + (x - y) * 0.866 * s,
-      y: oy + (x + y) * 0.5 * s - z * s,
-    };
-  }
-
   function computeMesaMedirLayout(cfg, equipOpts) {
     const EO = equipOpts || {};
     const hyd =
-      typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : { nCh: 4, nHx: 8 };
+      typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : { nCh: 4 };
     const hx =
       typeof nftHuecosDesdeCfg === 'function'
         ? nftHuecosDesdeCfg(cfg)
@@ -50,382 +39,367 @@
       if (!tiers || tiers.length < 2) tiers = null;
     }
 
-    const nTiers = tiers ? tiers.length : 1;
-    const maxTubes = tiers ? Math.max.apply(null, tiers) : hyd.nCh;
-    const totalTubes = tiers ? tiers.reduce((a, b) => a + b, 0) : hyd.nCh;
+    const nCh = Math.max(1, hyd.nCh || 4);
     const huecosN = Math.min(30, Math.max(2, hx));
     const multinivel = !!tiers;
+    const nTiers = tiers ? tiers.length : 1;
+    const maxTubes = tiers ? Math.max.apply(null, tiers) : nCh;
 
-    const W = Math.max(520, 180 + maxTubes * 72 + (multinivel ? 40 : 0));
-    const H = multinivel ? Math.max(420, 200 + nTiers * 88) : Math.max(380, 200 + hyd.nCh * 36);
+    const W0 =
+      typeof nftDiagramCanvasW0 === 'function' ? nftDiagramCanvasW0() : 520;
+    const topPad = 44;
+    const botTank = 158;
+    const marginX = 40;
+    const tubeRowH = Math.max(32, Math.min(44, Math.floor(320 / Math.max(multinivel ? nTiers : nCh, 1))));
+    const shelfH = multinivel ? tubeRowH + 28 : 0;
+    const tierGap = 14;
+
+    let sceneH;
+    if (multinivel) {
+      sceneH = topPad + nTiers * shelfH + (nTiers - 1) * tierGap + 24;
+    } else {
+      sceneH = topPad + nCh * tubeRowH + 36;
+    }
+
+    const Wsvg = Math.max(W0, marginX * 2 + Math.max(280, maxTubes * 56 + 80));
+    const H = sceneH + botTank;
+    const xL = marginX + 12;
+    const xR = Wsvg - marginX - 12;
+    const spanTube = xR - xL;
+    const tableY = topPad + (multinivel ? nTiers * (shelfH + tierGap) - tierGap : nCh * tubeRowH) + 8;
+    const tableH = 14;
+    const tankY = H - botTank + 6;
+    const tankH = 100;
+    const tankW = Math.min(380, Math.round(148 + vol * 0.7));
+    const tx = (Wsvg - tankW) / 2;
+    const waterTop = tankY + 8;
+    const waterH = tankH - 18;
+    const hr = Math.max(6.5, Math.min(12, spanTube / Math.max(huecosN - 1, 1) * 0.42));
+
+    const legHint = { volL: vol, nCanales: multinivel ? maxTubes : nCh, nTubosTotal: multinivel ? tiers.reduce((a, b) => a + b, 0) : nCh };
+    const legTier =
+      typeof nftDiagramLegibilityHint === 'function' ? nftDiagramLegibilityHint(legHint) : 0;
+    const volFs =
+      typeof nftTankVolumeFontSize === 'function' ? nftTankVolumeFontSize(vol, legTier) : 14;
+    const altCm =
+      EO.nftAlturaBombeoCm != null && Number(EO.nftAlturaBombeoCm) > 0
+        ? Math.round(Number(EO.nftAlturaBombeoCm))
+        : null;
+    const altBadge =
+      typeof nftAlturaBadgeBesideTank === 'function'
+        ? nftAlturaBadgeBesideTank(altCm, tx, tankY, tankW, tankH, Wsvg, legHint)
+        : { canvasW: Wsvg, html: '' };
 
     return {
       cfg: cfg,
-      hyd: hyd,
       vol: vol,
       huecosN: huecosN,
       tiers: tiers,
       nTiers: nTiers,
       maxTubes: maxTubes,
-      totalTubes: totalTubes,
-      nCh: hyd.nCh,
+      nCh: nCh,
       multinivel: multinivel,
-      W: W,
+      Wsvg: altBadge.canvasW,
       H: H,
-      showCalentador: EO.calentador !== false && (cfg.equipamiento || []).indexOf('calentador') >= 0,
-      showDifusor: EO.difusor !== false && (cfg.equipamiento || []).indexOf('difusor') >= 0,
-      pend: cfg.nftPendientePct != null ? cfg.nftPendientePct : 2,
+      topPad: topPad,
+      botTank: botTank,
+      xL: xL,
+      xR: xR,
+      spanTube: spanTube,
+      tubeRowH: tubeRowH,
+      shelfH: shelfH,
+      tierGap: tierGap,
+      tableY: tableY,
+      tableH: tableH,
+      tankY: tankY,
+      tankH: tankH,
+      tankW: tankW,
+      tx: tx,
+      waterTop: waterTop,
+      waterH: waterH,
+      hr: hr,
+      volFs: volFs,
+      altBadge: altBadge,
+      showCalentador: EO.calentador === true,
+      showDifusor: EO.difusor === true,
     };
   }
 
-  function boxIsoPath(x, y, z, w, d, h, O, sc) {
-    const p000 = iso(x, y, z, O, sc);
-    const p100 = iso(x + w, y, z, O, sc);
-    const p010 = iso(x, y + d, z, O, sc);
-    const p110 = iso(x + w, y + d, z, O, sc);
-    const p001 = iso(x, y, z + h, O, sc);
-    const p101 = iso(x + w, y, z + h, O, sc);
-    const p011 = iso(x, y + d, z + h, O, sc);
-    return {
-      top:
-        'M ' +
-        fq(p001.x) +
-        ' ' +
-        fq(p001.y) +
-        ' L ' +
-        fq(p101.x) +
-        ' ' +
-        fq(p101.y) +
-        ' L ' +
-        fq(p011.x) +
-        ' ' +
-        fq(p011.y) +
-        ' L ' +
-        fq(p001.x) +
-        ' ' +
-        fq(p001.y) +
-        ' Z',
-      left:
-        'M ' +
-        fq(p001.x) +
-        ' ' +
-        fq(p001.y) +
-        ' L ' +
-        fq(p000.x) +
-        ' ' +
-        fq(p000.y) +
-        ' L ' +
-        fq(p010.x) +
-        ' ' +
-        fq(p010.y) +
-        ' L ' +
-        fq(p011.x) +
-        ' ' +
-        fq(p011.y) +
-        ' Z',
-      right:
-        'M ' +
-        fq(p101.x) +
-        ' ' +
-        fq(p101.y) +
-        ' L ' +
-        fq(p100.x) +
-        ' ' +
-        fq(p100.y) +
-        ' L ' +
-        fq(p110.x) +
-        ' ' +
-        fq(p110.y) +
-        ' L ' +
-        fq(p011.x) +
-        ' ' +
-        fq(p011.y) +
-        ' Z',
-      front:
-        'M ' +
-        fq(p000.x) +
-        ' ' +
-        fq(p000.y) +
-        ' L ' +
-        fq(p100.x) +
-        ' ' +
-        fq(p100.y) +
-        ' L ' +
-        fq(p110.x) +
-        ' ' +
-        fq(p110.y) +
-        ' L ' +
-        fq(p010.x) +
-        ' ' +
-        fq(p010.y) +
-        ' Z',
-    };
+  function yTubeRow(L, i) {
+    return L.topPad + 18 + i * L.tubeRowH;
   }
 
-  function channelIsoPaths(x, y, z, w, d, h, gidBase, stroke) {
-    const O = { x: 88, y: 52 };
-    const sc = 1;
-    const b = boxIsoPath(x, y, z, w, d, h, O, sc);
-    return (
-      '<path d="' +
-      b.left +
-      '" fill="url(#' +
-      gidBase +
-      'TL)" stroke="' +
-      stroke +
-      '" stroke-width="1.1" stroke-linejoin="round"/>' +
-      '<path d="' +
-      b.right +
-      '" fill="url(#' +
-      gidBase +
-      'TR)" stroke="' +
-      stroke +
-      '" stroke-width="1.1" stroke-linejoin="round"/>' +
-      '<path d="' +
-      b.top +
-      '" fill="url(#' +
-      gidBase +
-      'TT)" stroke="' +
-      stroke +
-      '" stroke-width="1.15" stroke-linejoin="round"/>' +
-      '<path d="' +
-      b.front +
-      '" fill="url(#' +
-      gidBase +
-      'TF)" opacity="0.35" stroke="' +
-      stroke +
-      '" stroke-width="0.9"/>'
-    );
+  function yTierBase(L, t) {
+    return L.topPad + 12 + t * (L.shelfH + L.tierGap);
   }
 
-  function plantEllipseHtml(gx, gy, hr, dat, cult) {
-    const fill = dat && dat.variedad ? '#86efac' : '#d1fae5';
-    const stroke = dat && dat.variedad ? '#15803d' : '#94a3b8';
-    let h =
-      '<ellipse cx="' +
-      fq(gx) +
-      '" cy="' +
-      fq(gy) +
-      '" rx="' +
-      fq(hr) +
-      '" ry="' +
-      fq(hr * 0.72) +
-      '" fill="' +
-      fill +
-      '" stroke="' +
-      stroke +
-      '" stroke-width="1.1" pointer-events="none"/>';
-    if (dat && dat.variedad && typeof global.cultivoEmoji === 'function') {
-      const em = global.cultivoEmoji(cult);
-      if (em) {
-        h +=
-          '<text x="' +
+  function drawTubeChannel(s, x0, y0, w, h, gidCh) {
+    s +=
+      '<rect x="' +
+      fq(x0) +
+      '" y="' +
+      fq(y0) +
+      '" width="' +
+      fq(w) +
+      '" height="' +
+      h +
+      '" rx="5" fill="url(#' +
+      gidCh +
+      ')" stroke="#78350f" stroke-width="1.2" pointer-events="none"/>';
+    s +=
+      '<rect x="' +
+      fq(x0 + 3) +
+      '" y="' +
+      fq(y0 + 4) +
+      '" width="' +
+      fq(w - 6) +
+      '" height="' +
+      (h - 8) +
+      '" rx="3" fill="#fef3c7" opacity="0.55" pointer-events="none"/>';
+  }
+
+  function drawPlantsOnTube(s, L, P, gIdx, x0, y0, w, interactive) {
+    const nHx = L.huecosN;
+    const slotW = nHx <= 1 ? w * 0.5 : w / Math.max(1, nHx - 1);
+    for (let j = 0; j < nHx; j++) {
+      const t = nHx <= 1 ? 0.5 : j / (nHx - 1);
+      const gx = x0 + 8 + t * Math.max(0, w - 16);
+      const gy = y0 - L.hr * 0.85;
+      let dat = { variedad: '', fecha: '' };
+      if (global.state && global.state.torre[gIdx] && global.state.torre[gIdx][j]) {
+        dat = global.state.torre[gIdx][j];
+      }
+      const cult =
+        dat.variedad && typeof global.getCultivoDB === 'function' ? global.getCultivoDB(dat.variedad) : null;
+      if (typeof global.hcIlloNftHuecoLayer === 'function') {
+        s += global.hcIlloNftHuecoLayer(gx, gy, L.hr, gIdx, j, dat, cult, false, P, {
+          compact: nHx > 12,
+          numBelow: false,
+          sinTexto: true,
+          numShow: j + 1,
+          extraDy: 4,
+          slotAlong: slotW,
+        });
+      } else {
+        const fill = dat.variedad ? '#86efac' : '#d1fae5';
+        const stroke = dat.variedad ? '#15803d' : '#94a3b8';
+        s +=
+          '<ellipse cx="' +
           fq(gx) +
-          '" y="' +
-          fq(gy + 1) +
-          '" text-anchor="middle" dominant-baseline="central" font-size="' +
-          Math.min(11, hr * 1.1) +
-          '" pointer-events="none">' +
-          em +
-          '</text>';
+          '" cy="' +
+          fq(gy) +
+          '" rx="' +
+          fq(L.hr) +
+          '" ry="' +
+          fq(L.hr * 0.72) +
+          '" fill="' +
+          fill +
+          '" stroke="' +
+          stroke +
+          '" stroke-width="1.1" pointer-events="none"/>';
       }
     }
-    return h;
   }
 
-  function buildMesaMedirDefs(gidBase) {
+  function buildScene(L, suf, equipOpts) {
     const P = typeof HC_DIAG !== 'undefined' && HC_DIAG.nft ? HC_DIAG.nft : {};
-    const ch0 = P.canalGrad0 || '#f5e6c8';
-    const ch1 = P.canalGrad1 || '#c9a66b';
-    let s = '<defs>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'TL" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="' +
-      ch0 +
-      '"/><stop offset="100%" stop-color="#d4b896"/></linearGradient>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'TR" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e8d4b8"/><stop offset="100%" stop-color="' +
-      ch1 +
-      '"/></linearGradient>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'TT" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#faf6ef"/><stop offset="100%" stop-color="' +
-      ch0 +
-      '"/></linearGradient>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'TF" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#a8a29e"/><stop offset="100%" stop-color="#78716c"/></linearGradient>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'Tbl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e7e5e4"/><stop offset="100%" stop-color="#a8a29e"/></linearGradient>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'Tk" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#cbd5e1"/></linearGradient>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'Aq" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7dd3fc"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>';
-    s +=
-      '<linearGradient id="' +
-      gidBase +
-      'Bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0fdf4"/><stop offset="55%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#ecfdf5"/></linearGradient>';
-    s += '</defs>';
-    return s;
-  }
-
-  function buildScene(L, suf) {
-    const gidBase = 'nftMiMesa' + suf;
-    const P = typeof HC_DIAG !== 'undefined' && HC_DIAG.nft ? HC_DIAG.nft : {};
+    const gidCh = 'nftMmCh' + suf;
+    const gidTbl = 'nftMmTbl' + suf;
+    const gidTk = 'nftMmTk' + suf;
+    const gidAq = 'nftMmAq' + suf;
+    const gidBg = 'nftMmBg' + suf;
     let s = '';
-    const O = { x: 88, y: 52 };
-    const sc = 1;
-    const tableW = Math.max(4, L.maxTubes) * 2.2 + 2;
-    const tableD = L.multinivel ? 3.2 : 2.6;
-    const tableH = 0.35;
-    const tb = boxIsoPath(0, 0, 0, tableW, tableD, tableH, O, sc);
-    s += '<path d="' + tb.top + '" fill="url(#' + gidBase + 'Tbl)" stroke="#78716c" stroke-width="1.2"/>';
-    s += '<path d="' + tb.left + '" fill="#d6d3d1" stroke="#78716c" stroke-width="1"/>';
-    s += '<path d="' + tb.right + '" fill="#a8a29e" stroke="#78716c" stroke-width="1"/>';
-
-    const tubeW = 1.85;
-    const tubeD = 0.55;
-    const tubeH = 0.42;
-    const gap = 0.35;
     let gIdx = 0;
+
+    s +=
+      '<defs>' +
+      '<linearGradient id="' +
+      gidBg +
+      '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0fdf4"/><stop offset="55%" stop-color="#f8fafc"/><stop offset="100%" stop-color="#ecfdf5"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidCh +
+      '" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#a67c52"/><stop offset="100%" stop-color="#5c3d22"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidTbl +
+      '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e7e5e4"/><stop offset="100%" stop-color="#a8a29e"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidTk +
+      '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#334155"/><stop offset="100%" stop-color="#1e293b"/></linearGradient>' +
+      '<linearGradient id="' +
+      gidAq +
+      '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>' +
+      '</defs>';
+
+    s +=
+      '<rect width="' +
+      L.Wsvg +
+      '" height="' +
+      L.H +
+      '" fill="url(#' +
+      gidBg +
+      ')" pointer-events="none"/>';
+
+    const tableX = L.xL - 20;
+    const tableW = L.xR - L.xL + 40;
+    s +=
+      '<rect x="' +
+      fq(tableX) +
+      '" y="' +
+      fq(L.tableY) +
+      '" width="' +
+      fq(tableW) +
+      '" height="' +
+      L.tableH +
+      '" rx="6" fill="url(#' +
+      gidTbl +
+      ')" stroke="#78716c" stroke-width="1.2" pointer-events="none"/>';
+    s +=
+      '<rect x="' +
+      fq(tableX + 8) +
+      '" y="' +
+      fq(L.tableY + L.tableH) +
+      '" width="10" height="22" rx="2" fill="#78716c" pointer-events="none"/>';
+    s +=
+      '<rect x="' +
+      fq(tableX + tableW - 18) +
+      '" y="' +
+      fq(L.tableY + L.tableH) +
+      '" width="10" height="22" rx="2" fill="#78716c" pointer-events="none"/>';
+
+    const tubeH = 18;
 
     if (L.multinivel && L.tiers) {
       for (let t = 0; t < L.nTiers; t++) {
         const nt = L.tiers[t];
-        const zBase = tableH + 0.08 + t * (tubeH + 0.55);
-        const shelf = boxIsoPath(-0.15, -0.1, zBase - 0.06, tableW + 0.2, tableD + 0.15, 0.08, O, sc);
+        const ty = yTierBase(L, t);
+        const shelfW = L.xR - L.xL + 8;
         s +=
-          '<path d="' +
-          shelf.top +
-          '" fill="#f1f5f9" stroke="#94a3b8" stroke-width="0.9" opacity="0.95"/>';
+          '<rect x="' +
+          fq(L.xL - 4) +
+          '" y="' +
+          fq(ty - 6) +
+          '" width="' +
+          fq(shelfW) +
+          '" height="' +
+          (L.shelfH + 4) +
+          '" rx="4" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" opacity="0.95" pointer-events="none"/>';
+        const gap = 10;
+        const tw = (L.spanTube - gap * (nt - 1)) / Math.max(1, nt);
         for (let k = 0; k < nt; k++) {
-          const x0 = 0.5 + k * (tubeW + gap);
-          s += channelIsoPaths(x0, 0.35, zBase, tubeW, tubeD, tubeH, gidBase, '#92400e');
-          const nHx = L.huecosN;
-          for (let j = 0; j < nHx; j++) {
-            const along = nHx <= 1 ? 0.5 : j / (nHx - 1);
-            const px = x0 + 0.2 + along * (tubeW - 0.35);
-            const py = 0.35 + tubeD * 0.5;
-            const pTop = iso(px, py, zBase + tubeH + 0.02, O, sc);
-            let dat = { variedad: '' };
-            if (global.state && global.state.torre[gIdx] && global.state.torre[gIdx][j]) {
-              dat = global.state.torre[gIdx][j];
-            }
-            const cult =
-              dat.variedad && typeof global.getCultivoDB === 'function' ? global.getCultivoDB(dat.variedad) : null;
-            s += plantEllipseHtml(pTop.x, pTop.y, 5.5, dat, cult);
-          }
+          const x0 = L.xL + k * (tw + gap);
+          const y0 = ty + 10;
+          drawTubeChannel(s, x0, y0, tw, tubeH, gidCh);
+          drawPlantsOnTube(s, L, P, gIdx, x0, y0, tw, false);
           gIdx++;
         }
+        s +=
+          '<text x="' +
+          fq(L.xL - 2) +
+          '" y="' +
+          fq(ty + 14) +
+          '" text-anchor="end" font-size="9" fill="#64748b" font-weight="700" font-family="system-ui,sans-serif" pointer-events="none">N' +
+          (t + 1) +
+          '</text>';
       }
     } else {
-      const nT = Math.max(1, L.nCh);
-      for (let i = 0; i < nT; i++) {
-        const x0 = 0.45 + i * (tubeW + gap);
-        const z0 = tableH + 0.1;
-        s += channelIsoPaths(x0, 0.4, z0, tubeW, tubeD, tubeH, gidBase, '#92400e');
-        const nHx = L.huecosN;
-        for (let j = 0; j < nHx; j++) {
-          const along = nHx <= 1 ? 0.5 : j / (nHx - 1);
-          const px = x0 + 0.18 + along * (tubeW - 0.32);
-          const py = 0.4 + tubeD * 0.5;
-          const pTop = iso(px, py, z0 + tubeH + 0.02, O, sc);
-          let dat = { variedad: '' };
-          if (global.state && global.state.torre[i] && global.state.torre[i][j]) {
-            dat = global.state.torre[i][j];
-          }
-          const cult =
-            dat.variedad && typeof global.getCultivoDB === 'function' ? global.getCultivoDB(dat.variedad) : null;
-          s += plantEllipseHtml(pTop.x, pTop.y, 5.5, dat, cult);
-        }
+      for (let i = 0; i < L.nCh; i++) {
+        const y0 = yTubeRow(L, i) + 4;
+        drawTubeChannel(s, L.xL, y0, L.spanTube, tubeH, gidCh);
+        drawPlantsOnTube(s, L, P, i, L.xL, y0, L.spanTube, false);
       }
     }
 
-    const tankX = tableW + 0.6;
-    const tankY = 0.2;
-    const tankZ = 0;
-    const tankW = 2.4;
-    const tankD = 1.4;
-    const tankH = 1.05;
-    const tk = boxIsoPath(tankX, tankY, tankZ, tankW, tankD, tankH, O, sc);
-    s += '<path d="' + tk.left + '" fill="url(#' + gidBase + 'Tk)" stroke="#64748b" stroke-width="1.2"/>';
-    s += '<path d="' + tk.right + '" fill="#e2e8f0" stroke="#64748b" stroke-width="1.2"/>';
-    s += '<path d="' + tk.top + '" fill="url(#' + gidBase + 'Tk)" stroke="#64748b" stroke-width="1.2"/>';
-    const waterH = tankH * 0.72;
-    const wk = boxIsoPath(tankX + 0.12, tankY + 0.12, tankZ + 0.08, tankW - 0.22, tankD - 0.22, waterH, O, sc);
-    s += '<path d="' + wk.top + '" fill="url(#' + gidBase + 'Aq)" opacity="0.92" stroke="#0369a1" stroke-width="0.8"/>';
-    const tLabel = iso(tankX + tankW / 2, tankY + tankD / 2, tankZ + waterH * 0.45, O, sc);
+    s +=
+      '<rect x="' +
+      L.tx +
+      '" y="' +
+      L.tankY +
+      '" width="' +
+      L.tankW +
+      '" height="' +
+      L.tankH +
+      '" rx="10" fill="url(#' +
+      gidTk +
+      ')" stroke="#166534" stroke-width="1.4" pointer-events="none"/>';
+    s +=
+      '<rect x="' +
+      (L.tx + 5) +
+      '" y="' +
+      L.waterTop +
+      '" width="' +
+      (L.tankW - 10) +
+      '" height="' +
+      L.waterH +
+      '" rx="8" fill="url(#' +
+      gidAq +
+      ')" opacity="0.92" pointer-events="none"/>';
+    s += L.altBadge.html;
     s +=
       '<text x="' +
-      fq(tLabel.x) +
+      (L.tx + L.tankW / 2) +
       '" y="' +
-      fq(tLabel.y) +
-      '" text-anchor="middle" fill="#ecfdf5" font-size="13" font-weight="800" font-family="system-ui,sans-serif" pointer-events="none">' +
+      (L.tankY + Math.floor(L.tankH / 2) + 5) +
+      '" text-anchor="middle" fill="#ecfdf5" font-size="' +
+      L.volFs +
+      '" font-weight="800" font-family="system-ui,sans-serif" pointer-events="none">' +
       L.vol +
       ' L</text>';
 
-    const pump = iso(tankX + tankW + 0.35, tankY + 0.5, 0, O, sc);
-    s +=
-      '<rect x="' +
-      fq(pump.x) +
-      '" y="' +
-      fq(pump.y) +
-      '" width="22" height="16" rx="3" fill="#334155" stroke="#1e293b" stroke-width="1" pointer-events="none"/>';
-    s +=
-      '<text x="' +
-      fq(pump.x + 11) +
-      '" y="' +
-      fq(pump.y + 11) +
-      '" text-anchor="middle" font-size="7" fill="#e2e8f0" font-family="system-ui,sans-serif" pointer-events="none">BOMBA</text>';
-
-    if (L.showDifusor && typeof global.nftSvgAireadorEnSuelo === 'function') {
-      const tank2d = { tx: L.W * 0.72, tankY: L.H - 118, tankW: 120, tankH: 88 };
-      s += global.nftSvgAireadorEnSuelo(tank2d.tx, tank2d.tankY, tank2d.tankW, tank2d.tankH, P);
+    if (L.showCalentador) {
+      s +=
+        '<rect x="' +
+        (L.tx + 14) +
+        '" y="' +
+        (L.tankY + L.tankH - 34) +
+        '" width="10" height="28" rx="5" fill="#f97316" stroke="#c2410c" stroke-width="1.1" pointer-events="none"/>';
     }
 
-    const flowHint =
-      typeof NFT_FLOW_SUPPLY !== 'undefined'
-        ? NFT_FLOW_SUPPLY
-        : '#2563eb';
-    const flowRet = typeof NFT_FLOW_RETURN !== 'undefined' ? NFT_FLOW_RETURN : '#16a34a';
-    const p0 = iso(-0.3, tableD + 0.3, tableH * 0.5, O, sc);
-    const p1 = iso(tableW * 0.3, tableD + 0.5, tableH + 0.5, O, sc);
+    const px = L.tx + L.tankW + 18;
+    const py = L.waterTop + L.waterH * 0.5;
+    s +=
+      '<rect x="' +
+      px +
+      '" y="' +
+      (py - 10) +
+      '" width="36" height="22" rx="4" fill="#334155" stroke="#1e293b" stroke-width="1" pointer-events="none"/>';
+    s +=
+      '<text x="' +
+      (px + 18) +
+      '" y="' +
+      (py + 4) +
+      '" text-anchor="middle" font-size="7" fill="#e2e8f0" font-weight="700" font-family="system-ui,sans-serif" pointer-events="none">BOMBA</text>';
+
+    if (L.showDifusor && typeof global.nftSvgAireadorEnSuelo === 'function') {
+      s += global.nftSvgAireadorEnSuelo(L.tx, L.tankY, L.tankW, L.tankH, P);
+    }
+
+    const flowSupply = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
+    const flowReturn = typeof NFT_FLOW_RETURN !== 'undefined' ? NFT_FLOW_RETURN : '#16a34a';
+    const yMid = L.multinivel ? yTierBase(L, 0) + 20 : yTubeRow(L, 0);
     s +=
       '<path d="M ' +
-      fq(p0.x) +
+      fq(L.tx - 28) +
       ' ' +
-      fq(p0.y) +
+      fq(L.tankY + 20) +
       ' L ' +
-      fq(p1.x) +
+      fq(L.xL - 8) +
       ' ' +
-      fq(p1.y) +
+      fq(yMid) +
       '" stroke="' +
-      flowHint +
-      '" stroke-width="2.5" fill="none" stroke-dasharray="6 4" opacity="0.75" pointer-events="none"/>';
-    const pR = iso(tankX, tankY + tankD * 0.5, tankH + 0.2, O, sc);
+      flowSupply +
+      '" stroke-width="2.5" fill="none" stroke-dasharray="6 4" opacity="0.7" pointer-events="none"/>';
     s +=
       '<path d="M ' +
-      fq(p1.x) +
+      fq(L.xR + 12) +
       ' ' +
-      fq(p1.y) +
+      fq(yMid + 8) +
       ' L ' +
-      fq(pR.x) +
+      fq(L.tx + L.tankW + 8) +
       ' ' +
-      fq(pR.y) +
+      fq(L.tankY + 14) +
       '" stroke="' +
-      flowRet +
-      '" stroke-width="2.5" fill="none" stroke-dasharray="5 4" opacity="0.75" pointer-events="none"/>';
+      flowReturn +
+      '" stroke-width="2.5" fill="none" stroke-dasharray="5 4" opacity="0.7" pointer-events="none"/>';
 
     return s;
   }
@@ -439,15 +413,14 @@
         : 'Medir';
     const tid = 'nftMesaMi' + suf;
     const L = computeMesaMedirLayout(cfg, EO);
-    const gidBase = 'nftMiMesa' + suf;
-    const scene = buildScene(L, suf);
+    const scene = buildScene(L, suf, EO);
     const foot = L.multinivel
       ? 'Mesa multinivel · ' + L.tiers.join('+') + ' tubos/nivel · ' + L.vol + ' L'
       : 'Mesa · ' + L.nCh + ' tubos × ' + L.huecosN + ' huecos · ' + L.vol + ' L';
 
     return (
       '<svg class="torre-svg-diagram nft-mesa-medir-illustration nft-diagram--scroll hc-illo-diagram medir-vista-illo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
-      L.W +
+      L.Wsvg +
       ' ' +
       L.H +
       '" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
@@ -458,15 +431,11 @@
       '">' +
       escSvg('NFT mesa · vista ilustrada · ' + foot) +
       '</title>' +
-      buildMesaMedirDefs(gidBase) +
-      '<rect width="100%" height="100%" fill="url(#' +
-      gidBase +
-      'Bg)"/>' +
       '<g class="nft-mesa-medir-scene" pointer-events="none">' +
       scene +
       '</g>' +
       '<text x="' +
-      (L.W - 14) +
+      (L.Wsvg - 14) +
       '" y="22" text-anchor="end" font-size="10" fill="#64748b" font-family="system-ui,sans-serif" pointer-events="none">Vista ilustrada · orientativa</text>' +
       '</svg>'
     );
