@@ -1376,46 +1376,47 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 #medirDiagramWrap.torre-svg-canvas {
   max-height: min(56vh, 720px);
 }
-/* Medir NFT: capa cartoon sobre el mismo SVG hidráulico que Cultivo */
+/* Medir NFT: vista cartoon (distinta del esquema SCADA de Cultivo) */
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon {
   max-height: min(58vh, 760px);
-  background: linear-gradient(180deg, #f0fdf4 0%, #f8fafc 55%, #ecfdf5 100%);
-  border-radius: 14px;
+  background: linear-gradient(165deg, #ecfdf5 0%, #f0f9ff 45%, #fef9c3 100%);
+  border: 3px solid #4ade80;
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(34, 197, 94, 0.18);
 }
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon svg.nft-svg-diagram--cartoon {
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon svg.nft-svg-diagram--cartoon,
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon svg.nft-pared-illustration {
   min-height: min(40vh, 460px);
-  filter: drop-shadow(0 4px 14px rgba(15, 23, 42, 0.07));
+  filter: saturate(1.25) contrast(1.03) drop-shadow(0 6px 16px rgba(15, 23, 42, 0.1));
 }
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-scada-bg,
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-ghost {
-  display: none;
+  display: none !important;
 }
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-supply--cartoon,
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-supply,
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-return {
+  stroke-dasharray: none !important;
+  stroke-width: 6px !important;
+  stroke-linecap: round !important;
+}
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-supply {
-  stroke: #3b82f6 !important;
-  stroke-width: 4.2px !important;
-  stroke-linecap: round;
-  opacity: 0.92 !important;
+  stroke: #0ea5e9 !important;
 }
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-return--cartoon,
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-return {
   stroke: #22c55e !important;
-  stroke-width: 4.2px !important;
-  stroke-linecap: round;
-  opacity: 0.92 !important;
 }
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-legend text {
-  font-size: 11px !important;
-  font-weight: 700;
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-cartoon-frame {
+  pointer-events: none;
 }
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon svg rect[rx="11"] {
-  filter: drop-shadow(0 2px 4px rgba(92, 61, 34, 0.2));
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-cartoon-badge {
+  pointer-events: none;
 }
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .hc-illo-nft-hole ellipse:first-of-type,
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .hc-cesta circle:first-of-type {
-  filter: drop-shadow(0 2px 3px rgba(21, 128, 61, 0.25));
+  filter: drop-shadow(0 2px 4px rgba(21, 128, 61, 0.35));
 }
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .torre-anim-label {
-  opacity: 0.55;
+#medirDiagramWrap.medir-diagram-canvas--nft-cartoon svg.nft-pared-illustration .nft-pi-wall {
+  filter: drop-shadow(0 4px 8px rgba(148, 163, 184, 0.35));
 }
 .medir-instalacion-esquema {
   margin: 0.65rem 0 1.1rem;

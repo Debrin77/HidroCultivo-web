@@ -1,5 +1,5 @@
 /**
- * Vista Medir NFT: mismo builder hidráulico que Cultivo + capa cartoon (solo lectura visual).
+ * Vista Medir NFT: misma hidráulica que Cultivo, estilo cartoon visible.
  */
 (function (global) {
   'use strict';
@@ -27,6 +27,7 @@
       calentador: eq.includes('calentador'),
       difusor: eq.includes('difusor'),
       interactive: true,
+      cartoonMedir: true,
       bombaInfo: bomb,
       nftDisposicion: cfg.nftDisposicion,
       nftAlturaBombeoCm: altShow > 0 ? altShow : null,
@@ -43,13 +44,13 @@
   }
 
   /**
-   * SVG técnico + enhance cartoon (misma hidráulica que Cultivo e instalación).
    * @returns {string|null}
    */
   function buildNftMedirCartoonHtml(cfg) {
     if (!cfg || cfg.tipoInstalacion !== 'nft') return null;
-    if (typeof global.buildNftActiveDiagramSvg !== 'function') return null;
 
+    const disp =
+      typeof nftDisposicionNormalizada === 'function' ? nftDisposicionNormalizada(cfg.nftDisposicion) : 'mesa';
     const hyd = typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : { nCh: 4 };
     const hx =
       typeof nftHuecosDesdeCfg === 'function'
@@ -58,10 +59,19 @@
     const pend = cfg.nftPendientePct != null ? cfg.nftPendientePct : 2;
     const EO = buildNftMedirEquipOpts(cfg);
 
+    if (disp === 'pared' && typeof global.buildNftParedIllustrationSvg === 'function') {
+      let svg = global.buildNftParedIllustrationSvg(hyd.nCh, hx, pend, EO.volL, 'MedirCartoon', EO);
+      if (svg && typeof global.enhanceNftDiagramCartoon === 'function') {
+        svg = global.enhanceNftDiagramCartoon(svg, { medir: true, disp: 'pared', paredIllo: true });
+      }
+      return svg;
+    }
+
+    if (typeof global.buildNftActiveDiagramSvg !== 'function') return null;
     let svg = global.buildNftActiveDiagramSvg(hyd.nCh, hx, pend, EO.volL, 'MedirCartoon', EO);
     if (!svg || svg.indexOf('<svg') < 0) return null;
     if (typeof global.enhanceNftDiagramCartoon === 'function') {
-      svg = global.enhanceNftDiagramCartoon(svg, { medir: true });
+      svg = global.enhanceNftDiagramCartoon(svg, { medir: true, disp: disp });
     }
     return svg;
   }
@@ -73,7 +83,7 @@
     mountEl.className = 'torre-svg-canvas medir-diagram-canvas medir-diagram-canvas--nft-cartoon';
     mountEl.setAttribute(
       'aria-label',
-      'Esquema cartoon de tu NFT: mismo recorrido del agua que en Cultivo e instalación. Toca un hueco para ver cultivo.'
+      'Vista cartoon de tu NFT en Medir: mismo circuito de agua que en Cultivo e instalación.'
     );
     try {
       if (typeof bindTorreCestas === 'function') bindTorreCestas(mountEl);

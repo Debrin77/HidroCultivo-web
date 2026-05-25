@@ -58,6 +58,7 @@
     global.buildNftActiveDiagramSvg = function (canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
       const EO = equipOpts || {};
       const svg = orig.call(this, canales, huecos, pendPct, volL, svgIdSuffix, EO);
+      if (EO.cartoonMedir === true) return svg;
       return enhanceNftDiagramScada(svg, { interactive: EO.interactive === true });
     };
     global._nftScadaBridgeWrapped = true;

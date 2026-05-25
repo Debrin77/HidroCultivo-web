@@ -212,25 +212,35 @@ function nftHydraulicFlowSvgBundle(flowPaths, suf, opts) {
   const supplyD = flowPaths.supplyD || '';
   const returnD = flowPaths.returnD || '';
   const ports = flowPaths.ports;
-  const flowW = o.strokeWidth != null ? o.strokeWidth : 3.4;
+  const cartoon = o.cartoonMedir === true;
+  const flowW = o.strokeWidth != null ? o.strokeWidth : cartoon ? 5.5 : 3.4;
   const legendX = o.legendX != null ? o.legendX : 12;
   const legendY = o.legendY != null ? o.legendY : 8;
   const showLegend = o.showLegend !== false;
   const showPorts = o.showPorts !== false && ports;
   const mark = nftSvgFlowMarkerDefs(suf);
-  const pathGhost =
-    ' stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.45" stroke-width="5"';
-  const flowDashSupply = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowDashRet = 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
+  const pathGhost = cartoon
+    ? ''
+    : ' stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.45" stroke-width="5"';
+  const flowDashSupply = cartoon
+    ? 'stroke-linecap="round" stroke-linejoin="round"'
+    : 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowDashRet = cartoon
+    ? 'stroke-linecap="round" stroke-linejoin="round"'
+    : 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
   const anim =
-    o.animate !== false && typeof torreSvgAnimacionesActivas === 'function' && torreSvgAnimacionesActivas();
+    !cartoon &&
+    o.animate !== false &&
+    typeof torreSvgAnimacionesActivas === 'function' &&
+    torreSvgAnimacionesActivas();
   const animTag = anim
     ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
     : '/>';
 
-  let back =
-    '<path d="' + supplyD + '" stroke="' + NFT_FLOW_SUPPLY + '"' + pathGhost + '/>' +
-    '<path d="' + returnD + '" stroke="' + NFT_FLOW_RETURN + '"' + pathGhost + '/>';
+  let back = cartoon
+    ? ''
+    : '<path d="' + supplyD + '" stroke="' + NFT_FLOW_SUPPLY + '"' + pathGhost + '/>' +
+      '<path d="' + returnD + '" stroke="' + NFT_FLOW_RETURN + '"' + pathGhost + '/>';
   let flowLayer =
     '<path class="nft-flow-supply" d="' +
     supplyD +
@@ -620,6 +630,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
           legendX: 12,
           legendY: Math.max(8, topPad - 6),
           strokeWidth: flowW,
+          cartoonMedir: EO.cartoonMedir === true,
         })
       : null;
   const flowMark = flowSvg ? flowSvg.flowMark : nftSvgFlowMarkerDefs(suf);

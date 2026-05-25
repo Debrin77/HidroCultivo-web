@@ -1999,7 +1999,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       ? nftHydraulicFlowSvgBundle(flowPathsMm, 'MM' + suf, {
           legendX: 12,
           legendY: Math.max(8, topPad - 6),
-          strokeWidth: 3.4,
+          strokeWidth: EO.cartoonMedir === true ? 5.5 : 3.4,
+          cartoonMedir: EO.cartoonMedir === true,
         })
       : null;
   const flowMarkMM = flowSvgMm ? flowSvgMm.flowMark : { supplyId: 'a', returnId: 'b', defs: '' };
@@ -2636,9 +2637,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const flowSvgEsc =
     typeof nftHydraulicFlowSvgBundle === 'function'
       ? nftHydraulicFlowSvgBundle(flowPathsEsc, 'Esc' + suf, {
+          cartoonMedir: EO.cartoonMedir === true,
           legendX: 12,
           legendY: Math.max(8, hdrEscDraw.topPadMin - 6),
-          strokeWidth: 3.4,
+          strokeWidth: EO.cartoonMedir === true ? 5.5 : 3.4,
           showPorts: false,
         })
       : null;
