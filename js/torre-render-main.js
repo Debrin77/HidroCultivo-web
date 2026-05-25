@@ -213,8 +213,10 @@ function renderTorre() {
 
 var MEDIR_ESQUEMA_HINT_DEFAULT =
   'Mismo esquema que en Cultivo e instalación: tubos, recorrido del agua (azul/verde) y equipos. Toca un hueco para ver cultivo y días.';
+var MEDIR_NFT_CARTOON_HINT =
+  'Vista cartoon con el mismo circuito que Cultivo: <strong>azul</strong> alimentación, <strong>verde</strong> retorno. Toca un hueco para cultivo; tabla abajo.';
 
-/** Mismo SVG técnico que Cultivo e instalación (#torreSVGWrap), solo lectura visual opcional en Medir. */
+/** Medir: NFT → cartoon (misma hidráulica); resto → copia de #torreSVGWrap. */
 function renderTorreMedirDiagram() {
   const section = document.getElementById('medirInstalacionEsquema');
   const medirWrap = document.getElementById('medirDiagramWrap');
@@ -237,6 +239,16 @@ function renderTorreMedirDiagram() {
     section.classList.add('setup-hidden');
     medirWrap.innerHTML = '';
     return;
+  }
+
+  if (tipo === 'nft' && typeof renderNftMedirCartoon === 'function') {
+    try {
+      if (renderNftMedirCartoon(cfg, medirWrap)) {
+        section.classList.remove('setup-hidden');
+        if (hintEl) hintEl.innerHTML = MEDIR_NFT_CARTOON_HINT;
+        return;
+      }
+    } catch (_) {}
   }
 
   let html = '';
@@ -280,7 +292,7 @@ function renderTorreMedirDiagram() {
   section.classList.remove('setup-hidden');
   medirWrap.innerHTML = html;
   medirWrap.className = 'torre-svg-canvas medir-diagram-canvas';
-  medirWrap.classList.remove('medir-diagram-canvas--nft-mesa-illo');
+  medirWrap.classList.remove('medir-diagram-canvas--nft-cartoon', 'medir-diagram-canvas--nft-mesa-illo');
   if (tipo === 'nft' || tipo === 'dwc' || tipo === 'srf' || tipo === 'rdwc' || !tipo || tipo === 'torre') {
     try {
       bindTorreCestas(medirWrap);

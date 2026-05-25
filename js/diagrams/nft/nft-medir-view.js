@@ -1,28 +1,8 @@
 /**
- * Vista Medir: ilustración premium por tipo de instalación (solo lectura).
+ * Vista Medir NFT: mismo builder hidráulico que Cultivo + capa cartoon (solo lectura visual).
  */
 (function (global) {
   'use strict';
-
-  function nftMedirConfigHash(cfg) {
-    cfg = cfg || {};
-    const hyd =
-      typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : {};
-    const parts = [
-      cfg.tipoInstalacion || '',
-      cfg.nftDisposicion || '',
-      String(cfg.nftNumCanales ?? cfg.numNiveles ?? ''),
-      String(cfg.nftHuecosPorCanal ?? cfg.numCestas ?? ''),
-      String(cfg.nftMesaMultinivel || ''),
-      String(cfg.nftMesaTubosPorNivelStr || ''),
-      String(cfg.nftEscaleraCaras || ''),
-      String(cfg.nftEscaleraNivelesCara || ''),
-      String(cfg.volDeposito ?? ''),
-      String(cfg.volMezcla ?? ''),
-      (cfg.equipamiento || []).join(','),
-    ];
-    return parts.join('|');
-  }
 
   function buildNftMedirEquipOpts(cfg) {
     const eq = cfg.equipamiento || [];
@@ -46,7 +26,7 @@
     return {
       calentador: eq.includes('calentador'),
       difusor: eq.includes('difusor'),
-      interactive: false,
+      interactive: true,
       bombaInfo: bomb,
       nftDisposicion: cfg.nftDisposicion,
       nftAlturaBombeoCm: altShow > 0 ? altShow : null,
@@ -63,47 +43,44 @@
   }
 
   /**
-   * @returns {string|null} SVG ilustrado o null si no hay builder para este montaje.
+   * SVG técnico + enhance cartoon (misma hidráulica que Cultivo e instalación).
+   * @returns {string|null}
    */
-  function buildNftMedirIllustrationHtml(cfg) {
+  function buildNftMedirCartoonHtml(cfg) {
     if (!cfg || cfg.tipoInstalacion !== 'nft') return null;
-    const disp =
-      typeof nftDisposicionNormalizada === 'function' ? nftDisposicionNormalizada(cfg.nftDisposicion) : 'mesa';
-    if (disp !== 'mesa') return null;
-    if (typeof global.buildNftMesaMedirIllustrationSvg !== 'function') return null;
+    if (typeof global.buildNftActiveDiagramSvg !== 'function') return null;
 
     const hyd = typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : { nCh: 4 };
     const hx =
       typeof nftHuecosDesdeCfg === 'function'
         ? nftHuecosDesdeCfg(cfg)
         : parseInt(String(cfg.nftHuecosPorCanal || cfg.numCestas), 10) || 8;
-    const nCh = Math.max(1, hyd.nCh || parseInt(String(cfg.nftNumCanales), 10) || 4);
-    const EO = buildNftMedirEquipOpts(cfg);
     const pend = cfg.nftPendientePct != null ? cfg.nftPendientePct : 2;
+    const EO = buildNftMedirEquipOpts(cfg);
 
-    return global.buildNftMesaMedirIllustrationSvg(nCh, hx, pend, EO.volL, 'Medir', EO);
+    let svg = global.buildNftActiveDiagramSvg(hyd.nCh, hx, pend, EO.volL, 'MedirCartoon', EO);
+    if (!svg || svg.indexOf('<svg') < 0) return null;
+    if (typeof global.enhanceNftDiagramCartoon === 'function') {
+      svg = global.enhanceNftDiagramCartoon(svg, { medir: true });
+    }
+    return svg;
   }
 
-  function renderNftMedirIllustration(cfg, mountEl) {
-    const html = buildNftMedirIllustrationHtml(cfg);
+  function renderNftMedirCartoon(cfg, mountEl) {
+    const html = buildNftMedirCartoonHtml(cfg);
     if (!html || !mountEl) return false;
     mountEl.innerHTML = html;
-    mountEl.className = 'torre-svg-canvas medir-diagram-canvas medir-diagram-canvas--nft-mesa-illo';
+    mountEl.className = 'torre-svg-canvas medir-diagram-canvas medir-diagram-canvas--nft-cartoon';
     mountEl.setAttribute(
       'aria-label',
-      'Vista ilustrada de tu NFT en mesa. Los cultivos y datos están en el resumen por plaza.'
+      'Esquema cartoon de tu NFT: mismo recorrido del agua que en Cultivo e instalación. Toca un hueco para ver cultivo.'
     );
+    try {
+      if (typeof bindTorreCestas === 'function') bindTorreCestas(mountEl);
+    } catch (_) {}
     return true;
   }
 
-  function invalidateNftMedirCache() {
-    if (typeof global.state === 'object' && global.state) {
-      global.state.nftMedirIllustrationCache = null;
-    }
-  }
-
-  global.nftMedirConfigHash = nftMedirConfigHash;
-  global.buildNftMedirIllustrationHtml = buildNftMedirIllustrationHtml;
-  global.renderNftMedirIllustration = renderNftMedirIllustration;
-  global.invalidateNftMedirCache = invalidateNftMedirCache;
+  global.buildNftMedirCartoonHtml = buildNftMedirCartoonHtml;
+  global.renderNftMedirCartoon = renderNftMedirCartoon;
 })(typeof window !== 'undefined' ? window : globalThis);
