@@ -39,7 +39,7 @@
         ? p.xReturnRiser
         : oddTubes
           ? Math.min(p.Wsvg - 14, p.xR + flowMargin)
-          : Math.max(xFeedRiser + 10, Math.min(p.xL - 4, xFeedRiser + riserSep));
+          : Math.max(12, xFeedRiser - riserSep - 6);
     return { xFeedRiser: xFeedRiser, xReturnRiser: xReturnRiser, oddTubes: oddTubes };
   }
 
@@ -69,10 +69,10 @@
       pushWp(wp, xJog, yDuctRun);
       pushWp(wp, xReturnRiser, yDuctRun);
     } else {
-      /** Par: último tubo sale a la izq.; retorno por riser izquierdo (no cruzar a la derecha). */
-      const xCol = Math.min(xReturnRiser, xExit - flowMargin, ports.xReturn + 12);
-      pushWp(wp, xCol, yExit);
-      pushWp(wp, xCol, yDuctRun);
+      /** Par: bajar desde la salida del último tubo; no paralelizar con el riser de subida (azul). */
+      const xDrop = Math.min(xExit - flowMargin, ports.xReturn + 10);
+      pushWp(wp, xDrop, yExit);
+      pushWp(wp, xDrop, yDuctRun);
     }
     pushWp(wp, ports.xReturn, yDuctRun);
     pushWp(wp, ports.xReturn, ports.yInlet);
@@ -251,7 +251,7 @@
     const xExit = endsRight ? xR - padFlow : xL + padFlow;
     let xReturnRiserSerp = risers.xReturnRiser;
     if (!risers.oddTubes) {
-      xReturnRiserSerp = Math.min(xReturnRiserSerp, xExit - flowMargin, xFeedRiser + 18);
+      xReturnRiserSerp = Math.min(xExit - flowMargin, ports.xReturn + 10);
     }
     const retWp = returnWaypointsFromExit({
       xExit: xExit,
@@ -353,7 +353,7 @@
     const Rn = runs[nv - 1];
     const xExit = Rn.rtl ? Rn.xL + padFlow : Rn.xR - padFlow;
     if (!risers.oddTubes) {
-      xReturnRiser = Math.min(xReturnRiser, xExit - flowMargin, xFeedRiser + 18);
+      xReturnRiser = Math.min(xExit - flowMargin, ports.xReturn + 10);
     }
     const retWp = returnWaypointsFromExit({
       xExit: xExit,

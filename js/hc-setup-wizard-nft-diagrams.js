@@ -2681,7 +2681,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       if (nv % 2 === 0) {
         const lastREsc = runs[runs.length - 1];
         const xExitREsc = lastREsc.rtl ? lastREsc.xL + padFlow : lastREsc.xR - padFlow;
-        xReturnRiserEsc = Math.min(xReturnRiserEsc, xExitREsc - flowMarginEsc, xFeedRiserEsc + 18);
+        xReturnRiserEsc = Math.min(xExitREsc - flowMarginEsc, (escPorts ? escPorts.xReturn : xMinL) + 10);
       }
     } else {
       xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
@@ -2690,7 +2690,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       xReturnRiserEsc =
         nv % 2 === 1
           ? xMaxR + flowMarginEsc + 12
-          : Math.min(xMinL + padFlow - flowMarginEsc - 6, xExitREsc - flowMarginEsc, xFeedRiserEsc + 18);
+          : Math.min(xExitREsc - flowMarginEsc, (escPorts ? escPorts.xReturn : xMinL) + 10);
     }
   } else if (runs.length) {
     let xMinL = Infinity;
@@ -2705,7 +2705,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     xReturnRiserEsc =
       nv % 2 === 1
         ? xMaxR + flowMarginEsc + 12
-        : Math.min(xMinL + padFlow - flowMarginEsc - 6, xExitREsc - flowMarginEsc, xFeedRiserEsc + 18);
+        : Math.min(xExitREsc - flowMarginEsc, xMinL + 10);
   }
 
   const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
