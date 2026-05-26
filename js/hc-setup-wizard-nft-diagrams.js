@@ -2581,12 +2581,12 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     ...legHintEsc,
     alturaBadgeMinTier: 2,
   });
-  const Wsvg = altBadgeEsc.canvasW;
+  let Wsvg = altBadgeEsc.canvasW;
   const flowMarginEsc = esc1Cara ? 10 : 8;
   const serpentineJogEsc = esc1Cara ? (compactEsc ? 22 : 28) : compactEsc ? 26 : 32;
   let xFeedRiserEsc = cx - baseHalf - 28;
   let xReturnRiserEsc = cx + baseHalf + 28;
-  const cxTitle = Wsvg / 2;
+  let cxTitle = Wsvg / 2;
   const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
 
   /** Dos caras: hueco bajo la T para las dos entradas y las U del serpentín hacia el centro. */
@@ -2614,9 +2614,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       let xR = xLeftFoot + rungIn;
       if (i === 0) {
         xR = Math.min(xR, xInL0);
+        if (xR < xL + 12) xR = xL + 12;
       }
-      /** Espejo de la cara dcha.: 1.º tubo desde el centro; serpentín alternado (como 1 cara). */
-      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 1 });
+      /** Mismo serpentín que 1 cara (espejado): 1.º tubo desde el centro. */
+      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
     }
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
@@ -2626,6 +2627,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       let xR = xRightFoot + rungOut;
       if (i === 0) {
         xL = Math.max(xL, xInR0);
+        if (xR < xL + 12) xL = xR - 12;
       }
       runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
     }
@@ -2640,6 +2642,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
     const riserPad2 = serpentineJogEsc + 44;
     const contentW2 = xMaxR - xMinL + riserPad2 * 2;
+    Wsvg = Math.max(Wsvg, Math.ceil(contentW2 + 36));
     const shiftX2 = Math.max(20, (Wsvg - contentW2) / 2) + riserPad2 - xMinL;
     if (Math.abs(shiftX2) > 0.5) {
       for (let ri = 0; ri < runs.length; ri++) {
@@ -2659,6 +2662,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     xTankReturnR = tx + tankW - 14;
     xTankReturnCenter = xTankC;
     xSupplyRiser = cx;
+    cxTitle = Wsvg / 2;
   }
 
   if (runs.length && esc1Cara) {
@@ -2780,12 +2784,19 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const flowPathsEsc = {
     supplyD: hydEsc.supplyD || '',
     returnD: hydEsc.returnD || '',
-    ports: escPorts || {
-      xFeed: xTankFeed,
-      xReturn: xTankReturn,
-      yOutlet: yOutlet,
-      yInlet: yInlet,
-    },
+    ports: esc2Cara
+      ? {
+          xFeed: xTankFeed,
+          xReturn: xTankReturnCenter,
+          yOutlet: yOutlet,
+          yInlet: yInlet,
+        }
+      : escPorts || {
+          xFeed: xTankFeed,
+          xReturn: xTankReturn,
+          yOutlet: yOutlet,
+          yInlet: yInlet,
+        },
   };
   const flowSvgEsc =
     typeof nftHydraulicFlowSvgBundle === 'function'
@@ -2794,7 +2805,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           legendX: 12,
           legendY: Math.max(8, hdrEscDraw.topPadMin - 6),
           strokeWidth: EO.cartoonMedir === true ? 5.5 : 3.4,
-          showPorts: esc1Cara || esc2Cara,
+          showPorts: esc1Cara,
           legendMode: esc1Cara ? 'serie' : esc2Cara ? 'escalera_2c' : undefined,
         })
       : null;
