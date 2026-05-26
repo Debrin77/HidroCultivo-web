@@ -285,33 +285,44 @@
     };
   }
 
-  function zigzagRunWaypoints(runList, padFlow, flowMargin, outerSide) {
+  /**
+   * Serpentín tubo a tubo (escalera / peldaños): U por el extremo de salida de cada tubo,
+   * igual que pared/mesa — sin ramas verticales a todos los peldaños.
+   */
+  function serpentineAlongRuns(runList, padFlow, flowMargin) {
     const wp = [];
-    const xDropAt = function (R) {
-      return outerSide === 'R' ? R.xR - padFlow + flowMargin : R.xL + padFlow - flowMargin;
-    };
     for (let i = 0; i < runList.length; i++) {
       const R = runList[i];
       const Rn = i < runList.length - 1 ? runList[i + 1] : null;
-      const xS = R.rtl ? R.xR - padFlow : R.xL + padFlow;
-      const xE = R.rtl ? R.xL + padFlow : R.xR - padFlow;
-      pushWp(wp, xS, R.y);
-      pushWp(wp, xE, R.y);
+      const xIn = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+      const xOut = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+      pushWp(wp, xIn, R.y);
+      pushWp(wp, xOut, R.y);
       if (Rn) {
-        pushWp(wp, xDropAt(R), R.y);
-        pushWp(wp, xDropAt(R), Rn.y);
-        pushWp(wp, Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow, Rn.y);
+        const xDrop = R.rtl ? R.xL + padFlow - flowMargin : R.xR - padFlow + flowMargin;
+        const xNextIn = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
+        pushWp(wp, xDrop, R.y);
+        pushWp(wp, xDrop, Rn.y);
+        pushWp(wp, xNextIn, Rn.y);
       }
     }
     return wp;
   }
 
-  function faceInnerX(R, face, padFlow) {
-    return face === 'L' ? R.xR - padFlow : R.xL + padFlow;
-  }
-
-  function faceOuterX(R, face, padFlow) {
-    return face === 'L' ? R.xL + padFlow : R.xR - padFlow;
+  function risersFromRunList(runList, flowMargin, padFlow) {
+    let xMinL = Infinity;
+    let xMaxR = -Infinity;
+    for (let i = 0; i < runList.length; i++) {
+      const R = runList[i];
+      if (R.xL < xMinL) xMinL = R.xL;
+      if (R.xR > xMaxR) xMaxR = R.xR;
+    }
+    if (!Number.isFinite(xMinL)) xMinL = 0;
+    if (!Number.isFinite(xMaxR)) xMaxR = 0;
+    return {
+      xFeedRiser: xMinL + padFlow - flowMargin - 12,
+      xReturnRiser: xMaxR + flowMargin + 12,
+    };
   }
 
   function drainWaypoints(xFrom, yFrom, xLeg, xTankX, yInlet, ladderBot) {
@@ -360,6 +371,8 @@
       const runsR = runs.slice(nv);
       const yManifold = p.yManifold;
       const retAlCentro = p.retAlCentro;
+      const risL = risersFromRunList(runsL, flowMargin, padFlow);
+      const risR = risersFromRunList(runsR, flowMargin, padFlow);
       const supHead = [];
       pushWp(supHead, p.xPump, p.yPump);
       pushWp(supHead, p.xTankFeed, p.yPump);
@@ -369,28 +382,29 @@
 
       const supL = supHead.slice();
       const R0L = runsL[0];
-      pushWp(supL, faceInnerX(R0L, 'L', padFlow), yManifold);
-      pushWp(supL, faceInnerX(R0L, 'L', padFlow), R0L.y);
-      pushWp(supL, faceOuterX(R0L, 'L', padFlow), R0L.y);
-      supL.push.apply(supL, zigzagRunWaypoints(runsL, padFlow, flowMargin, 'L'));
+      const xIn0L = R0L.rtl ? R0L.xR - padFlow : R0L.xL + padFlow;
+      pushWp(supL, risL.xFeedRiser, yManifold);
+      pushWp(supL, risL.xFeedRiser, R0L.y);
+      pushWp(supL, xIn0L, R0L.y);
+      supL.push.apply(supL, serpentineAlongRuns(runsL, padFlow, flowMargin));
       supplyPaths.push(supL);
 
       const supR = [];
       pushWp(supR, p.xSupplyRiser, yManifold);
       const R0R = runsR[0];
-      pushWp(supR, faceInnerX(R0R, 'R', padFlow), yManifold);
-      pushWp(supR, faceInnerX(R0R, 'R', padFlow), R0R.y);
-      pushWp(supR, faceOuterX(R0R, 'R', padFlow), R0R.y);
-      supR.push.apply(supR, zigzagRunWaypoints(runsR, padFlow, flowMargin, 'R'));
+      const xIn0R = R0R.rtl ? R0R.xR - padFlow : R0R.xL + padFlow;
+      pushWp(supR, xIn0R, yManifold);
+      pushWp(supR, xIn0R, R0R.y);
+      supR.push.apply(supR, serpentineAlongRuns(runsR, padFlow, flowMargin));
       supplyPaths.push(supR);
 
       const RnL = runsL[nv - 1];
-      const xEndL = retAlCentro ? faceInnerX(RnL, 'L', padFlow) : faceOuterX(RnL, 'L', padFlow);
+      const xEndL = RnL.rtl ? RnL.xL + padFlow : RnL.xR - padFlow;
       returnPaths.push(
         drainWaypoints(
           xEndL,
           RnL.y,
-          retAlCentro ? p.cx : faceOuterX(RnL, 'L', padFlow),
+          retAlCentro ? p.cx : risL.xReturnRiser,
           retAlCentro ? p.xTankReturnCenter : p.xTankReturnL,
           p.yInlet,
           p.ladderBot
@@ -398,42 +412,61 @@
       );
 
       const RnR = runsR[nv - 1];
-      const xEndR = retAlCentro ? faceInnerX(RnR, 'R', padFlow) : faceOuterX(RnR, 'R', padFlow);
+      const xEndR = RnR.rtl ? RnR.xL + padFlow : RnR.xR - padFlow;
       returnPaths.push(
         drainWaypoints(
           xEndR,
           RnR.y,
-          retAlCentro ? p.cx : faceOuterX(RnR, 'R', padFlow),
+          retAlCentro ? p.cx : risR.xReturnRiser,
           retAlCentro ? p.xTankReturnCenter : p.xTankReturnR,
           p.yInlet,
           p.ladderBot
         )
       );
     } else {
+      const ris = risersFromRunList(runs, flowMargin, padFlow);
+      const xFeedRiser = p.xFeedRiser != null ? p.xFeedRiser : ris.xFeedRiser;
+      const xReturnRiser = p.xReturnRiser != null ? p.xReturnRiser : ris.xReturnRiser;
       const sup1 = [];
       pushWp(sup1, p.xPump, p.yPump);
       pushWp(sup1, p.xTankFeed, p.yPump);
       pushWp(sup1, p.xTankFeed, p.yOutlet);
-      pushWp(sup1, p.xLegSupplyL, p.yOutlet);
-      pushWp(sup1, p.xLegSupplyL, runs[0].y);
+      pushWp(sup1, xFeedRiser, p.yOutlet);
+      pushWp(sup1, xFeedRiser, runs[0].y);
       const R0 = runs[0];
-      pushWp(sup1, faceInnerX(R0, 'L', padFlow), R0.y);
-      pushWp(sup1, faceOuterX(R0, 'L', padFlow), R0.y);
-      sup1.push.apply(sup1, zigzagRunWaypoints(runs, padFlow, flowMargin, 'L'));
+      pushWp(sup1, R0.rtl ? R0.xR - padFlow : R0.xL + padFlow, R0.y);
+      sup1.push.apply(sup1, serpentineAlongRuns(runs, padFlow, flowMargin));
       supplyPaths.push(sup1);
 
       const Rn = runs[nv - 1];
       const xExit1 = Rn.rtl ? Rn.xL + padFlow : Rn.xR - padFlow;
-      returnPaths.push(
-        drainWaypoints(
-          xExit1,
-          Rn.y,
-          p.oddEsc ? p.backX + 8 : p.xLegReturnEven,
-          p.xTankReturn,
-          p.yInlet,
-          p.ladderBot
-        )
-      );
+      const xMinL = Math.min.apply(null, runs.map((r) => r.xL));
+      const xMaxR = Math.max.apply(null, runs.map((r) => r.xR));
+      const endsRight = !Rn.rtl;
+      if (ports && typeof returnWaypointsFromExit === 'function') {
+        returnPaths.push(
+          returnWaypointsFromExit({
+            xExit: xExit1,
+            yExit: Rn.y,
+            xL: xMinL,
+            xR: xMaxR,
+            flowMargin: flowMargin,
+            oddTubes: nv % 2 === 1,
+            xFeedRiser: xFeedRiser,
+            xReturnRiser: xReturnRiser,
+            Wsvg: p.Wsvg != null ? p.Wsvg : xMaxR + 80,
+            tankY: p.tankY != null ? p.tankY : p.ladderBot + 40,
+            ports: ports,
+            tubeH: p.tubeH != null ? p.tubeH : 22,
+            endsRight: endsRight,
+            ductDrop: p.ductDrop,
+          })
+        );
+      } else {
+        returnPaths.push(
+          drainWaypoints(xExit1, Rn.y, xReturnRiser, p.xTankReturn, p.yInlet, p.ladderBot)
+        );
+      }
     }
 
     return {

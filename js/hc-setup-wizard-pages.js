@@ -30,8 +30,8 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
   }
   const mesaParalelo =
     disp === 'mesa' &&
-    typeof nftMesaRecorridoNormalizada === 'function' &&
-    nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo';
+    typeof nftColectoresParaleloDesdeConfig === 'function' &&
+    nftColectoresParaleloDesdeConfig(cfg);
   if (!tiers && mesaParalelo) {
     tiers = [Math.max(1, nCh0)];
   }
@@ -614,23 +614,82 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const xPump = tx + 14;
   const flowMargin = 10;
-  const flowPaths = nftBuildSerpentineFlowPaths({
-    nCh: nCh,
-    yRow: yRow,
-    xL: xL,
-    xR: xR,
-    padFlow: padFlow,
-    flowMargin: flowMargin,
-    oddTubes: oddTubes,
-    xPump: xPump,
-    yPump: yPump,
-    tx: tx,
-    tankW: tankW,
-    tankY: tankY,
-    tankH: tankH,
-    Wsvg: Wsvg,
-    tubeH: tubeH,
-  });
+  const paredParalelo =
+    isParedSerp &&
+    typeof nftColectoresParaleloDesdeConfig === 'function' &&
+    nftColectoresParaleloDesdeConfig(cfg);
+  let flowPaths;
+  if (paredParalelo && typeof nftHydraulicMesaMultinivel === 'function') {
+    const geomsPar = [];
+    for (let i = 0; i < nCh; i++) {
+      geomsPar.push({ g: i, rowY: yRow(i), xL: xL, xR: xR, t: 0 });
+    }
+    const shelfPar = function (G) {
+      const yC = G.rowY;
+      const x0 = G.xL + padFlow;
+      const x1 = G.xR - padFlow;
+      return {
+        x0: x0,
+        x1: x1,
+        yC: yC,
+        yT: yC - tubeH / 2,
+        yB: yC + tubeH / 2,
+        thick: tubeH,
+        wid: Math.max(8, x1 - x0),
+      };
+    };
+    const portsPar = nftSvgTankPorts(tx, tankW, tankY, tankH, nCh);
+    const riserSep = 16;
+    const xFeedRiserPar = Math.max(12, xL - flowMargin - (oddTubes ? 0 : riserSep));
+    const xReturnRiserPar = oddTubes
+      ? Math.min(Wsvg - 14, xR + flowMargin)
+      : Math.max(xFeedRiserPar + 10, Math.min(xL - 4, xFeedRiserPar + riserSep));
+    const hydPar = nftHydraulicMesaMultinivel({
+      kind: 'mesa_multinivel',
+      mesaParallel: true,
+      mesaParallelGeoms: geomsPar,
+      mesaParallelShelfFn: shelfPar,
+      ports: portsPar,
+      xPump: xPump,
+      yPump: yPump,
+      xFeedRiser: xFeedRiserPar,
+      xReturnRiser: xReturnRiserPar,
+      xL: xL,
+      xR: xR,
+      flowMargin: flowMargin,
+      oddTubes: oddTubes,
+      Wsvg: Wsvg,
+      tankY: tankY,
+      tubeH: tubeH,
+      ductDrop: 28,
+      cornerRadius: 0,
+    });
+    flowPaths = {
+      supplyD: hydPar.supplyD || '',
+      returnD: hydPar.returnD || '',
+      ports: portsPar,
+      xFeedRiser: xFeedRiserPar,
+      xReturnRiser: xReturnRiserPar,
+    };
+  } else {
+    flowPaths = nftBuildSerpentineFlowPaths({
+      nCh: nCh,
+      yRow: yRow,
+      xL: xL,
+      xR: xR,
+      padFlow: padFlow,
+      flowMargin: flowMargin,
+      oddTubes: oddTubes,
+      xPump: xPump,
+      yPump: yPump,
+      tx: tx,
+      tankW: tankW,
+      tankY: tankY,
+      tankH: tankH,
+      Wsvg: Wsvg,
+      tubeH: tubeH,
+    });
+  }
   const flowSupplyD = flowPaths.supplyD;
   const flowReturnD = flowPaths.returnD;
   const tankPorts = flowPaths.ports;
@@ -646,6 +705,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
           legendY: Math.max(8, topPad - 6),
           strokeWidth: flowW,
           cartoonMedir: EO.cartoonMedir === true,
+          legendMode: paredParalelo ? 'mesa_paralelo' : 'serie',
         })
       : null;
   const flowMark = flowSvg ? flowSvg.flowMark : nftSvgFlowMarkerDefs(suf);
@@ -1313,6 +1373,9 @@ function buildNftDraftConfigFromSetupUi() {
         if (mont.mesaSepCm > 0) draft.nftMesaSeparacionNivelesCm = mont.mesaSepCm;
       }
     }
+  }
+  if (mont.disposicion === 'pared') {
+    draft.nftParedRecorridoAgua = mont.mesaRecorrido || 'serie';
   }
   if (mont.disposicion === 'escalera') {
     draft.nftEscaleraCaras = mont.escaleraCaras;

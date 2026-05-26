@@ -1747,6 +1747,7 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftMesaTubosPorNivelStr;
     delete state.configTorre.nftMesaSeparacionNivelesCm;
     delete state.configTorre.nftMesaRecorridoAgua;
+    delete state.configTorre.nftParedRecorridoAgua;
     delete state.configTorre.nftEscaleraCaras;
     delete state.configTorre.nftEscaleraNivelesCara;
     const montSv = readNftMontajeFromSetupUi();
@@ -1764,6 +1765,10 @@ function guardarSetupYContinuar() {
           if (montSv.mesaSepCm > 0) state.configTorre.nftMesaSeparacionNivelesCm = montSv.mesaSepCm;
         }
       }
+    }
+    if (montSv.disposicion === 'pared') {
+      state.configTorre.nftParedRecorridoAgua =
+        montSv.mesaRecorrido || (typeof nftMesaRecorridoNormalizada === 'function' ? nftMesaRecorridoNormalizada() : 'serie');
     }
     if (montSv.disposicion === 'escalera') {
       state.configTorre.nftEscaleraCaras = montSv.escaleraCaras;
@@ -1824,6 +1829,7 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftMesaTubosPorNivelStr;
     delete state.configTorre.nftMesaSeparacionNivelesCm;
     delete state.configTorre.nftMesaRecorridoAgua;
+    delete state.configTorre.nftParedRecorridoAgua;
     delete state.configTorre.nftEscaleraCaras;
     delete state.configTorre.nftEscaleraNivelesCara;
     delete state.configTorre.nftNetPotRimMm;

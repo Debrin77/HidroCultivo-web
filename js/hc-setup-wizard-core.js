@@ -2728,6 +2728,20 @@ function nftMesaRecorridoNormalizada(v) {
   return 'serie';
 }
 
+/** Colectores izq./der. (paralelo) en mesa o pared. */
+function nftColectoresParaleloDesdeConfig(cfg) {
+  cfg = cfg || {};
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  if (disp === 'mesa') {
+    return nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo';
+  }
+  if (disp === 'pared') {
+    const rec = cfg.nftParedRecorridoAgua != null ? cfg.nftParedRecorridoAgua : cfg.nftMesaRecorridoAgua;
+    return nftMesaRecorridoNormalizada(rec) === 'paralelo';
+  }
+  return false;
+}
+
 /** Vista cenital (mesa MM): multinivel o mesa en paralelo con bancada horizontal. */
 function nftMesaUsaDiagramaCenital(cfg) {
   if (!cfg || nftDisposicionNormalizada(cfg.nftDisposicion) !== 'mesa') return false;
@@ -2742,8 +2756,8 @@ function nftMesaUsaDiagramaCenital(cfg) {
 function nftFlowTopologyFromConfig(cfg) {
   cfg = cfg || {};
   const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
-  if (disp === 'mesa') {
-    return nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo' ? 'paralelo' : 'serie';
+  if (disp === 'mesa' || disp === 'pared') {
+    return nftColectoresParaleloDesdeConfig(cfg) ? 'paralelo' : 'serie';
   }
   if (disp === 'escalera') {
     const caras =
@@ -2989,7 +3003,11 @@ function readNftMesaRecorridoFromUi(prefix) {
 }
 
 function syncNftMesaRecorridoUiFromCfg(cfg) {
-  const rec = nftMesaRecorridoNormalizada(cfg && cfg.nftMesaRecorridoAgua);
+  cfg = cfg || {};
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  const rawRec =
+    disp === 'pared' && cfg.nftParedRecorridoAgua != null ? cfg.nftParedRecorridoAgua : cfg.nftMesaRecorridoAgua;
+  const rec = nftMesaRecorridoNormalizada(rawRec);
   const elS = document.getElementById('nftMesaRecorridoSerie');
   const elP = document.getElementById('nftMesaRecorridoParalelo');
   const elSs = document.getElementById('sysNftMesaRecorridoSerie');
@@ -3040,8 +3058,17 @@ function refrescarNftMontajeSubpanels() {
   const mesaW = document.getElementById('nftMesaExtraWrap');
   const escW = document.getElementById('nftEscaleraExtraWrap');
   const hint = document.getElementById('nftAlturaBombeoHint');
-  if (mesaW) mesaW.classList.toggle('setup-hidden', d !== 'mesa');
+  if (mesaW) mesaW.classList.toggle('setup-hidden', d !== 'mesa' && d !== 'pared');
   if (escW) escW.classList.toggle('setup-hidden', d !== 'escalera');
+  const mesaMmLbl = document.getElementById('nftMesaMultinivelChk')?.closest('label');
+  if (mesaMmLbl) mesaMmLbl.classList.toggle('setup-hidden', d !== 'mesa');
+  const mesaMmFields = document.getElementById('nftMesaMultinivelFields');
+  if (mesaMmFields && d !== 'mesa') mesaMmFields.classList.add('setup-hidden');
+  const mesaRecKicker = mesaW && mesaW.querySelector('.setup-nft-subkicker');
+  if (mesaRecKicker) {
+    mesaRecKicker.textContent =
+      d === 'pared' ? 'Recorrido del agua (pared)' : 'Recorrido del agua (mesa)';
+  }
   if (hint) {
     hint.innerHTML =
       d === 'mesa'
@@ -3138,8 +3165,15 @@ function refrescarSistemaNftMontajeSubpanels() {
   let d = 'mesa';
   if (document.getElementById('sysNftDispEscalera')?.classList.contains('selected')) d = 'escalera';
   else if (document.getElementById('sysNftDispPared')?.classList.contains('selected')) d = 'pared';
-  if (mesaW) mesaW.style.display = d === 'mesa' ? 'block' : 'none';
+  if (mesaW) mesaW.style.display = d === 'mesa' || d === 'pared' ? 'block' : 'none';
   if (escW) escW.style.display = d === 'escalera' ? 'block' : 'none';
+  const sysMmChk = document.getElementById('sysNftMesaMultinivelChk');
+  const sysMmRow = sysMmChk?.closest('label');
+  if (sysMmRow) sysMmRow.style.display = d === 'mesa' ? '' : 'none';
+  const sysRecKicker = mesaW && mesaW.querySelector('.torre-nft-cara-kicker');
+  if (sysRecKicker) {
+    sysRecKicker.textContent = d === 'pared' ? 'Recorrido del agua (pared)' : 'Recorrido del agua (mesa)';
+  }
   if (rowC) {
     const mm = document.getElementById('sysNftMesaMultinivelChk')?.checked === true;
     rowC.style.display = d === 'escalera' ? 'none' : 'block';
@@ -3191,7 +3225,11 @@ function textoResumenMontajeNftSistema(cfg) {
   const d = nftDisposicionNormalizada(cfg.nftDisposicion || 'mesa');
   const dTxt = d === 'mesa' ? 'Mesa' : d === 'escalera' ? 'Escalera' : 'Pared';
   const recTxt =
-    d === 'mesa' && nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo' ? ' · paralelo' : d === 'mesa' ? ' · serie' : '';
+    (d === 'mesa' || d === 'pared') && typeof nftColectoresParaleloDesdeConfig === 'function' && nftColectoresParaleloDesdeConfig(cfg)
+      ? ' · paralelo'
+      : d === 'mesa' || d === 'pared'
+        ? ' · serie'
+        : '';
   let nCh = cfg.nftNumCanales ?? cfg.numNiveles ?? 4;
   try {
     const hyd = getNftHidraulicaDesdeConfig(cfg);
@@ -4020,6 +4058,7 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   delete cfg.nftMesaTubosPorNivelStr;
   delete cfg.nftMesaSeparacionNivelesCm;
   delete cfg.nftMesaRecorridoAgua;
+  delete cfg.nftParedRecorridoAgua;
   delete cfg.nftEscaleraCaras;
   delete cfg.nftEscaleraNivelesCara;
   if (dispo === 'mesa') {
@@ -4049,6 +4088,7 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
     cfg.nftEscaleraNivelesCara = Math.max(1, Math.min(12, Number.isFinite(nv) ? nv : 4));
     cfg.nftNumCanales = cfg.nftEscaleraNivelesCara * caras;
   } else {
+    cfg.nftParedRecorridoAgua = readNftMesaRecorridoFromUi('sys');
     const nc = parseInt(String(document.getElementById('sysNftNumCanales')?.value || ''), 10);
     cfg.nftNumCanales = Math.max(1, Math.min(24, Number.isFinite(nc) ? nc : 4));
   }

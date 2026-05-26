@@ -2007,7 +2007,11 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     ductDrop: compactMesa ? 12 : 16,
     cornerRadius: 0,
   };
-  if (nTiers > 1 && hydSeq.length) {
+  if (mesaParalelo && geoms.length) {
+    hydMmSpec.mesaParallel = true;
+    hydMmSpec.mesaParallelGeoms = geoms;
+    hydMmSpec.mesaParallelShelfFn = mmShelf;
+  } else if (nTiers > 1 && hydSeq.length) {
     hydMmSpec.mesaColumns = {
       hydSeq: hydSeq,
       geomByG: geomByG,
@@ -2433,8 +2437,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
  * NFT escalera / A-frame esquemático: peldaños por cara (1 o 2 caras).
  *
  * Modelo hidráulico (línea azul): sin cruces entre alimentación y retorno.
- * Una cara: pasillo izq. (alimentación desde salida izq. del depósito), zigzag
- * en tubos, retorno por pasillo dcho. al depósito.
+ * Una cara: alimentación por pasillo izq. → tubo superior → serpentín tubo a tubo
+ * (U por el extremo de salida, sin ramas a todos los peldaños) → retorno por pasillo dcho.
  * Dos caras: subida central por el eje de la escalera (T en el vértice), zigzag
  * Dos caras: una subida central → T superior → cada tubo de arriba; serpentín hacia abajo
  * por el extremo alejado del centro (izq. en hoja izq., dcha. en hoja dcha.).
@@ -2567,10 +2571,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   });
   const Wsvg = altBadgeEsc.canvasW;
   const flowMarginEsc = 8;
-  const xLegDrainL = cx - baseHalf - 10;
-  const xLegSupplyL = xLegDrainL - 18;
-  const xLegReturnEven = xLegDrainL - 9;
-  const xLegDrainR = cx + baseHalf + 10;
+  let xFeedRiserEsc = cx - baseHalf - 28;
+  let xReturnRiserEsc = cx + baseHalf + 28;
   const cxTitle = Wsvg / 2;
   const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
 
@@ -2580,7 +2582,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const runs = [];
   let g = 0;
   if (car === 1) {
-    const backX = cx + 44;
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
@@ -2614,13 +2615,23 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   }
 
+  if (runs.length) {
+    let xMinL = Infinity;
+    let xMaxR = -Infinity;
+    for (let ri = 0; ri < runs.length; ri++) {
+      if (runs[ri].xL < xMinL) xMinL = runs[ri].xL;
+      if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
+    }
+    xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
+    xReturnRiserEsc = xMaxR + flowMarginEsc + 12;
+  }
+
   const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
   const F_RET = typeof NFT_FLOW_RETURN !== 'undefined' ? NFT_FLOW_RETURN : '#16a34a';
   const chGrad0Esc = HC_DIAG.nft.canalGrad0;
   const chGrad1Esc = HC_DIAG.nft.canalGrad1;
   const chColEsc = HC_DIAG.nft.canalStroke;
   const erEsc = compactEsc ? 10 : 14;
-  const backXEsc = cx + 44;
   const hydEsc =
     typeof nftHydraulicEscalera === 'function'
       ? nftHydraulicEscalera({
@@ -2644,14 +2655,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           flowMargin: flowMarginEsc,
           cornerRadius: erEsc,
           oddEsc: oddEsc,
-          xLegSupplyL: xLegSupplyL,
-          xLegReturnEven: xLegReturnEven,
-          backX: backXEsc,
+          xFeedRiser: esc1Cara ? xFeedRiserEsc : xSupplyRiser,
+          xReturnRiser: esc1Cara ? xReturnRiserEsc : undefined,
+          Wsvg: Wsvg,
+          tankY: tankY,
+          tubeH: tubeH,
           xTankReturn: xTankReturn,
           ladderBot: ladderBot,
           tx: tx,
           tankW: tankW,
-          tankY: tankY,
           tankH: tankH,
           ports: escPorts,
         })
@@ -2737,16 +2749,48 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   let frame = '';
   if (car === 2) {
     frame +=
-      '<line x1="' + cx + '" y1="' + yApex + '" x2="' + (cx - baseHalf) + '" y2="' + ladderBot + '" stroke="#64748b" stroke-width="2.8" stroke-linecap="round"/>';
-    frame +=
-      '<line x1="' + cx + '" y1="' + yApex + '" x2="' + (cx + baseHalf) + '" y2="' + ladderBot + '" stroke="#64748b" stroke-width="2.8" stroke-linecap="round"/>';
-    frame +=
-      '<line x1="' + (cx - baseHalf) + '" y1="' + ladderBot + '" x2="' + (cx + baseHalf) + '" y2="' + ladderBot + '" stroke="#475569" stroke-width="2.2" stroke-linecap="round" opacity="0.88"/>';
+      '<g class="nft-esc-frame" pointer-events="none" aria-hidden="true">' +
+      '<line x1="' +
+      cx +
+      '" y1="' +
+      yApex +
+      '" x2="' +
+      (cx - baseHalf) +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.78"/>' +
+      '<line x1="' +
+      cx +
+      '" y1="' +
+      yApex +
+      '" x2="' +
+      (cx + baseHalf) +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.78"/>' +
+      '<line x1="' +
+      (cx - baseHalf) +
+      '" y1="' +
+      ladderBot +
+      '" x2="' +
+      (cx + baseHalf) +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>';
     if (nv >= 2) {
       const yBrace = ladderTop + Math.min(nv - 1, 3) * dy * 0.42;
       frame +=
-        '<line x1="' + (cx - baseHalf * 0.48) + '" y1="' + yBrace + '" x2="' + (cx + baseHalf * 0.48) + '" y2="' + yBrace + '" stroke="#94a3b8" stroke-width="1.35" stroke-linecap="round" opacity="0.8"/>';
+        '<line x1="' +
+        (cx - baseHalf * 0.48) +
+        '" y1="' +
+        yBrace +
+        '" x2="' +
+        (cx + baseHalf * 0.48) +
+        '" y2="' +
+        yBrace +
+        '" stroke="#cbd5e1" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>';
     }
+    frame += '</g>';
     const ym = yEscManifold2;
     const teeBarHalf = Math.max(22, topCenterGap2 / 2 + 16);
     frame +=
@@ -2771,13 +2815,36 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.95"/>' +
       '</g>';
   } else {
-    const backX = cx + 44;
     frame +=
-      '<line x1="' + (cx - 12) + '" y1="' + yApex + '" x2="' + (cx - baseHalf - 10) + '" y2="' + ladderBot + '" stroke="#64748b" stroke-width="2.6" stroke-linecap="round"/>';
-    frame +=
-      '<line x1="' + backX + '" y1="' + (yApex + 8) + '" x2="' + backX + '" y2="' + ladderBot + '" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round"/>';
-    frame +=
-      '<line x1="' + (cx - baseHalf - 10) + '" y1="' + ladderBot + '" x2="' + backX + '" y2="' + ladderBot + '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.9"/>';
+      '<g class="nft-esc-frame" pointer-events="none" aria-hidden="true">' +
+      '<line x1="' +
+      (cx - 12) +
+      '" y1="' +
+      yApex +
+      '" x2="' +
+      (cx - baseHalf - 10) +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.75"/>' +
+      '<line x1="' +
+      (cx + baseHalf + 10) +
+      '" y1="' +
+      (yApex + 8) +
+      '" x2="' +
+      (cx + baseHalf + 10) +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.75"/>' +
+      '<line x1="' +
+      (cx - baseHalf - 10) +
+      '" y1="' +
+      ladderBot +
+      '" x2="' +
+      (cx + baseHalf + 10) +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>' +
+      '</g>';
   }
 
   const nRunsEsc = runs.length;
