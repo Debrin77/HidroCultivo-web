@@ -234,7 +234,8 @@
       if (i < nCh - 1) {
         const l2rN = (i + 1) % 2 === 0;
         const xNextIn = l2rN ? xL + padFlow : xR - padFlow;
-        const xVert = l2r ? xOut + flowMargin : xOut - flowMargin;
+        const xVert = serpentineVertColumnX(xOut, xNextIn, !l2r, flowMargin);
+        pushWp(supply, xOut, y);
         pushWp(supply, xVert, y);
         pushWp(supply, xVert, yRow(i + 1));
         if (Math.abs(xVert - xNextIn) > 0.5) {
@@ -331,7 +332,8 @@
     pushWp(supply, ports.xFeed, ports.yOutlet);
     pushWp(supply, xFeedRiser, ports.yOutlet);
     pushWp(supply, xFeedRiser, runs[0].y);
-    const runBody = serpentineAlongRuns(runs, padFlow, flowMargin);
+    const serpJog = p.serpentineJog != null ? p.serpentineJog : flowMargin;
+    const runBody = serpentineAlongRuns(runs, padFlow, serpJog);
     for (let wi = 0; wi < runBody.length; wi++) {
       pushWp(supply, runBody[wi][0], runBody[wi][1]);
     }
@@ -368,13 +370,21 @@
     };
   }
 
+  /** Columna vertical del serpentín: fuera del PVC, al lado de salida (izq. o dcha.). */
+  function serpentineVertColumnX(xOut, xNextIn, exitOnLeft, jog) {
+    const j = jog != null ? jog : 10;
+    if (exitOnLeft) {
+      return Math.min(xOut, xNextIn) - j;
+    }
+    return Math.max(xOut, xNextIn) + j;
+  }
+
   /**
-   * Serpentín tubo a tubo: de extremo a extremo por fuera del PVC (como pared/mesa),
-   * con U vertical en el lateral de salida antes de bajar al peldaño siguiente.
+   * Serpentín tubo a tubo: extremo → U por fuera → extremo del tubo de abajo (como rotulador).
    */
   function serpentineAlongRuns(runList, padFlow, flowMargin) {
     const wp = [];
-    const fm = flowMargin != null ? flowMargin : 10;
+    const jog = flowMargin != null ? flowMargin : 10;
     for (let i = 0; i < runList.length; i++) {
       const R = runList[i];
       const Rn = i < runList.length - 1 ? runList[i + 1] : null;
@@ -384,7 +394,8 @@
       pushWp(wp, xOut, R.y);
       if (Rn) {
         const xNextIn = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
-        const xVert = R.rtl ? xOut - fm : xOut + fm;
+        const xVert = serpentineVertColumnX(xOut, xNextIn, R.rtl, jog);
+        pushWp(wp, xOut, R.y);
         pushWp(wp, xVert, R.y);
         pushWp(wp, xVert, Rn.y);
         if (Math.abs(xVert - xNextIn) > 0.5) {

@@ -2583,6 +2583,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   });
   const Wsvg = altBadgeEsc.canvasW;
   const flowMarginEsc = esc1Cara ? 10 : 8;
+  const serpentineJogEsc = esc1Cara ? (compactEsc ? 22 : 28) : flowMarginEsc;
   let xFeedRiserEsc = cx - baseHalf - 28;
   let xReturnRiserEsc = cx + baseHalf + 28;
   const cxTitle = Wsvg / 2;
@@ -2597,7 +2598,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const xFoot = cx - 14 - baseHalf * p;
+      /** Peldaño superior a la izquierda; cada nivel baja desplazado a la derecha (escalera). */
+      const along = nv <= 1 ? 0 : 1 - p;
+      const xFoot = cx - 14 - baseHalf * along;
       runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
     }
   } else {
@@ -2634,7 +2637,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       if (runs[ri].xL < xMinL) xMinL = runs[ri].xL;
       if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
     }
-    const riserPad = flowMarginEsc + 40;
+    const riserPad = serpentineJogEsc + 52;
     const contentW = xMaxR - xMinL + riserPad * 2;
     const shiftX = Math.max(20, (Wsvg - contentW) / 2) + riserPad - xMinL;
     if (Math.abs(shiftX) > 0.5) {
@@ -2666,7 +2669,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
         oddTubes: nv % 2 === 1,
         nTubos: nv,
       });
-      xFeedRiserEsc = risEsc.xFeedRiser;
+      xFeedRiserEsc = Math.min(
+        risEsc.xFeedRiser,
+        xMinL + padFlow - serpentineJogEsc - flowMarginEsc - 34
+      );
       xReturnRiserEsc = risEsc.xReturnRiser;
     } else {
       xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
@@ -2710,6 +2716,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           xTankReturnR: xTankReturnR,
           padFlow: padFlow,
           flowMargin: flowMarginEsc,
+          serpentineJog: serpentineJogEsc,
           cornerRadius: erEsc,
           oddEsc: oddEsc,
           xFeedRiser: esc1Cara ? xFeedRiserEsc : xSupplyRiser,
@@ -2871,6 +2878,32 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '" y2="' +
       ym +
       '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.95"/>' +
+      '</g>';
+  } else if (runs.length) {
+    const xLadL0 = runs[0].xL - 12;
+    const xLadL1 = runs[runs.length - 1].xL - 12;
+    const xLadR0 = runs[0].xR + 10;
+    const xLadR1 = runs[runs.length - 1].xR + 10;
+    frame +=
+      '<g class="nft-esc-frame" pointer-events="none" aria-hidden="true">' +
+      '<line x1="' +
+      xLadL0 +
+      '" y1="' +
+      yApex +
+      '" x2="' +
+      xLadL1 +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.75"/>' +
+      '<line x1="' +
+      xLadR0 +
+      '" y1="' +
+      (yApex + 8) +
+      '" x2="' +
+      xLadR1 +
+      '" y2="' +
+      ladderBot +
+      '" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.75"/>' +
       '</g>';
   } else {
     frame +=
@@ -3066,9 +3099,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   const nTot = runs.length;
-  const escTitleFoot = vol + ' L · vista cenital';
+  const escTitleFoot = vol + ' L · ' + (car === 1 ? 'esquema serpentín' : 'vista cenital');
   let escViewLabel = '';
-  if (typeof hcDiagramViewLabelSvg === 'function') {
+  if (typeof hcDiagramViewLabelSvg === 'function' && car === 2) {
     escViewLabel = hcDiagramViewLabelSvg(cxTitle, 16, 'cenital', { pointerEvents: false });
   }
 
