@@ -1859,6 +1859,18 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
 .torre-preview--rdwc svg.rdwc-svg-diagram--plan {
   min-height: min(42vh, 480px);
 }
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-bucket,
+.torre-preview--rdwc svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-bucket {
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.12));
+}
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-tank,
+.torre-preview--rdwc svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-tank {
+  filter: drop-shadow(0 3px 8px rgba(30, 64, 175, 0.18));
+}
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan-balanced .rdwc-scada-module,
+.torre-preview--rdwc svg.rdwc-svg-diagram--plan-balanced .rdwc-scada-module {
+  display: none;
+}
 #torreSVGWrap.torre-svg-canvas svg.nft-serpentine-svg {
   min-height: min(34vh, 380px);
 }

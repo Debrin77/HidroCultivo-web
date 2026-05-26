@@ -70,7 +70,8 @@
     const modScale = layout === 'hub' ? 0.82 : 1;
     const modW = Math.min(56, rPot * 2.4) * modScale;
     const modH = Math.min(68, rPot * 2.9) * modScale;
-    if (RP && layout !== 'overlay') {
+    const esPlanRedondo = layout === 'plan';
+    if (RP && layout !== 'overlay' && !esPlanRedondo) {
       s += RP.module3d(x, y, modW, modH, 0.62, tieneDifusor, ta, idx + 1);
     }
     if (SP && dat.variedad && layout === 'manifold') {
@@ -84,17 +85,33 @@
     if (layout === 'hub-mini' || layout === 'overlay') {
       s += `<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="${(rPot * 0.22).toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2.2"/>`;
     }
+    if (esPlanRedondo && dat.variedad) {
+      s += `<circle cx="${x}" cy="${y}" r="${rPot.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2" opacity="0.92"/>`;
+    }
     if (isMultiSel) {
-      s += `<rect x="${(x - rPot - 4).toFixed(1)}" y="${(y - rPot - 4).toFixed(1)}" width="${(rPot * 2 + 8).toFixed(1)}" height="${(rPot * 2 + 8).toFixed(1)}" rx="${(rPot * 0.28).toFixed(1)}"
+      if (esPlanRedondo) {
+        s += `<circle cx="${x}" cy="${y}" r="${(rPot + 5).toFixed(1)}" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-dasharray="4 3" opacity="0.95"/>`;
+      } else {
+        s += `<rect x="${(x - rPot - 4).toFixed(1)}" y="${(y - rPot - 4).toFixed(1)}" width="${(rPot * 2 + 8).toFixed(1)}" height="${(rPot * 2 + 8).toFixed(1)}" rx="${(rPot * 0.28).toFixed(1)}"
         fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-dasharray="4 3" opacity="0.95"/>`;
+      }
     }
     if (isSelected) {
-      s += `<rect x="${(x - rPot - 3).toFixed(1)}" y="${(y - rPot - 3).toFixed(1)}" width="${(rPot * 2 + 6).toFixed(1)}" height="${(rPot * 2 + 6).toFixed(1)}" rx="${(rPot * 0.26).toFixed(1)}"
+      if (esPlanRedondo) {
+        s += `<circle cx="${x}" cy="${y}" r="${(rPot + 4).toFixed(1)}" fill="none" stroke="#22c55e" stroke-width="2.4" opacity="0.95"/>`;
+      } else {
+        s += `<rect x="${(x - rPot - 3).toFixed(1)}" y="${(y - rPot - 3).toFixed(1)}" width="${(rPot * 2 + 6).toFixed(1)}" height="${(rPot * 2 + 6).toFixed(1)}" rx="${(rPot * 0.26).toFixed(1)}"
         fill="none" stroke="#22c55e" stroke-width="2.4" opacity="0.95"/>`;
+      }
     }
     if (ultimaFoto?.data) {
-      s += `<defs><clipPath id="${clipId}"><rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="${(rPot * 0.22).toFixed(1)}"/></clipPath></defs>`;
-      s += `<image href="${ultimaFoto.data}" x="${rx}" y="${ry}" width="${rw}" height="${rh}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" opacity="0.88"/>`;
+      if (esPlanRedondo) {
+        s += `<defs><clipPath id="${clipId}"><circle cx="${x}" cy="${y}" r="${rPot.toFixed(1)}"/></clipPath></defs>`;
+        s += `<image href="${ultimaFoto.data}" x="${rx}" y="${ry}" width="${rw}" height="${rh}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" opacity="0.88"/>`;
+      } else {
+        s += `<defs><clipPath id="${clipId}"><rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" rx="${(rPot * 0.22).toFixed(1)}"/></clipPath></defs>`;
+        s += `<image href="${ultimaFoto.data}" x="${rx}" y="${ry}" width="${rw}" height="${rh}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" opacity="0.88"/>`;
+      }
     }
     if (pctC > 0 && pctC < 100 && dat.variedad) {
       const r2 = rPot + 4;
