@@ -2614,20 +2614,20 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   } else {
     /**
-     * Dos caras (A): peldaños desde el centro (T) abriendo hacia los lados al bajar.
-     * along=0 arriba (junto al eje), along=1 abajo (base del A más ancha).
+     * Dos caras (A / escalera): peldaños anclados al eje central (T), abriendo a los lados al bajar.
+     * Evita cxFaceL/R separados, que dibujaban una V (ancho arriba, estrecho abajo).
      */
     const baseHalfFace = baseHalf * 0.9;
-    const faceInset = Math.max(52, topCenterGap2 / 2 + serpentineJogEsc + 32);
-    const cxFaceL = cx - faceInset - baseHalfFace * 0.42;
-    const cxFaceR = cx + faceInset + baseHalfFace * 0.42;
-    xApexFootL = cxFaceL - 14;
-    xApexFootR = cxFaceR + 14;
+    const footTop = topCenterGap2 / 2 + rungIn;
+    const footBot = 14 + baseHalfFace;
+    xApexFootL = cx - footBot;
+    xApexFootR = cx + footBot;
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
       const along = nv <= 1 ? 0 : p;
-      const xFoot = cxFaceL - 14 - baseHalfFace * along;
+      const footInset = footTop + (footBot - footTop) * along;
+      const xFoot = cx - footInset;
       runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
       if (i === nv - 1) xApexFootL = xFoot;
     }
@@ -2635,7 +2635,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
       const along = nv <= 1 ? 0 : p;
-      const xFoot = cxFaceR + 14 + baseHalfFace * along;
+      const footInset = footTop + (footBot - footTop) * along;
+      const xFoot = cx + footInset;
       runs.push({ g: g++, y, xL: xFoot - rungIn, xR: xFoot + rungOut, rtl: i % 2 === 1 });
       if (i === nv - 1) xApexFootR = xFoot;
     }

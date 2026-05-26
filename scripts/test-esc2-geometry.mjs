@@ -93,17 +93,22 @@ while ((tm = tubeRe.exec(svgDirect))) {
   tubes.push({ x, cx: x + w / 2 });
 }
 const mid = tubes.reduce((a, t) => a + t.cx, 0) / tubes.length;
-const leftT = tubes.filter((t) => t.cx < mid - 20).sort((a, b) => a.x - b.x);
-const rightT = tubes.filter((t) => t.cx > mid + 20).sort((a, b) => a.x - b.x);
+const leftT = tubes.filter((t) => t.cx < mid - 20).sort((a, b) => b.cx - a.cx);
+const rightT = tubes.filter((t) => t.cx > mid + 20).sort((a, b) => a.cx - b.cx);
 if (leftT.length >= 2 && rightT.length >= 2) {
-  const spreadL = Math.abs(leftT[0].cx - leftT[leftT.length - 1].cx);
-  const spreadR = Math.abs(rightT[0].cx - rightT[rightT.length - 1].cx);
-  if (spreadL < 8 || spreadR < 8) {
-    console.error('FAIL inclinación: poco abanico entre peldaños');
+  const topL = leftT[0].cx;
+  const botL = leftT[leftT.length - 1].cx;
+  const topR = rightT[0].cx;
+  const botR = rightT[rightT.length - 1].cx;
+  if (topL <= botL || topR >= botR) {
+    console.error('FAIL forma V: arriba', topL, topR, 'abajo', botL, botR);
     fail++;
   } else {
-    console.log('OK inclinación abre hacia los lados');
+    console.log('OK escalera A: estrecho arriba, ancho abajo');
   }
+} else {
+  console.error('FAIL no se detectaron tubos por cara');
+  fail++;
 }
 
 process.exit(fail ? 1 : 0);
