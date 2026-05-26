@@ -1873,6 +1873,14 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
 .torre-preview--rdwc svg.rdwc-svg-diagram--plan-manual .rdwc-scada-module {
   display: none;
 }
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan-manual .rdwc-plan-pipes,
+.torre-preview--rdwc svg.rdwc-svg-diagram--plan-manual .rdwc-plan-pipes {
+  pointer-events: none;
+}
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan-manual .rdwc-plan-vessels,
+.torre-preview--rdwc svg.rdwc-svg-diagram--plan-manual .rdwc-plan-vessels {
+  isolation: isolate;
+}
 #torreSVGWrap.torre-svg-canvas svg.nft-serpentine-svg {
   min-height: min(34vh, 380px);
 }

@@ -227,47 +227,114 @@
     );
   }
 
-  /** Retorno en L: cubo superior de columna → lateral del depósito (manual). */
-  function rdwcPlanReturnL(bx, by, bucketR, tankCx, tankCy, tankR, colIndex, totalCols) {
-    const exitY = by - bucketR * 0.85;
-    const midY = tankCy + tankR * 0.35;
-    let tankX = tankCx;
-    if (totalCols <= 1) {
-      tankX = tankCx;
-    } else if (colIndex === 0) {
-      tankX = tankCx - tankR * 0.72;
-    } else if (colIndex >= totalCols - 1) {
-      tankX = tankCx + tankR * 0.72;
-    } else {
-      tankX = tankCx + (colIndex - (totalCols - 1) / 2) * tankR * 0.35;
+  /** Retorno: bus horizontal por encima de la 1.ª fila → laterales del depósito (sin cruzar cubos). */
+  function rdwcPlanReturnBus(s, topBuckets, bucketR, gridTop, gridW, cx, tankCy, tankR, ta) {
+    if (!topBuckets.length) return s;
+    const returnBusY = gridTop - bucketR - 18;
+    const gridLeft = cx - gridW / 2;
+    const gridRight = cx + gridW / 2;
+    const tankInY = tankCy + tankR * 0.2;
+
+    for (let i = 0; i < topBuckets.length; i++) {
+      const P = topBuckets[i];
+      const stubTop = P.y - bucketR - 4;
+      s += rdwcPlanPipeManual(
+        'M ' + f1(P.x) + ' ' + f1(stubTop) + ' L ' + f1(P.x) + ' ' + f1(returnBusY),
+        'return',
+        ta,
+        2.8
+      );
     }
-    const d =
+
+    const busL = gridLeft - bucketR * 0.35;
+    const busR = gridRight + bucketR * 0.35;
+    s += rdwcPlanPipeManual('M ' + f1(busL) + ' ' + f1(returnBusY) + ' L ' + f1(busR) + ' ' + f1(returnBusY), 'return', ta, 3.2);
+
+    const tankLeftX = cx - tankR * 0.78;
+    const tankRightX = cx + tankR * 0.78;
+    s += rdwcPlanPipeManual(
       'M ' +
-      f1(bx) +
-      ' ' +
-      f1(exitY) +
-      ' L ' +
-      f1(bx) +
-      ' ' +
-      f1(midY) +
-      ' L ' +
-      f1(tankX) +
-      ' ' +
-      f1(midY) +
-      ' L ' +
-      f1(tankX) +
-      ' ' +
-      f1(tankCy + tankR * 0.15);
-    return d;
+        f1(busL) +
+        ' ' +
+        f1(returnBusY) +
+        ' L ' +
+        f1(tankLeftX) +
+        ' ' +
+        f1(returnBusY) +
+        ' L ' +
+        f1(tankLeftX) +
+        ' ' +
+        f1(tankInY),
+      'return',
+      ta,
+      3.2
+    );
+    s += rdwcPlanPipeManual(
+      'M ' +
+        f1(busR) +
+        ' ' +
+        f1(returnBusY) +
+        ' L ' +
+        f1(tankRightX) +
+        ' ' +
+        f1(returnBusY) +
+        ' L ' +
+        f1(tankRightX) +
+        ' ' +
+        f1(tankInY),
+      'return',
+      ta,
+      3.2
+    );
+    return s;
   }
 
-  /** Manifold rosa en T bajo la última fila + eje central con bomba (manual). */
-  function rdwcPlanManualSpine(s, trunkX, tankCy, tankR, tankBottom, manifoldY, bottomBuckets, ta) {
+  /** Aire: rail bajo depósito + bajante lateral por columna (no atraviesa cubos). */
+  function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankBottom, tankR, cols, ta) {
+    const airRailY = tankBottom + 8;
+    s += rdwcPlanPipeManual(
+      'M ' + f1(tankCx - tankR * 0.85) + ' ' + f1(airRailY) + ' L ' + f1(tankCx + tankR * 0.85) + ' ' + f1(airRailY),
+      'air',
+      false,
+      1.8
+    );
+    const colKeys = Object.keys(byCol)
+      .map(Number)
+      .sort((a, b) => a - b);
+    for (let ci = 0; ci < colKeys.length; ci++) {
+      const ck = colKeys[ci];
+      const list = byCol[ck].sort((a, b) => a.row - b.row);
+      if (!list.length) continue;
+      const bx = list[0].x;
+      const sideX = ci === 0 ? bx - bucketR * 1.22 : ci >= colKeys.length - 1 ? bx + bucketR * 1.22 : bx + (ci % 2 === 0 ? -1 : 1) * bucketR * 1.15;
+      s += rdwcPlanPipeManual(
+        'M ' + f1(bx) + ' ' + f1(airRailY) + ' L ' + f1(sideX) + ' ' + f1(airRailY),
+        'air',
+        false,
+        1.5
+      );
+      for (let i = 0; i < list.length; i++) {
+        const P = list[i];
+        const entryX = P.x + (sideX < P.x ? bucketR * 0.42 : -bucketR * 0.42);
+        const entryY = P.y + bucketR * 0.48;
+        s += rdwcPlanPipeManual(
+          'M ' + f1(sideX) + ' ' + f1(airRailY) + ' L ' + f1(sideX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+          'air',
+          false,
+          1.4
+        );
+      }
+    }
+    return s;
+  }
+
+  /** Manifold rosa abajo + eje en el hueco central; bomba entre depósito y cubos. */
+  function rdwcPlanManualSpine(s, trunkX, tankBottom, gridTop, manifoldY, bottomBuckets, pumpY, ta) {
     if (!bottomBuckets.length) return s;
     const xs = bottomBuckets.map((p) => p.x).sort((a, b) => a - b);
     const leftX = xs[0];
     const rightX = xs[xs.length - 1];
-    const tapY = manifoldY;
+    const tapY = manifoldY + 6;
 
     s += rdwcPlanPipeManual(
       'M ' + f1(leftX) + ' ' + f1(tapY) + ' L ' + f1(rightX) + ' ' + f1(tapY),
@@ -278,46 +345,37 @@
     for (let i = 0; i < bottomBuckets.length; i++) {
       const P = bottomBuckets[i];
       s += rdwcPlanPipeManual(
-        'M ' +
-          f1(P.x) +
-          ' ' +
-          f1(P.y + P.r * 0.55) +
-          ' L ' +
-          f1(P.x) +
-          ' ' +
-          f1(tapY),
+        'M ' + f1(P.x) + ' ' + f1(P.y + P.r * 0.58) + ' L ' + f1(P.x) + ' ' + f1(tapY),
         'supply',
         ta,
-        3
+        2.8
       );
     }
-    const pumpY = (tankBottom + tapY) / 2;
+    const spineEnterY = gridTop + 8;
     s += rdwcPlanPipeManual(
-      'M ' + f1(trunkX) + ' ' + f1(tapY) + ' L ' + f1(trunkX) + ' ' + f1(pumpY + 14),
+      'M ' + f1(trunkX) + ' ' + f1(tapY) + ' L ' + f1(trunkX) + ' ' + f1(spineEnterY),
       'supply',
       ta,
-      3.6
+      3.2
     );
     s += rdwcPlanPipeManual(
-      'M ' + f1(trunkX) + ' ' + f1(pumpY - 14) + ' L ' + f1(trunkX) + ' ' + f1(tankBottom),
+      'M ' + f1(trunkX) + ' ' + f1(spineEnterY) + ' L ' + f1(trunkX) + ' ' + f1(pumpY + 12),
       'supply',
       ta,
-      3.6
+      3.2
+    );
+    s += rdwcPlanPipeManual(
+      'M ' + f1(trunkX) + ' ' + f1(pumpY - 12) + ' L ' + f1(trunkX) + ' ' + f1(tankBottom),
+      'supply',
+      ta,
+      3.2
     );
     if (RP) {
-      s += RP.recircPump(trunkX, pumpY, 12, '');
+      s += RP.recircPump(trunkX, pumpY, 11, '');
     } else {
       s +=
-        '<circle cx="' +
-        f1(trunkX) +
-        '" cy="' +
-        f1(pumpY) +
-        '" r="11" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>' +
-        '<circle cx="' +
-        f1(trunkX) +
-        '" cy="' +
-        f1(pumpY) +
-        '" r="6" fill="#334155"/>';
+        '<circle cx="' + f1(trunkX) + '" cy="' + f1(pumpY) + '" r="10" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>' +
+        '<circle cx="' + f1(trunkX) + '" cy="' + f1(pumpY) + '" r="5" fill="#334155"/>';
     }
     return s;
   }
@@ -415,6 +473,9 @@
       s += rdwcPlanRowsLabel(22, gridTop + gridH / 2, dist.rows);
     }
 
+    const pumpY = tankBottom + 22;
+    let pipes = '<g class="rdwc-plan-pipes" aria-hidden="true">';
+
     /* Uniones grises: vertical (misma columna) y horizontal (misma fila) — manual */
     const byCol = {};
     const byRow = {};
@@ -432,7 +493,7 @@
       for (let i = 0; i < list.length - 1; i++) {
         const a = list[i];
         const b = list[i + 1];
-        s += rdwcPlanPipeManual(
+        pipes += rdwcPlanPipeManual(
           'M ' + f1(a.x) + ' ' + f1(a.y + bucketR * 0.5) + ' L ' + f1(b.x) + ' ' + f1(b.y - bucketR * 0.5),
           'link',
           false,
@@ -445,7 +506,7 @@
       for (let i = 0; i < list.length - 1; i++) {
         const a = list[i];
         const b = list[i + 1];
-        s += rdwcPlanPipeManual(
+        pipes += rdwcPlanPipeManual(
           'M ' + f1(a.x + bucketR * 0.5) + ' ' + f1(a.y) + ' L ' + f1(b.x - bucketR * 0.5) + ' ' + f1(b.y),
           'link',
           false,
@@ -455,76 +516,46 @@
     });
 
     const bottomBuckets = positions.filter((p) => p.row === dist.rows - 1);
-    const topByCol = {};
-    positions.forEach((p) => {
-      if (p.row === 0) topByCol[p.col] = p;
-    });
+    const topBuckets = positions.filter((p) => p.row === 0);
 
     if (dist.rows >= 2) {
-      s = rdwcPlanManualSpine(s, trunkX, tankCy, tankR, tankBottom, manifoldY, bottomBuckets, ta);
-      Object.keys(topByCol).forEach((ck) => {
-        const P = topByCol[ck];
-        const colIdx = parseInt(ck, 10);
-        s += rdwcPlanPipeManual(
-          rdwcPlanReturnL(P.x, P.y, bucketR, tankCy, tankCy, tankR, colIdx, dist.cols),
-          'return',
-          ta,
-          3.2
-        );
-      });
+      pipes = rdwcPlanManualSpine(pipes, trunkX, tankBottom, gridTop, manifoldY, bottomBuckets, pumpY, ta);
+      pipes = rdwcPlanReturnBus(pipes, topBuckets, bucketR, gridTop, gridW, cx, tankCy, tankR, ta);
     } else {
-      const pumpY = tankBottom + 28;
-      s += rdwcPlanPipeManual(
-        'M ' + f1(trunkX) + ' ' + f1(tankBottom) + ' L ' + f1(trunkX) + ' ' + f1(pumpY + 16),
+      pipes += rdwcPlanPipeManual(
+        'M ' + f1(trunkX) + ' ' + f1(tankBottom) + ' L ' + f1(trunkX) + ' ' + f1(pumpY + 12),
         'supply',
         ta,
         3.5
       );
-      if (RP) s += RP.recircPump(trunkX, pumpY, 11, '');
+      if (RP) pipes += RP.recircPump(trunkX, pumpY, 11, '');
       const rowY = positions[0] ? positions[0].y : gridTop;
       const leftX = positions.length ? Math.min.apply(null, positions.map((p) => p.x)) : cx;
       const rightX = positions.length ? Math.max.apply(null, positions.map((p) => p.x)) : cx;
-      s += rdwcPlanPipeManual(
-        'M ' + f1(leftX) + ' ' + f1(rowY + bucketR * 0.6) + ' L ' + f1(rightX) + ' ' + f1(rowY + bucketR * 0.6),
+      const tap1Y = rowY + bucketR * 0.65;
+      pipes += rdwcPlanPipeManual(
+        'M ' + f1(leftX) + ' ' + f1(tap1Y) + ' L ' + f1(rightX) + ' ' + f1(tap1Y),
         'supply',
         ta,
         3.5
       );
       for (let pi = 0; pi < positions.length; pi++) {
         const P = positions[pi];
-        s += rdwcPlanPipeManual(
-          'M ' + f1(P.x) + ' ' + f1(rowY + bucketR * 0.6) + ' L ' + f1(P.x) + ' ' + f1(P.y + bucketR * 0.45),
+        pipes += rdwcPlanPipeManual(
+          'M ' + f1(P.x) + ' ' + f1(tap1Y) + ' L ' + f1(P.x) + ' ' + f1(P.y + bucketR * 0.48),
           'supply',
           ta,
           2.8
         );
-        s += rdwcPlanPipeManual(
-          rdwcPlanReturnL(P.x, P.y, bucketR, cx, tankCy, tankR, P.col, dist.cols),
-          'return',
-          ta,
-          3
-        );
       }
+      pipes = rdwcPlanReturnBus(pipes, positions, bucketR, gridTop, gridW, cx, tankCy, tankR, ta);
     }
 
-    /* Aire: desde depósito a cada cubo */
-    for (let pi = 0; pi < positions.length; pi++) {
-      const P = positions[pi];
-      s += rdwcPlanPipeManual(
-        'M ' +
-          f1(cx) +
-          ' ' +
-          f1(tankCy - tankR * 0.2) +
-          ' L ' +
-          f1(P.x) +
-          ' ' +
-          f1(P.y + bucketR * 0.42),
-        'air',
-        false,
-        1.4
-      );
-    }
+    pipes = rdwcPlanAirRoutes(pipes, positions, byCol, bucketR, cx, tankBottom, tankR, dist.cols, ta);
+    pipes += '</g>';
+    s += pipes;
 
+    s += '<g class="rdwc-plan-vessels">';
     s += rdwcPlanRoundTank(cx, tankCy, tankR, pct, volLbl);
     s += rdwcPlanAirPumpOnTank(cx, tankCy, tankR, airLpm);
 
@@ -535,6 +566,7 @@
         s = siteInteractive(s, P.x, P.y, P.rn, P.c, rPot, cfg, P.idx, ta, tieneDifusor, 'plan');
       }
     }
+    s += '</g>';
 
     const title =
       'RDWC · ' + dist.sites + ' cubos · ' + dist.rows + ' filas · ' + volLbl + ' · recirc. ' + recLh + ' L/h';
