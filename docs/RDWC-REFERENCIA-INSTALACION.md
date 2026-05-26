@@ -11,6 +11,8 @@ Documento derivado de manual técnico de kit modular RDWC XL 2.0 (recirculación
 
 ## Filas y cubos (plantillas app)
 
+**36 plantillas** en el selector (agrupadas por 1–4 filas): desde **2 cubos · 1 fila** hasta **32 cubos · 4 filas**. Los valores de las 9 combinaciones del manual XL 2.0 van ancladas; el resto se calcula con la misma escala (recirculación, aire, depósito, mangueras).
+
 | Cubos | Filas | Depósito control (L máx orient.) | Aire (L/min orient.) |
 |------|-------|----------------------------------|----------------------|
 | 4 | 2 | 40 | 28 |
@@ -21,6 +23,8 @@ Documento derivado de manual técnico de kit modular RDWC XL 2.0 (recirculación
 | 16 | 4 | 70 | 60 |
 | 18 | 3 | 75 | 72 |
 | 24 | 4 | 90 | 80 |
+
+Ejemplos extra en app: 10·2 filas, 15·3, 20·4, 28·4, 12·1 fila (línea), etc.
 
 Cubo nominal típico: **20 L**. Cesta: **Ø 125 mm** (14 cm). Separación centro a centro: **36–45 cm**.
 
