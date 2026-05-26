@@ -1,3 +1,6 @@
+/**
+ * Regresión: escalera 2 caras → 8 tubos, clase dos-caras, data-caras=2.
+ */
 import fs from 'fs';
 import vm from 'vm';
 import path from 'path';
@@ -28,26 +31,57 @@ ctx.window = ctx;
 const s = vm.createContext(ctx);
 for (const f of [
   'js/hc-diagram-palette.js',
+  'js/hc-setup-wizard-core.js',
   'js/diagrams/nft/nft-hydraulic-model.js',
   'js/hc-setup-wizard-pages.js',
   'js/hc-setup-wizard-nft-diagrams.js',
 ]) {
   vm.runInContext(fs.readFileSync(path.join(root, f), 'utf8'), s, { filename: f });
 }
-ctx.nftEscaleraCarasNormalizada = (v) => (parseInt(String(v), 10) === 2 ? 2 : 1);
-ctx.nftEscaleraCarasDesdeCfgYUi = () => 2;
 
-const svg = ctx.buildNftEscaleraDiagramSvg(4, 2, 8, 2, 40, 't', {});
-const re = /<rect x="([\d.]+)"[^>]*width="([\d.]+)"/g;
-const rects = [];
-let m;
-while ((m = re.exec(svg))) {
-  const x = +m[1];
-  const w = +m[2];
-  rects.push({ x, w, cx: x + w / 2 });
+let fail = 0;
+
+const svgDirect = ctx.buildNftEscaleraDiagramSvg(4, 2, 8, 2, 40, 't', { cfgSnapshot: {} });
+if (!svgDirect.includes('nft-escalera--dos-caras') || svgDirect.includes('nft-escalera--una-cara')) {
+  console.error('FAIL buildNftEscaleraDiagramSvg(4, 2) sin UI');
+  fail++;
+} else {
+  console.log('OK escalera directa 2 caras');
 }
-const mid = rects.reduce((a, r) => a + r.cx, 0) / rects.length;
-const left = rects.filter((r) => r.cx < mid - 30).length;
-const right = rects.filter((r) => r.cx > mid + 30).length;
-console.log('tubes', rects.length, 'left', left, 'right', right, 'mid', Math.round(mid));
-console.log('ok', left === 4 && right === 4 && svg.includes('dos-caras'));
+
+const cfg = {
+  nftDisposicion: 'escalera',
+  nftEscaleraCaras: 2,
+  nftEscaleraNivelesCara: 4,
+  nftHuecosPorCanal: 8,
+};
+const svgActive = ctx.buildNftActiveDiagramSvg(4, 8, 2, 40, '', {
+  nftDisposicion: 'escalera',
+  cfgSnapshot: cfg,
+  escaleraNiveles: 4,
+  escaleraCaras: 2,
+});
+if (!svgActive.includes('data-nft-esc-caras="2"') && !svgActive.includes("data-nft-esc-caras='2'")) {
+  const m = svgActive.match(/data-nft-esc-caras="(\d)"/);
+  console.error('FAIL active diagram caras=', m ? m[1] : '?');
+  fail++;
+} else {
+  console.log('OK buildNftActiveDiagramSvg 2 caras');
+}
+
+const chCount = (svgDirect.match(/fill="url\(#nftEscCh[^"]*\)"/g) || []).length;
+if (chCount !== 8) {
+  console.error('FAIL tube count', chCount, 'expected 8');
+  fail++;
+} else {
+  console.log('OK 8 channel rects');
+}
+
+if (!svgDirect.includes('Cara izquierda') || !svgDirect.includes('Cara derecha')) {
+  console.error('FAIL face labels');
+  fail++;
+} else {
+  console.log('OK face labels');
+}
+
+process.exit(fail ? 1 : 0);

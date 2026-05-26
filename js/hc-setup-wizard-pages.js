@@ -53,9 +53,7 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     const caras =
       typeof nftEscaleraCarasParaDiagrama === 'function'
         ? nftEscaleraCarasParaDiagrama(
-            typeof nftEscaleraNvDesdeCfgYUi === 'function'
-              ? nftEscaleraNvDesdeCfgYUi(cfg, EO, canales)
-              : canales,
+            EO.escaleraCaras != null ? EO.escaleraCaras : cfg.nftEscaleraCaras,
             EO
           )
         : nftEscaleraCarasNormSafe(EO.escaleraCaras != null ? EO.escaleraCaras : cfg.nftEscaleraCaras);
