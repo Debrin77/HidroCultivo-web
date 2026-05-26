@@ -2555,7 +2555,11 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   let xTankC = tx + Math.round(tankW / 2);
   let escPorts = esc1Cara ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv) : null;
   let xTankFeed = esc2Cara ? xTankC : escPorts ? escPorts.xFeed : tx + 12;
-  let xTankReturn = escPorts ? escPorts.xReturn : tx + tankW - 12;
+  let xTankReturn = escPorts
+    ? escPorts.xReturn
+    : esc1Cara && typeof nftSvgTankPorts === 'function'
+      ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv).xReturn
+      : tx + tankW - 12;
   const xTankReturnL = tx + 14;
   const xTankReturnR = tx + tankW - 14;
   const xTankReturnCenter = xTankC;
@@ -2674,9 +2678,19 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
         xMinL + padFlow - serpentineJogEsc - flowMarginEsc - 34
       );
       xReturnRiserEsc = risEsc.xReturnRiser;
+      if (nv % 2 === 0) {
+        const lastREsc = runs[runs.length - 1];
+        const xExitREsc = lastREsc.rtl ? lastREsc.xL + padFlow : lastREsc.xR - padFlow;
+        xReturnRiserEsc = Math.min(xReturnRiserEsc, xExitREsc - flowMarginEsc, xFeedRiserEsc + 18);
+      }
     } else {
       xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
-      xReturnRiserEsc = xMaxR + flowMarginEsc + 12;
+      const lastREsc = runs[runs.length - 1];
+      const xExitREsc = lastREsc.rtl ? lastREsc.xL + padFlow : lastREsc.xR - padFlow;
+      xReturnRiserEsc =
+        nv % 2 === 1
+          ? xMaxR + flowMarginEsc + 12
+          : Math.min(xMinL + padFlow - flowMarginEsc - 6, xExitREsc - flowMarginEsc, xFeedRiserEsc + 18);
     }
   } else if (runs.length) {
     let xMinL = Infinity;
@@ -2686,7 +2700,12 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
     }
     xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
-    xReturnRiserEsc = xMaxR + flowMarginEsc + 12;
+    const lastREsc = runs[runs.length - 1];
+    const xExitREsc = lastREsc.rtl ? lastREsc.xL + padFlow : lastREsc.xR - padFlow;
+    xReturnRiserEsc =
+      nv % 2 === 1
+        ? xMaxR + flowMarginEsc + 12
+        : Math.min(xMinL + padFlow - flowMarginEsc - 6, xExitREsc - flowMarginEsc, xFeedRiserEsc + 18);
   }
 
   const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';

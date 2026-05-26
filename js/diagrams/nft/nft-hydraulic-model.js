@@ -69,8 +69,10 @@
       pushWp(wp, xJog, yDuctRun);
       pushWp(wp, xReturnRiser, yDuctRun);
     } else {
-      pushWp(wp, xReturnRiser, yExit);
-      pushWp(wp, xReturnRiser, yDuctRun);
+      /** Par: último tubo sale a la izq.; retorno por riser izquierdo (no cruzar a la derecha). */
+      const xCol = Math.min(xReturnRiser, xExit - flowMargin, ports.xReturn + 12);
+      pushWp(wp, xCol, yExit);
+      pushWp(wp, xCol, yDuctRun);
     }
     pushWp(wp, ports.xReturn, yDuctRun);
     pushWp(wp, ports.xReturn, ports.yInlet);
@@ -247,6 +249,10 @@
     const yLast = yRow(nCh - 1);
     const endsRight = (nCh - 1) % 2 === 0;
     const xExit = endsRight ? xR - padFlow : xL + padFlow;
+    let xReturnRiserSerp = risers.xReturnRiser;
+    if (!risers.oddTubes) {
+      xReturnRiserSerp = Math.min(xReturnRiserSerp, xExit - flowMargin, xFeedRiser + 18);
+    }
     const retWp = returnWaypointsFromExit({
       xExit: xExit,
       yExit: yLast,
@@ -255,7 +261,7 @@
       flowMargin: flowMargin,
       oddTubes: risers.oddTubes,
       xFeedRiser: xFeedRiser,
-      xReturnRiser: risers.xReturnRiser,
+      xReturnRiser: xReturnRiserSerp,
       Wsvg: p.Wsvg,
       tankY: p.tankY,
       ports: ports,
@@ -263,7 +269,13 @@
       endsRight: endsRight,
     });
 
-    return { supply: supply, return: retWp, xExit: xExit, xFeedRiser: xFeedRiser, xReturnRiser: risers.xReturnRiser };
+    return {
+      supply: supply,
+      return: retWp,
+      xExit: xExit,
+      xFeedRiser: xFeedRiser,
+      xReturnRiser: xReturnRiserSerp,
+    };
   }
 
   function nftHydraulicSerpentine(p) {
@@ -324,7 +336,7 @@
       nTubos: nv,
     });
     const xFeedRiser = p.xFeedRiser != null ? p.xFeedRiser : risers.xFeedRiser;
-    const xReturnRiser = p.xReturnRiser != null ? p.xReturnRiser : risers.xReturnRiser;
+    let xReturnRiser = p.xReturnRiser != null ? p.xReturnRiser : risers.xReturnRiser;
 
     const supply = [];
     pushWp(supply, p.xPump, p.yPump);
@@ -340,6 +352,9 @@
 
     const Rn = runs[nv - 1];
     const xExit = Rn.rtl ? Rn.xL + padFlow : Rn.xR - padFlow;
+    if (!risers.oddTubes) {
+      xReturnRiser = Math.min(xReturnRiser, xExit - flowMargin, xFeedRiser + 18);
+    }
     const retWp = returnWaypointsFromExit({
       xExit: xExit,
       yExit: Rn.y,
