@@ -2505,10 +2505,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
   rungOut = Math.max(rungOut, minRungSpanUnits - (car === 2 ? 22 : 18));
   const rungIn = car === 2 ? 18 : 22;
-  const baseHalf0 = car === 1 ? 128 : 138;
-  /** En 2 caras necesitamos hueco para el serpentín que vuelve al centro. */
-  const faceGap2 = car === 2 ? (compactEsc ? 48 : 64) : 0;
-  const baseHalf = baseHalf0 + faceGap2;
+  const baseHalf = car === 1 ? 128 : escFew ? 168 : 156;
   const minCxEsc = 32 + 14 + baseHalf + rungOut;
   const cxMid = W0base / 2;
   let cx = Math.max(cxMid, minCxEsc);
@@ -2562,7 +2559,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const xTankReturnL = tx + 14;
   const xTankReturnR = tx + tankW - 14;
   const xTankReturnCenter = xTankC;
-  const xSupplyRiser = cx;
+  let xSupplyRiser = cx;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   let xPump = tx + 14;
   let yOutlet = escPorts ? escPorts.yOutlet : tankY + tankH - 16;
@@ -2586,14 +2583,14 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   });
   const Wsvg = altBadgeEsc.canvasW;
   const flowMarginEsc = esc1Cara ? 10 : 8;
-  const serpentineJogEsc = esc1Cara ? (compactEsc ? 22 : 28) : compactEsc ? 18 : 22;
+  const serpentineJogEsc = esc1Cara ? (compactEsc ? 22 : 28) : compactEsc ? 26 : 32;
   let xFeedRiserEsc = cx - baseHalf - 28;
   let xReturnRiserEsc = cx + baseHalf + 28;
   const cxTitle = Wsvg / 2;
   const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
 
-  /** Dos caras, primer peldaño: ancho libre bajo la T y para las U del serpentín hacia el centro. */
-  const topCenterGap2 = car === 2 ? (compactEsc ? 48 : 68) : 0;
+  /** Dos caras: hueco bajo la T para las dos entradas y las U del serpentín hacia el centro. */
+  const topCenterGap2 = car === 2 ? (compactEsc ? 56 : 80) : 0;
 
   const runs = [];
   let g = 0;
@@ -2612,19 +2609,19 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const xLeftFoot = cx - baseHalf * p - faceGap2;
+      const xLeftFoot = cx - baseHalf * p;
       let xL = xLeftFoot - rungOut;
       let xR = xLeftFoot + rungIn;
       if (i === 0) {
         xR = Math.min(xR, xInL0);
       }
-      /** Entrada del 1.º tubo desde el centro; U del serpentín por el lado exterior (izq.). */
-      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
+      /** Espejo de la cara dcha.: 1.º tubo desde el centro; serpentín alternado (como 1 cara). */
+      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 1 });
     }
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const xRightFoot = cx + baseHalf * p + faceGap2;
+      const xRightFoot = cx + baseHalf * p;
       let xL = xRightFoot - rungIn;
       let xR = xRightFoot + rungOut;
       if (i === 0) {
@@ -2632,6 +2629,36 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       }
       runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
     }
+  }
+
+  if (runs.length && esc2Cara) {
+    let xMinL = Infinity;
+    let xMaxR = -Infinity;
+    for (let ri = 0; ri < runs.length; ri++) {
+      if (runs[ri].xL < xMinL) xMinL = runs[ri].xL;
+      if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
+    }
+    const riserPad2 = serpentineJogEsc + 44;
+    const contentW2 = xMaxR - xMinL + riserPad2 * 2;
+    const shiftX2 = Math.max(20, (Wsvg - contentW2) / 2) + riserPad2 - xMinL;
+    if (Math.abs(shiftX2) > 0.5) {
+      for (let ri = 0; ri < runs.length; ri++) {
+        runs[ri].xL += shiftX2;
+        runs[ri].xR += shiftX2;
+      }
+      cx += shiftX2;
+      xMinL += shiftX2;
+      xMaxR += shiftX2;
+    }
+    const txNew2 = Math.round((xMinL + xMaxR - tankW) / 2);
+    tx = Math.max(20, Math.min(Wsvg - tankW - 20, txNew2));
+    xPump = tx + 14;
+    xTankC = tx + Math.round(tankW / 2);
+    xTankFeed = xTankC;
+    xTankReturnL = tx + 14;
+    xTankReturnR = tx + tankW - 14;
+    xTankReturnCenter = xTankC;
+    xSupplyRiser = cx;
   }
 
   if (runs.length && esc1Cara) {

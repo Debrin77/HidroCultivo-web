@@ -431,23 +431,22 @@
     const flowMargin = p.flowMargin != null ? p.flowMargin : 8;
     const tubeH = p.tubeH != null ? p.tubeH : 22;
     const tankY = p.tankY;
-    const outerLeft = p.outerLeft === true;
-    const oddFace = p.nv % 2 === 1;
+    const exitOnOuter = p.exitOnOuter === true;
     const wp = [];
     pushWp(wp, xExit, yExit);
     let yDuct = yExit + tubeH / 2 + (p.ductDrop != null ? p.ductDrop : 28);
     if (yDuct > tankY - 10) yDuct = tankY - 12;
-    if (oddFace) {
-      pushWp(wp, xExit, yDuct);
-      pushWp(wp, xTank, yDuct);
-    } else {
-      const xDrop = outerLeft
-        ? Math.min(xExit - flowMargin, xTank + 10)
-        : Math.max(xExit + flowMargin, xTank - 10);
+    if (exitOnOuter) {
+      const xDrop =
+        p.outerLeft === true
+          ? Math.min(xExit - flowMargin, xTank + 8)
+          : Math.max(xExit + flowMargin, xTank - 8);
       pushWp(wp, xDrop, yExit);
       pushWp(wp, xDrop, yDuct);
-      pushWp(wp, xTank, yDuct);
+    } else {
+      pushWp(wp, xExit, yDuct);
     }
+    pushWp(wp, xTank, yDuct);
     pushWp(wp, xTank, yInlet);
     return wp;
   }
@@ -568,6 +567,7 @@
 
       const RnL = runsL[nv - 1];
       const xEndL = RnL.rtl ? RnL.xL + padFlow : RnL.xR - padFlow;
+      const midL = (RnL.xL + RnL.xR) / 2;
       returnPaths.push(
         returnEscalera2FaceWaypoints({
           xExit: xEndL,
@@ -578,13 +578,14 @@
           tubeH: p.tubeH,
           tankY: p.tankY,
           outerLeft: true,
-          nv: nv,
+          exitOnOuter: xEndL <= midL + 0.5,
           ductDrop: p.ductDrop,
         })
       );
 
       const RnR = runsR[nv - 1];
       const xEndR = RnR.rtl ? RnR.xL + padFlow : RnR.xR - padFlow;
+      const midR = (RnR.xL + RnR.xR) / 2;
       returnPaths.push(
         returnEscalera2FaceWaypoints({
           xExit: xEndR,
@@ -595,7 +596,7 @@
           tubeH: p.tubeH,
           tankY: p.tankY,
           outerLeft: false,
-          nv: nv,
+          exitOnOuter: xEndR >= midR - 0.5,
           ductDrop: p.ductDrop,
         })
       );
