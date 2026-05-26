@@ -286,6 +286,87 @@
   }
 
   /**
+   * Serpentín como pared/mesa pero con geometría por tubo (escalera 1 cara: tubos escalonados).
+   * Misma lógica de depósito, colectores y zigzag que nftHydraulicSerpentine.
+   */
+  function nftHydraulicSerpentineRuns(p) {
+    const runs = p.runs || [];
+    const nv = runs.length;
+    const padFlow = p.padFlow != null ? p.padFlow : 14;
+    const flowMargin = p.flowMargin != null ? p.flowMargin : 10;
+    const ports =
+      p.ports ||
+      (typeof nftSvgTankPorts === 'function' && p.tx != null
+        ? nftSvgTankPorts(p.tx, p.tankW, p.tankY, p.tankH, nv)
+        : null);
+    if (!ports || !nv) {
+      return { supplyD: '', returnD: '', ports: ports, xFeedRiser: 0, xReturnRiser: 0 };
+    }
+
+    let xMinL = Infinity;
+    let xMaxR = -Infinity;
+    for (let i = 0; i < nv; i++) {
+      if (runs[i].xL < xMinL) xMinL = runs[i].xL;
+      if (runs[i].xR > xMaxR) xMaxR = runs[i].xR;
+    }
+
+    const risers = nftHydraulicRisers({
+      xL: xMinL,
+      xR: xMaxR,
+      Wsvg: p.Wsvg,
+      flowMargin: flowMargin,
+      oddTubes: nv % 2 === 1,
+      xFeedRiser: p.xFeedRiser,
+      xReturnRiser: p.xReturnRiser,
+      nTubos: nv,
+    });
+    const xFeedRiser = p.xFeedRiser != null ? p.xFeedRiser : risers.xFeedRiser;
+    const xReturnRiser = p.xReturnRiser != null ? p.xReturnRiser : risers.xReturnRiser;
+
+    const supply = [];
+    pushWp(supply, p.xPump, p.yPump);
+    pushWp(supply, ports.xFeed, p.yPump);
+    pushWp(supply, ports.xFeed, ports.yOutlet);
+    pushWp(supply, xFeedRiser, ports.yOutlet);
+    pushWp(supply, xFeedRiser, runs[0].y);
+    const runBody = serpentineAlongRuns(runs, padFlow, flowMargin);
+    for (let wi = 0; wi < runBody.length; wi++) {
+      pushWp(supply, runBody[wi][0], runBody[wi][1]);
+    }
+
+    const Rn = runs[nv - 1];
+    const xExit = Rn.rtl ? Rn.xL + padFlow : Rn.xR - padFlow;
+    const retWp = returnWaypointsFromExit({
+      xExit: xExit,
+      yExit: Rn.y,
+      xL: xMinL,
+      xR: xMaxR,
+      flowMargin: flowMargin,
+      oddTubes: risers.oddTubes,
+      xFeedRiser: xFeedRiser,
+      xReturnRiser: xReturnRiser,
+      Wsvg: p.Wsvg,
+      tankY: p.tankY,
+      ports: ports,
+      tubeH: p.tubeH != null ? p.tubeH : 22,
+      endsRight: !Rn.rtl,
+      ductDrop: p.ductDrop,
+    });
+
+    const er = p.cornerRadius != null ? p.cornerRadius : 0;
+    return {
+      supplyD: waypointsToSvg(supply, { cornerRadius: er }),
+      returnD: waypointsToSvg(retWp, { cornerRadius: er }),
+      ports: ports,
+      xFeedRiser: xFeedRiser,
+      xReturnRiser: xReturnRiser,
+      xExitSerp: xExit,
+      supplyWaypoints: supply,
+      returnWaypoints: retWp,
+    };
+  }
+
+  /**
    * Serpentín tubo a tubo (escalera / peldaños): sale por un extremo, baja en esa misma X
    * y entra en el extremo del peldaño siguiente (escalera escalonada: un tramo horizontal si hace falta).
    */
@@ -424,49 +505,14 @@
         )
       );
     } else {
-      const ris = risersFromRunList(runs, flowMargin, padFlow);
-      const xFeedRiser = p.xFeedRiser != null ? p.xFeedRiser : ris.xFeedRiser;
-      const xReturnRiser = p.xReturnRiser != null ? p.xReturnRiser : ris.xReturnRiser;
-      const sup1 = [];
-      pushWp(sup1, p.xPump, p.yPump);
-      pushWp(sup1, p.xTankFeed, p.yPump);
-      pushWp(sup1, p.xTankFeed, p.yOutlet);
-      pushWp(sup1, xFeedRiser, p.yOutlet);
-      pushWp(sup1, xFeedRiser, runs[0].y);
-      const R0 = runs[0];
-      pushWp(sup1, R0.rtl ? R0.xR - padFlow : R0.xL + padFlow, R0.y);
-      sup1.push.apply(sup1, serpentineAlongRuns(runs, padFlow, flowMargin));
-      supplyPaths.push(sup1);
-
-      const Rn = runs[nv - 1];
-      const xExit1 = Rn.rtl ? Rn.xL + padFlow : Rn.xR - padFlow;
-      const xMinL = Math.min.apply(null, runs.map((r) => r.xL));
-      const xMaxR = Math.max.apply(null, runs.map((r) => r.xR));
-      const endsRight = !Rn.rtl;
-      if (ports && typeof returnWaypointsFromExit === 'function') {
-        returnPaths.push(
-          returnWaypointsFromExit({
-            xExit: xExit1,
-            yExit: Rn.y,
-            xL: xMinL,
-            xR: xMaxR,
-            flowMargin: flowMargin,
-            oddTubes: nv % 2 === 1,
-            xFeedRiser: xFeedRiser,
-            xReturnRiser: xReturnRiser,
-            Wsvg: p.Wsvg != null ? p.Wsvg : xMaxR + 80,
-            tankY: p.tankY != null ? p.tankY : p.ladderBot + 40,
-            ports: ports,
-            tubeH: p.tubeH != null ? p.tubeH : 22,
-            endsRight: endsRight,
-            ductDrop: p.ductDrop,
-          })
-        );
-      } else {
-        returnPaths.push(
-          drainWaypoints(xExit1, Rn.y, xReturnRiser, p.xTankReturn, p.yInlet, p.ladderBot)
-        );
-      }
+      return nftHydraulicSerpentineRuns(
+        Object.assign({}, p, {
+          ports: ports,
+          padFlow: padFlow,
+          flowMargin: flowMargin,
+          cornerRadius: er,
+        })
+      );
     }
 
     return {
@@ -833,6 +879,7 @@
 
   global.nftHydraulicSolve = nftHydraulicSolve;
   global.nftHydraulicSerpentine = nftHydraulicSerpentine;
+  global.nftHydraulicSerpentineRuns = nftHydraulicSerpentineRuns;
   global.nftHydraulicEscalera = nftHydraulicEscalera;
   global.nftHydraulicMesaMultinivel = nftHydraulicMesaMultinivel;
   global.nftHydraulicWaypointsToSvg = waypointsToSvg;

@@ -2449,8 +2449,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
  * NFT escalera / A-frame esquemático: peldaños por cara (1 o 2 caras).
  *
  * Modelo hidráulico (línea azul): sin cruces entre alimentación y retorno.
- * Una cara: alimentación por pasillo izq. → tubo superior → serpentín tubo a tubo
- * (U por el extremo de salida, sin ramas a todos los peldaños) → retorno por pasillo dcho.
+ * Una cara: mismo serpentín que pared (depósito → colector izq. → zigzag por extremos de tubo
+ * → retorno), con tubos desplazados en escalera.
  * Dos caras: subida central por el eje de la escalera (T en el vértice), zigzag
  * Dos caras: una subida central → T superior → cada tubo de arriba; serpentín hacia abajo
  * por el extremo alejado del centro (izq. en hoja izq., dcha. en hoja dcha.).
@@ -2572,7 +2572,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   if (compactEsc) {
     tubeH = Math.max(car === 2 ? 15 : 20, Math.round(tubeH * 0.92));
   }
-  const padFlow = car === 2 ? 7 : 9;
+  const padFlow = car === 2 ? 7 : 14;
   const nRunsHint = car === 2 ? nv * 2 : nv;
   const legHintEsc = { volL: vol, nCanales: nRunsHint, nTubosTotal: nRunsHint, alturaBadgeNTubos: nRunsHint };
   const legTierEsc = nftDiagramLegibilityHint(legHintEsc);
@@ -2582,7 +2582,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     alturaBadgeMinTier: 2,
   });
   const Wsvg = altBadgeEsc.canvasW;
-  const flowMarginEsc = 8;
+  const flowMarginEsc = esc1Cara ? 10 : 8;
   let xFeedRiserEsc = cx - baseHalf - 28;
   let xReturnRiserEsc = cx + baseHalf + 28;
   const cxTitle = Wsvg / 2;
@@ -2634,13 +2634,21 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       if (runs[ri].xL < xMinL) xMinL = runs[ri].xL;
       if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
     }
-    const feedRiserOut = compactEsc ? 28 : 36;
-    const lastRunEsc = runs[runs.length - 1];
-    const exitRightEsc = lastRunEsc ? !lastRunEsc.rtl : oddEsc;
-    xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - feedRiserOut;
-    xReturnRiserEsc = exitRightEsc
-      ? xMaxR + flowMarginEsc + 12
-      : Math.max(14, xMinL + padFlow - flowMarginEsc - 6);
+    if (esc1Cara && typeof nftHydraulicRisers === 'function') {
+      const risEsc = nftHydraulicRisers({
+        xL: xMinL,
+        xR: xMaxR,
+        Wsvg: Wsvg,
+        flowMargin: flowMarginEsc,
+        oddTubes: nv % 2 === 1,
+        nTubos: nv,
+      });
+      xFeedRiserEsc = risEsc.xFeedRiser;
+      xReturnRiserEsc = risEsc.xReturnRiser;
+    } else {
+      xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
+      xReturnRiserEsc = xMaxR + flowMarginEsc + 12;
+    }
   }
 
   const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
@@ -2702,7 +2710,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           legendX: 12,
           legendY: Math.max(8, hdrEscDraw.topPadMin - 6),
           strokeWidth: EO.cartoonMedir === true ? 5.5 : 3.4,
-          showPorts: false,
+          showPorts: esc1Cara,
+          legendMode: esc1Cara ? 'serie' : undefined,
         })
       : null;
   const flowMarkEsc = flowSvgEsc ? flowSvgEsc.flowMark : { supplyId: 'a', returnId: 'b', defs: '' };
