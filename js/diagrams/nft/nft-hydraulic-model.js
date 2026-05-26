@@ -674,9 +674,11 @@
       supplyPaths.push(supTrunk);
       for (let i = 0; i < tubes.length; i++) {
         const t = tubes[i];
+        // Colector izq. → entrada del tubo → recorrido por el tubo (película) hasta la salida
         supplyPaths.push([
           [xL, t.yC],
           [t.x0, t.yC],
+          [t.x1, t.yC],
         ]);
       }
     } else {
