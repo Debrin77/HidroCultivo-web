@@ -28,13 +28,6 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr);
     if (tiers.length < 2) tiers = null;
   }
-  const mesaParalelo =
-    disp === 'mesa' &&
-    typeof nftColectoresParaleloDesdeConfig === 'function' &&
-    nftColectoresParaleloDesdeConfig(cfg);
-  if (!tiers && mesaParalelo) {
-    tiers = [Math.max(1, nCh0)];
-  }
   if (disp === 'mesa' && tiers) {
     return buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts);
   }
@@ -614,12 +607,12 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   const xPump = tx + 14;
   const flowMargin = 10;
-  const paredParalelo =
-    isParedSerp &&
+  const colectoresParalelo =
+    (dispLayout === 'mesa' || dispLayout === 'pared') &&
     typeof nftColectoresParaleloDesdeConfig === 'function' &&
     nftColectoresParaleloDesdeConfig(cfg);
   let flowPaths;
-  if (paredParalelo && typeof nftHydraulicMesaMultinivel === 'function') {
+  if (colectoresParalelo && typeof nftHydraulicMesaMultinivel === 'function') {
     const geomsPar = [];
     for (let i = 0; i < nCh; i++) {
       geomsPar.push({ g: i, rowY: yRow(i), xL: xL, xR: xR, t: 0 });
@@ -704,7 +697,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
           legendY: Math.max(8, topPad - 6),
           strokeWidth: flowW,
           cartoonMedir: EO.cartoonMedir === true,
-          legendMode: paredParalelo ? 'mesa_paralelo' : 'serie',
+          legendMode: colectoresParalelo ? 'mesa_paralelo' : 'serie',
         })
       : null;
   const flowMark = flowSvg ? flowSvg.flowMark : nftSvgFlowMarkerDefs(suf);
@@ -773,7 +766,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   let plants = '';
   for (let i = 0; i < nCh; i++) {
     const y = yRow(i);
-    const rtl = i % 2 === 1;
+    const rtl = colectoresParalelo ? false : i % 2 === 1;
     const spanH = spanTube;
     const slotAlongRow = huecosN <= 1 ? spanH : spanH / Math.max(1, huecosN - 1);
 
@@ -922,6 +915,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   return (
     '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll' +
     (isParedSerp ? ' nft-serpentine--pared' : '') +
+    (colectoresParalelo ? ' nft-serpentine--paralelo' : '') +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
@@ -932,7 +926,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     '<title id="' +
     tid +
     '">' +
-    escSvgText('NFT serpentín · ' + foot) +
+    escSvgText((colectoresParalelo ? 'NFT paralelo' : 'NFT serpentín') + ' · ' + foot) +
     '</title>' +
     '<defs>' +
     '<linearGradient id="' +

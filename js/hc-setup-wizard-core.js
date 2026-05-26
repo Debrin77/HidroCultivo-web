@@ -2742,14 +2742,14 @@ function nftColectoresParaleloDesdeConfig(cfg) {
   return false;
 }
 
-/** Vista cenital (mesa MM): multinivel o mesa en paralelo con bancada horizontal. */
+/** Vista cenital (mesa MM): solo multinivel con 2+ franjas; paralelo 1 nivel usa esquema lateral como serie. */
 function nftMesaUsaDiagramaCenital(cfg) {
   if (!cfg || nftDisposicionNormalizada(cfg.nftDisposicion) !== 'mesa') return false;
   if (cfg.nftMesaMultinivel) {
     const tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr || '');
     if (tiers.length >= 2) return true;
   }
-  return nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo';
+  return false;
 }
 
 /** Topología hidráulica para caudal de bomba: serie (un flujo) o paralelo (suma por tubo/rama). */
