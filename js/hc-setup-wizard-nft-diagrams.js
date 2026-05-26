@@ -2511,7 +2511,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const baseHalf = car === 1 ? 128 : 138;
   const minCxEsc = 32 + 14 + baseHalf + rungOut;
   const cxMid = W0base / 2;
-  const cx = Math.max(cxMid, minCxEsc);
+  let cx = Math.max(cxMid, minCxEsc);
   const W0 = Math.max(W0base + Math.max(0, cx - cxMid), minRungSpanUnits + baseHalf + 200);
   const hdrEsc = nftDiagramHeaderTypography(W0, { compact: compactEsc, withLegend: true });
   const topPad = Math.max(92 + (compactEsc ? 10 : 0), hdrEsc.topPadMin);
@@ -2545,25 +2545,25 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const tankY = H - botTank + 4;
   const tankH = 100;
   const tankW = Math.min(400, Math.round(152 + vol * 0.72));
-  const tx = (W0 - tankW) / 2;
+  let tx = (W0 - tankW) / 2;
   const waterTop = tankY + 6;
   const waterH = tankH - 16;
   const esc1Cara = car === 1;
   const esc2Cara = car === 2;
   const oddEsc = nv % 2 === 1;
   const odd2 = esc2Cara && oddEsc;
-  const xTankC = tx + Math.round(tankW / 2);
-  const escPorts = esc1Cara ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv) : null;
-  const xTankFeed = esc2Cara ? xTankC : escPorts ? escPorts.xFeed : tx + 12;
-  const xTankReturn = escPorts ? escPorts.xReturn : tx + tankW - 12;
+  let xTankC = tx + Math.round(tankW / 2);
+  let escPorts = esc1Cara ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv) : null;
+  let xTankFeed = esc2Cara ? xTankC : escPorts ? escPorts.xFeed : tx + 12;
+  let xTankReturn = escPorts ? escPorts.xReturn : tx + tankW - 12;
   const xTankReturnL = tx + 14;
   const xTankReturnR = tx + tankW - 14;
   const xTankReturnCenter = xTankC;
   const xSupplyRiser = cx;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
-  const xPump = tx + 14;
-  const yOutlet = escPorts ? escPorts.yOutlet : tankY + tankH - 16;
-  const yInlet = escPorts ? escPorts.yInlet : tankY + 16;
+  let xPump = tx + 14;
+  let yOutlet = escPorts ? escPorts.yOutlet : tankY + tankH - 16;
+  let yInlet = escPorts ? escPorts.yInlet : tankY + 16;
   let tubeH = car === 2 ? Math.min(22, 17 + Math.min(6, huecosN * 0.45)) : Math.min(32, 24 + Math.min(8, huecosN * 0.55));
   if (escFew) {
     tubeH = Math.round(tubeH * (car === 2 ? 1.06 : 1.08));
@@ -2627,14 +2627,37 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   }
 
-  if (runs.length) {
+  if (runs.length && esc1Cara) {
     let xMinL = Infinity;
     let xMaxR = -Infinity;
     for (let ri = 0; ri < runs.length; ri++) {
       if (runs[ri].xL < xMinL) xMinL = runs[ri].xL;
       if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
     }
-    if (esc1Cara && typeof nftHydraulicRisers === 'function') {
+    const riserPad = flowMarginEsc + 40;
+    const contentW = xMaxR - xMinL + riserPad * 2;
+    const shiftX = Math.max(20, (Wsvg - contentW) / 2) + riserPad - xMinL;
+    if (Math.abs(shiftX) > 0.5) {
+      for (let ri = 0; ri < runs.length; ri++) {
+        runs[ri].xL += shiftX;
+        runs[ri].xR += shiftX;
+      }
+      cx += shiftX;
+      xMinL += shiftX;
+      xMaxR += shiftX;
+    }
+    const txNew = Math.round((xMinL + xMaxR - tankW) / 2);
+    tx = Math.max(20, Math.min(Wsvg - tankW - 20, txNew));
+    xPump = tx + 14;
+    xTankC = tx + Math.round(tankW / 2);
+    if (escPorts) {
+      escPorts = nftSvgTankPorts(tx, tankW, tankY, tankH, nv);
+      xTankFeed = escPorts.xFeed;
+      xTankReturn = escPorts.xReturn;
+      yOutlet = escPorts.yOutlet;
+      yInlet = escPorts.yInlet;
+    }
+    if (typeof nftHydraulicRisers === 'function') {
       const risEsc = nftHydraulicRisers({
         xL: xMinL,
         xR: xMaxR,
@@ -2649,6 +2672,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
       xReturnRiserEsc = xMaxR + flowMarginEsc + 12;
     }
+  } else if (runs.length) {
+    let xMinL = Infinity;
+    let xMaxR = -Infinity;
+    for (let ri = 0; ri < runs.length; ri++) {
+      if (runs[ri].xL < xMinL) xMinL = runs[ri].xL;
+      if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
+    }
+    xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
+    xReturnRiserEsc = xMaxR + flowMarginEsc + 12;
   }
 
   const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';
