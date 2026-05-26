@@ -2738,6 +2738,23 @@ function nftMesaUsaDiagramaCenital(cfg) {
   return nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo';
 }
 
+/** Topología hidráulica para caudal de bomba: serie (un flujo) o paralelo (suma por tubo/rama). */
+function nftFlowTopologyFromConfig(cfg) {
+  cfg = cfg || {};
+  const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
+  if (disp === 'mesa') {
+    return nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo' ? 'paralelo' : 'serie';
+  }
+  if (disp === 'escalera') {
+    const caras =
+      typeof nftEscaleraCarasNormalizada === 'function'
+        ? nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras)
+        : 1;
+    return caras >= 2 ? 'paralelo' : 'serie';
+  }
+  return 'serie';
+}
+
 /** @returns {number[]} tubos por franja de arriba a abajo */
 function parseNftMesaTubosPorNivelStr(str) {
   const s = String(str == null ? '' : str).trim();

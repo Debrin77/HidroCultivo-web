@@ -7,8 +7,9 @@
  * basarse en la curva Q–H del fabricante (placa de la bomba).
  * @param {object|null|undefined} canalGeom si null/undefined, usa valores por defecto (Ø90 redondo, 3 mm, longitud auto).
  * @param {number} [alturaBombeoCm] altura vertical desde nivel de agua / bomba hasta entrada al primer canal (0 = omitir).
+ * @param {{ topologia?: 'serie'|'paralelo' }} [opts] serie = un solo caudal en el circuito; paralelo = nCanales × caudal por tubo.
  */
-function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboMm, canalGeom, alturaBombeoCm) {
+function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboMm, canalGeom, alturaBombeoCm, opts) {
   const nChRaw = parseInt(String(nCanales), 10);
   const nHxRaw = parseInt(String(huecosPorCanal), 10);
   if (!Number.isFinite(nChRaw) || nChRaw < 1 || !Number.isFinite(nHxRaw) || nHxRaw < 2) return null;
@@ -42,17 +43,24 @@ function calcularBombaNftParam(nCanales, huecosPorCanal, pendientePct, diamTuboM
   const qCanalEmpRec = longCanalM * qFilmLhPorM * 1.18;
   const qCanalEmpMin = longCanalM * qFilmLhPorM * 0.95;
 
-  const qTotalGeomRec = nCh * qCanalGeomRec;
-  const qTotalGeomMin = nCh * qCanalGeomMin;
-  const qTotalEmpRec = nCh * qCanalEmpRec;
-  const qTotalEmpMin = nCh * qCanalEmpMin;
+  const topologia =
+    opts && opts.topologia === 'paralelo' ? 'paralelo' : 'serie';
+  const qMult = topologia === 'paralelo' ? nCh : 1;
+
+  const qTotalGeomRec = qMult * qCanalGeomRec;
+  const qTotalGeomMin = qMult * qCanalGeomMin;
+  const qTotalEmpRec = qMult * qCanalEmpRec;
+  const qTotalEmpMin = qMult * qCanalEmpMin;
 
   const qTotalParaRec = Math.max(qTotalGeomRec, qTotalEmpRec);
   const qTotalLh = Math.round(qTotalParaRec);
   const caudalMinLH = Math.max(120, Math.round(Math.max(qTotalGeomMin, qTotalEmpMin, qTotalParaRec * 0.88)));
   const caudalRecLH = Math.max(caudalMinLH + 40, Math.round(Math.max(qTotalParaRec * 1.12, qTotalGeomRec * 1.08)));
 
-  const headBase = 0.42 + 0.055 * Math.min(nCh, 15);
+  const headBase =
+    topologia === 'paralelo'
+      ? 0.42 + 0.02 * Math.min(nCh, 15)
+      : 0.42 + 0.055 * Math.min(nCh, 15);
   const friccTubo = dMm <= 16 ? 0.22 : dMm <= 20 ? 0.14 : dMm <= 25 ? 0.09 : 0.06;
   let altCmUsed = 0;
   let altM = 0;
@@ -183,7 +191,11 @@ function getNftBombaDesdeConfig(cfg) {
   const pend = Number.isFinite(pendRaw) && pendRaw >= 1 ? pendRaw : 2;
   const dMm = cfg.nftTuboInteriorMm || 25;
   const altCm = getNftAlturaBombeoEfectivaCm(cfg);
-  return calcularBombaNftParam(hyd.nCh, hyd.nHx, pend, dMm, nftCanalGeomDesdeConfig(cfg), altCm);
+  const topologia =
+    typeof nftFlowTopologyFromConfig === 'function' ? nftFlowTopologyFromConfig(cfg) : 'serie';
+  return calcularBombaNftParam(hyd.nCh, hyd.nHx, pend, dMm, nftCanalGeomDesdeConfig(cfg), altCm, {
+    topologia,
+  });
 }
 
 /** Bloque &lt;details&gt; reutilizable: cifras y fórmulas solo bajo demanda. */
@@ -212,7 +224,15 @@ function nftBombaDetalleTecnicoHtml(b) {
   return (
     '<p class="nft-detalle-p">Se cruza geometría del canal (lámina y longitud) con reglas habituales de NFT y pérdidas en la línea de alimentación. <strong>No sustituye</strong> la curva <em>caudal–altura (Q–H)</em> del fabricante ni el manual de la bomba.</p>' +
     '<ul class="nft-detalle-ul">' +
-    '<li>Caudal orientativo mín.: <strong>' + b.caudalMinLH + ' L/h</strong> · recomendado: <strong>' + b.caudalRecLH + ' L/h</strong> (24 h, conjunto de canales)</li>' +
+    '<li>Caudal orientativo mín.: <strong>' + b.caudalMinLH + ' L/h</strong> · recomendado: <strong>' + b.caudalRecLH + ' L/h</strong> (24 h · recorrido <strong>' +
+    (b.topologia === 'paralelo' ? 'paralelo' : 'serie') +
+    '</strong>' +
+    (b.topologia === 'paralelo' && b.qMultCanales > 1
+      ? ' · suma de ' + b.qMultCanales + ' tubos'
+      : b.topologia === 'serie' && b.nCh > 1
+        ? ' · flujo único en ' + b.nCh + ' tubos en serie'
+        : '') +
+    ')</li>' +
     '<li>Altura manométrica estimada: <strong>' + b.headMetros + ' m</strong></li>' +
     '<li>Potencia eléctrica orientativa: <strong>~' + b.potenciaRecW + ' W</strong></li>' +
     '<li>Canal: ' + escHtmlUi(b.canalFormaLabel) + ' · lámina <strong>' + b.laminaMm + ' mm</strong> · sección flujo ≈ <strong>' + b.AflowMm2 + ' mm²</strong> · longitud <strong>' + b.longitudCanalM + ' m</strong></li>' +
@@ -766,6 +786,12 @@ function renderTorreSistemaResumenTabla(cfg) {
         hyd.mesaTiers.length +
         ' niveles · tubos por nivel ' +
         hyd.mesaTiers.join(' · ');
+    } else if (disp === 'mesa') {
+      const rec =
+        typeof nftMesaRecorridoNormalizada === 'function'
+          ? nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua)
+          : 'serie';
+      montajeDet += ' · recorrido ' + (rec === 'paralelo' ? 'paralelo' : 'en serie');
     } else if (disp === 'escalera' && hyd.escaleraNiveles != null) {
       montajeDet +=
         ' · ' +
