@@ -1393,17 +1393,15 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-ghost {
   display: none !important;
 }
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-supply,
-#medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-return {
-  stroke-dasharray: none !important;
-  stroke-width: 6px !important;
-  stroke-linecap: round !important;
-}
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-supply {
   stroke: #0ea5e9 !important;
+  stroke-width: 5.5px !important;
+  stroke-linecap: round !important;
 }
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-flow-return {
   stroke: #22c55e !important;
+  stroke-width: 5.5px !important;
+  stroke-linecap: round !important;
 }
 #medirDiagramWrap.medir-diagram-canvas--nft-cartoon .nft-cartoon-frame {
   pointer-events: none;

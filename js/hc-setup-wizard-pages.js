@@ -222,14 +222,9 @@ function nftHydraulicFlowSvgBundle(flowPaths, suf, opts) {
   const pathGhost = cartoon
     ? ''
     : ' stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.45" stroke-width="5"';
-  const flowDashSupply = cartoon
-    ? 'stroke-linecap="round" stroke-linejoin="round"'
-    : 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
-  const flowDashRet = cartoon
-    ? 'stroke-linecap="round" stroke-linejoin="round"'
-    : 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
+  const flowDashSupply = 'stroke-dasharray="11 9" stroke-linecap="round" stroke-linejoin="round"';
+  const flowDashRet = 'stroke-dasharray="8 7" stroke-linecap="round" stroke-linejoin="round"';
   const anim =
-    !cartoon &&
     o.animate !== false &&
     typeof torreSvgAnimacionesActivas === 'function' &&
     torreSvgAnimacionesActivas();
