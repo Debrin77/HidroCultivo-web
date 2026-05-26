@@ -664,27 +664,29 @@
     pushWp(head, ports.xFeed, ports.yOutlet);
     pushWp(head, xL, ports.yOutlet);
 
-    const supplyPaths = [head];
+    const supplyPaths = [];
+    const supTrunk = head.slice();
     if (tubes.length) {
       const yTop = tubes[0].yC;
       const yBot = tubes[tubes.length - 1].yC;
-      supplyPaths.push([
-        [xL, yTop],
-        [xL, yBot],
-      ]);
+      pushWp(supTrunk, xL, yTop);
+      if (Math.abs(yBot - yTop) > 0.5) pushWp(supTrunk, xL, yBot);
+      supplyPaths.push(supTrunk);
       for (let i = 0; i < tubes.length; i++) {
         const t = tubes[i];
         supplyPaths.push([
           [xL, t.yC],
           [t.x0, t.yC],
-          [t.x1, t.yC],
         ]);
       }
+    } else {
+      supplyPaths.push(head);
     }
 
     const returnPaths = [];
     let yDuctRun = p.tankY - 12;
     if (tubes.length) {
+      const yTop = tubes[0].yC;
       const yBot = tubes[tubes.length - 1].yC;
       yDuctRun = Math.min(yDuctRun, yBot + (p.ductDrop != null ? p.ductDrop : 28));
       for (let i = 0; i < tubes.length; i++) {
@@ -694,10 +696,10 @@
           [xR, t.yC],
         ]);
       }
-      returnPaths.push([
-        [xR, tubes[0].yC],
-        [xR, yDuctRun],
-      ]);
+      const retTrunk = [[xR, yTop]];
+      if (Math.abs(yBot - yTop) > 0.5) retTrunk.push([xR, yBot]);
+      if (Math.abs(yDuctRun - retTrunk[retTrunk.length - 1][1]) > 0.5) retTrunk.push([xR, yDuctRun]);
+      returnPaths.push(retTrunk);
     } else {
       returnPaths.push([[xR, ports.yOutlet], [xR, yDuctRun]]);
     }

@@ -59,14 +59,7 @@
     const pend = cfg.nftPendientePct != null ? cfg.nftPendientePct : 2;
     const EO = buildNftMedirEquipOpts(cfg);
 
-    if (disp === 'pared' && typeof global.buildNftParedIllustrationSvg === 'function') {
-      let svg = global.buildNftParedIllustrationSvg(hyd.nCh, hx, pend, EO.volL, 'MedirCartoon', EO);
-      if (svg && typeof global.enhanceNftDiagramCartoon === 'function') {
-        svg = global.enhanceNftDiagramCartoon(svg, { medir: true, disp: 'pared', paredIllo: true });
-      }
-      return svg;
-    }
-
+    /* Mismo SVG hidráulico que Cultivo/Sistema (serie o colectores paralelo). No usar la ilustración pared sin tuberías. */
     if (typeof global.buildNftActiveDiagramSvg !== 'function') return null;
     let svg = global.buildNftActiveDiagramSvg(hyd.nCh, hx, pend, EO.volL, 'MedirCartoon', EO);
     if (!svg || svg.indexOf('<svg') < 0) return null;

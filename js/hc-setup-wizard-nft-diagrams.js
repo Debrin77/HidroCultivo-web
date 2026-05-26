@@ -1987,8 +1987,10 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const lm = Glast ? mmShelf(Glast) : { yC: topPad + tierRowH / 2, x0: xL, x1: xR, thick: 18 };
   const cfgMm = EO.cfgSnapshot || {};
   const mesaParalelo =
-    typeof nftMesaRecorridoNormalizada === 'function' &&
-    nftMesaRecorridoNormalizada(cfgMm.nftMesaRecorridoAgua) === 'paralelo';
+    typeof nftColectoresParaleloDesdeConfig === 'function'
+      ? nftColectoresParaleloDesdeConfig(cfgMm)
+      : typeof nftMesaRecorridoNormalizada === 'function' &&
+        nftMesaRecorridoNormalizada(cfgMm.nftMesaRecorridoAgua) === 'paralelo';
 
   const hydMmSpec = {
     kind: 'mesa_multinivel',
