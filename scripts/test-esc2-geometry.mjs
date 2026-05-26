@@ -84,4 +84,26 @@ if (!svgDirect.includes('Cara izquierda') || !svgDirect.includes('Cara derecha')
   console.log('OK face labels');
 }
 
+const tubeRe = /<rect x="([\d.]+)"[^>]*width="([\d.]+)"/g;
+const tubes = [];
+let tm;
+while ((tm = tubeRe.exec(svgDirect))) {
+  const x = +tm[1];
+  const w = +tm[2];
+  tubes.push({ x, cx: x + w / 2 });
+}
+const mid = tubes.reduce((a, t) => a + t.cx, 0) / tubes.length;
+const leftT = tubes.filter((t) => t.cx < mid - 20).sort((a, b) => a.x - b.x);
+const rightT = tubes.filter((t) => t.cx > mid + 20).sort((a, b) => a.x - b.x);
+if (leftT.length >= 2 && rightT.length >= 2) {
+  const spreadL = Math.abs(leftT[0].cx - leftT[leftT.length - 1].cx);
+  const spreadR = Math.abs(rightT[0].cx - rightT[rightT.length - 1].cx);
+  if (spreadL < 8 || spreadR < 8) {
+    console.error('FAIL inclinación: poco abanico entre peldaños');
+    fail++;
+  } else {
+    console.log('OK inclinación abre hacia los lados');
+  }
+}
+
 process.exit(fail ? 1 : 0);

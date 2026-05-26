@@ -2614,8 +2614,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   } else {
     /**
-     * Dos caras (A): dos escaleras independientes (como 1 cara cada una), separadas en X.
-     * La versión anterior unía ambas en cx arriba y parecía un solo montaje.
+     * Dos caras (A): peldaños desde el centro (T) abriendo hacia los lados al bajar.
+     * along=0 arriba (junto al eje), along=1 abajo (base del A más ancha).
      */
     const baseHalfFace = baseHalf * 0.9;
     const faceInset = Math.max(52, topCenterGap2 / 2 + serpentineJogEsc + 32);
@@ -2626,7 +2626,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const along = nv <= 1 ? 0 : 1 - p;
+      const along = nv <= 1 ? 0 : p;
       const xFoot = cxFaceL - 14 - baseHalfFace * along;
       runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
       if (i === nv - 1) xApexFootL = xFoot;
@@ -2634,7 +2634,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const along = nv <= 1 ? 0 : 1 - p;
+      const along = nv <= 1 ? 0 : p;
       const xFoot = cxFaceR + 14 + baseHalfFace * along;
       runs.push({ g: g++, y, xL: xFoot - rungIn, xR: xFoot + rungOut, rtl: i % 2 === 1 });
       if (i === nv - 1) xApexFootR = xFoot;
