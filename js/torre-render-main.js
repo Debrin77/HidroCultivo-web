@@ -64,7 +64,12 @@ function renderTorre() {
       escaleraCaras: hyd.escaleraCaras,
     };
     if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
-    let nftSvg = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'Main', svgOpts);
+    const dispNft = nftDisposicionNormalizada(cfg.nftDisposicion);
+    const canalesArg =
+      dispNft === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraNiveles >= 1
+        ? hyd.escaleraNiveles
+        : hyd.nCh;
+    let nftSvg = buildNftActiveDiagramSvg(canalesArg, hx, pend, vol, 'Main', svgOpts);
     if (typeof enhanceNftDiagramScada === 'function') {
       nftSvg = enhanceNftDiagramScada(nftSvg, { interactive: true });
     }
@@ -265,7 +270,12 @@ function renderTorreMedirDiagram() {
           ? getVolumenMezclaLitros(cfg)
           : getVolumenDepositoMaxLitros(cfg) || 18;
       const eqArr = cfg.equipamiento || [];
-      let nftSvg = buildNftActiveDiagramSvg(hyd.nCh, hx, pend, vol, 'MedirMirror', {
+      const dispMir = nftDisposicionNormalizada(cfg.nftDisposicion);
+      const canalesMir =
+        dispMir === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraNiveles >= 1
+          ? hyd.escaleraNiveles
+          : hyd.nCh;
+      let nftSvg = buildNftActiveDiagramSvg(canalesMir, hx, pend, vol, 'MedirMirror', {
         calentador: eqArr.includes('calentador'),
         difusor: eqArr.includes('difusor'),
         interactive: true,

@@ -61,7 +61,13 @@
 
     /* Mismo SVG hidráulico que Cultivo/Sistema (serie o colectores paralelo). No usar la ilustración pared sin tuberías. */
     if (typeof global.buildNftActiveDiagramSvg !== 'function') return null;
-    let svg = global.buildNftActiveDiagramSvg(hyd.nCh, hx, pend, EO.volL, 'MedirCartoon', EO);
+    const dispM =
+      typeof nftDisposicionNormalizada === 'function' ? nftDisposicionNormalizada(cfg.nftDisposicion) : 'mesa';
+    const canalesM =
+      dispM === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraNiveles >= 1
+        ? hyd.escaleraNiveles
+        : hyd.nCh;
+    let svg = global.buildNftActiveDiagramSvg(canalesM, hx, pend, EO.volL, 'MedirCartoon', EO);
     if (!svg || svg.indexOf('<svg') < 0) return null;
     if (typeof global.enhanceNftDiagramCartoon === 'function') {
       svg = global.enhanceNftDiagramCartoon(svg, { medir: true, disp: disp });

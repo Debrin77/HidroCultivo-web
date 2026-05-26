@@ -15390,6 +15390,20 @@ button.toggle-switch:focus-visible {
   min-height: min(32vh, 260px);
   vertical-align: middle;
 }
+/* Escalera A (2 caras): esquema ancho — scroll horizontal en vista previa del asistente */
+.torre-preview.nft-schematic-host.nft-preview--esc-2c {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+.torre-preview.nft-schematic-host.nft-preview--esc-2c svg.nft-escalera--dos-caras {
+  min-width: min(100%, 520px);
+  min-height: min(36vh, 300px);
+  max-height: min(72vh, 560px);
+}
+#torreSVGWrap.torre-svg-canvas svg.nft-escalera--dos-caras {
+  min-height: min(40vh, 480px);
+}
 .torre-preview.torre-preview--rdwc .rdwc-svg-diagram--hub {
   max-width: 100%;
 }

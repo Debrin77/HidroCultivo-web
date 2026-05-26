@@ -506,10 +506,14 @@
   }
 
   /** Escalera / A-frame: 1 cara (serie) o 2 caras (T central, ramas en paralelo). */
+  function nftEscaleraCarNorm(v) {
+    return parseInt(String(v), 10) === 2 ? 2 : 1;
+  }
+
   function nftHydraulicEscalera(p) {
     const runs = p.runs || [];
     const nv = p.nv;
-    const car = p.car;
+    const car = nftEscaleraCarNorm(p.car);
     const padFlow = p.padFlow;
     const flowMargin = p.flowMargin != null ? p.flowMargin : 8;
     const er = p.cornerRadius != null ? p.cornerRadius : 14;

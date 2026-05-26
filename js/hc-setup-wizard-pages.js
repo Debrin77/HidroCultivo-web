@@ -1,4 +1,14 @@
 ﻿/** buildNftActiveDiagramSvg, preview, páginas del asistente, grid nutrientes. Tras hc-setup-wizard-nft-diagrams.js. */
+
+/** Alias: siempre usa normalización de core (y UI vía nftEscaleraCarasDesdeCfgYUi). */
+function nftEscaleraCarasNormSafe(v) {
+  return typeof nftEscaleraCarasNormalizada === 'function'
+    ? nftEscaleraCarasNormalizada(v)
+    : parseInt(String(v), 10) === 2
+      ? 2
+      : 1;
+}
+
 /** Placeholder del asistente NFT sin tubos/huecos definidos. */
 function buildNftSetupEmptyDiagramSvg() {
   return (
@@ -40,11 +50,19 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     return buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts);
   }
   if (disp === 'escalera') {
-    const caras = EO.escaleraCaras != null ? EO.escaleraCaras : nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras);
-    let nv = EO.escaleraNiveles;
-    if (nv == null || !Number.isFinite(nv)) nv = parseInt(String(cfg.nftEscaleraNivelesCara), 10);
-    if (!Number.isFinite(nv) || nv < 1) nv = Math.max(1, Math.ceil(canales / Math.max(1, caras)));
-    nv = Math.min(12, Math.max(1, nv));
+    const caras =
+      typeof nftEscaleraCarasParaDiagrama === 'function'
+        ? nftEscaleraCarasParaDiagrama(
+            typeof nftEscaleraNvDesdeCfgYUi === 'function'
+              ? nftEscaleraNvDesdeCfgYUi(cfg, EO, canales)
+              : canales,
+            EO
+          )
+        : nftEscaleraCarasNormSafe(EO.escaleraCaras != null ? EO.escaleraCaras : cfg.nftEscaleraCaras);
+    const nv =
+      typeof nftEscaleraNvDesdeCfgYUi === 'function'
+        ? nftEscaleraNvDesdeCfgYUi(cfg, EO, canales)
+        : parseInt(String(canales), 10) || 1;
     return buildNftEscaleraDiagramSvg(nv, caras, huecos, pendPct, volL, svgIdSuffix, equipOpts);
   }
   return buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts);
@@ -991,14 +1009,14 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
   const foot = vol + ' L';
 
   return (
-    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll' +
+    '<svg class="torre-svg-diagram nft-serpentine-svg nft-diagram--scroll svg-fit-block' +
     (isParedSerp ? ' nft-serpentine--pared' : '') +
     (colectoresParalelo ? ' nft-serpentine--paralelo' : '') +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
     H +
-    '" width="100%" class="svg-fit-block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -1449,7 +1467,7 @@ function buildNftDraftConfigFromSetupUi() {
     draft.nftParedRecorridoAgua = mont.mesaRecorrido || 'serie';
   }
   if (mont.disposicion === 'escalera') {
-    draft.nftEscaleraCaras = mont.escaleraCaras;
+    draft.nftEscaleraCaras = nftEscaleraCarasNormSafe(mont.escaleraCaras);
     if (Number.isFinite(canalesSlider) && canalesSlider > 0) {
       draft.nftEscaleraNivelesCara = Math.min(12, canalesSlider);
       draft.nftNumCanales = draft.nftEscaleraNivelesCara * mont.escaleraCaras;
@@ -1521,22 +1539,51 @@ function updateNftSetupPreview() {
   const altShow = draft.nftAlturaBombeoCm != null && Number(draft.nftAlturaBombeoCm) > 0
     ? Math.round(Number(draft.nftAlturaBombeoCm))
     : getNftAlturaBombeoEfectivaCm(draft);
-  if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
-  let nftPrevSvg = buildNftActiveDiagramSvg(canales, huecos, pendDraw, vol, '', {
-    calentador: setupEquipamiento.has('calentador'),
-    difusor: setupEquipamiento.has('difusor'),
-    bombaInfo: bNft,
-    nftDisposicion: draft.nftDisposicion,
-    nftAlturaBombeoCm: altShow > 0 ? altShow : null,
-    cfgSnapshot: draft,
-    mesaTiers: hyd.mesaTiers,
-    escaleraNiveles: hyd.escaleraNiveles,
-    escaleraCaras: hyd.escaleraCaras,
-  });
-  if (typeof enhanceNftDiagramScada === 'function') {
-    nftPrevSvg = enhanceNftDiagramScada(nftPrevSvg, { interactive: false });
+  const dispPrev = nftDisposicionNormalizada(draft.nftDisposicion);
+  const canalesDraw =
+    dispPrev === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraNiveles >= 1
+      ? hyd.escaleraNiveles
+      : canales;
+  let nftPrevSvg = buildNftSetupEmptyDiagramSvg();
+  try {
+    if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
+    nftPrevSvg = buildNftActiveDiagramSvg(canalesDraw, huecos, pendDraw, vol, '', {
+      calentador: setupEquipamiento.has('calentador'),
+      difusor: setupEquipamiento.has('difusor'),
+      bombaInfo: bNft,
+      nftDisposicion: draft.nftDisposicion,
+      nftAlturaBombeoCm: altShow > 0 ? altShow : null,
+      cfgSnapshot: draft,
+      mesaTiers: hyd.mesaTiers,
+      escaleraNiveles: hyd.escaleraNiveles,
+      escaleraCaras: hyd.escaleraCaras,
+    });
+    if (typeof enhanceNftDiagramScada === 'function') {
+      nftPrevSvg = enhanceNftDiagramScada(nftPrevSvg, { interactive: false });
+    }
+  } catch (err) {
+    console.error('[NFT preview]', err);
+    nftPrevSvg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 100" role="img" aria-label="Error al dibujar">' +
+      '<rect width="360" height="100" rx="10" fill="#fef2f2" stroke="#fecaca"/>' +
+      '<text x="180" y="48" text-anchor="middle" font-family="system-ui,sans-serif" font-size="12" fill="#b91c1c">No se pudo dibujar el esquema</text>' +
+      '<text x="180" y="68" text-anchor="middle" font-family="system-ui,sans-serif" font-size="10" fill="#991b1b">Recarga (Ctrl+F5) o reduce tubos/huecos</text>' +
+      '</svg>';
   }
   preview.innerHTML = nftPrevSvg;
+  if (dispPrev === 'escalera') {
+    const carasUi =
+      typeof nftEscaleraCarasDesdeCfgYUi === 'function'
+        ? nftEscaleraCarasDesdeCfgYUi(draft, { escaleraCaras: hyd.escaleraCaras })
+        : nftEscaleraCarasNormSafe(hyd.escaleraCaras);
+    preview.setAttribute('data-nft-esc-caras', String(carasUi));
+    preview.setAttribute('data-nft-esc-nv', String(hyd.escaleraNiveles != null ? hyd.escaleraNiveles : ''));
+    preview.classList.toggle('nft-preview--esc-2c', carasUi === 2);
+  } else {
+    preview.removeAttribute('data-nft-esc-caras');
+    preview.removeAttribute('data-nft-esc-nv');
+    preview.classList.remove('nft-preview--esc-2c');
+  }
   try {
     if (typeof disposeDwcScadaViewport === 'function') disposeDwcScadaViewport(preview);
     if (typeof bindDwcScadaCestaHover === 'function') bindDwcScadaCestaHover(preview);

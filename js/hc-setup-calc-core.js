@@ -1771,7 +1771,12 @@ function guardarSetupYContinuar() {
         montSv.mesaRecorrido || (typeof nftMesaRecorridoNormalizada === 'function' ? nftMesaRecorridoNormalizada() : 'serie');
     }
     if (montSv.disposicion === 'escalera') {
-      state.configTorre.nftEscaleraCaras = montSv.escaleraCaras;
+      state.configTorre.nftEscaleraCaras =
+        typeof nftEscaleraCarasNormalizada === 'function'
+          ? nftEscaleraCarasNormalizada(montSv.escaleraCaras)
+          : montSv.escaleraCaras === 2
+            ? 2
+            : 1;
       state.configTorre.nftEscaleraNivelesCara = Math.max(1, Math.min(12, nftNvSlider));
     }
     state.configTorre.nftBombaEstimada = getNftBombaDesdeConfig(state.configTorre);

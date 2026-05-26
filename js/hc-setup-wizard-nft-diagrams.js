@@ -2386,13 +2386,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   }
 
   return (
-    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-svg-diagram--scada nft-diagram--scroll' +
+    '<svg class="torre-svg-diagram nft-mesa-mm-svg nft-svg-diagram--scada nft-diagram--scroll svg-fit-block' +
     (compactMesa ? ' nft-diagram--compact' : '') +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
     H +
-    '" width="100%" class="svg-fit-block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +
@@ -2478,7 +2478,14 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const tid = 'nftEscTitle' + suf;
 
   const nv = Math.min(12, Math.max(1, parseInt(String(nivelesCara), 10) || 1));
-  const car = caras === 2 ? 2 : 1;
+  const car =
+    typeof nftEscaleraCarasParaDiagrama === 'function'
+      ? nftEscaleraCarasParaDiagrama(caras, EO)
+      : typeof nftEscaleraCarasNormalizada === 'function'
+        ? nftEscaleraCarasNormalizada(caras)
+        : parseInt(String(caras), 10) === 2
+          ? 2
+          : 1;
   const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const tankMetaEsc =
@@ -2556,9 +2563,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     : esc1Cara && typeof nftSvgTankPorts === 'function'
       ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv).xReturn
       : tx + tankW - 12;
-  const xTankReturnL = tx + 14;
-  const xTankReturnR = tx + tankW - 14;
-  const xTankReturnCenter = xTankC;
+  let xTankReturnL = tx + 14;
+  let xTankReturnR = tx + tankW - 14;
+  let xTankReturnCenter = xTankC;
   let xSupplyRiser = cx;
   const yPump = waterTop + Math.min(18, waterH * 0.45);
   let xPump = tx + 14;
@@ -2587,13 +2594,15 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   let xFeedRiserEsc = cx - baseHalf - 28;
   let xReturnRiserEsc = cx + baseHalf + 28;
   let cxTitle = Wsvg / 2;
-  const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
+  let hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
 
   /** Dos caras: hueco bajo la T para las dos entradas y las U del serpentín hacia el centro. */
-  const topCenterGap2 = car === 2 ? (compactEsc ? 56 : 80) : 0;
+  const topCenterGap2 = car === 2 ? (compactEsc ? 72 : 100) : 0;
 
   const runs = [];
   let g = 0;
+  let xApexFootL = cx - baseHalf;
+  let xApexFootR = cx + baseHalf;
   if (car === 1) {
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
@@ -2604,32 +2613,31 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
     }
   } else {
-    const xInL0 = cx - topCenterGap2 / 2;
-    const xInR0 = cx + topCenterGap2 / 2;
+    /**
+     * Dos caras (A): dos escaleras independientes (como 1 cara cada una), separadas en X.
+     * La versión anterior unía ambas en cx arriba y parecía un solo montaje.
+     */
+    const baseHalfFace = baseHalf * 0.9;
+    const faceInset = Math.max(52, topCenterGap2 / 2 + serpentineJogEsc + 32);
+    const cxFaceL = cx - faceInset - baseHalfFace * 0.42;
+    const cxFaceR = cx + faceInset + baseHalfFace * 0.42;
+    xApexFootL = cxFaceL - 14;
+    xApexFootR = cxFaceR + 14;
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const xLeftFoot = cx - baseHalf * p;
-      let xL = xLeftFoot - rungOut;
-      let xR = xLeftFoot + rungIn;
-      if (i === 0) {
-        xR = Math.min(xR, xInL0);
-        if (xR < xL + 12) xR = xL + 12;
-      }
-      /** Mismo serpentín que 1 cara (espejado): 1.º tubo desde el centro. */
-      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
+      const along = nv <= 1 ? 0 : 1 - p;
+      const xFoot = cxFaceL - 14 - baseHalfFace * along;
+      runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
+      if (i === nv - 1) xApexFootL = xFoot;
     }
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const xRightFoot = cx + baseHalf * p;
-      let xL = xRightFoot - rungIn;
-      let xR = xRightFoot + rungOut;
-      if (i === 0) {
-        xL = Math.max(xL, xInR0);
-        if (xR < xL + 12) xL = xR - 12;
-      }
-      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
+      const along = nv <= 1 ? 0 : 1 - p;
+      const xFoot = cxFaceR + 14 + baseHalfFace * along;
+      runs.push({ g: g++, y, xL: xFoot - rungIn, xR: xFoot + rungOut, rtl: i % 2 === 1 });
+      if (i === nv - 1) xApexFootR = xFoot;
     }
   }
 
@@ -2663,6 +2671,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     xTankReturnCenter = xTankC;
     xSupplyRiser = cx;
     cxTitle = Wsvg / 2;
+    hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
   }
 
   if (runs.length && esc1Cara) {
@@ -2674,6 +2683,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
     const riserPad = serpentineJogEsc + 52;
     const contentW = xMaxR - xMinL + riserPad * 2;
+    Wsvg = Math.max(Wsvg, Math.ceil(contentW + 36));
     const shiftX = Math.max(20, (Wsvg - contentW) / 2) + riserPad - xMinL;
     if (Math.abs(shiftX) > 0.5) {
       for (let ri = 0; ri < runs.length; ri++) {
@@ -2861,6 +2871,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
 
   let frame = '';
   if (car === 2) {
+    const xLegL = xApexFootL;
+    const xLegR = xApexFootR;
     frame +=
       '<g class="nft-esc-frame" pointer-events="none" aria-hidden="true">' +
       '<line x1="' +
@@ -2868,7 +2880,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '" y1="' +
       yApex +
       '" x2="' +
-      (cx - baseHalf) +
+      xLegL +
       '" y2="' +
       ladderBot +
       '" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.78"/>' +
@@ -2877,19 +2889,28 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '" y1="' +
       yApex +
       '" x2="' +
-      (cx + baseHalf) +
+      xLegR +
       '" y2="' +
       ladderBot +
       '" stroke="#94a3b8" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="6 5" opacity="0.78"/>' +
       '<line x1="' +
-      (cx - baseHalf) +
+      xLegL +
       '" y1="' +
       ladderBot +
       '" x2="' +
-      (cx + baseHalf) +
+      xLegR +
       '" y2="' +
       ladderBot +
-      '" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>';
+      '" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round" opacity="0.65"/>' +
+      '<line x1="' +
+      cx +
+      '" y1="' +
+      (ladderTop - 4) +
+      '" x2="' +
+      cx +
+      '" y2="' +
+      (ladderBot - 8) +
+      '" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 5" opacity="0.45"/>';
     if (nv >= 2) {
       const yBrace = ladderTop + Math.min(nv - 1, 3) * dy * 0.42;
       frame +=
@@ -2927,6 +2948,36 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       ym +
       '" stroke="#475569" stroke-width="2" stroke-linecap="round" opacity="0.95"/>' +
       '</g>';
+    if (runs.length >= nv * 2) {
+      let xMinL = Infinity;
+      let xMaxL = -Infinity;
+      let xMinR = Infinity;
+      let xMaxR = -Infinity;
+      for (let fi = 0; fi < nv; fi++) {
+        if (runs[fi].xL < xMinL) xMinL = runs[fi].xL;
+        if (runs[fi].xR > xMaxL) xMaxL = runs[fi].xR;
+      }
+      for (let fi = nv; fi < nv * 2; fi++) {
+        if (runs[fi].xL < xMinR) xMinR = runs[fi].xL;
+        if (runs[fi].xR > xMaxR) xMaxR = runs[fi].xR;
+      }
+      const yLbl = Math.max(18, hdrEscDraw.topPadMin - 8);
+      const cxLblL = (xMinL + xMaxL) / 2;
+      const cxLblR = (xMinR + xMaxR) / 2;
+      frame +=
+        '<g class="nft-esc-face-labels" pointer-events="none" aria-hidden="true">' +
+        '<text x="' +
+        cxLblL.toFixed(1) +
+        '" y="' +
+        yLbl +
+        '" text-anchor="middle" font-size="11" font-weight="800" fill="#166534" font-family="system-ui,sans-serif">Cara izquierda</text>' +
+        '<text x="' +
+        cxLblR.toFixed(1) +
+        '" y="' +
+        yLbl +
+        '" text-anchor="middle" font-size="11" font-weight="800" fill="#166534" font-family="system-ui,sans-serif">Cara derecha</text>' +
+        '</g>';
+    }
   } else if (runs.length) {
     const xLadL0 = runs[0].xL - 12;
     const xLadL1 = runs[runs.length - 1].xL - 12;
@@ -3147,21 +3198,28 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   const nTot = runs.length;
-  const escTitleFoot = vol + ' L · ' + (car === 1 ? 'esquema serpentín' : 'vista cenital');
+  const escTitleFoot =
+    car === 2
+      ? vol + ' L · escalera A · 2 caras · ' + nv + ' peldaños/cara'
+      : vol + ' L · escalera · 1 cara · ' + nv + ' peldaños';
   let escViewLabel = '';
   if (typeof hcDiagramViewLabelSvg === 'function' && car === 2) {
     escViewLabel = hcDiagramViewLabelSvg(cxTitle, 16, 'cenital', { pointerEvents: false });
   }
 
   return (
-    '<svg class="torre-svg-diagram nft-escalera-svg nft-svg-diagram--scada nft-diagram--scroll' +
+    '<svg class="torre-svg-diagram nft-escalera-svg nft-svg-diagram--scada nft-diagram--scroll svg-fit-block' +
     (car === 1 ? ' nft-escalera--una-cara' : ' nft-escalera--dos-caras') +
     (compactEsc ? ' nft-diagram--compact' : '') +
+    '" data-nft-esc-caras="' +
+    car +
+    '" data-nft-esc-nv="' +
+    nv +
     '" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
     Wsvg +
     ' ' +
     H +
-    '" width="100%" class="svg-fit-block" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
+    '" width="100%" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="' +
     tid +
     '">' +
     '<title id="' +

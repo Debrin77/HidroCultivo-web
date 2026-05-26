@@ -2131,7 +2131,7 @@ function abrirSetup() {
         ? String(Math.round(Number(c.nftMesaSeparacionNivelesCm)))
         : '';
   }
-  seleccionarNftEscaleraCaras(c.nftEscaleraCaras === 2 ? 2 : 1);
+  seleccionarNftEscaleraCaras(nftEscaleraCarasNormalizada(c.nftEscaleraCaras));
   onNftMesaMultinivelToggle();
   refrescarNftMontajeSubpanels();
   setupNftTuboMm = Math.max(16, Math.min(40, parseInt(String(c.nftTuboInteriorMm), 10) || 25));
@@ -2875,6 +2875,65 @@ function nftEscaleraCarasNormalizada(v) {
 }
 
 /**
+ * Caras para dibujar escalera: parámetro explícito + UI + config (en ese orden en navegador).
+ * @param {number|string} carasParam valor pasado a buildNftEscaleraDiagramSvg (p. ej. 2)
+ */
+function nftEscaleraCarasParaDiagrama(carasParam, EO) {
+  EO = EO || {};
+  let car = nftEscaleraCarasNormalizada(carasParam);
+  if (typeof readNftMontajeFromSetupUi === 'function' && typeof document !== 'undefined') {
+    try {
+      const m = readNftMontajeFromSetupUi();
+      if (m.disposicion === 'escalera') car = nftEscaleraCarasNormalizada(m.escaleraCaras);
+    } catch (_) {}
+  } else if (EO.escaleraCaras != null) {
+    car = nftEscaleraCarasNormalizada(EO.escaleraCaras);
+  } else if (EO.cfgSnapshot && EO.cfgSnapshot.nftEscaleraCaras != null) {
+    car = nftEscaleraCarasNormalizada(EO.cfgSnapshot.nftEscaleraCaras);
+  }
+  return car;
+}
+
+/** Caras escalera: prioriza botones del asistente (nftEscCara*) si disposición = escalera. */
+function nftEscaleraCarasDesdeCfgYUi(cfg, EO) {
+  cfg = cfg || {};
+  EO = EO || {};
+  if (typeof readNftMontajeFromSetupUi === 'function' && typeof document !== 'undefined') {
+    try {
+      const m = readNftMontajeFromSetupUi();
+      if (m.disposicion === 'escalera') return nftEscaleraCarasNormalizada(m.escaleraCaras);
+    } catch (_) {}
+  }
+  if (EO.escaleraCaras != null) return nftEscaleraCarasNormalizada(EO.escaleraCaras);
+  return nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras);
+}
+
+/** Peldaños por cara: slider del asistente o config (no confundir con nCh total en 2 caras). */
+function nftEscaleraNvDesdeCfgYUi(cfg, EO, canalesArg) {
+  cfg = cfg || {};
+  EO = EO || {};
+  const caras = nftEscaleraCarasDesdeCfgYUi(cfg, EO);
+  if (typeof readNftMontajeFromSetupUi === 'function' && typeof document !== 'undefined') {
+    try {
+      const m = readNftMontajeFromSetupUi();
+      if (m.disposicion === 'escalera') {
+        const sliderNv = parseInt(document.getElementById('sliderNftCanales')?.value ?? '', 10);
+        if (Number.isFinite(sliderNv) && sliderNv >= 1) return Math.min(12, sliderNv);
+      }
+    } catch (_) {}
+  }
+  let nv = EO.escaleraNiveles;
+  if (nv == null || !Number.isFinite(nv)) nv = parseInt(String(cfg.nftEscaleraNivelesCara), 10);
+  if (Number.isFinite(nv) && nv >= 1) return Math.min(12, Math.max(1, Math.round(nv)));
+  const raw = parseInt(String(canalesArg), 10);
+  if (!Number.isFinite(raw) || raw < 1) return 1;
+  if (raw <= 12) return raw;
+  if (caras === 2 && raw % 2 === 0 && raw / 2 <= 12) return raw / 2;
+  if (raw % caras === 0 && raw / caras <= 12) return raw / caras;
+  return Math.min(12, Math.max(1, Math.ceil(raw / caras)));
+}
+
+/**
  * Canales hidráulicos efectivos y metadatos de montaje para cálculo y SVG.
  * @returns {{ nCh: number, nHx: number, mesaTiers?: number[], escaleraNiveles?: number, escaleraCaras?: number }}
  */
@@ -2912,15 +2971,9 @@ function getNftHidraulicaDesdeConfig(cfg) {
     }
   }
   if (disp === 'escalera') {
-    const caras = nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras);
-    let nv = parseInt(String(cfg.nftEscaleraNivelesCara ?? ''), 10);
-    if (!Number.isFinite(nv) || nv < 0) {
-      const total = nftCanalesRawDesdeCfg(cfg);
-      if (total < 1) return { nCh: 0, nHx: hx, escaleraNiveles: 0, escaleraCaras: caras };
-      nv = Math.max(1, Math.ceil(total / Math.max(1, caras)));
-    }
+    const caras = nftEscaleraCarasDesdeCfgYUi(cfg, null);
+    const nv = nftEscaleraNvDesdeCfgYUi(cfg, null, cfg.nftNumCanales);
     if (nv < 1) return { nCh: 0, nHx: hx, escaleraNiveles: 0, escaleraCaras: caras };
-    nv = Math.min(12, Math.max(1, nv));
     const nCh = Math.min(24, Math.max(0, nv * caras));
     return { nCh, nHx: hx, escaleraNiveles: nv, escaleraCaras: caras };
   }
@@ -3093,7 +3146,10 @@ function onNftMesaMultinivelToggle() {
 }
 
 function seleccionarNftEscaleraCaras(n) {
-  const caras = n === 2 ? 2 : 1;
+  const caras = nftEscaleraCarasNormalizada(n);
+  if (caras === 2 && readNftMontajeFromSetupUi().disposicion !== 'escalera') {
+    seleccionarNftDisposicion('escalera');
+  }
   const b1 = document.getElementById('nftEscCara1');
   const b2 = document.getElementById('nftEscCara2');
   if (b1) {
@@ -3104,7 +3160,10 @@ function seleccionarNftEscaleraCaras(n) {
     b2.classList.toggle('selected', caras === 2);
     b2.setAttribute('aria-pressed', caras === 2 ? 'true' : 'false');
   }
-  if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
+  if (setupTipoInstalacion === 'nft') {
+    if (typeof refrescarNftCanalesSliderEtiqueta === 'function') refrescarNftCanalesSliderEtiqueta();
+    updateNftSetupPreview();
+  }
 }
 
 function seleccionarNftDisposicion(which) {
@@ -3132,7 +3191,7 @@ function onSistemaNftMesaMultinivelToggle() {
 }
 
 function seleccionarSistemaNftEscaleraCaras(n) {
-  const caras = n === 2 ? 2 : 1;
+  const caras = nftEscaleraCarasNormalizada(n);
   const b1 = document.getElementById('sysNftEscCara1');
   const b2 = document.getElementById('sysNftEscCara2');
   if (b1) {
@@ -3143,6 +3202,9 @@ function seleccionarSistemaNftEscaleraCaras(n) {
     b2.classList.toggle('selected', caras === 2);
     b2.setAttribute('aria-pressed', caras === 2 ? 'true' : 'false');
   }
+  try {
+    if (typeof renderTorre === 'function') renderTorre();
+  } catch (_) {}
 }
 
 function seleccionarSistemaNftDisposicion(which) {
@@ -3895,7 +3957,7 @@ function sincronizarSistemaNftMontajeUI() {
         ? String(Math.round(Number(cfg.nftMesaSeparacionNivelesCm)))
         : '';
   }
-  seleccionarSistemaNftEscaleraCaras(cfg.nftEscaleraCaras === 2 ? 2 : 1);
+  seleccionarSistemaNftEscaleraCaras(nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras));
   let nvEsc = 4;
   if (dispN === 'escalera' && cfg.nftEscaleraNivelesCara != null && Number(cfg.nftEscaleraNivelesCara) > 0) {
     nvEsc = Math.max(1, Math.min(12, Math.round(Number(cfg.nftEscaleraNivelesCara))));
@@ -3905,7 +3967,7 @@ function sincronizarSistemaNftMontajeUI() {
   const ncEl = document.getElementById('sysNftNumCanales');
   if (ncEl) {
     let nc = Math.max(1, Math.min(24, parseInt(String(cfg.nftNumCanales ?? cfg.numNiveles ?? 4), 10) || 4));
-    if (dispN === 'escalera') nc = Math.max(1, Math.min(24, nvEsc * (cfg.nftEscaleraCaras === 2 ? 2 : 1)));
+    if (dispN === 'escalera') nc = Math.max(1, Math.min(24, nvEsc * nftEscaleraCarasNormalizada(cfg.nftEscaleraCaras)));
     ncEl.value = String(nc);
   }
   onSistemaNftMesaMultinivelToggle();
