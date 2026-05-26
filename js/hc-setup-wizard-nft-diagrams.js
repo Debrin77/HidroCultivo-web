@@ -2451,11 +2451,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
  * Modelo hidráulico (línea azul): sin cruces entre alimentación y retorno.
  * Una cara: mismo serpentín que pared (depósito → colector izq. → zigzag por extremos de tubo
  * → retorno), con tubos desplazados en escalera.
- * Dos caras: subida central por el eje de la escalera (T en el vértice), zigzag
- * Dos caras: una subida central → T superior → cada tubo de arriba; serpentín hacia abajo
- * por el extremo alejado del centro (izq. en hoja izq., dcha. en hoja dcha.).
- * Peldaños pares: retorno al depósito por el lado que mira al centro (entrada arriba, centro).
- * Peldaños impares: retorno lateral del depósito (izq./dcha. según hoja).
+ * Dos caras: una subida central (igual con peldaños pares o impares) → T → tubos superiores;
+ * en cada hoja serpentín por el lado exterior como una cara sola; dos retornos al depósito (izq. y dcha.).
  *
  * Referencias generales NFT (pendiente, recirculación, retorno al depósito):
  * p. ej. Atlas Scientific — How to Build a Nutrient Film Technique (NFT) System;
@@ -2551,7 +2548,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const esc1Cara = car === 1;
   const esc2Cara = car === 2;
   const oddEsc = nv % 2 === 1;
-  const odd2 = esc2Cara && oddEsc;
   let xTankC = tx + Math.round(tankW / 2);
   let escPorts = esc1Cara ? nftSvgTankPorts(tx, tankW, tankY, tankH, nv) : null;
   let xTankFeed = esc2Cara ? xTankC : escPorts ? escPorts.xFeed : tx + 12;
@@ -2587,7 +2583,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   });
   const Wsvg = altBadgeEsc.canvasW;
   const flowMarginEsc = esc1Cara ? 10 : 8;
-  const serpentineJogEsc = esc1Cara ? (compactEsc ? 22 : 28) : flowMarginEsc;
+  const serpentineJogEsc = esc1Cara ? (compactEsc ? 22 : 28) : compactEsc ? 18 : 22;
   let xFeedRiserEsc = cx - baseHalf - 28;
   let xReturnRiserEsc = cx + baseHalf + 28;
   const cxTitle = Wsvg / 2;
@@ -2619,7 +2615,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       if (i === 0) {
         xR = Math.min(xR, xInL0);
       }
-      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 1 });
+      /** Entrada del 1.º tubo desde el centro; U del serpentín por el lado exterior (izq.). */
+      runs.push({ g: g++, y, xL, xR, rtl: i % 2 === 0 });
     }
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
@@ -2728,7 +2725,6 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           yInlet: yInlet,
           xSupplyRiser: xSupplyRiser,
           yManifold: yEscManifold2,
-          retAlCentro: !odd2,
           cx: cx,
           xTankReturnCenter: xTankReturnCenter,
           xTankReturnL: xTankReturnL,
@@ -2768,8 +2764,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
           legendX: 12,
           legendY: Math.max(8, hdrEscDraw.topPadMin - 6),
           strokeWidth: EO.cartoonMedir === true ? 5.5 : 3.4,
-          showPorts: esc1Cara,
-          legendMode: esc1Cara ? 'serie' : undefined,
+          showPorts: esc1Cara || esc2Cara,
+          legendMode: esc1Cara ? 'serie' : esc2Cara ? 'escalera_2c' : undefined,
         })
       : null;
   const flowMarkEsc = flowSvgEsc ? flowSvgEsc.flowMark : { supplyId: 'a', returnId: 'b', defs: '' };
@@ -2787,28 +2783,20 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '" r="5.5" fill="' +
       F_SUP +
       '" stroke="#fef3c7" stroke-width="1.4"/>' +
-      (odd2
-        ? '<circle cx="' +
-          xTankReturnL +
-          '" cy="' +
-          yInlet +
-          '" r="5.5" fill="' +
-          F_RET +
-          '" stroke="#fef3c7" stroke-width="1.4"/>' +
-          '<circle cx="' +
-          xTankReturnR +
-          '" cy="' +
-          yInlet +
-          '" r="5.5" fill="' +
-          F_RET +
-          '" stroke="#fef3c7" stroke-width="1.4"/>'
-        : '<circle cx="' +
-          xTankReturnCenter +
-          '" cy="' +
-          yInlet +
-          '" r="5.5" fill="' +
-          F_RET +
-          '" stroke="#fef3c7" stroke-width="1.4"/>') +
+      '<circle cx="' +
+      xTankReturnL +
+      '" cy="' +
+      yInlet +
+      '" r="5.5" fill="' +
+      F_RET +
+      '" stroke="#fef3c7" stroke-width="1.4"/>' +
+      '<circle cx="' +
+      xTankReturnR +
+      '" cy="' +
+      yInlet +
+      '" r="5.5" fill="' +
+      F_RET +
+      '" stroke="#fef3c7" stroke-width="1.4"/>' +
       '</g>';
   } else if (esc1Cara && escPorts) {
     flowTankPortsEsc +=

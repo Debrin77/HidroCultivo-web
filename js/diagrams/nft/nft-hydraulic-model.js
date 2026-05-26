@@ -395,6 +395,64 @@
   }
 
   /**
+   * Serpentín con U siempre por el lado exterior de la hoja (escalera 2 caras).
+   * @param {boolean} outerLeft true = cara izquierda (U por la izq.), false = cara derecha.
+   */
+  function serpentineAlongRunsOuter(runList, padFlow, jog, outerLeft) {
+    const wp = [];
+    const j = jog != null ? jog : 10;
+    for (let i = 0; i < runList.length; i++) {
+      const R = runList[i];
+      const Rn = i < runList.length - 1 ? runList[i + 1] : null;
+      const xIn = R.rtl ? R.xR - padFlow : R.xL + padFlow;
+      const xOut = R.rtl ? R.xL + padFlow : R.xR - padFlow;
+      pushWp(wp, xIn, R.y);
+      pushWp(wp, xOut, R.y);
+      if (Rn) {
+        const xNextIn = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
+        const xVert = outerLeft ? Math.min(xOut, xNextIn) - j : Math.max(xOut, xNextIn) + j;
+        pushWp(wp, xOut, R.y);
+        pushWp(wp, xVert, R.y);
+        pushWp(wp, xVert, Rn.y);
+        if (Math.abs(xVert - xNextIn) > 0.5) {
+          pushWp(wp, xNextIn, Rn.y);
+        }
+      }
+    }
+    return wp;
+  }
+
+  /** Retorno al depósito desde el último tubo de una cara (escalera A, 2 caras). */
+  function returnEscalera2FaceWaypoints(p) {
+    const xExit = p.xExit;
+    const yExit = p.yExit;
+    const xTank = p.xTankReturn;
+    const yInlet = p.yInlet;
+    const flowMargin = p.flowMargin != null ? p.flowMargin : 8;
+    const tubeH = p.tubeH != null ? p.tubeH : 22;
+    const tankY = p.tankY;
+    const outerLeft = p.outerLeft === true;
+    const oddFace = p.nv % 2 === 1;
+    const wp = [];
+    pushWp(wp, xExit, yExit);
+    let yDuct = yExit + tubeH / 2 + (p.ductDrop != null ? p.ductDrop : 28);
+    if (yDuct > tankY - 10) yDuct = tankY - 12;
+    if (oddFace) {
+      pushWp(wp, xExit, yDuct);
+      pushWp(wp, xTank, yDuct);
+    } else {
+      const xDrop = outerLeft
+        ? Math.min(xExit - flowMargin, xTank + 10)
+        : Math.max(xExit + flowMargin, xTank - 10);
+      pushWp(wp, xDrop, yExit);
+      pushWp(wp, xDrop, yDuct);
+      pushWp(wp, xTank, yDuct);
+    }
+    pushWp(wp, xTank, yInlet);
+    return wp;
+  }
+
+  /**
    * Serpentín tubo a tubo: extremo → U por fuera → extremo del tubo de abajo (como rotulador).
    */
   function serpentineAlongRuns(runList, padFlow, flowMargin) {
@@ -482,9 +540,7 @@
       const runsL = runs.slice(0, nv);
       const runsR = runs.slice(nv);
       const yManifold = p.yManifold;
-      const retAlCentro = p.retAlCentro;
-      const risL = risersFromRunList(runsL, flowMargin, padFlow);
-      const risR = risersFromRunList(runsR, flowMargin, padFlow);
+      const serpJog = p.serpentineJog != null ? p.serpentineJog : flowMargin;
       const supHead = [];
       pushWp(supHead, p.xPump, p.yPump);
       pushWp(supHead, p.xTankFeed, p.yPump);
@@ -492,48 +548,56 @@
       pushWp(supHead, p.xSupplyRiser, p.yOutlet);
       pushWp(supHead, p.xSupplyRiser, yManifold);
 
-      const supL = supHead.slice();
+      /** Subida central → T → cada tubo superior (igual si peldaños pares o impares). */
       const R0L = runsL[0];
       const xIn0L = R0L.rtl ? R0L.xR - padFlow : R0L.xL + padFlow;
-      pushWp(supL, risL.xFeedRiser, yManifold);
-      pushWp(supL, risL.xFeedRiser, R0L.y);
+      const supL = supHead.slice();
+      pushWp(supL, xIn0L, yManifold);
       pushWp(supL, xIn0L, R0L.y);
-      supL.push.apply(supL, serpentineAlongRuns(runsL, padFlow, flowMargin));
+      supL.push.apply(supL, serpentineAlongRunsOuter(runsL, padFlow, serpJog, true));
       supplyPaths.push(supL);
 
-      const supR = [];
-      pushWp(supR, p.xSupplyRiser, yManifold);
       const R0R = runsR[0];
       const xIn0R = R0R.rtl ? R0R.xR - padFlow : R0R.xL + padFlow;
+      const supR = [];
+      pushWp(supR, p.xSupplyRiser, yManifold);
       pushWp(supR, xIn0R, yManifold);
       pushWp(supR, xIn0R, R0R.y);
-      supR.push.apply(supR, serpentineAlongRuns(runsR, padFlow, flowMargin));
+      supR.push.apply(supR, serpentineAlongRunsOuter(runsR, padFlow, serpJog, false));
       supplyPaths.push(supR);
 
       const RnL = runsL[nv - 1];
       const xEndL = RnL.rtl ? RnL.xL + padFlow : RnL.xR - padFlow;
       returnPaths.push(
-        drainWaypoints(
-          xEndL,
-          RnL.y,
-          retAlCentro ? p.cx : risL.xReturnRiser,
-          retAlCentro ? p.xTankReturnCenter : p.xTankReturnL,
-          p.yInlet,
-          p.ladderBot
-        )
+        returnEscalera2FaceWaypoints({
+          xExit: xEndL,
+          yExit: RnL.y,
+          xTankReturn: p.xTankReturnL,
+          yInlet: p.yInlet,
+          flowMargin: flowMargin,
+          tubeH: p.tubeH,
+          tankY: p.tankY,
+          outerLeft: true,
+          nv: nv,
+          ductDrop: p.ductDrop,
+        })
       );
 
       const RnR = runsR[nv - 1];
       const xEndR = RnR.rtl ? RnR.xL + padFlow : RnR.xR - padFlow;
       returnPaths.push(
-        drainWaypoints(
-          xEndR,
-          RnR.y,
-          retAlCentro ? p.cx : risR.xReturnRiser,
-          retAlCentro ? p.xTankReturnCenter : p.xTankReturnR,
-          p.yInlet,
-          p.ladderBot
-        )
+        returnEscalera2FaceWaypoints({
+          xExit: xEndR,
+          yExit: RnR.y,
+          xTankReturn: p.xTankReturnR,
+          yInlet: p.yInlet,
+          flowMargin: flowMargin,
+          tubeH: p.tubeH,
+          tankY: p.tankY,
+          outerLeft: false,
+          nv: nv,
+          ductDrop: p.ductDrop,
+        })
       );
     } else {
       return nftHydraulicSerpentineRuns(
@@ -541,6 +605,7 @@
           ports: ports,
           padFlow: padFlow,
           flowMargin: flowMargin,
+          serpentineJog: p.serpentineJog,
           cornerRadius: er,
         })
       );
