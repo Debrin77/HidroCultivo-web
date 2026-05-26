@@ -551,22 +551,30 @@
       pushWp(supHead, p.xSupplyRiser, p.yOutlet);
       pushWp(supHead, p.xSupplyRiser, yManifold);
 
-      /** Subida central → T → cada tubo superior (igual si peldaños pares o impares). */
+      /** Subida central → T → entrada interior del 1.º tubo (no al extremo exterior: evita dibujar una V). */
       const R0L = runsL[0];
-      const xIn0L = R0L.rtl ? R0L.xR - padFlow : R0L.xL + padFlow;
+      const xIn0L = R0L.xR - padFlow;
       const supL = supHead.slice();
       pushWp(supL, xIn0L, yManifold);
       pushWp(supL, xIn0L, R0L.y);
-      supL.push.apply(supL, serpentineAlongRuns(runsL, padFlow, serpJog));
+      const serpL =
+        typeof serpentineAlongRunsOuter === 'function'
+          ? serpentineAlongRunsOuter(runsL, padFlow, serpJog, true)
+          : serpentineAlongRuns(runsL, padFlow, serpJog);
+      supL.push.apply(supL, serpL);
       supplyPaths.push(supL);
 
       const R0R = runsR[0];
-      const xIn0R = R0R.rtl ? R0R.xR - padFlow : R0R.xL + padFlow;
+      const xIn0R = R0R.xL + padFlow;
       const supR = [];
       pushWp(supR, p.xSupplyRiser, yManifold);
       pushWp(supR, xIn0R, yManifold);
       pushWp(supR, xIn0R, R0R.y);
-      supR.push.apply(supR, serpentineAlongRuns(runsR, padFlow, serpJog));
+      const serpR =
+        typeof serpentineAlongRunsOuter === 'function'
+          ? serpentineAlongRunsOuter(runsR, padFlow, serpJog, false)
+          : serpentineAlongRuns(runsR, padFlow, serpJog);
+      supR.push.apply(supR, serpR);
       supplyPaths.push(supR);
 
       const RnL = runsL[nv - 1];

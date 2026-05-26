@@ -2614,31 +2614,36 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   } else {
     /**
-     * Dos caras (A / escalera): peldaños anclados al eje central (T), abriendo a los lados al bajar.
-     * Evita cxFaceL/R separados, que dibujaban una V (ancho arriba, estrecho abajo).
+     * Dos caras (A / escalera): peldaño anclado al borde interior (junto a la T arriba);
+     * el canal crece hacia fuera y alarga al bajar — silueta ∧, no ∨.
      */
     const baseHalfFace = baseHalf * 0.9;
-    const footTop = topCenterGap2 / 2 + rungIn;
-    const footBot = 14 + baseHalfFace;
-    xApexFootL = cx - footBot;
-    xApexFootR = cx + footBot;
+    const innerTop = topCenterGap2 / 2 + padFlow;
+    const innerBot = innerTop + baseHalfFace * 0.72;
+    const rungSpanFull = rungOut + rungIn;
+    xApexFootL = cx - innerBot - rungSpanFull;
+    xApexFootR = cx + innerBot + rungSpanFull;
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
       const along = nv <= 1 ? 0 : p;
-      const footInset = footTop + (footBot - footTop) * along;
-      const xFoot = cx - footInset;
-      runs.push({ g: g++, y, xL: xFoot - rungOut, xR: xFoot + rungIn, rtl: i % 2 === 1 });
-      if (i === nv - 1) xApexFootL = xFoot;
+      const inner = innerTop + (innerBot - innerTop) * along;
+      const spanMult = 0.58 + 0.42 * along;
+      const span = rungSpanFull * spanMult;
+      const xR = cx - inner;
+      runs.push({ g: g++, y, xL: xR - span, xR: xR, rtl: 1 });
+      if (i === nv - 1) xApexFootL = xR - span;
     }
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
       const along = nv <= 1 ? 0 : p;
-      const footInset = footTop + (footBot - footTop) * along;
-      const xFoot = cx + footInset;
-      runs.push({ g: g++, y, xL: xFoot - rungIn, xR: xFoot + rungOut, rtl: i % 2 === 1 });
-      if (i === nv - 1) xApexFootR = xFoot;
+      const inner = innerTop + (innerBot - innerTop) * along;
+      const spanMult = 0.58 + 0.42 * along;
+      const span = rungSpanFull * spanMult;
+      const xL = cx + inner;
+      runs.push({ g: g++, y, xL: xL, xR: xL + span, rtl: 0 });
+      if (i === nv - 1) xApexFootR = xL + span;
     }
   }
 
@@ -2912,15 +2917,17 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       '" y2="' +
       (ladderBot - 8) +
       '" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4 5" opacity="0.45"/>';
-    if (nv >= 2) {
-      const yBrace = ladderTop + Math.min(nv - 1, 3) * dy * 0.42;
+    if (nv >= 2 && runs.length >= nv * 2) {
+      const yBrace = runs[0].y;
+      const xBraceL = runs[0].xR;
+      const xBraceR = runs[nv].xL;
       frame +=
         '<line x1="' +
-        (cx - baseHalf * 0.48) +
+        xBraceL +
         '" y1="' +
         yBrace +
         '" x2="' +
-        (cx + baseHalf * 0.48) +
+        xBraceR +
         '" y2="' +
         yBrace +
         '" stroke="#cbd5e1" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>';
