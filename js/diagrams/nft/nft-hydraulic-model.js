@@ -401,8 +401,17 @@
   function escalera2FaceFlowEnds(R, pad, faceLeft) {
     const innerX = faceLeft ? R.xR : R.xL;
     const outerX = faceLeft ? R.xL : R.xR;
-    const xIn = R.rtl ? innerX - pad : outerX + pad;
-    const xOut = R.rtl ? outerX + pad : innerX - pad;
+    let xIn;
+    let xOut;
+    if (R.rtl) {
+      /** centro → fuera (simétrico en ambas caras) */
+      xIn = faceLeft ? innerX - pad : innerX + pad;
+      xOut = faceLeft ? outerX + pad : outerX - pad;
+    } else {
+      /** fuera → centro */
+      xIn = faceLeft ? outerX + pad : outerX - pad;
+      xOut = faceLeft ? innerX - pad : innerX + pad;
+    }
     const exitNearInner = Math.abs(xOut - innerX) + 0.5 < Math.abs(xOut - outerX);
     return { xIn: xIn, xOut: xOut, innerX: innerX, outerX: outerX, exitNearInner: exitNearInner };
   }
@@ -570,21 +579,21 @@
       pushWp(supHead, p.xSupplyRiser, p.yOutlet);
       pushWp(supHead, p.xSupplyRiser, yManifold);
 
-      /** Subida central → T → entrada interior del 1.º tubo (no al extremo exterior: evita dibujar una V). */
+      /** Subida central → T → entrada interior del 1.º tubo (espejo izq./dcha.). */
       const R0L = runsL[0];
-      const xIn0L = R0L.xR - padFlow;
+      const in0L = escalera2FaceFlowEnds(R0L, padFlow, true);
       const supL = supHead.slice();
-      pushWp(supL, xIn0L, yManifold);
-      pushWp(supL, xIn0L, R0L.y);
+      pushWp(supL, in0L.xIn, yManifold);
+      pushWp(supL, in0L.xIn, R0L.y);
       supL.push.apply(supL, serpentineEscalera2Face(runsL, padFlow, serpJog, true));
       supplyPaths.push(supL);
 
       const R0R = runsR[0];
-      const xIn0R = R0R.xL + padFlow;
+      const in0R = escalera2FaceFlowEnds(R0R, padFlow, false);
       const supR = [];
       pushWp(supR, p.xSupplyRiser, yManifold);
-      pushWp(supR, xIn0R, yManifold);
-      pushWp(supR, xIn0R, R0R.y);
+      pushWp(supR, in0R.xIn, yManifold);
+      pushWp(supR, in0R.xIn, R0R.y);
       supR.push.apply(supR, serpentineEscalera2Face(runsR, padFlow, serpJog, false));
       supplyPaths.push(supR);
 

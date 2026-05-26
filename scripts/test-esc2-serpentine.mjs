@@ -47,14 +47,35 @@ function rtlPattern(nv) {
   return svg;
 }
 
+function flowEnds(R, pad, faceLeft) {
+  const innerX = faceLeft ? R.xR : R.xL;
+  const outerX = faceLeft ? R.xL : R.xR;
+  let xIn;
+  let xOut;
+  if (R.rtl) {
+    xIn = faceLeft ? innerX - pad : innerX + pad;
+    xOut = faceLeft ? outerX + pad : outerX - pad;
+  } else {
+    xIn = faceLeft ? outerX + pad : outerX - pad;
+    xOut = faceLeft ? innerX - pad : innerX + pad;
+  }
+  return { xIn, xOut, innerX, outerX };
+}
+
 function checkNv(nv) {
   const pad = 7;
-  const runs = [];
+  const cx = 500;
+  const inner0 = 58;
+  const span = 180;
+  const runsL = [];
+  const runsR = [];
   for (let i = 0; i < nv; i++) {
-    const inner = 60 + i * 20;
-    const span = 180;
-    runs.push({ y: 100 + i * 70, xL: inner - span, xR: inner, rtl: i % 2 === 0 ? 1 : 0 });
+    const inner = inner0 + i * 22;
+    const rtl = i % 2 === 0 ? 1 : 0;
+    runsL.push({ y: 100 + i * 70, xL: cx - inner - span, xR: cx - inner, rtl: rtl });
+    runsR.push({ y: 100 + i * 70, xL: cx + inner, xR: cx + inner + span, rtl: rtl });
   }
+  const runs = runsL;
   const wp = [];
   const serp = (function () {
     const wp = [];
@@ -105,7 +126,18 @@ function checkNv(nv) {
   if (exitOuter !== expectOuterExit) {
     throw new Error('nv' + nv + ' retorno extremo incorrecto');
   }
-  console.log('OK nv=' + nv, 'retorno', exitOuter ? 'exterior' : 'interior');
+
+  const e0L = flowEnds(runsL[0], pad, true);
+  const e0R = flowEnds(runsR[0], pad, false);
+  if (e0L.xIn >= e0L.innerX - 0.5 || e0R.xIn <= e0R.innerX + 0.5) {
+    throw new Error('nv' + nv + ' entrada 1.º tubo no es por el centro');
+  }
+  const dL = cx - e0L.xIn;
+  const dR = e0R.xIn - cx;
+  if (Math.abs(dL - dR) > 1.5) {
+    throw new Error('nv' + nv + ' entrada no simétrica dL=' + dL + ' dR=' + dR);
+  }
+  console.log('OK nv=' + nv, 'retorno', exitOuter ? 'exterior' : 'interior', 'simetría 1.º tubo');
 }
 
 let fail = 0;
