@@ -639,11 +639,10 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
       };
     };
     const portsPar = nftSvgTankPorts(tx, tankW, tankY, tankH, nCh);
-    const riserSep = 16;
-    const xFeedRiserPar = Math.max(12, xL - flowMargin - (oddTubes ? 0 : riserSep));
-    const xReturnRiserPar = oddTubes
-      ? Math.min(Wsvg - 14, xR + flowMargin)
-      : Math.max(xFeedRiserPar + 10, Math.min(xL - 4, xFeedRiserPar + riserSep));
+    // En paralelo: alimentación siempre por la izquierda, retorno siempre por la derecha
+    portsPar.xReturn = tx + tankW - 14;
+    const xFeedRiserPar = Math.max(12, xL - flowMargin);
+    const xReturnRiserPar = Math.min(Wsvg - 14, xR + flowMargin);
     const hydPar = nftHydraulicMesaMultinivel({
       kind: 'mesa_multinivel',
       mesaParallel: true,
