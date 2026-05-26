@@ -10,8 +10,12 @@
 
   function rdwcPreferirLayoutHub(cfg) {
     const rows = Math.max(1, Math.min(4, parseInt(String((cfg || {}).rdwcRows || 1), 10) || 1));
-    const sites = Math.max(2, Math.min(64, parseInt(String((cfg || {}).rdwcSites || 4), 10) || 4));
-    return rows >= 2 || sites >= 5;
+    return rows < 2;
+  }
+
+  function rdwcPreferirLayoutPlan(cfg) {
+    const rows = Math.max(1, Math.min(4, parseInt(String((cfg || {}).rdwcRows || 1), 10) || 1));
+    return rows >= 2 && typeof renderRdwcPlan === 'function';
   }
 
   function rdwcSiteInteractive(s, x, y, rn, c, rPot, cfg, idx, ta, tieneDifusor, layout) {
@@ -360,6 +364,9 @@
     }
     if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
     try {
+      if (rdwcPreferirLayoutPlan(c)) {
+        return renderRdwcPlan(c, rdwcSiteInteractive);
+      }
       if (rdwcPreferirLayoutHub(c)) return renderRdwcHub(c);
       return renderRdwcManifold(c);
     } finally {
@@ -374,7 +381,9 @@
     return buildRdwcDiagramSvg();
   }
 
+  global.rdwcScadaDefs = rdwcScadaDefs;
   global.rdwcPreferirLayoutHub = rdwcPreferirLayoutHub;
+  global.rdwcPreferirLayoutPlan = rdwcPreferirLayoutPlan;
   global.buildRdwcDiagramSvg = buildRdwcDiagramSvg;
   global.generarSVGRdwc = generarSVGRdwc;
 })(typeof window !== 'undefined' ? window : globalThis);

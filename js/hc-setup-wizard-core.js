@@ -493,7 +493,56 @@ function rdwcEnsureConfigDefaults(cfg) {
   if (c.rdwcTopFeedEnabled !== true) c.rdwcTopFeedEnabled = false;
   if (c.rdwcReturnMode !== 'gravity' && c.rdwcReturnMode !== 'forced') c.rdwcReturnMode = 'gravity';
   if (c.rdwcLayout !== 'line' && c.rdwcLayout !== 'double_row' && c.rdwcLayout !== 'u_shape') c.rdwcLayout = 'line';
+  if (c.rdwcAirStonePerBucket !== false) c.rdwcAirStonePerBucket = true;
   return c;
+}
+
+function initSetupRdwcPresetSelect() {
+  const sel = document.getElementById('setupRdwcPreset');
+  if (!sel || typeof rdwcFillPresetSelect !== 'function') return;
+  const cfg = setupRdwcDraft || (typeof getSetupRdwcDraftSeed === 'function' ? getSetupRdwcDraftSeed() : {});
+  const guess = typeof rdwcGuessPresetId === 'function' ? rdwcGuessPresetId(cfg) : '';
+  rdwcFillPresetSelect(sel, cfg.rdwcPresetId || guess);
+}
+
+function syncSetupRdwcFormFromConfig(cfg) {
+  cfg = cfg || {};
+  const map = {
+    setupRdwcSites: cfg.rdwcSites,
+    setupRdwcRows: cfg.rdwcRows,
+    setupRdwcBucketVolL: cfg.rdwcBucketVolL,
+    setupRdwcControlVolL: cfg.rdwcControlVolL,
+    setupRdwcControlTrabajoL: cfg.volMezclaLitros,
+    setupRdwcRecirculationLh: cfg.rdwcRecirculationLh,
+    setupRdwcAirLpm: cfg.rdwcAirLpm,
+    setupRdwcNetPotMm: cfg.rdwcNetPotMm,
+    setupRdwcNetPotHeightMm: cfg.rdwcNetPotHeightMm,
+    setupRdwcCenterSpacingCm: cfg.rdwcCenterSpacingCm,
+    setupRdwcBucketTrabajoL: cfg.rdwcBucketTrabajoL,
+    setupRdwcBucketTrabajoDiamCm: cfg.rdwcBucketTrabajoDiamCm,
+    setupRdwcBucketTrabajoProfCm: cfg.rdwcBucketTrabajoProfCm,
+  };
+  Object.keys(map).forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = map[id] != null && map[id] !== '' ? String(map[id]) : '';
+  });
+}
+
+function onSetupRdwcPresetChange() {
+  const sel = document.getElementById('setupRdwcPreset');
+  if (!sel) return;
+  const id = String(sel.value || '').trim();
+  if (!id) return;
+  const c =
+    typeof getSetupRdwcDraftSeed === 'function'
+      ? hcSetupClonePlain(getSetupRdwcDraftSeed(), {}) || {}
+      : setupRdwcDraft || {};
+  if (typeof rdwcApplyPresetToConfig !== 'function' || !rdwcApplyPresetToConfig(c, id)) return;
+  setupRdwcDraft = hcSetupClonePlain(c, {});
+  syncSetupRdwcFormFromConfig(c);
+  try {
+    if (typeof onSetupRdwcInput === 'function') onSetupRdwcInput();
+  } catch (_) {}
 }
 
 function rdwcParseLitrosTrabajo(raw) {
@@ -578,8 +627,14 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
     const netPotH = rdwcParseNetPotHeightMm(document.getElementById(prefix + 'NetPotHeightMm')?.value);
     if (netPotH != null) c.rdwcNetPotHeightMm = netPotH;
     else delete c.rdwcNetPotHeightMm;
-    c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum(prefix + 'CenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
-    if (scope === 'sys') {
+  c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum(prefix + 'CenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
+  if (scope === 'setup') {
+    const presetEl = document.getElementById('setupRdwcPreset');
+    const pid = presetEl && presetEl.value ? String(presetEl.value).trim() : '';
+    if (pid) c.rdwcPresetId = pid;
+    else delete c.rdwcPresetId;
+  }
+  if (scope === 'sys') {
       c.rdwcTempObjetivoC = Math.max(10, Math.min(30, gNum(prefix + 'TempObjetivoC', c.rdwcTempObjetivoC || 19)));
       c.rdwcHeadM = Math.max(0, Math.min(6, gNum(prefix + 'HeadM', c.rdwcHeadM || 1.2)));
       c.rdwcLineLenM = Math.max(1, Math.min(60, gNum(prefix + 'LineLenM', c.rdwcLineLenM || 12)));
@@ -1373,14 +1428,19 @@ function rdwcCalcularHidraulica(cfg, opts) {
   const estadoRec = recUser < recMin ? 'warn' : recUser > recMax * 1.2 ? 'bad' : 'ok';
   const estadoAir = airUser < airMin ? 'warn' : airUser > airMax * 1.3 ? 'bad' : 'ok';
   const estadoGlobal = (estadoRec === 'bad' || estadoAir === 'bad') ? 'bad' : (estadoRec === 'warn' || estadoAir === 'warn') ? 'warn' : 'ok';
+  const rows = Math.max(1, Math.min(4, parseInt(String(c.rdwcRows), 10) || 1));
+  const airStones = sites;
 
   return {
     totalVol,
     controlVol,
     bucketVol,
     sites,
+    rows,
     recMin, recObj, recMax,
     airMin, airObj, airMax,
+    airStones,
+    airLpmPerStone: airStones > 0 ? Math.round((airObj / airStones) * 10) / 10 : airObj,
     pumpMin, pumpRec,
     tubeOutMm, tubeRetMm,
     mode,
@@ -1523,9 +1583,13 @@ function renderRdwcSetupCalculadoUi(cfg) {
           calc.pumpRec +
           ' L/h · aire ~' +
           calc.airObj +
-          ' L/min (mín. recirc. ~' +
+          ' L/min (≈' +
+          calc.airLpmPerStone +
+          ' L/min × ' +
+          calc.airStones +
+          ' piedras en cubos). Mín. recirc. ~' +
           calc.recMin +
-          ' L/h). No hace falta multiplicar cubos a mano: la suma de arriba es el total.';
+          ' L/h. La suma de arriba es el total del circuito.';
       }
       if (elManualNote) {
         if (manualCtl != null && totalManual != null && Math.abs(totalManual - calc.totalVol) > 0.15) {
@@ -2517,7 +2581,7 @@ function refrescarSetupTipoInstalacionUI() {
       : setupTipoInstalacion === 'dwc'
         ? 'Depósito: medidas interiores con cinta o litros en la caja; Ø de cesta en el envase. Rejilla y litros de mezcla los sugerimos; lo opcional puede quedar vacío.'
         : isRdwc
-          ? 'Cuenta cubos y lee litros del depósito de control en la placa del kit. Recirculación y aire: valores por defecto o lo que ponga tu bomba; no hace falta calcular a mano.'
+          ? 'Elige una plantilla (cubos × filas) o indica medidas a mano. Vista cenital: impulsión, retorno y aire con piedra en cada cubo de cultivo.'
         : isSrf
           ? 'Mide el estanque (largo × ancho × profundidad útil del agua) y cuenta huecos en la balsa. Aireación y recirculación pueden quedar por defecto.'
         : 'Niveles y cestas por nivel: manual del kit o a ojo. Depósito y tubo los afinas luego en Cultivo e instalación.';
@@ -2548,6 +2612,9 @@ function refrescarSetupTipoInstalacionUI() {
       if (!(typeof setupEsNuevaTorre !== 'undefined' && setupEsNuevaTorre)) {
         syncSetupRdwcFieldsDesdeConfig(setupRdwcDraft || state.configTorre || {});
       }
+    } catch (_) {}
+    try {
+      initSetupRdwcPresetSelect();
     } catch (_) {}
     try {
       if (typeof onSetupRdwcInput === 'function') onSetupRdwcInput();

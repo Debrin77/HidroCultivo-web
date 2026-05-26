@@ -2976,7 +2976,15 @@
         <div id="setupDwcIntroBloque" class="setup-hidden" aria-hidden="true"></div>
         <div id="setupRdwcDetalleWrap" class="setup-hidden setup-rdwc-asistente-simple">
           <div class="setup-dwc-title">Sistema RDWC</div>
-          <p class="setup-dwc-help">Indica <strong>cubos</strong>, <strong>depósito de control</strong> y Ø de cesta. Recirculación y aire en tiempo real.</p>
+          <p class="setup-dwc-help">Indica <strong>cubos</strong>, <strong>depósito de control</strong> y Ø de cesta. El esquema cenital muestra impulsión, retorno y <strong>aire con piedra difusora en cada cubo</strong>.</p>
+          <div class="setup-dwc-grid-2 setup-mt-8">
+            <div style="grid-column:1/-1">
+              <label class="form-label setup-dwc-label" for="setupRdwcPreset">Plantilla de instalación</label>
+              <select id="setupRdwcPreset" class="setup-dwc-input" onchange="try{onSetupRdwcPresetChange()}catch(e){}" aria-label="Plantilla RDWC por número de cubos y filas">
+                <option value="">Personalizado (manual)</option>
+              </select>
+            </div>
+          </div>
           <div id="setupRdwcPreviewSection" class="setup-dwc-preview-section setup-dwc-preview-section--diagram">
             <p class="setup-dwc-preview-kicker">Vista previa</p>
             <div class="torre-preview torre-preview--rdwc" id="setupRdwcPreview" role="img" aria-live="polite"></div>
@@ -4688,7 +4696,9 @@
   <script src="js/diagrams/dwc/dwc-diagram.js?v=2026-05-15-scada3"></script>
   <script src="js/diagrams/rdwc/rdwc-scada-tokens.js?v=2026-05-15-scada1"></script>
   <script src="js/diagrams/rdwc/rdwc-scada-parts.js?v=2026-05-15-scada1"></script>
-  <script src="js/diagrams/rdwc/rdwc-diagram.js?v=2026-05-15-scada1"></script>
+  <script src="js/diagrams/rdwc/rdwc-presets.js?v=2026-05-27-rdwc-plan"></script>
+  <script src="js/diagrams/rdwc/rdwc-diagram.js?v=2026-05-27-rdwc-plan"></script>
+  <script src="js/diagrams/rdwc/rdwc-plan-diagram.js?v=2026-05-27-rdwc-plan"></script>
   <script src="js/diagrams/srf/srf-scada-tokens.js?v=2026-05-15-scada1"></script>
   <script src="js/diagrams/srf/srf-scada-parts.js?v=2026-05-15-scada1"></script>
   <script src="js/diagrams/srf/srf-diagram.js?v=2026-05-15-scada1"></script>

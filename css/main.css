@@ -1855,6 +1855,10 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
 #torreSVGWrap.torre-svg-canvas svg.nft-escalera-svg {
   min-height: min(36vh, 400px);
 }
+#torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan,
+.torre-preview--rdwc svg.rdwc-svg-diagram--plan {
+  min-height: min(42vh, 480px);
+}
 #torreSVGWrap.torre-svg-canvas svg.nft-serpentine-svg {
   min-height: min(34vh, 380px);
 }

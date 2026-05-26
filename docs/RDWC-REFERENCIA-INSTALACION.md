@@ -1,0 +1,52 @@
+# RDWC — Referencia de instalación (uso interno)
+
+Documento derivado de manual técnico de kit modular RDWC XL 2.0 (recirculación profunda). **Sin marcas** en la app; aquí solo reglas de montaje y criterios para presets y diagramas.
+
+## Componentes
+
+- **Depósito de control**: bomba de recirculación, mezcla, EC/pH, opcional venturi en el propio depósito.
+- **Cubos de cultivo**: un sitio por cubo; junta de aire en el borde superior; piedra difusora **en cada cubo**.
+- **Impulsión (verde)**: depósito → manifold de mandata → cada cubo (por el centro del montaje).
+- **Retorno (azul)**: último peldaño de cada rama → manifold de retorno → depósito (puertos izq./dcha. en 2 caras).
+
+## Filas y cubos (plantillas app)
+
+| Cubos | Filas | Depósito control (L máx orient.) | Aire (L/min orient.) |
+|------|-------|----------------------------------|----------------------|
+| 4 | 2 | 40 | 28 |
+| 6 | 2 | 45 | 32 |
+| 8 | 2 | 50 | 40 |
+| 9 | 3 | 55 | 42 |
+| 12 | 3 o 4 | 60 | 55 |
+| 16 | 4 | 70 | 60 |
+| 18 | 3 | 75 | 72 |
+| 24 | 4 | 90 | 80 |
+
+Cubo nominal típico: **20 L**. Cesta: **Ø 125 mm** (14 cm). Separación centro a centro: **36–45 cm**.
+
+## Aireación
+
+1. Bomba de aire **por encima** del nivel del agua del circuito.
+2. Línea principal (manguera 12×8 mm en kits grandes).
+3. **Manifold** por cubo (derivación 6×4 mm).
+4. Manguera silicona ~50–60 cm → codo → **piedra porosa** dentro del cubo.
+5. Caudal total orientativo: **1 L/min por cada 8–10 L** de volumen útil del circuito; repartir entre **todos los cubos de cultivo**.
+
+## Hidráulica (cálculo app)
+
+- Recirculación: **1,2–2 renovaciones/h** del volumen útil total (depósito + cubos).
+- Tubos impulsión/retorno: Ø orientativo según caudal (25–63 mm en montajes grandes).
+- Distancia entre cubos: ajustable deslizando tubo en junta (mín. ~3 cm dentro del cubo).
+
+## Prueba del sistema
+
+1. Llenar hasta **borde inferior de la cesta**.
+2. Circular 15 min; revisar fugas en juntas y racores.
+3. Comprobar **todas las piedras**.
+4. EC/pH en depósito de control con bomba en marcha.
+
+## Vista cenital en HidroCultivo
+
+Con **2 o más filas**, el diagrama usa layout **plan**: filas alineadas, depósito abajo al centro, leyenda impulsión/retorno/aire. Con **1 fila** y pocos cubos: layout en línea (manifold).
+
+PDF de referencia (interno): `docs/RDWC-manual-referencia-tecnica.pdf` — no mostrar al usuario final.
