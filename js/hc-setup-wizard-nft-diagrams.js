@@ -2505,7 +2505,10 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
   rungOut = Math.max(rungOut, minRungSpanUnits - (car === 2 ? 22 : 18));
   const rungIn = car === 2 ? 18 : 22;
-  const baseHalf = car === 1 ? 128 : 138;
+  const baseHalf0 = car === 1 ? 128 : 138;
+  /** En 2 caras necesitamos hueco para el serpentín que vuelve al centro. */
+  const faceGap2 = car === 2 ? (compactEsc ? 48 : 64) : 0;
+  const baseHalf = baseHalf0 + faceGap2;
   const minCxEsc = 32 + 14 + baseHalf + rungOut;
   const cxMid = W0base / 2;
   let cx = Math.max(cxMid, minCxEsc);
@@ -2589,8 +2592,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   const cxTitle = Wsvg / 2;
   const hdrEscDraw = nftDiagramHeaderTypography(Math.max(W0, Wsvg), { compact: compactEsc, withLegend: true });
 
-  /** Dos caras, primer peldaño: ancho libre bajo la T (suministro entre canales). */
-  const topCenterGap2 = car === 2 ? (compactEsc ? 24 : 34) : 0;
+  /** Dos caras, primer peldaño: ancho libre bajo la T y para las U del serpentín hacia el centro. */
+  const topCenterGap2 = car === 2 ? (compactEsc ? 48 : 68) : 0;
 
   const runs = [];
   let g = 0;
@@ -2609,7 +2612,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const xLeftFoot = cx - baseHalf * p;
+      const xLeftFoot = cx - baseHalf * p - faceGap2;
       let xL = xLeftFoot - rungOut;
       let xR = xLeftFoot + rungIn;
       if (i === 0) {
@@ -2621,7 +2624,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     for (let i = 0; i < nv; i++) {
       const p = nv <= 1 ? 0 : i / (nv - 1);
       const y = ladderTop + i * dy;
-      const xRightFoot = cx + baseHalf * p;
+      const xRightFoot = cx + baseHalf * p + faceGap2;
       let xL = xRightFoot - rungIn;
       let xR = xRightFoot + rungOut;
       if (i === 0) {

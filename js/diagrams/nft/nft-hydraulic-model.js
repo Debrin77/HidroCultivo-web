@@ -554,7 +554,7 @@
       const supL = supHead.slice();
       pushWp(supL, xIn0L, yManifold);
       pushWp(supL, xIn0L, R0L.y);
-      supL.push.apply(supL, serpentineAlongRunsOuter(runsL, padFlow, serpJog, true));
+      supL.push.apply(supL, serpentineAlongRuns(runsL, padFlow, serpJog));
       supplyPaths.push(supL);
 
       const R0R = runsR[0];
@@ -563,7 +563,7 @@
       pushWp(supR, p.xSupplyRiser, yManifold);
       pushWp(supR, xIn0R, yManifold);
       pushWp(supR, xIn0R, R0R.y);
-      supR.push.apply(supR, serpentineAlongRunsOuter(runsR, padFlow, serpJog, false));
+      supR.push.apply(supR, serpentineAlongRuns(runsR, padFlow, serpJog));
       supplyPaths.push(supR);
 
       const RnL = runsL[nv - 1];
