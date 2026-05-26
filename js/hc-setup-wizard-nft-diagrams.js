@@ -2631,7 +2631,8 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const spanMult = 0.58 + 0.42 * along;
       const span = rungSpanFull * spanMult;
       const xR = cx - inner;
-      runs.push({ g: g++, y, xL: xR - span, xR: xR, rtl: 1 });
+      /** Par: centro→fuera; impar: fuera→centro (serpentín, pares o impares). */
+      runs.push({ g: g++, y, xL: xR - span, xR: xR, rtl: i % 2 === 0 ? 1 : 0 });
       if (i === nv - 1) xApexFootL = xR - span;
     }
     for (let i = 0; i < nv; i++) {
@@ -2642,7 +2643,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       const spanMult = 0.58 + 0.42 * along;
       const span = rungSpanFull * spanMult;
       const xL = cx + inner;
-      runs.push({ g: g++, y, xL: xL, xR: xL + span, rtl: 0 });
+      runs.push({ g: g++, y, xL: xL, xR: xL + span, rtl: i % 2 === 0 ? 0 : 1 });
       if (i === nv - 1) xApexFootR = xL + span;
     }
   }

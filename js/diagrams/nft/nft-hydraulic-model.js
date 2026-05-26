@@ -395,27 +395,46 @@
   }
 
   /**
-   * Serpentín con U siempre por el lado exterior de la hoja (escalera 2 caras).
-   * @param {boolean} outerLeft true = cara izquierda (U por la izq.), false = cara derecha.
+   * Extremos de flujo en un peldaño (escalera A, 2 caras).
+   * rtl alterna: peldaño par centro→fuera, impar fuera→centro (cualquier nv).
    */
-  function serpentineAlongRunsOuter(runList, padFlow, jog, outerLeft) {
+  function escalera2FaceFlowEnds(R, pad, faceLeft) {
+    const innerX = faceLeft ? R.xR : R.xL;
+    const outerX = faceLeft ? R.xL : R.xR;
+    const xIn = R.rtl ? innerX - pad : outerX + pad;
+    const xOut = R.rtl ? outerX + pad : innerX - pad;
+    const exitNearInner = Math.abs(xOut - innerX) + 0.5 < Math.abs(xOut - outerX);
+    return { xIn: xIn, xOut: xOut, innerX: innerX, outerX: outerX, exitNearInner: exitNearInner };
+  }
+
+  /**
+   * Serpentín escalera 2 caras: centro↔fuera en cada tubo; bajada en el mismo extremo
+   * (U exterior o interior según toque el extremo exterior o el del centro).
+   */
+  function serpentineEscalera2Face(runList, padFlow, jog, faceLeft) {
     const wp = [];
     const j = jog != null ? jog : 10;
     for (let i = 0; i < runList.length; i++) {
       const R = runList[i];
       const Rn = i < runList.length - 1 ? runList[i + 1] : null;
-      const xIn = R.rtl ? R.xR - padFlow : R.xL + padFlow;
-      const xOut = R.rtl ? R.xL + padFlow : R.xR - padFlow;
-      pushWp(wp, xIn, R.y);
-      pushWp(wp, xOut, R.y);
+      const ends = escalera2FaceFlowEnds(R, padFlow, faceLeft);
+      pushWp(wp, ends.xIn, R.y);
+      pushWp(wp, ends.xOut, R.y);
       if (Rn) {
-        const xNextIn = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
-        const xVert = outerLeft ? Math.min(xOut, xNextIn) - j : Math.max(xOut, xNextIn) + j;
-        pushWp(wp, xOut, R.y);
+        const nextEnds = escalera2FaceFlowEnds(Rn, padFlow, faceLeft);
+        const exitInner = Math.abs(ends.xOut - ends.innerX) + 0.5 < Math.abs(ends.xOut - ends.outerX);
+        const enterInner = Math.abs(nextEnds.xIn - nextEnds.innerX) + 0.5 < Math.abs(nextEnds.xIn - nextEnds.outerX);
+        let xVert;
+        if (exitInner && enterInner) {
+          xVert = faceLeft ? Math.max(ends.xOut, nextEnds.xIn) + j : Math.min(ends.xOut, nextEnds.xIn) - j;
+        } else {
+          xVert = faceLeft ? Math.min(ends.xOut, nextEnds.xIn) - j : Math.max(ends.xOut, nextEnds.xIn) + j;
+        }
+        pushWp(wp, ends.xOut, R.y);
         pushWp(wp, xVert, R.y);
         pushWp(wp, xVert, Rn.y);
-        if (Math.abs(xVert - xNextIn) > 0.5) {
-          pushWp(wp, xNextIn, Rn.y);
+        if (Math.abs(xVert - nextEnds.xIn) > 0.5) {
+          pushWp(wp, nextEnds.xIn, Rn.y);
         }
       }
     }
@@ -557,11 +576,7 @@
       const supL = supHead.slice();
       pushWp(supL, xIn0L, yManifold);
       pushWp(supL, xIn0L, R0L.y);
-      const serpL =
-        typeof serpentineAlongRunsOuter === 'function'
-          ? serpentineAlongRunsOuter(runsL, padFlow, serpJog, true)
-          : serpentineAlongRuns(runsL, padFlow, serpJog);
-      supL.push.apply(supL, serpL);
+      supL.push.apply(supL, serpentineEscalera2Face(runsL, padFlow, serpJog, true));
       supplyPaths.push(supL);
 
       const R0R = runsR[0];
@@ -570,45 +585,37 @@
       pushWp(supR, p.xSupplyRiser, yManifold);
       pushWp(supR, xIn0R, yManifold);
       pushWp(supR, xIn0R, R0R.y);
-      const serpR =
-        typeof serpentineAlongRunsOuter === 'function'
-          ? serpentineAlongRunsOuter(runsR, padFlow, serpJog, false)
-          : serpentineAlongRuns(runsR, padFlow, serpJog);
-      supR.push.apply(supR, serpR);
+      supR.push.apply(supR, serpentineEscalera2Face(runsR, padFlow, serpJog, false));
       supplyPaths.push(supR);
 
-      const RnL = runsL[nv - 1];
-      const xEndL = RnL.rtl ? RnL.xL + padFlow : RnL.xR - padFlow;
-      const midL = (RnL.xL + RnL.xR) / 2;
+      const endL = escalera2FaceFlowEnds(runsL[nv - 1], padFlow, true);
       returnPaths.push(
         returnEscalera2FaceWaypoints({
-          xExit: xEndL,
-          yExit: RnL.y,
+          xExit: endL.xOut,
+          yExit: runsL[nv - 1].y,
           xTankReturn: p.xTankReturnL,
           yInlet: p.yInlet,
           flowMargin: flowMargin,
           tubeH: p.tubeH,
           tankY: p.tankY,
           outerLeft: true,
-          exitOnOuter: xEndL <= midL + 0.5,
+          exitOnOuter: !endL.exitNearInner,
           ductDrop: p.ductDrop,
         })
       );
 
-      const RnR = runsR[nv - 1];
-      const xEndR = RnR.rtl ? RnR.xL + padFlow : RnR.xR - padFlow;
-      const midR = (RnR.xL + RnR.xR) / 2;
+      const endR = escalera2FaceFlowEnds(runsR[nv - 1], padFlow, false);
       returnPaths.push(
         returnEscalera2FaceWaypoints({
-          xExit: xEndR,
-          yExit: RnR.y,
+          xExit: endR.xOut,
+          yExit: runsR[nv - 1].y,
           xTankReturn: p.xTankReturnR,
           yInlet: p.yInlet,
           flowMargin: flowMargin,
           tubeH: p.tubeH,
           tankY: p.tankY,
           outerLeft: false,
-          exitOnOuter: xEndR >= midR - 0.5,
+          exitOnOuter: !endR.exitNearInner,
           ductDrop: p.ductDrop,
         })
       );

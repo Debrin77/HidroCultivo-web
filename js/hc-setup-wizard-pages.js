@@ -190,13 +190,13 @@ function nftSvgFlowLegend(x, y, mode) {
     m === 'mesa_paralelo'
       ? 'Alimentación: depósito → colector izq. → entrada a cada tubo'
       : m === 'escalera_2c'
-        ? 'Alimentación: depósito → subida central → T → tubos superiores'
+        ? 'Alimentación: T → 1.º tubo por el centro · zigzag en cada peldaño'
         : 'Alimentación: sale abajo · sube · tubo superior → serpentín';
   const retTxt =
     m === 'mesa_paralelo'
       ? 'Retorno: salida de cada tubo → colector der. → depósito'
       : m === 'escalera_2c'
-        ? 'Retorno: cada cara → su puerto en el depósito (izq. y dcha.)'
+        ? 'Retorno: último peldaño → depósito (izq. / dcha.)'
         : 'Retorno: último tubo → entra arriba al depósito';
   return (
     '<g class="nft-flow-legend" transform="translate(' +
