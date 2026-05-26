@@ -2634,8 +2634,13 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
       if (runs[ri].xL < xMinL) xMinL = runs[ri].xL;
       if (runs[ri].xR > xMaxR) xMaxR = runs[ri].xR;
     }
-    xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - 12;
-    xReturnRiserEsc = xMaxR + flowMarginEsc + 12;
+    const feedRiserOut = compactEsc ? 28 : 36;
+    const lastRunEsc = runs[runs.length - 1];
+    const exitRightEsc = lastRunEsc ? !lastRunEsc.rtl : oddEsc;
+    xFeedRiserEsc = xMinL + padFlow - flowMarginEsc - feedRiserOut;
+    xReturnRiserEsc = exitRightEsc
+      ? xMaxR + flowMarginEsc + 12
+      : Math.max(14, xMinL + padFlow - flowMarginEsc - 6);
   }
 
   const F_SUP = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';

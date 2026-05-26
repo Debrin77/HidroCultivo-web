@@ -232,12 +232,12 @@
       pushWp(supply, xIn, y);
       pushWp(supply, xOut, y);
       if (i < nCh - 1) {
-        const xDrop = l2r ? xR - padFlow + flowMargin : xL + padFlow - flowMargin;
         const l2rN = (i + 1) % 2 === 0;
         const xNextIn = l2rN ? xL + padFlow : xR - padFlow;
-        pushWp(supply, xDrop, y);
-        pushWp(supply, xDrop, yRow(i + 1));
-        pushWp(supply, xNextIn, yRow(i + 1));
+        pushWp(supply, xOut, yRow(i + 1));
+        if (Math.abs(xOut - xNextIn) > 0.5) {
+          pushWp(supply, xNextIn, yRow(i + 1));
+        }
       }
     }
 
@@ -286,8 +286,8 @@
   }
 
   /**
-   * Serpentín tubo a tubo (escalera / peldaños): U por el extremo de salida de cada tubo,
-   * igual que pared/mesa — sin ramas verticales a todos los peldaños.
+   * Serpentín tubo a tubo (escalera / peldaños): sale por un extremo, baja en esa misma X
+   * y entra en el extremo del peldaño siguiente (escalera escalonada: un tramo horizontal si hace falta).
    */
   function serpentineAlongRuns(runList, padFlow, flowMargin) {
     const wp = [];
@@ -299,11 +299,11 @@
       pushWp(wp, xIn, R.y);
       pushWp(wp, xOut, R.y);
       if (Rn) {
-        const xDrop = R.rtl ? R.xL + padFlow - flowMargin : R.xR - padFlow + flowMargin;
         const xNextIn = Rn.rtl ? Rn.xR - padFlow : Rn.xL + padFlow;
-        pushWp(wp, xDrop, R.y);
-        pushWp(wp, xDrop, Rn.y);
-        pushWp(wp, xNextIn, Rn.y);
+        pushWp(wp, xOut, Rn.y);
+        if (Math.abs(xOut - xNextIn) > 0.5) {
+          pushWp(wp, xNextIn, Rn.y);
+        }
       }
     }
     return wp;
