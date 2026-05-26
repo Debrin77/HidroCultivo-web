@@ -28,6 +28,13 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr);
     if (tiers.length < 2) tiers = null;
   }
+  const mesaParalelo =
+    disp === 'mesa' &&
+    typeof nftMesaRecorridoNormalizada === 'function' &&
+    nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo';
+  if (!tiers && mesaParalelo) {
+    tiers = [Math.max(1, nCh0)];
+  }
   if (disp === 'mesa' && tiers) {
     return buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts);
   }
@@ -160,7 +167,16 @@ function nftSvgFlowMarkerDefs(suf) {
 }
 
 /** Leyenda: azul = alimentación, verde = retorno al depósito. */
-function nftSvgFlowLegend(x, y) {
+function nftSvgFlowLegend(x, y, mode) {
+  const m = mode || 'serie';
+  const supTxt =
+    m === 'mesa_paralelo'
+      ? 'Alimentación: depósito → colector izq. → entrada a cada tubo'
+      : 'Alimentación: sale abajo · sube · tubo superior → serpentín';
+  const retTxt =
+    m === 'mesa_paralelo'
+      ? 'Retorno: salida de cada tubo → colector der. → depósito'
+      : 'Retorno: último tubo → entra arriba al depósito';
   return (
     '<g class="nft-flow-legend" transform="translate(' +
     x +
@@ -170,11 +186,15 @@ function nftSvgFlowLegend(x, y) {
     '<line x1="0" y1="6" x2="22" y2="6" stroke="' +
     NFT_FLOW_SUPPLY +
     '" stroke-width="3" stroke-linecap="round"/>' +
-    '<text x="26" y="9" font-size="10" fill="#1e40af" font-family="system-ui,sans-serif" font-weight="600">Alimentación: sale abajo · sube · tubo superior → serpentín</text>' +
+    '<text x="26" y="9" font-size="10" fill="#1e40af" font-family="system-ui,sans-serif" font-weight="600">' +
+    supTxt +
+    '</text>' +
     '<line x1="0" y1="22" x2="22" y2="22" stroke="' +
     NFT_FLOW_RETURN +
     '" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round"/>' +
-    '<text x="26" y="25" font-size="10" fill="#166534" font-family="system-ui,sans-serif" font-weight="600">Retorno: último tubo → entra arriba al depósito</text>' +
+    '<text x="26" y="25" font-size="10" fill="#166534" font-family="system-ui,sans-serif" font-weight="600">' +
+    retTxt +
+    '</text>' +
     '</g>'
   );
 }
@@ -261,7 +281,7 @@ function nftHydraulicFlowSvgBundle(flowPaths, suf, opts) {
     mark.returnId +
     ')"' +
     animTag;
-  let flowLegend = showLegend ? nftSvgFlowLegend(legendX, legendY) : '';
+  let flowLegend = showLegend ? nftSvgFlowLegend(legendX, legendY, o.legendMode) : '';
   let flowTankPorts = '';
   if (showPorts) {
     flowTankPorts =
@@ -1282,13 +1302,16 @@ function buildNftDraftConfigFromSetupUi() {
   };
   if (geom.longCanalM != null) draft.nftLongCanalM = geom.longCanalM;
   if (mont.alturaBombeoCm > 0) draft.nftAlturaBombeoCm = mont.alturaBombeoCm;
-  if (mont.disposicion === 'mesa' && mont.mesaMultinivel) {
-    const tiers = parseNftMesaTubosPorNivelStr(mont.mesaTubosStr);
-    if (tiers.length >= 2) {
-      draft.nftMesaMultinivel = true;
-      draft.nftMesaTubosPorNivelStr = tiers.join(',');
-      draft.nftNumCanales = tiers.reduce((a, b) => a + b, 0);
-      if (mont.mesaSepCm > 0) draft.nftMesaSeparacionNivelesCm = mont.mesaSepCm;
+  if (mont.disposicion === 'mesa') {
+    draft.nftMesaRecorridoAgua = mont.mesaRecorrido || 'serie';
+    if (mont.mesaMultinivel) {
+      const tiers = parseNftMesaTubosPorNivelStr(mont.mesaTubosStr);
+      if (tiers.length >= 2) {
+        draft.nftMesaMultinivel = true;
+        draft.nftMesaTubosPorNivelStr = tiers.join(',');
+        draft.nftNumCanales = tiers.reduce((a, b) => a + b, 0);
+        if (mont.mesaSepCm > 0) draft.nftMesaSeparacionNivelesCm = mont.mesaSepCm;
+      }
     }
   }
   if (mont.disposicion === 'escalera') {

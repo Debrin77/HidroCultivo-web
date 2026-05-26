@@ -607,6 +607,84 @@
     return { segments: segs, xExit: lx, yExit: ly };
   }
 
+  /**
+   * Mesa bancada: colector de alimentación (izq.) → cada tubo en paralelo → colector retorno (der.) → depósito.
+   * @param {{ geoms: object[], shelfFn: Function, xFeedRiser: number, xReturnRiser: number, ports: object, xPump: number, yPump: number, tankY: number, ductDrop?: number }} p
+   */
+  function mesaParallelFlowPaths(p) {
+    const geoms = p.geoms || [];
+    const shelfFn = p.shelfFn;
+    const ports = p.ports;
+    const xL = p.xManifoldL != null ? p.xManifoldL : p.xFeedRiser;
+    const xR = p.xCollectorR != null ? p.xCollectorR : p.xReturnRiser;
+    const tubes = [];
+    for (let i = 0; i < geoms.length; i++) {
+      const G = geoms[i];
+      const H = shelfFn(G);
+      tubes.push({ H: H, x0: Math.min(H.x0, H.x1), x1: Math.max(H.x0, H.x1), yC: H.yC });
+    }
+    tubes.sort((a, b) => a.yC - b.yC);
+
+    const head = [];
+    pushWp(head, p.xPump, p.yPump);
+    pushWp(head, ports.xFeed, p.yPump);
+    pushWp(head, ports.xFeed, ports.yOutlet);
+    pushWp(head, xL, ports.yOutlet);
+
+    const supplyPaths = [head];
+    if (tubes.length) {
+      const yTop = tubes[0].yC;
+      const yBot = tubes[tubes.length - 1].yC;
+      supplyPaths.push([
+        [xL, yTop],
+        [xL, yBot],
+      ]);
+      for (let i = 0; i < tubes.length; i++) {
+        const t = tubes[i];
+        supplyPaths.push([
+          [xL, t.yC],
+          [t.x0, t.yC],
+          [t.x1, t.yC],
+        ]);
+      }
+    }
+
+    const returnPaths = [];
+    let yDuctRun = p.tankY - 12;
+    if (tubes.length) {
+      const yBot = tubes[tubes.length - 1].yC;
+      yDuctRun = Math.min(yDuctRun, yBot + (p.ductDrop != null ? p.ductDrop : 28));
+      for (let i = 0; i < tubes.length; i++) {
+        const t = tubes[i];
+        returnPaths.push([
+          [t.x1, t.yC],
+          [xR, t.yC],
+        ]);
+      }
+      returnPaths.push([
+        [xR, tubes[0].yC],
+        [xR, yDuctRun],
+      ]);
+    } else {
+      returnPaths.push([[xR, ports.yOutlet], [xR, yDuctRun]]);
+    }
+    returnPaths.push([
+      [xR, yDuctRun],
+      [ports.xReturn, yDuctRun],
+      [ports.xReturn, ports.yInlet],
+    ]);
+
+    const xExit = tubes.length ? tubes[tubes.length - 1].x1 : xR;
+    const yExit = tubes.length ? tubes[tubes.length - 1].yC : ports.yOutlet;
+    return {
+      supplyPaths: supplyPaths,
+      returnPaths: returnPaths,
+      xExit: xExit,
+      yExit: yExit,
+      endsRight: true,
+    };
+  }
+
   /** Mesa multinivel o 1 nivel: cabecera depósito + tubos + retorno. */
   function nftHydraulicMesaMultinivel(p) {
     const er = p.cornerRadius != null ? p.cornerRadius : 0;
@@ -621,8 +699,28 @@
     let yExit = p.yExit;
     let endsRight = p.endsRight;
     let supplyBodyD = '';
+    let returnBodyD = '';
 
-    if (p.mesaColumns && p.mesaColumns.hydSeq && p.mesaColumns.hydSeq.length) {
+    if (p.mesaParallel && p.mesaParallelGeoms && p.mesaParallelGeoms.length && p.mesaParallelShelfFn) {
+      const mp = mesaParallelFlowPaths({
+        geoms: p.mesaParallelGeoms,
+        shelfFn: p.mesaParallelShelfFn,
+        xFeedRiser: p.xFeedRiser,
+        xReturnRiser: p.xReturnRiser,
+        xManifoldL: p.xFeedRiser,
+        xCollectorR: p.xReturnRiser,
+        ports: ports,
+        xPump: p.xPump,
+        yPump: p.yPump,
+        tankY: p.tankY,
+        ductDrop: p.ductDrop,
+      });
+      supplyBodyD = pathsToSvg(mp.supplyPaths, { cornerRadius: p.cornerRadius || 0 });
+      returnBodyD = pathsToSvg(mp.returnPaths, { cornerRadius: p.cornerRadius || 0 });
+      xExit = mp.xExit;
+      yExit = mp.yExit;
+      endsRight = mp.endsRight;
+    } else if (p.mesaColumns && p.mesaColumns.hydSeq && p.mesaColumns.hydSeq.length) {
       const mc = p.mesaColumns;
       const col = mesaColumnSupplySegments({
         hydSeq: mc.hydSeq,
@@ -653,31 +751,35 @@
       supplyBodyD = String(p.supplyTailSvg).trim();
     }
 
-    let supplyD = waypointsToSvg(head, { cornerRadius: 0 });
-    if (supplyBodyD) {
+    let supplyD = p.mesaParallel ? supplyBodyD : waypointsToSvg(head, { cornerRadius: 0 });
+    if (!p.mesaParallel && supplyBodyD) {
       supplyD = supplyD ? supplyD + ' ' + supplyBodyD : supplyBodyD;
     }
 
-    const retWp = returnWaypointsFromExit({
-      xExit: xExit,
-      yExit: yExit,
-      xL: p.xL,
-      xR: p.xR,
-      flowMargin: p.flowMargin,
-      oddTubes: p.oddTubes,
-      xFeedRiser: p.xFeedRiser,
-      xReturnRiser: p.xReturnRiser,
-      Wsvg: p.Wsvg,
-      tankY: p.tankY,
-      ports: ports,
-      tubeH: p.tubeH,
-      ductDrop: p.ductDrop,
-      endsRight: p.endsRight != null ? p.endsRight : endsRight,
-    });
+    let returnD = returnBodyD;
+    if (!returnD) {
+      const retWp = returnWaypointsFromExit({
+        xExit: xExit,
+        yExit: yExit,
+        xL: p.xL,
+        xR: p.xR,
+        flowMargin: p.flowMargin,
+        oddTubes: p.oddTubes,
+        xFeedRiser: p.xFeedRiser,
+        xReturnRiser: p.xReturnRiser,
+        Wsvg: p.Wsvg,
+        tankY: p.tankY,
+        ports: ports,
+        tubeH: p.tubeH,
+        ductDrop: p.ductDrop,
+        endsRight: p.endsRight != null ? p.endsRight : endsRight,
+      });
+      returnD = waypointsToSvg(retWp, { cornerRadius: er });
+    }
 
     return {
       supplyD: supplyD,
-      returnD: waypointsToSvg(retWp, { cornerRadius: er }),
+      returnD: returnD,
       ports: ports,
       xExit: xExit,
       yExit: yExit,
@@ -700,4 +802,5 @@
   global.nftHydraulicReturnWaypointsFromExit = returnWaypointsFromExit;
   global.nftHydraulicMesaRowSupplyWaypoints = mesaRowSupplyWaypoints;
   global.nftHydraulicMesaColumnSupplySegments = mesaColumnSupplySegments;
+  global.nftHydraulicMesaParallelFlowPaths = mesaParallelFlowPaths;
 })(typeof window !== 'undefined' ? window : globalThis);

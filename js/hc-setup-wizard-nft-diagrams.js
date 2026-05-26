@@ -1959,6 +1959,11 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
 
   const Glast = hydSeq.length ? geomByG[hydSeq[hydSeq.length - 1]] : null;
   const lm = Glast ? mmShelf(Glast) : { yC: topPad + tierRowH / 2, x0: xL, x1: xR, thick: 18 };
+  const cfgMm = EO.cfgSnapshot || {};
+  const mesaParalelo =
+    typeof nftMesaRecorridoNormalizada === 'function' &&
+    nftMesaRecorridoNormalizada(cfgMm.nftMesaRecorridoAgua) === 'paralelo';
+
   const hydMmSpec = {
     kind: 'mesa_multinivel',
     ports: portsMM,
@@ -2001,6 +2006,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
           legendY: Math.max(8, topPad - 6),
           strokeWidth: EO.cartoonMedir === true ? 5.5 : 3.4,
           cartoonMedir: EO.cartoonMedir === true,
+          legendMode: mesaParalelo ? 'mesa_paralelo' : 'serie',
         })
       : null;
   const flowMarkMM = flowSvgMm ? flowSvgMm.flowMark : { supplyId: 'a', returnId: 'b', defs: '' };

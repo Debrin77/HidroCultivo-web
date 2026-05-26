@@ -1393,6 +1393,20 @@
           <input type="number" id="sysNftNumCanales" class="torre-nft-input-mt" min="1" max="24" step="1" placeholder="ej. 4">
         </div>
         <div id="sysNftMesaExtraWrap" class="torre-nft-mesa-wrap setup-hidden">
+          <div class="torre-nft-cara-kicker">Recorrido del agua</div>
+          <div class="torre-nft-grid-2-tight torre-nft-mesa-recorrido">
+            <label class="equip-card nft-disp-btn torre-nft-chip-btn selected" id="sysNftMesaRecorridoSerieLbl">
+              <input type="radio" name="sysNftMesaRecorrido" id="sysNftMesaRecorridoSerie" class="setup-nft-radio-sr" checked
+                onchange="onNftMesaRecorridoChange('sys')">
+              <span>Serie</span>
+            </label>
+            <label class="equip-card nft-disp-btn torre-nft-chip-btn" id="sysNftMesaRecorridoParaleloLbl">
+              <input type="radio" name="sysNftMesaRecorrido" id="sysNftMesaRecorridoParalelo" class="setup-nft-radio-sr"
+                onchange="onNftMesaRecorridoChange('sys')">
+              <span>Paralelo</span>
+            </label>
+          </div>
+          <p class="torre-nft-p-note">Paralelo = colectores (cada tubo con entrada propia). Serie = agua pasa por todos en orden.</p>
           <label class="torre-nft-check-row">
             <input type="checkbox" id="sysNftMesaMultinivelChk" class="torre-nft-check"
               onchange="onSistemaNftMesaMultinivelToggle()">
@@ -3200,6 +3214,20 @@
                 Opcional en mesa plana; <strong>imprescindible</strong> en pared y escalera para afinar la bomba. En mesa multinivel, si no la pones, se puede estimar con la separación entre niveles (abajo).
               </div>
               <div id="nftMesaExtraWrap" class="setup-hidden setup-nft-subpanel">
+                <div class="setup-nft-subkicker">Recorrido del agua (mesa)</div>
+                <div class="setup-nft-grid-2 setup-nft-mesa-recorrido">
+                  <label class="equip-card nft-disp-btn selected" id="nftMesaRecorridoSerieLbl">
+                    <input type="radio" name="nftMesaRecorrido" id="nftMesaRecorridoSerie" class="setup-nft-radio-sr"
+                      checked onchange="onNftMesaRecorridoChange('nft')">
+                    <span><strong>Serie</strong> — tubo a tubo (serpentín)</span>
+                  </label>
+                  <label class="equip-card nft-disp-btn" id="nftMesaRecorridoParaleloLbl">
+                    <input type="radio" name="nftMesaRecorrido" id="nftMesaRecorridoParalelo" class="setup-nft-radio-sr"
+                      onchange="onNftMesaRecorridoChange('nft')">
+                    <span><strong>Paralelo</strong> — entrada y retorno por colectores (bancada)</span>
+                  </label>
+                </div>
+                <p class="setup-nft-subhint setup-nft-subhint-compact">Paralelo: cada tubo recibe mezcla desde el colector izquierdo y devuelve por el derecho (como bancada comercial). Serie: el agua pasa por todos los tubos en orden.</p>
                 <label class="setup-nft-check-label">
                   <input type="checkbox" id="nftMesaMultinivelChk" class="setup-nft-check-input"
                     onchange="onNftMesaMultinivelToggle()">
@@ -4673,13 +4701,13 @@
   <script src="js/torre-render-main.js?v=2026-05-19-nft-cartoon2"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-19-nft-risers-ui"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-19-mesa-paralelo"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-15-wizard-aislado"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15-wizard-aislado"></script>
 
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-15-srf-blank"></script>
-  <script src="js/diagrams/nft/nft-hydraulic-model.js?v=2026-05-19-hydraulic-all"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-19-nft-cartoon2"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-19-nft-cartoon3"></script>
+  <script src="js/diagrams/nft/nft-hydraulic-model.js?v=2026-05-19-mesa-paralelo"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-19-mesa-paralelo"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-19-mesa-paralelo"></script>
   <script src="js/diagrams/nft/nft-pared-illustration.js?v=2026-05-19-pared-illo"></script>
   <script src="js/diagrams/nft/nft-cartoon-enhance.js?v=2026-05-19-nft-cartoon3"></script>
   <script src="js/diagrams/nft/nft-medir-view.js?v=2026-05-19-nft-cartoon2"></script>

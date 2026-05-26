@@ -1746,18 +1746,23 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftMesaMultinivel;
     delete state.configTorre.nftMesaTubosPorNivelStr;
     delete state.configTorre.nftMesaSeparacionNivelesCm;
+    delete state.configTorre.nftMesaRecorridoAgua;
     delete state.configTorre.nftEscaleraCaras;
     delete state.configTorre.nftEscaleraNivelesCara;
     const montSv = readNftMontajeFromSetupUi();
     state.configTorre.nftDisposicion = montSv.disposicion;
     if (montSv.alturaBombeoCm > 0) state.configTorre.nftAlturaBombeoCm = montSv.alturaBombeoCm;
     else delete state.configTorre.nftAlturaBombeoCm;
-    if (montSv.disposicion === 'mesa' && montSv.mesaMultinivel) {
-      const tiersSv = parseNftMesaTubosPorNivelStr(montSv.mesaTubosStr);
-      if (tiersSv.length >= 2) {
-        state.configTorre.nftMesaMultinivel = true;
-        state.configTorre.nftMesaTubosPorNivelStr = tiersSv.join(',');
-        if (montSv.mesaSepCm > 0) state.configTorre.nftMesaSeparacionNivelesCm = montSv.mesaSepCm;
+    if (montSv.disposicion === 'mesa') {
+      state.configTorre.nftMesaRecorridoAgua =
+        montSv.mesaRecorrido || (typeof nftMesaRecorridoNormalizada === 'function' ? nftMesaRecorridoNormalizada() : 'serie');
+      if (montSv.mesaMultinivel) {
+        const tiersSv = parseNftMesaTubosPorNivelStr(montSv.mesaTubosStr);
+        if (tiersSv.length >= 2) {
+          state.configTorre.nftMesaMultinivel = true;
+          state.configTorre.nftMesaTubosPorNivelStr = tiersSv.join(',');
+          if (montSv.mesaSepCm > 0) state.configTorre.nftMesaSeparacionNivelesCm = montSv.mesaSepCm;
+        }
       }
     }
     if (montSv.disposicion === 'escalera') {
@@ -1818,6 +1823,7 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftMesaMultinivel;
     delete state.configTorre.nftMesaTubosPorNivelStr;
     delete state.configTorre.nftMesaSeparacionNivelesCm;
+    delete state.configTorre.nftMesaRecorridoAgua;
     delete state.configTorre.nftEscaleraCaras;
     delete state.configTorre.nftEscaleraNivelesCara;
     delete state.configTorre.nftNetPotRimMm;
