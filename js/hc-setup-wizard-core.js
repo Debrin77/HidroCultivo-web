@@ -505,6 +505,21 @@ function initSetupRdwcPresetSelect() {
   rdwcFillPresetSelect(sel, cfg.rdwcPresetId || guess);
 }
 
+function initSysRdwcPresetSelect() {
+  const sel = document.getElementById('sysRdwcPreset');
+  if (!sel || typeof rdwcFillPresetSelect !== 'function') return;
+  const cfg = state.configTorre || {};
+  const guess = typeof rdwcGuessPresetId === 'function' ? rdwcGuessPresetId(cfg) : '';
+  rdwcFillPresetSelect(sel, cfg.rdwcPresetId || guess);
+}
+
+function refreshSysRdwcMontajeHint(cfg) {
+  const el = document.getElementById('sysRdwcMontajeHint');
+  if (!el || typeof rdwcMontajeHintsForConfig !== 'function') return;
+  const h = rdwcMontajeHintsForConfig(cfg || state.configTorre || {});
+  el.textContent = h && h.summary ? h.summary : '';
+}
+
 function syncSetupRdwcFormFromConfig(cfg) {
   cfg = cfg || {};
   const map = {
@@ -542,6 +557,59 @@ function onSetupRdwcPresetChange() {
   syncSetupRdwcFormFromConfig(c);
   try {
     if (typeof onSetupRdwcInput === 'function') onSetupRdwcInput();
+  } catch (_) {}
+}
+
+function syncSysRdwcFormFromConfig(cfg) {
+  cfg = cfg || {};
+  const map = {
+    sysRdwcSites: cfg.rdwcSites,
+    sysRdwcRows: cfg.rdwcRows,
+    sysRdwcBucketVolL: cfg.rdwcBucketVolL,
+    sysRdwcControlVolL: cfg.rdwcControlVolL,
+    sysRdwcControlTrabajoL: cfg.volMezclaLitros,
+    sysRdwcRecirculationLh: cfg.rdwcRecirculationLh,
+    sysRdwcAirLpm: cfg.rdwcAirLpm,
+    sysRdwcNetPotMm: cfg.rdwcNetPotMm,
+    sysRdwcNetPotHeightMm: cfg.rdwcNetPotHeightMm,
+    sysRdwcCenterSpacingCm: cfg.rdwcCenterSpacingCm,
+    sysRdwcBucketTrabajoL: cfg.rdwcBucketTrabajoL,
+    sysRdwcBucketTrabajoDiamCm: cfg.rdwcBucketTrabajoDiamCm,
+    sysRdwcBucketTrabajoProfCm: cfg.rdwcBucketTrabajoProfCm,
+    sysRdwcTempObjetivoC: cfg.rdwcTempObjetivoC,
+    sysRdwcHeadM: cfg.rdwcHeadM,
+    sysRdwcLineLenM: cfg.rdwcLineLenM,
+    sysRdwcFittings: cfg.rdwcFittings,
+  };
+  Object.keys(map).forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = map[id] != null && map[id] !== '' ? String(map[id]) : '';
+  });
+  const l = document.getElementById('sysRdwcLayout');
+  if (l) l.value = cfg.rdwcLayout || 'line';
+  const hm = document.getElementById('sysRdwcHydroMode');
+  if (hm) hm.value = cfg.rdwcHydroMode || 'estandar';
+}
+
+function onSysRdwcPresetChange() {
+  const sel = document.getElementById('sysRdwcPreset');
+  if (!sel) return;
+  const id = String(sel.value || '').trim();
+  if (!id) return;
+  const c = hcSetupClonePlain(state.configTorre || {}, {}) || {};
+  c.tipoInstalacion = 'rdwc';
+  if (typeof rdwcApplyPresetToConfig !== 'function' || !rdwcApplyPresetToConfig(c, id)) return;
+  syncSysRdwcFormFromConfig(c);
+  renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
+  renderRdwcCalculoStatus(c, 'sysRdwcCalcStatus');
+  try {
+    refreshSysRdwcMontajeHint(c);
+  } catch (_) {}
+  try {
+    syncRdwcLitrosUtilesSugeridos('sys');
+  } catch (_) {}
+  try {
+    if (typeof renderTorre === 'function') renderTorre();
   } catch (_) {}
 }
 
@@ -628,8 +696,8 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
     if (netPotH != null) c.rdwcNetPotHeightMm = netPotH;
     else delete c.rdwcNetPotHeightMm;
   c.rdwcCenterSpacingCm = Math.max(20, Math.min(150, gNum(prefix + 'CenterSpacingCm', c.rdwcCenterSpacingCm || 45)));
-  if (scope === 'setup') {
-    const presetEl = document.getElementById('setupRdwcPreset');
+  {
+    const presetEl = document.getElementById(scope === 'sys' ? 'sysRdwcPreset' : 'setupRdwcPreset');
     const pid = presetEl && presetEl.value ? String(presetEl.value).trim() : '';
     if (pid) c.rdwcPresetId = pid;
     else delete c.rdwcPresetId;
@@ -1667,6 +1735,12 @@ function renderRdwcCalculoStatus(cfg, elId) {
     ' · Impulsión <strong>Ø' + calc.tubeOutMm + ' mm</strong> · Retorno <strong>Ø' + calc.tubeRetMm + ' mm</strong>.' +
     cultivoTxt +
     controlRecoTxt +
+    (typeof rdwcMontajeHintsForConfig === 'function'
+      ? (() => {
+          const mh = rdwcMontajeHintsForConfig(cfgUse);
+          return mh && mh.summary ? ' · <span class="rdwc-montaje-hint">' + mh.summary + '</span>' : '';
+        })()
+      : '') +
     ' Recirculación ' + rdwcFlowChip(calc.estadoRec) + ' · Aire ' + rdwcFlowChip(calc.estadoAir) + '.' +
     ' La aireación principal conviene repartirla en los <strong>cubos de cultivo</strong> (zona radicular); el depósito de control puede llevar apoyo opcional.' +
     ' Para nutrientes, añade los productos en el <strong>depósito de control</strong> con la recirculación en marcha; la dosis se calcula sobre ese total útil.';
@@ -1695,6 +1769,7 @@ function bindRdwcCompatLive(scope) {
   const ids =
     scope === 'sys'
       ? [
+          'sysRdwcPreset',
           'sysRdwcCultivoPrevisto',
           'sysRdwcSites',
           'sysRdwcRows',
@@ -1717,6 +1792,7 @@ function bindRdwcCompatLive(scope) {
           'sysRdwcHydroMode',
         ]
       : [
+          'setupRdwcPreset',
           'setupRdwcCultivoPrevisto',
           'setupRdwcSites',
           'setupRdwcRows',
@@ -1773,7 +1849,13 @@ function bindRdwcCompatLive(scope) {
       renderRdwcCompatStatus(c2, 'sysRdwcCompatStatus');
       renderRdwcCalculoStatus(c2, 'sysRdwcCalcStatus');
       try {
+        refreshSysRdwcMontajeHint(c2);
+      } catch (_) {}
+      try {
         syncRdwcLitrosUtilesSugeridos('sys');
+      } catch (_) {}
+      try {
+        if (typeof renderTorre === 'function') renderTorre();
       } catch (_) {}
     } else {
       const g = (id, fb) => {
@@ -3718,9 +3800,15 @@ function syncSistemaRdwcDesdeConfig(cfg) {
   try {
     seleccionarSistemaRdwcMontajeOrigen('diy');
   } catch (_) {}
+  try {
+    initSysRdwcPresetSelect();
+  } catch (_) {}
   bindRdwcCompatLive('sys');
   renderRdwcCompatStatus(c, 'sysRdwcCompatStatus');
   renderRdwcCalculoStatus(c, 'sysRdwcCalcStatus');
+  try {
+    refreshSysRdwcMontajeHint(c);
+  } catch (_) {}
   try {
     syncRdwcLitrosUtilesSugeridos('sys');
   } catch (_) {}

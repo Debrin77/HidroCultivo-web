@@ -1484,6 +1484,13 @@
           <div id="sistemaRdwcBloque" class="setup-hidden">
             <p class="torre-nft-p"><strong>Datos mínimos:</strong> sitios/cubos visibles y <strong>litros del depósito de control</strong> en la placa del kit. Lo demás puede quedar por defecto o con lo que indique tu bomba; no hace falta calcular caudales a mano.</p>
             <p class="torre-nft-p-soft">Montaje (kits genéricos): bomba de aire por encima del nivel de solución; tubos a presión con giro suave; al separar cubos, deja ~3 cm de tubo dentro del lateral; tras el primer llenado, revisa fugas.</p>
+            <div style="margin-bottom:10px">
+              <label class="form-label torre-dwc-lbl-mono" for="sysRdwcPreset">Plantilla de instalación</label>
+              <select id="sysRdwcPreset" class="torre-dwc-input" onchange="try{onSysRdwcPresetChange()}catch(e){}" aria-label="Plantilla RDWC por número de cubos y filas">
+                <option value="">Personalizado (manual)</option>
+              </select>
+            </div>
+            <p id="sysRdwcMontajeHint" class="torre-nft-p-soft setup-dwc-help" role="status" aria-live="polite"></p>
 <div class="torre-dwc-grid-2">
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcSites">Sitios/cubos</label><input type="number" id="sysRdwcSites" class="torre-dwc-input" min="2" max="64" step="1" placeholder="4"></div>
               <div><label class="form-label torre-dwc-lbl-mono" for="sysRdwcRows">Filas</label><input type="number" id="sysRdwcRows" class="torre-dwc-input" min="1" max="4" step="1" placeholder="1"></div>
@@ -4696,9 +4703,9 @@
   <script src="js/diagrams/dwc/dwc-diagram.js?v=2026-05-15-scada3"></script>
   <script src="js/diagrams/rdwc/rdwc-scada-tokens.js?v=2026-05-15-scada1"></script>
   <script src="js/diagrams/rdwc/rdwc-scada-parts.js?v=2026-05-15-scada1"></script>
-  <script src="js/diagrams/rdwc/rdwc-presets.js?v=2026-05-27-rdwc-plan"></script>
+  <script src="js/diagrams/rdwc/rdwc-presets.js?v=2026-05-27-rdwc-sys"></script>
   <script src="js/diagrams/rdwc/rdwc-diagram.js?v=2026-05-27-rdwc-plan"></script>
-  <script src="js/diagrams/rdwc/rdwc-plan-diagram.js?v=2026-05-27-rdwc-plan"></script>
+  <script src="js/diagrams/rdwc/rdwc-plan-diagram.js?v=2026-05-27-rdwc-sys"></script>
   <script src="js/diagrams/srf/srf-scada-tokens.js?v=2026-05-15-scada1"></script>
   <script src="js/diagrams/srf/srf-scada-parts.js?v=2026-05-15-scada1"></script>
   <script src="js/diagrams/srf/srf-diagram.js?v=2026-05-15-scada1"></script>

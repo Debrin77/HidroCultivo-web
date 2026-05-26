@@ -23,6 +23,24 @@
     return { sites: s, rows: r, cols: cols, grid: grid };
   }
 
+  function rdwcPlanAirHints(x, y, cfg) {
+    const h = typeof rdwcMontajeHintsForConfig === 'function' ? rdwcMontajeHintsForConfig(cfg) : null;
+    if (!h) return '';
+    return (
+      '<text x="' +
+      x +
+      '" y="' +
+      y +
+      '" font-size="8" fill="#9a3412" font-family="system-ui,sans-serif" font-weight="500">Línea aire ~' +
+      h.airMainLenCm +
+      ' cm · tubo/cubo ~' +
+      h.airStoneHoseCm +
+      ' cm × ' +
+      h.airStones +
+      '</text>'
+    );
+  }
+
   function rdwcPlanFlowLegend(x, y) {
     return (
       '<g class="rdwc-plan-legend" transform="translate(' +
@@ -162,6 +180,7 @@
       s += hcDiagramVolLabelSvg(W / 2, 30, volLbl, { fontSize: 11, pointerEvents: false });
     }
     s += rdwcPlanFlowLegend(12, headerH - 4);
+    s += rdwcPlanAirHints(12, headerH + 52, cfg);
 
     const manL = gridLeft - 8;
     const manR = gridLeft + gridW + 8;
