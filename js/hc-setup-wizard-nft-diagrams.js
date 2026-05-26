@@ -1845,10 +1845,20 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const xPumpMM = tx + 14;
   const flowMarginMM = 10;
   const riserSepMM = 16;
-  const xFeedRiserMM = Math.max(26, Math.min(tx + 28, xL - flowMarginMM - (oddTubesMM ? 0 : riserSepMM)));
-  const xReturnRiserMM = oddTubesMM
+  const cfgMmEarly = EO.cfgSnapshot || {};
+  const mesaParaleloEarly =
+    typeof nftColectoresParaleloDesdeConfig === 'function'
+      ? nftColectoresParaleloDesdeConfig(cfgMmEarly)
+      : false;
+  let xFeedRiserMM = Math.max(26, Math.min(tx + 28, xL - flowMarginMM - (oddTubesMM ? 0 : riserSepMM)));
+  let xReturnRiserMM = oddTubesMM
     ? Math.min(Wsvg - 14, xR + flowMarginMM)
     : Math.max(xFeedRiserMM + 10, Math.min(xL - 4, xFeedRiserMM + riserSepMM));
+  if (mesaParaleloEarly) {
+    portsMM.xReturn = tx + tankW - 14;
+    xFeedRiserMM = Math.max(26, xL - flowMarginMM);
+    xReturnRiserMM = Math.min(Wsvg - 14, xR + flowMarginMM);
+  }
   const rowInner = xR - xL - 2 * padFlow;
   const geoms = [];
   let gIdx = 0;

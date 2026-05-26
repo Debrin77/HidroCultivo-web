@@ -23,6 +23,14 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
   const EO = equipOpts || {};
   const cfg = EO.cfgSnapshot || {};
   const disp = nftDisposicionNormalizada(EO.nftDisposicion != null ? EO.nftDisposicion : cfg.nftDisposicion);
+  const recorridoParalelo =
+    (disp === 'mesa' || disp === 'pared') &&
+    typeof nftColectoresParaleloDesdeConfig === 'function' &&
+    nftColectoresParaleloDesdeConfig(cfg);
+  /** Paralelo = misma vista lateral que serie (tubos apilados), no cenital en fila. */
+  if (recorridoParalelo) {
+    return buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts);
+  }
   let tiers = EO.mesaTiers && EO.mesaTiers.length >= 2 ? EO.mesaTiers : null;
   if (!tiers && disp === 'mesa' && cfg.nftMesaMultinivel) {
     tiers = parseNftMesaTubosPorNivelStr(cfg.nftMesaTubosPorNivelStr);
@@ -216,6 +224,44 @@ function nftBuildReturnPathFromExit(p) {
   return '';
 }
 
+/** Divide un `d` SVG con varios subtrazos (M…M…) para dibujar ramas en paralelo por separado. */
+function nftSvgFlowDToSubpaths(d) {
+  const s = String(d || '').trim();
+  if (!s) return [];
+  const parts = s.split(/(?=\s*M[\s.-])/i).map((p) => p.trim()).filter(Boolean);
+  return parts.length ? parts : [s];
+}
+
+function nftSvgFlowMultiPathLayer(d, className, stroke, dash, flowW, markerId, animOpen, pathGhost) {
+  const parts = nftSvgFlowDToSubpaths(d);
+  if (!parts.length) return { ghost: '', layer: '' };
+  let ghost = '';
+  let layer = '';
+  for (let i = 0; i < parts.length; i++) {
+    const mark =
+      parts.length === 1 || i === parts.length - 1 ? ' marker-end="url(#' + markerId + ')"' : '';
+    if (pathGhost) {
+      ghost += '<path d="' + parts[i] + '" stroke="' + stroke + '"' + pathGhost + '/>';
+    }
+    layer +=
+      '<path class="' +
+      className +
+      (parts.length > 1 ? ' nft-flow-branch' : '') +
+      '" d="' +
+      parts[i] +
+      '" stroke="' +
+      stroke +
+      '" fill="none" ' +
+      dash +
+      ' stroke-width="' +
+      flowW +
+      '" opacity="0.98"' +
+      mark +
+      animOpen;
+  }
+  return { ghost: ghost, layer: layer };
+}
+
 /**
  * Capas SVG de flujo NFT unificadas (ghost + trazos + leyenda + puertos) para todos los montajes.
  * @param {{ supplyD: string, returnD: string, ports?: object }} flowPaths
@@ -245,35 +291,63 @@ function nftHydraulicFlowSvgBundle(flowPaths, suf, opts) {
     ? '><animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.35s" repeatCount="indefinite" calcMode="linear"/></path>'
     : '/>';
 
-  let back = cartoon
-    ? ''
-    : '<path d="' + supplyD + '" stroke="' + NFT_FLOW_SUPPLY + '"' + pathGhost + '/>' +
-      '<path d="' + returnD + '" stroke="' + NFT_FLOW_RETURN + '"' + pathGhost + '/>';
-  let flowLayer =
-    '<path class="nft-flow-supply" d="' +
-    supplyD +
-    '" stroke="' +
-    NFT_FLOW_SUPPLY +
-    '" fill="none" ' +
-    flowDashSupply +
-    ' stroke-width="' +
-    flowW +
-    '" opacity="0.98" marker-end="url(#' +
-    mark.supplyId +
-    ')"' +
-    animTag +
-    '<path class="nft-flow-return" d="' +
-    returnD +
-    '" stroke="' +
-    NFT_FLOW_RETURN +
-    '" fill="none" ' +
-    flowDashRet +
-    ' stroke-width="' +
-    flowW +
-    '" opacity="0.98" marker-end="url(#' +
-    mark.returnId +
-    ')"' +
-    animTag;
+  const useMultiPath = o.legendMode === 'mesa_paralelo';
+  let back = '';
+  let flowLayer = '';
+  if (useMultiPath) {
+    const supMp = nftSvgFlowMultiPathLayer(
+      supplyD,
+      'nft-flow-supply',
+      NFT_FLOW_SUPPLY,
+      flowDashSupply,
+      flowW,
+      mark.supplyId,
+      animTag,
+      cartoon ? '' : pathGhost
+    );
+    const retMp = nftSvgFlowMultiPathLayer(
+      returnD,
+      'nft-flow-return',
+      NFT_FLOW_RETURN,
+      flowDashRet,
+      flowW,
+      mark.returnId,
+      animTag,
+      cartoon ? '' : pathGhost
+    );
+    back = supMp.ghost + retMp.ghost;
+    flowLayer = supMp.layer + retMp.layer;
+  } else {
+    back = cartoon
+      ? ''
+      : '<path d="' + supplyD + '" stroke="' + NFT_FLOW_SUPPLY + '"' + pathGhost + '/>' +
+        '<path d="' + returnD + '" stroke="' + NFT_FLOW_RETURN + '"' + pathGhost + '/>';
+    flowLayer =
+      '<path class="nft-flow-supply" d="' +
+      supplyD +
+      '" stroke="' +
+      NFT_FLOW_SUPPLY +
+      '" fill="none" ' +
+      flowDashSupply +
+      ' stroke-width="' +
+      flowW +
+      '" opacity="0.98" marker-end="url(#' +
+      mark.supplyId +
+      ')"' +
+      animTag +
+      '<path class="nft-flow-return" d="' +
+      returnD +
+      '" stroke="' +
+      NFT_FLOW_RETURN +
+      '" fill="none" ' +
+      flowDashRet +
+      ' stroke-width="' +
+      flowW +
+      '" opacity="0.98" marker-end="url(#' +
+      mark.returnId +
+      ')"' +
+      animTag;
+  }
   let flowLegend = showLegend ? nftSvgFlowLegend(legendX, legendY, o.legendMode) : '';
   let flowTankPorts = '';
   if (showPorts) {
