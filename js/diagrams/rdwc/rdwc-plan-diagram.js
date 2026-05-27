@@ -399,7 +399,7 @@
   }
 
   /**
-   * Racor inferior: rosa sube al cubo (codo) y naranja baja al manifold (codo), unión en el manifold.
+   * Racor inferior: rosa sube desde el manifold (sin tramo horizontal en tapY); naranja baja en vertical al manifold.
    */
   function rdwcPlanBucketLowerPort(P, tapY, trunkX, ta) {
     const br = P.r || 30;
@@ -408,10 +408,15 @@
     const outX = P.x + side * br * 0.34;
     const kneeY = tapY - 12;
     let o = '';
-    o += rdwcPlanTubeElbow(P.x, tapY, outX, tapY, outX, kneeY, 'supply', ta, 4);
+    o += rdwcPlanTubeElbow(P.x, tapY, P.x, kneeY, outX, kneeY, 'supply', ta, 4);
     o += rdwcPlanTubeElbow(outX, kneeY, outX, portY, P.x, portY, 'supply', ta, 4.2);
     o += rdwcPlanTubeElbow(P.x, portY, outX, portY, outX, kneeY, 'return', ta, 4.2);
-    o += rdwcPlanTubeElbow(outX, kneeY, outX, tapY, P.x, tapY, 'return', ta, 4);
+    o += rdwcPlanTubePath(
+      'M ' + f1(outX) + ' ' + f1(kneeY) + ' L ' + f1(P.x) + ' ' + f1(kneeY) + ' L ' + f1(P.x) + ' ' + f1(tapY),
+      'return',
+      ta,
+      4
+    );
     return o;
   }
 
@@ -478,32 +483,28 @@
     const leftX = Math.min(xs[0], trunkX);
     const rightX = Math.max(xs[xs.length - 1], trunkX);
     s += rdwcPlanTubePath(
-      'M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY) + ' L ' + f1(leftX) + ' ' + f1(tapY),
+      'M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY),
       'supply',
       ta,
       5
     );
-    if (rightX - leftX > 2) {
-      s += rdwcPlanTubePath(
-        'M ' + f1(leftX) + ' ' + f1(tapY) + ' L ' + f1(rightX) + ' ' + f1(tapY),
-        'supply',
-        ta,
-        5.2
-      );
-    }
+    s += rdwcPlanTubePath(
+      'M ' + f1(leftX) + ' ' + f1(tapY) + ' L ' + f1(rightX) + ' ' + f1(tapY),
+      'supply',
+      ta,
+      5.2
+    );
     for (let i = 0; i < bottomBuckets.length; i++) {
       s += rdwcPlanBucketLowerPort(bottomBuckets[i], tapY, trunkX, ta);
     }
     return s;
   }
 
-  /** Retorno: manifold → codo en T → eje central → depósito. */
+  /** Retorno: eje central en el manifold (vertical, sin tramo horizontal en tapY) → depósito. */
   function rdwcPlanReturnClose(s, cx, tankBottom, trunkX, tapY, bottomBuckets, ta) {
     if (!bottomBuckets.length) return s;
-    const kneeY = tapY - 14;
-    s += rdwcPlanTubeElbow(trunkX - 12, tapY, trunkX, tapY, trunkX, kneeY, 'return', ta, 5);
     s += rdwcPlanTubePath(
-      'M ' + f1(trunkX) + ' ' + f1(kneeY) + ' L ' + f1(trunkX) + ' ' + f1(tankBottom + 6),
+      'M ' + f1(trunkX) + ' ' + f1(tapY) + ' L ' + f1(trunkX) + ' ' + f1(tankBottom + 6),
       'return',
       ta,
       5
