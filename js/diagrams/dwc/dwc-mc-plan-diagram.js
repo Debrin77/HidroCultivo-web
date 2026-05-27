@@ -117,8 +117,11 @@
     return (colCenters[ci - 1] + colCenters[ci]) / 2;
   }
 
-  /** Aire: bomba arriba → reparto → bajada a cada piedra (sin tubería de agua). */
-  function dwcMcPlanAirRoutes(positions, byCol, bucketR, airRailY, pumpAnchor, dist) {
+  /**
+   * Aire en tramos rectos (ortogonal), igual que RDWC plan:
+   * bomba ↓ raíl horizontal ↓ por columna → tramo horizontal → piedra en cada cubo.
+   */
+  function dwcMcPlanAirRoutes(positions, byCol, bucketR, airRailY, pumpOutX, pumpOutY, dist) {
     if (!positions.length) return '';
     let s = '';
     const sorted = positions.slice().sort((a, b) => a.x - b.x || a.col - b.col);
@@ -126,7 +129,7 @@
     const railX1 = sorted[sorted.length - 1].x;
 
     s += dwcMcPlanAirTube(
-      'M ' + f1(pumpAnchor.outX) + ' ' + f1(pumpAnchor.outY) + ' L ' + f1(pumpAnchor.outX) + ' ' + f1(airRailY),
+      'M ' + f1(pumpOutX) + ' ' + f1(pumpOutY) + ' L ' + f1(pumpOutX) + ' ' + f1(airRailY),
       2.8
     );
     if (railX1 - railX0 > 2) {
@@ -139,26 +142,16 @@
     if (dist.sites <= 1) {
       const P = sorted[0];
       const entryY = P.y + bucketR * 0.48;
-      const offX = P.x - bucketR * 0.18;
-      s += dwcMcPlanAirTube(
-        'M ' +
-          f1(P.x) +
-          ' ' +
-          f1(airRailY) +
-          ' L ' +
-          f1(offX) +
-          ' ' +
-          f1(airRailY) +
-          ' L ' +
-          f1(offX) +
-          ' ' +
-          f1(entryY) +
-          ' L ' +
-          f1(P.x) +
-          ' ' +
-          f1(entryY),
-        2.2
-      );
+      s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.3);
+      return s;
+    }
+
+    if (dist.rows <= 1) {
+      for (let i = 0; i < sorted.length; i++) {
+        const P = sorted[i];
+        const entryY = P.y + bucketR * 0.48;
+        s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.3);
+      }
       return s;
     }
 
@@ -171,12 +164,12 @@
       const ck = colKeys[ci];
       const list = byCol[ck].sort((a, b) => a.row - b.row);
       if (!list.length) continue;
-      const spineX = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpAnchor.outX);
+      const spineX = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX);
       const spineSign = spineX < list[0].x ? -1 : 1;
       const lastY = list[list.length - 1].y + bucketR * 0.48;
-      if (Math.abs(spineX - pumpAnchor.outX) > 2) {
+      if (Math.abs(spineX - pumpOutX) > 2) {
         s += dwcMcPlanAirTube(
-          'M ' + f1(pumpAnchor.outX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(airRailY),
+          'M ' + f1(pumpOutX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(airRailY),
           2.4
         );
       }
@@ -419,9 +412,10 @@
       byCol[P.col].push(P);
     }
 
-    const airBadgeY = gridTop - 22;
-    const pumpAnchor = { outX: cx, outY: airBadgeY + 20, px: cx, py: airBadgeY };
-    const airRailY = gridTop - 6;
+    const airBadgeY = PLAN_CHROME_H + 6;
+    const pumpOutX = cx;
+    const pumpOutY = airBadgeY + 28;
+    const airRailY = gridTop - 10;
 
     let s = dwcMcPlanDefs();
     s += '<rect width="' + W + '" height="' + H + '" fill="url(#dwcMcPlanBg)"/>';
@@ -430,13 +424,6 @@
     if (dist.rows >= 2) {
       s += dwcMcPlanRowsLabel(22, gridTop + gridH / 2, dist.rows);
     }
-
-    s += '<g class="dwc-mc-plan-air" aria-hidden="true">';
-    if (tieneDifusor) {
-      s += dwcMcPlanAirPumpBadge(cx, airBadgeY, airLpm);
-      s += dwcMcPlanAirRoutes(positions, byCol, bucketR, airRailY, pumpAnchor, dist);
-    }
-    s += '</g>';
 
     const rPot = bucketR * 0.7;
     s += '<g class="dwc-mc-plan-buckets">';
@@ -452,6 +439,13 @@
           } catch (_) {}
         }
       }
+    }
+    s += '</g>';
+
+    s += '<g class="dwc-mc-plan-air" aria-hidden="true">';
+    if (tieneDifusor) {
+      s += dwcMcPlanAirPumpBadge(cx, airBadgeY, airLpm);
+      s += dwcMcPlanAirRoutes(positions, byCol, bucketR, airRailY, pumpOutX, pumpOutY, dist);
     }
     s += '</g>';
 
@@ -476,10 +470,10 @@
       ' · ' +
       dist.rows +
       (dist.rows === 1 ? ' fila' : ' filas') +
-      ' · solo aire';
+      ' · vista cenital · solo aire';
 
     return (
-      '<svg class="torre-svg-diagram dwc-svg-diagram dwc-svg-diagram--multicubo dwc-svg-diagram--mc-plan svg-centered-block" data-hc-dwc-mc-plan="v1" width="' +
+      '<svg class="torre-svg-diagram dwc-svg-diagram dwc-svg-diagram--multicubo dwc-svg-diagram--mc-plan svg-centered-block" data-hc-dwc-mc-plan="v2" width="' +
       W +
       '" height="' +
       H +
