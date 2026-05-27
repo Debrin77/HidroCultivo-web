@@ -61,20 +61,20 @@
     );
   }
 
-  /** Vista frontal: relleno interior del recipiente (detrás del agua). */
-  function frontalTankInner(x, y, w, h) {
+  /** Vista frontal: relleno interior del recipiente (detrás del agua, hasta el borde negro). */
+  function frontalTankInner(x, y, w, h, rimIn) {
     const T = tokens();
     const inner = T.tankInner || '#f1f5f9';
-    const inset = 4;
+    const ri = rimIn != null ? rimIn : 1.2;
     return (
       '<rect class="srf-frontal-tank__inner" x="' +
-      f1(x + inset) +
+      f1(x + ri) +
       '" y="' +
       f1(y) +
       '" width="' +
-      f1(w - inset * 2) +
+      f1(w - ri * 2) +
       '" height="' +
-      f1(h) +
+      f1(h - ri) +
       '" fill="' +
       inner +
       '" stroke="none" aria-hidden="true"/>'

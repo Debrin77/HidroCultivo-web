@@ -64,8 +64,9 @@
         : volMax != null && n > 0
           ? Math.round((volMax / n) * 10) / 10
           : null;
-    const tieneDifusorPlan = (state.configTorre?.equipamiento?.includes('difusor') ?? true) && !esKratky;
-    const W = Math.min(780, Math.max(480, 120 + C * 56) + (tieneDifusorPlan ? 72 : 0));
+    const tieneDifusor = (state.configTorre?.equipamiento?.includes('difusor') ?? true) && !esKratky;
+    const frontalPumpGutter = tieneDifusor ? 80 : 0;
+    const W = Math.min(780, Math.max(480, 120 + C * 56) + frontalPumpGutter);
     const headerH = 48;
     const planTop = headerH + 8;
     const planPad = 14;
@@ -84,16 +85,19 @@
     const secTop = planTop + planH + interViewGap;
     const viewCenitalY = planPanelTop - 8;
     const viewFrontalY = planTop + planH + interViewGap * 0.45;
-    const canalH = 92;
-    const canalW = planW;
-    const canalX = planLeft;
-    const canalY = secTop;
-    const raftY = canalY + 8;
+    const tankH = 92;
+    const tankW = planW - frontalPumpGutter;
+    const tankX = planLeft;
+    const tankY = secTop;
+    const rimSw = 2.4;
+    const rimIn = rimSw / 2;
+    const waterX = tankX + rimIn;
+    const waterW = tankW - rimSw;
+    const waterBottom = tankY + tankH - rimIn;
     const raftH = 22;
-    const waterY = canalY + raftH + (esKratky ? Math.min(28, Number(cfg.srfKratkyGapCm) || 8) * 1.2 : 6);
-    const waterBottom = canalY + canalH - 6;
+    const waterY =
+      tankY + raftH + (esKratky ? Math.min(28, Number(cfg.srfKratkyGapCm) || 8) * 1.2 : 6);
     const ta = typeof torreSvgAnimacionesActivas === 'function' ? torreSvgAnimacionesActivas() : false;
-    const tieneDifusor = (state.configTorre?.equipamiento?.includes('difusor') ?? true) && !esKratky;
     const profCm = Number(cfg.srfProfundidadCm) || 25;
     const balsaMm = cfg.srfBalsaGrosorMm || 40;
     const recLh = Math.round(Number(cfg.srfRecircLh) || 400);
@@ -102,12 +106,12 @@
     s += `<rect width="${W}" height="900" fill="url(#srfScadaBg)"/>`;
     if (SP) {
       s += SP.sectionPanel(planLeft - 8, planTop - 8, planW + 16, planH + 16, 14);
-      s += SP.sectionPanel(canalX - 8, canalY - 8, canalW + 16, canalH + 20, 12);
+      s += SP.sectionPanel(tankX - 8, tankY - 8, tankW + 16, tankH + 20, 12);
     }
     if (typeof hcDiagramViewLabelSvg === 'function') {
       s +=
         hcDiagramViewLabelSvg(planLeft + planW / 2, viewCenitalY, 'cenital', { pointerEvents: false }) +
-        hcDiagramViewLabelSvg(canalX + canalW / 2, viewFrontalY, 'frontal', { pointerEvents: false });
+        hcDiagramViewLabelSvg(tankX + tankW / 2, viewFrontalY, 'frontal', { pointerEvents: false });
     }
 
     s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="url(#srfRaft)" stroke="#64748b" stroke-width="1.3"/>`;
@@ -169,104 +173,212 @@
     }
 
     const wTop = waterBottom - (waterBottom - waterY) * volPct;
+    const raftY = Math.max(tankY + 2, wTop - raftH);
     if (SP && typeof SP.frontalTankInner === 'function') {
-      s += SP.frontalTankInner(canalX, canalY, canalW, canalH);
+      s += SP.frontalTankInner(tankX, tankY, tankW, tankH, rimIn);
     } else {
       s +=
         '<rect class="srf-frontal-tank__inner" x="' +
-        (canalX + 4).toFixed(1) +
+        waterX.toFixed(1) +
         '" y="' +
-        canalY +
+        tankY +
         '" width="' +
-        (canalW - 8).toFixed(1) +
+        waterW.toFixed(1) +
         '" height="' +
-        canalH +
+        (tankH - rimIn).toFixed(1) +
         '" fill="#f1f5f9" aria-hidden="true"/>';
     }
-    s += `<rect x="${(canalX + 8).toFixed(1)}" y="${raftY}" width="${(canalW - 16).toFixed(1)}" height="${raftH}" rx="4" fill="url(#srfRaft)" stroke="#94a3b8" stroke-width="1"/>`;
-    s += `<rect x="${(canalX + 10).toFixed(1)}" y="${wTop.toFixed(1)}" width="${(canalW - 20).toFixed(1)}" height="${(waterBottom - wTop).toFixed(1)}" fill="url(#srfWater)" opacity="0.92"/>`;
-    s += `<line x1="${(canalX + 10).toFixed(1)}" y1="${wTop.toFixed(1)}" x2="${(canalX + canalW - 10).toFixed(1)}" y2="${wTop.toFixed(1)}" stroke="#00acc1" stroke-width="1.2" opacity="0.75"/>`;
+    s +=
+      '<rect x="' +
+      waterX.toFixed(1) +
+      '" y="' +
+      wTop.toFixed(1) +
+      '" width="' +
+      waterW.toFixed(1) +
+      '" height="' +
+      Math.max(0, waterBottom - wTop).toFixed(1) +
+      '" class="srf-frontal-water" fill="url(#srfWater)" opacity="0.92"/>';
+    s +=
+      '<line x1="' +
+      waterX.toFixed(1) +
+      '" y1="' +
+      wTop.toFixed(1) +
+      '" x2="' +
+      (waterX + waterW).toFixed(1) +
+      '" y2="' +
+      wTop.toFixed(1) +
+      '" stroke="#00acc1" stroke-width="1.2" opacity="0.75"/>';
+    s +=
+      '<rect x="' +
+      waterX.toFixed(1) +
+      '" y="' +
+      raftY.toFixed(1) +
+      '" width="' +
+      waterW.toFixed(1) +
+      '" height="' +
+      raftH +
+      '" rx="4" class="srf-frontal-raft" fill="url(#srfRaft)" stroke="#94a3b8" stroke-width="1"/>';
 
     if (esKratky) {
-      s += `<rect x="${(canalX + 10).toFixed(1)}" y="${(raftY + raftH).toFixed(1)}" width="${(canalW - 20).toFixed(1)}" height="${(wTop - raftY - raftH).toFixed(1)}" fill="#f0f9ff" opacity="0.5" stroke="#7dd3fc" stroke-width="0.8" stroke-dasharray="3 2"/>`;
+      s +=
+        '<rect x="' +
+        waterX.toFixed(1) +
+        '" y="' +
+        (raftY + raftH).toFixed(1) +
+        '" width="' +
+        waterW.toFixed(1) +
+        '" height="' +
+        Math.max(0, wTop - raftY - raftH).toFixed(1) +
+        '" fill="#f0f9ff" opacity="0.5" stroke="#7dd3fc" stroke-width="0.8" stroke-dasharray="3 2"/>';
     }
 
     if (tieneDifusor) {
-      const nStones = Math.min(6, Math.ceil(canalW / 70));
+      const stonePad = 14;
+      const nStones = Math.min(6, Math.ceil(tankW / 70));
       const stoneYs = [];
       for (let ai = 0; ai < nStones; ai++) {
         const ax =
-          canalX + 30 + ai * ((canalW - 60) / Math.max(1, nStones - 1 || 1));
-        const stoneY = waterBottom - 8;
+          waterX +
+          stonePad +
+          ai * ((waterW - stonePad * 2) / Math.max(1, nStones - 1 || 1));
+        const stoneY = waterBottom - 6;
         stoneYs.push({ ax, stoneY });
-        s += `<ellipse cx="${ax.toFixed(1)}" cy="${stoneY.toFixed(1)}" rx="9" ry="4" fill="#64748b" stroke="#475569" stroke-width="0.8"/>`;
+        s +=
+          '<ellipse cx="' +
+          ax.toFixed(1) +
+          '" cy="' +
+          stoneY.toFixed(1) +
+          '" rx="9" ry="4" fill="#64748b" stroke="#475569" stroke-width="0.8"/>';
         if (ta) {
-          s += `<circle cx="${ax.toFixed(1)}" cy="${(stoneY - 2).toFixed(1)}" r="1.2" fill="#bae6fd" opacity="0"><animate attributeName="cy" to="${(wTop + 6).toFixed(1)}" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="1.2s" repeatCount="indefinite"/></circle>`;
+          s +=
+            '<circle cx="' +
+            ax.toFixed(1) +
+            '" cy="' +
+            (stoneY - 2).toFixed(1) +
+            '" r="1.2" fill="#bae6fd" opacity="0"><animate attributeName="cy" to="' +
+            (wTop + 6).toFixed(1) +
+            '" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="1.2s" repeatCount="indefinite"/></circle>';
         }
       }
       const pumpW = 54;
       const pumpH = 40;
-      const pumpX = canalX + canalW + 14;
-      const pumpY = canalY + (canalH - pumpH) / 2;
+      const pumpGap = 18;
+      const pumpX = tankX + tankW + pumpGap;
+      const pumpY = tankY + (tankH - pumpH) / 2;
       const pumpCx = pumpX + pumpW / 2;
       const pumpOutX = pumpX;
       const pumpOutY = pumpY + pumpH * 0.55;
+      const tankWallX = tankX + tankW - rimIn;
+      s += '<g class="srf-ext-pump-outside" aria-hidden="true">';
       if (typeof dwcSvgAirPumpExternal === 'function') {
         const pumpMc = dwcSvgAirPumpExternal(pumpX, pumpY, 1);
         s += pumpMc.svg;
       } else {
         s +=
-          `<g class="srf-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">` +
-          `<rect x="${(pumpX + 4).toFixed(1)}" y="${(pumpY + 14).toFixed(1)}" width="${(pumpW - 8).toFixed(1)}" height="${(pumpH - 10).toFixed(1)}" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.5"/>` +
-          `<ellipse cx="${pumpCx.toFixed(1)}" cy="${(pumpY + 12).toFixed(1)}" rx="${((pumpW - 10) / 2).toFixed(1)}" ry="12" fill="#fb923c" stroke="#c2410c" stroke-width="2"/>` +
-          `</g>`;
+          '<g class="srf-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
+          '<rect x="' +
+          (pumpX + 4).toFixed(1) +
+          '" y="' +
+          (pumpY + 14).toFixed(1) +
+          '" width="' +
+          (pumpW - 8).toFixed(1) +
+          '" height="' +
+          (pumpH - 10).toFixed(1) +
+          '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.5"/>' +
+          '<ellipse cx="' +
+          pumpCx.toFixed(1) +
+          '" cy="' +
+          (pumpY + 12).toFixed(1) +
+          '" rx="' +
+          ((pumpW - 10) / 2).toFixed(1) +
+          '" ry="12" fill="#fb923c" stroke="#c2410c" stroke-width="2"/>' +
+          '</g>';
       }
       if (stoneYs.length) {
         const mid = stoneYs[Math.floor(stoneYs.length / 2)];
-        const hoseD = `M ${pumpOutX.toFixed(1)} ${pumpOutY.toFixed(1)} L ${(canalX + canalW - 6).toFixed(1)} ${pumpOutY.toFixed(1)} L ${(canalX + canalW - 6).toFixed(1)} ${mid.stoneY.toFixed(1)} L ${mid.ax.toFixed(1)} ${mid.stoneY.toFixed(1)}`;
+        const hoseD =
+          'M ' +
+          pumpOutX.toFixed(1) +
+          ' ' +
+          pumpOutY.toFixed(1) +
+          ' L ' +
+          (tankWallX - 2).toFixed(1) +
+          ' ' +
+          pumpOutY.toFixed(1) +
+          ' L ' +
+          (tankWallX - 2).toFixed(1) +
+          ' ' +
+          mid.stoneY.toFixed(1) +
+          ' L ' +
+          mid.ax.toFixed(1) +
+          ' ' +
+          mid.stoneY.toFixed(1);
         s +=
-          `<path d="${hoseD}" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>` +
-          `<path d="${hoseD}" fill="none" stroke="#90a4ae" stroke-width="1" stroke-linecap="round" opacity="0.35"/>`;
+          '<path d="' +
+          hoseD +
+          '" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>' +
+          '<path d="' +
+          hoseD +
+          '" fill="none" stroke="#90a4ae" stroke-width="1" stroke-linecap="round" opacity="0.35"/>';
         for (const st of stoneYs) {
-          const branch = `M ${mid.ax.toFixed(1)} ${mid.stoneY.toFixed(1)} L ${st.ax.toFixed(1)} ${st.stoneY.toFixed(1)}`;
-          s += `<path d="${branch}" fill="none" stroke="#cfd8dc" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>`;
+          const branch =
+            'M ' +
+            mid.ax.toFixed(1) +
+            ' ' +
+            mid.stoneY.toFixed(1) +
+            ' L ' +
+            st.ax.toFixed(1) +
+            ' ' +
+            st.stoneY.toFixed(1);
+          s +=
+            '<path d="' +
+            branch +
+            '" fill="none" stroke="#cfd8dc" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>';
         }
       }
+      s += '</g>';
     }
 
     if (SP && typeof SP.frontalTankRim === 'function') {
-      s += SP.frontalTankRim(canalX, canalY, canalW, canalH);
+      s += SP.frontalTankRim(tankX, tankY, tankW, tankH);
     } else {
-      const bot = canalY + canalH;
+      const bot = tankY + tankH;
       s +=
         '<g class="srf-frontal-tank-rim" aria-hidden="true">' +
         '<path d="M ' +
-        canalX.toFixed(1) +
+        tankX.toFixed(1) +
         ' ' +
-        canalY +
+        tankY +
         ' L ' +
-        canalX.toFixed(1) +
+        tankX.toFixed(1) +
         ' ' +
         bot.toFixed(1) +
         ' L ' +
-        (canalX + canalW).toFixed(1) +
+        (tankX + tankW).toFixed(1) +
         ' ' +
         bot.toFixed(1) +
         ' L ' +
-        (canalX + canalW).toFixed(1) +
+        (tankX + tankW).toFixed(1) +
         ' ' +
-        canalY +
+        tankY +
         '" fill="none" stroke="#0f172a" stroke-width="2.4" stroke-linejoin="miter"/>' +
         '</g>';
     }
 
     const volNum = volMez != null ? Math.round(volMez * 10) / 10 : null;
-    const volLabelY = canalY + canalH + 28;
+    const volLabelY = tankY + tankH + 28;
     if (typeof hcDiagramVolLabelSvg === 'function') {
-      s += hcDiagramVolLabelSvg(canalX + canalW / 2, volLabelY, volNum, { fontSize: 12, pointerEvents: false });
+      s += hcDiagramVolLabelSvg(tankX + tankW / 2, volLabelY, volNum, { fontSize: 12, pointerEvents: false });
     } else {
       const volLbl = volNum != null ? volNum + ' L' : '—';
-      s += `<text x="${(canalX + canalW / 2).toFixed(1)}" y="${volLabelY.toFixed(1)}" text-anchor="middle" font-family="Inconsolata,monospace" font-size="12" font-weight="800" fill="#0369a1">${volLbl}</text>`;
+      s +=
+        '<text x="' +
+        (tankX + tankW / 2).toFixed(1) +
+        '" y="' +
+        volLabelY.toFixed(1) +
+        '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="12" font-weight="800" fill="#0369a1">' +
+        volLbl +
+        '</text>';
     }
 
     const H = volLabelY + 18;
