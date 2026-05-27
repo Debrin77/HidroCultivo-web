@@ -20,7 +20,7 @@
 
   function rdwcSiteInteractive(s, x, y, rn, c, rPot, cfg, idx, ta, tieneDifusor, layout) {
     const dat =
-      state.torre && state.torre[rn] && state.torre[rn][c]
+      typeof state !== 'undefined' && state.torre && state.torre[rn] && state.torre[rn][c]
         ? state.torre[rn][c]
         : { variedad: '', fecha: '', fotos: [] };
     const dias = dat.fecha && typeof torreDiasCicloVisual === 'function' ? torreDiasCicloVisual(dat) : 0;
@@ -386,6 +386,13 @@
       }
       if (rdwcPreferirLayoutHub(c)) return renderRdwcHub(c);
       return renderRdwcManifold(c);
+    } catch (drawErr) {
+      try {
+        console.error('buildRdwcDiagramSvg', drawErr);
+      } catch (_) {}
+      return (
+        '<p class="torre-svg-fallback" role="status">No se pudo dibujar el sistema RDWC. Recarga la página (Ctrl+F5) e inténtalo de nuevo.</p>'
+      );
     } finally {
       if (typeof state !== 'undefined') {
         state.configTorre = prevCfg;

@@ -2096,9 +2096,10 @@ function refreshRdwcSetupPreview() {
     if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(draft);
     const sites = Math.max(2, Math.round(Number(draft.rdwcSites) || 4));
     const rows = Math.max(1, Math.min(4, Math.round(Number(draft.rdwcRows) || 1)));
-    const cols = Math.max(1, Math.ceil(sites / rows));
-    draft.numNiveles = rows;
-    draft.numCestas = cols;
+    const dist =
+      typeof rdwcPlanDistribuir === 'function' ? rdwcPlanDistribuir(sites, rows) : { rows: rows, cols: Math.ceil(sites / rows), grid: [] };
+    draft.numNiveles = dist.rows;
+    draft.numCestas = dist.cols;
     const prevCfg = state.configTorre;
     const prevTorre = state.torre;
     state.configTorre = Object.assign({}, draft, { tipoInstalacion: 'rdwc' });
@@ -2111,10 +2112,16 @@ function refreshRdwcSetupPreview() {
       fotoKeys: [],
     });
     const torrePreview = [];
-    for (let n = 0; n < rows; n++) {
+    for (let r = 0; r < dist.rows; r++) {
       const row = [];
-      for (let col = 0; col < cols; col++) row.push(emptyCell());
+      for (let c = 0; c < dist.cols; c++) row.push(emptyCell());
       torrePreview.push(row);
+    }
+    for (let gi = 0; gi < dist.grid.length; gi++) {
+      const g = dist.grid[gi];
+      if (torrePreview[g.row] && g.col < dist.cols) {
+        torrePreview[g.row][g.col] = emptyCell();
+      }
     }
     state.torre = torrePreview;
     if (typeof generarSVGRdwc === 'function') {

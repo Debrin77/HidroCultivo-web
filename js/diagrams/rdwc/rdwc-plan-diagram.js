@@ -722,11 +722,6 @@
     const spacingCm = Math.max(20, Math.min(150, Number(cfg.rdwcCenterSpacingCm) || 45));
     const colStep = Math.min(138, Math.max(96, spacingCm * 1.35));
     const rowStep = Math.min(105, Math.max(78, spacingCm * 1));
-    const colsCfg =
-      typeof rdwcColsFromSitesRows === 'function'
-        ? rdwcColsFromSitesRows(dist.sites, dist.rows)
-        : dist.cols;
-
     const bucketR = Math.max(26, Math.min(38, 36 - dist.cols * 0.8));
     const tankR = Math.max(40, Math.min(54, 42 + Math.min(6, dist.sites * 0.2)));
     const marginX = 72;
@@ -761,9 +756,16 @@
       const rowLeft = cx - rowW / 2;
       const x = rowLeft + g.col * colStep;
       const y = gridTop + g.row * rowStep;
-      const rn = Math.floor(g.idx / colsCfg);
-      const c = g.idx % colsCfg;
-      positions.push({ x: x, y: y, rn: rn, c: c, idx: g.idx, row: g.row, col: g.col, r: bucketR });
+      positions.push({
+        x: x,
+        y: y,
+        rn: g.row,
+        c: g.col,
+        idx: g.idx,
+        row: g.row,
+        col: g.col,
+        r: bucketR,
+      });
     }
 
     const bottomRowY = gridTop + (dist.rows - 1) * rowStep;
@@ -866,7 +868,13 @@
       const P = positions[pi];
       s += rdwcPlanRoundBucket(P.x, P.y, bucketR, P.idx, ta);
       if (typeof siteInteractive === 'function') {
-        s = siteInteractive(s, P.x, P.y, P.rn, P.c, rPot, cfg, P.idx, ta, tieneDifusor, 'plan');
+        try {
+          s = siteInteractive(s, P.x, P.y, P.rn, P.c, rPot, cfg, P.idx, ta, tieneDifusor, 'plan');
+        } catch (siteErr) {
+          try {
+            console.warn('rdwcPlan siteInteractive', siteErr);
+          } catch (_) {}
+        }
       }
     }
     s += '</g>';
