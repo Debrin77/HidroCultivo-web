@@ -6,8 +6,8 @@ Documento derivado de manual técnico de kit modular RDWC XL 2.0 (recirculación
 
 - **Depósito de control**: bomba de recirculación, mezcla, EC/pH, opcional venturi en el propio depósito.
 - **Cubos de cultivo**: un sitio por cubo; junta de aire en el borde superior; piedra difusora **en cada cubo**.
-- **Impulsión (verde)**: depósito → manifold de mandata → cada cubo (por el centro del montaje).
-- **Retorno (azul)**: último peldaño de cada rama → manifold de retorno → depósito (puertos izq./dcha. en 2 caras).
+- **Impulsión**: salida del depósito (eje central) → tubería de reparto inferior → sube a cada cubo (codos 90°).
+- **Retorno (circuito cerrado)**: codos 90° desde cubos de la fila superior al depósito; bajante por columna entre filas; fila inferior vuelve al eje y sube al depósito.
 
 ## Filas y cubos (plantillas app)
 
@@ -51,6 +51,6 @@ Cubo nominal típico: **20 L**. Cesta: **Ø 125 mm** (14 cm). Separación centro
 
 ## Vista cenital en HidroCultivo
 
-Con **2 o más filas**, el diagrama usa layout **plan**: filas alineadas, depósito abajo al centro, leyenda impulsión/retorno/aire. Con **1 fila** y pocos cubos: layout en línea (manifold).
+Con **2 o más filas**, el diagrama usa layout **plan**: depósito arriba, impulsión amarilla (eje), reparto rosa abajo, retorno naranja en L y por columnas. Sin tuberías grises horizontales entre cubos de la misma fila.
 
 PDF de referencia (interno): `docs/RDWC-manual-referencia-tecnica.pdf` — no mostrar al usuario final.
