@@ -17,6 +17,9 @@
     raft: '#e2e8f0',
     raftStroke: '#64748b',
     tank: '#475569',
+    /** Borde del recipiente en vista frontal (estanque abierto por arriba). */
+    tankRim: '#0f172a',
+    tankInner: '#f1f5f9',
     flow: '#16a34a',
     air: '#64748b',
   };

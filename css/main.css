@@ -1863,6 +1863,11 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
 .torre-preview--rdwc svg.rdwc-svg-diagram--plan .rdwc-plan-chrome {
   pointer-events: none;
 }
+#torreSVGWrap.torre-svg-canvas svg.srf-svg-diagram .srf-frontal-tank-rim path,
+.torre-preview--srf svg.srf-svg-diagram .srf-frontal-tank-rim path {
+  stroke: #0f172a;
+  stroke-width: 2.4px;
+}
 #torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-bucket,
 .torre-preview--rdwc svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-bucket {
   filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.12));

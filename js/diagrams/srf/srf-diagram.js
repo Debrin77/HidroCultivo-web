@@ -168,8 +168,22 @@
       }
     }
 
-    s += `<rect x="${(canalX + 8).toFixed(1)}" y="${raftY}" width="${(canalW - 16).toFixed(1)}" height="${raftH}" rx="4" fill="url(#srfRaft)" stroke="#94a3b8" stroke-width="1"/>`;
     const wTop = waterBottom - (waterBottom - waterY) * volPct;
+    if (SP && typeof SP.frontalTankInner === 'function') {
+      s += SP.frontalTankInner(canalX, canalY, canalW, canalH);
+    } else {
+      s +=
+        '<rect class="srf-frontal-tank__inner" x="' +
+        (canalX + 4).toFixed(1) +
+        '" y="' +
+        canalY +
+        '" width="' +
+        (canalW - 8).toFixed(1) +
+        '" height="' +
+        canalH +
+        '" fill="#f1f5f9" aria-hidden="true"/>';
+    }
+    s += `<rect x="${(canalX + 8).toFixed(1)}" y="${raftY}" width="${(canalW - 16).toFixed(1)}" height="${raftH}" rx="4" fill="url(#srfRaft)" stroke="#94a3b8" stroke-width="1"/>`;
     s += `<rect x="${(canalX + 10).toFixed(1)}" y="${wTop.toFixed(1)}" width="${(canalW - 20).toFixed(1)}" height="${(waterBottom - wTop).toFixed(1)}" fill="url(#srfWater)" opacity="0.92"/>`;
     s += `<line x1="${(canalX + 10).toFixed(1)}" y1="${wTop.toFixed(1)}" x2="${(canalX + canalW - 10).toFixed(1)}" y2="${wTop.toFixed(1)}" stroke="#00acc1" stroke-width="1.2" opacity="0.75"/>`;
 
@@ -218,6 +232,32 @@
           s += `<path d="${branch}" fill="none" stroke="#cfd8dc" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>`;
         }
       }
+    }
+
+    if (SP && typeof SP.frontalTankRim === 'function') {
+      s += SP.frontalTankRim(canalX, canalY, canalW, canalH);
+    } else {
+      const bot = canalY + canalH;
+      s +=
+        '<g class="srf-frontal-tank-rim" aria-hidden="true">' +
+        '<path d="M ' +
+        canalX.toFixed(1) +
+        ' ' +
+        canalY +
+        ' L ' +
+        canalX.toFixed(1) +
+        ' ' +
+        bot.toFixed(1) +
+        ' L ' +
+        (canalX + canalW).toFixed(1) +
+        ' ' +
+        bot.toFixed(1) +
+        ' L ' +
+        (canalX + canalW).toFixed(1) +
+        ' ' +
+        canalY +
+        '" fill="none" stroke="#0f172a" stroke-width="2.4" stroke-linejoin="miter"/>' +
+        '</g>';
     }
 
     const volNum = volMez != null ? Math.round(volMez * 10) / 10 : null;
