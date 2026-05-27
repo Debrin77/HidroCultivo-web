@@ -615,10 +615,9 @@
    */
   function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCy, tankR, gridTop, pumpAnchor, dist) {
     if (!positions.length) return s;
-    const compactTop = rdwcPlanCompactTopRow(dist, positions);
-    const series = rdwcPlanIsSeries(dist, positions);
+    const series = rdwcPlanIsSeries(dist);
     const sorted = rdwcPlanBucketsSorted(positions);
-    const airRailY = series || compactTop ? gridTop - bucketR * 0.12 : tankCy - tankR * 0.15;
+    const airRailY = series ? gridTop - bucketR * 0.12 : tankCy - tankR * 0.15;
     const railX0 = sorted[0].x;
     const railX1 = sorted[sorted.length - 1].x;
 
