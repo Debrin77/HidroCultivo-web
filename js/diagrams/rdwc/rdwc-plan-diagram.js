@@ -42,6 +42,11 @@
     return { sites: s, rows: r, cols: cols, grid: grid };
   }
 
+  /** 2 filas en config pero cubos solo en fila 0 (pareja compacta). */
+  function rdwcPlanCompactTopRow(dist, positions) {
+    return dist.rows >= 2 && positions.length > 0 && positions.every((p) => p.row === 0);
+  }
+
   function rdwcPlanAirHints(x, y, cfg) {
     const h = typeof rdwcMontajeHintsForConfig === 'function' ? rdwcMontajeHintsForConfig(cfg) : null;
     if (!h) return '';
@@ -421,9 +426,11 @@
     }
     s += rdwcPlanTubePath('M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY), 'impulse', ta, 5);
     if (!bottomBuckets.length) return s;
+    const br = bottomBuckets[0].r || 30;
     const xs = bottomBuckets.map((p) => p.x).sort((a, b) => a - b);
-    const leftX = xs[0];
-    const rightX = xs[xs.length - 1];
+    const pad = br * 0.65;
+    const leftX = xs[0] - pad;
+    const rightX = xs[xs.length - 1] + pad;
     s += rdwcPlanTubePath(
       'M ' + f1(leftX) + ' ' + f1(tapY) + ' L ' + f1(rightX) + ' ' + f1(tapY),
       'supply',
@@ -556,7 +563,7 @@
    */
   function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankCy, tankR, gridLeft, gridRight, gridTop, pumpAnchor, dist) {
     if (!positions.length) return s;
-    const compactTop = dist.rows >= 2 && positions.every((p) => p.row === 0);
+    const compactTop = rdwcPlanCompactTopRow(dist, positions);
     const airRailY = compactTop ? gridTop - bucketR * 0.28 : tankCy - tankR * 0.15;
     const xs = positions.map((p) => p.x).sort((a, b) => a - b);
     const colKeys = Object.keys(byCol)
@@ -682,8 +689,6 @@
     const H = gridTop + gridH + bucketR * 2 + 56;
 
     const tankBottom = tankCy + tankR;
-    const bottomRowY = gridTop + (dist.rows - 1) * rowStep;
-    const manifoldY = bottomRowY + bucketR + 20;
 
     const volMax = typeof getVolumenDepositoMaxLitros === 'function' ? getVolumenDepositoMaxLitros(cfg) : null;
     const volMez = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
@@ -710,6 +715,11 @@
       const c = g.idx % colsCfg;
       positions.push({ x: x, y: y, rn: rn, c: c, idx: g.idx, row: g.row, col: g.col, r: bucketR });
     }
+
+    const compactTopOnly = rdwcPlanCompactTopRow(dist, positions);
+    const supplyRowIndex = compactTopOnly ? 0 : dist.rows - 1;
+    const bottomRowY = gridTop + supplyRowIndex * rowStep;
+    const manifoldY = bottomRowY + bucketR + 20;
 
     let s = '';
     if (typeof global.rdwcScadaDefs === 'function') {
@@ -747,26 +757,29 @@
       byCol[P.col].push(P);
     }
 
-    const bottomBuckets = positions.filter((p) => p.row === dist.rows - 1);
+    const supplyBuckets = positions.filter((p) => p.row === supplyRowIndex);
+    const bottomBuckets = supplyBuckets;
     const topBuckets = positions.filter((p) => p.row === 0);
 
     let pipes = '<g class="rdwc-plan-pipes" aria-hidden="true">';
 
     if (dist.rows >= 2) {
-      pipes = rdwcPlanLoopTrace(
-        pipes,
-        cx,
-        tankCy,
-        tankR,
-        tankBottom,
-        tapY,
-        topBuckets,
-        bottomBuckets,
-        byCol,
-        bucketR,
-        ta
-      );
-      pipes = rdwcPlanImpulsionSupply(pipes, cx, tankBottom, pumpY, trunkX, tapY, bottomBuckets, ta);
+      if (!compactTopOnly && topBuckets.length && bottomBuckets.length) {
+        pipes = rdwcPlanLoopTrace(
+          pipes,
+          cx,
+          tankCy,
+          tankR,
+          tankBottom,
+          tapY,
+          topBuckets,
+          bottomBuckets,
+          byCol,
+          bucketR,
+          ta
+        );
+      }
+      pipes = rdwcPlanImpulsionSupply(pipes, cx, tankBottom, pumpY, trunkX, tapY, supplyBuckets, ta);
       Object.keys(byCol).forEach((ck) => {
         const list = byCol[ck].sort((a, b) => a.row - b.row);
         if (list.length >= 2) {
