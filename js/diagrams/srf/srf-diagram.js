@@ -7,11 +7,49 @@
   const SP = typeof srfScadaParts !== 'undefined' ? srfScadaParts : null;
 
   function srfScadaDefs() {
-    return `<defs>
-      <linearGradient id="srfScadaBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f5f6f8"/><stop offset="100%" stop-color="#e4e7eb"/></linearGradient>
-      <linearGradient id="srfWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bae6fd"/><stop offset="100%" stop-color="#0284c7"/></linearGradient>
-      <linearGradient id="srfRaft" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e2e8f0"/></linearGradient>
-    </defs>`;
+    return (
+      '<defs>' +
+      '<linearGradient id="srfScadaBg" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0%" stop-color="#ecfdf5"/>' +
+      '<stop offset="42%" stop-color="#f0f9ff"/>' +
+      '<stop offset="100%" stop-color="#fef9c3"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="srfWater" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#7dd3fc"/>' +
+      '<stop offset="40%" stop-color="#38bdf8"/>' +
+      '<stop offset="100%" stop-color="#0369a1"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="srfWaterShine" x1="0" y1="0" x2="1" y2="0">' +
+      '<stop offset="0%" stop-color="#e0f2fe" stop-opacity="0"/>' +
+      '<stop offset="50%" stop-color="#ffffff" stop-opacity="0.45"/>' +
+      '<stop offset="100%" stop-color="#e0f2fe" stop-opacity="0"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="srfRaft" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#ffffff"/>' +
+      '<stop offset="55%" stop-color="#e0f2fe"/>' +
+      '<stop offset="100%" stop-color="#bae6fd"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="srfTankInner" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#f8fafc"/>' +
+      '<stop offset="100%" stop-color="#e2e8f0"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="srfKratkyAir" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#fef9c3"/>' +
+      '<stop offset="100%" stop-color="#e0f2fe"/>' +
+      '</linearGradient>' +
+      '<filter id="srfSoftShadow" x="-15%" y="-15%" width="130%" height="130%">' +
+      '<feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0c4a6e" flood-opacity="0.16"/>' +
+      '</filter>' +
+      '<filter id="srfPotShadow" x="-25%" y="-25%" width="150%" height="150%">' +
+      '<feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="#15803d" flood-opacity="0.22"/>' +
+      '</filter>' +
+      '</defs>'
+    );
+  }
+
+  function srfTok() {
+    if (typeof HC_DIAG !== 'undefined' && HC_DIAG.srfScada) return HC_DIAG.srfScada;
+    return typeof SRF_SCADA !== 'undefined' ? SRF_SCADA : {};
   }
 
   function buildSrfDiagramSvg(cfg, torre, opts) {
@@ -104,7 +142,10 @@
 
     let s = srfScadaDefs();
     s += `<rect width="${W}" height="900" fill="url(#srfScadaBg)"/>`;
-    if (SP) {
+    if (SP && typeof SP.sectionPanelTinted === 'function') {
+      s += SP.sectionPanelTinted(planLeft - 8, planTop - 8, planW + 16, planH + 16, 14, 'plan');
+      s += SP.sectionPanelTinted(tankX - 8, tankY - 8, tankW + 16, tankH + 20, 12, 'tank');
+    } else if (SP) {
       s += SP.sectionPanel(planLeft - 8, planTop - 8, planW + 16, planH + 16, 14);
       s += SP.sectionPanel(tankX - 8, tankY - 8, tankW + 16, tankH + 20, 12);
     }
@@ -114,7 +155,39 @@
         hcDiagramViewLabelSvg(tankX + tankW / 2, viewFrontalY, 'frontal', { pointerEvents: false });
     }
 
-    s += `<rect x="${planInnerX}" y="${planInnerY}" width="${planInnerW}" height="${planInnerH}" rx="8" fill="url(#srfRaft)" stroke="#64748b" stroke-width="1.3"/>`;
+    const T = srfTok();
+    s +=
+      '<rect class="srf-plan-raft" x="' +
+      planInnerX.toFixed(1) +
+      '" y="' +
+      planInnerY.toFixed(1) +
+      '" width="' +
+      planInnerW.toFixed(1) +
+      '" height="' +
+      planInnerH.toFixed(1) +
+      '" rx="8" fill="url(#srfRaft)" stroke="' +
+      (T.raftStroke || '#0d9488') +
+      '" stroke-width="1.6" filter="url(#srfSoftShadow)"/>';
+
+    for (let rn = 0; rn < N; rn++) {
+      for (let col = 0; col < C; col++) {
+        const hx = planInnerX + (col + 0.5) * cellW;
+        const hy = planInnerY + (rn + 0.5) * cellH;
+        const hR = Math.max(4, Rpot * 0.42);
+        s +=
+          '<circle class="srf-plan-hole" cx="' +
+          hx.toFixed(1) +
+          '" cy="' +
+          hy.toFixed(1) +
+          '" r="' +
+          hR.toFixed(1) +
+          '" fill="' +
+          (T.holeGuide || '#7dd3fc') +
+          '" fill-opacity="0.28" stroke="' +
+          (T.potEmptyStroke || '#38bdf8') +
+          '" stroke-width="0.9" stroke-opacity="0.55" aria-hidden="true"/>';
+      }
+    }
 
     for (let rn = 0; rn < N; rn++) {
       for (let col = 0; col < C; col++) {
@@ -127,20 +200,20 @@
         const dias =
           dat.fecha && typeof torreDiasCicloVisual === 'function' ? torreDiasCicloVisual(dat) : 0;
         const est = dat.variedad && typeof getEstado === 'function' ? getEstado(dat.variedad, dias) : '';
-        let fill = '#f8fafc';
-        let stroke = '#94a3b8';
+        let fill = T.potEmptyFill || '#e0f2fe';
+        let stroke = T.potEmptyStroke || '#38bdf8';
         if (dat.variedad) {
           if (est === 'plantula') {
-            fill = '#eff6ff';
+            fill = '#dbeafe';
             stroke = '#2563eb';
           } else if (est === 'crecimiento') {
-            fill = '#f0fdf4';
+            fill = '#bbf7d0';
             stroke = '#15803d';
           } else if (est === 'madurez') {
-            fill = '#fffbeb';
+            fill = '#fde68a';
             stroke = '#b45309';
           } else {
-            fill = '#faf5ff';
+            fill = '#e9d5ff';
             stroke = '#7c3aed';
           }
         }
@@ -154,8 +227,22 @@
         const aria = typeof escAriaAttr === 'function'
           ? escAriaAttr('Planta fila ' + (rn + 1) + ' col ' + (col + 1) + ', ' + titLista + '. Pulsa para ficha.')
           : 'Planta ' + (rn + 1) + '-' + (col + 1);
+        const potFilter = dat.variedad ? ' filter="url(#srfPotShadow)"' : '';
         s += `<g data-n="${rn}" data-c="${col}" class="hc-cesta hc-cesta--interactive srf-pot-hit" role="button" tabindex="0" aria-label="${aria}">`;
-        s += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${Rpot.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+        s +=
+          '<circle cx="' +
+          cx.toFixed(1) +
+          '" cy="' +
+          cy.toFixed(1) +
+          '" r="' +
+          Rpot.toFixed(1) +
+          '" fill="' +
+          fill +
+          '" stroke="' +
+          stroke +
+          '" stroke-width="2.2"' +
+          potFilter +
+          '/>';
         if (cultEmoji) {
           s += `<text x="${cx.toFixed(1)}" y="${(cy + 1).toFixed(1)}" text-anchor="middle" font-size="${Math.min(14, Rpot * 0.9).toFixed(1)}" dominant-baseline="middle">${cultEmoji}</text>`;
         }
@@ -197,7 +284,18 @@
       waterW.toFixed(1) +
       '" height="' +
       Math.max(0, waterBottom - wTop).toFixed(1) +
-      '" class="srf-frontal-water" fill="url(#srfWater)" opacity="0.92"/>';
+      '" class="srf-frontal-water" fill="url(#srfWater)" opacity="0.96"/>';
+    const shineH = Math.min(14, Math.max(4, waterBottom - wTop));
+    s +=
+      '<rect x="' +
+      waterX.toFixed(1) +
+      '" y="' +
+      wTop.toFixed(1) +
+      '" width="' +
+      waterW.toFixed(1) +
+      '" height="' +
+      shineH.toFixed(1) +
+      '" class="srf-frontal-water-shine" fill="url(#srfWaterShine)" opacity="0.7" aria-hidden="true"/>';
     s +=
       '<line x1="' +
       waterX.toFixed(1) +
@@ -207,17 +305,33 @@
       (waterX + waterW).toFixed(1) +
       '" y2="' +
       wTop.toFixed(1) +
-      '" stroke="#00acc1" stroke-width="1.2" opacity="0.75"/>';
-    s +=
-      '<rect x="' +
-      waterX.toFixed(1) +
-      '" y="' +
-      raftY.toFixed(1) +
-      '" width="' +
-      waterW.toFixed(1) +
-      '" height="' +
-      raftH +
-      '" rx="4" class="srf-frontal-raft" fill="url(#srfRaft)" stroke="#94a3b8" stroke-width="1"/>';
+      '" stroke="' +
+      (T.waterSurface || '#38bdf8') +
+      '" stroke-width="1.8" opacity="0.9"/>';
+    if (!esKratky && wTop > raftY + raftH + 4) {
+      const rootY = raftY + raftH + 2;
+      const rootH = Math.min(18, wTop - rootY - 2);
+      if (rootH > 3) {
+        s += '<g class="srf-frontal-roots" aria-hidden="true" opacity="0.55">';
+        const rootN = Math.min(5, Math.ceil(waterW / 48));
+        for (let ri = 0; ri < rootN; ri++) {
+          const rx = waterX + waterW * ((ri + 0.5) / rootN);
+          s +=
+            '<path d="M ' +
+            rx.toFixed(1) +
+            ' ' +
+            rootY.toFixed(1) +
+            ' q ' +
+            (ri % 2 === 0 ? -4 : 4).toFixed(1) +
+            ' ' +
+            (rootH * 0.45).toFixed(1) +
+            ' 0 ' +
+            rootH.toFixed(1) +
+            '" fill="none" stroke="#22c55e" stroke-width="1.4" stroke-linecap="round"/>';
+        }
+        s += '</g>';
+      }
+    }
 
     if (esKratky) {
       s +=
@@ -229,13 +343,13 @@
         waterW.toFixed(1) +
         '" height="' +
         Math.max(0, wTop - raftY - raftH).toFixed(1) +
-        '" fill="#f0f9ff" opacity="0.5" stroke="#7dd3fc" stroke-width="0.8" stroke-dasharray="3 2"/>';
+        '" fill="url(#srfKratkyAir)" opacity="0.72" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4 3"/>';
     }
 
+    const stonePad = 14;
+    const stoneYs = [];
     if (tieneDifusor) {
-      const stonePad = 14;
       const nStones = Math.min(6, Math.ceil(tankW / 70));
-      const stoneYs = [];
       for (let ai = 0; ai < nStones; ai++) {
         const ax =
           waterX +
@@ -248,95 +362,28 @@
           ax.toFixed(1) +
           '" cy="' +
           stoneY.toFixed(1) +
-          '" rx="9" ry="4" fill="#64748b" stroke="#475569" stroke-width="0.8"/>';
+          '" rx="9" ry="4" fill="' +
+          (T.stoneFill || '#5eead4') +
+          '" stroke="' +
+          (T.stoneStroke || '#0f766e') +
+          '" stroke-width="1"/><ellipse cx="' +
+          (ax - 3).toFixed(1) +
+          '" cy="' +
+          (stoneY - 1).toFixed(1) +
+          '" rx="3" ry="1.2" fill="#ffffff" opacity="0.35" aria-hidden="true"/>';
         if (ta) {
           s +=
             '<circle cx="' +
             ax.toFixed(1) +
             '" cy="' +
             (stoneY - 2).toFixed(1) +
-            '" r="1.2" fill="#bae6fd" opacity="0"><animate attributeName="cy" to="' +
+            '" r="1.4" fill="' +
+            (T.bubble || '#bae6fd') +
+            '" opacity="0"><animate attributeName="cy" to="' +
             (wTop + 6).toFixed(1) +
             '" dur="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0.8;0" dur="1.2s" repeatCount="indefinite"/></circle>';
         }
       }
-      const pumpW = 54;
-      const pumpH = 40;
-      const pumpGap = 18;
-      const pumpX = tankX + tankW + pumpGap;
-      const pumpY = tankY + (tankH - pumpH) / 2;
-      const pumpCx = pumpX + pumpW / 2;
-      const pumpOutX = pumpX;
-      const pumpOutY = pumpY + pumpH * 0.55;
-      const tankWallX = tankX + tankW - rimIn;
-      s += '<g class="srf-ext-pump-outside" aria-hidden="true">';
-      if (typeof dwcSvgAirPumpExternal === 'function') {
-        const pumpMc = dwcSvgAirPumpExternal(pumpX, pumpY, 1);
-        s += pumpMc.svg;
-      } else {
-        s +=
-          '<g class="srf-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
-          '<rect x="' +
-          (pumpX + 4).toFixed(1) +
-          '" y="' +
-          (pumpY + 14).toFixed(1) +
-          '" width="' +
-          (pumpW - 8).toFixed(1) +
-          '" height="' +
-          (pumpH - 10).toFixed(1) +
-          '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.5"/>' +
-          '<ellipse cx="' +
-          pumpCx.toFixed(1) +
-          '" cy="' +
-          (pumpY + 12).toFixed(1) +
-          '" rx="' +
-          ((pumpW - 10) / 2).toFixed(1) +
-          '" ry="12" fill="#fb923c" stroke="#c2410c" stroke-width="2"/>' +
-          '</g>';
-      }
-      if (stoneYs.length) {
-        const mid = stoneYs[Math.floor(stoneYs.length / 2)];
-        const hoseD =
-          'M ' +
-          pumpOutX.toFixed(1) +
-          ' ' +
-          pumpOutY.toFixed(1) +
-          ' L ' +
-          (tankWallX - 2).toFixed(1) +
-          ' ' +
-          pumpOutY.toFixed(1) +
-          ' L ' +
-          (tankWallX - 2).toFixed(1) +
-          ' ' +
-          mid.stoneY.toFixed(1) +
-          ' L ' +
-          mid.ax.toFixed(1) +
-          ' ' +
-          mid.stoneY.toFixed(1);
-        s +=
-          '<path d="' +
-          hoseD +
-          '" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>' +
-          '<path d="' +
-          hoseD +
-          '" fill="none" stroke="#90a4ae" stroke-width="1" stroke-linecap="round" opacity="0.35"/>';
-        for (const st of stoneYs) {
-          const branch =
-            'M ' +
-            mid.ax.toFixed(1) +
-            ' ' +
-            mid.stoneY.toFixed(1) +
-            ' L ' +
-            st.ax.toFixed(1) +
-            ' ' +
-            st.stoneY.toFixed(1);
-          s +=
-            '<path d="' +
-            branch +
-            '" fill="none" stroke="#cfd8dc" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>';
-        }
-      }
-      s += '</g>';
     }
 
     if (SP && typeof SP.frontalTankRim === 'function') {
@@ -365,6 +412,129 @@
         '</g>';
     }
 
+    const lidSeatY = tankY + 1;
+    if (SP && typeof SP.frontalTankLidSeat === 'function') {
+      s += SP.frontalTankLidSeat(tankX, lidSeatY, tankW);
+    } else {
+      s +=
+        '<line x1="' +
+        tankX.toFixed(1) +
+        '" y1="' +
+        lidSeatY.toFixed(1) +
+        '" x2="' +
+        (tankX + tankW).toFixed(1) +
+        '" y2="' +
+        lidSeatY.toFixed(1) +
+        '" stroke="#475569" stroke-width="2" stroke-linecap="round" aria-hidden="true"/>';
+    }
+    if (SP && typeof SP.frontalRaftLid === 'function') {
+      s += SP.frontalRaftLid(waterX, raftY, waterW, raftH, T.raftFrontStroke || '#0284c7');
+    } else {
+      s +=
+        '<rect x="' +
+        waterX.toFixed(1) +
+        '" y="' +
+        raftY.toFixed(1) +
+        '" width="' +
+        waterW.toFixed(1) +
+        '" height="' +
+        raftH +
+        '" rx="4" class="srf-frontal-raft srf-frontal-raft-lid" fill="url(#srfRaft)" stroke="' +
+        (T.raftFrontStroke || '#0284c7') +
+        '" stroke-width="1.4" filter="url(#srfSoftShadow)"/>';
+    }
+
+    if (tieneDifusor) {
+      const pumpW = 54;
+      const pumpH = 40;
+      const pumpGap = 18;
+      const pumpX = tankX + tankW + pumpGap;
+      const pumpY = tankY + tankH - pumpH - 6;
+      const pumpCx = pumpX + pumpW / 2;
+      const tankWallX = tankX + tankW - rimIn;
+      let pumpOutX = pumpX;
+      let pumpOutY = pumpY + pumpH * 0.55;
+      s += '<g class="srf-ext-pump-outside" aria-hidden="true">';
+      if (typeof dwcSvgAirPumpExternal === 'function') {
+        const pumpMc = dwcSvgAirPumpExternal(pumpX, pumpY, 1);
+        s += pumpMc.svg;
+        if (pumpMc.outlets && pumpMc.outlets[0]) {
+          pumpOutX = pumpMc.outlets[0].x;
+          pumpOutY = pumpMc.outlets[0].y;
+        }
+      } else {
+        s +=
+          '<g class="srf-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
+          '<rect x="' +
+          (pumpX + 4).toFixed(1) +
+          '" y="' +
+          (pumpY + 14).toFixed(1) +
+          '" width="' +
+          (pumpW - 8).toFixed(1) +
+          '" height="' +
+          (pumpH - 10).toFixed(1) +
+          '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.5"/>' +
+          '<ellipse cx="' +
+          pumpCx.toFixed(1) +
+          '" cy="' +
+          (pumpY + 12).toFixed(1) +
+          '" rx="' +
+          ((pumpW - 10) / 2).toFixed(1) +
+          '" ry="12" fill="#fb923c" stroke="#c2410c" stroke-width="2"/>' +
+          '</g>';
+      }
+      if (stoneYs.length) {
+        const mid = stoneYs[Math.floor(stoneYs.length / 2)];
+        const hoseEntryY = waterBottom - 5;
+        const hoseD =
+          'M ' +
+          pumpOutX.toFixed(1) +
+          ' ' +
+          pumpOutY.toFixed(1) +
+          ' L ' +
+          (tankWallX - 2).toFixed(1) +
+          ' ' +
+          pumpOutY.toFixed(1) +
+          ' L ' +
+          (tankWallX - 2).toFixed(1) +
+          ' ' +
+          hoseEntryY.toFixed(1) +
+          ' L ' +
+          (tankWallX - 2).toFixed(1) +
+          ' ' +
+          mid.stoneY.toFixed(1) +
+          ' L ' +
+          mid.ax.toFixed(1) +
+          ' ' +
+          mid.stoneY.toFixed(1);
+        s +=
+          '<path d="' +
+          hoseD +
+          '" fill="none" stroke="#ecfdf5" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>' +
+          '<path d="' +
+          hoseD +
+          '" fill="none" stroke="' +
+          (T.airHose || '#4ade80') +
+          '" stroke-width="1.4" stroke-linecap="round" opacity="0.85"/>';
+        for (const st of stoneYs) {
+          const branch =
+            'M ' +
+            mid.ax.toFixed(1) +
+            ' ' +
+            mid.stoneY.toFixed(1) +
+            ' L ' +
+            st.ax.toFixed(1) +
+            ' ' +
+            st.stoneY.toFixed(1);
+          s +=
+            '<path d="' +
+            branch +
+            '" fill="none" stroke="#86efac" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>';
+        }
+      }
+      s += '</g>';
+    }
+
     const volNum = volMez != null ? Math.round(volMez * 10) / 10 : null;
     const volLabelY = tankY + tankH + 28;
     if (typeof hcDiagramVolLabelSvg === 'function') {
@@ -384,7 +554,7 @@
     const H = volLabelY + 18;
     const pad = 12;
     return (
-      `<svg class="torre-svg-diagram srf-svg-diagram srf-svg-diagram--scada svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="srfDiagTitle">` +
+      `<svg class="torre-svg-diagram srf-svg-diagram srf-svg-diagram--scada srf-svg-diagram--vivid svg-centered-block" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" overflow="visible" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="srfDiagTitle">` +
       `<title id="srfDiagTitle">SRF · ${volNum != null ? volNum + ' L' : '—'} · vista cenital y frontal</title>${s}</svg>`
     );
   }

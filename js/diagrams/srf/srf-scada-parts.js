@@ -39,11 +39,28 @@
   }
 
   function sectionPanel(x, y, w, h, rx) {
-    const SP = sp();
-    if (SP) return SP.sectionPanel(x, y, w, h, rx);
+    return sectionPanelTinted(x, y, w, h, rx, 'default');
+  }
+
+  /** Panel con tinte (plan = verde suave, tank = azul invernadero). */
+  function sectionPanelTinted(x, y, w, h, rx, variant) {
     const T = tokens();
+    let fill = T.panelBg;
+    let stroke = T.panelBorder;
+    let sw = 1;
+    if (variant === 'plan') {
+      fill = T.panelPlanBg || '#ecfdf5';
+      stroke = T.panelPlanBorder || '#34d399';
+      sw = 1.4;
+    } else if (variant === 'tank') {
+      fill = T.panelTankBg || '#f0f9ff';
+      stroke = T.panelTankBorder || '#38bdf8';
+      sw = 1.4;
+    }
     return (
-      '<rect x="' +
+      '<rect class="srf-scada-panel srf-scada-panel--' +
+      (variant || 'default') +
+      '" x="' +
       f1(x) +
       '" y="' +
       f1(y) +
@@ -54,17 +71,17 @@
       '" rx="' +
       (rx || 12) +
       '" fill="' +
-      T.panelBg +
+      fill +
       '" stroke="' +
-      T.panelBorder +
-      '" stroke-width="1"/>'
+      stroke +
+      '" stroke-width="' +
+      sw +
+      '" opacity="0.96"/>'
     );
   }
 
   /** Vista frontal: relleno interior del recipiente (detrás del agua, hasta el borde negro). */
   function frontalTankInner(x, y, w, h, rimIn) {
-    const T = tokens();
-    const inner = T.tankInner || '#f1f5f9';
     const ri = rimIn != null ? rimIn : 1.2;
     return (
       '<rect class="srf-frontal-tank__inner" x="' +
@@ -75,9 +92,7 @@
       f1(w - ri * 2) +
       '" height="' +
       f1(h - ri) +
-      '" fill="' +
-      inner +
-      '" stroke="none" aria-hidden="true"/>'
+      '" fill="url(#srfTankInner)" stroke="none" aria-hidden="true"/>'
     );
   }
 
@@ -111,6 +126,64 @@
     );
   }
 
+  /** Brida superior del estanque (la balsa actúa como tapadera). */
+  function frontalTankLidSeat(x, y, w) {
+    const T = tokens();
+    return (
+      '<g class="srf-frontal-lid-seat" aria-hidden="true">' +
+      '<line x1="' +
+      f1(x + 2) +
+      '" y1="' +
+      f1(y) +
+      '" x2="' +
+      f1(x + w - 2) +
+      '" y2="' +
+      f1(y) +
+      '" stroke="' +
+      (T.tank || '#475569') +
+      '" stroke-width="2.2" stroke-linecap="round"/>' +
+      '<line x1="' +
+      f1(x + 2) +
+      '" y1="' +
+      f1(y + 2.5) +
+      '" x2="' +
+      f1(x + w - 2) +
+      '" y2="' +
+      f1(y + 2.5) +
+      '" stroke="#94a3b8" stroke-width="0.9" stroke-linecap="round" opacity="0.85"/>' +
+      '</g>'
+    );
+  }
+
+  /** Balsa flotante (tapadera) en vista frontal. */
+  function frontalRaftLid(x, y, w, h, stroke) {
+    const st = stroke || '#0284c7';
+    return (
+      '<g class="srf-frontal-raft-lid" aria-hidden="true">' +
+      '<rect x="' +
+      f1(x) +
+      '" y="' +
+      f1(y) +
+      '" width="' +
+      f1(w) +
+      '" height="' +
+      f1(h) +
+      '" rx="4" fill="url(#srfRaft)" stroke="' +
+      st +
+      '" stroke-width="1.4" filter="url(#srfSoftShadow)"/>' +
+      '<line x1="' +
+      f1(x + 4) +
+      '" y1="' +
+      f1(y + 3) +
+      '" x2="' +
+      f1(x + w - 4) +
+      '" y2="' +
+      f1(y + 3) +
+      '" stroke="#ffffff" stroke-width="1" stroke-linecap="round" opacity="0.65"/>' +
+      '</g>'
+    );
+  }
+
   function sectionLabel(x, y, text) {
     const SP = sp();
     if (SP) return SP.sectionLabel(x, y, text);
@@ -133,8 +206,11 @@
     tokens: tokens,
     header: header,
     sectionPanel: sectionPanel,
+    sectionPanelTinted: sectionPanelTinted,
     sectionLabel: sectionLabel,
     frontalTankInner: frontalTankInner,
     frontalTankRim: frontalTankRim,
+    frontalTankLidSeat: frontalTankLidSeat,
+    frontalRaftLid: frontalRaftLid,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -106,6 +106,110 @@ function dwcSvgMcHosePlan(hx, hy, tx, ty) {
   );
 }
 
+/** Eje vertical de aire por columna (misma idea que rdwcPlanAirColumnSpineX). */
+function dwcSvgMcAirColumnSpineX(ci, nCols, colCenters, cubeHalf, airPumpX) {
+  if (nCols <= 1) {
+    const bx = colCenters[0];
+    if (airPumpX >= bx + 1) return bx - cubeHalf * 1.18;
+    return bx + cubeHalf * 1.18;
+  }
+  if (ci === 0) return colCenters[0] - cubeHalf * 1.12;
+  if (ci === nCols - 1) return colCenters[nCols - 1] + cubeHalf * 1.12;
+  return (colCenters[ci - 1] + colCenters[ci]) / 2;
+}
+
+/** Mangueras de aire cenital multiválvula: bomba → raíl → columna → cada cubo (estilo RDWC). */
+function dwcSvgMcAirPlanRoutes(positions, dist, pumpOutX, pumpOutY, airRailY, cubeHalf, ta, SC) {
+  if (!positions || !positions.length || !dist) return '';
+  const sorted = positions.slice().sort((a, b) => a.cx - b.cx || a.col - b.col);
+  let s = '';
+  const hoseSeg = (d, sw) =>
+    SC
+      ? SC.flowPath(d, ta, sw)
+      : `<path d="${d}" fill="none" stroke="#f5f5f5" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>` +
+        `<path d="${d}" fill="none" stroke="#90a4ae" stroke-width="${(sw - 0.6).toFixed(1)}" stroke-linecap="round" opacity="0.4"/>`;
+
+  s += hoseSeg(
+    `M ${pumpOutX.toFixed(1)} ${pumpOutY.toFixed(1)} L ${pumpOutX.toFixed(1)} ${airRailY.toFixed(1)}`,
+    2.6
+  );
+  const railX0 = sorted[0].cx;
+  const railX1 = sorted[sorted.length - 1].cx;
+  if (railX1 - railX0 > 2) {
+    s += hoseSeg(
+      `M ${railX0.toFixed(1)} ${airRailY.toFixed(1)} L ${railX1.toFixed(1)} ${airRailY.toFixed(1)}`,
+      2.4
+    );
+  }
+
+  if (dist.sites <= 1) {
+    const P = sorted[0];
+    const entryY = P.cy + cubeHalf * 0.42;
+    const offX = P.cx - cubeHalf * 0.18;
+    s += hoseSeg(
+      `M ${P.cx.toFixed(1)} ${airRailY.toFixed(1)} L ${offX.toFixed(1)} ${airRailY.toFixed(1)} L ${offX.toFixed(1)} ${entryY.toFixed(1)} L ${P.cx.toFixed(1)} ${entryY.toFixed(1)}`,
+      2
+    );
+    return s;
+  }
+
+  const byCol = {};
+  for (const p of positions) {
+    if (!byCol[p.col]) byCol[p.col] = [];
+    byCol[p.col].push(p);
+  }
+  const colKeys = Object.keys(byCol)
+    .map(Number)
+    .sort((a, b) => a - b);
+  const colCenters = colKeys.map((ck) => byCol[ck][0].cx);
+  const nCols = colKeys.length;
+
+  for (let ci = 0; ci < colKeys.length; ci++) {
+    const ck = colKeys[ci];
+    const list = byCol[ck].sort((a, b) => a.row - b.row);
+    if (!list.length) continue;
+    const spineX = dwcSvgMcAirColumnSpineX(ci, nCols, colCenters, cubeHalf, pumpOutX);
+    const spineSign = spineX < list[0].cx ? -1 : 1;
+    const lastY = list[list.length - 1].cy + cubeHalf * 0.42;
+    if (Math.abs(spineX - pumpOutX) > 2) {
+      s += hoseSeg(
+        `M ${pumpOutX.toFixed(1)} ${airRailY.toFixed(1)} L ${spineX.toFixed(1)} ${airRailY.toFixed(1)}`,
+        2.2
+      );
+    }
+    s += hoseSeg(
+      `M ${spineX.toFixed(1)} ${airRailY.toFixed(1)} L ${spineX.toFixed(1)} ${lastY.toFixed(1)}`,
+      2.1
+    );
+    for (let i = 0; i < list.length; i++) {
+      const P = list[i];
+      const entryX = P.cx + spineSign * cubeHalf * 0.42;
+      const entryY = P.cy + cubeHalf * 0.42;
+      s += hoseSeg(
+        `M ${spineX.toFixed(1)} ${entryY.toFixed(1)} L ${entryX.toFixed(1)} ${entryY.toFixed(1)}`,
+        1.9
+      );
+    }
+  }
+  return s;
+}
+
+/** Cubo cuadrado vista cenital (tapa + hueco maceta cuadrado). */
+function dwcSvgMcBucketPlan(bx, by, size, SC) {
+  const rx = Math.max(4, size * 0.1);
+  const inner = Math.max(8, size - 10);
+  const hole = Math.max(14, inner * 0.42);
+  const hx = bx + (size - hole) / 2;
+  const hy = by + (size - hole) / 2;
+  let o =
+    SC && SC.mcCuboPlan3d
+      ? SC.mcCuboPlan3d(bx, by, size)
+      : `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${size}" height="${size}" rx="${rx}" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.5" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.08))"/>` +
+        `<rect x="${(bx + 5).toFixed(1)}" y="${(by + 5).toFixed(1)}" width="${inner.toFixed(1)}" height="${inner.toFixed(1)}" rx="${Math.max(3, rx - 2)}" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
+  o += `<rect x="${hx.toFixed(1)}" y="${hy.toFixed(1)}" width="${hole}" height="${hole}" rx="3" fill="#1e293b" stroke="#0f172a" stroke-width="1" opacity="0.88"/>`;
+  return o;
+}
+
 /** Distribuidor / multiválvula (vista cenital). */
 function dwcSvgMcManifoldHub(cx, cy) {
   return (
@@ -371,25 +475,35 @@ function generarSVGDwc() {
   let mcCols = 1;
   let mcRows = 1;
   let mcColsPerRow = [1];
+  let mcLayoutDist = null;
+  let mcPositions = null;
   let mcCubeSz = 56;
   let mcGapPlan = 16;
   let mcGapFront = 14;
+  let mcColStep = 90;
+  let mcRowStep = 78;
   if (esMulticubo) {
-    const mcGrid =
+    mcLayoutDist =
       typeof hcDistribuirCubosMultivalvula === 'function'
         ? hcDistribuirCubosMultivalvula(S_mc)
         : typeof hcDistribuirFilasColumnas === 'function'
           ? (() => {
               const g = hcDistribuirFilasColumnas(S_mc, 6);
-              return { rows: g.rows, cols: g.cols, colsPerRow: [g.cols] };
+              return { sites: S_mc, rows: g.rows, cols: g.cols, colsPerRow: [g.cols], grid: null };
             })()
-          : { cols: S_mc <= 6 ? S_mc : 6, rows: S_mc <= 6 ? 1 : 2, colsPerRow: [Math.ceil(S_mc / 2), Math.floor(S_mc / 2)] };
-    mcCols = mcGrid.cols;
-    mcRows = mcGrid.rows;
-    mcColsPerRow = mcGrid.colsPerRow || [mcCols];
+          : { sites: S_mc, cols: S_mc <= 6 ? S_mc : 6, rows: S_mc <= 6 ? 1 : 2, colsPerRow: [Math.ceil(S_mc / 2), Math.floor(S_mc / 2)], grid: null };
+    mcCols = mcLayoutDist.cols;
+    mcRows = mcLayoutDist.rows;
+    mcColsPerRow = mcLayoutDist.colsPerRow || [mcCols];
     mcCubeSz = S_mc <= 4 ? 78 : S_mc <= 6 ? 70 : 58;
-    mcGapPlan = S_mc <= 4 ? 20 : 14;
+    mcGapPlan = S_mc <= 4 ? 18 : 14;
     mcGapFront = S_mc <= 4 ? 18 : 12;
+    const mcSteps =
+      typeof hcDwcMcColRowSteps === 'function' ? hcDwcMcColRowSteps(mcCubeSz, mcGapPlan) : null;
+    if (mcSteps) {
+      mcColStep = mcSteps.colStep;
+      mcRowStep = mcSteps.rowStep;
+    }
     if (typeof dwcLitrosUtilesPorCuboMultivalvula === 'function') {
       volPerCuboMc = dwcLitrosUtilesPorCuboMultivalvula(cfg);
     }
@@ -425,31 +539,40 @@ function generarSVGDwc() {
           volOk: '#0284c7',
         };
 
-  const W = esMulticubo
-    ? Math.min(620, Math.max(480, 72 + mcCols * (mcCubeSz + mcGapPlan)))
-    : 460;
-  const H = esMulticubo ? 760 : esCilindricoDwc ? 620 : 548;
-
-  /* Mismo ancho exterior para tapa (cenital) y depósito (frente), alineados. */
-  const planPad = esMulticubo ? 12 : 10;
   const dep = dwcSvgDepDimsDesdeCfg(cfg);
   const cilAspect = esCilindricoDwc ? dwcCilindricoAspectoDesdeCfg(cfg, dep) : null;
+  let W = esMulticubo ? 520 : 460;
+  const planPad = esMulticubo ? 12 : 10;
+  const planTop = esMulticubo ? 48 : 54;
+  if (esMulticubo && typeof hcDwcMcComputePositions === 'function') {
+    const wProbe = Math.min(
+      620,
+      Math.max(480, 88 + Math.max(0, mcCols - 1) * mcColStep + mcCubeSz * 2)
+    );
+    mcPositions = hcDwcMcComputePositions(mcLayoutDist, wProbe, planTop, mcCubeSz, mcGapPlan);
+    W = Math.min(
+      620,
+      Math.max(480, 88 + Math.max(0, mcCols - 1) * mcColStep + mcCubeSz * 2)
+    );
+    mcPositions = hcDwcMcComputePositions(mcLayoutDist, W, planTop, mcCubeSz, mcGapPlan);
+  }
+  const H = esMulticubo ? 760 : esCilindricoDwc ? 620 : 548;
+
   const blockW = esMulticubo
-    ? mcCols * mcCubeSz + Math.max(0, mcCols - 1) * mcGapPlan + planPad * 2
+    ? Math.max(
+        mcCubeSz + planPad * 2,
+        Math.max(0, mcCols - 1) * mcColStep + mcCubeSz + planPad * 2
+      )
     : esCilindricoDwc && cilAspect
       ? Math.min(280, Math.max(200, Math.round(170 + cilAspect.diamCm * 0.85)))
       : Math.min(320, Math.max(228, 28 + cDraw * 30));
   const planLeft = (W - blockW) / 2;
   const planW = blockW;
-  const mcAirBetweenRowsH = esMulticubo && mcRows > 1 ? 52 : 0;
-  const planTop = esMulticubo ? 44 : 54;
-  const mcPlanFloorH = esMulticubo && mcRows <= 1 ? 40 : 0;
+  const mcAirBandH = esMulticubo ? (mcRows > 1 ? 44 : 48) : 0;
   const planH = esMulticubo
-    ? mcRows * mcCubeSz +
-      Math.max(0, mcRows - 1) * mcGapPlan +
-      planPad * 2 +
-      mcAirBetweenRowsH +
-      mcPlanFloorH
+    ? mcPositions
+      ? mcPositions.gridBottom - planTop + mcAirBandH + 8
+      : mcRows * mcCubeSz + Math.max(0, mcRows - 1) * mcRowStep + planPad * 2 + mcAirBandH
     : esCilindricoDwc
       ? planW
       : Math.min(200, 28 + nDraw * 30);
@@ -466,7 +589,7 @@ function generarSVGDwc() {
     Rpot = dwcSvgCilindricoMacetaR(planW, planPad, cfg);
   }
 
-  function macetaSvg(n, c, cx, cy, r, topView) {
+  function macetaSvg(n, c, cx, cy, r, topView, squarePot) {
     const dat =
       state.torre && state.torre[n] && state.torre[n][c]
         ? state.torre[n][c]
@@ -519,6 +642,9 @@ function generarSVGDwc() {
     if (!topView) {
       o += `<ellipse cx="${cx.toFixed(1)}" cy="${(cy + 4).toFixed(1)}" rx="${(r * 1.08).toFixed(1)}" ry="${(r * 0.55).toFixed(1)}"
         fill="rgba(15,23,42,0.07)" opacity="0.85"/>`;
+    } else if (squarePot && topView) {
+      const sq = (r + 2) * 1.42;
+      o += `<rect x="${(cx - sq / 2).toFixed(1)}" y="${(cy - sq / 2).toFixed(1)}" width="${sq.toFixed(1)}" height="${sq.toFixed(1)}" rx="3" fill="none" stroke="#cbd5e1" stroke-width="1.1" opacity="0.9"/>`;
     } else {
       o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 2.2).toFixed(1)}" fill="none" stroke="#cbd5e1" stroke-width="1.1" opacity="0.9"/>`;
     }
@@ -526,19 +652,38 @@ function generarSVGDwc() {
       o += SC.plantAccent(cx, cy, r, true);
     }
     o += `<g data-n="${n}" data-c="${c}" class="hc-cesta hc-cesta--interactive dwc-maceta hc-cesta-pe-all" role="button" tabindex="0" aria-label="${ariaCesta}">`;
-    o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="${topView ? 2 : 2.2}"/>`;
+    if (squarePot && topView) {
+      const pr = r * 0.92;
+      o += `<rect x="${(cx - pr).toFixed(1)}" y="${(cy - pr).toFixed(1)}" width="${(pr * 2).toFixed(1)}" height="${(pr * 2).toFixed(1)}" rx="4" fill="${fill}" stroke="${stroke}" stroke-width="2"/>`;
+    } else {
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="${fill}" stroke="${stroke}" stroke-width="${topView ? 2 : 2.2}"/>`;
+    }
     if (isMultiSel) {
-      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 5).toFixed(1)}"
-        fill="none" stroke="#f59e0b" stroke-width="2.6" stroke-dasharray="4 3" opacity="0.95"/>`;
+      if (squarePot && topView) {
+        const pr2 = r + 5;
+        o += `<rect x="${(cx - pr2).toFixed(1)}" y="${(cy - pr2).toFixed(1)}" width="${(pr2 * 2).toFixed(1)}" height="${(pr2 * 2).toFixed(1)}" rx="5" fill="none" stroke="#f59e0b" stroke-width="2.6" stroke-dasharray="4 3" opacity="0.95"/>`;
+      } else {
+        o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 5).toFixed(1)}"
+          fill="none" stroke="#f59e0b" stroke-width="2.6" stroke-dasharray="4 3" opacity="0.95"/>`;
+      }
     }
     if (isSelected) {
-      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 4).toFixed(1)}"
-        fill="none" stroke="#22c55e" stroke-width="2.5" opacity="0.9"/>`;
-      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 7.5).toFixed(1)}"
-        fill="none" stroke="rgba(34,197,94,0.22)" stroke-width="5" opacity="0.85"/>`;
+      if (squarePot && topView) {
+        const pr3 = r + 4;
+        o += `<rect x="${(cx - pr3).toFixed(1)}" y="${(cy - pr3).toFixed(1)}" width="${(pr3 * 2).toFixed(1)}" height="${(pr3 * 2).toFixed(1)}" rx="5" fill="none" stroke="#22c55e" stroke-width="2.5" opacity="0.9"/>`;
+      } else {
+        o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 4).toFixed(1)}"
+          fill="none" stroke="#22c55e" stroke-width="2.5" opacity="0.9"/>`;
+        o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r + 7.5).toFixed(1)}"
+          fill="none" stroke="rgba(34,197,94,0.22)" stroke-width="5" opacity="0.85"/>`;
+      }
     }
     if (ultimaFoto?.data) {
-      o += `<defs><clipPath id="${clipId}"><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r - 1.5).toFixed(1)}"/></clipPath></defs>`;
+      if (squarePot && topView) {
+        o += `<defs><clipPath id="${clipId}"><rect x="${(cx - r + 1.5).toFixed(1)}" y="${(cy - r + 1.5).toFixed(1)}" width="${((r - 1.5) * 2).toFixed(1)}" height="${((r - 1.5) * 2).toFixed(1)}" rx="3"/></clipPath></defs>`;
+      } else {
+        o += `<defs><clipPath id="${clipId}"><circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r - 1.5).toFixed(1)}"/></clipPath></defs>`;
+      }
       o += `<image href="${ultimaFoto.data}" x="${(cx - r).toFixed(1)}" y="${(cy - r).toFixed(1)}"
         width="${(r * 2).toFixed(1)}" height="${(r * 2).toFixed(1)}" preserveAspectRatio="xMidYMid slice"
         clip-path="url(#${clipId})" opacity="0.93"></image>`;
@@ -592,8 +737,14 @@ function generarSVGDwc() {
         (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches))
         ? 1.95
         : 1.55;
-    o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r * hitMult).toFixed(1)}"
-      fill="rgba(0,0,0,0)" stroke="none" pointer-events="all" class="hc-cesta-hit"/>`;
+    if (squarePot && topView) {
+      const hr = r * hitMult;
+      o += `<rect x="${(cx - hr).toFixed(1)}" y="${(cy - hr).toFixed(1)}" width="${(hr * 2).toFixed(1)}" height="${(hr * 2).toFixed(1)}" rx="6"
+        fill="rgba(0,0,0,0)" stroke="none" pointer-events="all" class="hc-cesta-hit"/>`;
+    } else {
+      o += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(r * hitMult).toFixed(1)}"
+        fill="rgba(0,0,0,0)" stroke="none" pointer-events="all" class="hc-cesta-hit"/>`;
+    }
     o += `</g>`;
     return o;
   }
@@ -629,47 +780,54 @@ function generarSVGDwc() {
 
   if (esMulticubo) {
     const S = S_mc;
-    const fCols = mcCols;
     const fRows = mcRows;
     const gapMc = mcGapFront;
-    const airGapBetweenRows = fRows > 1 ? 40 : 0;
-    const pumpCx = tankX + tankW / 2;
-    const yGrid0 = tankStartY + 6;
-    const rowPadX = 10;
-    const miniW = Math.min(82, Math.max(44, (tankW - 2 * rowPadX - (fCols - 1) * gapMc) / fCols));
+    const airGapBetweenRows = fRows > 1 ? 38 : 0;
+    const pumpCx = W / 2;
+    const yGrid0 = tankStartY + 8;
+    const miniW = Math.min(82, Math.max(48, mcCubeSz * 0.92));
     const miniH = Math.round(miniW * 1.28);
-    const rowTotalW = fCols * miniW + (fCols - 1) * gapMc;
-    const row0X = tankX + (tankW - rowTotalW) / 2;
-    function mcFrontRowY(fr) {
+    const frontLayout =
+      mcPositions ||
+      (typeof hcDwcMcComputePositions === 'function'
+        ? hcDwcMcComputePositions(mcLayoutDist, W, tankStartY, miniW, gapMc)
+        : null);
+    const frontPos = frontLayout ? frontLayout.positions : [];
+    const rowSpan = miniH + gapMc + (fRows > 1 ? airGapBetweenRows / Math.max(1, fRows - 1) : 0);
+    function mcFrontYForRow(fr) {
+      if (mcPositions && mcPositions.positions.length) {
+        const rowPts = mcPositions.positions.filter((p) => p.row === fr);
+        if (rowPts.length) {
+          return yGrid0 + (rowPts[0].by - mcPositions.gridTop);
+        }
+      }
       let y = yGrid0 + fr * (miniH + gapMc + 8);
       if (fRows > 1 && fr >= 1) y += airGapBetweenRows;
       return y;
     }
-    const gridBottom = mcFrontRowY(fRows - 1) + miniH;
-    const row0Bottom = mcFrontRowY(0) + miniH;
-    const pumpY =
-      fRows > 1 ? row0Bottom + airGapBetweenRows / 2 - 20 : gridBottom + 16;
-    const floorY = fRows > 1 ? gridBottom + 10 : gridBottom + 16;
-    const manifoldY =
-      fRows > 1 ? row0Bottom + airGapBetweenRows / 2 - 6 : gridBottom + 10;
+    let gridBottom = yGrid0 + fRows * rowSpan;
+    if (frontPos.length) {
+      const maxRow = Math.max(...frontPos.map((p) => p.row));
+      gridBottom = mcFrontYForRow(maxRow) + miniH;
+    }
+    const row0Bottom = mcFrontYForRow(0) + miniH;
+    const pumpY = fRows > 1 ? row0Bottom + airGapBetweenRows / 2 - 20 : gridBottom + 14;
+    const floorY = fRows > 1 ? gridBottom + 8 : gridBottom + 14;
+    const airRailY = fRows > 1 ? row0Bottom + airGapBetweenRows / 2 - 4 : gridBottom + 6;
     let cuboSvg = '';
     let hoseSvg = '';
     dwcMcAirPts = [];
     const pumpMc = dwcSvgAirPumpExternal(pumpCx - 27, pumpY, 1);
-    const pumpOutY = pumpMc.outlets[0] ? pumpMc.outlets[0].y : pumpY + 14;
+    const pumpOut = pumpMc.outlets[0] || { x: pumpCx, y: pumpY + 14 };
     for (let idx = 0; idx < S; idx++) {
+      const P = frontPos[idx];
       const slot =
-        typeof hcMultivalvulaSlotDesdeIdx === 'function'
-          ? hcMultivalvulaSlotDesdeIdx(idx, { rows: fRows, cols: fCols, colsPerRow: mcColsPerRow })
-          : { row: Math.floor(idx / fCols), col: idx % fCols, colsInRow: fCols };
-      const fr = slot.row;
-      const fc = slot.col;
-      const rowInnerX =
-        typeof hcMultivalvulaRowInnerX === 'function'
-          ? hcMultivalvulaRowInnerX(row0X, slot.colsInRow, fCols, miniW, gapMc)
-          : row0X;
-      const x = rowInnerX + fc * (miniW + gapMc);
-      const y = mcFrontRowY(fr);
+        P ||
+        (typeof hcMultivalvulaSlotDesdeIdx === 'function'
+          ? hcMultivalvulaSlotDesdeIdx(idx, mcLayoutDist || { rows: fRows, cols: mcCols, colsPerRow: mcColsPerRow })
+          : { row: Math.floor(idx / mcCols), col: idx % mcCols, colsInRow: mcCols });
+      const x = P ? P.cx - miniW / 2 : tankX + (tankW - miniW) / 2;
+      const y = mcFrontYForRow(slot.row);
       const cubo =
         SC && SC.mcCuboFront3d
           ? SC.mcCuboFront3d(x, y, miniW, miniH, volPctAguaDibujo, tieneDifusor, Dw, idx, volPerCuboMc, ta)
@@ -677,31 +835,46 @@ function generarSVGDwc() {
       cuboSvg += cubo.svg;
       if (tieneDifusor) {
         dwcMcAirPts.push({ cx: cubo.cx, stoneY: cubo.stoneY, waterTop: cubo.waterTop });
-        const entryY = cubo.iy - 2;
-        const aisleX = dwcSvgMcAisleX(fc, x, fCols, miniW, gapMc, row0X);
+      }
+    }
+    if (tieneDifusor && frontPos.length) {
+      const railFrontY = fRows > 1 ? row0Bottom + airGapBetweenRows / 2 - 4 : yGrid0 - 4;
+      hoseSvg += dwcSvgMcAirPlanRoutes(
+        frontPos.map((p) => ({ cx: p.cx, cy: mcFrontYForRow(p.row) + miniH / 2, col: p.col, row: p.row })),
+        mcLayoutDist || { sites: S, rows: fRows },
+        pumpOut.x,
+        pumpOut.y,
+        railFrontY,
+        miniW / 2,
+        ta,
+        SC
+      );
+    } else if (tieneDifusor) {
+      for (let idx = 0; idx < S; idx++) {
+        const slot = hcMultivalvulaSlotDesdeIdx(idx, mcLayoutDist);
+        const y = mcFrontYForRow(slot.row);
+        const x = tankX + tankW / 2 - miniW / 2;
+        const cuboCx = x + miniW / 2;
         const hoseD = dwcSvgMcHoseFrontRoute(
           pumpCx,
-          pumpOutY,
-          manifoldY,
-          aisleX,
+          pumpOut.y,
+          airRailY,
+          cuboCx,
           y,
           miniH,
-          cubo.cx,
-          entryY,
-          cubo.stoneY,
-          fr,
+          cuboCx,
+          y + 8,
+          y + miniH - 6,
+          slot.row,
           fRows
         );
         hoseSvg += SC
           ? SC.flowPath(hoseD, ta, 2)
-          : `<path d="${hoseD}" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>` +
-            `<path d="${hoseD}" fill="none" stroke="#90a4ae" stroke-width="1" stroke-linecap="round" opacity="0.35"/>`;
+          : `<path d="${hoseD}" fill="none" stroke="#eceff1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>`;
       }
     }
     hoseSvg +=
-      `<line x1="${(tankX + 8).toFixed(1)}" y1="${(floorY + pumpMc.h + 10).toFixed(1)}" x2="${(tankX + tankW - 8).toFixed(1)}" y2="${(floorY + pumpMc.h + 10).toFixed(1)}" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.7"/>` +
-      `<line x1="${row0X.toFixed(1)}" y1="${manifoldY.toFixed(1)}" x2="${(row0X + rowTotalW).toFixed(1)}" y2="${manifoldY.toFixed(1)}" stroke="#cfd8dc" stroke-width="3.5" stroke-linecap="round" opacity="0.95"/>` +
-      dwcSvgMcManifoldHub(pumpCx, manifoldY);
+      `<line x1="${(tankX + 8).toFixed(1)}" y1="${(floorY + pumpMc.h + 8).toFixed(1)}" x2="${(tankX + tankW - 8).toFixed(1)}" y2="${(floorY + pumpMc.h + 8).toFixed(1)}" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.65"/>`;
     innerBottom = gridBottom + 6;
     tankGraphicBottom = floorY + pumpMc.h + 28;
     clipPathInner = `<rect x="${tankX}" y="${tankStartY}" width="${tankW}" height="${(tankGraphicBottom - tankStartY).toFixed(1)}" rx="2"/>`;
@@ -800,11 +973,18 @@ function generarSVGDwc() {
 
   let s = '';
   const volEtiquetaTxt =
-    typeof volEtiqueta === 'number' && Number.isFinite(volEtiqueta)
-      ? typeof hcDiagramFormatVolL === 'function'
-        ? hcDiagramFormatVolL(volEtiqueta)
-        : volEtiqueta + ' L'
-      : '—';
+    esMulticubo && volPerCuboMc != null && Number.isFinite(volPerCuboMc)
+      ? (typeof hcDiagramFormatVolL === 'function'
+          ? hcDiagramFormatVolL(volPerCuboMc)
+          : volPerCuboMc + ' L') +
+        '/cubo · ' +
+        S_mc +
+        ' cubos'
+      : typeof volEtiqueta === 'number' && Number.isFinite(volEtiqueta)
+        ? typeof hcDiagramFormatVolL === 'function'
+          ? hcDiagramFormatVolL(volEtiqueta)
+          : volEtiqueta + ' L'
+        : '—';
   let diagramViewLabels = '';
   if (typeof hcDiagramViewLabelSvg === 'function') {
     diagramViewLabels +=
@@ -861,77 +1041,66 @@ function generarSVGDwc() {
 
   let dwcLidCylNoCabenOverlay = '';
   if (esMulticubo) {
-    const hubCx = planLeft + planW / 2;
-    function mcPlanRowY(row) {
-      let y = planInnerY + row * (mcCubeSz + mcGapPlan);
-      if (mcRows > 1 && row >= 1) y += mcAirBetweenRowsH;
-      return y;
+    if (!mcPositions && typeof hcDwcMcComputePositions === 'function') {
+      mcPositions = hcDwcMcComputePositions(mcLayoutDist, W, planTop, mcCubeSz, mcGapPlan);
     }
-    const gridPlanBottom = mcPlanRowY(mcRows - 1) + mcCubeSz;
-    const floorTopY = gridPlanBottom + (mcRows > 1 ? 8 : 12);
-    const hubCy =
-      mcRows > 1
-        ? mcPlanRowY(0) + mcCubeSz + mcAirBetweenRowsH / 2
-        : floorTopY + 28;
-    const pumpPlanY = hubCy - 14;
+    const planPts = mcPositions ? mcPositions.positions : [];
+    const hubCx = mcPositions ? mcPositions.cx : planLeft + planW / 2;
+    const gridPlanBottom = mcPositions ? mcPositions.gridBottom : planTop + planH - mcAirBandH;
+    let hubCy = gridPlanBottom + 18;
+    if (mcRows > 1 && planPts.length > 1) {
+      const r0 = planPts.find((p) => p.row === 0);
+      const r1 = planPts.find((p) => p.row === 1);
+      if (r0 && r1) hubCy = (r0.cy + r1.cy) / 2;
+    }
+    const airRailY = mcRows > 1 ? hubCy : gridPlanBottom + 10;
+    const pumpPlanY = airRailY + (mcRows > 1 ? 22 : 14);
     let cubesPlanSvg = '';
     let hosesPlanSvg = '';
     const mcPlanTargets = [];
     for (let idx = 0; idx < S_mc; idx++) {
-      const slot =
-        typeof hcMultivalvulaSlotDesdeIdx === 'function'
-          ? hcMultivalvulaSlotDesdeIdx(idx, { rows: mcRows, cols: mcCols, colsPerRow: mcColsPerRow })
-          : { row: Math.floor(idx / mcCols), col: idx % mcCols, colsInRow: mcCols };
-      const row = slot.row;
-      const col = slot.col;
-      const rowInnerX =
-        typeof hcMultivalvulaRowInnerX === 'function'
-          ? hcMultivalvulaRowInnerX(planInnerX, slot.colsInRow, mcCols, mcCubeSz, mcGapPlan)
-          : planInnerX;
-      const bx = rowInnerX + col * (mcCubeSz + mcGapPlan);
-      const by = mcPlanRowY(row);
-      const cx = bx + mcCubeSz / 2;
-      const cy = by + mcCubeSz / 2;
+      const P = planPts[idx];
+      const bx = P ? P.bx : planInnerX;
+      const by = P ? P.by : planInnerY;
+      const cx = P ? P.cx : bx + mcCubeSz / 2;
+      const cy = P ? P.cy : by + mcCubeSz / 2;
       const rPot = Math.max(16, Math.min(28, mcCubeSz * 0.4));
-      mcPlanTargets.push({ cx, cy, row, col, bx, by });
-      cubesPlanSvg += SC && SC.mcCuboPlan3d
-        ? SC.mcCuboPlan3d(bx, by, mcCubeSz)
-        : `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${mcCubeSz}" height="${mcCubeSz}" rx="11" fill="url(#dwcLidTop)" stroke="#64748b" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.07))"/>` +
-          `<rect x="${(bx + 5).toFixed(1)}" y="${(by + 5).toFixed(1)}" width="${(mcCubeSz - 10).toFixed(1)}" height="${(mcCubeSz - 10).toFixed(1)}" rx="7" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>`;
-      cubesPlanSvg += macetaSvg(0, idx, cx, cy, rPot, true);
-    }
-    if (tieneDifusor) {
-      for (const t of mcPlanTargets) {
-        const hoseD = dwcSvgMcHosePlanRoute(
-          hubCx,
-          hubCy,
-          t.bx,
-          t.by,
-          t.cx,
-          t.cy,
-          t.row,
-          mcRows,
-          t.col,
-          mcCols,
-          mcCubeSz,
-          mcGapPlan,
-          planInnerX
-        );
-        hosesPlanSvg += SC
-          ? SC.flowPath(hoseD, ta, 1.8)
-          : `<path d="${hoseD}" fill="none" stroke="#f5f5f5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>` +
-            `<path d="${hoseD}" fill="none" stroke="#90a4ae" stroke-width="1.1" stroke-linecap="round" opacity="0.4"/>`;
-      }
+      mcPlanTargets.push({ cx, cy, row: P ? P.row : 0, col: P ? P.col : idx, bx, by });
+      cubesPlanSvg += dwcSvgMcBucketPlan(bx, by, mcCubeSz, SC);
+      cubesPlanSvg += macetaSvg(0, idx, cx, cy, rPot, true, true);
     }
     const pumpPlan = dwcSvgAirPumpExternal(hubCx - 27, pumpPlanY, 1);
-    const floorPlanY = floorTopY - 4;
+    const pumpOut = pumpPlan.outlets[0] || { x: hubCx, y: pumpPlanY + 14 };
+    if (tieneDifusor && planPts.length) {
+      hosesPlanSvg += dwcSvgMcAirPlanRoutes(
+        planPts,
+        mcLayoutDist || { sites: S_mc, rows: mcRows },
+        pumpOut.x,
+        pumpOut.y,
+        airRailY,
+        mcCubeSz / 2,
+        ta,
+        SC
+      );
+    }
+    if (SC) {
+      s += SC.sectionPanel(planLeft - 10, planTop - 10, planW + 20, planH + 6, 12);
+      s += SC.sectionPanel(tankX - 10, tankStartY - 10, tankW + 20, tankGraphicBottom - tankStartY + 24, 12);
+    }
+    if (mcRows >= 2 && SC && SC.sectionLabel) {
+      const lblY = mcPositions ? mcPositions.gridTop + (mcPositions.gridBottom - mcPositions.gridTop) / 2 : planTop + planH * 0.42;
+      s +=
+        `<text x="20" y="${lblY.toFixed(1)}" font-size="10" font-weight="800" fill="#475569" font-family="Syne,sans-serif" text-anchor="middle" transform="rotate(-90 20,${lblY.toFixed(1)})" pointer-events="none">${mcRows} FILAS</text>`;
+    }
     s +=
-      (SC ? `<ellipse cx="${hubCx.toFixed(1)}" cy="${floorPlanY.toFixed(1)}" rx="${(planInnerW * 0.42).toFixed(1)}" ry="5" fill="rgba(15,23,42,0.06)"/>` : '') +
       pumpPlan.svg +
-      `<line x1="${planInnerX.toFixed(1)}" y1="${floorPlanY.toFixed(1)}" x2="${(planInnerX + planInnerW).toFixed(1)}" y2="${floorPlanY.toFixed(1)}" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 2.5" opacity="0.65"/>` +
-      dwcSvgMcManifoldHub(hubCx, hubCy) +
       hosesPlanSvg +
       cubesPlanSvg;
+    if (volPerCuboMc != null && Number.isFinite(volPerCuboMc)) {
+      s +=
+        `<text x="${hubCx.toFixed(1)}" y="${(pumpPlanY + pumpPlan.h + 14).toFixed(1)}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="8" font-weight="600" fill="#64748b" pointer-events="none">` +
+        `${Math.round(volPerCuboMc * 10) / 10} L/cubo · mezcla en cubo auxiliar si son iguales</text>`;
+    }
   } else {
     if (formaDwc === 'cilindrico') {
       const rimMm = Number(cfg.dwcNetPotRimMm);
@@ -1152,7 +1321,15 @@ function generarSVGDwc() {
         : '#64748b';
   const volBottomY = tankGraphicBottom + 24;
   if (typeof hcDiagramVolLabelSvg === 'function') {
-    s += hcDiagramVolLabelSvg(W / 2, volBottomY, volEtiqueta, { fill: volCol, fontSize: esMulticubo ? 17 : 19, pointerEvents: false });
+    s += hcDiagramVolLabelSvg(
+      W / 2,
+      volBottomY,
+      esMulticubo && volPerCuboMc != null && Number.isFinite(volPerCuboMc) ? volPerCuboMc : volEtiqueta,
+      { fill: volCol, fontSize: esMulticubo ? 17 : 19, pointerEvents: false }
+    );
+    if (esMulticubo && volPerCuboMc != null) {
+      s += `<text x="${W / 2}" y="${volBottomY + 14}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="9" font-weight="600" fill="#64748b" pointer-events="none">por cubo · ${S_mc} cubos</text>`;
+    }
   } else {
     s += `<text x="${W / 2}" y="${volBottomY}" font-family="Syne,sans-serif" font-size="19" font-weight="900" fill="${volCol}" text-anchor="middle">${volEtiquetaTxt}</text>`;
   }

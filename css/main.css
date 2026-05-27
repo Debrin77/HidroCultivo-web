@@ -1872,6 +1872,14 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
 .torre-preview--srf svg.srf-svg-diagram .srf-ext-pump-outside {
   pointer-events: none;
 }
+#torreSVGWrap.torre-svg-canvas svg.srf-svg-diagram--vivid .srf-frontal-water,
+.torre-preview--srf svg.srf-svg-diagram--vivid .srf-frontal-water {
+  filter: saturate(1.1);
+}
+#torreSVGWrap.torre-svg-canvas svg.srf-svg-diagram--vivid .hc-cesta--interactive:hover circle,
+.torre-preview--srf svg.srf-svg-diagram--vivid .hc-cesta--interactive:hover circle {
+  stroke-width: 2.6;
+}
 #torreSVGWrap.torre-svg-canvas svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-bucket,
 .torre-preview--rdwc svg.rdwc-svg-diagram--plan-balanced .rdwc-plan-bucket {
   filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.12));
@@ -15297,8 +15305,8 @@ button.toggle-switch:focus-visible {
 .dwc-setup-mc-hole {
   width: 22px;
   height: 22px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, #64748b, #0f172a 70%);
+  border-radius: 4px;
+  background: linear-gradient(145deg, #64748b, #0f172a 75%);
 }
 .dwc-setup-mc-tank {
   width: 48px;

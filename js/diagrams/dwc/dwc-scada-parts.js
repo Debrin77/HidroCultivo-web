@@ -184,7 +184,7 @@
     const d = Math.min(9, size * 0.12);
     return (
       isoTopFace(bx, by, size, 8, d) +
-      `<rect x="${f1(bx)}" y="${f1(by)}" width="${size}" height="${size}" rx="11" fill="url(#dwcLidTop)" stroke="${T.tank}" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.08))"/>` +
+      `<rect x="${f1(bx)}" y="${f1(by)}" width="${size}" height="${size}" rx="${Math.max(4, size * 0.1).toFixed(1)}" fill="url(#dwcLidTop)" stroke="${T.tank}" stroke-width="1.4" filter="drop-shadow(0 2px 8px rgba(15,23,42,0.08))"/>` +
       `<rect x="${f1(bx + 5)}" y="${f1(by + 5)}" width="${f1(size - 10)}" height="${f1(size - 10)}" rx="7" fill="${T.panelInner}" stroke="#e2e8f0" stroke-width="1"/>`
     );
   }

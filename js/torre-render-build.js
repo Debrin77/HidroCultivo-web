@@ -12,23 +12,125 @@ function hcDistribuirFilasColumnas(total, maxCols) {
   return { rows, cols };
 }
 
+/** Filas RDWC inferidas para DWC multiválvula (misma lógica visual que vista cenital RDWC). */
+function hcInferMcRowsRdwcStyle(total) {
+  const n = Math.max(1, parseInt(String(total != null ? total : 1), 10) || 1);
+  if (n <= 3) return 1;
+  if (n === 4) return 2;
+  if (n <= 5) return 1;
+  if (n <= 12) return 2;
+  if (n <= 18) return 3;
+  return Math.min(4, Math.ceil(n / 6));
+}
+
 /**
- * DWC multiválvula: desde 6 cubos, dos filas equilibradas (3+3, 4+4…) para bomba central y mangueras en columna.
- * Hasta 5 cubos: una sola fila.
+ * DWC multiválvula: reparto de cubos como RDWC (rdwcPlanDistribuir) — filas centradas, 4 cubos → 2×2, etc.
  */
 function hcDistribuirCubosMultivalvula(total) {
   const n = Math.max(1, parseInt(String(total != null ? total : 1), 10) || 1);
+  if (typeof rdwcPlanDistribuir === 'function') {
+    const rows = hcInferMcRowsRdwcStyle(n);
+    const dist = rdwcPlanDistribuir(n, rows);
+    const colsPerRow = [];
+    for (let r = 0; r < dist.rows; r++) {
+      const cells = dist.grid.filter((g) => g.row === r);
+      colsPerRow.push(cells.length ? cells[0].colsInRow : 0);
+    }
+    return {
+      sites: dist.sites,
+      rows: dist.rows,
+      cols: dist.cols,
+      colsPerRow: colsPerRow,
+      grid: dist.grid,
+    };
+  }
   if (n <= 5) {
-    return { rows: 1, cols: n, colsPerRow: [n] };
+    return { sites: n, rows: 1, cols: n, colsPerRow: [n], grid: null };
   }
   const top = Math.ceil(n / 2);
   const bot = Math.floor(n / 2);
-  return { rows: 2, cols: Math.max(top, bot), colsPerRow: [top, bot] };
+  return { sites: n, rows: 2, cols: Math.max(top, bot), colsPerRow: [top, bot], grid: null };
+}
+
+/** Pasos cenital/alzado multiválvula (proporcional al tamaño del cubo). */
+function hcDwcMcColRowSteps(cubeSz, gap) {
+  const sz = Math.max(40, cubeSz || 56);
+  const g = Math.max(0, gap != null ? gap : 14);
+  return {
+    colStep: Math.min(110, Math.max(sz + g, 78)),
+    rowStep: Math.min(95, Math.max(sz + g * 0.85, 72)),
+  };
+}
+
+/**
+ * Posiciones de cubos (centro cx,cy y esquina bx,by) — misma regla que renderRdwcPlan.
+ * @returns {{ positions, colStep, rowStep, cx, gridTop, gridBottom }}
+ */
+function hcDwcMcComputePositions(layout, W, planTop, cubeSz, gap) {
+  const dist = layout || { rows: 1, cols: 1, grid: null, colsPerRow: [1] };
+  const sz = Math.max(40, cubeSz || 56);
+  const half = sz / 2;
+  const steps = hcDwcMcColRowSteps(sz, gap);
+  const colStep = steps.colStep;
+  const rowStep = steps.rowStep;
+  const cx = W / 2;
+  const gridTop = planTop + 10;
+  const positions = [];
+
+  if (dist.grid && dist.grid.length) {
+    for (let gi = 0; gi < dist.grid.length; gi++) {
+      const g = dist.grid[gi];
+      const rowW = (g.colsInRow - 1) * colStep;
+      const rowLeft = cx - rowW / 2;
+      const x = rowLeft + g.col * colStep;
+      const y = gridTop + g.row * rowStep;
+      positions.push({
+        idx: g.idx,
+        row: g.row,
+        col: g.col,
+        colsInRow: g.colsInRow,
+        cx: x,
+        cy: y,
+        bx: x - half,
+        by: y - half,
+      });
+    }
+  } else {
+    const colsPerRow = dist.colsPerRow || [dist.cols || 1];
+    let idx = 0;
+    for (let row = 0; row < (dist.rows || 1) && idx < (dist.sites || positions.length); row++) {
+      const colsInRow = colsPerRow[row] || dist.cols || 1;
+      const rowW = (colsInRow - 1) * colStep;
+      const rowLeft = cx - rowW / 2;
+      for (let col = 0; col < colsInRow && idx < (dist.sites || 999); col++, idx++) {
+        const x = rowLeft + col * colStep;
+        const y = gridTop + row * rowStep;
+        positions.push({
+          idx: idx,
+          row: row,
+          col: col,
+          colsInRow: colsInRow,
+          cx: x,
+          cy: y,
+          bx: x - half,
+          by: y - half,
+        });
+      }
+    }
+  }
+
+  const gridBottom =
+    positions.length > 0 ? positions[positions.length - 1].by + sz : gridTop + sz;
+  return { positions, colStep, rowStep, cx, gridTop, gridBottom, cubeSz: sz };
 }
 
 /** Índice de cubo → fila/columna con reparto multiválvula (filas pueden tener distinto nº de columnas). */
 function hcMultivalvulaSlotDesdeIdx(idx, layout) {
   const i = Math.max(0, parseInt(String(idx != null ? idx : 0), 10) || 0);
+  if (layout && layout.grid && layout.grid[i]) {
+    const g = layout.grid[i];
+    return { row: g.row, col: g.col, colsInRow: g.colsInRow };
+  }
   if (!layout || !layout.colsPerRow || layout.rows === 1) {
     const c = layout && layout.colsPerRow ? layout.colsPerRow[0] : layout ? layout.cols : 1;
     return { row: 0, col: i, colsInRow: c };
@@ -36,7 +138,14 @@ function hcMultivalvulaSlotDesdeIdx(idx, layout) {
   if (i < layout.colsPerRow[0]) {
     return { row: 0, col: i, colsInRow: layout.colsPerRow[0] };
   }
-  return { row: 1, col: i - layout.colsPerRow[0], colsInRow: layout.colsPerRow[1] };
+  let acc = layout.colsPerRow[0];
+  for (let r = 1; r < layout.colsPerRow.length; r++) {
+    if (i < acc + layout.colsPerRow[r]) {
+      return { row: r, col: i - acc, colsInRow: layout.colsPerRow[r] };
+    }
+    acc += layout.colsPerRow[r];
+  }
+  return { row: layout.rows - 1, col: 0, colsInRow: layout.colsPerRow[layout.colsPerRow.length - 1] || 1 };
 }
 
 /** Centra una fila de cubos dentro del ancho de la fila más ancha. */
