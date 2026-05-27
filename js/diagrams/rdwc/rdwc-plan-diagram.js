@@ -1,7 +1,7 @@
 /**
  * Vista cenital RDWC — hidráulica según manual:
- * Impulsión: depósito → eje → tubería de reparto (abajo) → sube a cubos.
- * Retorno: codos 90° cubos superiores → depósito; bajante por columna; cierra por eje al depósito.
+ * Impulsión (amarillo): depósito → bomba. Reparto (rosa): bomba → manifold → cubos inferiores.
+ * Retorno (naranja): cubos → manifold (mismo racor) → eje al depósito; fila superior con codo al depósito.
  */
 (function (global) {
   'use strict';
@@ -131,13 +131,11 @@
       rdwcPlanLegendTube(0, 6, 16, 'impulse') +
       '<text x="20" y="9" font-size="8" fill="#854d0e" font-family="system-ui,sans-serif" font-weight="600">Impulsión (depósito)</text>' +
       rdwcPlanLegendTube(0, 18, 16, 'supply') +
-      '<text x="20" y="21" font-size="8" fill="#9d174d" font-family="system-ui,sans-serif" font-weight="600">Reparto inferior</text>' +
-      rdwcPlanLegendTube(0, 30, 16, 'plant') +
-      '<text x="20" y="33" font-size="8" fill="#854d0e" font-family="system-ui,sans-serif" font-weight="600">Subida a cubos (plantas)</text>' +
-      rdwcPlanLegendTube(0, 42, 16, 'return') +
-      '<text x="20" y="45" font-size="8" fill="#9a3412" font-family="system-ui,sans-serif" font-weight="600">Anillo retorno (cubos↔depósito)</text>' +
-      rdwcPlanLegendTube(0, 54, 16, 'air') +
-      '<text x="20" y="57" font-size="8" fill="#166534" font-family="system-ui,sans-serif" font-weight="600">Aire</text>' +
+      '<text x="20" y="21" font-size="8" fill="#9d174d" font-family="system-ui,sans-serif" font-weight="600">Reparto (bomba → cubos)</text>' +
+      rdwcPlanLegendTube(0, 30, 16, 'return') +
+      '<text x="20" y="33" font-size="8" fill="#9a3412" font-family="system-ui,sans-serif" font-weight="600">Retorno (cubos → depósito)</text>' +
+      rdwcPlanLegendTube(0, 42, 16, 'air') +
+      '<text x="20" y="45" font-size="8" fill="#166534" font-family="system-ui,sans-serif" font-weight="600">Aire</text>' +
       '</g>'
     );
   }
@@ -412,29 +410,24 @@
     return rdwcPlanTubePath(d, 'return', ta, 4.8);
   }
 
-  /** Codo 90°: manifold (rosa) → subida amarilla al cubo. */
-  function rdwcPlanSupplyRiseElbow(P, tapY, ta) {
+  /** Racor inferior del cubo: rosa (manifold → cubo) y naranja (cubo → manifold) en el mismo punto. */
+  function rdwcPlanBucketLowerPort(P, tapY, ta) {
     const br = P.r || 30;
-    const entryY = P.y + br * 0.56;
-    const offX = P.x + br * 0.24;
-    const d =
-      'M ' +
-      f1(P.x) +
-      ' ' +
-      f1(tapY) +
-      ' L ' +
-      f1(offX) +
-      ' ' +
-      f1(tapY) +
-      ' L ' +
-      f1(offX) +
-      ' ' +
-      f1(entryY) +
-      ' L ' +
-      f1(P.x) +
-      ' ' +
-      f1(entryY);
-    return rdwcPlanTubePath(d, 'plant', ta, 4.2);
+    const portY = P.y + br * 0.52;
+    let o = '';
+    o += rdwcPlanTubePath(
+      'M ' + f1(P.x) + ' ' + f1(tapY) + ' L ' + f1(P.x) + ' ' + f1(portY),
+      'supply',
+      ta,
+      4.2
+    );
+    o += rdwcPlanTubePath(
+      'M ' + f1(P.x) + ' ' + f1(portY) + ' L ' + f1(P.x) + ' ' + f1(tapY),
+      'return',
+      ta,
+      4.2
+    );
+    return o;
   }
 
   /** Enlace de retorno en serie entre cubos adyacentes. */
@@ -479,7 +472,7 @@
   }
 
   /**
-   * Impulsión: depósito → eje (amarillo) → reparto inferior (rosa) → codos 90° suben a cubos inferiores.
+   * Impulsión: depósito → bomba (amarillo). Reparto rosa: bomba → manifold → racor en cubos inferiores.
    */
   function rdwcPlanImpulsionSupply(s, cx, tankBottom, pumpY, trunkX, tapY, bottomBuckets, ta) {
     s += rdwcPlanTubePath(
@@ -495,7 +488,6 @@
         '<circle cx="' + f1(cx) + '" cy="' + f1(pumpY) + '" r="10" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>' +
         '<circle cx="' + f1(cx) + '" cy="' + f1(pumpY) + '" r="5" fill="#334155"/>';
     }
-    s += rdwcPlanTubePath('M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY), 'impulse', ta, 5);
     if (!bottomBuckets.length) return s;
     const br = bottomBuckets[0].r || 30;
     const xs = bottomBuckets.map((p) => p.x).sort((a, b) => a - b);
@@ -503,31 +495,28 @@
     const leftX = xs[0] - pad;
     const rightX = xs[xs.length - 1] + pad;
     s += rdwcPlanTubePath(
-      'M ' + f1(leftX) + ' ' + f1(tapY) + ' L ' + f1(rightX) + ' ' + f1(tapY),
+      'M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY) + ' L ' + f1(leftX) + ' ' + f1(tapY),
       'supply',
       ta,
-      5.2
+      5
     );
+    if (rightX - leftX > 2) {
+      s += rdwcPlanTubePath(
+        'M ' + f1(leftX) + ' ' + f1(tapY) + ' L ' + f1(rightX) + ' ' + f1(tapY),
+        'supply',
+        ta,
+        5.2
+      );
+    }
     for (let i = 0; i < bottomBuckets.length; i++) {
-      s += rdwcPlanSupplyRiseElbow(bottomBuckets[i], tapY, ta);
+      s += rdwcPlanBucketLowerPort(bottomBuckets[i], tapY, ta);
     }
     return s;
   }
 
-  /**
-   * Retorno: cubos inferiores → eje (naranja) → sube al depósito (cierra el círculo).
-   */
+  /** Retorno: manifold inferior → eje central naranja → depósito (sin duplicar tramo amarillo). */
   function rdwcPlanReturnClose(s, cx, tankBottom, trunkX, tapY, bottomBuckets, ta) {
     if (!bottomBuckets.length) return s;
-    for (let i = 0; i < bottomBuckets.length; i++) {
-      const P = bottomBuckets[i];
-      s += rdwcPlanTubePath(
-        'M ' + f1(P.x) + ' ' + f1(P.y + P.r * 0.52) + ' L ' + f1(P.x) + ' ' + f1(tapY),
-        'return',
-        ta,
-        4.2
-      );
-    }
     s += rdwcPlanTubePath(
       'M ' + f1(trunkX) + ' ' + f1(tapY) + ' L ' + f1(trunkX) + ' ' + f1(tankBottom + 6),
       'return',
