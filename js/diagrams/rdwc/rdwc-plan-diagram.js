@@ -221,8 +221,8 @@
       onLid: onLid,
       px: px,
       py: py,
-      outX: px,
-      outY: onLid ? py + 14 : py + 10,
+      outX: onLid ? px : px - 14,
+      outY: onLid ? py + 11 : py,
     };
   }
 
@@ -327,18 +327,6 @@
     const py = a.py;
     const lbl = Math.round(lpm) + ' L/min';
     let o = '<g class="rdwc-air-pump" pointer-events="none" aria-hidden="true">';
-    const outY = a.outY;
-    if (a.onLid) {
-      o += rdwcPlanAirTubePath(
-        'M ' + f1(px) + ' ' + f1(outY) + ' L ' + f1(px) + ' ' + f1(tankCy - tankR * 0.18),
-        2.2
-      );
-    } else {
-      o += rdwcPlanAirTubePath(
-        'M ' + f1(cx + tankR * 0.55) + ' ' + f1(tankCy - tankR * 0.3) + ' L ' + f1(px - 10) + ' ' + f1(py),
-        2.2
-      );
-    }
     o +=
       '<rect x="' +
       f1(px - 22) +
@@ -555,190 +543,50 @@
     return s;
   }
 
-  function rdwcPlanAirSpineX(ci, colKeys, colCenters, laneXs, leftLane, rightLane) {
-    if (ci === 0) return leftLane;
-    if (ci === colKeys.length - 1) return rightLane;
-    const bx = colCenters[ci];
-    const leftGap = laneXs[ci];
-    const rightGap = laneXs[ci + 1];
-    return Math.abs(bx - leftGap) <= Math.abs(bx - rightGap) ? leftGap : rightGap;
-  }
-
-  /** 2 filas configuradas pero cubos solo en fila 0 (pareja compacta o un cubo en el marco). */
-  function rdwcPlanAirCompactTopRow(s, positions, byCol, bucketR, tankCy, tankR, gridLeft, gridRight, gridTop, pumpAnchor) {
-    const laneGap = bucketR * 1.68;
-    const airBusY = tankCy + tankR + 10;
-    const airTopY = gridTop - bucketR * 0.3;
-    const airBotY = gridTop + bucketR * 0.55;
-    const leftLane = gridLeft - laneGap;
-    const rightLane = gridRight + laneGap;
-
-    const colKeys = Object.keys(byCol)
-      .map(Number)
-      .sort((a, b) => a - b);
-    const colCenters = colKeys.map((ck) => byCol[ck][0].x);
-    const midLane = colCenters.length >= 2 ? (colCenters[0] + colCenters[1]) / 2 : null;
-
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(pumpAnchor.outX) + ' ' + f1(pumpAnchor.outY) + ' L ' + f1(pumpAnchor.outX) + ' ' + f1(airBusY),
-      2.6
-    );
-    const busJoinX = Math.max(leftLane, Math.min(rightLane, pumpAnchor.outX));
-    if (Math.abs(busJoinX - pumpAnchor.outX) > 1) {
-      s += rdwcPlanAirTubePath(
-        'M ' + f1(pumpAnchor.outX) + ' ' + f1(airBusY) + ' L ' + f1(busJoinX) + ' ' + f1(airBusY),
-        2.4
-      );
-    }
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(leftLane) + ' ' + f1(airBusY) + ' L ' + f1(rightLane) + ' ' + f1(airBusY),
-      2.4
-    );
-
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(leftLane) + ' ' + f1(airBusY) + ' L ' + f1(leftLane) + ' ' + f1(airBotY),
-      2.3
-    );
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(rightLane) + ' ' + f1(airBusY) + ' L ' + f1(rightLane) + ' ' + f1(airBotY),
-      2.3
-    );
-    if (midLane !== null) {
-      s += rdwcPlanAirTubePath(
-        'M ' + f1(midLane) + ' ' + f1(airBusY) + ' L ' + f1(midLane) + ' ' + f1(airBotY),
-        2.3
-      );
-    }
-
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(leftLane) + ' ' + f1(airTopY) + ' L ' + f1(rightLane) + ' ' + f1(airTopY),
-      2.2
-    );
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(leftLane) + ' ' + f1(airBotY) + ' L ' + f1(rightLane) + ' ' + f1(airBotY),
-      2.2
-    );
-
-    const laneXs = [leftLane];
-    if (midLane !== null) laneXs.push(midLane);
-    laneXs.push(rightLane);
-
-    for (let ci = 0; ci < colKeys.length; ci++) {
-      const ck = colKeys[ci];
-      const list = byCol[ck].sort((a, b) => a.row - b.row);
-      if (!list.length) continue;
-      const spineX = rdwcPlanAirSpineX(ci, colKeys, colCenters, laneXs, leftLane, rightLane);
-      const sideSign = spineX < list[0].x ? -1 : 1;
-      for (let i = 0; i < list.length; i++) {
-        const P = list[i];
-        const entryX = P.x + sideSign * bucketR * 0.44;
-        const entryY = P.y + bucketR * 0.5;
-        s += rdwcPlanAirTubePath(
-          'M ' + f1(spineX) + ' ' + f1(airBotY) + ' L ' + f1(spineX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
-          2.1
-        );
-      }
-    }
-    return s;
-  }
-
-  /** Aire: un solo origen (bomba) → colector bajo depósito → bajantes entre columnas → cubos. */
-  function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankCy, tankR, gridLeft, gridRight, gridTop, bottomRowY, pumpAnchor, dist) {
+  /**
+   * Aire: salida bomba → un colector → bajante lateral por columna → rama a cada cubo.
+   * Sin rejilla horizontal extra (evita líneas confusas sobre el diagrama).
+   */
+  function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankCy, tankR, gridLeft, gridRight, gridTop, pumpAnchor, dist) {
     if (!positions.length) return s;
-    const compactTopRow =
-      dist.rows >= 2 && positions.length > 0 && positions.every((p) => p.row === 0);
-    if (compactTopRow) {
-      return rdwcPlanAirCompactTopRow(
-        s,
-        positions,
-        byCol,
-        bucketR,
-        tankCy,
-        tankR,
-        gridLeft,
-        gridRight,
-        gridTop,
-        pumpAnchor
-      );
-    }
-    const laneGap = bucketR * 1.68;
-    const airBusY = tankCy + tankR + 10;
-    const airTopY = gridTop - bucketR * 0.3;
-    const airBotY = bottomRowY + bucketR * 0.55;
+    const compactTop = dist.rows >= 2 && positions.every((p) => p.row === 0);
+    const airRailY = compactTop ? gridTop - bucketR * 0.32 : tankCy - tankR * 0.15;
+    const sideOff = bucketR * 1.22;
+
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(pumpAnchor.outX) + ' ' + f1(pumpAnchor.outY) + ' L ' + f1(tankCx) + ' ' + f1(airRailY),
+      2.8
+    );
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(gridLeft - bucketR * 0.65) + ' ' + f1(airRailY) + ' L ' + f1(gridRight + bucketR * 0.65) + ' ' + f1(airRailY),
+      2.8
+    );
 
     const colKeys = Object.keys(byCol)
       .map(Number)
       .sort((a, b) => a - b);
-    const colCenters = colKeys.map((ck) => byCol[ck][0].x);
-
-    const leftLane = gridLeft - laneGap;
-    const rightLane = gridRight + laneGap;
-
-    const laneXs = [leftLane];
-    for (let i = 0; i < colCenters.length - 1; i++) {
-      laneXs.push((colCenters[i] + colCenters[i + 1]) / 2);
-    }
-    laneXs.push(rightLane);
-
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(pumpAnchor.outX) + ' ' + f1(pumpAnchor.outY) + ' L ' + f1(pumpAnchor.outX) + ' ' + f1(airBusY),
-      2.6
-    );
-    const busJoinX = Math.max(leftLane, Math.min(rightLane, pumpAnchor.outX));
-    if (Math.abs(busJoinX - pumpAnchor.outX) > 1) {
-      s += rdwcPlanAirTubePath(
-        'M ' + f1(pumpAnchor.outX) + ' ' + f1(airBusY) + ' L ' + f1(busJoinX) + ' ' + f1(airBusY),
-        2.4
-      );
-    }
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(leftLane) + ' ' + f1(airBusY) + ' L ' + f1(rightLane) + ' ' + f1(airBusY),
-      2.4
-    );
-
-    for (let li = 0; li < laneXs.length; li++) {
-      const laneX = laneXs[li];
-      const isEdge = li === 0 || li === laneXs.length - 1;
-      const isBetweenCols = li > 0 && li < laneXs.length - 1;
-      if (isBetweenCols || (isEdge && colKeys.length <= 2)) {
-        s += rdwcPlanAirTubePath(
-          'M ' + f1(laneX) + ' ' + f1(airBusY) + ' L ' + f1(laneX) + ' ' + f1(airBotY),
-          2.3
-        );
-      } else if (isEdge) {
-        s += rdwcPlanAirTubePath(
-          'M ' + f1(laneX) + ' ' + f1(airBusY) + ' L ' + f1(laneX) + ' ' + f1(airTopY),
-          2.2
-        );
-        s += rdwcPlanAirTubePath(
-          'M ' + f1(laneX) + ' ' + f1(airTopY) + ' L ' + f1(laneX) + ' ' + f1(airBotY),
-          2.2
-        );
-      }
-    }
-
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(leftLane) + ' ' + f1(airTopY) + ' L ' + f1(rightLane) + ' ' + f1(airTopY),
-      2.2
-    );
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(leftLane) + ' ' + f1(airBotY) + ' L ' + f1(rightLane) + ' ' + f1(airBotY),
-      2.2
-    );
-
     for (let ci = 0; ci < colKeys.length; ci++) {
       const ck = colKeys[ci];
       const list = byCol[ck].sort((a, b) => a.row - b.row);
       if (!list.length) continue;
-      const spineX = rdwcPlanAirSpineX(ci, colKeys, colCenters, laneXs, leftLane, rightLane);
-      const sideSign = spineX < list[0].x ? -1 : 1;
+      const bx = list[0].x;
+      const sideX =
+        ci === 0
+          ? bx - sideOff
+          : ci >= colKeys.length - 1
+            ? bx + sideOff
+            : bx + (ci % 2 === 0 ? -1 : 1) * bucketR * 1.15;
+      s += rdwcPlanAirTubePath(
+        'M ' + f1(bx) + ' ' + f1(airRailY) + ' L ' + f1(sideX) + ' ' + f1(airRailY),
+        2.4
+      );
       for (let i = 0; i < list.length; i++) {
         const P = list[i];
-        const entryX = P.x + sideSign * bucketR * 0.44;
-        const entryY = P.y + bucketR * 0.5;
+        const entryX = P.x + (sideX < P.x ? bucketR * 0.42 : -bucketR * 0.42);
+        const entryY = P.y + bucketR * 0.48;
         s += rdwcPlanAirTubePath(
-          'M ' + f1(spineX) + ' ' + f1(airBotY) + ' L ' + f1(spineX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
-          2.1
+          'M ' + f1(sideX) + ' ' + f1(airRailY) + ' L ' + f1(sideX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+          2.2
         );
       }
     }
@@ -904,7 +752,6 @@
       gridLeft,
       gridRight,
       gridTop,
-      bottomRowY,
       airPumpAnchor,
       dist
     );
