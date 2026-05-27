@@ -18,6 +18,18 @@
   function rdwcPlanDistribuir(sites, rows) {
     const s = Math.max(1, Math.min(64, parseInt(String(sites), 10) || 4));
     const r = Math.max(1, Math.min(4, parseInt(String(rows), 10) || 1));
+    // 2 cubos · 2 filas: marco 2×2 (como 4×2), un cubo por fila — no en línea horizontal ni columna estrecha.
+    if (s === 2 && r === 2) {
+      return {
+        sites: s,
+        rows: r,
+        cols: 2,
+        grid: [
+          { idx: 0, row: 0, col: 0, colsInRow: 2 },
+          { idx: 1, row: 1, col: 0, colsInRow: 2 },
+        ],
+      };
+    }
     const cols = Math.max(1, Math.ceil(s / r));
     const grid = [];
     let idx = 0;
