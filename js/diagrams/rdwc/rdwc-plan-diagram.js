@@ -48,29 +48,6 @@
     return positions.slice().sort((a, b) => a.x - b.x || a.col - b.col);
   }
 
-  function rdwcPlanAirHints(x, y, cfg) {
-    const h = typeof rdwcMontajeHintsForConfig === 'function' ? rdwcMontajeHintsForConfig(cfg) : null;
-    if (!h) return '';
-    const sites = Math.max(2, parseInt(String((cfg && cfg.rdwcSites) || 4), 10) || 4);
-    const rows = Math.max(1, Math.min(4, parseInt(String((cfg && cfg.rdwcRows) || 1), 10) || 1));
-    const pumpPos = rows >= 3 || sites >= 9 ? 'bomba al lado del depósito' : 'bomba sobre depósito';
-    return (
-      '<text x="' +
-      x +
-      '" y="' +
-      y +
-      '" font-size="8" fill="#166534" font-family="system-ui,sans-serif">Aire: ~' +
-      h.airMainLenCm +
-      ' cm línea · ~' +
-      h.airStoneHoseCm +
-      ' cm/cubo × ' +
-      h.airStones +
-      ' · ' +
-      pumpPos +
-      '</text>'
-    );
-  }
-
   const TUBE_STYLE = {
     impulse: { rim: '#713f12', body: '#ca8a04', shine: '#fef9c3' },
     supply: { rim: '#831843', body: '#ec4899', shine: '#fce7f3' },
@@ -117,10 +94,12 @@
     );
   }
 
-  function rdwcPlanFlowLegend(x, y) {
+  /** Leyenda de tuberías; rightX = borde derecho del bloque (alineado a la derecha del SVG). */
+  function rdwcPlanFlowLegend(rightX, y) {
+    const legendW = 168;
     return (
       '<g class="rdwc-plan-legend" transform="translate(' +
-      x +
+      (rightX - legendW) +
       ',' +
       y +
       ')" pointer-events="none" aria-hidden="true">' +
@@ -647,7 +626,7 @@
     const cx = W / 2;
     const tankCy = 56 + tankR;
     const gridTop = tankCy + tankR + 50;
-    const H = gridTop + gridH + bucketR * 2 + 56;
+    const H = gridTop + gridH + bucketR * 2 + 40;
 
     const tankBottom = tankCy + tankR;
 
@@ -699,11 +678,10 @@
     s += '<rect width="' + W + '" height="' + H + '" fill="url(#rdwcScadaBg)"/>';
 
     if (typeof hcDiagramViewLabelSvg === 'function') {
-      s += hcDiagramViewLabelSvg(W / 2, 10, 'cenital', { pointerEvents: false });
+      s += hcDiagramViewLabelSvg(12, 12, 'cenital', { pointerEvents: false, anchor: 'start' });
     }
 
-    s += rdwcPlanFlowLegend(W - 175, 6);
-    s += rdwcPlanAirHints(10, H - 10, cfg);
+    s += rdwcPlanFlowLegend(W - 10, 8);
 
     const rowsLabelY = dist.rows >= 2 ? gridTop + gridH / 2 : gridTop + bucketR * 0.55;
     s += rdwcPlanRowsLabel(22, rowsLabelY, dist.rows);
