@@ -14,8 +14,7 @@
   }
 
   function rdwcPreferirLayoutPlan(cfg) {
-    const rows = Math.max(1, Math.min(4, parseInt(String((cfg || {}).rdwcRows || 1), 10) || 1));
-    return rows >= 2 && typeof renderRdwcPlan === 'function';
+    return typeof renderRdwcPlan === 'function';
   }
 
   function rdwcSiteInteractive(s, x, y, rn, c, rPot, cfg, idx, ta, tieneDifusor, layout) {

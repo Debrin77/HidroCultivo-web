@@ -1,7 +1,8 @@
 /**
  * Vista cenital RDWC — hidráulica según manual:
  * Impulsión (amarillo): depósito → bomba. Reparto (rosa): bomba → manifold → cubos inferiores.
- * Retorno (naranja): cubos → manifold (mismo racor) → eje al depósito; fila superior con codo al depósito.
+ * Retorno (naranja): cubos → manifold (mismo racor) → eje al depósito; filas superiores con codo al depósito.
+ * 1 fila: misma lógica (manifold + retorno al depósito), sin circuito en serie entre cubos.
  */
 (function (global) {
   'use strict';
@@ -41,11 +42,6 @@
       }
     }
     return { sites: s, rows: r, cols: cols, grid: grid };
-  }
-
-  /** 1 fila: circuito en serie; último cubo retorna al depósito. */
-  function rdwcPlanIsSeries(dist) {
-    return dist.rows === 1;
   }
 
   function rdwcPlanBucketsSorted(positions) {
@@ -538,9 +534,8 @@
    */
   function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCy, tankR, gridTop, pumpAnchor, dist) {
     if (!positions.length) return s;
-    const series = rdwcPlanIsSeries(dist);
     const sorted = rdwcPlanBucketsSorted(positions);
-    const airRailY = series ? gridTop - bucketR * 0.12 : tankCy - tankR * 0.15;
+    const airRailY = tankCy - tankR * 0.15;
     const railX0 = sorted[0].x;
     const railX1 = sorted[sorted.length - 1].x;
 
@@ -555,32 +550,30 @@
       );
     }
 
-    const singleRowAll = positions.every((p) => p.row === positions[0].row);
-    if (singleRowAll || series) {
-      for (let i = 0; i < sorted.length; i++) {
-        const P = sorted[i];
-        const entryY = P.y + bucketR * 0.48;
-        const offX = P.x + (i === 0 ? -bucketR * 0.18 : bucketR * 0.18);
-        s += rdwcPlanAirTubePath(
-          'M ' +
-            f1(P.x) +
-            ' ' +
-            f1(airRailY) +
-            ' L ' +
-            f1(offX) +
-            ' ' +
-            f1(airRailY) +
-            ' L ' +
-            f1(offX) +
-            ' ' +
-            f1(entryY) +
-            ' L ' +
-            f1(P.x) +
-            ' ' +
-            f1(entryY),
-          2.2
-        );
-      }
+    const singleBucket = dist.sites <= 1;
+    if (singleBucket) {
+      const P = sorted[0];
+      const entryY = P.y + bucketR * 0.48;
+      const offX = P.x - bucketR * 0.18;
+      s += rdwcPlanAirTubePath(
+        'M ' +
+          f1(P.x) +
+          ' ' +
+          f1(airRailY) +
+          ' L ' +
+          f1(offX) +
+          ' ' +
+          f1(airRailY) +
+          ' L ' +
+          f1(offX) +
+          ' ' +
+          f1(entryY) +
+          ' L ' +
+          f1(P.x) +
+          ' ' +
+          f1(entryY),
+        2.2
+      );
       return s;
     }
 
@@ -712,9 +705,8 @@
     s += rdwcPlanFlowLegend(W - 175, 6);
     s += rdwcPlanAirHints(10, H - 10, cfg);
 
-    if (dist.rows >= 2) {
-      s += rdwcPlanRowsLabel(22, gridTop + gridH / 2, dist.rows);
-    }
+    const rowsLabelY = dist.rows >= 2 ? gridTop + gridH / 2 : gridTop + bucketR * 0.55;
+    s += rdwcPlanRowsLabel(22, rowsLabelY, dist.rows);
 
     const pumpY = tankBottom + 26;
     const tapY = manifoldY;
@@ -731,39 +723,21 @@
     }
 
     const bottomBuckets = positions.filter((p) => p.row === dist.rows - 1);
-    const topBuckets = positions.filter((p) => p.row === 0);
-    const seriesLayout = rdwcPlanIsSeries(dist);
+    const topBuckets = dist.rows > 1 ? positions.filter((p) => p.row === 0) : [];
 
     let pipes = '<g class="rdwc-plan-pipes" aria-hidden="true">';
-
-    if (seriesLayout) {
-      pipes = rdwcPlanSeriesHydraulics(
-        pipes,
-        positions,
-        cx,
-        tankCy,
-        tankR,
-        tankBottom,
-        pumpY,
-        trunkX,
-        bucketR,
-        dist.cols,
-        ta
-      );
-    } else if (dist.rows >= 2) {
-      pipes = rdwcPlanImpulsionSupply(pipes, cx, tankBottom, pumpY, trunkX, tapY, bottomBuckets, ta);
-      Object.keys(byCol).forEach((ck) => {
-        const list = byCol[ck].sort((a, b) => a.row - b.row);
-        if (list.length >= 2) {
-          pipes += rdwcPlanReturnColumn(list[0], list[list.length - 1], bucketR, ta);
-        }
-      });
-      for (let i = 0; i < topBuckets.length; i++) {
-        const P = topBuckets[i];
-        pipes += rdwcPlanReturnElbowTop(P, cx, tankCy, tankR, bucketR, P.col, dist.cols, ta);
+    pipes = rdwcPlanImpulsionSupply(pipes, cx, tankBottom, pumpY, trunkX, tapY, bottomBuckets, ta);
+    Object.keys(byCol).forEach((ck) => {
+      const list = byCol[ck].sort((a, b) => a.row - b.row);
+      if (dist.rows > 1 && list.length >= 2) {
+        pipes += rdwcPlanReturnColumn(list[0], list[list.length - 1], bucketR, ta);
       }
-      pipes = rdwcPlanReturnClose(pipes, cx, tankBottom, trunkX, tapY, bottomBuckets, ta);
+    });
+    for (let i = 0; i < topBuckets.length; i++) {
+      const P = topBuckets[i];
+      pipes += rdwcPlanReturnElbowTop(P, cx, tankCy, tankR, bucketR, P.col, dist.cols, ta);
     }
+    pipes = rdwcPlanReturnClose(pipes, cx, tankBottom, trunkX, tapY, bottomBuckets, ta);
 
     pipes += '</g>';
     s += pipes;
