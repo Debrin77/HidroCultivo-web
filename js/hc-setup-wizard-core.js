@@ -3556,7 +3556,11 @@ function textoResumenSistemaRdwcPanel(cfg) {
   const q = Math.max(200, Math.round(Number(cfg.rdwcRecirculationLh || 1200)));
   const air = Math.max(1, Math.round(Number(cfg.rdwcAirLpm || 20)));
   const depTxt = vu != null ? ('depósito ' + vu + '/' + v + ' L') : ('depósito ' + v + ' L');
-  return s + ' sitios · ' + r + ' fila(s) · cubo ' + b + ' L · ' + depTxt + ' · recirc ' + q + ' L/h · aire ' + air + ' L/min';
+  const total =
+    typeof getRdwcVolumenSolucionTotalLitros === 'function' ? getRdwcVolumenSolucionTotalLitros(cfg) : null;
+  const totalTxt =
+    total != null && Number.isFinite(total) && total > 0 ? ' · circuito ~' + total + ' L útiles' : '';
+  return s + ' sitios · ' + r + ' fila(s) · cubo ' + b + ' L · ' + depTxt + totalTxt + ' · recirc ' + q + ' L/h · aire ' + air + ' L/min';
 }
 
 /**

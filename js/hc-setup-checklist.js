@@ -1032,17 +1032,77 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   });
 }
 
+/** Bloque HTML: cálculo hidráulico RDWC vs valores configurados (Cultivo e instalación). */
+function clRdwcHidraulicaResumenHtml(cfg) {
+  const calc = typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(cfg || {}) : null;
+  if (!calc) {
+    return (
+      '<p class="cl-rdwc-hydro-hint">Completa <strong>sitios, cubos y depósito de control</strong> en Cultivo e instalación para ver recirculación, aire y tuberías orientativas.</p>'
+    );
+  }
+  const recU = Math.max(0, Math.round(Number((cfg || {}).rdwcRecirculationLh) || 0));
+  const airU = Math.max(0, Math.round(Number((cfg || {}).rdwcAirLpm) || 0));
+  const recOk = recU >= calc.recMin;
+  const airOk = airU >= calc.airMin;
+  const recChip = typeof clEstadoChipHtml === 'function' ? clEstadoChipHtml(recOk ? 'ok' : 'warn') : '';
+  const airChip = typeof clEstadoChipHtml === 'function' ? clEstadoChipHtml(airOk ? 'ok' : 'warn') : '';
+  return (
+    '<div class="cl-rdwc-hydro-hint" role="status">' +
+    '<strong>Cálculo orientativo</strong> (circuito ~' +
+    calc.totalVol +
+    ' L útiles): recirculación <strong>' +
+    calc.recObj +
+    ' L/h</strong> (mín ' +
+    calc.recMin +
+    ', configurado <strong>' +
+    recU +
+    ' L/h</strong> ' +
+    recChip +
+    ') · aire <strong>' +
+    calc.airObj +
+    ' L/min</strong> (mín ' +
+    calc.airMin +
+    ', configurado <strong>' +
+    airU +
+    ' L/min</strong> ' +
+    airChip +
+    ') · bomba sugerida <strong>' +
+    calc.pumpRec +
+    ' L/h</strong> · impulsión Ø<strong>' +
+    calc.tubeOutMm +
+    '</strong> mm · retorno Ø<strong>' +
+    calc.tubeRetMm +
+    '</strong> mm.</div>'
+  );
+}
+
 function getCLPasos() {
   const cfg = state.configTorre || {};
   const primerLlenado = clRutaChecklist === 'primer_llenado';
   let nut = getNutrienteTorre();
-  let vol = getVolumenMezclaLitros(cfg);
+  let vol =
+    typeof getVolumenNutrientesLitros === 'function'
+      ? getVolumenNutrientesLitros(cfg)
+      : getVolumenMezclaLitros(cfg);
+  if (vol == null || !Number.isFinite(vol) || vol <= 0) {
+    vol = getVolumenMezclaLitros(cfg);
+  }
   if (primerLlenado) {
     if (!nut && Array.isArray(NUTRIENTES_DB) && NUTRIENTES_DB.length) {
       nut = NUTRIENTES_DB.find(n => n && n.id === 'canna_aqua') || NUTRIENTES_DB[0];
     }
     if (vol == null || !Number.isFinite(vol) || vol <= 0) {
-      vol = typeof VOL_OBJETIVO === 'number' ? VOL_OBJETIVO : 18;
+      if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
+      const vRdwc =
+        typeof getRdwcVolumenSolucionTotalLitros === 'function'
+          ? getRdwcVolumenSolucionTotalLitros(cfg)
+          : null;
+      vol =
+        vRdwc != null && Number.isFinite(vRdwc) && vRdwc > 0
+          ? vRdwc
+          : typeof VOL_OBJETIVO === 'number'
+            ? VOL_OBJETIVO
+            : 18;
     }
   } else if (!nut || vol == null || !Number.isFinite(vol) || vol <= 0) {
     return [
@@ -1051,7 +1111,7 @@ function getCLPasos() {
         seccion: '⚙️ Datos pendientes',
         paso: '·',
         desc:
-          'Indica volumen de depósito (etiqueta o Cultivo e instalación) y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario al abrir el checklist.',
+          'Indica volumen (depósito o circuito RDWC), nutriente y sitios en <strong>Cultivo e instalación</strong> o el formulario al abrir el checklist.',
         nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
       },
     ];
@@ -1063,7 +1123,7 @@ function getCLPasos() {
         seccion: '⚙️ Datos pendientes',
         paso: '·',
         desc:
-          'Indica volumen de depósito (etiqueta o Cultivo e instalación) y nutriente en <strong>Torre</strong>, <strong>Cultivo e instalación</strong> o el formulario al abrir el checklist.',
+          'Indica volumen (depósito o circuito RDWC), nutriente y sitios en <strong>Cultivo e instalación</strong> o el formulario al abrir el checklist.',
         nota: 'Sin esos datos no se pueden generar los pasos con ml orientativos.',
       },
     ];
@@ -1395,8 +1455,11 @@ function getCLPasos() {
           id: 'R0',
           seccion: '🔁 RDWC — Recirculación y retorno',
           paso: 'R·0',
-          desc: 'Validar <strong>recirculación continua</strong> (línea de envío/alta y retorno/baja) en todos los módulos antes de cerrar recarga.',
+          desc: primerLlenado
+            ? 'Antes de cebar: revisa en <strong>Cultivo e instalación</strong> que recirculación y aire encajan con el cálculo orientativo del circuito.'
+            : 'Validar <strong>recirculación continua</strong> (línea de envío/alta y retorno/baja) en todos los módulos antes de cerrar recarga.',
           nota: 'No es riego por impulsos ni goteo: la bomba de recirculación trabaja en continuo. Revisa caudal homogéneo por sitio, sin sifonados invertidos ni puntos muertos en retornos.',
+          postCamposHtml: clRdwcHidraulicaResumenHtml(cfg),
         },
         {
           id: 'R0b',
@@ -1694,11 +1757,14 @@ function getCLPasos() {
     desc:'Poner toldo si hay sol directo o temperatura > 20°C',
     nota: esNft ? 'En NFT el sol directo seca rápido la película y las plántulas al inicio del canal'
       : esDwc ? 'En DWC el sol calienta depósito y follaje; toldo y depósito opaco reducen estrés y algas'
+      : esRdwc ? 'En RDWC el sol calienta cubos y depósito de control; prioriza sombra del circuito y depósito opaco'
       : 'Reduce transpiración durante los 45 min sin bomba',
   };
   const pasosPaso1ApagarRecarga = [
   { id:'1.1', seccion:'⏹️ Paso 1 — Apagar y riego provisional', paso:'1.1',
-    desc: esDwc
+    desc: esRdwc
+      ? 'Apagar <strong>bomba de recirculación</strong> y <strong>bomba de aire</strong> antes de vaciar el circuito'
+      : esDwc
       ? 'Apagar el aireador (y la bomba de agua si hubiera recirculación auxiliar) antes de vaciar'
       : 'Apagar la bomba de riego',
     campos:[{ id:'clHoraApagado', label:'Hora apagado:', type:'time', clase:'wide' }] },
@@ -1707,12 +1773,17 @@ function getCLPasos() {
       ? ('Riego provisional por canal: humedecer copas, cubetas o el inicio de cada línea con solución (≈50–150 ml según longitud). Ningún tramo debe quedar seco.')
       : esDwc
         ? 'Con solución provisional, humedecer coronas/net cups y comprobar que las raíces no queden al aire en ninguna maceta'
-        : 'Regar manualmente cada cesta con solución provisional: 50-100 ml por cesta',
+        : esRdwc
+          ? 'Humedecer net pots y raíces visibles en cada cubo con solución del depósito de control; el circuito puede quedar parcialmente lleno'
+          : 'Regar manualmente cada cesta con solución provisional: 50-100 ml por cesta',
     nota: esNft ? ('Reparte en los ' + nftCh + ' canales si comparten bomba — prioridad al arranque de cada uno.')
       : esDwc ? 'Mantén cubierta húmeda y raíces en contacto con líquido hasta rellenar de nuevo'
+      : esRdwc ? 'Sin recirculación activa: evita que las raíces queden al aire en los cubos'
       : 'Mantener esponjas húmedas' },
   { id:'1.3', seccion:null, paso:'1.3', alert:true,
-    desc:'⚠️ Máximo 45 minutos sin bomba — anotar hora límite',
+    desc: esRdwc
+      ? '⚠️ Máximo 45 minutos sin recirculación ni aireación — anotar hora límite'
+      : '⚠️ Máximo 45 minutos sin bomba — anotar hora límite',
     nota:'Estrés hídrico irreversible si se supera' },
 
   { id:'1.4', seccion:null, paso:'1.4', alert:true,
@@ -1759,7 +1830,9 @@ function getCLPasos() {
       ? 'Limpiar canales NFT, espigas, retornos al depósito y bomba; retirar restos de raíz en codos y bajantes'
       : esDwc
         ? 'Limpiar difusores, mangueras de aire, tapa y paredes del depósito; retirar raíces flotantes y biofilm'
-        : 'Limpiar tubos, bomba exterior y conexiones' },
+        : esRdwc
+          ? 'Limpiar depósito de control, cubos, manifold y tuberías de recirculación; retirar raíces sueltas y biofilm en retornos'
+          : 'Limpiar tubos, bomba exterior y conexiones' },
   ];
   const pasosPaso2SoloLimpiezaDepositoVacio = [
   { id:'2.3', seccion:'🧹 Paso 2 — Limpiar depósito', paso:'2.3',
@@ -1910,8 +1983,9 @@ function getCLPasos() {
         : 'Confirmar que la bomba lleva funcionando correctamente durante la espera',
     campos:[
       { id:'clHoraEncendido', label:'Hora:', type:'time', clase:'wide' },
-      { id:'clMinSinBomba', label: esDwc ? (esDwcK ? 'Min sin revisión de nivel:' : 'Min sin aireador:') : 'Min sin bomba:', type:'number', placeholder:'40' }
-    ] },
+      { id:'clMinSinBomba', label: esDwc ? (esDwcK ? 'Min sin revisión de nivel:' : 'Min sin aireador:') : esRdwc ? 'Min sin recirc./aire:' : 'Min sin bomba:', type:'number', placeholder:'40' }
+    ],
+    postCamposHtml: esRdwc ? clRdwcHidraulicaResumenHtml(cfg) : '' },
   { id:'5.2', seccion:null, paso:'5.2',
     desc: esDwc
       ? (esDwcK
@@ -1984,7 +2058,9 @@ function getCLPasos() {
         ? (esDwcK
           ? 'Registrar en Historial / Mediciones; vigilar sobre todo temperatura del agua, EC y volumen seguro en días siguientes'
           : 'Registrar en Historial / Mediciones; vigilar temperatura del agua, EC y estado del aireador en los días siguientes')
-        : 'Ejecutar cálculo de riego en la app — verificar que los valores son correctos' },
+        : esRdwc
+          ? 'Registrar en Historial / Mediciones; confirma que recirculación y aire siguen alineados con el cálculo orientativo del circuito'
+          : 'Ejecutar cálculo de riego en la app — verificar que los valores son correctos' },
 ]; }
 
 function getCLTotal() { return getCLPasos().length; }
@@ -2496,7 +2572,10 @@ function clGetResumenDisenoChecklist(cfg) {
 
 function renderChecklistHeaderSummary() {
   const cfg = state.configTorre || {};
-  const esDwcHdr = cfg.tipoInstalacion === 'dwc';
+  const tipoHdr =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  const esRdwcHdr = tipoHdr === 'rdwc';
+  const esDwcHdr = tipoHdr === 'dwc';
   const esDwcKHdr =
     esDwcHdr && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const dwcOxMultHdr =
@@ -2532,7 +2611,9 @@ function renderChecklistHeaderSummary() {
       sistema +
       (dwcOxMultHdr
         ? '. Varios cubos: ml del paso 4 son por cubo — repite en cada uno (o mezcla en cubo auxiliar y reparte).'
-        : '. Revisa el resumen y completa cada bloque antes de registrar la operación.');
+        : esRdwcHdr
+          ? '. Cebar circuito → dosificar sobre el volumen útil total → comprobar recirculación, aire y retornos.'
+          : '. Revisa el resumen y completa cada bloque antes de registrar la operación.');
   }
   const sum = document.getElementById('checklistSummary');
   if (!sum) return;
@@ -2541,13 +2622,15 @@ function renderChecklistHeaderSummary() {
       ? dwcLitrosUtilesPorCuboMultivalvula(cfg)
       : null;
   const mezclaResumen =
-    dwcOxMultHdr && volPorCuboHdr != null && Number.isFinite(volPorCuboHdr) && volPorCuboHdr > 0
-      ? Math.round(volPorCuboHdr * 10) / 10 +
-        ' L/cubo (según tu sistema)' +
-        (nCubosMcHdr > 0 ? ' · ' + nCubosMcHdr + ' cubos' : '')
-      : dwcOxMultHdr
-        ? 'Indica medidas del cubo en Cultivo'
-        : clFmtLitros(vol);
+    esRdwcHdr && vol != null && Number.isFinite(vol) && vol > 0
+      ? Math.round(vol * 10) / 10 + ' L circuito (reservorio + cubos)'
+      : dwcOxMultHdr && volPorCuboHdr != null && Number.isFinite(volPorCuboHdr) && volPorCuboHdr > 0
+        ? Math.round(volPorCuboHdr * 10) / 10 +
+          ' L/cubo (según tu sistema)' +
+          (nCubosMcHdr > 0 ? ' · ' + nCubosMcHdr + ' cubos' : '')
+        : dwcOxMultHdr
+          ? 'Indica medidas del cubo en Cultivo'
+          : clFmtLitros(vol);
   const compact = [ruta, sistema, mezclaResumen].filter(Boolean).join(' · ');
   const cards = [
     { k: 'Ruta', v: ruta },
