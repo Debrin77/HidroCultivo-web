@@ -543,49 +543,95 @@
     return s;
   }
 
+  function rdwcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR) {
+    if (nCols <= 1) return colCenters[0];
+    if (ci === 0) return colCenters[0] - bucketR * 1.12;
+    if (ci === nCols - 1) return colCenters[nCols - 1] + bucketR * 1.12;
+    return (colCenters[ci - 1] + colCenters[ci]) / 2;
+  }
+
   /**
-   * Aire: salida bomba → un colector → bajante lateral por columna → rama a cada cubo.
-   * Sin rejilla horizontal extra (evita líneas confusas sobre el diagrama).
+   * Aire: bomba → bajada → tramo horizontal solo entre cubos → entrada vertical a cada cubo.
+   * Sin serpentines (rama lateral fuera + vuelta horizontal al cubo).
    */
   function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankCy, tankR, gridLeft, gridRight, gridTop, pumpAnchor, dist) {
     if (!positions.length) return s;
     const compactTop = dist.rows >= 2 && positions.every((p) => p.row === 0);
-    const airRailY = compactTop ? gridTop - bucketR * 0.32 : tankCy - tankR * 0.15;
-    const sideOff = bucketR * 1.22;
-
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(pumpAnchor.outX) + ' ' + f1(pumpAnchor.outY) + ' L ' + f1(tankCx) + ' ' + f1(airRailY),
-      2.8
-    );
-    s += rdwcPlanAirTubePath(
-      'M ' + f1(gridLeft - bucketR * 0.65) + ' ' + f1(airRailY) + ' L ' + f1(gridRight + bucketR * 0.65) + ' ' + f1(airRailY),
-      2.8
-    );
-
+    const airRailY = compactTop ? gridTop - bucketR * 0.28 : tankCy - tankR * 0.15;
+    const xs = positions.map((p) => p.x).sort((a, b) => a - b);
     const colKeys = Object.keys(byCol)
       .map(Number)
       .sort((a, b) => a - b);
+    const colCenters = colKeys.map((ck) => byCol[ck][0].x);
+    const nCols = colKeys.length;
+    const singleRowAll = positions.every((p) => p.row === positions[0].row);
+    let railX0 = xs[0];
+    let railX1 = xs[xs.length - 1];
+    if (!singleRowAll) {
+      for (let ci = 0; ci < nCols; ci++) {
+        const sx = rdwcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR);
+        railX0 = Math.min(railX0, sx);
+        railX1 = Math.max(railX1, sx);
+      }
+    }
+    const midX = (railX0 + railX1) / 2;
+    const trunkJoinY = compactTop ? tankCy + tankR * 0.35 : airRailY;
+
+    s += rdwcPlanAirTubePath(
+      'M ' +
+        f1(pumpAnchor.outX) +
+        ' ' +
+        f1(pumpAnchor.outY) +
+        ' L ' +
+        f1(pumpAnchor.outX) +
+        ' ' +
+        f1(trunkJoinY) +
+        ' L ' +
+        f1(midX) +
+        ' ' +
+        f1(trunkJoinY) +
+        ' L ' +
+        f1(midX) +
+        ' ' +
+        f1(airRailY),
+      2.8
+    );
+    if (railX1 - railX0 > 2) {
+      s += rdwcPlanAirTubePath(
+        'M ' + f1(railX0) + ' ' + f1(airRailY) + ' L ' + f1(railX1) + ' ' + f1(airRailY),
+        2.8
+      );
+    }
+
+    if (singleRowAll) {
+      for (let i = 0; i < positions.length; i++) {
+        const P = positions[i];
+        const entryY = P.y + bucketR * 0.48;
+        s += rdwcPlanAirTubePath(
+          'M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY),
+          2.2
+        );
+      }
+      return s;
+    }
+
     for (let ci = 0; ci < colKeys.length; ci++) {
       const ck = colKeys[ci];
       const list = byCol[ck].sort((a, b) => a.row - b.row);
       if (!list.length) continue;
-      const bx = list[0].x;
-      const sideX =
-        ci === 0
-          ? bx - sideOff
-          : ci >= colKeys.length - 1
-            ? bx + sideOff
-            : bx + (ci % 2 === 0 ? -1 : 1) * bucketR * 1.15;
+      const spineX = rdwcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR);
+      const spineSign = spineX < list[0].x ? -1 : 1;
+      const lastY = list[list.length - 1].y + bucketR * 0.48;
       s += rdwcPlanAirTubePath(
-        'M ' + f1(bx) + ' ' + f1(airRailY) + ' L ' + f1(sideX) + ' ' + f1(airRailY),
-        2.4
+        'M ' + f1(spineX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(lastY),
+        2.3
       );
       for (let i = 0; i < list.length; i++) {
         const P = list[i];
-        const entryX = P.x + (sideX < P.x ? bucketR * 0.42 : -bucketR * 0.42);
+        const entryX = P.x + spineSign * bucketR * 0.42;
         const entryY = P.y + bucketR * 0.48;
         s += rdwcPlanAirTubePath(
-          'M ' + f1(sideX) + ' ' + f1(airRailY) + ' L ' + f1(sideX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+          'M ' + f1(spineX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
           2.2
         );
       }
