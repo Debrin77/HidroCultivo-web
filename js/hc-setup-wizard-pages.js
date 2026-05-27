@@ -1738,12 +1738,19 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
   previewEl.style.position = 'relative';
   previewEl.style.height = 'auto';
   const n = Math.min(24, Math.max(1, parseInt(String(numCubos), 10) || 1));
+  const forma =
+    typeof dwcNormalizeDepositoForma === 'function'
+      ? dwcNormalizeDepositoForma(formaDep)
+      : String(formaDep || 'prismatico');
+  const esCyl = forma === 'cilindrico';
   const wrap = document.createElement('div');
-  wrap.className = 'dwc-setup-mc-wrap dwc-setup-mc-wrap--prismatico';
+  wrap.className =
+    'dwc-setup-mc-wrap dwc-setup-mc-wrap--rdwc dwc-setup-mc-wrap--' + (esCyl ? 'cilindrico' : 'prismatico');
   wrap.setAttribute('role', 'img');
   wrap.setAttribute(
     'aria-label',
-    n + ' cubos cuadrados independientes con multiválvula, una maceta por cubo.'
+    n +
+      ' cubos estilo RDWC con multiválvula (solo aire a difusoras), una maceta por cubo.'
   );
   const grid =
     typeof hcDistribuirCubosMultivalvula === 'function'
@@ -1757,7 +1764,7 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
   if (grid.rows > 1) wrap.classList.add('dwc-setup-mc-wrap--stacked');
   function appendMcCube(parent, idx) {
     const cube = document.createElement('div');
-    cube.className = 'dwc-setup-mc-cube dwc-setup-mc-cube--prismatico';
+    cube.className = 'dwc-setup-mc-cube dwc-setup-mc-cube--' + (esCyl ? 'cilindrico' : 'prismatico');
     const lid = document.createElement('div');
     lid.className = 'dwc-setup-mc-lid';
     const hole = document.createElement('div');
@@ -1782,6 +1789,13 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
       const colsInRow = grid.colsPerRow ? grid.colsPerRow[r] : Math.ceil(n / grid.rows);
       rowEls.push(makeMcRow(colsInRow));
     }
+    const airRow = document.createElement('div');
+    airRow.className = 'dwc-setup-mc-air-row';
+    airRow.setAttribute('aria-hidden', 'true');
+    const pump = document.createElement('div');
+    pump.className = 'dwc-setup-mc-air-pump';
+    pump.title = 'Bomba + multiválvula · manguera a cada difusora';
+    airRow.appendChild(pump);
     if (grid.grid && grid.grid.length) {
       for (let r = 0; r < grid.rows; r++) {
         const cells = grid.grid.filter((g) => g.row === r).sort((a, b) => a.col - b.col);
@@ -1798,31 +1812,27 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
         appendMcCube(rowEls[slot.row], i);
       }
     }
+    for (let r = 0; r < rowEls.length; r++) {
+      wrap.appendChild(rowEls[r]);
+    }
+    wrap.appendChild(airRow);
+  } else {
+    const row = makeMcRow(grid.cols || n);
+    for (let i = 0; i < n; i++) appendMcCube(row, i);
+    wrap.appendChild(row);
     const airRow = document.createElement('div');
     airRow.className = 'dwc-setup-mc-air-row';
     airRow.setAttribute('aria-hidden', 'true');
     const pump = document.createElement('div');
     pump.className = 'dwc-setup-mc-air-pump';
-    pump.title = 'Bomba de aire · una línea por cubo';
+    pump.title = 'Bomba + multiválvula · manguera a cada difusora';
     airRow.appendChild(pump);
-    for (let r = 0; r < rowEls.length; r++) {
-      wrap.appendChild(rowEls[r]);
-      if (r === 0 && rowEls.length > 1) wrap.appendChild(airRow);
-    }
-  } else {
-    const row = makeMcRow(grid.cols || n);
-    for (let i = 0; i < n; i++) appendMcCube(row, i);
-    wrap.appendChild(row);
+    wrap.appendChild(airRow);
   }
   const cap = document.createElement('div');
   cap.className = 'dwc-setup-lid-caption';
   cap.textContent =
-    n +
-    ' cubo' +
-    (n === 1 ? '' : 's') +
-    ' cuadrado' +
-    (n === 1 ? '' : 's') +
-    ' · 1 maceta/cubo · multiválvula';
+    n + ' cubo' + (n === 1 ? '' : 's') + ' (aspecto RDWC) · 1 maceta/cubo · multiválvula (solo aire)';
   wrap.appendChild(cap);
   previewEl.appendChild(wrap);
 }

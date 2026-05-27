@@ -15286,6 +15286,24 @@ button.toggle-switch:focus-visible {
   align-items: center;
   gap: 4px;
 }
+.dwc-setup-mc-wrap--rdwc .dwc-setup-mc-lid {
+  border-radius: 50%;
+  background: #e8e4df;
+  border: 2px solid #78716c;
+  box-shadow: inset 0 0 0 3px rgba(129, 212, 250, 0.45);
+}
+.dwc-setup-mc-wrap--rdwc .dwc-setup-mc-hole {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle at 32% 28%, #64748b, #1e293b 72%);
+}
+.dwc-setup-mc-wrap--rdwc .dwc-setup-mc-tank {
+  width: 46px;
+  height: 20px;
+  border-radius: 6px 6px 10px 10px;
+  background: linear-gradient(180deg, #81d4fa 0%, #1565c0 100%);
+}
 .dwc-setup-mc-lid {
   width: 52px;
   height: 52px;
