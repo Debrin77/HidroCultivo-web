@@ -1068,11 +1068,11 @@ function clRdwcHidraulicaResumenHtml(cfg) {
     airChip +
     ') · bomba sugerida <strong>' +
     calc.pumpRec +
-    ' L/h</strong> · impulsión Ø<strong>' +
+    ' L/h</strong> (a tu altura de impulsión; revisa curva bomba) · impulsión Ø<strong>' +
     calc.tubeOutMm +
     '</strong> mm · retorno Ø<strong>' +
     calc.tubeRetMm +
-    '</strong> mm.</div>'
+    '</strong> mm. Referencia sector: ~3–7 renovaciones/h del volumen del circuito.</div>'
   );
 }
 

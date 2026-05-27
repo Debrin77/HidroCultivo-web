@@ -1134,9 +1134,9 @@ function rdwcRecoPerfilPorGrupo(grupo) {
     return {
       grupo: g,
       etiqueta: g === 'hierbas' ? 'Hierbas aromáticas' : 'Hojas voluminosas',
-      cestaMinMm: 50,
-      cestaMaxMm: 75,
-      cestaTxt: '50–75 mm',
+      cestaMinMm: 75,
+      cestaMaxMm: 100,
+      cestaTxt: '75–100 mm (≈3–4")',
       bucketMinL: g === 'hierbas' ? 12 : 20,
       bucketMaxL: g === 'hierbas' ? 20 : 35,
       bucketTxt: g === 'hierbas' ? '12–20 L' : '20–35 L',
@@ -1175,10 +1175,10 @@ function rdwcRecoPerfilPorGrupo(grupo) {
   if (g === 'frutos' || g === 'raices') {
     return {
       grupo: g,
-      etiqueta: g === 'raices' ? 'Raíces / tubérculos ligeros' : 'Frutos',
-      cestaMinMm: 75,
-      cestaMaxMm: 100,
-      cestaTxt: '75–100 mm',
+      etiqueta: g === 'raices' ? 'Raíces / tubérculos ligeros' : 'Frutos / planta grande',
+      cestaMinMm: 100,
+      cestaMaxMm: 150,
+      cestaTxt: '100–150 mm (≈4–6")',
       bucketMinL: 25,
       bucketMaxL: 45,
       bucketTxt: '25–45 L',
@@ -1197,8 +1197,8 @@ function rdwcRecoPerfilPorGrupo(grupo) {
     grupo: 'lechugas',
     etiqueta: 'Lechugas / hojas ligeras',
     cestaMinMm: 50,
-    cestaMaxMm: 50,
-    cestaTxt: '50 mm',
+    cestaMaxMm: 75,
+    cestaTxt: '50–75 mm (≈2–3")',
     bucketMinL: 15,
     bucketMaxL: 25,
     bucketTxt: '15–25 L',
@@ -1464,19 +1464,19 @@ function rdwcCalcularHidraulica(cfg, opts) {
   const mode = c.rdwcHydroMode === 'silencioso' || c.rdwcHydroMode === 'alto_rendimiento' ? c.rdwcHydroMode : 'estandar';
   const totalVol = Math.max((Number(controlVol) || 0) + sites * (Number(bucketVol) || 0), Number(controlVol) || 0);
 
-  const modeMult = mode === 'silencioso' ? 1.15 : mode === 'alto_rendimiento' ? 1.95 : 1.6;
-  const modeMinMult = mode === 'silencioso' ? 1.0 : mode === 'alto_rendimiento' ? 1.35 : 1.2;
-  const modeMaxMult = mode === 'silencioso' ? 1.75 : mode === 'alto_rendimiento' ? 2.7 : 2.3;
+  // Renovaciones/h del volumen útil total (referencia sector RDWC: ~3–7×/h; silencioso más bajo).
+  const modeMult = mode === 'silencioso' ? 2.5 : mode === 'alto_rendimiento' ? 6.5 : 5;
+  const modeMinMult = mode === 'silencioso' ? 2 : mode === 'alto_rendimiento' ? 4 : 3;
+  const modeMaxMult = mode === 'silencioso' ? 3.5 : mode === 'alto_rendimiento' ? 9 : 7;
 
-  // Regla práctica: 1.2-2 renovaciones/h del volumen total en RDWC.
-  const recMin = Math.max(900, Math.round(totalVol * modeMinMult));
+  const recMin = Math.max(400, Math.round(totalVol * modeMinMult));
   const recObj = Math.max(recMin, Math.round(totalVol * modeMult));
-  const recMax = Math.max(recObj + 200, Math.round(totalVol * modeMaxMult));
+  const recMax = Math.max(recObj + 150, Math.round(totalVol * modeMaxMult));
 
-  // Aireación orientativa: 1 L/min por 8-10 L + margen por raíces.
-  const airMin = Math.max(8, Math.round(totalVol / 10));
-  const airObj = Math.max(airMin, Math.round(totalVol / 8));
-  const airMax = Math.max(airObj + 4, Math.round(totalVol / 6));
+  // Aire DWC: ~0,13–0,26 L/min por L (≈0,5–1 L/min por galón); objetivo en rango medio-alto.
+  const airMin = Math.max(6, Math.round(totalVol / 10));
+  const airObj = Math.max(airMin, Math.round(totalVol / 5));
+  const airMax = Math.max(airObj + 4, Math.round(totalVol / 3));
 
   // Bomba sugerida con factor por altura + pérdidas lineales y accesorios.
   const lossFac = 1 + headM * 0.18 + lineLenM * 0.01 + fittings * 0.008;
@@ -1493,8 +1493,9 @@ function rdwcCalcularHidraulica(cfg, opts) {
   if (pumpRec > 6200) tubeRetMm = 50;
   if (pumpRec > 9000) tubeRetMm = 63;
 
-  const estadoRec = recUser < recMin ? 'warn' : recUser > recMax * 1.2 ? 'bad' : 'ok';
-  const estadoAir = airUser < airMin ? 'warn' : airUser > airMax * 1.3 ? 'bad' : 'ok';
+  const estadoRec =
+    recUser < recMin * 0.9 ? 'warn' : recUser > recMax * 2.2 ? 'bad' : 'ok';
+  const estadoAir = airUser < airMin ? 'warn' : airUser > airMax * 1.5 ? 'warn' : 'ok';
   const estadoGlobal = (estadoRec === 'bad' || estadoAir === 'bad') ? 'bad' : (estadoRec === 'warn' || estadoAir === 'warn') ? 'warn' : 'ok';
   const rows = Math.max(1, Math.min(4, parseInt(String(c.rdwcRows), 10) || 1));
   const airStones = sites;
