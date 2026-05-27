@@ -140,17 +140,6 @@
     );
   }
 
-  /** Puntos M/L de un path ortogonal. */
-  function rdwcPlanPathPoints(d) {
-    const pts = [];
-    const re = /([ML])\s*([\d.+-]+)\s+([\d.+-]+)/gi;
-    let m;
-    while ((m = re.exec(d))) {
-      pts.push({ x: parseFloat(m[2]), y: parseFloat(m[3]) });
-    }
-    return pts;
-  }
-
   /** Aire: trazo discontinuo simple (el brillo triple desalineaba el patrón). */
   function rdwcPlanAirTubePath(d, sw) {
     const st = TUBE_STYLE.air;
@@ -210,13 +199,6 @@
       '" stroke-width="' +
       Math.max(1, w * 0.35) +
       '" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>';
-    if (ta) {
-      o +=
-        '<path class="rdwc-plan-tube-flow" d="' +
-        d +
-        '" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="5 6" opacity="0.45">' +
-        '<animate attributeName="stroke-dashoffset" from="22" to="0" dur="1.4s" repeatCount="indefinite"/></path>';
-    }
     o += '</g>';
     return o;
   }
@@ -416,21 +398,6 @@
     return rdwcPlanTubePath(d, kind, ta, sw);
   }
 
-  function rdwcPlanManifoldJoint(x, y, kind) {
-    const st = TUBE_STYLE[kind] || TUBE_STYLE.return;
-    return (
-      '<circle cx="' +
-      f1(x) +
-      '" cy="' +
-      f1(y) +
-      '" r="4" fill="' +
-      st.body +
-      '" stroke="' +
-      st.rim +
-      '" stroke-width="1.2" pointer-events="none"/>'
-    );
-  }
-
   /**
    * Racor inferior: rosa sube al cubo (codo) y naranja baja al manifold (codo), unión en el manifold.
    */
@@ -445,7 +412,6 @@
     o += rdwcPlanTubeElbow(outX, kneeY, outX, portY, P.x, portY, 'supply', ta, 4.2);
     o += rdwcPlanTubeElbow(P.x, portY, outX, portY, outX, kneeY, 'return', ta, 4.2);
     o += rdwcPlanTubeElbow(outX, kneeY, outX, tapY, P.x, tapY, 'return', ta, 4);
-    o += rdwcPlanManifoldJoint(P.x, tapY, 'return');
     return o;
   }
 
@@ -508,11 +474,9 @@
         '<circle cx="' + f1(cx) + '" cy="' + f1(pumpY) + '" r="5" fill="#334155"/>';
     }
     if (!bottomBuckets.length) return s;
-    const br = bottomBuckets[0].r || 30;
     const xs = bottomBuckets.map((p) => p.x).sort((a, b) => a - b);
-    const pad = br * 0.65;
-    const leftX = xs[0] - pad;
-    const rightX = xs[xs.length - 1] + pad;
+    const leftX = Math.min(xs[0], trunkX);
+    const rightX = Math.max(xs[xs.length - 1], trunkX);
     s += rdwcPlanTubePath(
       'M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY) + ' L ' + f1(leftX) + ' ' + f1(tapY),
       'supply',
@@ -544,85 +508,6 @@
       ta,
       5
     );
-    s += rdwcPlanManifoldJoint(trunkX, tapY, 'return');
-    return s;
-  }
-
-  /**
-   * Trazo suave del anillo hidráulico (circuito cerrado) — referencia PDF.
-   */
-  function rdwcPlanLoopTrace(s, cx, tankCy, tankR, tankBottom, tapY, topBuckets, bottomBuckets, byCol, bucketR, ta) {
-    if (!topBuckets.length || !bottomBuckets.length) return s;
-    const leftTop = topBuckets.reduce((a, b) => (a.x < b.x ? a : b));
-    const rightTop = topBuckets.reduce((a, b) => (a.x > b.x ? a : b));
-    const leftBot = bottomBuckets.reduce((a, b) => (a.x < b.x ? a : b));
-    const rightBot = bottomBuckets.reduce((a, b) => (a.x > b.x ? a : b));
-    const tankL = cx - tankR * 0.75;
-    const tankRgt = cx + tankR * 0.75;
-    const tankIn = tankCy + tankR * 0.2;
-    const bendY = leftTop.y - bucketR - 14;
-
-    let d =
-      'M ' +
-      f1(tankL) +
-      ' ' +
-      f1(tankIn) +
-      ' L ' +
-      f1(tankL) +
-      ' ' +
-      f1(bendY) +
-      ' L ' +
-      f1(leftTop.x) +
-      ' ' +
-      f1(bendY) +
-      ' L ' +
-      f1(leftTop.x) +
-      ' ' +
-      f1(leftTop.y - bucketR * 0.7);
-    const listL = (byCol[leftTop.col] || []).sort((a, b) => a.row - b.row);
-    if (listL.length >= 2) {
-      d +=
-        ' L ' +
-        f1(listL[listL.length - 1].x) +
-        ' ' +
-        f1(listL[listL.length - 1].y - bucketR * 0.55);
-    }
-    d +=
-      ' L ' +
-      f1(leftBot.x) +
-      ' ' +
-      f1(tapY) +
-      ' L ' +
-      f1(rightBot.x) +
-      ' ' +
-      f1(tapY) +
-      ' L ' +
-      f1(rightBot.x) +
-      ' ' +
-      f1(rightBot.y - bucketR * 0.55);
-    const listR = (byCol[rightTop.col] || []).sort((a, b) => a.row - b.row);
-    if (listR.length >= 2) {
-      d += ' L ' + f1(listR[0].x) + ' ' + f1(listR[0].y + bucketR * 0.55);
-    }
-    d +=
-      ' L ' +
-      f1(rightTop.x) +
-      ' ' +
-      f1(bendY) +
-      ' L ' +
-      f1(tankRgt) +
-      ' ' +
-      f1(bendY) +
-      ' L ' +
-      f1(tankRgt) +
-      ' ' +
-      f1(tankIn);
-    s +=
-      '<path class="rdwc-plan-loop-trace" d="' +
-      d +
-      '" fill="none" stroke="' +
-      TUBE_STYLE.return.body +
-      '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity="0.35" pointer-events="none"/>';
     return s;
   }
 
@@ -851,21 +736,6 @@
         ta
       );
     } else if (dist.rows >= 2) {
-      if (topBuckets.length && bottomBuckets.length) {
-        pipes = rdwcPlanLoopTrace(
-          pipes,
-          cx,
-          tankCy,
-          tankR,
-          tankBottom,
-          tapY,
-          topBuckets,
-          bottomBuckets,
-          byCol,
-          bucketR,
-          ta
-        );
-      }
       pipes = rdwcPlanImpulsionSupply(pipes, cx, tankBottom, pumpY, trunkX, tapY, bottomBuckets, ta);
       Object.keys(byCol).forEach((ck) => {
         const list = byCol[ck].sort((a, b) => a.row - b.row);
