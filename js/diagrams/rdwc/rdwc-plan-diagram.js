@@ -459,6 +459,15 @@
     return s;
   }
 
+  function rdwcPlanManifoldSpan(bucketXs, feederX) {
+    const xs = bucketXs.slice().sort((a, b) => a - b);
+    if (!xs.length) return { leftX: feederX, rightX: feederX };
+    return {
+      leftX: Math.min(xs[0], feederX),
+      rightX: Math.max(xs[xs.length - 1], feederX),
+    };
+  }
+
   /**
    * Impulsión: depósito → bomba (amarillo). Reparto rosa: bomba → manifold → racor en cubos inferiores.
    */
@@ -477,21 +486,24 @@
         '<circle cx="' + f1(cx) + '" cy="' + f1(pumpY) + '" r="5" fill="#334155"/>';
     }
     if (!bottomBuckets.length) return s;
-    const xs = bottomBuckets.map((p) => p.x).sort((a, b) => a - b);
-    const leftX = xs[0];
-    const rightX = xs[xs.length - 1];
+    const span = rdwcPlanManifoldSpan(
+      bottomBuckets.map((p) => p.x),
+      trunkX
+    );
     s += rdwcPlanTubePath(
       'M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY),
       'supply',
       ta,
       5
     );
-    s += rdwcPlanTubePath(
-      'M ' + f1(leftX) + ' ' + f1(tapY) + ' L ' + f1(rightX) + ' ' + f1(tapY),
-      'supply',
-      ta,
-      5.2
-    );
+    if (span.rightX - span.leftX > 1) {
+      s += rdwcPlanTubePath(
+        'M ' + f1(span.leftX) + ' ' + f1(tapY) + ' L ' + f1(span.rightX) + ' ' + f1(tapY),
+        'supply',
+        ta,
+        5.2
+      );
+    }
     for (let i = 0; i < bottomBuckets.length; i++) {
       s += rdwcPlanBucketLowerPort(bottomBuckets[i], tapY, ta);
     }
@@ -510,8 +522,12 @@
     return s;
   }
 
-  function rdwcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR) {
-    if (nCols <= 1) return colCenters[0];
+  function rdwcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, airPumpX) {
+    if (nCols <= 1) {
+      const bx = colCenters[0];
+      if (airPumpX >= bx + 1) return bx - bucketR * 1.18;
+      return bx + bucketR * 1.18;
+    }
     if (ci === 0) return colCenters[0] - bucketR * 1.12;
     if (ci === nCols - 1) return colCenters[nCols - 1] + bucketR * 1.12;
     return (colCenters[ci - 1] + colCenters[ci]) / 2;
@@ -577,7 +593,7 @@
       const ck = colKeys[ci];
       const list = byCol[ck].sort((a, b) => a.row - b.row);
       if (!list.length) continue;
-      const spineX = rdwcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR);
+      const spineX = rdwcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpAnchor.outX);
       const spineSign = spineX < list[0].x ? -1 : 1;
       const lastY = list[list.length - 1].y + bucketR * 0.48;
       if (Math.abs(spineX - pumpAnchor.outX) > 2) {
