@@ -195,14 +195,14 @@
       st.rim +
       '" stroke-width="' +
       (w + 2.8) +
-      '" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '" stroke-linecap="round" stroke-linejoin="miter"/>' +
       '<path d="' +
       d +
       '" fill="none" stroke="' +
       st.body +
       '" stroke-width="' +
       w +
-      '" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '" stroke-linecap="round" stroke-linejoin="miter"/>' +
       '<path d="' +
       d +
       '" fill="none" stroke="' +
@@ -410,23 +410,42 @@
     return rdwcPlanTubePath(d, 'return', ta, 4.8);
   }
 
-  /** Racor inferior del cubo: rosa (manifold → cubo) y naranja (cubo → manifold) en el mismo punto. */
-  function rdwcPlanBucketLowerPort(P, tapY, ta) {
+  /** Codo 90° ortogonal (3 puntos) — esquinas visibles en racores. */
+  function rdwcPlanTubeElbow(x1, y1, x2, y2, x3, y3, kind, ta, sw) {
+    const d = 'M ' + f1(x1) + ' ' + f1(y1) + ' L ' + f1(x2) + ' ' + f1(y2) + ' L ' + f1(x3) + ' ' + f1(y3);
+    return rdwcPlanTubePath(d, kind, ta, sw);
+  }
+
+  function rdwcPlanManifoldJoint(x, y, kind) {
+    const st = TUBE_STYLE[kind] || TUBE_STYLE.return;
+    return (
+      '<circle cx="' +
+      f1(x) +
+      '" cy="' +
+      f1(y) +
+      '" r="4" fill="' +
+      st.body +
+      '" stroke="' +
+      st.rim +
+      '" stroke-width="1.2" pointer-events="none"/>'
+    );
+  }
+
+  /**
+   * Racor inferior: rosa sube al cubo (codo) y naranja baja al manifold (codo), unión en el manifold.
+   */
+  function rdwcPlanBucketLowerPort(P, tapY, trunkX, ta) {
     const br = P.r || 30;
     const portY = P.y + br * 0.52;
+    const side = P.x < trunkX - 2 ? -1 : P.x > trunkX + 2 ? 1 : P.col === 0 ? -1 : 1;
+    const outX = P.x + side * br * 0.34;
+    const kneeY = tapY - 12;
     let o = '';
-    o += rdwcPlanTubePath(
-      'M ' + f1(P.x) + ' ' + f1(tapY) + ' L ' + f1(P.x) + ' ' + f1(portY),
-      'supply',
-      ta,
-      4.2
-    );
-    o += rdwcPlanTubePath(
-      'M ' + f1(P.x) + ' ' + f1(portY) + ' L ' + f1(P.x) + ' ' + f1(tapY),
-      'return',
-      ta,
-      4.2
-    );
+    o += rdwcPlanTubeElbow(P.x, tapY, outX, tapY, outX, kneeY, 'supply', ta, 4);
+    o += rdwcPlanTubeElbow(outX, kneeY, outX, portY, P.x, portY, 'supply', ta, 4.2);
+    o += rdwcPlanTubeElbow(P.x, portY, outX, portY, outX, kneeY, 'return', ta, 4.2);
+    o += rdwcPlanTubeElbow(outX, kneeY, outX, tapY, P.x, tapY, 'return', ta, 4);
+    o += rdwcPlanManifoldJoint(P.x, tapY, 'return');
     return o;
   }
 
@@ -509,20 +528,23 @@
       );
     }
     for (let i = 0; i < bottomBuckets.length; i++) {
-      s += rdwcPlanBucketLowerPort(bottomBuckets[i], tapY, ta);
+      s += rdwcPlanBucketLowerPort(bottomBuckets[i], tapY, trunkX, ta);
     }
     return s;
   }
 
-  /** Retorno: manifold inferior → eje central naranja → depósito (sin duplicar tramo amarillo). */
+  /** Retorno: manifold → codo en T → eje central → depósito. */
   function rdwcPlanReturnClose(s, cx, tankBottom, trunkX, tapY, bottomBuckets, ta) {
     if (!bottomBuckets.length) return s;
+    const kneeY = tapY - 14;
+    s += rdwcPlanTubeElbow(trunkX - 12, tapY, trunkX, tapY, trunkX, kneeY, 'return', ta, 5);
     s += rdwcPlanTubePath(
-      'M ' + f1(trunkX) + ' ' + f1(tapY) + ' L ' + f1(trunkX) + ' ' + f1(tankBottom + 6),
+      'M ' + f1(trunkX) + ' ' + f1(kneeY) + ' L ' + f1(trunkX) + ' ' + f1(tankBottom + 6),
       'return',
       ta,
       5
     );
+    s += rdwcPlanManifoldJoint(trunkX, tapY, 'return');
     return s;
   }
 
