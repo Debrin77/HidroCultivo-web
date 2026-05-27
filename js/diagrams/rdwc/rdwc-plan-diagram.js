@@ -398,21 +398,19 @@
     return rdwcPlanTubePath(d, kind, ta, sw);
   }
 
-  /**
-   * Racor inferior: rosa sube desde el manifold (sin tramo horizontal en tapY); naranja baja en vertical al manifold.
-   */
-  function rdwcPlanBucketLowerPort(P, tapY, trunkX, ta) {
+  /** Racor inferior: rosa y naranja en el mismo eje vertical (manifold ↔ cubo). */
+  function rdwcPlanBucketLowerPort(P, tapY, ta) {
     const br = P.r || 30;
     const portY = P.y + br * 0.52;
-    const side = P.x < trunkX - 2 ? -1 : P.x > trunkX + 2 ? 1 : P.col === 0 ? -1 : 1;
-    const outX = P.x + side * br * 0.34;
-    const kneeY = tapY - 12;
     let o = '';
-    o += rdwcPlanTubeElbow(P.x, tapY, P.x, kneeY, outX, kneeY, 'supply', ta, 4);
-    o += rdwcPlanTubeElbow(outX, kneeY, outX, portY, P.x, portY, 'supply', ta, 4.2);
-    o += rdwcPlanTubeElbow(P.x, portY, outX, portY, outX, kneeY, 'return', ta, 4.2);
     o += rdwcPlanTubePath(
-      'M ' + f1(outX) + ' ' + f1(kneeY) + ' L ' + f1(P.x) + ' ' + f1(kneeY) + ' L ' + f1(P.x) + ' ' + f1(tapY),
+      'M ' + f1(P.x) + ' ' + f1(tapY) + ' L ' + f1(P.x) + ' ' + f1(portY),
+      'supply',
+      ta,
+      4
+    );
+    o += rdwcPlanTubePath(
+      'M ' + f1(P.x) + ' ' + f1(portY) + ' L ' + f1(P.x) + ' ' + f1(tapY),
       'return',
       ta,
       4
@@ -480,8 +478,8 @@
     }
     if (!bottomBuckets.length) return s;
     const xs = bottomBuckets.map((p) => p.x).sort((a, b) => a - b);
-    const leftX = Math.min(xs[0], trunkX);
-    const rightX = Math.max(xs[xs.length - 1], trunkX);
+    const leftX = xs[0];
+    const rightX = xs[xs.length - 1];
     s += rdwcPlanTubePath(
       'M ' + f1(cx) + ' ' + f1(pumpY - 10) + ' L ' + f1(cx) + ' ' + f1(tapY),
       'supply',
@@ -495,7 +493,7 @@
       5.2
     );
     for (let i = 0; i < bottomBuckets.length; i++) {
-      s += rdwcPlanBucketLowerPort(bottomBuckets[i], tapY, trunkX, ta);
+      s += rdwcPlanBucketLowerPort(bottomBuckets[i], tapY, ta);
     }
     return s;
   }
