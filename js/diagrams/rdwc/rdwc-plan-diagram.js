@@ -18,17 +18,6 @@
   function rdwcPlanDistribuir(sites, rows) {
     const s = Math.max(1, Math.min(64, parseInt(String(sites), 10) || 4));
     const r = Math.max(1, Math.min(4, parseInt(String(rows), 10) || 1));
-    // Compacto 2 filas: marco de 2 columnas en fila 0 (pareja). Con 1 cubo queda el hueco derecho vacío.
-    if (r === 2 && (s === 1 || s === 2)) {
-      const grid =
-        s === 2
-          ? [
-              { idx: 0, row: 0, col: 0, colsInRow: 2 },
-              { idx: 1, row: 0, col: 1, colsInRow: 2 },
-            ]
-          : [{ idx: 0, row: 0, col: 0, colsInRow: 2 }];
-      return { sites: s, rows: r, cols: 2, grid: grid };
-    }
     const cols = Math.max(1, Math.ceil(s / r));
     const grid = [];
     let idx = 0;
@@ -42,14 +31,9 @@
     return { sites: s, rows: r, cols: cols, grid: grid };
   }
 
-  /** 2 filas en config pero cubos solo en fila 0 (pareja compacta). */
-  function rdwcPlanCompactTopRow(dist, positions) {
-    return dist.rows >= 2 && positions.length > 0 && positions.every((p) => p.row === 0);
-  }
-
-  /** 1 fila real o compacto: cubos en serie; solo el último retorna al depósito. */
-  function rdwcPlanIsSeries(dist, positions) {
-    return dist.rows === 1 || rdwcPlanCompactTopRow(dist, positions);
+  /** 1 fila: circuito en serie; último cubo retorna al depósito. */
+  function rdwcPlanIsSeries(dist) {
+    return dist.rows === 1;
   }
 
   function rdwcPlanBucketsSorted(positions) {
@@ -783,9 +767,7 @@
       positions.push({ x: x, y: y, rn: rn, c: c, idx: g.idx, row: g.row, col: g.col, r: bucketR });
     }
 
-    const compactTopOnly = rdwcPlanCompactTopRow(dist, positions);
-    const supplyRowIndex = compactTopOnly ? 0 : dist.rows - 1;
-    const bottomRowY = gridTop + supplyRowIndex * rowStep;
+    const bottomRowY = gridTop + (dist.rows - 1) * rowStep;
     const manifoldY = bottomRowY + bucketR + 20;
 
     let s = '';
@@ -824,10 +806,9 @@
       byCol[P.col].push(P);
     }
 
-    const supplyBuckets = positions.filter((p) => p.row === supplyRowIndex);
-    const bottomBuckets = supplyBuckets;
+    const bottomBuckets = positions.filter((p) => p.row === dist.rows - 1);
     const topBuckets = positions.filter((p) => p.row === 0);
-    const seriesLayout = rdwcPlanIsSeries(dist, positions);
+    const seriesLayout = rdwcPlanIsSeries(dist);
 
     let pipes = '<g class="rdwc-plan-pipes" aria-hidden="true">';
 
@@ -861,7 +842,7 @@
           ta
         );
       }
-      pipes = rdwcPlanImpulsionSupply(pipes, cx, tankBottom, pumpY, trunkX, tapY, supplyBuckets, ta);
+      pipes = rdwcPlanImpulsionSupply(pipes, cx, tankBottom, pumpY, trunkX, tapY, bottomBuckets, ta);
       Object.keys(byCol).forEach((ck) => {
         const list = byCol[ck].sort((a, b) => a.row - b.row);
         if (list.length >= 2) {
