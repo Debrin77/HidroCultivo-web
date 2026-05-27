@@ -1736,7 +1736,8 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
   stroke: none;
   filter: drop-shadow(0 0 1px rgba(15, 23, 42, 0.45));
 }
-#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--multicubo {
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--multicubo,
+#torreSVGWrap.torre-svg-canvas svg.dwc-svg-diagram--mc-plan {
   min-height: min(62vh, 760px);
 }
 /* NFT: el diagrama puede crecer en altura; el scroll es en el contenedor */

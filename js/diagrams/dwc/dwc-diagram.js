@@ -486,6 +486,11 @@ function generarSVGDwc() {
   const esMulticubo =
     typeof dwcGetOxigenacionDiseno === 'function' &&
     dwcGetOxigenacionDiseno(cfg) === 'cubos_independientes';
+  if (esMulticubo && typeof renderDwcMcPlan === 'function') {
+    const siteFn =
+      typeof dwcMcSiteInteractive === 'function' ? dwcMcSiteInteractive : null;
+    return renderDwcMcPlan(cfg, siteFn);
+  }
   const esMcCilindrico = esMulticubo && formaDwc === 'cilindrico';
   const esCilindricoDwc = !esMulticubo && formaDwc === 'cilindrico';
   /** Cubo redondo DWC: siempre 1 maceta; tapa = mismo diámetro que el depósito. */

@@ -780,6 +780,5 @@
   }
 
   global.rdwcPlanDistribuir = rdwcPlanDistribuir;
-  global.rdwcPlanRoundBucket = rdwcPlanRoundBucket;
   global.renderRdwcPlan = renderRdwcPlan;
 })(typeof window !== 'undefined' ? window : globalThis);
