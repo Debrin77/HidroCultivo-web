@@ -16,19 +16,18 @@
   }
 
   function rdwcPlanDistribuir(sites, rows) {
-    const s = Math.max(2, Math.min(64, parseInt(String(sites), 10) || 4));
+    const s = Math.max(1, Math.min(64, parseInt(String(sites), 10) || 4));
     const r = Math.max(1, Math.min(4, parseInt(String(rows), 10) || 1));
-    // Caso compacto pedido por usuario: 2 cubos / 2 filas se muestra como pareja superior (no en línea vertical).
-    if (s === 2 && r === 2) {
-      return {
-        sites: s,
-        rows: r,
-        cols: 2,
-        grid: [
-          { idx: 0, row: 0, col: 0, colsInRow: 2 },
-          { idx: 1, row: 0, col: 1, colsInRow: 2 },
-        ],
-      };
+    // Compacto 2 filas: marco de 2 columnas en fila 0 (pareja). Con 1 cubo queda el hueco derecho vacío.
+    if (r === 2 && (s === 1 || s === 2)) {
+      const grid =
+        s === 2
+          ? [
+              { idx: 0, row: 0, col: 0, colsInRow: 2 },
+              { idx: 1, row: 0, col: 1, colsInRow: 2 },
+            ]
+          : [{ idx: 0, row: 0, col: 0, colsInRow: 2 }];
+      return { sites: s, rows: r, cols: 2, grid: grid };
     }
     const cols = Math.max(1, Math.ceil(s / r));
     const grid = [];
@@ -565,9 +564,103 @@
     return Math.abs(bx - leftGap) <= Math.abs(bx - rightGap) ? leftGap : rightGap;
   }
 
+  /** 2 filas configuradas pero cubos solo en fila 0 (pareja compacta o un cubo en el marco). */
+  function rdwcPlanAirCompactTopRow(s, positions, byCol, bucketR, tankCy, tankR, gridLeft, gridRight, gridTop, pumpAnchor) {
+    const laneGap = bucketR * 1.68;
+    const airBusY = tankCy + tankR + 10;
+    const airTopY = gridTop - bucketR * 0.3;
+    const airBotY = gridTop + bucketR * 0.55;
+    const leftLane = gridLeft - laneGap;
+    const rightLane = gridRight + laneGap;
+
+    const colKeys = Object.keys(byCol)
+      .map(Number)
+      .sort((a, b) => a - b);
+    const colCenters = colKeys.map((ck) => byCol[ck][0].x);
+    const midLane = colCenters.length >= 2 ? (colCenters[0] + colCenters[1]) / 2 : null;
+
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(pumpAnchor.outX) + ' ' + f1(pumpAnchor.outY) + ' L ' + f1(pumpAnchor.outX) + ' ' + f1(airBusY),
+      2.6
+    );
+    const busJoinX = Math.max(leftLane, Math.min(rightLane, pumpAnchor.outX));
+    if (Math.abs(busJoinX - pumpAnchor.outX) > 1) {
+      s += rdwcPlanAirTubePath(
+        'M ' + f1(pumpAnchor.outX) + ' ' + f1(airBusY) + ' L ' + f1(busJoinX) + ' ' + f1(airBusY),
+        2.4
+      );
+    }
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(leftLane) + ' ' + f1(airBusY) + ' L ' + f1(rightLane) + ' ' + f1(airBusY),
+      2.4
+    );
+
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(leftLane) + ' ' + f1(airBusY) + ' L ' + f1(leftLane) + ' ' + f1(airBotY),
+      2.3
+    );
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(rightLane) + ' ' + f1(airBusY) + ' L ' + f1(rightLane) + ' ' + f1(airBotY),
+      2.3
+    );
+    if (midLane !== null) {
+      s += rdwcPlanAirTubePath(
+        'M ' + f1(midLane) + ' ' + f1(airBusY) + ' L ' + f1(midLane) + ' ' + f1(airBotY),
+        2.3
+      );
+    }
+
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(leftLane) + ' ' + f1(airTopY) + ' L ' + f1(rightLane) + ' ' + f1(airTopY),
+      2.2
+    );
+    s += rdwcPlanAirTubePath(
+      'M ' + f1(leftLane) + ' ' + f1(airBotY) + ' L ' + f1(rightLane) + ' ' + f1(airBotY),
+      2.2
+    );
+
+    const laneXs = [leftLane];
+    if (midLane !== null) laneXs.push(midLane);
+    laneXs.push(rightLane);
+
+    for (let ci = 0; ci < colKeys.length; ci++) {
+      const ck = colKeys[ci];
+      const list = byCol[ck].sort((a, b) => a.row - b.row);
+      if (!list.length) continue;
+      const spineX = rdwcPlanAirSpineX(ci, colKeys, colCenters, laneXs, leftLane, rightLane);
+      const sideSign = spineX < list[0].x ? -1 : 1;
+      for (let i = 0; i < list.length; i++) {
+        const P = list[i];
+        const entryX = P.x + sideSign * bucketR * 0.44;
+        const entryY = P.y + bucketR * 0.5;
+        s += rdwcPlanAirTubePath(
+          'M ' + f1(spineX) + ' ' + f1(airBotY) + ' L ' + f1(spineX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+          2.1
+        );
+      }
+    }
+    return s;
+  }
+
   /** Aire: un solo origen (bomba) → colector bajo depósito → bajantes entre columnas → cubos. */
-  function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankCy, tankR, gridLeft, gridRight, gridTop, bottomRowY, pumpAnchor) {
+  function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankCy, tankR, gridLeft, gridRight, gridTop, bottomRowY, pumpAnchor, dist) {
     if (!positions.length) return s;
+    const compactTopRow =
+      dist.rows >= 2 && positions.length > 0 && positions.every((p) => p.row === 0);
+    if (compactTopRow) {
+      return rdwcPlanAirCompactTopRow(
+        s,
+        positions,
+        byCol,
+        bucketR,
+        tankCy,
+        tankR,
+        gridLeft,
+        gridRight,
+        gridTop,
+        pumpAnchor
+      );
+    }
     const laneGap = bucketR * 1.68;
     const airBusY = tankCy + tankR + 10;
     const airTopY = gridTop - bucketR * 0.3;
@@ -812,7 +905,8 @@
       gridRight,
       gridTop,
       bottomRowY,
-      airPumpAnchor
+      airPumpAnchor,
+      dist
     );
     pipes += '</g>';
     s += pipes;
