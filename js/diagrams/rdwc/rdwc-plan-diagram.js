@@ -94,9 +94,11 @@
     );
   }
 
+  const PLAN_CHROME_H = 56;
+
   /** Leyenda de tuberías; rightX = borde derecho del bloque (alineado a la derecha del SVG). */
   function rdwcPlanFlowLegend(rightX, y) {
-    const legendW = 168;
+    const legendW = 118;
     return (
       '<g class="rdwc-plan-legend" transform="translate(' +
       (rightX - legendW) +
@@ -104,15 +106,32 @@
       y +
       ')" pointer-events="none" aria-hidden="true">' +
       rdwcPlanLegendTube(0, 6, 16, 'impulse') +
-      '<text x="20" y="9" font-size="8" fill="#854d0e" font-family="system-ui,sans-serif" font-weight="600">Impulsión (depósito)</text>' +
+      '<text x="20" y="9" font-size="8" fill="#854d0e" font-family="system-ui,sans-serif" font-weight="600">Impulsión</text>' +
       rdwcPlanLegendTube(0, 18, 16, 'supply') +
-      '<text x="20" y="21" font-size="8" fill="#9d174d" font-family="system-ui,sans-serif" font-weight="600">Reparto (bomba → cubos)</text>' +
+      '<text x="20" y="21" font-size="8" fill="#9d174d" font-family="system-ui,sans-serif" font-weight="600">Reparto</text>' +
       rdwcPlanLegendTube(0, 30, 16, 'return') +
-      '<text x="20" y="33" font-size="8" fill="#9a3412" font-family="system-ui,sans-serif" font-weight="600">Retorno (cubos → depósito)</text>' +
+      '<text x="20" y="33" font-size="8" fill="#9a3412" font-family="system-ui,sans-serif" font-weight="600">Retorno</text>' +
       rdwcPlanLegendTube(0, 42, 16, 'air') +
       '<text x="20" y="45" font-size="8" fill="#166534" font-family="system-ui,sans-serif" font-weight="600">Aire</text>' +
       '</g>'
     );
+  }
+
+  /** Cabecera fija: título de vista (izq.) y leyenda (der.) sin invadir el depósito. */
+  function rdwcPlanChromeSvg(W) {
+    let o =
+      '<g class="rdwc-plan-chrome" data-hc-layout="v3" pointer-events="none" aria-hidden="true">' +
+      '<rect x="0" y="0" width="' +
+      W +
+      '" height="' +
+      PLAN_CHROME_H +
+      '" fill="rgba(250,250,249,0.96)"/>';
+    if (typeof hcDiagramViewLabelSvg === 'function') {
+      o += hcDiagramViewLabelSvg(10, 18, 'cenital', { pointerEvents: false, anchor: 'start' });
+    }
+    o += rdwcPlanFlowLegend(W - 8, 6);
+    o += '</g>';
+    return o;
   }
 
   /** Aire: trazo discontinuo simple (el brillo triple desalineaba el patrón). */
@@ -624,7 +643,7 @@
     const gridH = (dist.rows - 1) * rowStep;
     const W = Math.min(780, Math.max(420, marginX * 2 + gridW + bucketR * 2 + 40));
     const cx = W / 2;
-    const tankCy = 56 + tankR;
+    const tankCy = PLAN_CHROME_H + 14 + tankR;
     const gridTop = tankCy + tankR + 50;
     const H = gridTop + gridH + bucketR * 2 + 40;
 
@@ -676,12 +695,7 @@
         '<defs><linearGradient id="rdwcScadaBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fafaf9"/><stop offset="100%" stop-color="#e7e5e4"/></linearGradient></defs>';
     }
     s += '<rect width="' + W + '" height="' + H + '" fill="url(#rdwcScadaBg)"/>';
-
-    if (typeof hcDiagramViewLabelSvg === 'function') {
-      s += hcDiagramViewLabelSvg(12, 12, 'cenital', { pointerEvents: false, anchor: 'start' });
-    }
-
-    s += rdwcPlanFlowLegend(W - 10, 8);
+    s += rdwcPlanChromeSvg(W);
 
     const rowsLabelY = dist.rows >= 2 ? gridTop + gridH / 2 : gridTop + bucketR * 0.55;
     s += rdwcPlanRowsLabel(22, rowsLabelY, dist.rows);
@@ -748,7 +762,7 @@
       'RDWC · ' + dist.sites + ' cubos · ' + dist.rows + ' filas · ' + volLbl + ' · recirc. ' + recLh + ' L/h';
 
     return (
-      '<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--plan rdwc-svg-diagram--plan-manual rdwc-svg-diagram--scada svg-centered-block" width="' +
+      '<svg class="torre-svg-diagram rdwc-svg-diagram rdwc-svg-diagram--plan rdwc-svg-diagram--plan-manual rdwc-svg-diagram--scada svg-centered-block" data-hc-rdwc-plan="v3" width="' +
       W +
       '" height="' +
       H +
