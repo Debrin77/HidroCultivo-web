@@ -18,6 +18,18 @@
   function rdwcPlanDistribuir(sites, rows) {
     const s = Math.max(2, Math.min(64, parseInt(String(sites), 10) || 4));
     const r = Math.max(1, Math.min(4, parseInt(String(rows), 10) || 1));
+    // Caso compacto pedido por usuario: 2 cubos / 2 filas se muestra como pareja superior (no en línea vertical).
+    if (s === 2 && r === 2) {
+      return {
+        sites: s,
+        rows: r,
+        cols: 2,
+        grid: [
+          { idx: 0, row: 0, col: 0, colsInRow: 2 },
+          { idx: 1, row: 0, col: 1, colsInRow: 2 },
+        ],
+      };
+    }
     const cols = Math.max(1, Math.ceil(s / r));
     const grid = [];
     let idx = 0;
@@ -520,6 +532,7 @@
   /** Aire: desde bomba en depósito → línea principal → derivaciones a cubos. */
   function rdwcPlanAirRoutes(s, positions, byCol, bucketR, tankCx, tankCy, tankR, gridLeft, gridRight, pumpAnchor, ta) {
     const airRailY = tankCy - tankR * 0.15;
+    // Tramo explícito bomba -> colector de aire (siempre visible)
     s += rdwcPlanTubePath(
       'M ' + f1(pumpAnchor.outX) + ' ' + f1(pumpAnchor.outY) + ' L ' + f1(tankCx) + ' ' + f1(airRailY),
       'air',
