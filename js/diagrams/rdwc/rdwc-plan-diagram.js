@@ -56,18 +56,18 @@
     air: { rim: '#c2410c', body: '#fdba74', shine: '#fff7ed' },
   };
 
-  function rdwcPlanLegendTube(x1, y1, x2, kind) {
+  function rdwcPlanLegendTube(x1, y, x2, kind) {
     const st = TUBE_STYLE[kind] || TUBE_STYLE.return;
     const w = 4.5;
     return (
       '<line x1="' +
       x1 +
       '" y1="' +
-      y1 +
+      y +
       '" x2="' +
       x2 +
       '" y2="' +
-      y2 +
+      y +
       '" stroke="' +
       st.rim +
       '" stroke-width="' +
@@ -76,11 +76,11 @@
       '<line x1="' +
       x1 +
       '" y1="' +
-      y1 +
+      y +
       '" x2="' +
       x2 +
       '" y2="' +
-      y2 +
+      y +
       '" stroke="' +
       st.body +
       '" stroke-width="' +
