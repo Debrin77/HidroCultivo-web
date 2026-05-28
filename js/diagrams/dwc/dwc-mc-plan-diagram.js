@@ -82,9 +82,9 @@
     return { svg: o, stoneX: cx, stoneY: stoneY };
   }
 
-  function dwcMcPlanAirTube(d, sw) {
+  function dwcMcPlanAirTube(d, sw, dashed) {
     const w = sw || 2.6;
-    const dash = ' stroke-dasharray="6 4"';
+    const dash = dashed === false ? '' : ' stroke-dasharray="6 4"';
     return (
       '<g class="dwc-mc-plan-air-tube">' +
       '<path d="' +
@@ -144,7 +144,7 @@
       const P = sorted[0];
       const entryY = P.y + bucketR * 0.48;
       s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.3);
-      if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
+      if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8, false);
       return s;
     }
 
@@ -154,7 +154,7 @@
         const entryY = P.y + bucketR * 0.48;
         s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.3);
       }
-      if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
+      if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8, false);
       return s;
     }
 
@@ -163,13 +163,11 @@
       .sort((a, b) => a - b);
     const colCenters = colKeys.map((ck) => byCol[ck][0].x);
     const nCols = colKeys.length;
-    const railJunctionXs = [];
     if (dist.rows > 1 && nCols > 0) {
       const spineXs = [];
       for (let ci = 0; ci < colKeys.length; ci++) {
         const sx = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX);
         spineXs.push(sx);
-        railJunctionXs.push(sx);
       }
       railX0 = Math.min(railX0, ...spineXs);
       railX1 = Math.max(railX1, ...spineXs);
@@ -192,27 +190,7 @@
         );
       }
     }
-    if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
-    if (railJunctionXs.length) {
-      for (let ji = 0; ji < railJunctionXs.length; ji++) {
-        const jx = railJunctionXs[ji];
-        s +=
-          '<circle cx="' +
-          f1(jx) +
-          '" cy="' +
-          f1(airRailY) +
-          '" r="3.1" fill="' +
-          C_AIR_RIM +
-          '"/>' +
-          '<circle cx="' +
-          f1(jx) +
-          '" cy="' +
-          f1(airRailY) +
-          '" r="2.1" fill="' +
-          C_AIR_BODY +
-          '"/>';
-      }
-    }
+    if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8, false);
     return s;
   }
 
