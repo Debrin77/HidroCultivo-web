@@ -674,22 +674,31 @@ function generarSVGRdwc() {
 
 
 /** Núcleo torre (cestas + depósito). Envoltorio SCADA: js/diagrams/torre/torre-diagram.js */
-/** Bomba DWC + manguera a piedra difusora (asistente y pestaña Cultivo). */
-function torreSvgDepositoAirDwc(depX, depY, depW, depH) {
-  if (typeof dwcSvgAirPumpExternal !== 'function') return '';
-  const pumpScale = 0.74;
-  const pumpX = depX + depW + 14;
+/**
+ * Bomba DWC unificada (misma que NFT/DWC/RDWC) + manguera a piedra.
+ * idSuffix evita colisión de #dwcPumpDome entre varios SVG en la misma página.
+ */
+function torreSvgDepositoAirDwc(depX, depY, depW, depH, idSuffix) {
+  if (typeof dwcSvgAirPumpExternal !== 'function') return { defs: '', html: '' };
+  const gid = 'dwcPumpDome' + String(idSuffix || 'T').replace(/[^a-zA-Z0-9_]/g, '');
+  const defs =
+    '<linearGradient id="' +
+    gid +
+    '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/></linearGradient>';
+  const pumpScale = 0.82;
+  const pumpX = depX + depW + 12;
   const pumpY = depY + depH - 40 * pumpScale;
   const piedraX = depX + Math.round(depW * 0.55);
   const piedraY = depY + depH - 11;
   const pump = dwcSvgAirPumpExternal(0, 0, 1);
+  const pumpSvg = pump.svg.replace(/dwcPumpDome/g, gid);
   const o0 = pump.outlets[0] || { x: 0, y: 12 + 0.55 * 34 };
   const pumpOutX = pumpX + o0.x * pumpScale;
   const pumpOutY = pumpY + o0.y * pumpScale;
   const wallX = depX + depW - 3;
   const entryY = depY + depH * 0.52;
-  let s =
-    '<g class="torre-dwc-air" aria-hidden="true">' +
+  let html =
+    '<g class="torre-dwc-air">' +
     '<g class="torre-dwc-pump" transform="translate(' +
     pumpX.toFixed(1) +
     ' ' +
@@ -697,12 +706,12 @@ function torreSvgDepositoAirDwc(depX, depY, depW, depH) {
     ') scale(' +
     pumpScale.toFixed(3) +
     ')">' +
-    pump.svg +
+    pumpSvg +
     '</g>';
   if (typeof dwcSvgAirHosePumpToStone === 'function') {
-    s += dwcSvgAirHosePumpToStone(pumpOutX, pumpOutY, wallX, entryY, piedraX, piedraY, 1.8, 0.95);
+    html += dwcSvgAirHosePumpToStone(pumpOutX, pumpOutY, wallX, entryY, piedraX, piedraY, 1.8, 0.95);
   } else {
-    s +=
+    html +=
       '<path d="M ' +
       pumpOutX.toFixed(1) +
       ' ' +
@@ -717,20 +726,16 @@ function torreSvgDepositoAirDwc(depX, depY, depW, depH) {
       piedraY.toFixed(1) +
       '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
   }
-  s +=
+  html +=
     '<ellipse cx="' +
     piedraX.toFixed(1) +
     '" cy="' +
     piedraY.toFixed(1) +
     '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>' +
-    '<ellipse cx="' +
-    piedraX.toFixed(1) +
-    '" cy="' +
-    (piedraY - 1).toFixed(1) +
-    '" rx="6" ry="3" fill="#d1d5db" opacity="0.55"/>' +
     '</g>';
-  return s;
+  return { defs: defs, html: html };
 }
+if (typeof window !== 'undefined') window.torreSvgDepositoAirDwc = torreSvgDepositoAirDwc;
 
 function _buildTorreSvgLegacy() {
   // Usar configuración REAL de la torre activa
@@ -839,10 +844,6 @@ function _buildTorreSvgLegacy() {
     <clipPath id="depClip">
       <rect x="${DEP_X+3}" y="${DEP_Y+3}" width="${DEP_W-6}" height="${DEP_H-6}" rx="10"/>
     </clipPath>
-    <linearGradient id="dwcPumpDome" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ffb74d"/>
-      <stop offset="100%" stop-color="#ff9800"/>
-    </linearGradient>
   </defs>`;
 
   // ── EJE CENTRAL ───────────────────────────────────────────────────────────
@@ -955,7 +956,11 @@ function _buildTorreSvgLegacy() {
 
   // ── DIFUSOR DE AIRE (bomba DWC + manguera a piedra) ───────────────────────
   if (tieneDifusor) {
-    s += torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H);
+    const airLeg = torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H, 'Leg');
+    if (airLeg.defs) {
+      s = s.replace('</defs>', airLeg.defs + '</defs>');
+    }
+    s += airLeg.html;
     if (ta) {
       const ax = DEP_X + Math.round(DEP_W * 0.55);
       const ay = DEP_Y + DEP_H - 11;

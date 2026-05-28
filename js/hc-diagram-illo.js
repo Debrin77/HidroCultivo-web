@@ -2468,59 +2468,11 @@
   }
 
   function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor, u) {
-    if (!tieneDifusor) return '';
-    var pumpScale = 0.74;
-    var pumpX = depX + depW + 10;
-    var pumpY = depY + depH - 40 * pumpScale;
-    var piedraX = depX + Math.round(depW * 0.58);
-    var piedraY = depY + depH - 11;
-    var pumpOutX = pumpX;
-    var pumpOutY = pumpY + 12 * pumpScale + (40 * pumpScale - 6 * pumpScale) * 0.55;
-    var s = '';
-    if (typeof dwcSvgAirPumpExternal === 'function') {
-      var pump = dwcSvgAirPumpExternal(0, 0, 1);
-      s +=
-        '<g class="hc-illo-dwc-pump" transform="translate(' +
-        f1(pumpX) +
-        ' ' +
-        f1(pumpY) +
-        ') scale(' +
-        pumpScale.toFixed(3) +
-        ')">' +
-        pump.svg +
-        '</g>';
-    } else {
-      s += airPumpModern(pumpX, pumpY, 54 * pumpScale, 40 * pumpScale, u || 'torre');
+    if (!tieneDifusor) return { defs: '', html: '' };
+    if (typeof torreSvgDepositoAirDwc === 'function') {
+      return torreSvgDepositoAirDwc(depX, depY, depW, depH, u || 'illo');
     }
-    if (typeof dwcSvgAirHosePumpToStone === 'function') {
-      s += dwcSvgAirHosePumpToStone(pumpOutX, pumpOutY, depX + depW - 4, depY + depH * 0.55, piedraX, piedraY, 1.6, 0.9);
-    } else {
-      s +=
-        '<path d="M ' +
-        f1(pumpOutX) +
-        ' ' +
-        f1(pumpOutY) +
-        ' L ' +
-        f1(piedraX + 12) +
-        ' ' +
-        f1(pumpOutY) +
-        ' L ' +
-        f1(piedraX + 12) +
-        ' ' +
-        f1(piedraY) +
-        ' L ' +
-        f1(piedraX) +
-        ' ' +
-        f1(piedraY) +
-        '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
-    }
-    s +=
-      '<ellipse cx="' +
-      f1(piedraX) +
-      '" cy="' +
-      f1(piedraY) +
-      '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>';
-    return s;
+    return { defs: '', html: '' };
   }
 
   window.hcIlloTorreLayout = hcIlloTorreLayout;
@@ -2637,7 +2589,9 @@
           '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
       }
       body += tankFront(depXv, depYv, depWv, DEP_H, volPct, u, ta, true, true);
-      body += hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true, u);
+      var airCorte = hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true, u);
+      if (airCorte.defs) body = body.replace('</defs>', airCorte.defs + '</defs>');
+      body += airCorte.html;
       body +=
         '<path d="M ' +
         f1(depXv + depWv - 20) +
@@ -2751,8 +2705,7 @@
       } catch (_) {}
       tankPack = null;
     }
-    var extraDefs =
-      '<linearGradient id="dwcPumpDome" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/></linearGradient>';
+    var extraDefs = '';
     if (tankPack && tankPack.defs) extraDefs += tankPack.defs;
     if (body.indexOf('</defs>') >= 0) {
       body = body.replace('</defs>', extraDefs + '</defs>');
@@ -2835,7 +2788,17 @@
         '" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1"/>';
     }
     try {
-      body += hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, tieneDifusor, u);
+      if (tieneDifusor) {
+        var airEsquema = hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, true, u);
+        if (airEsquema.defs) {
+          if (body.indexOf('</defs>') >= 0) {
+            body = body.replace('</defs>', airEsquema.defs + '</defs>');
+          } else {
+            body = '<defs>' + airEsquema.defs + '</defs>' + body;
+          }
+        }
+        body += airEsquema.html;
+      }
     } catch (airErr) {
       try {
         console.warn('hcIlloGenerarSVGTorre air', airErr);

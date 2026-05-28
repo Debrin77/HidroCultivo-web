@@ -544,7 +544,8 @@ function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
 
 /** Bomba DWC + manguera a piedra (preview asistente; motor en torre-render-build.js). */
 function torrePreviewAireadorSvg(depX, depY, depW, depH) {
-  return typeof torreSvgDepositoAirDwc === 'function' ? torreSvgDepositoAirDwc(depX, depY, depW, depH) : '';
+  if (typeof torreSvgDepositoAirDwc !== 'function') return { defs: '', html: '' };
+  return torreSvgDepositoAirDwc(depX, depY, depW, depH, 'TorPrv');
 }
 
 /** Bomba de aire en suelo, separada del depósito; piedra difusora dentro del agua, alejada del borde del depósito. */
@@ -2519,7 +2520,7 @@ function updateTorreBuilder() {
       (n + 1) +
       '</text>';
   }
-  const torrePreviewAirSvg = hasAir ? torrePreviewAireadorSvg(depX, depY, depW, depH) : '';
+  const torrePreviewAir = hasAir ? torrePreviewAireadorSvg(depX, depY, depW, depH) : { defs: '', html: '' };
   const volOutsideY = depY + depH + 22;
   const volOutsideSvg =
     typeof hcDiagramVolLabelSvg === 'function'
@@ -2548,7 +2549,7 @@ function updateTorreBuilder() {
     '<linearGradient id="tpTopBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef8f1"/><stop offset="100%" stop-color="#f7fbf8"/></linearGradient>' +
     '<linearGradient id="tpBotBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f4f6f8"/><stop offset="100%" stop-color="#eef2f6"/></linearGradient>' +
     '<linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#334155"/></linearGradient>' +
-    '<linearGradient id="dwcPumpDome" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/></linearGradient>' +
+    torrePreviewAir.defs +
     tankPreview.defs +
     '</defs>' +
     '<rect x="1" y="1" width="' +
@@ -2654,7 +2655,7 @@ function updateTorreBuilder() {
     (depW * 0.44).toFixed(1) +
     '" ry="6" fill="rgba(15,23,42,0.14)"/>' +
     tankPreview.html +
-    torrePreviewAirSvg +
+    torrePreviewAir.html +
     volOutsideSvg +
     '<line x1="' +
     (towerX + 48).toFixed(1) +

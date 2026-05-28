@@ -1,11 +1,17 @@
 /**
- * Envoltorio SCADA para diagrama de torre (usa _buildTorreSvgLegacy en torre-render-build.js).
+ * Diagrama de torre: diseño hc-illo (maqueta 3D) con fallback legacy.
  */
 (function (global) {
   'use strict';
 
   function tagTorreScada(svg) {
     if (!svg || typeof svg !== 'string' || svg.indexOf('<svg') < 0) return svg;
+    if (svg.indexOf('hc-illo-torre') >= 0) {
+      if (svg.indexOf('torre-svg-diagram--scada') < 0) {
+        return svg.replace(/class="([^"]*)"/, 'class="torre-svg-diagram--scada $1"');
+      }
+      return svg;
+    }
     let s = svg;
     if (s.indexOf('torre-svg-diagram--scada') < 0) {
       s = s.replace(/class="([^"]*)"/, 'class="torre-svg-diagram--scada $1"');
@@ -41,55 +47,51 @@
             '" height="' +
             vh +
             '" fill="url(#torreScadaBg)" pointer-events="none"/>' +
-            (s.indexOf('hc-illo-torre') < 0 && typeof hcDiagramViewLabelSvg === 'function'
+            (typeof hcDiagramViewLabelSvg === 'function'
               ? hcDiagramViewLabelSvg(vx + vw / 2, vy + 14, 'frontal', { pointerEvents: false })
-              : s.indexOf('hc-illo-torre') < 0
-                ? '<text x="' +
-                  (vx + vw / 2) +
-                  '" y="' +
-                  (vy + 14) +
-                  '" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Vista frontal</text>'
-                : '')
+              : '<text x="' +
+                (vx + vw / 2) +
+                '" y="' +
+                (vy + 14) +
+                '" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Vista frontal</text>')
         );
       }
     }
     return s;
   }
 
-  /** HTML del diagrama de torre para #torreSVGWrap (legacy estable primero). */
+  function torreDiagramSvgLooksValid(svg) {
+    return (
+      svg &&
+      typeof svg === 'string' &&
+      svg.indexOf('<svg') >= 0 &&
+      svg.indexOf('hc-baskets-n-0') >= 0
+    );
+  }
+
+  /** Diseño acordado (hc-illo); legacy solo si falla. */
   function hcRenderTorreDiagramHtml() {
-    if (typeof _buildTorreSvgLegacy === 'function') {
-      try {
-        const leg = _buildTorreSvgLegacy();
-        if (leg && leg.indexOf('<svg') >= 0) {
-          try {
-            return tagTorreScada(leg);
-          } catch (tagErr) {
-            try {
-              console.error('tagTorreScada', tagErr);
-            } catch (_) {}
-            return leg;
-          }
-        }
-      } catch (e2) {
-        try {
-          console.error('_buildTorreSvgLegacy', e2);
-        } catch (_) {}
-      }
-    }
     if (typeof hcIlloGenerarSVGTorre === 'function') {
       try {
         const illo = hcIlloGenerarSVGTorre();
-        if (illo && illo.indexOf('<svg') >= 0) {
-          try {
-            return tagTorreScada(illo);
-          } catch (tagErr2) {
-            return illo;
-          }
+        if (torreDiagramSvgLooksValid(illo) && illo.indexOf('hc-illo-torre') >= 0) {
+          return tagTorreScada(illo);
         }
       } catch (e) {
         try {
           console.error('hcIlloGenerarSVGTorre', e);
+        } catch (_) {}
+      }
+    }
+    if (typeof _buildTorreSvgLegacy === 'function') {
+      try {
+        const leg = _buildTorreSvgLegacy();
+        if (torreDiagramSvgLooksValid(leg)) {
+          return tagTorreScada(leg);
+        }
+      } catch (e2) {
+        try {
+          console.error('_buildTorreSvgLegacy', e2);
         } catch (_) {}
       }
     }

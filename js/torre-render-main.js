@@ -169,6 +169,7 @@ function renderTorre() {
     }
   } else {
     if (!state.configTorre) state.configTorre = {};
+    if (!state.configTorre.torreDiagramaVista) state.configTorre.torreDiagramaVista = 'esquema';
     if (state.configTorre.torreVistaModo === 'lista') {
       state.configTorre.torreVistaModo = 'esquema';
     }
