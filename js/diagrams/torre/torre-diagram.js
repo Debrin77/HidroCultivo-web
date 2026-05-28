@@ -12,13 +12,17 @@
     }
     if (s.indexOf('torreScadaBg') < 0) {
       const vbM = s.match(/viewBox=["']([^"']+)["']/i);
-      let W = 360;
-      let H = 400;
+      let vx = 0;
+      let vy = 0;
+      let vw = 360;
+      let vh = 400;
       if (vbM) {
         const p = vbM[1].trim().split(/[\s,]+/).map(Number);
         if (p.length >= 4) {
-          W = p[2];
-          H = p[3];
+          vx = p[0] || 0;
+          vy = p[1] || 0;
+          vw = p[2];
+          vh = p[3];
         }
       }
       const grad =
@@ -28,30 +32,45 @@
         s = s.replace(/<defs([^>]*)>/i, '<defs$1>' + grad);
         s = s.replace(
           /<\/defs>/i,
-          '</defs><rect class="torre-scada-bg" width="' +
-            W +
+          '</defs><rect class="torre-scada-bg" x="' +
+            vx +
+            '" y="' +
+            vy +
+            '" width="' +
+            vw +
             '" height="' +
-            H +
+            vh +
             '" fill="url(#torreScadaBg)" pointer-events="none"/>' +
-            s.indexOf('hc-illo-torre') < 0 && typeof hcDiagramViewLabelSvg === 'function'
-              ? hcDiagramViewLabelSvg(W / 2, 14, 'frontal', { pointerEvents: false })
+            (s.indexOf('hc-illo-torre') < 0 && typeof hcDiagramViewLabelSvg === 'function'
+              ? hcDiagramViewLabelSvg(vx + vw / 2, vy + 14, 'frontal', { pointerEvents: false })
               : s.indexOf('hc-illo-torre') < 0
                 ? '<text x="' +
-                  W / 2 +
-                  '" y="14" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Vista frontal</text>'
-                : ''
+                  (vx + vw / 2) +
+                  '" y="' +
+                  (vy + 14) +
+                  '" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Vista frontal</text>'
+                : '')
         );
       }
     }
     return s;
   }
 
-  function buildTorreDiagramSvg() {
-    /* Motor legacy: cestas interactivas, giro y depósito probados en producción. */
+  /** HTML del diagrama de torre para #torreSVGWrap (legacy estable primero). */
+  function hcRenderTorreDiagramHtml() {
     if (typeof _buildTorreSvgLegacy === 'function') {
       try {
         const leg = _buildTorreSvgLegacy();
-        if (leg && leg.indexOf('<svg') >= 0) return tagTorreScada(leg);
+        if (leg && leg.indexOf('<svg') >= 0) {
+          try {
+            return tagTorreScada(leg);
+          } catch (tagErr) {
+            try {
+              console.error('tagTorreScada', tagErr);
+            } catch (_) {}
+            return leg;
+          }
+        }
       } catch (e2) {
         try {
           console.error('_buildTorreSvgLegacy', e2);
@@ -61,7 +80,13 @@
     if (typeof hcIlloGenerarSVGTorre === 'function') {
       try {
         const illo = hcIlloGenerarSVGTorre();
-        if (illo && illo.indexOf('<svg') >= 0) return tagTorreScada(illo);
+        if (illo && illo.indexOf('<svg') >= 0) {
+          try {
+            return tagTorreScada(illo);
+          } catch (tagErr2) {
+            return illo;
+          }
+        }
       } catch (e) {
         try {
           console.error('hcIlloGenerarSVGTorre', e);
@@ -71,10 +96,16 @@
     return '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema de torre. Recarga la página (Ctrl+F5).</p>';
   }
 
-  function generarSVGTorre() {
-    return buildTorreDiagramSvg();
+  function buildTorreDiagramSvg() {
+    return hcRenderTorreDiagramHtml();
   }
 
+  function generarSVGTorre() {
+    return hcRenderTorreDiagramHtml();
+  }
+
+  global.tagTorreScada = tagTorreScada;
+  global.hcRenderTorreDiagramHtml = hcRenderTorreDiagramHtml;
   global.buildTorreDiagramSvg = buildTorreDiagramSvg;
   global.generarSVGTorre = generarSVGTorre;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -407,6 +407,12 @@ function goTab(tab) {
   if (tab === 'calendario') { calFecha = new Date(); calDiaSeleccionado = null; renderCalendario(); }
   if (tab === 'sistema') {
     renderTorre();
+    requestAnimationFrame(() => {
+      try {
+        const w = document.getElementById('torreSVGWrap');
+        if (w && w.querySelector('.torre-loading-placeholder')) renderTorre();
+      } catch (_) {}
+    });
     renderCompatGrid();
     calcularRotacion();
     const postSetupCultivos =

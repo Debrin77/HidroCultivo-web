@@ -168,26 +168,26 @@ function renderTorre() {
       } catch (_) {}
     }
   } else {
+    if (!state.configTorre) state.configTorre = {};
+    if (state.configTorre.torreVistaModo === 'lista') {
+      state.configTorre.torreVistaModo = 'esquema';
+    }
     try {
-      wrap.innerHTML = typeof generarSVGTorre === 'function' ? generarSVGTorre() : '';
+      const renderFn =
+        typeof hcRenderTorreDiagramHtml === 'function'
+          ? hcRenderTorreDiagramHtml
+          : typeof generarSVGTorre === 'function'
+            ? generarSVGTorre
+            : typeof _buildTorreSvgLegacy === 'function'
+              ? _buildTorreSvgLegacy
+              : null;
+      wrap.innerHTML = renderFn ? renderFn() : '';
     } catch (eTorreSvg) {
       wrap.innerHTML =
         '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema de torre. Recarga la página (Ctrl+F5).</p>';
       try {
-        console.error('generarSVGTorre', eTorreSvg);
+        console.error('hcRenderTorreDiagramHtml', eTorreSvg);
       } catch (_) {}
-    }
-    if (!wrap.innerHTML || !String(wrap.innerHTML).trim() || String(wrap.innerHTML).indexOf('<svg') < 0) {
-      try {
-        if (typeof _buildTorreSvgLegacy === 'function') {
-          const leg = _buildTorreSvgLegacy();
-          if (leg && leg.indexOf('<svg') >= 0) wrap.innerHTML = leg;
-        }
-      } catch (eLeg) {
-        try {
-          console.error('_buildTorreSvgLegacy fallback', eLeg);
-        } catch (_) {}
-      }
     }
     if (!wrap.innerHTML || String(wrap.innerHTML).indexOf('<svg') < 0) {
       wrap.innerHTML =
@@ -447,7 +447,12 @@ function initTorreGestos(wrap) {
       if (dragRotating && wrap.querySelector('#hc-baskets-n-0')) {
         pintarSoloCestas();
       } else {
-        wrap.innerHTML = generarSVGTorre();
+        wrap.innerHTML =
+          typeof hcRenderTorreDiagramHtml === 'function'
+            ? hcRenderTorreDiagramHtml()
+            : typeof generarSVGTorre === 'function'
+              ? generarSVGTorre()
+              : '';
         if (!dragRotating) {
           bindTorreCestas(wrap, { suppressTapIfMoved: () => moved > 10 });
           bindTorreRotFlechas(wrap);

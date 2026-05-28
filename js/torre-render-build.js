@@ -674,6 +674,64 @@ function generarSVGRdwc() {
 
 
 /** Núcleo torre (cestas + depósito). Envoltorio SCADA: js/diagrams/torre/torre-diagram.js */
+/** Bomba DWC + manguera a piedra difusora (asistente y pestaña Cultivo). */
+function torreSvgDepositoAirDwc(depX, depY, depW, depH) {
+  if (typeof dwcSvgAirPumpExternal !== 'function') return '';
+  const pumpScale = 0.74;
+  const pumpX = depX + depW + 14;
+  const pumpY = depY + depH - 40 * pumpScale;
+  const piedraX = depX + Math.round(depW * 0.55);
+  const piedraY = depY + depH - 11;
+  const pump = dwcSvgAirPumpExternal(0, 0, 1);
+  const o0 = pump.outlets[0] || { x: 0, y: 12 + 0.55 * 34 };
+  const pumpOutX = pumpX + o0.x * pumpScale;
+  const pumpOutY = pumpY + o0.y * pumpScale;
+  const wallX = depX + depW - 3;
+  const entryY = depY + depH * 0.52;
+  let s =
+    '<g class="torre-dwc-air" aria-hidden="true">' +
+    '<g class="torre-dwc-pump" transform="translate(' +
+    pumpX.toFixed(1) +
+    ' ' +
+    pumpY.toFixed(1) +
+    ') scale(' +
+    pumpScale.toFixed(3) +
+    ')">' +
+    pump.svg +
+    '</g>';
+  if (typeof dwcSvgAirHosePumpToStone === 'function') {
+    s += dwcSvgAirHosePumpToStone(pumpOutX, pumpOutY, wallX, entryY, piedraX, piedraY, 1.8, 0.95);
+  } else {
+    s +=
+      '<path d="M ' +
+      pumpOutX.toFixed(1) +
+      ' ' +
+      pumpOutY.toFixed(1) +
+      ' L ' +
+      wallX.toFixed(1) +
+      ' ' +
+      pumpOutY.toFixed(1) +
+      ' L ' +
+      piedraX.toFixed(1) +
+      ' ' +
+      piedraY.toFixed(1) +
+      '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
+  }
+  s +=
+    '<ellipse cx="' +
+    piedraX.toFixed(1) +
+    '" cy="' +
+    piedraY.toFixed(1) +
+    '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>' +
+    '<ellipse cx="' +
+    piedraX.toFixed(1) +
+    '" cy="' +
+    (piedraY - 1).toFixed(1) +
+    '" rx="6" ry="3" fill="#d1d5db" opacity="0.55"/>' +
+    '</g>';
+  return s;
+}
+
 function _buildTorreSvgLegacy() {
   // Usar configuración REAL de la torre activa
   const cfg = state.configTorre || {};
@@ -781,6 +839,10 @@ function _buildTorreSvgLegacy() {
     <clipPath id="depClip">
       <rect x="${DEP_X+3}" y="${DEP_Y+3}" width="${DEP_W-6}" height="${DEP_H-6}" rx="10"/>
     </clipPath>
+    <linearGradient id="dwcPumpDome" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffb74d"/>
+      <stop offset="100%" stop-color="#ff9800"/>
+    </linearGradient>
   </defs>`;
 
   // ── EJE CENTRAL ───────────────────────────────────────────────────────────
@@ -891,30 +953,20 @@ function _buildTorreSvgLegacy() {
     </circle>`;
   }
 
-  // ── DIFUSOR DE AIRE ───────────────────────────────────────────────────────
+  // ── DIFUSOR DE AIRE (bomba DWC + manguera a piedra) ───────────────────────
   if (tieneDifusor) {
-    const ax  = DEP_X + DEP_W - 28;
-    const ay  = DEP_Y + DEP_H - 16; // piedra en el fondo
-
-    // Tubito de aire (desde fuera hasta el fondo)
-    s += `<line x1="${ax}" y1="${DEP_Y-8}" x2="${ax}" y2="${ay-10}"
-      stroke="#6b7280" stroke-width="1.5" stroke-dasharray="3 2"/>`;
-
-    // Piedra difusora
-    s += `<ellipse cx="${ax}" cy="${ay}" rx="12" ry="6"
-      fill="#9ca3af" stroke="#6b7280" stroke-width="1.5"/>`;
-    s += `<ellipse cx="${ax}" cy="${ay}" rx="10" ry="4" fill="#d1d5db" opacity="0.6"/>`;
-
-    // Burbujas (animadas si ta)
+    s += torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H);
     if (ta) {
-      const burbs = [[-8,0], [-3,0], [2,0], [7,0], [-5,0], [4,0]];
+      const ax = DEP_X + Math.round(DEP_W * 0.55);
+      const ay = DEP_Y + DEP_H - 11;
+      const burbs = [[-8, 0], [-3, 0], [2, 0], [7, 0], [-5, 0], [4, 0]];
       burbs.forEach(([dx], i) => {
-        const bx    = ax + dx + (i%3 - 1) * 3;
+        const bx = ax + dx + ((i % 3) - 1) * 3;
         const byStart = ay - 5;
-        const byEnd   = aguaY - 10;
-        const delay   = (i * 0.28).toFixed(2);
-        const dur     = (1.2 + i * 0.15).toFixed(2);
-        s += `<circle cx="${bx}" cy="${byStart}" r="${1.5 + (i%2)*0.5}" fill="#93c5fd" opacity="0">
+        const byEnd = aguaY - 10;
+        const delay = (i * 0.28).toFixed(2);
+        const dur = (1.2 + i * 0.15).toFixed(2);
+        s += `<circle cx="${bx}" cy="${byStart}" r="${1.5 + (i % 2) * 0.5}" fill="#93c5fd" opacity="0">
           <animate attributeName="cy" from="${byStart}" to="${byEnd}"
             dur="${dur}s" begin="${delay}s" repeatCount="indefinite" calcMode="linear"/>
           <animate attributeName="opacity" values="0;0.8;0.8;0"
@@ -924,15 +976,15 @@ function _buildTorreSvgLegacy() {
         </circle>`;
       });
     }
-
   }
 
 
   // Flechas girar maqueta (solo aquí, a lados del depósito)
   const btnR = 17;
   const yBtn = DEP_Y + DEP_H / 2;
+  const airGap = tieneDifusor ? 58 : 0;
   const xL = DEP_X - 6 - btnR;
-  const xR = DEP_X + DEP_W + 6 + btnR;
+  const xR = DEP_X + DEP_W + 6 + btnR + airGap;
   /* Punta hacia el exterior (alejada del depósito); la base mira al centro. */
   const triL = `M ${xL - 7} ${yBtn} L ${xL + 5} ${yBtn - 8} L ${xL + 5} ${yBtn + 8} Z`;
   const triR = `M ${xR + 7} ${yBtn} L ${xR - 5} ${yBtn - 8} L ${xR - 5} ${yBtn + 8} Z`;

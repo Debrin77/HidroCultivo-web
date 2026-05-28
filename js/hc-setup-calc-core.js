@@ -1645,6 +1645,8 @@ function guardarSetupYContinuar() {
 
   state.configTorre = {
     tipoInstalacion: isNft ? 'nft' : isDwc ? 'dwc' : isRdwc ? 'rdwc' : isSrf ? 'srf' : 'torre',
+    torreVistaModo: 'esquema',
+    torreDiagramaVista: 'esquema',
     tipoTorre:    'custom',
     numNiveles:   niveles,
     numCestas:    cestas,

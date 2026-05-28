@@ -542,62 +542,9 @@ function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
   return { defs: defs, html: html, volTextFill: aguaCol };
 }
 
-/** Bomba DWC unificada en preview del asistente (torre): sin tramo vertical entre bomba y depósito. */
+/** Bomba DWC + manguera a piedra (preview asistente; motor en torre-render-build.js). */
 function torrePreviewAireadorSvg(depX, depY, depW, depH) {
-  if (typeof dwcSvgAirPumpExternal !== 'function') return '';
-  const pumpScale = 0.74;
-  const pumpX = depX + depW + 14;
-  const pumpY = depY + depH - 40 * pumpScale;
-  const piedraX = depX + Math.round(depW * 0.55);
-  const piedraY = depY + depH - 11;
-  const pump = dwcSvgAirPumpExternal(0, 0, 1);
-  const o0 = pump.outlets[0] || { x: 0, y: 12 + 0.55 * 34 };
-  const pumpOutX = pumpX + o0.x * pumpScale;
-  const pumpOutY = pumpY + o0.y * pumpScale;
-  let s =
-    '<g class="torre-preview-dwc-pump" transform="translate(' +
-    pumpX.toFixed(1) +
-    ' ' +
-    pumpY.toFixed(1) +
-    ') scale(' +
-    pumpScale.toFixed(3) +
-    ')">' +
-    pump.svg +
-    '</g>';
-  if (typeof dwcSvgAirHosePumpToStone === 'function') {
-    s += dwcSvgAirHosePumpToStone(
-      pumpOutX,
-      pumpOutY,
-      depX + depW - 4,
-      depY + depH * 0.55,
-      piedraX,
-      piedraY,
-      1.5,
-      0.92
-    );
-  } else {
-    s +=
-      '<path d="M ' +
-      pumpOutX.toFixed(1) +
-      ' ' +
-      pumpOutY.toFixed(1) +
-      ' L ' +
-      piedraX.toFixed(1) +
-      ' ' +
-      pumpOutY.toFixed(1) +
-      ' L ' +
-      piedraX.toFixed(1) +
-      ' ' +
-      piedraY.toFixed(1) +
-      '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
-  }
-  s +=
-    '<ellipse cx="' +
-    piedraX.toFixed(1) +
-    '" cy="' +
-    piedraY.toFixed(1) +
-    '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>';
-  return s;
+  return typeof torreSvgDepositoAirDwc === 'function' ? torreSvgDepositoAirDwc(depX, depY, depW, depH) : '';
 }
 
 /** Bomba de aire en suelo, separada del depósito; piedra difusora dentro del agua, alejada del borde del depósito. */
@@ -2478,7 +2425,7 @@ function updateTorreBuilder() {
   const hasAir = !!(setupEquipamiento && setupEquipamiento.has('difusor'));
   const hasHeat = !!(setupEquipamiento && setupEquipamiento.has('calentador'));
   const W = 340;
-  const H = 442;
+  const H = 458;
   const cx = W / 2;
   const selNivel = Math.max(0, Math.min(N - 1, Math.floor((N - 1) / 2)));
   const topCx = cx;
@@ -2573,6 +2520,23 @@ function updateTorreBuilder() {
       '</text>';
   }
   const torrePreviewAirSvg = hasAir ? torrePreviewAireadorSvg(depX, depY, depW, depH) : '';
+  const volOutsideY = depY + depH + 22;
+  const volOutsideSvg =
+    typeof hcDiagramVolLabelSvg === 'function'
+      ? hcDiagramVolLabelSvg(cx, volOutsideY, Number.isFinite(volSlider) ? volSlider : null, {
+          fill: tankPreview.volTextFill || '#0284c7',
+          fontSize: 13,
+          pointerEvents: false,
+        })
+      : '<text x="' +
+        cx.toFixed(1) +
+        '" y="' +
+        volOutsideY.toFixed(1) +
+        '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="13" font-weight="900" fill="' +
+        (tankPreview.volTextFill || '#0284c7') +
+        '">' +
+        volLbl +
+        '</text>';
   preview.classList.add('torre-preview--tower-hero');
   preview.innerHTML =
     '<svg class="torre-preview-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
@@ -2691,15 +2655,7 @@ function updateTorreBuilder() {
     '" ry="6" fill="rgba(15,23,42,0.14)"/>' +
     tankPreview.html +
     torrePreviewAirSvg +
-    '<text x="' +
-    cx.toFixed(1) +
-    '" y="' +
-    (depY + depH - 11).toFixed(1) +
-    '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="13" font-weight="900" fill="' +
-    (tankPreview.volTextFill || '#0284c7') +
-    '">' +
-    volLbl +
-    '</text>' +
+    volOutsideSvg +
     '<line x1="' +
     (towerX + 48).toFixed(1) +
     '" y1="' +
