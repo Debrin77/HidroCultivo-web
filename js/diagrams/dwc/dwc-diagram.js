@@ -1360,4 +1360,83 @@ function generarSVGDwc() {
   global.dwcSvgDepDimsDesdeCfg = dwcSvgDepDimsDesdeCfg;
   global.dwcSvgAirPumpExternal = dwcSvgAirPumpExternal;
   global.dwcSvgAirHosePumpToStone = dwcSvgAirHosePumpToStone;
+
+  /** Bomba unificada con cúpula naranja sólida (sin depender de #dwcPumpDome en el documento). */
+  function dwcSvgAirPumpDraw(px, py, scale) {
+    const sc = Number.isFinite(Number(scale)) ? Math.max(0.72, Math.min(1.15, Number(scale))) : 1;
+    const x = Number(px) || 0;
+    const y = Number(py) || 0;
+    if (typeof dwcSvgAirPumpExternal === 'function') {
+      const pump = dwcSvgAirPumpExternal(0, 0, 1);
+      const inner = pump.svg.replace(/fill="url\(#dwcPumpDome\)"/g, 'fill="#ff9800"');
+      return {
+        svg:
+          '<g class="dwc-unified-air-pump" transform="translate(' +
+          x.toFixed(1) +
+          ' ' +
+          y.toFixed(1) +
+          ') scale(' +
+          sc.toFixed(3) +
+          ')">' +
+          inner +
+          '</g>',
+        outlets: pump.outlets.map(function (o) {
+          return { x: x + o.x * sc, y: y + o.y * sc };
+        }),
+      };
+    }
+    const w = 54 * sc;
+    const h = 40 * sc;
+    const cx = x + w / 2;
+    return {
+      svg:
+        '<g class="dwc-unified-air-pump" transform="translate(' +
+        x.toFixed(1) +
+        ' ' +
+        y.toFixed(1) +
+        ') scale(' +
+        sc.toFixed(3) +
+        ')" pointer-events="none">' +
+        '<ellipse cx="' +
+        (w / 2).toFixed(1) +
+        '" cy="' +
+        (h + 6 * sc).toFixed(1) +
+        '" rx="' +
+        (w * 0.4).toFixed(1) +
+        '" ry="' +
+        (4.5 * sc).toFixed(1) +
+        '" fill="rgba(15,23,42,0.14)"/>' +
+        '<rect x="' +
+        (4 * sc).toFixed(1) +
+        '" y="' +
+        (15 * sc).toFixed(1) +
+        '" width="' +
+        (w - 8 * sc).toFixed(1) +
+        '" height="' +
+        (h - 11 * sc).toFixed(1) +
+        '" rx="' +
+        (5 * sc).toFixed(1) +
+        '" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>' +
+        '<ellipse cx="' +
+        (w / 2).toFixed(1) +
+        '" cy="' +
+        (12 * sc).toFixed(1) +
+        '" rx="' +
+        ((w - 10 * sc) / 2).toFixed(1) +
+        '" ry="' +
+        (13 * sc).toFixed(1) +
+        '" fill="#ff9800" stroke="#e65100" stroke-width="2"/>' +
+        '<circle cx="' +
+        (w / 2).toFixed(1) +
+        '" cy="' +
+        (h * 0.52).toFixed(1) +
+        '" r="' +
+        (9 * sc).toFixed(1) +
+        '" fill="#eceff1" stroke="#78909c" stroke-width="1.2"/>' +
+        '</g>',
+      outlets: [{ x: x, y: y + (12 + 0.55 * 34) * sc }],
+    };
+  }
+
+  global.dwcSvgAirPumpDraw = dwcSvgAirPumpDraw;
 })(typeof window !== 'undefined' ? window : globalThis);

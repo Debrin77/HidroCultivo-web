@@ -545,7 +545,7 @@ function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
 /** Bomba DWC + manguera a piedra (preview asistente; motor en torre-render-build.js). */
 function torrePreviewAireadorSvg(depX, depY, depW, depH) {
   if (typeof torreSvgDepositoAirDwc !== 'function') return { defs: '', html: '' };
-  return torreSvgDepositoAirDwc(depX, depY, depW, depH, 'TorPrv');
+  return torreSvgDepositoAirDwc(depX, depY, depW, depH);
 }
 
 /** Bomba de aire en suelo, separada del depósito; piedra difusora dentro del agua, alejada del borde del depósito. */
@@ -2549,7 +2549,6 @@ function updateTorreBuilder() {
     '<linearGradient id="tpTopBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef8f1"/><stop offset="100%" stop-color="#f7fbf8"/></linearGradient>' +
     '<linearGradient id="tpBotBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f4f6f8"/><stop offset="100%" stop-color="#eef2f6"/></linearGradient>' +
     '<linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#334155"/></linearGradient>' +
-    torrePreviewAir.defs +
     tankPreview.defs +
     '</defs>' +
     '<rect x="1" y="1" width="' +

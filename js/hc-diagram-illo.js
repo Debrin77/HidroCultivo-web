@@ -2434,6 +2434,23 @@
     return out;
   }
 
+  function hcIlloTorreNivelRotHint(cx, cy, rx) {
+    return (
+      '<g class="hc-torre-nivel-rot-hint" pointer-events="none" aria-hidden="true" opacity="0.5">' +
+      '<text x="' +
+      f1(cx - rx - 26) +
+      '" y="' +
+      f1(cy + 5) +
+      '" font-family="Syne,sans-serif" font-size="16" font-weight="800" fill="#64748b">‹</text>' +
+      '<text x="' +
+      f1(cx + rx + 20) +
+      '" y="' +
+      f1(cy + 5) +
+      '" font-family="Syne,sans-serif" font-size="16" font-weight="800" fill="#64748b">›</text>' +
+      '</g>'
+    );
+  }
+
   function hcIlloTorreRotFlechas(depX, depY, depW, depH) {
     var btnR = 17;
     var yBtn = depY + depH / 2;
@@ -2467,10 +2484,10 @@
     );
   }
 
-  function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor, u) {
+  function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor) {
     if (!tieneDifusor) return { defs: '', html: '' };
     if (typeof torreSvgDepositoAirDwc === 'function') {
-      return torreSvgDepositoAirDwc(depX, depY, depW, depH, u || 'illo');
+      return torreSvgDepositoAirDwc(depX, depY, depW, depH);
     }
     return { defs: '', html: '' };
   }
@@ -2589,7 +2606,7 @@
           '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
       }
       body += tankFront(depXv, depYv, depWv, DEP_H, volPct, u, ta, true, true);
-      var airCorte = hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true, u);
+      var airCorte = hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true);
       if (airCorte.defs) body = body.replace('</defs>', airCorte.defs + '</defs>');
       body += airCorte.html;
       body +=
@@ -2772,12 +2789,13 @@
         f1(cyN) +
         '" r="10" fill="#cbd5e1" stroke="#475569" stroke-width="1.4"/>';
       body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
+      body += hcIlloTorreNivelRotHint(L.CX, cyN, L.TORRE_RX);
     }
     body += '<ellipse cx="' + f1(L.CX) + '" cy="' + f1(L.depY + L.DEP_H + 8) + '" rx="' + f1(L.DEP_W * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
     if (tankPack && tankPack.html) {
       body += tankPack.html;
     } else {
-      body += tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, volPct, u, ta, tieneDifusor, tieneCalentador);
+      body += tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, volPct, u, ta, false, tieneCalentador);
     }
     if (tieneCalentador) {
       body +=
@@ -2789,14 +2807,7 @@
     }
     try {
       if (tieneDifusor) {
-        var airEsquema = hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, true, u);
-        if (airEsquema.defs) {
-          if (body.indexOf('</defs>') >= 0) {
-            body = body.replace('</defs>', airEsquema.defs + '</defs>');
-          } else {
-            body = '<defs>' + airEsquema.defs + '</defs>' + body;
-          }
-        }
+        var airEsquema = hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, true);
         body += airEsquema.html;
       }
     } catch (airErr) {
@@ -2805,6 +2816,13 @@
       } catch (_) {}
     }
     body += '<line x1="' + f1(L.CX) + '" y1="' + f1(L.depY) + '" x2="' + f1(L.CX) + '" y2="' + f1(L.MARG_T + L.torH) + '" stroke="#0ea5e9" stroke-width="2.2" opacity="0.35"/>';
+    if (typeof hcDiagramVolLabelSvg === 'function') {
+      body += hcDiagramVolLabelSvg(L.CX, L.depY + L.DEP_H + 28, volMez != null ? volMez : volTankL, {
+        fontSize: 20,
+        fill: HC_ILLO.water1,
+        pointerEvents: false,
+      });
+    }
     body += hcIlloTorreRotFlechas(L.depX, L.depY, L.DEP_W, L.DEP_H);
     return svgWrap(
       'torre-svg-diagram hc-illo-torre',

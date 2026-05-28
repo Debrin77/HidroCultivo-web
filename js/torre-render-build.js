@@ -676,64 +676,58 @@ function generarSVGRdwc() {
 /** Núcleo torre (cestas + depósito). Envoltorio SCADA: js/diagrams/torre/torre-diagram.js */
 /**
  * Bomba DWC unificada (misma que NFT/DWC/RDWC) + manguera a piedra.
- * idSuffix evita colisión de #dwcPumpDome entre varios SVG en la misma página.
+ * La bomba va a la derecha de las flechas de giro del depósito (no las tapa).
  */
-function torreSvgDepositoAirDwc(depX, depY, depW, depH, idSuffix) {
-  if (typeof dwcSvgAirPumpExternal !== 'function') return { defs: '', html: '' };
-  const gid = 'dwcPumpDome' + String(idSuffix || 'T').replace(/[^a-zA-Z0-9_]/g, '');
-  const defs =
-    '<linearGradient id="' +
-    gid +
-    '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/></linearGradient>';
-  const pumpScale = 0.82;
-  const pumpX = depX + depW + 12;
-  const pumpY = depY + depH - 40 * pumpScale;
+function torreSvgDepositoAirDwc(depX, depY, depW, depH) {
+  if (typeof dwcSvgAirPumpDraw !== 'function' && typeof dwcSvgAirPumpExternal !== 'function') {
+    return { defs: '', html: '' };
+  }
+  const pumpScale = 0.88;
+  const pumpH = 40 * pumpScale;
+  const pumpX = depX + depW + 52;
+  const pumpY = depY + depH - pumpH - 2;
   const piedraX = depX + Math.round(depW * 0.55);
   const piedraY = depY + depH - 11;
-  const pump = dwcSvgAirPumpExternal(0, 0, 1);
-  const pumpSvg = pump.svg.replace(/dwcPumpDome/g, gid);
-  const o0 = pump.outlets[0] || { x: 0, y: 12 + 0.55 * 34 };
-  const pumpOutX = pumpX + o0.x * pumpScale;
-  const pumpOutY = pumpY + o0.y * pumpScale;
   const wallX = depX + depW - 3;
   const entryY = depY + depH * 0.52;
-  let html =
-    '<g class="torre-dwc-air">' +
-    '<g class="torre-dwc-pump" transform="translate(' +
-    pumpX.toFixed(1) +
-    ' ' +
-    pumpY.toFixed(1) +
-    ') scale(' +
-    pumpScale.toFixed(3) +
-    ')">' +
-    pumpSvg +
-    '</g>';
+  let pumpOutX = pumpX;
+  let pumpOutY = pumpY + pumpH * 0.55;
+  let pumpBlock = '';
+  if (typeof dwcSvgAirPumpDraw === 'function') {
+    const drawn = dwcSvgAirPumpDraw(pumpX, pumpY, pumpScale);
+    pumpBlock = drawn.svg;
+    if (drawn.outlets && drawn.outlets[0]) {
+      pumpOutX = drawn.outlets[0].x;
+      pumpOutY = drawn.outlets[0].y;
+    }
+  } else {
+    const pump = dwcSvgAirPumpExternal(0, 0, 1);
+    const inner = pump.svg.replace(/fill="url\(#dwcPumpDome\)"/g, 'fill="#ff9800"');
+    const o0 = pump.outlets[0] || { x: 0, y: 29 };
+    pumpOutX = pumpX + o0.x * pumpScale;
+    pumpOutY = pumpY + o0.y * pumpScale;
+    pumpBlock =
+      '<g transform="translate(' +
+      pumpX.toFixed(1) +
+      ' ' +
+      pumpY.toFixed(1) +
+      ') scale(' +
+      pumpScale.toFixed(3) +
+      ')">' +
+      inner +
+      '</g>';
+  }
+  let html = '<g class="torre-dwc-air">' + pumpBlock;
   if (typeof dwcSvgAirHosePumpToStone === 'function') {
     html += dwcSvgAirHosePumpToStone(pumpOutX, pumpOutY, wallX, entryY, piedraX, piedraY, 1.8, 0.95);
-  } else {
-    html +=
-      '<path d="M ' +
-      pumpOutX.toFixed(1) +
-      ' ' +
-      pumpOutY.toFixed(1) +
-      ' L ' +
-      wallX.toFixed(1) +
-      ' ' +
-      pumpOutY.toFixed(1) +
-      ' L ' +
-      piedraX.toFixed(1) +
-      ' ' +
-      piedraY.toFixed(1) +
-      '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
   }
   html +=
     '<ellipse cx="' +
     piedraX.toFixed(1) +
     '" cy="' +
     piedraY.toFixed(1) +
-    '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>' +
-    '</g>';
-  return { defs: defs, html: html };
+    '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/></g>';
+  return { defs: '', html: html };
 }
 if (typeof window !== 'undefined') window.torreSvgDepositoAirDwc = torreSvgDepositoAirDwc;
 
@@ -937,9 +931,7 @@ function _buildTorreSvgLegacy() {
     s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
       font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreTexto}</text>`;
   }
-  if (typeof hcDiagramViewLabelSvg === 'function') {
-    s += hcDiagramViewLabelSvg(CX, 16, 'frontal', { pointerEvents: false, fill: '#475569' });
-  }
+  s += `<text x="${CX}" y="16" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Torre vertical</text>`;
 
   // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {
@@ -956,10 +948,7 @@ function _buildTorreSvgLegacy() {
 
   // ── DIFUSOR DE AIRE (bomba DWC + manguera a piedra) ───────────────────────
   if (tieneDifusor) {
-    const airLeg = torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H, 'Leg');
-    if (airLeg.defs) {
-      s = s.replace('</defs>', airLeg.defs + '</defs>');
-    }
+    const airLeg = torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H);
     s += airLeg.html;
     if (ta) {
       const ax = DEP_X + Math.round(DEP_W * 0.55);
@@ -987,9 +976,8 @@ function _buildTorreSvgLegacy() {
   // Flechas girar maqueta (solo aquí, a lados del depósito)
   const btnR = 17;
   const yBtn = DEP_Y + DEP_H / 2;
-  const airGap = tieneDifusor ? 58 : 0;
   const xL = DEP_X - 6 - btnR;
-  const xR = DEP_X + DEP_W + 6 + btnR + airGap;
+  const xR = DEP_X + DEP_W + 6 + btnR;
   /* Punta hacia el exterior (alejada del depósito); la base mira al centro. */
   const triL = `M ${xL - 7} ${yBtn} L ${xL + 5} ${yBtn - 8} L ${xL + 5} ${yBtn + 8} Z`;
   const triR = `M ${xR + 7} ${yBtn} L ${xR - 5} ${yBtn - 8} L ${xR - 5} ${yBtn + 8} Z`;
