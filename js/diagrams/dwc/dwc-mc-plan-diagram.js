@@ -22,6 +22,9 @@
       '<linearGradient id="dwcMcPlanWater" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0%" stop-color="#81d4fa"/><stop offset="100%" stop-color="#1565c0"/>' +
       '</linearGradient>' +
+      '<linearGradient id="dwcMcPumpDome" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/>' +
+      '</linearGradient>' +
       '</defs>'
     );
   }
@@ -81,7 +84,6 @@
 
   function dwcMcPlanAirTube(d, sw) {
     const w = sw || 2.6;
-    const dash = ' stroke-dasharray="6 4"';
     return (
       '<g class="dwc-mc-plan-air-tube">' +
       '<path d="' +
@@ -91,7 +93,6 @@
       '" stroke-width="' +
       (w + 1.6) +
       '" stroke-linecap="round" stroke-linejoin="round"' +
-      dash +
       '/>' +
       '<path d="' +
       d +
@@ -100,7 +101,6 @@
       '" stroke-width="' +
       w +
       '" stroke-linecap="round" stroke-linejoin="round"' +
-      dash +
       '/>' +
       '</g>'
     );
@@ -183,27 +183,69 @@
 
   function dwcMcPlanAirPumpBadge(cx, cy, lpm) {
     const lbl = Math.round(lpm) + ' L/min';
-    return (
+    const w = 56;
+    const h = 40;
+    const px = cx - w / 2;
+    const py = cy - h / 2;
+    const outX = cx;
+    const outY = py + h - 1;
+    const svg =
       '<g class="dwc-mc-air-badge" pointer-events="none" aria-hidden="true">' +
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(py + h + 6) +
+      '" rx="20" ry="4.5" fill="rgba(15,23,42,0.14)"/>' +
       '<rect x="' +
-      f1(cx - 28) +
+      f1(px + 4) +
       '" y="' +
-      f1(cy - 14) +
-      '" width="56" height="28" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>' +
+      f1(py + 15) +
+      '" width="' +
+      f1(w - 8) +
+      '" height="' +
+      f1(h - 11) +
+      '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>' +
+      '<ellipse cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(py + 12) +
+      '" rx="' +
+      f1((w - 10) / 2) +
+      '" ry="13" fill="url(#dwcMcPumpDome)" stroke="#e65100" stroke-width="2"/>' +
+      '<ellipse cx="' +
+      f1(cx - 8) +
+      '" cy="' +
+      f1(py + 8) +
+      '" rx="7" ry="3" fill="rgba(255,255,255,0.45)"/>' +
+      '<circle cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(py + h * 0.52) +
+      '" r="9" fill="#eceff1" stroke="#78909c" stroke-width="1.2"/>' +
+      '<circle cx="' +
+      f1(cx) +
+      '" cy="' +
+      f1(py + h * 0.52) +
+      '" r="4.5" fill="none" stroke="#90a4ae" stroke-width="0.9"/>' +
+      '<rect x="' +
+      f1(cx - 31) +
+      '" y="' +
+      f1(py - 19) +
+      '" width="62" height="20" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>' +
       '<text x="' +
       f1(cx) +
       '" y="' +
-      f1(cy - 2) +
+      f1(py - 5) +
       '" text-anchor="middle" font-size="9" font-weight="800" fill="#14532d" font-family="system-ui,sans-serif">AIRE</text>' +
       '<text x="' +
       f1(cx) +
       '" y="' +
-      f1(cy + 9) +
+      f1(py + 5) +
       '" text-anchor="middle" font-size="7.5" fill="#15803d" font-family="system-ui,sans-serif">' +
       lbl +
       '</text>' +
-      '</g>'
-    );
+      '</g>';
+    return { svg: svg, outX: outX, outY: outY };
   }
 
   function dwcMcPlanChrome(W) {
@@ -407,7 +449,7 @@
     }
 
     const airRailY = gridTop - bucketR - 10;
-    const airBadgeY = airRailY - 30;
+    const airBadgeY = airRailY - 34;
     const pumpOutX = cx;
     const pumpOutY = airBadgeY + 24;
 
@@ -438,8 +480,17 @@
 
     s += '<g class="dwc-mc-plan-air" aria-hidden="true">';
     if (tieneDifusor) {
-      s += dwcMcPlanAirPumpBadge(cx, airBadgeY, airLpm);
-      s += dwcMcPlanAirRoutes(positions, byCol, bucketR, airRailY, pumpOutX, pumpOutY, dist);
+      const pump = dwcMcPlanAirPumpBadge(cx, airBadgeY, airLpm);
+      s += pump.svg;
+      s += dwcMcPlanAirRoutes(
+        positions,
+        byCol,
+        bucketR,
+        airRailY,
+        pump.outX != null ? pump.outX : pumpOutX,
+        pump.outY != null ? pump.outY : pumpOutY,
+        dist
+      );
     }
     s += '</g>';
 
