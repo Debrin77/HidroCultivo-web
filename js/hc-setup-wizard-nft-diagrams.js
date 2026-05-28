@@ -1736,6 +1736,102 @@ function nftSvgHuecoNumBelowHole(gx, gy, hrGi, numShow, fs, compact, extraDy) {
   );
 }
 
+/** Bomba externa estilo DWC/RDWC, con fallback local para NFT. */
+function nftSvgExternalPump(px, py, scale, numOutlets) {
+  const sc = Number.isFinite(Number(scale)) ? Math.max(0.72, Math.min(1.45, Number(scale))) : 1;
+  const nOut = Math.max(1, Math.min(4, parseInt(String(numOutlets), 10) || 1));
+  if (typeof dwcSvgAirPumpExternal === 'function') {
+    const base = dwcSvgAirPumpExternal(0, 0, nOut);
+    const w = (base.w || 54) * sc;
+    const h = (base.h || 40) * sc;
+    return {
+      svg:
+        '<g class="nft-ext-pump" transform="translate(' +
+        px.toFixed(1) +
+        ' ' +
+        py.toFixed(1) +
+        ') scale(' +
+        sc.toFixed(3) +
+        ')" pointer-events="none">' +
+        base.svg +
+        '</g>',
+      w: w,
+      h: h,
+    };
+  }
+  const w = 54 * sc;
+  const h = 40 * sc;
+  const cx = px + w / 2;
+  const footRx = w * 0.4;
+  return {
+    svg:
+      '<g class="nft-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))" pointer-events="none">' +
+      '<ellipse cx="' +
+      cx.toFixed(1) +
+      '" cy="' +
+      (py + h + 8 * sc).toFixed(1) +
+      '" rx="' +
+      footRx.toFixed(1) +
+      '" ry="' +
+      (5 * sc).toFixed(1) +
+      '" fill="rgba(15,23,42,0.14)"/>' +
+      '<rect x="' +
+      (px + 4 * sc).toFixed(1) +
+      '" y="' +
+      (py + 15 * sc).toFixed(1) +
+      '" width="' +
+      (w - 8 * sc).toFixed(1) +
+      '" height="' +
+      (h - 11 * sc).toFixed(1) +
+      '" rx="' +
+      (5 * sc).toFixed(1) +
+      '" fill="#37474f" stroke="#1e293b" stroke-width="' +
+      (1.8 * sc).toFixed(2) +
+      '"/>' +
+      '<ellipse cx="' +
+      cx.toFixed(1) +
+      '" cy="' +
+      (py + 12 * sc).toFixed(1) +
+      '" rx="' +
+      ((w - 10 * sc) / 2).toFixed(1) +
+      '" ry="' +
+      (13 * sc).toFixed(1) +
+      '" fill="#ff9800" stroke="#e65100" stroke-width="' +
+      (2 * sc).toFixed(2) +
+      '"/>' +
+      '<ellipse cx="' +
+      (cx - 8 * sc).toFixed(1) +
+      '" cy="' +
+      (py + 8 * sc).toFixed(1) +
+      '" rx="' +
+      (7 * sc).toFixed(1) +
+      '" ry="' +
+      (3 * sc).toFixed(1) +
+      '" fill="rgba(255,255,255,0.45)"/>' +
+      '<circle cx="' +
+      cx.toFixed(1) +
+      '" cy="' +
+      (py + h * 0.52).toFixed(1) +
+      '" r="' +
+      (9 * sc).toFixed(1) +
+      '" fill="#eceff1" stroke="#78909c" stroke-width="' +
+      (1.2 * sc).toFixed(2) +
+      '"/>' +
+      '<circle cx="' +
+      cx.toFixed(1) +
+      '" cy="' +
+      (py + h * 0.52).toFixed(1) +
+      '" r="' +
+      (4.5 * sc).toFixed(1) +
+      '" fill="none" stroke="#90a4ae" stroke-width="' +
+      (0.9 * sc).toFixed(2) +
+      '"/>' +
+      '</g>',
+    w: w,
+    h: h,
+  };
+}
+
 /**
  * NFT mesa multinivel: franjas con distinto número de tubos; flujo en serpentín entre franjas.
  */
@@ -2314,6 +2410,17 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   }
 
   let pumpLines = '';
+  {
+    const pumpScale = Math.max(0.82, Math.min(1.3, 0.9 + nTubosMesa * 0.012 + Math.max(0, nTiers - 1) * 0.04));
+    const pumpW = 54 * pumpScale;
+    const pumpH = 40 * pumpScale;
+    const rightX = tx + tankW + 12;
+    const leftX = tx - pumpW - 12;
+    const pumpX = rightX + pumpW <= Wsvg - 8 ? rightX : Math.max(8, leftX);
+    const pumpY = tankY + tankH * 0.5 - pumpH * 0.5;
+    const pump = nftSvgExternalPump(pumpX, pumpY, pumpScale, 1);
+    pumpLines += pump.svg;
+  }
 
   let tierBandsMm = '';
   if (nTiers > 1) {
@@ -3195,6 +3302,17 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
   }
 
   let pumpLines = '';
+  {
+    const pumpScale = Math.max(0.82, Math.min(1.32, 0.9 + nTubosEscTotal * 0.013 + (car === 2 ? 0.06 : 0)));
+    const pumpW = 54 * pumpScale;
+    const pumpH = 40 * pumpScale;
+    const rightX = tx + tankW + 12;
+    const leftX = tx - pumpW - 12;
+    const pumpX = rightX + pumpW <= Wsvg - 8 ? rightX : Math.max(8, leftX);
+    const pumpY = tankY + tankH * 0.5 - pumpH * 0.5;
+    const pump = nftSvgExternalPump(pumpX, pumpY, pumpScale, 1);
+    pumpLines += pump.svg;
+  }
 
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
