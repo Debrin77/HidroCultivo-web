@@ -2385,7 +2385,7 @@
     var numCestas = cfg.numCestas || 5;
     var u = uid('torre');
     var vista = cfg.torreDiagramaVista || 'esquema';
-    var W = vista === 'esquema' ? 380 : 560;
+    var W = vista === 'esquema' ? 440 : 560;
     var CX = W / 2;
     var NIVEL_H = 58;
     var GAP = 12;
@@ -2545,31 +2545,69 @@
         body
       );
     }
+    var panelX = 18;
+    var panelY = 14;
+    var panelW = W - 36;
+    var panelH = H - 24;
+    var leftZoneW = 272;
+    var leftX = panelX + 14;
+    var centerX = leftX + leftZoneW * 0.5;
+    var topY = MARG_T + 4;
+    body +=
+      '<rect x="' +
+      f1(panelX) +
+      '" y="' +
+      f1(panelY) +
+      '" width="' +
+      f1(panelW) +
+      '" height="' +
+      f1(panelH) +
+      '" rx="16" fill="rgba(255,255,255,0.74)" stroke="#cbd5e1" stroke-width="1.2"/>';
+    body +=
+      '<rect x="' +
+      f1(panelX + 1) +
+      '" y="' +
+      f1(panelY + 1) +
+      '" width="' +
+      f1(panelW - 2) +
+      '" height="54" rx="15" fill="rgba(148,163,184,0.09)"/>';
     body +=
       '<text x="' +
-      CX +
-      '" y="24" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="' +
-      HC_ILLO.inkSoft +
-      '">Sistema de cultivo</text>';
+      f1(centerX) +
+      '" y="30" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="#64748b" letter-spacing="0.04em">SISTEMA DE CULTIVO</text>';
     body +=
       '<text x="' +
-      CX +
-      '" y="41" text-anchor="middle" font-family="Syne,sans-serif" font-size="24" font-weight="900" fill="' +
+      f1(centerX) +
+      '" y="49" text-anchor="middle" font-family="Syne,sans-serif" font-size="24" font-weight="900" fill="' +
       HC_ILLO.ink +
       '">Torre vertical</text>';
     body +=
-      '<ellipse cx="' +
-      f1(CX) +
-      '" cy="' +
-      f1(MARG_T + torH + 10) +
-      '" rx="78" ry="14" fill="rgba(15,23,42,0.08)"/>';
+      '<text x="' +
+      f1(centerX) +
+      '" y="63" text-anchor="middle" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#64748b">Hibrida Pro · visual tecnico funcional</text>';
     body +=
       '<rect x="' +
-      f1(CX - 8) +
+      f1(leftX + 28) +
       '" y="' +
-      MARG_T +
+      f1(topY - 4) +
+      '" width="' +
+      f1(leftZoneW - 56) +
+      '" height="' +
+      f1(torH + 22) +
+      '" rx="20" fill="rgba(148,163,184,0.09)" stroke="#bfcedd" stroke-width="1.1"/>';
+    body +=
+      '<ellipse cx="' +
+      f1(centerX) +
+      '" cy="' +
+      f1(topY + torH + 12) +
+      '" rx="86" ry="14" fill="rgba(15,23,42,0.08)"/>';
+    body +=
+      '<rect x="' +
+      f1(centerX - 8) +
+      '" y="' +
+      f1(topY + 2) +
       '" width="16" height="' +
-      torH +
+      f1(torH - 4) +
       '" rx="8" fill="url(#' +
       u +
       '-water)" stroke="' +
@@ -2577,39 +2615,39 @@
       '" stroke-width="2.2"/>';
     body +=
       '<rect x="' +
-      f1(CX - 2.4) +
+      f1(centerX - 2.4) +
       '" y="' +
-      f1(MARG_T + 8) +
+      f1(topY + 10) +
       '" width="4.8" height="' +
-      f1(Math.max(20, torH - 16)) +
+      f1(Math.max(20, torH - 20)) +
       '" rx="2.4" fill="rgba(255,255,255,0.42)"/>';
-    var RX = 84;
+    var RX = 86;
     for (var n = 0; n < numNiveles; n++) {
-      var cy = MARG_T + n * (NIVEL_H + GAP) + NIVEL_H / 2;
+      var cy = topY + n * (NIVEL_H + GAP) + NIVEL_H / 2;
       body +=
         '<ellipse cx="' +
-        CX +
+        f1(centerX) +
         '" cy="' +
-        cy +
+        f1(cy) +
         '" rx="' +
-        RX +
+        f1(RX) +
         '" ry="14" fill="none" stroke="' +
         HC_ILLO.lidHi +
         '" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.56"/>';
       body +=
         '<circle cx="' +
-        f1(CX) +
+        f1(centerX) +
         '" cy="' +
         f1(cy) +
         '" r="11.8" fill="#cbd5e1" stroke="#334155" stroke-width="1.8"/>' +
         '<circle cx="' +
-        f1(CX) +
+        f1(centerX) +
         '" cy="' +
         f1(cy) +
         '" r="3.1" fill="#94a3b8"/>';
       for (var c = 0; c < numCestas; c++) {
         var ang = (c / numCestas) * Math.PI * 2 - Math.PI / 2;
-        var px = CX + Math.cos(ang) * RX;
+        var px = centerX + Math.cos(ang) * RX;
         var py = cy + Math.sin(ang) * 14;
         body += maceta({
           n: n,
@@ -2623,40 +2661,144 @@
           extraClass: 'torre-maceta',
         });
       }
+      body +=
+        '<text x="' +
+        f1(leftX + 18) +
+        '" y="' +
+        f1(cy + 4) +
+        '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="10" font-weight="800" fill="#64748b">N' +
+        (n + 1) +
+        '</text>';
     }
-    var depY = MARG_T + torH + 24;
-    body += tankFront(CX - 90, depY, 180, DEP_H, volPct, u, ta, true, true);
-    body += airPump(CX + 98, depY + 10, 44, 30, u);
+    var depY = topY + torH + 24;
+    body += tankFront(centerX - 94, depY, 188, DEP_H, volPct, u, ta, true, true);
+    body += airPump(centerX + 106, depY + 11, 44, 30, u);
     body +=
       '<path d="M ' +
-      f1(CX + 98) +
+      f1(centerX + 106) +
       ' ' +
-      f1(depY + 24) +
+      f1(depY + 25) +
       ' C ' +
-      f1(CX + 62) +
+      f1(centerX + 68) +
       ' ' +
-      f1(depY + 20) +
+      f1(depY + 21) +
       ' ' +
-      f1(CX + 38) +
+      f1(centerX + 42) +
       ' ' +
-      f1(depY + 14) +
+      f1(depY + 15) +
       ' ' +
-      f1(CX + 16) +
+      f1(centerX + 18) +
       ' ' +
-      f1(depY + 14) +
+      f1(depY + 15) +
       '" fill="none" stroke="#e2e8f0" stroke-width="2.2" opacity="0.95"/>' +
       '<path d="M ' +
-      f1(CX + 16) +
+      f1(centerX + 18) +
       ' ' +
-      f1(depY + 14) +
+      f1(depY + 15) +
       ' L ' +
-      f1(CX + 16) +
+      f1(centerX + 18) +
       ' ' +
-      f1(depY + 70) +
+      f1(depY + 71) +
       '" fill="none" stroke="#e2e8f0" stroke-width="2.2" opacity="0.95"/>';
+    var rightX = leftX + leftZoneW + 14;
+    var rightW = panelX + panelW - rightX - 14;
+    body +=
+      '<rect x="' +
+      f1(rightX) +
+      '" y="' +
+      f1(topY - 2) +
+      '" width="' +
+      f1(rightW) +
+      '" height="' +
+      f1(torH + DEP_H + 26) +
+      '" rx="12" fill="rgba(248,250,252,0.8)" stroke="#d4dde7" stroke-width="1"/>';
     body +=
       '<text x="' +
-      CX +
+      f1(rightX + rightW / 2) +
+      '" y="' +
+      f1(topY + 14) +
+      '" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="800" fill="#475569">RESUMEN TÉCNICO</text>';
+    var totCestas = numNiveles * numCestas;
+    var estCap =
+      volCap != null && Number.isFinite(Number(volCap)) && Number(volCap) > 0
+        ? Math.round((Math.min(1, Math.max(0, volPct)) * 100))
+        : null;
+    body +=
+      '<text x="' +
+      f1(rightX + 12) +
+      '" y="' +
+      f1(topY + 34) +
+      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Niveles: ' +
+      numNiveles +
+      '</text>' +
+      '<text x="' +
+      f1(rightX + 12) +
+      '" y="' +
+      f1(topY + 50) +
+      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Cestas / nivel: ' +
+      numCestas +
+      '</text>' +
+      '<text x="' +
+      f1(rightX + 12) +
+      '" y="' +
+      f1(topY + 66) +
+      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Total cestas: ' +
+      totCestas +
+      '</text>' +
+      '<text x="' +
+      f1(rightX + 12) +
+      '" y="' +
+      f1(topY + 82) +
+      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Nivel deposito: ' +
+      (estCap != null ? estCap + '%' : '—') +
+      '</text>' +
+      '<text x="' +
+      f1(rightX + 12) +
+      '" y="' +
+      f1(topY + 98) +
+      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Estado circuito: recirculacion</text>';
+    body +=
+      '<rect x="' +
+      f1(rightX + 10) +
+      '" y="' +
+      f1(topY + 112) +
+      '" width="' +
+      f1(rightW - 20) +
+      '" height="1" fill="#d6dee8"/>';
+    body +=
+      '<circle cx="' +
+      f1(rightX + 16) +
+      '" cy="' +
+      f1(topY + 128) +
+      '" r="3.5" fill="#0ea5e9"/>' +
+      '<text x="' +
+      f1(rightX + 25) +
+      '" y="' +
+      f1(topY + 132) +
+      '" font-family="Inconsolata,monospace" font-size="9.5" font-weight="700" fill="#334155">Impulsion</text>' +
+      '<circle cx="' +
+      f1(rightX + 16) +
+      '" cy="' +
+      f1(topY + 146) +
+      '" r="3.5" fill="#22c55e"/>' +
+      '<text x="' +
+      f1(rightX + 25) +
+      '" y="' +
+      f1(topY + 150) +
+      '" font-family="Inconsolata,monospace" font-size="9.5" font-weight="700" fill="#334155">Retorno</text>' +
+      '<circle cx="' +
+      f1(rightX + 16) +
+      '" cy="' +
+      f1(topY + 164) +
+      '" r="3.5" fill="#f59e0b"/>' +
+      '<text x="' +
+      f1(rightX + 25) +
+      '" y="' +
+      f1(topY + 168) +
+      '" font-family="Inconsolata,monospace" font-size="9.5" font-weight="700" fill="#334155">Aireacion</text>';
+    body +=
+      '<text x="' +
+      centerX +
       '" y="' +
       (depY + DEP_H + 26) +
       '" text-anchor="middle" font-family="Syne,sans-serif" font-size="17" font-weight="900" fill="' +
@@ -2664,7 +2806,14 @@
       '">' +
       (volMez != null ? Math.round(volMez * 10) / 10 + ' L' : '—') +
       '</text>';
-    return svgWrap('torre-svg-diagram hc-illo-torre', W, depY + DEP_H + 40, u + '-title', 'Torre ' + numNiveles + ' niveles', body);
+    return svgWrap(
+      'torre-svg-diagram hc-illo-torre',
+      W,
+      depY + DEP_H + 40,
+      u + '-title',
+      'Torre ' + numNiveles + ' niveles',
+      body
+    );
   };
 
   /** Hueco NFT interactivo (sustituye círculo plano en serpentín/mesa/escalera). */
