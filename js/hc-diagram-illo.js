@@ -2765,7 +2765,7 @@
     var numCestas = Math.max(1, Math.min(10, parseInt(cfg.numCestas, 10) || 5));
     var u = uid('torre');
     var vista = cfg.torreDiagramaVista || 'esquema';
-    var W = vista === 'esquema' ? 440 : 560;
+    var W = vista === 'esquema' ? 360 : 560;
     var CX = W / 2;
     var NIVEL_H = 58;
     var GAP = 12;
@@ -2925,21 +2925,117 @@
         body
       );
     }
-    var colorido = hcIlloTorreEsquemaSistemaColorido(cfg, u, numNiveles, numCestas, volCap, volMez, volPct, ta);
-    if (colorido.defsExtra && body.indexOf('</defs>') >= 0) {
-      body = body.replace('</defs>', colorido.defsExtra + '</defs>');
-    } else if (colorido.defsExtra) {
-      body = '<defs>' + colorido.defsExtra + '</defs>' + body;
+    /* Esquema único (Cultivo e instalación): torre 3D + depósito DWC; Medir no duplica este SVG. */
+    var L = hcIlloTorreLayout(cfg);
+    W = L.W;
+    H = L.H;
+    var rot = cfg._torreRotRad || 0;
+    var equip = illoTorreEquipList(cfg);
+    var tieneDifusor = !equip.length || equip.indexOf('difusor') >= 0;
+    var tieneCalentador = equip.indexOf('calentador') >= 0;
+    var volTankL =
+      volMez != null && Number.isFinite(Number(volMez)) && volMez > 0
+        ? volMez
+        : volCap != null && Number.isFinite(Number(volCap))
+          ? Number(volCap) * 0.78
+          : 20;
+    body += '<rect width="' + L.W + '" height="' + L.H + '" fill="url(#' + u + '-bg)"/>';
+    body +=
+      '<text x="' +
+      f1(L.CX) +
+      '" y="32" text-anchor="middle" font-family="Syne,sans-serif" font-size="22" font-weight="900" fill="' +
+      HC_ILLO.ink +
+      '">Torre vertical</text>';
+    body +=
+      '<ellipse cx="' +
+      f1(L.CX) +
+      '" cy="' +
+      f1(L.MARG_T - 22) +
+      '" rx="24" ry="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>';
+    body +=
+      '<rect x="' +
+      f1(L.CX - 7) +
+      '" y="' +
+      f1(L.MARG_T - 8) +
+      '" width="14" height="' +
+      f1(L.torH + 16) +
+      '" rx="7" fill="url(#' +
+      u +
+      '-water)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>';
+    if (ta) {
+      body +=
+        '<line x1="' +
+        f1(L.CX) +
+        '" y1="' +
+        f1(L.MARG_T) +
+        '" x2="' +
+        f1(L.CX) +
+        '" y2="' +
+        f1(L.depY) +
+        '" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="6 7" opacity="0.45">' +
+        '<animate attributeName="stroke-dashoffset" from="0" to="26" dur="1s" repeatCount="indefinite"/></line>';
     }
-    body += colorido.body;
-    return svgWrap(
-      'torre-svg-diagram hc-illo-torre hc-illo-torre--sistema',
-      colorido.W,
-      colorido.H,
-      u + '-title',
-      'Torre vertical',
-      body
-    );
+    var n;
+    for (n = 0; n < numNiveles; n++) {
+      var cyN = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
+      body +=
+        '<ellipse cx="' +
+        f1(L.CX) +
+        '" cy="' +
+        f1(cyN) +
+        '" rx="' +
+        f1(L.TORRE_RX + 4) +
+        '" ry="' +
+        f1(L.TORRE_RY + 3) +
+        '" fill="rgba(132,204,22,0.08)" stroke="#84cc16" stroke-width="1.4" opacity="0.65"/>';
+      body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
+      body += hcIlloTorreNivelRotHint(L.CX, cyN, L.TORRE_RX);
+    }
+    body += '<ellipse cx="' + f1(L.CX) + '" cy="' + f1(L.depY + L.DEP_H + 8) + '" rx="' + f1(L.DEP_W * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
+    var depBlock = { defs: '', html: '' };
+    if (typeof torreSvgDepositoCompleto === 'function') {
+      depBlock = torreSvgDepositoCompleto(L.depX, L.depY, L.DEP_W, L.DEP_H, volTankL, {
+        suf: u + 'Tk',
+        animate: ta,
+        capL: volCap,
+        mezL: volMez,
+        difusor: tieneDifusor,
+      });
+    } else {
+      depBlock.html = tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, Math.max(0.55, volPct), u, ta, false, tieneCalentador);
+      if (tieneDifusor) {
+        var airFb = hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, true, ta);
+        depBlock.defs += airFb.defs || '';
+        depBlock.html += airFb.html || '';
+      }
+    }
+    if (depBlock.defs) {
+      if (body.indexOf('</defs>') >= 0) {
+        body = body.replace('</defs>', depBlock.defs + '</defs>');
+      } else {
+        body = '<defs>' + depBlock.defs + '</defs>' + body;
+      }
+    }
+    body += depBlock.html || '';
+    if (tieneCalentador) {
+      body +=
+        '<rect x="' +
+        f1(L.depX + 16) +
+        '" y="' +
+        f1(L.depY + L.DEP_H - 36) +
+        '" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1"/>';
+    }
+    if (typeof hcDiagramVolLabelSvg === 'function') {
+      body += hcDiagramVolLabelSvg(L.CX, L.depY + L.DEP_H + 28, volMez != null ? volMez : volTankL, {
+        fontSize: 20,
+        fill: HC_ILLO.water1,
+        pointerEvents: false,
+      });
+    }
+    body += hcIlloTorreRotFlechas(L.depX, L.depY, L.DEP_W, L.DEP_H);
+    return svgWrap('torre-svg-diagram hc-illo-torre hc-illo-torre--esquema', W, L.H, u + '-title', 'Torre vertical', body);
   };
 
   /** Hueco NFT interactivo (sustituye círculo plano en serpentín/mesa/escalera). */

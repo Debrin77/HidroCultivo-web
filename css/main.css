@@ -12099,6 +12099,17 @@ button.config-option:focus-visible,
   min-height: min(64vh, 760px);
   filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.12));
 }
+#tab-sistema #torreSVGWrap.torre-svg-canvas--torre-vertical {
+  background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 55%, #e8edf3 100%);
+  max-height: min(72vh, 920px);
+}
+#tab-sistema #torreSVGWrap.torre-svg-canvas--torre-vertical svg.hc-illo-torre {
+  min-height: unset;
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.06));
+}
 #tab-sistema #torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram:not(.hc-illo-torre) {
   min-height: min(52vh, 640px);
   width: 100%;

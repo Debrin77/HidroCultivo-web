@@ -194,6 +194,7 @@ function renderTorre() {
       wrap.innerHTML =
         '<p class="torre-svg-fallback" role="status">Esquema de torre vacío: revisa niveles y cestas en Cultivo e instalación.</p>';
     }
+    wrap.classList.add('torre-svg-canvas--torre-vertical');
     wrap.setAttribute(
       'aria-label',
       'Torre hidropónica: eje central, niveles y depósito. Flechas para girar; toca una cesta de frente o usa Lista.'
@@ -259,10 +260,11 @@ function renderTorreMedirDiagram() {
     return;
   }
 
-  const tipo = cfg.tipoInstalacion;
-  const conEsquema =
-    !tipo || tipo === 'torre' || tipo === 'nft' || tipo === 'dwc' || tipo === 'srf' || tipo === 'rdwc';
-  if (!conEsquema) {
+  const tipo = cfg.tipoInstalacion || 'torre';
+  /* Torre, DWC, SRF, RDWC: diagrama solo en Cultivo e instalación (como el resto de hidro). */
+  const esquemaSoloEnSistema =
+    !tipo || tipo === 'torre' || tipo === 'dwc' || tipo === 'srf' || tipo === 'rdwc';
+  if (esquemaSoloEnSistema) {
     section.classList.add('setup-hidden');
     medirWrap.innerHTML = '';
     return;
@@ -386,24 +388,6 @@ function torrePintarCestasSolo(wrap) {
   const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
   const rot = cfg._torreRotRad || 0;
   const isIllo = !!wrap.querySelector('.hc-illo-torre');
-  const isSistemaColor = !!wrap.querySelector('.hc-illo-torre--sistema');
-  if (
-    isIllo &&
-    isSistemaColor &&
-    typeof hcIlloTorreNivelCestasFrontal === 'function' &&
-    typeof hcIlloTorreLayoutSistema === 'function'
-  ) {
-    const L = hcIlloTorreLayoutSistema(cfg);
-    const titleEl = wrap.querySelector('svg title');
-    const illoU =
-      (wrap.dataset && wrap.dataset.illoUid) ||
-      (titleEl && titleEl.id ? titleEl.id.replace(/-title$/, '') : 'torre');
-    for (let ni = 0; ni < numNiveles; ni++) {
-      const g = wrap.querySelector('#hc-baskets-n-' + ni);
-      if (g) g.innerHTML = hcIlloTorreNivelCestasFrontal(ni, rot, illoU, cfg, L);
-    }
-    return;
-  }
   if (isIllo && typeof hcIlloTorreNivelCestasHTML === 'function' && typeof hcIlloTorreLayout === 'function') {
     const L = hcIlloTorreLayout(cfg);
     const titleEl = wrap.querySelector('svg title');
