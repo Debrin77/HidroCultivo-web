@@ -1627,7 +1627,7 @@
             <p class="torre-nft-p-soft" style="margin:0.35rem 0 0">Indica cuántos cubos y las medidas de un cubo típico. Los ml del checklist son <strong>por cubo</strong>.</p>
           <div id="sysDwcNumCubosWrap" class="setup-hidden">
             <label class="form-label torre-dwc-lbl-mono" for="sysDwcNumCubos">¿Cuántos cubos tienes?</label>
-            <input type="number" id="sysDwcNumCubos" class="torre-dwc-input" min="1" max="24" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC con multivalvula"
+            <input type="number" id="sysDwcNumCubos" class="torre-dwc-input" min="1" max="8" step="1" placeholder="ej. 5" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC con multivalvula"
               oninput="try{refreshDwcSistemaMedidasUI()}catch(e){}">
           </div>
           <div id="sysDwcLitrosUtilesPorSitioWrap" class="setup-hidden">
@@ -3053,7 +3053,7 @@
         </div>
         <div id="setupDwcNumCubosWrap" class="setup-hidden">
           <label class="form-label setup-dwc-label" for="setupDwcNumCubos">¿Cuántos cubos?</label>
-          <input type="number" id="setupDwcNumCubos" class="setup-dwc-input" min="1" max="24" step="1" placeholder="ej. 4" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC multiválvula"
+          <input type="number" id="setupDwcNumCubos" class="setup-dwc-input" min="1" max="8" step="1" placeholder="ej. 4" inputmode="numeric" autocomplete="off" aria-label="Número de cubos DWC multiválvula"
             oninput="try{updateTorreBuilder()}catch(e0){}try{refreshDwcTapHintSetup()}catch(e1){}try{actualizarResumenSetup()}catch(e2){}try{onSetupDwcMedidasInput()}catch(e3){}">
         </div>
         <div id="setupDwcPreviewSection" class="setup-dwc-preview-section">

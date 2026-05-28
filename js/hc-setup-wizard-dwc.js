@@ -101,6 +101,8 @@ function dwcNormalizeOxigenacionDiseno(raw) {
   return 'dep_unido';
 }
 
+const DWC_MC_MAX_CUBOS = 8;
+
 function dwcGetOxigenacionDiseno(cfg) {
   const c = cfg || state.configTorre || {};
   if (c.dwcOxigenacionDiseno != null && String(c.dwcOxigenacionDiseno).trim() !== '') {
@@ -140,10 +142,10 @@ function dwcGetNumCubosIndependientes(cfg) {
   const c = cfg || state.configTorre || {};
   if (dwcGetOxigenacionDiseno(c) !== 'cubos_independientes') return 0;
   const n = parseInt(String(c.dwcNumCubos), 10);
-  if (Number.isFinite(n) && n >= 1) return Math.min(24, n);
+  if (Number.isFinite(n) && n >= 1) return Math.min(DWC_MC_MAX_CUBOS, n);
   const f = Math.max(1, parseInt(String(c.numNiveles || 1), 10) || 1);
   const col = Math.max(1, parseInt(String(c.numCestas || 1), 10) || 1);
-  return Math.min(24, Math.max(1, f * col));
+  return Math.min(DWC_MC_MAX_CUBOS, Math.max(1, f * col));
 }
 
 /** Bloque HTML (checklist) con la guía rápida multivalvula / varios cubos. */
@@ -217,7 +219,7 @@ function dwcAplicarMatrizCultivoMulticuboEnCfg(cfg, ids) {
       Math.max(1, parseInt(String(cfg.numNiveles || 1), 10) || 1) *
       Math.max(1, parseInt(String(cfg.numCestas || 1), 10) || 1);
   }
-  n = Math.min(24, Math.max(1, Math.round(n)));
+  n = Math.min(DWC_MC_MAX_CUBOS, Math.max(1, Math.round(n)));
   cfg.dwcNumCubos = n;
   cfg.numNiveles = 1;
   cfg.numCestas = n;
@@ -2648,7 +2650,7 @@ function refreshDwcTapHintSetup() {
   const oxSetup = dwcNormalizeOxigenacionDiseno(document.getElementById('setupDwcOxigenacionDiseno')?.value);
   if (oxSetup === 'cubos_independientes') {
     const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
-    const nn = Number.isFinite(nRaw) && nRaw >= 1 ? Math.min(24, nRaw) : 4;
+    const nn = Number.isFinite(nRaw) && nRaw >= 1 ? Math.min(DWC_MC_MAX_CUBOS, nRaw) : 4;
     el.classList.remove('setup-hidden');
     el.style.borderRadius = '10px';
     el.style.padding = '8px 10px';
@@ -3277,7 +3279,7 @@ function refreshDwcTapHintSistema() {
     const selOx = document.getElementById('sysDwcOxigenacionDiseno');
     if (elNc && selOx && dwcNormalizeOxigenacionDiseno(selOx.value) === 'cubos_independientes') {
       const r = parseInt(String(elNc.value || '').trim(), 10);
-      if (Number.isFinite(r) && r >= 1) n = Math.min(24, r);
+      if (Number.isFinite(r) && r >= 1) n = Math.min(DWC_MC_MAX_CUBOS, r);
     }
     el.style.display = 'block';
     el.style.borderRadius = '10px';
@@ -3749,9 +3751,9 @@ function syncDwcFormInputsDesdeConfig(c, ids) {
       if (dwcGetOxigenacionDiseno(c) === 'cubos_independientes') {
         const n0 =
           c.dwcNumCubos != null && Number.isFinite(Number(c.dwcNumCubos))
-            ? Math.min(24, Math.max(1, Math.round(Number(c.dwcNumCubos))))
+            ? Math.min(DWC_MC_MAX_CUBOS, Math.max(1, Math.round(Number(c.dwcNumCubos))))
             : Math.min(
-                24,
+                DWC_MC_MAX_CUBOS,
                 Math.max(
                   1,
                   (parseInt(String(c.numNiveles || 1), 10) || 1) * (parseInt(String(c.numCestas || 1), 10) || 1)

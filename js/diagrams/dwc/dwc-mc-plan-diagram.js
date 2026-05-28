@@ -207,51 +207,57 @@
       return s;
     }
 
-    const topBuckets = sorted.filter((p) => p.row === 0);
-    const lowerBuckets = sorted.filter((p) => p.row > 0);
-    if (topBuckets.length) {
-      railX0 = Math.min(railX0, topBuckets[0].x - bucketR * 0.95);
-      railX1 = Math.max(railX1, topBuckets[topBuckets.length - 1].x + bucketR * 0.95);
-    }
-
-    // Cubos de la primera fila: solo desde la línea superior.
-    for (let ti = 0; ti < topBuckets.length; ti++) {
-      const P = topBuckets[ti];
-      const entryX = P.x - bucketR * 0.42;
-      const entryY = P.y + bucketR * 0.48;
-      s += dwcMcPlanAirTube(
-        'M ' + f1(entryX) + ' ' + f1(airRailY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
-        2.2
-      );
-    }
-
-    // Cubos de filas inferiores: bajada izquierda + reparto por la parte inferior.
-    if (lowerBuckets.length) {
-      let maxLowerX = lowerBuckets[0].x;
-      let maxLowerEntryY = lowerBuckets[0].y + bucketR * 0.48;
-      for (let li = 1; li < lowerBuckets.length; li++) {
-        maxLowerX = Math.max(maxLowerX, lowerBuckets[li].x);
-        maxLowerEntryY = Math.max(maxLowerEntryY, lowerBuckets[li].y + bucketR * 0.48);
+    const colKeys = Object.keys(byCol)
+      .map(Number)
+      .sort((a, b) => a - b);
+    const colCenters = colKeys.map((ck) => byCol[ck][0].x);
+    const nCols = colKeys.length;
+    if (dist.rows > 1 && nCols > 0) {
+      const spineXs = [];
+      for (let ci = 0; ci < colKeys.length; ci++) {
+        const sx = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX);
+        spineXs.push(sx);
       }
-      const leftFeedX = railX0;
-      const lowerRailY = maxLowerEntryY + Math.max(10, bucketR * 0.22);
-      const lowerRailX1 = maxLowerX + bucketR * 0.15;
-      s += dwcMcPlanAirTube(
-        'M ' + f1(leftFeedX) + ' ' + f1(airRailY) + ' L ' + f1(leftFeedX) + ' ' + f1(lowerRailY),
-        2.3
-      );
-      s += dwcMcPlanAirTube(
-        'M ' + f1(leftFeedX) + ' ' + f1(lowerRailY) + ' L ' + f1(lowerRailX1) + ' ' + f1(lowerRailY),
-        2.3
-      );
-      for (let li = 0; li < lowerBuckets.length; li++) {
-        const P = lowerBuckets[li];
-        const entryX = P.x - bucketR * 0.42;
-        const entryY = P.y + bucketR * 0.48;
+      railX0 = Math.min(railX0, ...spineXs);
+      railX1 = Math.max(railX1, ...spineXs);
+    }
+    for (let ci = 0; ci < colKeys.length; ci++) {
+      const ck = colKeys[ci];
+      const list = byCol[ck].sort((a, b) => a.row - b.row);
+      if (!list.length) continue;
+      const spineX = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX);
+      const spineSign = spineX < list[0].x ? -1 : 1;
+      const top = list[0];
+      const topEntryY = top.y + bucketR * 0.48;
+      s += dwcMcPlanAirTube('M ' + f1(spineX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(topEntryY), 2.3);
+      const hasLower = list.length > 1;
+      let lowerRailY = null;
+      if (hasLower) {
+        let maxY = topEntryY;
+        for (let li = 1; li < list.length; li++) {
+          maxY = Math.max(maxY, list[li].y + bucketR * 0.48);
+        }
+        lowerRailY = maxY + Math.max(10, bucketR * 0.22);
         s += dwcMcPlanAirTube(
-          'M ' + f1(entryX) + ' ' + f1(lowerRailY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
-          2.2
+          'M ' + f1(spineX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(lowerRailY),
+          2.3
         );
+      }
+      for (let i = 0; i < list.length; i++) {
+        const P = list[i];
+        const entryX = P.x + spineSign * bucketR * 0.42;
+        const entryY = P.y + bucketR * 0.48;
+        if (i === 0) {
+          s += dwcMcPlanAirTube(
+            'M ' + f1(spineX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+            2.2
+          );
+        } else if (lowerRailY != null) {
+          s += dwcMcPlanAirTube(
+            'M ' + f1(spineX) + ' ' + f1(lowerRailY) + ' L ' + f1(entryX) + ' ' + f1(lowerRailY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+            2.2
+          );
+        }
       }
     }
     const mainRailD =

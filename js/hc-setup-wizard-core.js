@@ -2385,7 +2385,7 @@ function abrirSetup() {
       const elNc = document.getElementById('setupDwcNumCubos');
       const nCub = Math.max(
         1,
-        Math.min(24, parseInt(String(c.dwcNumCubos ?? c.numCestas ?? 4), 10) || 4)
+        Math.min(8, parseInt(String(c.dwcNumCubos ?? c.numCestas ?? 4), 10) || 4)
       );
       if (elNc) elNc.value = String(nCub);
     } else {

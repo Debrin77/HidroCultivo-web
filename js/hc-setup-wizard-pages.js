@@ -1737,7 +1737,7 @@ function renderDwcMulticuboSetupPreview(previewEl, numCubos, volLitros, formaDep
   previewEl.innerHTML = '';
   previewEl.style.position = 'relative';
   previewEl.style.height = 'auto';
-  const n = Math.min(24, Math.max(1, parseInt(String(numCubos), 10) || 1));
+  const n = Math.min(8, Math.max(1, parseInt(String(numCubos), 10) || 1));
   const forma =
     typeof dwcNormalizeDepositoForma === 'function'
       ? dwcNormalizeDepositoForma(formaDep)
@@ -2005,7 +2005,7 @@ function refreshDwcSetupPreview() {
     const nRaw = parseInt(String(document.getElementById('setupDwcNumCubos')?.value || '').trim(), 10);
     cols =
       Number.isFinite(nRaw) && nRaw >= 1
-        ? Math.min(24, nRaw)
+        ? Math.min(8, nRaw)
         : defNc > 0
           ? defNc
           : 0;
@@ -2266,7 +2266,7 @@ function updateTorreBuilder() {
       const defNc = esNuevaBuilder ? 0 : formaMc === 'cilindrico' ? 1 : 4;
       const nn =
         Number.isFinite(nRaw) && nRaw >= 1
-          ? Math.min(24, nRaw)
+          ? Math.min(8, nRaw)
           : defNc > 0
             ? defNc
             : 0;
