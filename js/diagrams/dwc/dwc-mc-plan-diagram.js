@@ -163,10 +163,13 @@
       .sort((a, b) => a - b);
     const colCenters = colKeys.map((ck) => byCol[ck][0].x);
     const nCols = colKeys.length;
+    const railJunctionXs = [];
     if (dist.rows > 1 && nCols > 0) {
       const spineXs = [];
       for (let ci = 0; ci < colKeys.length; ci++) {
-        spineXs.push(dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX));
+        const sx = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX);
+        spineXs.push(sx);
+        railJunctionXs.push(sx);
       }
       railX0 = Math.min(railX0, ...spineXs);
       railX1 = Math.max(railX1, ...spineXs);
@@ -190,6 +193,26 @@
       }
     }
     if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
+    if (railJunctionXs.length) {
+      for (let ji = 0; ji < railJunctionXs.length; ji++) {
+        const jx = railJunctionXs[ji];
+        s +=
+          '<circle cx="' +
+          f1(jx) +
+          '" cy="' +
+          f1(airRailY) +
+          '" r="3.1" fill="' +
+          C_AIR_RIM +
+          '"/>' +
+          '<circle cx="' +
+          f1(jx) +
+          '" cy="' +
+          f1(airRailY) +
+          '" r="2.1" fill="' +
+          C_AIR_BODY +
+          '"/>';
+      }
+    }
     return s;
   }
 
