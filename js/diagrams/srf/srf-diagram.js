@@ -449,13 +449,13 @@
       const basketN = Math.min(6, Math.max(1, C));
       const rimW = 17;
       const rimH = 4.4;
-      const bodyTopW = 12.5;
-      const bodyBotW = 8.2;
-      const bodyH = 16.5;
+      const bodyTopW = 14.2;
+      const bodyBotW = 7.6;
+      const bodyH = 19.5;
       for (let bi = 0; bi < basketN; bi++) {
         const bx = waterX + waterW * ((bi + 0.5) / basketN);
         const rimY = raftY + 2.2;
-        const bodyY = rimY + rimH * 0.6;
+        const bodyY = rimY - 1.6;
         const bodyBottom = bodyY + bodyH;
         s +=
           '<g class="srf-frontal-basket" aria-hidden="true" opacity="0.95">' +
@@ -561,22 +561,42 @@
       } else {
         s +=
           '<g class="srf-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
+          '<ellipse cx="' +
+          pumpCx.toFixed(1) +
+          '" cy="' +
+          (pumpY + pumpH + 6).toFixed(1) +
+          '" rx="20" ry="4.5" fill="rgba(15,23,42,0.14)"/>' +
           '<rect x="' +
           (pumpX + 4).toFixed(1) +
           '" y="' +
-          (pumpY + 14).toFixed(1) +
+          (pumpY + 15).toFixed(1) +
           '" width="' +
           (pumpW - 8).toFixed(1) +
           '" height="' +
-          (pumpH - 10).toFixed(1) +
-          '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.5"/>' +
+          (pumpH - 11).toFixed(1) +
+          '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>' +
           '<ellipse cx="' +
           pumpCx.toFixed(1) +
           '" cy="' +
           (pumpY + 12).toFixed(1) +
           '" rx="' +
           ((pumpW - 10) / 2).toFixed(1) +
-          '" ry="12" fill="#fb923c" stroke="#c2410c" stroke-width="2"/>' +
+          '" ry="13" fill="#ff9800" stroke="#e65100" stroke-width="2"/>' +
+          '<ellipse cx="' +
+          (pumpCx - 8).toFixed(1) +
+          '" cy="' +
+          (pumpY + 8).toFixed(1) +
+          '" rx="7" ry="3" fill="rgba(255,255,255,0.45)"/>' +
+          '<circle cx="' +
+          pumpCx.toFixed(1) +
+          '" cy="' +
+          (pumpY + pumpH * 0.52).toFixed(1) +
+          '" r="9" fill="#eceff1" stroke="#78909c" stroke-width="1.2"/>' +
+          '<circle cx="' +
+          pumpCx.toFixed(1) +
+          '" cy="' +
+          (pumpY + pumpH * 0.52).toFixed(1) +
+          '" r="4.5" fill="none" stroke="#90a4ae" stroke-width="0.9"/>' +
           '</g>';
       }
       if (stoneYs.length) {
