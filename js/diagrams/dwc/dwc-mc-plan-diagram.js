@@ -167,12 +167,6 @@
       const spineX = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX);
       const spineSign = spineX < list[0].x ? -1 : 1;
       const lastY = list[list.length - 1].y + bucketR * 0.48;
-      if (Math.abs(spineX - pumpOutX) > 2) {
-        s += dwcMcPlanAirTube(
-          'M ' + f1(pumpOutX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(airRailY),
-          2.4
-        );
-      }
       s += dwcMcPlanAirTube('M ' + f1(spineX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(lastY), 2.3);
       for (let i = 0; i < list.length; i++) {
         const P = list[i];
@@ -364,7 +358,7 @@
     const gridH = (dist.rows - 1) * rowStep;
     const W = Math.min(720, Math.max(400, marginX * 2 + gridW + bucketR * 2 + 24));
     const cx = W / 2;
-    const gridTop = PLAN_CHROME_H + 36;
+    const gridTop = PLAN_CHROME_H + 58;
     const H = gridTop + gridH + bucketR * 2 + 36;
     const ta = typeof torreSvgAnimacionesActivas === 'function' && torreSvgAnimacionesActivas();
     const tieneDifusor = c.equipamiento?.includes?.('difusor') ?? true;
@@ -412,10 +406,10 @@
       byCol[P.col].push(P);
     }
 
-    const airBadgeY = PLAN_CHROME_H + 6;
+    const airBadgeY = 24;
     const pumpOutX = cx;
-    const pumpOutY = airBadgeY + 28;
-    const airRailY = gridTop - 10;
+    const pumpOutY = airBadgeY + 24;
+    const airRailY = gridTop - 14;
 
     let s = dwcMcPlanDefs();
     s += '<rect width="' + W + '" height="' + H + '" fill="url(#dwcMcPlanBg)"/>';
