@@ -1047,30 +1047,7 @@ function _buildTorreSvgLegacy() {
   const ejeTop = MARG_T - 36;
   const ejeBot = DEP_Y + 8;
 
-  // ── NIVELES Y CESTAS ──────────────────────────────────────────────────────
-  for (let n = 0; n < numNiveles; n++) {
-    const ny     = nivelY(n);
-    const activo = nivelesActivos.includes(n);
-    const bodyX = CX - TORRE_W / 2;
-    const bodyY = ny - (NIVEL_H/2 - 6);
-    const bodyH = (NIVEL_H - 12);
-
-    // Cuerpo de cilindro por nivel (modular, queda más “torre redonda”)
-    s += `<rect x="${bodyX}" y="${bodyY}" width="${TORRE_W}" height="${bodyH}" rx="18"
-      fill="url(#torreBodyGrad)" stroke="#cbd5e1" stroke-width="1" opacity="${activo ? 1 : 0.38}"/>`;
-    // Glow suave cuando está activo
-    if (activo) {
-      s += `<rect x="${bodyX+2}" y="${bodyY+2}" width="${TORRE_W-4}" height="${bodyH-4}" rx="16"
-        fill="url(#torreGlowGrad)" opacity="1"/>`;
-    }
-
-    if (!activo) continue;
-
-    // Cestas por nivel en <g> propio: al girar solo se actualiza este fragmento (mucho más fluido).
-    s += `<g id="hc-baskets-n-${n}">${generarSVGTorreCestasNivelHTML(n, rot)}</g>`;
-  }
-
-  // Eje central y subida de agua encima de los módulos (no cortado por cilindros de nivel)
+  // Eje central (hub): detrás de cestas; no tapa el cultivo al girar
   s += `<g class="hc-torre-eje" pointer-events="none" aria-hidden="true">
     <rect x="${CX-EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot-ejeTop}"
       rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.88"/>
@@ -1091,6 +1068,23 @@ function _buildTorreSvgLegacy() {
           dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
       </circle>`;
     });
+  }
+
+  // ── NIVELES (rueda) Y CESTAS ─────────────────────────────────────────────
+  for (let n = 0; n < numNiveles; n++) {
+    const ny     = nivelY(n);
+    const activo = nivelesActivos.includes(n);
+    const opNiv = activo ? 1 : 0.38;
+    s += `<ellipse class="hc-torre-nivel-rueda" cx="${CX}" cy="${ny}" rx="${TORRE_RX}" ry="${TORRE_RY + 2}"
+      fill="none" stroke="#cbd5e1" stroke-width="1.3" opacity="${opNiv}"/>`;
+    if (activo) {
+      s += `<ellipse cx="${CX}" cy="${ny}" rx="${TORRE_RX - 3}" ry="${TORRE_RY}"
+        fill="none" stroke="#86efac" stroke-width="1" opacity="0.35"/>`;
+    }
+
+    if (!activo) continue;
+
+    s += `<g id="hc-baskets-n-${n}" class="hc-torre-nivel-cestas">${generarSVGTorreCestasNivelHTML(n, rot)}</g>`;
   }
 
   // ── DEPÓSITO ──────────────────────────────────────────────────────────────

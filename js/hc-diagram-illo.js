@@ -2434,7 +2434,7 @@
     return out;
   }
 
-  /** Eje central (agua + subida animada): encima de anillos de nivel para que no quede cortado. */
+  /** Eje central (hub de la torre): detrás de cestas; anillos de nivel solo contorno para no cortarlo. */
   function hcIlloTorreEjeCentralSvg(L, u, ta) {
     var out =
       '<g class="hc-torre-eje" pointer-events="none" aria-hidden="true">' +
@@ -2978,11 +2978,12 @@
           ? Number(volCap) * 0.78
           : 20;
     body += '<rect width="' + L.W + '" height="' + L.H + '" fill="url(#' + u + '-bg)"/>';
+    body += hcIlloTorreEjeCentralSvg(L, u, ta);
     var n;
     for (n = 0; n < numNiveles; n++) {
       var cyN = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
       body +=
-        '<ellipse cx="' +
+        '<ellipse class="hc-torre-nivel-rueda" cx="' +
         f1(L.CX) +
         '" cy="' +
         f1(cyN) +
@@ -2991,10 +2992,9 @@
         '" ry="' +
         f1(L.TORRE_RY + 3) +
         '" fill="none" stroke="#84cc16" stroke-width="1.5" opacity="0.72"/>';
-      body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
+      body += '<g id="hc-baskets-n-' + n + '" class="hc-torre-nivel-cestas">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
       body += hcIlloTorreNivelRotHint(L.CX, cyN, L.TORRE_RX);
     }
-    body += hcIlloTorreEjeCentralSvg(L, u, ta);
     body += '<ellipse cx="' + f1(L.CX) + '" cy="' + f1(L.depY + L.DEP_H + 8) + '" rx="' + f1(L.DEP_W * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
     var depBlock = { defs: '', html: '' };
     if (typeof torreSvgDepositoCompleto === 'function') {
