@@ -17,6 +17,37 @@
     return Math.abs(n - Math.round(n)) < 1e-6 ? String(Math.round(n)) : n.toFixed(2);
   }
 
+  function drawUnifiedPump(px, py, scale) {
+    const sc = Number.isFinite(Number(scale)) ? Math.max(0.75, Math.min(1.3, Number(scale))) : 1;
+    if (typeof global.dwcSvgAirPumpExternal === 'function') {
+      const pump = global.dwcSvgAirPumpExternal(0, 0, 1);
+      return (
+        '<g class="nft-illo-pump" transform="translate(' +
+        fq(px) +
+        ' ' +
+        fq(py) +
+        ') scale(' +
+        fq(sc) +
+        ')" pointer-events="none">' +
+        pump.svg +
+        '</g>'
+      );
+    }
+    const w = 54 * sc;
+    const h = 40 * sc;
+    const cx = px + w / 2;
+    return (
+      '<g class="nft-illo-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))" pointer-events="none">' +
+      '<ellipse cx="' + fq(cx) + '" cy="' + fq(py + h + 6 * sc) + '" rx="' + fq(w * 0.4) + '" ry="' + fq(4.5 * sc) + '" fill="rgba(15,23,42,0.14)"/>' +
+      '<rect x="' + fq(px + 4 * sc) + '" y="' + fq(py + 15 * sc) + '" width="' + fq(w - 8 * sc) + '" height="' + fq(h - 11 * sc) + '" rx="' + fq(5 * sc) + '" fill="#37474f" stroke="#1e293b" stroke-width="' + fq(1.8 * sc) + '"/>' +
+      '<ellipse cx="' + fq(cx) + '" cy="' + fq(py + 12 * sc) + '" rx="' + fq((w - 10 * sc) / 2) + '" ry="' + fq(13 * sc) + '" fill="#ff9800" stroke="#e65100" stroke-width="' + fq(2 * sc) + '"/>' +
+      '<ellipse cx="' + fq(cx - 8 * sc) + '" cy="' + fq(py + 8 * sc) + '" rx="' + fq(7 * sc) + '" ry="' + fq(3 * sc) + '" fill="rgba(255,255,255,0.45)"/>' +
+      '<circle cx="' + fq(cx) + '" cy="' + fq(py + h * 0.52) + '" r="' + fq(9 * sc) + '" fill="#eceff1" stroke="#78909c" stroke-width="' + fq(1.2 * sc) + '"/>' +
+      '<circle cx="' + fq(cx) + '" cy="' + fq(py + h * 0.52) + '" r="' + fq(4.5 * sc) + '" fill="none" stroke="#90a4ae" stroke-width="' + fq(0.9 * sc) + '"/>' +
+      '</g>'
+    );
+  }
+
   function computeMesaMedirLayout(cfg, equipOpts) {
     const EO = equipOpts || {};
     const hyd =
@@ -354,20 +385,10 @@
         '" width="10" height="28" rx="5" fill="#f97316" stroke="#c2410c" stroke-width="1.1" pointer-events="none"/>';
     }
 
-    const px = L.tx + L.tankW + 18;
-    const py = L.waterTop + L.waterH * 0.5;
-    s +=
-      '<rect x="' +
-      px +
-      '" y="' +
-      (py - 10) +
-      '" width="36" height="22" rx="4" fill="#334155" stroke="#1e293b" stroke-width="1" pointer-events="none"/>';
-    s +=
-      '<text x="' +
-      (px + 18) +
-      '" y="' +
-      (py + 4) +
-      '" text-anchor="middle" font-size="7" fill="#e2e8f0" font-weight="700" font-family="system-ui,sans-serif" pointer-events="none">BOMBA</text>';
+    const pumpScale = Math.max(0.82, Math.min(1.2, 0.9 + (L.multinivel ? L.nTiers * 0.06 : 0)));
+    const px = L.tx + L.tankW + 12;
+    const py = L.waterTop + L.waterH * 0.5 - 20 * pumpScale;
+    s += drawUnifiedPump(px, py, pumpScale);
 
     if (L.showDifusor && typeof global.nftSvgAireadorEnSuelo === 'function') {
       s += global.nftSvgAireadorEnSuelo(L.tx, L.tankY, L.tankW, L.tankH, P);
