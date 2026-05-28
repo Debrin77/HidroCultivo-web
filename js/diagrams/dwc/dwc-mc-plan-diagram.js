@@ -29,41 +29,87 @@
     );
   }
 
-  /** Cubo cenital (misma apariencia que rdwcPlanRoundBucket, copia local). */
-  function dwcMcPlanBucket(cx, cy, r, ta) {
-    const rim = r * 0.7;
-    const waterR = r - 4;
-    let o =
-      '<g class="dwc-mc-plan-bucket" pointer-events="none" aria-hidden="true">' +
-      '<circle cx="' +
-      f1(cx) +
-      '" cy="' +
-      f1(cy) +
-      '" r="' +
-      f1(r) +
-      '" fill="#e8e4df" stroke="#78716c" stroke-width="2"/>' +
-      '<circle cx="' +
-      f1(cx) +
-      '" cy="' +
-      f1(cy) +
-      '" r="' +
-      f1(waterR) +
-      '" fill="url(#dwcMcPlanWater)" opacity="0.75"/>' +
-      '<circle cx="' +
-      f1(cx) +
-      '" cy="' +
-      f1(cy) +
-      '" r="' +
-      f1(rim) +
-      '" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>' +
-      '<circle cx="' +
-      f1(cx) +
-      '" cy="' +
-      f1(cy) +
-      '" r="' +
-      f1(rim - 4) +
-      '" fill="#334155" opacity="0.35"/>';
-    const stoneY = cy + r * 0.38;
+  /** Cubo cenital (circular o prismático regular según forma seleccionada). */
+  function dwcMcPlanBucket(cx, cy, r, ta, esPrismatico) {
+    let o = '<g class="dwc-mc-plan-bucket" pointer-events="none" aria-hidden="true">';
+    let stoneY = cy + r * 0.38;
+    if (esPrismatico) {
+      const side = r * 2;
+      const x = cx - r;
+      const y = cy - r;
+      const inPad = 4;
+      const corePad = r * 0.27;
+      o +=
+        '<rect x="' +
+        f1(x) +
+        '" y="' +
+        f1(y) +
+        '" width="' +
+        f1(side) +
+        '" height="' +
+        f1(side) +
+        '" rx="10" fill="#e8e4df" stroke="#78716c" stroke-width="2"/>' +
+        '<rect x="' +
+        f1(x + inPad) +
+        '" y="' +
+        f1(y + inPad) +
+        '" width="' +
+        f1(side - inPad * 2) +
+        '" height="' +
+        f1(side - inPad * 2) +
+        '" rx="8" fill="url(#dwcMcPlanWater)" opacity="0.75"/>' +
+        '<rect x="' +
+        f1(x + corePad) +
+        '" y="' +
+        f1(y + corePad) +
+        '" width="' +
+        f1(side - corePad * 2) +
+        '" height="' +
+        f1(side - corePad * 2) +
+        '" rx="8" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>' +
+        '<rect x="' +
+        f1(x + corePad + 4) +
+        '" y="' +
+        f1(y + corePad + 4) +
+        '" width="' +
+        f1(side - (corePad + 4) * 2) +
+        '" height="' +
+        f1(side - (corePad + 4) * 2) +
+        '" rx="7" fill="#334155" opacity="0.35"/>';
+      stoneY = cy + r * 0.42;
+    } else {
+      const rim = r * 0.7;
+      const waterR = r - 4;
+      o +=
+        '<circle cx="' +
+        f1(cx) +
+        '" cy="' +
+        f1(cy) +
+        '" r="' +
+        f1(r) +
+        '" fill="#e8e4df" stroke="#78716c" stroke-width="2"/>' +
+        '<circle cx="' +
+        f1(cx) +
+        '" cy="' +
+        f1(cy) +
+        '" r="' +
+        f1(waterR) +
+        '" fill="url(#dwcMcPlanWater)" opacity="0.75"/>' +
+        '<circle cx="' +
+        f1(cx) +
+        '" cy="' +
+        f1(cy) +
+        '" r="' +
+        f1(rim) +
+        '" fill="#1e293b" stroke="#0f172a" stroke-width="1.5"/>' +
+        '<circle cx="' +
+        f1(cx) +
+        '" cy="' +
+        f1(cy) +
+        '" r="' +
+        f1(rim - 4) +
+        '" fill="#334155" opacity="0.35"/>';
+    }
     o +=
       '<ellipse cx="' +
       f1(cx) +
@@ -181,16 +227,37 @@
       if (!list.length) continue;
       const spineX = dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX);
       const spineSign = spineX < list[0].x ? -1 : 1;
-      const lastY = list[list.length - 1].y + bucketR * 0.48;
-      s += dwcMcPlanAirTube('M ' + f1(spineX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(lastY), 2.3);
+      const top = list[0];
+      const topEntryY = top.y + bucketR * 0.48;
+      s += dwcMcPlanAirTube('M ' + f1(spineX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(topEntryY), 2.3);
+      const hasLower = list.length > 1;
+      let lowerRailY = null;
+      if (hasLower) {
+        let maxY = topEntryY;
+        for (let li = 1; li < list.length; li++) {
+          maxY = Math.max(maxY, list[li].y + bucketR * 0.48);
+        }
+        lowerRailY = maxY + Math.max(10, bucketR * 0.22);
+        s += dwcMcPlanAirTube(
+          'M ' + f1(spineX) + ' ' + f1(airRailY) + ' L ' + f1(spineX) + ' ' + f1(lowerRailY),
+          2.3
+        );
+      }
       for (let i = 0; i < list.length; i++) {
         const P = list[i];
         const entryX = P.x + spineSign * bucketR * 0.42;
         const entryY = P.y + bucketR * 0.48;
-        s += dwcMcPlanAirTube(
-          'M ' + f1(spineX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
-          2.2
-        );
+        if (i === 0) {
+          s += dwcMcPlanAirTube(
+            'M ' + f1(spineX) + ' ' + f1(entryY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+            2.2
+          );
+        } else if (lowerRailY != null) {
+          s += dwcMcPlanAirTube(
+            'M ' + f1(spineX) + ' ' + f1(lowerRailY) + ' L ' + f1(entryX) + ' ' + f1(lowerRailY) + ' L ' + f1(entryX) + ' ' + f1(entryY),
+            2.2
+          );
+        }
       }
     }
     const mainRailD =
@@ -395,6 +462,8 @@
    */
   function renderDwcMcPlan(cfg, siteInteractive) {
     const c = cfg || {};
+    const forma = typeof dwcNormalizeDepositoForma === 'function' ? dwcNormalizeDepositoForma(c.dwcDepositoForma) : c.dwcDepositoForma;
+    const esPrismatico = forma === 'prismatico' || forma === 'prismatico_regular';
     const S =
       typeof dwcGetNumCubosIndependientes === 'function'
         ? Math.max(1, dwcGetNumCubosIndependientes(c))
@@ -477,7 +546,7 @@
     s += '<g class="dwc-mc-plan-buckets">';
     for (let pi = 0; pi < positions.length; pi++) {
       const P = positions[pi];
-      s += dwcMcPlanBucket(P.x, P.y, bucketR, ta).svg;
+      s += dwcMcPlanBucket(P.x, P.y, bucketR, ta, esPrismatico).svg;
       if (typeof siteInteractive === 'function') {
         try {
           s = siteInteractive(s, P.x, P.y, P.idx, rPot, c, P.idx, ta);
