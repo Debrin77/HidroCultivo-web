@@ -2495,6 +2495,168 @@
   window.hcIlloTorreLayout = hcIlloTorreLayout;
   window.hcIlloTorreNivelCestasHTML = hcIlloTorreNivelCestasHTML;
 
+  /**
+   * Vista colorida de torre para Cultivo e instalación (panel, macetas 3D, depósito con agua).
+   * Sin líneas de impulsión/retorno ni panel «Resumen técnico»; bomba DWC unificada.
+   */
+  function hcIlloTorreEsquemaSistemaColorido(cfg, u, numNiveles, numCestas, volCap, volMez, volPct, ta) {
+    var rot = cfg._torreRotRad || 0;
+    var equip = illoTorreEquipList(cfg);
+    var tieneDifusor = !equip.length || equip.indexOf('difusor') >= 0;
+    var volTankL =
+      volMez != null && Number.isFinite(Number(volMez)) && volMez > 0
+        ? volMez
+        : volCap != null && Number.isFinite(Number(volCap))
+          ? Number(volCap) * 0.78
+          : 20;
+    var W = 440;
+    var NIVEL_H = 58;
+    var GAP = 12;
+    var torH = numNiveles * NIVEL_H + (numNiveles - 1) * GAP;
+    var MARG_T = 50;
+    var DEP_H = 88;
+    var H = MARG_T + torH + 24 + DEP_H + 40;
+    var panelX = 18;
+    var panelY = 14;
+    var panelW = W - 36;
+    var panelH = H - 24;
+    var leftZoneW = 272;
+    var leftX = panelX + 14;
+    var centerX = leftX + leftZoneW * 0.5;
+    var topY = MARG_T + 4;
+    var RX = 86;
+    var depY = topY + torH + 24;
+    var depX = centerX - 94;
+    var depW = 188;
+    var Lp = {
+      CX: centerX,
+      MARG_T: topY - NIVEL_H / 2,
+      NIVEL_H: NIVEL_H,
+      GAP: GAP,
+      TORRE_RX: RX,
+      TORRE_RY: 14,
+    };
+    var body = '';
+    body += '<rect width="' + W + '" height="' + H + '" fill="url(#' + u + '-bg)"/>';
+    body +=
+      '<rect x="' +
+      f1(panelX) +
+      '" y="' +
+      f1(panelY) +
+      '" width="' +
+      f1(panelW) +
+      '" height="' +
+      f1(panelH) +
+      '" rx="16" fill="rgba(255,255,255,0.74)" stroke="#cbd5e1" stroke-width="1.2"/>';
+    body +=
+      '<rect x="' +
+      f1(panelX + 1) +
+      '" y="' +
+      f1(panelY + 1) +
+      '" width="' +
+      f1(panelW - 2) +
+      '" height="54" rx="15" fill="rgba(148,163,184,0.09)"/>';
+    body +=
+      '<text x="' +
+      f1(centerX) +
+      '" y="30" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="#64748b" letter-spacing="0.04em">SISTEMA DE CULTIVO</text>';
+    body +=
+      '<text x="' +
+      f1(centerX) +
+      '" y="49" text-anchor="middle" font-family="Syne,sans-serif" font-size="24" font-weight="900" fill="' +
+      HC_ILLO.ink +
+      '">Torre vertical</text>';
+    body +=
+      '<rect x="' +
+      f1(leftX + 28) +
+      '" y="' +
+      f1(topY - 4) +
+      '" width="' +
+      f1(leftZoneW - 56) +
+      '" height="' +
+      f1(torH + 22) +
+      '" rx="20" fill="rgba(148,163,184,0.09)" stroke="#bfcedd" stroke-width="1.1"/>';
+    body +=
+      '<ellipse cx="' +
+      f1(centerX) +
+      '" cy="' +
+      f1(topY + torH + 12) +
+      '" rx="86" ry="14" fill="rgba(15,23,42,0.08)"/>';
+    body +=
+      '<rect x="' +
+      f1(centerX - 8) +
+      '" y="' +
+      f1(topY + 2) +
+      '" width="16" height="' +
+      f1(torH - 4) +
+      '" rx="8" fill="url(#' +
+      u +
+      '-water)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2.2"/>';
+    body +=
+      '<rect x="' +
+      f1(centerX - 2.4) +
+      '" y="' +
+      f1(topY + 10) +
+      '" width="4.8" height="' +
+      f1(Math.max(20, torH - 20)) +
+      '" rx="2.4" fill="rgba(255,255,255,0.42)"/>';
+    var n;
+    for (n = 0; n < numNiveles; n++) {
+      var cy = topY + n * (NIVEL_H + GAP) + NIVEL_H / 2;
+      body +=
+        '<ellipse cx="' +
+        f1(centerX) +
+        '" cy="' +
+        f1(cy) +
+        '" rx="' +
+        f1(RX) +
+        '" ry="14" fill="none" stroke="' +
+        HC_ILLO.lidHi +
+        '" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.56"/>';
+      body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, Lp) + '</g>';
+      body +=
+        '<text x="' +
+        f1(leftX + 18) +
+        '" y="' +
+        f1(cy + 4) +
+        '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="10" font-weight="800" fill="#64748b">N' +
+        (n + 1) +
+        '</text>';
+    }
+    body += '<ellipse cx="' + f1(centerX) + '" cy="' + f1(depY + DEP_H + 8) + '" rx="' + f1(depW * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
+    var defsExtra = '';
+    var depBlock = { defs: '', html: '' };
+    if (typeof torreSvgDepositoCompleto === 'function') {
+      depBlock = torreSvgDepositoCompleto(depX, depY, depW, DEP_H, volTankL, {
+        suf: u + 'Tk',
+        animate: ta,
+        capL: volCap,
+        mezL: volMez,
+        difusor: tieneDifusor,
+      });
+    } else {
+      depBlock.html = tankFront(depX, depY, depW, DEP_H, Math.max(0.55, volPct), u, ta, false, false);
+      if (tieneDifusor) {
+        var airFb = hcIlloTorreDwcAirSvg(depX, depY, depW, DEP_H, true, ta);
+        depBlock.defs += airFb.defs || '';
+        depBlock.html += airFb.html || '';
+      }
+    }
+    defsExtra += depBlock.defs || '';
+    body += depBlock.html || '';
+    if (typeof hcDiagramVolLabelSvg === 'function') {
+      body += hcDiagramVolLabelSvg(centerX, depY + DEP_H + 28, volMez != null ? volMez : volTankL, {
+        fontSize: 20,
+        fill: HC_ILLO.water1,
+        pointerEvents: false,
+      });
+    }
+    body += hcIlloTorreRotFlechas(depX, depY, depW, DEP_H);
+    return { W: W, H: H, body: body, defsExtra: defsExtra };
+  }
+
   function torreAllBasketsPanel(u, cfg, x0, y0, nNiv, nCes, stepX, stepY, rx, ry) {
     var body = '';
     for (var n = 0; n < nNiv; n++) {
@@ -2536,7 +2698,7 @@
     var numCestas = Math.max(1, Math.min(10, parseInt(cfg.numCestas, 10) || 5));
     var u = uid('torre');
     var vista = cfg.torreDiagramaVista || 'esquema';
-    var W = vista === 'esquema' ? 360 : 560;
+    var W = vista === 'esquema' ? 440 : 560;
     var CX = W / 2;
     var NIVEL_H = 58;
     var GAP = 12;
@@ -2696,131 +2858,17 @@
         body
       );
     }
-    var L = hcIlloTorreLayout(cfg);
-    W = L.W;
-    H = L.H;
-    var rot = cfg._torreRotRad || 0;
-    var equip = illoTorreEquipList(cfg);
-    var tieneDifusor = !equip.length || equip.indexOf('difusor') >= 0;
-    var tieneCalentador = equip.indexOf('calentador') >= 0;
-    var volTankL =
-      volMez != null && Number.isFinite(Number(volMez)) && volMez > 0
-        ? volMez
-        : volCap != null && Number.isFinite(Number(volCap))
-          ? Number(volCap) * 0.78
-          : 20;
-    body += '<rect width="' + L.W + '" height="' + L.H + '" fill="url(#' + u + '-bg)"/>';
-    body +=
-      '<text x="' +
-      f1(L.CX) +
-      '" y="32" text-anchor="middle" font-family="Syne,sans-serif" font-size="22" font-weight="900" fill="' +
-      HC_ILLO.ink +
-      '">Torre vertical</text>';
-    body +=
-      '<ellipse cx="' +
-      f1(L.CX) +
-      '" cy="' +
-      f1(L.MARG_T - 22) +
-      '" rx="24" ry="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>';
-    body +=
-      '<rect x="' +
-      f1(L.CX - 7) +
-      '" y="' +
-      f1(L.MARG_T - 8) +
-      '" width="14" height="' +
-      f1(L.torH + 16) +
-      '" rx="7" fill="url(#' +
-      u +
-      '-water)" stroke="' +
-      HC_ILLO.ink +
-      '" stroke-width="2"/>';
-    if (ta) {
-      body +=
-        '<line x1="' +
-        f1(L.CX) +
-        '" y1="' +
-        f1(L.MARG_T) +
-        '" x2="' +
-        f1(L.CX) +
-        '" y2="' +
-        f1(L.depY) +
-        '" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="6 7" opacity="0.45">' +
-        '<animate attributeName="stroke-dashoffset" from="0" to="26" dur="1s" repeatCount="indefinite"/></line>';
+    var colorido = hcIlloTorreEsquemaSistemaColorido(cfg, u, numNiveles, numCestas, volCap, volMez, volPct, ta);
+    if (colorido.defsExtra && body.indexOf('</defs>') >= 0) {
+      body = body.replace('</defs>', colorido.defsExtra + '</defs>');
+    } else if (colorido.defsExtra) {
+      body = '<defs>' + colorido.defsExtra + '</defs>' + body;
     }
-    var n;
-    for (n = 0; n < numNiveles; n++) {
-      var cyN = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
-      body +=
-        '<ellipse cx="' +
-        f1(L.CX) +
-        '" cy="' +
-        f1(cyN) +
-        '" rx="' +
-        f1(L.TORRE_RX + 4) +
-        '" ry="' +
-        f1(L.TORRE_RY + 3) +
-        '" fill="rgba(132,204,22,0.06)" stroke="#84cc16" stroke-width="1.4" stroke-dasharray="5 4" opacity="0.72"/>';
-      body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
-      body += hcIlloTorreNivelRotHint(L.CX, cyN, L.TORRE_RX);
-    }
-    body += '<ellipse cx="' + f1(L.CX) + '" cy="' + f1(L.depY + L.DEP_H + 8) + '" rx="' + f1(L.DEP_W * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
-    var depBlock = { defs: '', html: '' };
-    if (typeof torreSvgDepositoCompleto === 'function') {
-      depBlock = torreSvgDepositoCompleto(L.depX, L.depY, L.DEP_W, L.DEP_H, volTankL, {
-        suf: u + 'Tk',
-        animate: ta,
-        capL: volCap,
-        mezL: volMez,
-        difusor: tieneDifusor,
-      });
-    } else if (typeof nftSvgTankTorreStyle === 'function') {
-      depBlock = nftSvgTankTorreStyle(L.depX, L.depY, L.DEP_W, L.DEP_H, u + 'Tk', volTankL, {
-        animate: ta,
-        capL: volCap,
-        mezL: volMez,
-      });
-      if (tieneDifusor && typeof torreSvgDepositoAirDwc === 'function') {
-        var airFb = torreSvgDepositoAirDwc(L.depX, L.depY, L.DEP_W, L.DEP_H, ta);
-        depBlock.defs += airFb.defs || '';
-        depBlock.html += airFb.html || '';
-      }
-    } else {
-      depBlock.html = tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, Math.max(0.55, volPct), u, ta, false, tieneCalentador);
-      if (tieneDifusor && typeof torreSvgDepositoAirDwc === 'function') {
-        var airFb2 = torreSvgDepositoAirDwc(L.depX, L.depY, L.DEP_W, L.DEP_H, ta);
-        depBlock.defs += airFb2.defs || '';
-        depBlock.html += airFb2.html || '';
-      }
-    }
-    if (depBlock.defs) {
-      if (body.indexOf('</defs>') >= 0) {
-        body = body.replace('</defs>', depBlock.defs + '</defs>');
-      } else {
-        body = '<defs>' + depBlock.defs + '</defs>' + body;
-      }
-    }
-    body += depBlock.html || '';
-    if (tieneCalentador) {
-      body +=
-        '<rect x="' +
-        f1(L.depX + 16) +
-        '" y="' +
-        f1(L.depY + L.DEP_H - 36) +
-        '" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1"/>';
-    }
-    body += '<line x1="' + f1(L.CX) + '" y1="' + f1(L.depY) + '" x2="' + f1(L.CX) + '" y2="' + f1(L.MARG_T + L.torH) + '" stroke="#0ea5e9" stroke-width="2.2" opacity="0.35"/>';
-    if (typeof hcDiagramVolLabelSvg === 'function') {
-      body += hcDiagramVolLabelSvg(L.CX, L.depY + L.DEP_H + 28, volMez != null ? volMez : volTankL, {
-        fontSize: 20,
-        fill: HC_ILLO.water1,
-        pointerEvents: false,
-      });
-    }
-    body += hcIlloTorreRotFlechas(L.depX, L.depY, L.DEP_W, L.DEP_H);
+    body += colorido.body;
     return svgWrap(
-      'torre-svg-diagram hc-illo-torre',
-      W,
-      L.H,
+      'torre-svg-diagram hc-illo-torre hc-illo-torre--sistema',
+      colorido.W,
+      colorido.H,
       u + '-title',
       'Torre vertical',
       body
