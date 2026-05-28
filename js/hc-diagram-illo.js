@@ -2674,6 +2674,82 @@
     body += tankFront(centerX - 94, depY, 188, DEP_H, volPct, u, ta, true, true);
     body += airPump(centerX + 106, depY + 11, 44, 30, u);
     body +=
+      '<path class="hc-illo-flow-supply" d="M ' +
+      f1(centerX - 70) +
+      ' ' +
+      f1(depY + 16) +
+      ' C ' +
+      f1(centerX - 102) +
+      ' ' +
+      f1(depY - 8) +
+      ' ' +
+      f1(centerX - 96) +
+      ' ' +
+      f1(topY + 12) +
+      ' ' +
+      f1(centerX - 20) +
+      ' ' +
+      f1(topY + 10) +
+      '" fill="none" stroke="#0ea5e9" stroke-width="2.6" stroke-linecap="round" opacity="0.9"/>';
+    body +=
+      '<path class="hc-illo-flow-return" d="M ' +
+      f1(centerX + 70) +
+      ' ' +
+      f1(topY + 18) +
+      ' C ' +
+      f1(centerX + 102) +
+      ' ' +
+      f1(topY + 44) +
+      ' ' +
+      f1(centerX + 100) +
+      ' ' +
+      f1(depY + 4) +
+      ' ' +
+      f1(centerX + 34) +
+      ' ' +
+      f1(depY + 12) +
+      '" fill="none" stroke="#22c55e" stroke-width="2.6" stroke-linecap="round" opacity="0.88"/>';
+    if (ta) {
+      body +=
+        '<path class="hc-illo-flow-supply-anim" d="M ' +
+        f1(centerX - 70) +
+        ' ' +
+        f1(depY + 16) +
+        ' C ' +
+        f1(centerX - 102) +
+        ' ' +
+        f1(depY - 8) +
+        ' ' +
+        f1(centerX - 96) +
+        ' ' +
+        f1(topY + 12) +
+        ' ' +
+        f1(centerX - 20) +
+        ' ' +
+        f1(topY + 10) +
+        '" fill="none" stroke="#67e8f9" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="8 7" opacity="0.92">' +
+        '<animate attributeName="stroke-dashoffset" from="0" to="-30" dur="1.4s" repeatCount="indefinite"/></path>';
+      body +=
+        '<path class="hc-illo-flow-return-anim" d="M ' +
+        f1(centerX + 70) +
+        ' ' +
+        f1(topY + 18) +
+        ' C ' +
+        f1(centerX + 102) +
+        ' ' +
+        f1(topY + 44) +
+        ' ' +
+        f1(centerX + 100) +
+        ' ' +
+        f1(depY + 4) +
+        ' ' +
+        f1(centerX + 34) +
+        ' ' +
+        f1(depY + 12) +
+        '" fill="none" stroke="#86efac" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="8 7" opacity="0.9">' +
+        '<animate attributeName="stroke-dashoffset" from="0" to="30" dur="1.6s" repeatCount="indefinite"/></path>';
+    }
+    body +=
       '<path d="M ' +
       f1(centerX + 106) +
       ' ' +
