@@ -309,31 +309,58 @@
     const a = rdwcAirPumpAnchor(cx, tankCy, tankR, diagramW, preferSide);
     const px = a.px;
     const py = a.py;
-    const lbl = Math.round(lpm) + ' L/min';
+    const w = 56;
+    const h = 40;
+    const x = px - w / 2;
+    const y = py - h / 2;
     let o = '<g class="rdwc-air-pump" pointer-events="none" aria-hidden="true">';
     o +=
+      '<ellipse cx="' +
+      f1(px) +
+      '" cy="' +
+      f1(y + h + 6) +
+      '" rx="20" ry="4.5" fill="rgba(15,23,42,0.14)"/>' +
       '<rect x="' +
-      f1(px - 22) +
+      f1(x + 4) +
       '" y="' +
-      f1(py - 11) +
-      '" width="44" height="22" rx="6" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>' +
+      f1(y + 15) +
+      '" width="' +
+      f1(w - 8) +
+      '" height="' +
+      f1(h - 11) +
+      '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>' +
+      '<ellipse cx="' +
+      f1(px) +
+      '" cy="' +
+      f1(y + 12) +
+      '" rx="' +
+      f1((w - 10) / 2) +
+      '" ry="13" fill="url(#rdwcPumpDome)" stroke="#e65100" stroke-width="2"/>' +
+      '<ellipse cx="' +
+      f1(px - 8) +
+      '" cy="' +
+      f1(y + 8) +
+      '" rx="7" ry="3" fill="rgba(255,255,255,0.45)"/>' +
+      '<circle cx="' +
+      f1(px) +
+      '" cy="' +
+      f1(y + h * 0.52) +
+      '" r="9" fill="#eceff1" stroke="#78909c" stroke-width="1.2"/>' +
+      '<circle cx="' +
+      f1(px) +
+      '" cy="' +
+      f1(y + h * 0.52) +
+      '" r="4.5" fill="none" stroke="#90a4ae" stroke-width="0.9"/>' +
       '<rect x="' +
-      f1(px - 16) +
+      f1(px - 31) +
       '" y="' +
-      f1(py - 7) +
-      '" width="32" height="12" rx="3" fill="#dcfce7" stroke="#4ade80" stroke-width="0.8"/>' +
+      f1(y - 27) +
+      '" width="62" height="20" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>' +
       '<text x="' +
       f1(px) +
       '" y="' +
-      f1(py + 1) +
-      '" text-anchor="middle" font-size="6.5" font-weight="800" fill="#14532d" font-family="system-ui,sans-serif">AIRE</text>' +
-      '<text x="' +
-      f1(px) +
-      '" y="' +
-      f1(py + 9) +
-      '" text-anchor="middle" font-size="5.5" fill="#15803d" font-family="system-ui,sans-serif">' +
-      lbl +
-      '</text>' +
+      f1(y - 13) +
+      '" text-anchor="middle" font-size="9" font-weight="800" fill="#14532d" font-family="system-ui,sans-serif">AIRE</text>' +
       '</g>';
     return o;
   }
