@@ -2416,21 +2416,21 @@ function updateTorreBuilder() {
   const hasAir = !!(setupEquipamiento && setupEquipamiento.has('difusor'));
   const hasHeat = !!(setupEquipamiento && setupEquipamiento.has('calentador'));
   const W = 340;
-  const H = 430;
+  const H = 442;
   const cx = W / 2;
   const selNivel = Math.max(0, Math.min(N - 1, Math.floor((N - 1) / 2)));
   const topCx = cx;
-  const topCy = 92;
-  const topR = Math.max(44, Math.min(72, 32 + C * 5));
-  const sectionTop = 194;
-  const sectionBottom = 362;
+  const topCy = 94;
+  const topR = Math.max(46, Math.min(76, 34 + C * 5.4));
+  const sectionTop = 198;
+  const sectionBottom = 370;
   const towerX = cx;
   const towerW = 18;
-  const depY = 364;
-  const depW = 158;
+  const depY = 372;
+  const depW = 166;
   const depX = cx - depW / 2;
-  const depH = 42;
-  const waterW = Math.max(64, Math.min(depW - 12, 62 + volSlider * 1.1));
+  const depH = 44;
+  const waterW = Math.max(70, Math.min(depW - 12, 68 + volSlider * 1.1));
   const volLbl = Number.isFinite(volSlider) ? Math.round(volSlider) + ' L' : '—';
   let ringPts = '';
   let ringLabels = '';
@@ -2532,6 +2532,15 @@ function updateTorreBuilder() {
     ' cestas en anillo · N' +
     (selNivel + 1) +
     '</text>' +
+    '<line x1="' +
+    (cx - topR - 20).toFixed(1) +
+    '" y1="' +
+    (topCy + topR * 0.9).toFixed(1) +
+    '" x2="' +
+    (cx + topR + 20).toFixed(1) +
+    '" y2="' +
+    (topCy + topR * 0.9).toFixed(1) +
+    '" stroke="#d1d5db" stroke-dasharray="3 3"/>' +
     '<line x1="22" y1="170" x2="' +
     (W - 22) +
     '" y2="170" stroke="#d1d5db"/>' +
@@ -2565,10 +2574,52 @@ function updateTorreBuilder() {
     '<text x="' +
     cx.toFixed(1) +
     '" y="' +
-    (depY + 58).toFixed(1) +
+    (depY + 60).toFixed(1) +
     '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="14" font-weight="900" fill="#0284c7">' +
     volLbl +
     '</text>' +
+    '<line x1="' +
+    (towerX + 48).toFixed(1) +
+    '" y1="' +
+    sectionTop.toFixed(1) +
+    '" x2="' +
+    (towerX + 48).toFixed(1) +
+    '" y2="' +
+    sectionBottom.toFixed(1) +
+    '" stroke="#94a3b8" stroke-width="1.1"/>' +
+    '<path d="M ' +
+    (towerX + 45).toFixed(1) +
+    ' ' +
+    sectionTop.toFixed(1) +
+    ' L ' +
+    (towerX + 48).toFixed(1) +
+    ' ' +
+    (sectionTop - 5).toFixed(1) +
+    ' L ' +
+    (towerX + 51).toFixed(1) +
+    ' ' +
+    sectionTop.toFixed(1) +
+    '" fill="#94a3b8"/>' +
+    '<path d="M ' +
+    (towerX + 45).toFixed(1) +
+    ' ' +
+    sectionBottom.toFixed(1) +
+    ' L ' +
+    (towerX + 48).toFixed(1) +
+    ' ' +
+    (sectionBottom + 5).toFixed(1) +
+    ' L ' +
+    (towerX + 51).toFixed(1) +
+    ' ' +
+    sectionBottom.toFixed(1) +
+    '" fill="#94a3b8"/>' +
+    '<text x="' +
+    (towerX + 56).toFixed(1) +
+    '" y="' +
+    ((sectionTop + sectionBottom) * 0.5 + 4).toFixed(1) +
+    '" text-anchor="start" font-family="Inconsolata,monospace" font-size="11" font-weight="700" fill="#475569">~' +
+    (N * 20) +
+    ' cm</text>' +
     (hasAir
       ? '<g><rect x="' +
         (depX + depW + 16).toFixed(1) +
