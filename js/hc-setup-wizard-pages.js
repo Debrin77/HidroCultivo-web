@@ -2411,22 +2411,22 @@ function updateTorreBuilder() {
     } catch (_) {}
   }
 
-  // Preview visual de torre vertical (SVG compacto y legible)
+  // Preview visual de torre vertical (Hibrida Pro, claramente diferenciada)
   const N = Math.max(1, Math.min(12, niveles));
   const C = Math.max(1, Math.min(10, cestas));
-  const W = 260;
-  const top = 22;
-  const stepY = 26;
-  const towerH = (N - 1) * stepY + 18;
-  const depY = top + towerH + 16;
-  const H = depY + 56;
+  const W = 320;
+  const top = 56;
+  const stepY = 27;
+  const towerH = (N - 1) * stepY + 20;
+  const depY = top + towerH + 22;
+  const H = depY + 90;
   const cx = W / 2;
-  const rx = Math.max(34, Math.min(72, 28 + C * 4.4));
+  const rx = Math.max(40, Math.min(84, 30 + C * 5.1));
   const volLbl = Number.isFinite(volSlider) ? Math.round(volSlider) + ' L' : '—';
   let rings = '';
   let cups = '';
   for (let n = 0; n < N; n++) {
-    const y = top + n * stepY + 9;
+    const y = top + n * stepY + 10;
     rings +=
       '<ellipse cx="' +
       cx.toFixed(1) +
@@ -2434,22 +2434,22 @@ function updateTorreBuilder() {
       y.toFixed(1) +
       '" rx="' +
       rx.toFixed(1) +
-      '" ry="8.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.62"/>';
+      '" ry="9.3" fill="none" stroke="#94a3b8" stroke-width="1.35" stroke-dasharray="5 4" opacity="0.68"/>';
     for (let c = 0; c < C; c++) {
       const ang = (c / C) * Math.PI * 2 - Math.PI / 2;
       const px = cx + Math.cos(ang) * rx;
-      const py = y + Math.sin(ang) * 8.2;
+      const py = y + Math.sin(ang) * 8.8;
       cups +=
         '<circle cx="' +
         px.toFixed(1) +
         '" cy="' +
         py.toFixed(1) +
-        '" r="4.2" fill="#f8fafc" stroke="#0f2744" stroke-width="1.2"/>' +
+        '" r="5.2" fill="#f8fafc" stroke="#0f2744" stroke-width="1.35"/>' +
         '<circle cx="' +
         px.toFixed(1) +
         '" cy="' +
         py.toFixed(1) +
-        '" r="1.2" fill="#94a3b8" opacity="0.9"/>';
+        '" r="1.5" fill="#94a3b8" opacity="0.92"/>';
     }
   }
   preview.classList.add('torre-preview--tower-hero');
@@ -2464,35 +2464,84 @@ function updateTorreBuilder() {
     C +
     ' cestas por fila">' +
     '<defs><linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></linearGradient>' +
-    '<linearGradient id="tpDep" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient></defs>' +
+    '<linearGradient id="tpDep" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient>' +
+    '<linearGradient id="tpHead" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/></linearGradient></defs>' +
+    '<rect x="0" y="0" width="' +
+    W +
+    '" height="' +
+    H +
+    '" rx="18" fill="rgba(255,255,255,0.58)" stroke="#cbd5e1" stroke-width="1.2"/>' +
+    '<text x="' +
+    cx.toFixed(1) +
+    '" y="24" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="12" font-weight="700" fill="#64748b">VISTA PREVIA TORRE</text>' +
+    '<text x="' +
+    cx.toFixed(1) +
+    '" y="42" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="18" font-weight="900" fill="#0f2744">Hibrida Pro</text>' +
     '<rect x="' +
-    (cx - 5).toFixed(1) +
+    (cx - 38).toFixed(1) +
+    '" y="' +
+    (top - 20).toFixed(1) +
+    '" width="76" height="12" rx="6" fill="url(#tpHead)" stroke="#93c5fd" stroke-width="1"/>' +
+    '<rect x="' +
+    (cx - 6).toFixed(1) +
     '" y="' +
     top.toFixed(1) +
-    '" width="10" height="' +
+    '" width="12" height="' +
     towerH.toFixed(1) +
-    '" rx="5" fill="url(#tpPipe)" stroke="#0f2744" stroke-width="1.2"/>' +
+    '" rx="6" fill="url(#tpPipe)" stroke="#0f2744" stroke-width="1.4"/>' +
+    '<circle cx="' +
+    cx.toFixed(1) +
+    '" cy="' +
+    (top + 8).toFixed(1) +
+    '" r="6.2" fill="#e2e8f0" stroke="#334155" stroke-width="1.2"/>' +
     rings +
     cups +
     '<rect x="' +
-    (cx - Math.min(86, 42 + volSlider * 0.42)).toFixed(1) +
+    (cx + 98).toFixed(1) +
+    '" y="' +
+    (depY + 8).toFixed(1) +
+    '" width="28" height="18" rx="4" fill="#37474f" stroke="#1e293b" stroke-width="1.2"/>' +
+    '<ellipse cx="' +
+    (cx + 112).toFixed(1) +
+    '" cy="' +
+    (depY + 7).toFixed(1) +
+    '" rx="11" ry="6.2" fill="#ff9800" stroke="#e65100" stroke-width="1.2"/>' +
+    '<path d="M ' +
+    (cx + 98).toFixed(1) +
+    ' ' +
+    (depY + 16).toFixed(1) +
+    ' C ' +
+    (cx + 76).toFixed(1) +
+    ' ' +
+    (depY + 14).toFixed(1) +
+    ' ' +
+    (cx + 58).toFixed(1) +
+    ' ' +
+    (depY + 12).toFixed(1) +
+    ' ' +
+    (cx + 44).toFixed(1) +
+    ' ' +
+    (depY + 12).toFixed(1) +
+    '" fill="none" stroke="#e2e8f0" stroke-width="1.8"/>' +
+    '<rect x="' +
+    (cx - Math.min(104, 50 + volSlider * 0.5)).toFixed(1) +
     '" y="' +
     depY.toFixed(1) +
     '" width="' +
-    (Math.min(172, 84 + volSlider * 0.84)).toFixed(1) +
-    '" height="42" rx="9" fill="#e2e8f0" stroke="#334155" stroke-width="1.3"/>' +
+    (Math.min(208, 100 + volSlider * 1.0)).toFixed(1) +
+    '" height="52" rx="11" fill="#e2e8f0" stroke="#334155" stroke-width="1.45"/>' +
     '<rect x="' +
-    (cx - Math.min(82, 40 + volSlider * 0.4)).toFixed(1) +
+    (cx - Math.min(98, 47 + volSlider * 0.47)).toFixed(1) +
     '" y="' +
-    (depY + 10).toFixed(1) +
+    (depY + 14).toFixed(1) +
     '" width="' +
-    (Math.min(164, 80 + volSlider * 0.8)).toFixed(1) +
-    '" height="24" rx="6" fill="url(#tpDep)" opacity="0.88"/>' +
+    (Math.min(196, 94 + volSlider * 0.94)).toFixed(1) +
+    '" height="30" rx="7" fill="url(#tpDep)" opacity="0.9"/>' +
     '<text x="' +
     cx.toFixed(1) +
     '" y="' +
-    (depY + 57).toFixed(1) +
-    '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="11" font-weight="900" fill="#0284c7">' +
+    (depY + 73).toFixed(1) +
+    '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="14" font-weight="900" fill="#0284c7">' +
     volLbl +
     '</text></svg>';
 }
