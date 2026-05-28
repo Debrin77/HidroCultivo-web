@@ -2515,7 +2515,7 @@ function updateTorreBuilder() {
   }
   let torrePreviewAirSvg = '';
   if (hasAir) {
-    const pumpScale = 0.7;
+    const pumpScale = 0.78;
     const pumpX = depX + depW + 8;
     const pumpY = depY + depH - 40 * pumpScale;
     const piedraX = depX + Math.round(depW * 0.58);

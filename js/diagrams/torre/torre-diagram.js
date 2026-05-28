@@ -33,11 +33,13 @@
             '" height="' +
             H +
             '" fill="url(#torreScadaBg)" pointer-events="none"/>' +
-            (typeof hcDiagramViewLabelSvg === 'function'
+            s.indexOf('hc-illo-torre') < 0 && typeof hcDiagramViewLabelSvg === 'function'
               ? hcDiagramViewLabelSvg(W / 2, 14, 'frontal', { pointerEvents: false })
-              : '<text x="' +
-                W / 2 +
-                '" y="14" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Vista frontal</text>')
+              : s.indexOf('hc-illo-torre') < 0
+                ? '<text x="' +
+                  W / 2 +
+                  '" y="14" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Vista frontal</text>'
+                : ''
         );
       }
     }

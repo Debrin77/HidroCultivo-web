@@ -186,6 +186,11 @@ function renderTorre() {
     } catch (e) {}
     bindTorreCestas(wrap);
     bindTorreRotFlechas(wrap);
+    try {
+      const titleEl = wrap.querySelector('svg title');
+      if (titleEl && titleEl.id) wrap.dataset.illoUid = titleEl.id.replace(/-title$/, '');
+    } catch (_) {}
+    bindTorreTecladoRotacion();
   }
 
   try {
@@ -307,6 +312,11 @@ function renderTorreMedirDiagram() {
     try {
       bindTorreCestas(medirWrap);
     } catch (_) {}
+    if (!tipo || tipo === 'torre') {
+      try {
+        bindTorreRotFlechas(medirWrap);
+      } catch (_) {}
+    }
   }
   if (tipo === 'rdwc') {
     try {
@@ -358,6 +368,19 @@ function torrePintarCestasSolo(wrap) {
   const cfg = state.configTorre || {};
   const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
   const rot = cfg._torreRotRad || 0;
+  const isIllo = !!wrap.querySelector('.hc-illo-torre');
+  if (isIllo && typeof hcIlloTorreNivelCestasHTML === 'function' && typeof hcIlloTorreLayout === 'function') {
+    const L = hcIlloTorreLayout(cfg);
+    const titleEl = wrap.querySelector('svg title');
+    const illoU =
+      (wrap.dataset && wrap.dataset.illoUid) ||
+      (titleEl && titleEl.id ? titleEl.id.replace(/-title$/, '') : 'torre');
+    for (let ni = 0; ni < numNiveles; ni++) {
+      const g = wrap.querySelector('#hc-baskets-n-' + ni);
+      if (g) g.innerHTML = hcIlloTorreNivelCestasHTML(ni, rot, illoU, cfg, L);
+    }
+    return;
+  }
   for (let ni = 0; ni < numNiveles; ni++) {
     const g = wrap.querySelector('#hc-baskets-n-' + ni);
     if (g) g.innerHTML = generarSVGTorreCestasNivelHTML(ni, rot);
@@ -642,7 +665,33 @@ function rotarTorrePaso(dir = 1) {
   const cur = state.configTorre._torreRotRad || 0;
   state.configTorre._torreRotRad = torreNormRotRad(torreSnapRotRad(cur + step * (dir >= 0 ? 1 : -1)));
   saveState();
+  const wrap = document.getElementById('torreSVGWrap');
+  if (wrap && wrap.querySelector('.hc-illo-torre') && wrap.querySelector('#hc-baskets-n-0')) {
+    torrePintarCestasSolo(wrap);
+    bindTorreCestas(wrap, { suppressTapIfMoved: () => false });
+    bindTorreRotFlechas(wrap);
+    try {
+      renderTorreMedirDiagram();
+    } catch (_) {}
+    return;
+  }
   renderTorre();
+}
+
+let _torreKbRotBound = false;
+function bindTorreTecladoRotacion() {
+  if (_torreKbRotBound) return;
+  _torreKbRotBound = true;
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    if (!torreSvgEsTorreVerticalGiratoria()) return;
+    const wrap = document.getElementById('torreSVGWrap');
+    if (!wrap || !wrap.querySelector('.torre-svg-diagram')) return;
+    const tag = e.target && e.target.tagName ? String(e.target.tagName).toUpperCase() : '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+    e.preventDefault();
+    rotarTorrePaso(e.key === 'ArrowRight' ? 1 : -1);
+  });
 }
 
 

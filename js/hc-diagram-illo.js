@@ -2344,6 +2344,175 @@
     return svgWrap('rdwc-svg-diagram hc-illo-rdwc', W, tankY + 120, u + '-title', 'RDWC ' + sites + ' sitios', body);
   };
 
+  function hcIlloTorreLayout(cfg) {
+    var numNiveles = cfg.numNiveles || 5;
+    var W = 360;
+    var CX = W / 2;
+    var NIVEL_H = 58;
+    var GAP = 12;
+    var MARG_T = 54;
+    var TORRE_RX = 98;
+    var TORRE_RY = 17;
+    var torH = numNiveles * NIVEL_H + (numNiveles - 1) * GAP;
+    var DEP_H = 88;
+    var DEP_W = 200;
+    var depY = MARG_T + torH + 20;
+    var depX = (W - DEP_W) / 2;
+    var H = depY + DEP_H + 32;
+    return {
+      W: W,
+      CX: CX,
+      NIVEL_H: NIVEL_H,
+      GAP: GAP,
+      MARG_T: MARG_T,
+      TORRE_RX: TORRE_RX,
+      TORRE_RY: TORRE_RY,
+      torH: torH,
+      DEP_H: DEP_H,
+      DEP_W: DEP_W,
+      depY: depY,
+      depX: depX,
+      H: H,
+      numNiveles: numNiveles,
+    };
+  }
+
+  function hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) {
+    var numCestas = cfg.numCestas || 5;
+    var cy = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
+    var phase = n * 0.55 + (rot || 0);
+    var items = [];
+    var c;
+    for (c = 0; c < numCestas; c++) {
+      var ang = (Math.PI * 2 * (c / numCestas)) + phase;
+      var z = (Math.sin(ang) + 1) / 2;
+      var scale = 0.84 + 0.22 * z;
+      var opacity = 0.4 + 0.6 * z;
+      items.push({
+        c: c,
+        px: L.CX + Math.cos(ang) * L.TORRE_RX,
+        py: cy + Math.sin(ang) * L.TORRE_RY,
+        z: z,
+        scale: scale,
+        opacity: opacity,
+      });
+    }
+    items.sort(function (a, b) {
+      return a.z - b.z;
+    });
+    var out = '';
+    items.forEach(function (it) {
+      var caraFrontal = it.z >= 0.38;
+      out += '<g opacity="' + it.opacity.toFixed(2) + '"' + (caraFrontal ? '' : ' pointer-events="none"') + '>';
+      out += maceta({
+        n: n,
+        c: it.c,
+        cx: it.px,
+        cy: it.py,
+        rx: 11.6 * it.scale,
+        ry: 8.1 * it.scale,
+        uid: u,
+        cfg: cfg,
+        topView: true,
+        extraClass: 'torre-maceta',
+      });
+      out += '</g>';
+    });
+    return out;
+  }
+
+  function hcIlloTorreRotFlechas(depX, depY, depW, depH) {
+    var btnR = 17;
+    var yBtn = depY + depH / 2;
+    var xL = depX - 6 - btnR;
+    var xR = depX + depW + 6 + btnR;
+    var triL = 'M ' + f1(xL - 7) + ' ' + f1(yBtn) + ' L ' + f1(xL + 5) + ' ' + f1(yBtn - 8) + ' L ' + f1(xL + 5) + ' ' + f1(yBtn + 8) + ' Z';
+    var triR = 'M ' + f1(xR + 7) + ' ' + f1(yBtn) + ' L ' + f1(xR - 5) + ' ' + f1(yBtn - 8) + ' L ' + f1(xR - 5) + ' ' + f1(yBtn + 8) + ' Z';
+    return (
+      '<g class="hc-torre-rot-flecha" data-rot-dir="1" role="button" tabindex="0" aria-label="Girar niveles a la izquierda">' +
+      '<circle cx="' +
+      f1(xL) +
+      '" cy="' +
+      f1(yBtn) +
+      '" r="' +
+      btnR +
+      '" fill="rgba(248,250,252,0.97)" stroke="#64748b" stroke-width="1.3"/>' +
+      '<path d="' +
+      triL +
+      '" fill="#1e293b" pointer-events="none"/></g>' +
+      '<g class="hc-torre-rot-flecha" data-rot-dir="-1" role="button" tabindex="0" aria-label="Girar niveles a la derecha">' +
+      '<circle cx="' +
+      f1(xR) +
+      '" cy="' +
+      f1(yBtn) +
+      '" r="' +
+      btnR +
+      '" fill="rgba(248,250,252,0.97)" stroke="#64748b" stroke-width="1.3"/>' +
+      '<path d="' +
+      triR +
+      '" fill="#1e293b" pointer-events="none"/></g>'
+    );
+  }
+
+  function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor, u) {
+    if (!tieneDifusor) return '';
+    var pumpScale = 0.74;
+    var pumpX = depX + depW + 10;
+    var pumpY = depY + depH - 40 * pumpScale;
+    var piedraX = depX + Math.round(depW * 0.58);
+    var piedraY = depY + depH - 11;
+    var pumpOutX = pumpX;
+    var pumpOutY = pumpY + 12 * pumpScale + (40 * pumpScale - 6 * pumpScale) * 0.55;
+    var s = '';
+    if (typeof dwcSvgAirPumpExternal === 'function') {
+      var pump = dwcSvgAirPumpExternal(0, 0, 1);
+      s +=
+        '<g class="hc-illo-dwc-pump" transform="translate(' +
+        f1(pumpX) +
+        ' ' +
+        f1(pumpY) +
+        ') scale(' +
+        pumpScale.toFixed(3) +
+        ')">' +
+        pump.svg +
+        '</g>';
+    } else {
+      s += airPumpModern(pumpX, pumpY, 54 * pumpScale, 40 * pumpScale, u || 'torre');
+    }
+    if (typeof dwcSvgAirHosePumpToStone === 'function') {
+      s += dwcSvgAirHosePumpToStone(pumpOutX, pumpOutY, depX + depW - 4, depY + depH * 0.55, piedraX, piedraY, 1.6, 0.9);
+    } else {
+      s +=
+        '<path d="M ' +
+        f1(pumpOutX) +
+        ' ' +
+        f1(pumpOutY) +
+        ' L ' +
+        f1(piedraX + 12) +
+        ' ' +
+        f1(pumpOutY) +
+        ' L ' +
+        f1(piedraX + 12) +
+        ' ' +
+        f1(piedraY) +
+        ' L ' +
+        f1(piedraX) +
+        ' ' +
+        f1(piedraY) +
+        '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
+    }
+    s +=
+      '<ellipse cx="' +
+      f1(piedraX) +
+      '" cy="' +
+      f1(piedraY) +
+      '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>';
+    return s;
+  }
+
+  window.hcIlloTorreLayout = hcIlloTorreLayout;
+  window.hcIlloTorreNivelCestasHTML = hcIlloTorreNivelCestasHTML;
+
   function torreAllBasketsPanel(u, cfg, x0, y0, nNiv, nCes, stepX, stepY, rx, ry) {
     var body = '';
     for (var n = 0; n < nNiv; n++) {
@@ -2385,7 +2554,7 @@
     var numCestas = cfg.numCestas || 5;
     var u = uid('torre');
     var vista = cfg.torreDiagramaVista || 'esquema';
-    var W = vista === 'esquema' ? 440 : 560;
+    var W = vista === 'esquema' ? 360 : 560;
     var CX = W / 2;
     var NIVEL_H = 58;
     var GAP = 12;
@@ -2398,8 +2567,8 @@
     var volMez = typeof getVolumenMezclaLitros === 'function' ? getVolumenMezclaLitros(cfg) : null;
     var volPct = volCap > 0 && volMez > 0 ? Math.min(1, volMez / volCap) : 0.65;
     var body = defsBlock(u);
-    body += '<rect width="' + W + '" height="' + H + '" fill="url(#' + u + '-bg)"/>';
     if (vista === 'corte' || vista === 'flujo') {
+      body += '<rect width="' + W + '" height="' + H + '" fill="url(#' + u + '-bg)"/>';
       var isFlujo = vista === 'flujo';
       var shellX = 56;
       var shellW = 168;
@@ -2455,9 +2624,7 @@
           '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
       }
       body += tankFront(depXv, depYv, depWv, DEP_H, volPct, u, ta, true, true);
-      var pumpX = depXv + depWv + 24;
-      var pumpY = depYv + 10;
-      body += airPump(pumpX, pumpY, 44, 30, u);
+      body += hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true, u);
       body +=
         '<path d="M ' +
         f1(depXv + depWv - 20) +
@@ -2545,349 +2712,123 @@
         body
       );
     }
-    var panelX = 18;
-    var panelY = 14;
-    var panelW = W - 36;
-    var panelH = H - 24;
-    var leftZoneW = 272;
-    var leftX = panelX + 14;
-    var centerX = leftX + leftZoneW * 0.5;
-    var topY = MARG_T + 4;
-    body +=
-      '<rect x="' +
-      f1(panelX) +
-      '" y="' +
-      f1(panelY) +
-      '" width="' +
-      f1(panelW) +
-      '" height="' +
-      f1(panelH) +
-      '" rx="16" fill="rgba(255,255,255,0.74)" stroke="#cbd5e1" stroke-width="1.2"/>';
-    body +=
-      '<rect x="' +
-      f1(panelX + 1) +
-      '" y="' +
-      f1(panelY + 1) +
-      '" width="' +
-      f1(panelW - 2) +
-      '" height="54" rx="15" fill="rgba(148,163,184,0.09)"/>';
+    var L = hcIlloTorreLayout(cfg);
+    W = L.W;
+    H = L.H;
+    var rot = cfg._torreRotRad || 0;
+    var equip = cfg.equipamiento || [];
+    var tieneDifusor =
+      (typeof state !== 'undefined' &&
+        state.configTorre &&
+        state.configTorre.equipamiento &&
+        state.configTorre.equipamiento.indexOf('difusor') >= 0) ||
+      equip.indexOf('difusor') >= 0;
+    var tieneCalentador =
+      (typeof state !== 'undefined' &&
+        state.configTorre &&
+        state.configTorre.equipamiento &&
+        state.configTorre.equipamiento.indexOf('calentador') >= 0) ||
+      equip.indexOf('calentador') >= 0;
+    var volTankL =
+      volMez != null && Number.isFinite(Number(volMez)) && volMez > 0
+        ? volMez
+        : volCap != null && Number.isFinite(Number(volCap))
+          ? Number(volCap) * 0.78
+          : 20;
+    var tankPack = null;
+    if (typeof nftSvgTankTorreStyle === 'function') {
+      tankPack = nftSvgTankTorreStyle(L.depX, L.depY, L.DEP_W, L.DEP_H, u + 'Tk', volTankL, {
+        animate: ta,
+      });
+    }
+    var extraDefs =
+      '<linearGradient id="dwcPumpDome" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/></linearGradient>';
+    if (tankPack && tankPack.defs) extraDefs += tankPack.defs;
+    body = body.replace('</defs>', extraDefs + '</defs>');
+    body += '<rect width="' + L.W + '" height="' + L.H + '" fill="url(#' + u + '-bg)"/>';
     body +=
       '<text x="' +
-      f1(centerX) +
-      '" y="30" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="700" fill="#64748b" letter-spacing="0.04em">SISTEMA DE CULTIVO</text>';
-    body +=
-      '<text x="' +
-      f1(centerX) +
-      '" y="49" text-anchor="middle" font-family="Syne,sans-serif" font-size="24" font-weight="900" fill="' +
+      f1(L.CX) +
+      '" y="32" text-anchor="middle" font-family="Syne,sans-serif" font-size="22" font-weight="900" fill="' +
       HC_ILLO.ink +
       '">Torre vertical</text>';
     body +=
-      '<text x="' +
-      f1(centerX) +
-      '" y="63" text-anchor="middle" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#64748b">Hibrida Pro · visual tecnico funcional</text>';
-    body +=
-      '<rect x="' +
-      f1(leftX + 28) +
-      '" y="' +
-      f1(topY - 4) +
-      '" width="' +
-      f1(leftZoneW - 56) +
-      '" height="' +
-      f1(torH + 22) +
-      '" rx="20" fill="rgba(148,163,184,0.09)" stroke="#bfcedd" stroke-width="1.1"/>';
-    body +=
       '<ellipse cx="' +
-      f1(centerX) +
+      f1(L.CX) +
       '" cy="' +
-      f1(topY + torH + 12) +
-      '" rx="86" ry="14" fill="rgba(15,23,42,0.08)"/>';
+      f1(L.MARG_T - 22) +
+      '" rx="24" ry="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>';
     body +=
       '<rect x="' +
-      f1(centerX - 8) +
+      f1(L.CX - 7) +
       '" y="' +
-      f1(topY + 2) +
-      '" width="16" height="' +
-      f1(torH - 4) +
-      '" rx="8" fill="url(#' +
+      f1(L.MARG_T - 8) +
+      '" width="14" height="' +
+      f1(L.torH + 16) +
+      '" rx="7" fill="url(#' +
       u +
       '-water)" stroke="' +
       HC_ILLO.ink +
-      '" stroke-width="2.2"/>';
-    body +=
-      '<rect x="' +
-      f1(centerX - 2.4) +
-      '" y="' +
-      f1(topY + 10) +
-      '" width="4.8" height="' +
-      f1(Math.max(20, torH - 20)) +
-      '" rx="2.4" fill="rgba(255,255,255,0.42)"/>';
-    var RX = 86;
-    for (var n = 0; n < numNiveles; n++) {
-      var cy = topY + n * (NIVEL_H + GAP) + NIVEL_H / 2;
-      body +=
-        '<ellipse cx="' +
-        f1(centerX) +
-        '" cy="' +
-        f1(cy) +
-        '" rx="' +
-        f1(RX) +
-        '" ry="14" fill="none" stroke="' +
-        HC_ILLO.lidHi +
-        '" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.56"/>';
-      body +=
-        '<circle cx="' +
-        f1(centerX) +
-        '" cy="' +
-        f1(cy) +
-        '" r="11.8" fill="#cbd5e1" stroke="#334155" stroke-width="1.8"/>' +
-        '<circle cx="' +
-        f1(centerX) +
-        '" cy="' +
-        f1(cy) +
-        '" r="3.1" fill="#94a3b8"/>';
-      for (var c = 0; c < numCestas; c++) {
-        var ang = (c / numCestas) * Math.PI * 2 - Math.PI / 2;
-        var px = centerX + Math.cos(ang) * RX;
-        var py = cy + Math.sin(ang) * 14;
-        body += maceta({
-          n: n,
-          c: c,
-          cx: px,
-          cy: py,
-          rx: 13.4,
-          ry: 9.3,
-          uid: u,
-          cfg: cfg,
-          extraClass: 'torre-maceta',
-        });
-      }
-      body +=
-        '<text x="' +
-        f1(leftX + 18) +
-        '" y="' +
-        f1(cy + 4) +
-        '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="10" font-weight="800" fill="#64748b">N' +
-        (n + 1) +
-        '</text>';
-    }
-    var depY = topY + torH + 24;
-    body += tankFront(centerX - 94, depY, 188, DEP_H, volPct, u, ta, true, true);
-    body += airPump(centerX + 106, depY + 11, 44, 30, u);
-    body +=
-      '<path class="hc-illo-flow-supply" d="M ' +
-      f1(centerX - 70) +
-      ' ' +
-      f1(depY + 16) +
-      ' C ' +
-      f1(centerX - 102) +
-      ' ' +
-      f1(depY - 8) +
-      ' ' +
-      f1(centerX - 96) +
-      ' ' +
-      f1(topY + 12) +
-      ' ' +
-      f1(centerX - 20) +
-      ' ' +
-      f1(topY + 10) +
-      '" fill="none" stroke="#0ea5e9" stroke-width="2.6" stroke-linecap="round" opacity="0.9"/>';
-    body +=
-      '<path class="hc-illo-flow-return" d="M ' +
-      f1(centerX + 70) +
-      ' ' +
-      f1(topY + 18) +
-      ' C ' +
-      f1(centerX + 102) +
-      ' ' +
-      f1(topY + 44) +
-      ' ' +
-      f1(centerX + 100) +
-      ' ' +
-      f1(depY + 4) +
-      ' ' +
-      f1(centerX + 34) +
-      ' ' +
-      f1(depY + 12) +
-      '" fill="none" stroke="#22c55e" stroke-width="2.6" stroke-linecap="round" opacity="0.88"/>';
+      '" stroke-width="2"/>';
     if (ta) {
       body +=
-        '<path class="hc-illo-flow-supply-anim" d="M ' +
-        f1(centerX - 70) +
-        ' ' +
-        f1(depY + 16) +
-        ' C ' +
-        f1(centerX - 102) +
-        ' ' +
-        f1(depY - 8) +
-        ' ' +
-        f1(centerX - 96) +
-        ' ' +
-        f1(topY + 12) +
-        ' ' +
-        f1(centerX - 20) +
-        ' ' +
-        f1(topY + 10) +
-        '" fill="none" stroke="#67e8f9" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="8 7" opacity="0.92">' +
-        '<animate attributeName="stroke-dashoffset" from="0" to="-30" dur="1.4s" repeatCount="indefinite"/></path>';
-      body +=
-        '<path class="hc-illo-flow-return-anim" d="M ' +
-        f1(centerX + 70) +
-        ' ' +
-        f1(topY + 18) +
-        ' C ' +
-        f1(centerX + 102) +
-        ' ' +
-        f1(topY + 44) +
-        ' ' +
-        f1(centerX + 100) +
-        ' ' +
-        f1(depY + 4) +
-        ' ' +
-        f1(centerX + 34) +
-        ' ' +
-        f1(depY + 12) +
-        '" fill="none" stroke="#86efac" stroke-width="1.4" stroke-linecap="round" stroke-dasharray="8 7" opacity="0.9">' +
-        '<animate attributeName="stroke-dashoffset" from="0" to="30" dur="1.6s" repeatCount="indefinite"/></path>';
+        '<line x1="' +
+        f1(L.CX) +
+        '" y1="' +
+        f1(L.MARG_T) +
+        '" x2="' +
+        f1(L.CX) +
+        '" y2="' +
+        f1(L.depY) +
+        '" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="6 7" opacity="0.45">' +
+        '<animate attributeName="stroke-dashoffset" from="0" to="26" dur="1s" repeatCount="indefinite"/></line>';
     }
-    body +=
-      '<path d="M ' +
-      f1(centerX + 106) +
-      ' ' +
-      f1(depY + 25) +
-      ' C ' +
-      f1(centerX + 68) +
-      ' ' +
-      f1(depY + 21) +
-      ' ' +
-      f1(centerX + 42) +
-      ' ' +
-      f1(depY + 15) +
-      ' ' +
-      f1(centerX + 18) +
-      ' ' +
-      f1(depY + 15) +
-      '" fill="none" stroke="#e2e8f0" stroke-width="2.2" opacity="0.95"/>' +
-      '<path d="M ' +
-      f1(centerX + 18) +
-      ' ' +
-      f1(depY + 15) +
-      ' L ' +
-      f1(centerX + 18) +
-      ' ' +
-      f1(depY + 71) +
-      '" fill="none" stroke="#e2e8f0" stroke-width="2.2" opacity="0.95"/>';
-    var rightX = leftX + leftZoneW + 14;
-    var rightW = panelX + panelW - rightX - 14;
-    body +=
-      '<rect x="' +
-      f1(rightX) +
-      '" y="' +
-      f1(topY - 2) +
-      '" width="' +
-      f1(rightW) +
-      '" height="' +
-      f1(torH + DEP_H + 26) +
-      '" rx="12" fill="rgba(248,250,252,0.8)" stroke="#d4dde7" stroke-width="1"/>';
-    body +=
-      '<text x="' +
-      f1(rightX + rightW / 2) +
-      '" y="' +
-      f1(topY + 14) +
-      '" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="800" fill="#475569">RESUMEN TÉCNICO</text>';
-    var totCestas = numNiveles * numCestas;
-    var estCap =
-      volCap != null && Number.isFinite(Number(volCap)) && Number(volCap) > 0
-        ? Math.round((Math.min(1, Math.max(0, volPct)) * 100))
-        : null;
-    body +=
-      '<text x="' +
-      f1(rightX + 12) +
-      '" y="' +
-      f1(topY + 34) +
-      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Niveles: ' +
-      numNiveles +
-      '</text>' +
-      '<text x="' +
-      f1(rightX + 12) +
-      '" y="' +
-      f1(topY + 50) +
-      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Cestas / nivel: ' +
-      numCestas +
-      '</text>' +
-      '<text x="' +
-      f1(rightX + 12) +
-      '" y="' +
-      f1(topY + 66) +
-      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Total cestas: ' +
-      totCestas +
-      '</text>' +
-      '<text x="' +
-      f1(rightX + 12) +
-      '" y="' +
-      f1(topY + 82) +
-      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Nivel deposito: ' +
-      (estCap != null ? estCap + '%' : '—') +
-      '</text>' +
-      '<text x="' +
-      f1(rightX + 12) +
-      '" y="' +
-      f1(topY + 98) +
-      '" font-family="Inconsolata,monospace" font-size="10" font-weight="700" fill="#334155">Estado circuito: recirculacion</text>';
-    body +=
-      '<rect x="' +
-      f1(rightX + 10) +
-      '" y="' +
-      f1(topY + 112) +
-      '" width="' +
-      f1(rightW - 20) +
-      '" height="1" fill="#d6dee8"/>';
-    body +=
-      '<circle cx="' +
-      f1(rightX + 16) +
-      '" cy="' +
-      f1(topY + 128) +
-      '" r="3.5" fill="#0ea5e9"/>' +
-      '<text x="' +
-      f1(rightX + 25) +
-      '" y="' +
-      f1(topY + 132) +
-      '" font-family="Inconsolata,monospace" font-size="9.5" font-weight="700" fill="#334155">Impulsion</text>' +
-      '<circle cx="' +
-      f1(rightX + 16) +
-      '" cy="' +
-      f1(topY + 146) +
-      '" r="3.5" fill="#22c55e"/>' +
-      '<text x="' +
-      f1(rightX + 25) +
-      '" y="' +
-      f1(topY + 150) +
-      '" font-family="Inconsolata,monospace" font-size="9.5" font-weight="700" fill="#334155">Retorno</text>' +
-      '<circle cx="' +
-      f1(rightX + 16) +
-      '" cy="' +
-      f1(topY + 164) +
-      '" r="3.5" fill="#f59e0b"/>' +
-      '<text x="' +
-      f1(rightX + 25) +
-      '" y="' +
-      f1(topY + 168) +
-      '" font-family="Inconsolata,monospace" font-size="9.5" font-weight="700" fill="#334155">Aireacion</text>';
-    body +=
-      '<text x="' +
-      centerX +
-      '" y="' +
-      (depY + DEP_H + 26) +
-      '" text-anchor="middle" font-family="Syne,sans-serif" font-size="17" font-weight="900" fill="' +
-      HC_ILLO.water1 +
-      '">' +
-      (volMez != null ? Math.round(volMez * 10) / 10 + ' L' : '—') +
-      '</text>';
+    var n;
+    for (n = 0; n < numNiveles; n++) {
+      var cyN = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
+      body +=
+        '<ellipse cx="' +
+        f1(L.CX) +
+        '" cy="' +
+        f1(cyN) +
+        '" rx="' +
+        f1(L.TORRE_RX + 4) +
+        '" ry="' +
+        f1(L.TORRE_RY + 3) +
+        '" fill="none" stroke="' +
+        HC_ILLO.lidHi +
+        '" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.45"/>';
+      body +=
+        '<circle cx="' +
+        f1(L.CX) +
+        '" cy="' +
+        f1(cyN) +
+        '" r="10" fill="#cbd5e1" stroke="#475569" stroke-width="1.4"/>';
+      body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
+    }
+    body += '<ellipse cx="' + f1(L.CX) + '" cy="' + f1(L.depY + L.DEP_H + 8) + '" rx="' + f1(L.DEP_W * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
+    if (tankPack && tankPack.html) {
+      body += tankPack.html;
+    } else {
+      body += tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, volPct, u, ta, tieneDifusor, tieneCalentador);
+    }
+    if (tieneCalentador) {
+      body +=
+        '<rect x="' +
+        f1(L.depX + 16) +
+        '" y="' +
+        f1(L.depY + L.DEP_H - 36) +
+        '" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1"/>';
+    }
+    body += hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, tieneDifusor, u);
+    body += '<line x1="' + f1(L.CX) + '" y1="' + f1(L.depY) + '" x2="' + f1(L.CX) + '" y2="' + f1(L.MARG_T + L.torH) + '" stroke="#0ea5e9" stroke-width="2.2" opacity="0.35"/>';
+    body += hcIlloTorreRotFlechas(L.depX, L.depY, L.DEP_W, L.DEP_H);
     return svgWrap(
       'torre-svg-diagram hc-illo-torre',
       W,
-      depY + DEP_H + 40,
+      L.H,
       u + '-title',
-      'Torre ' + numNiveles + ' niveles',
+      'Torre vertical',
       body
     );
   };
