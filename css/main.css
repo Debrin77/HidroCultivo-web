@@ -12122,6 +12122,10 @@ button.config-option:focus-visible,
   display: block;
   filter: drop-shadow(0 2px 8px rgba(15, 23, 42, 0.06));
 }
+#tab-sistema #torreSVGWrap.torre-svg-canvas--torre-vertical .hc-diagram-view-label {
+  visibility: hidden;
+  pointer-events: none;
+}
 #tab-sistema #torreSVGWrap.torre-svg-canvas svg.torre-svg-diagram:not(.hc-illo-torre) {
   min-height: min(52vh, 640px);
   width: 100%;

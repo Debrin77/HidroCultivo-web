@@ -4,10 +4,21 @@
 (function (global) {
   'use strict';
 
+  /** Quita etiquetas de vista (p. ej. «Vista frontal») que tapaban la torre en Cultivo e instalación. */
+  function stripTorreDiagramViewLabels(svg) {
+    if (!svg || typeof svg !== 'string') return svg;
+    return svg
+      .replace(/<text\b[^>]*\bclass="[^"]*hc-diagram-view-label[^"]*"[^>]*>[\s\S]*?<\/text>/gi, '')
+      .replace(
+        /<text\b[^>]*>[\s]*Vista\s+frontal[\s]*<\/text>/gi,
+        ''
+      );
+  }
+
   function tagTorreScada(svg) {
     if (!svg || typeof svg !== 'string' || svg.indexOf('<svg') < 0) return svg;
-  if (svg.indexOf('hc-illo-torre') >= 0) {
-      return svg;
+    if (svg.indexOf('hc-illo-torre') >= 0) {
+      return stripTorreDiagramViewLabels(svg);
     }
     let s = svg;
     if (s.indexOf('torre-svg-diagram--scada') < 0) {
@@ -43,18 +54,11 @@
             vw +
             '" height="' +
             vh +
-            '" fill="url(#torreScadaBg)" pointer-events="none"/>' +
-            (typeof hcDiagramViewLabelSvg === 'function'
-              ? hcDiagramViewLabelSvg(vx + vw / 2, vy + 14, 'frontal', { pointerEvents: false })
-              : '<text x="' +
-                (vx + vw / 2) +
-                '" y="' +
-                (vy + 14) +
-                '" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Vista frontal</text>')
+            '" fill="url(#torreScadaBg)" pointer-events="none"/>'
         );
       }
     }
-    return s;
+    return stripTorreDiagramViewLabels(s);
   }
 
   function torreDiagramSvgLooksValid(svg) {
@@ -72,7 +76,7 @@
       try {
         const illo = hcIlloGenerarSVGTorre();
         if (torreDiagramSvgLooksValid(illo) && illo.indexOf('hc-illo-torre') >= 0) {
-          return illo;
+          return stripTorreDiagramViewLabels(illo);
         }
       } catch (e) {
         try {
