@@ -214,7 +214,8 @@
       const lowerBuckets = sorted.filter((p) => p.row > 0).sort((a, b) => a.x - b.x);
       if (topBuckets.length) {
         railX0 = Math.min(railX0, topBuckets[0].x - bucketR * 0.95);
-        railX1 = Math.max(railX1, topBuckets[topBuckets.length - 1].x + bucketR * 0.95);
+        // En 7 cubos no debe sobrepasar el último punto de suministro superior.
+        railX1 = topBuckets[topBuckets.length - 1].x;
       }
       const mainRailD =
         railX1 - railX0 > 2
@@ -233,12 +234,15 @@
       if (lowerBuckets.length) {
         const leftFeedX = railX0;
         let maxLowerEntryY = lowerBuckets[0].y + bucketR * 0.48;
+        let maxLowerBottomY = lowerBuckets[0].y + bucketR;
         let maxLowerX = lowerBuckets[0].x;
         for (let i = 1; i < lowerBuckets.length; i++) {
           maxLowerEntryY = Math.max(maxLowerEntryY, lowerBuckets[i].y + bucketR * 0.48);
+          maxLowerBottomY = Math.max(maxLowerBottomY, lowerBuckets[i].y + bucketR);
           maxLowerX = Math.max(maxLowerX, lowerBuckets[i].x);
         }
-        const lowerRailY = maxLowerEntryY + Math.max(12, bucketR * 0.28);
+        // La línea inferior debe quedar por debajo de los recipientes.
+        const lowerRailY = maxLowerBottomY + Math.max(12, bucketR * 0.28);
         const lowerRailX1 = maxLowerX + bucketR * 0.25;
         s += dwcMcPlanAirTube(
           'M ' + f1(leftFeedX) + ' ' + f1(airRailY) + ' L ' + f1(leftFeedX) + ' ' + f1(lowerRailY),
