@@ -454,7 +454,7 @@
       const bodyH = 10.5;
       for (let bi = 0; bi < basketN; bi++) {
         const bx = waterX + waterW * ((bi + 0.5) / basketN);
-        const rimY = raftY + 2.2;
+        const rimY = raftY + 4.0;
         const bodyY = rimY + rimH * 0.6;
         const bodyBottom = bodyY + bodyH;
         s +=
