@@ -207,6 +207,56 @@
       return s;
     }
 
+    // Excepción solicitada: SOLO para 7 recipientes.
+    // Fila superior desde línea superior; fila inferior desde bajada izquierda por línea inferior separada.
+    if (dist.sites === 7 && dist.rows === 2) {
+      const topBuckets = sorted.filter((p) => p.row === 0).sort((a, b) => a.x - b.x);
+      const lowerBuckets = sorted.filter((p) => p.row > 0).sort((a, b) => a.x - b.x);
+      if (topBuckets.length) {
+        railX0 = Math.min(railX0, topBuckets[0].x - bucketR * 0.95);
+        railX1 = Math.max(railX1, topBuckets[topBuckets.length - 1].x + bucketR * 0.95);
+      }
+      const mainRailD =
+        railX1 - railX0 > 2
+          ? 'M ' + f1(railX0) + ' ' + f1(airRailY) + ' L ' + f1(railX1) + ' ' + f1(airRailY)
+          : '';
+      if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
+
+      // Arriba: suministro solo desde la línea superior.
+      for (let i = 0; i < topBuckets.length; i++) {
+        const P = topBuckets[i];
+        const entryY = P.y + bucketR * 0.48;
+        s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.25);
+      }
+
+      // Abajo: bajada izquierda + reparto inferior separado de recipientes.
+      if (lowerBuckets.length) {
+        const leftFeedX = railX0;
+        let maxLowerEntryY = lowerBuckets[0].y + bucketR * 0.48;
+        let maxLowerX = lowerBuckets[0].x;
+        for (let i = 1; i < lowerBuckets.length; i++) {
+          maxLowerEntryY = Math.max(maxLowerEntryY, lowerBuckets[i].y + bucketR * 0.48);
+          maxLowerX = Math.max(maxLowerX, lowerBuckets[i].x);
+        }
+        const lowerRailY = maxLowerEntryY + Math.max(12, bucketR * 0.28);
+        const lowerRailX1 = maxLowerX + bucketR * 0.25;
+        s += dwcMcPlanAirTube(
+          'M ' + f1(leftFeedX) + ' ' + f1(airRailY) + ' L ' + f1(leftFeedX) + ' ' + f1(lowerRailY),
+          2.3
+        );
+        s += dwcMcPlanAirTube(
+          'M ' + f1(leftFeedX) + ' ' + f1(lowerRailY) + ' L ' + f1(lowerRailX1) + ' ' + f1(lowerRailY),
+          2.3
+        );
+        for (let i = 0; i < lowerBuckets.length; i++) {
+          const P = lowerBuckets[i];
+          const entryY = P.y + bucketR * 0.48;
+          s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(lowerRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.2);
+        }
+      }
+      return s;
+    }
+
     const colKeys = Object.keys(byCol)
       .map(Number)
       .sort((a, b) => a - b);
