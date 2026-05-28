@@ -2432,9 +2432,6 @@ function updateTorreBuilder() {
   const depW = 166;
   const depX = cx - depW / 2;
   const depH = 44;
-  const volPctTank = nftSvgTankFillPct(Math.max(5, volSlider || 20), {});
-  const sightY = depY + 8 + (1 - volPctTank) * (depH - 24);
-  const sightH = Math.max(8, depH - 18 - (1 - volPctTank) * (depH - 24));
   const volLbl = Number.isFinite(volSlider) ? Math.round(volSlider) + ' L' : '—';
   const animPreview =
     typeof window !== 'undefined' &&
@@ -2513,90 +2510,7 @@ function updateTorreBuilder() {
       (n + 1) +
       '</text>';
   }
-  let torrePreviewAirSvg = '';
-  if (hasAir) {
-    const pumpScale = 0.78;
-    const pumpX = depX + depW + 8;
-    const pumpY = depY + depH - 40 * pumpScale;
-    const piedraX = depX + Math.round(depW * 0.58);
-    const piedraY = depY + depH - 11;
-    const pumpOutX = pumpX;
-    const pumpOutY = pumpY + 12 * pumpScale + (40 * pumpScale - 6 * pumpScale) * 0.55;
-    const hoseKneeX = piedraX + 10;
-    if (typeof dwcSvgAirPumpExternal === 'function') {
-      const pump = dwcSvgAirPumpExternal(0, 0, 1);
-      torrePreviewAirSvg +=
-        '<g class="torre-preview-air-pump" transform="translate(' +
-        pumpX.toFixed(1) +
-        ' ' +
-        pumpY.toFixed(1) +
-        ') scale(' +
-        pumpScale.toFixed(3) +
-        ')">' +
-        pump.svg +
-        '</g>';
-    } else {
-      const pumpW = 54 * pumpScale;
-      const pumpH = 40 * pumpScale;
-      const pcx = pumpX + pumpW / 2;
-      torrePreviewAirSvg +=
-        '<g class="torre-preview-air-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
-        '<rect x="' +
-        (pumpX + 4 * pumpScale).toFixed(1) +
-        '" y="' +
-        (pumpY + 15 * pumpScale).toFixed(1) +
-        '" width="' +
-        (pumpW - 8 * pumpScale).toFixed(1) +
-        '" height="' +
-        (pumpH - 11 * pumpScale).toFixed(1) +
-        '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>' +
-        '<ellipse cx="' +
-        pcx.toFixed(1) +
-        '" cy="' +
-        (pumpY + 12 * pumpScale).toFixed(1) +
-        '" rx="' +
-        ((pumpW - 10 * pumpScale) / 2).toFixed(1) +
-        '" ry="13" fill="url(#dwcPumpDome)" stroke="#e65100" stroke-width="2"/>' +
-        '</g>';
-    }
-    if (typeof dwcSvgAirHosePumpToStone === 'function') {
-      torrePreviewAirSvg += dwcSvgAirHosePumpToStone(
-        pumpOutX,
-        pumpOutY,
-        depX + depW - 4,
-        depY + depH * 0.55,
-        piedraX,
-        piedraY,
-        1.6,
-        0.9
-      );
-    } else {
-      torrePreviewAirSvg +=
-        '<path d="M ' +
-        pumpOutX.toFixed(1) +
-        ' ' +
-        pumpOutY.toFixed(1) +
-        ' L ' +
-        hoseKneeX.toFixed(1) +
-        ' ' +
-        pumpOutY.toFixed(1) +
-        ' L ' +
-        hoseKneeX.toFixed(1) +
-        ' ' +
-        piedraY.toFixed(1) +
-        ' L ' +
-        piedraX.toFixed(1) +
-        ' ' +
-        piedraY.toFixed(1) +
-        '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
-    }
-    torrePreviewAirSvg +=
-      '<ellipse cx="' +
-      piedraX.toFixed(1) +
-      '" cy="' +
-      piedraY.toFixed(1) +
-      '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>';
-  }
+  const torrePreviewAirSvg = hasAir ? nftSvgAireadorEnSuelo(depX, depY, depW, depH, {}) : '';
   preview.classList.add('torre-preview--tower-hero');
   preview.innerHTML =
     '<svg class="torre-preview-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
@@ -2714,38 +2628,7 @@ function updateTorreBuilder() {
     (depW * 0.44).toFixed(1) +
     '" ry="6" fill="rgba(15,23,42,0.14)"/>' +
     tankPreview.html +
-    '<rect x="' +
-    (depX + depW + 2).toFixed(1) +
-    '" y="' +
-    (depY + 7).toFixed(1) +
-    '" width="8" height="' +
-    (depH - 14).toFixed(1) +
-    '" rx="3" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>' +
-    '<rect x="' +
-    (depX + depW + 3.6).toFixed(1) +
-    '" y="' +
-    sightY.toFixed(1) +
-    '" width="4.8" height="' +
-    sightH.toFixed(1) +
-    '" rx="2.4" fill="#60a5fa" opacity="0.9"/>' +
-    '<line x1="' +
-    (depX + depW + 12).toFixed(1) +
-    '" y1="' +
-    (depY + 10).toFixed(1) +
-    '" x2="' +
-    (depX + depW + 15).toFixed(1) +
-    '" y2="' +
-    (depY + 10).toFixed(1) +
-    '" stroke="#94a3b8"/>' +
-    '<line x1="' +
-    (depX + depW + 12).toFixed(1) +
-    '" y1="' +
-    (depY + depH - 10).toFixed(1) +
-    '" x2="' +
-    (depX + depW + 15).toFixed(1) +
-    '" y2="' +
-    (depY + depH - 10).toFixed(1) +
-    '" stroke="#94a3b8"/>' +
+    torrePreviewAirSvg +
     '<text x="' +
     cx.toFixed(1) +
     '" y="' +
@@ -2797,7 +2680,6 @@ function updateTorreBuilder() {
     '" text-anchor="start" font-family="Inconsolata,monospace" font-size="11" font-weight="700" fill="#475569">~' +
     (N * 20) +
     ' cm</text>' +
-    torrePreviewAirSvg +
     (hasHeat
       ? '<g><rect x="' +
         (depX + 14).toFixed(1) +

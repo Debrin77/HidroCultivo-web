@@ -2344,8 +2344,21 @@
     return svgWrap('rdwc-svg-diagram hc-illo-rdwc', W, tankY + 120, u + '-title', 'RDWC ' + sites + ' sitios', body);
   };
 
+  function illoTorreEquipList(cfg) {
+    var e = cfg && cfg.equipamiento;
+    if (Array.isArray(e)) return e;
+    if (
+      typeof state !== 'undefined' &&
+      state.configTorre &&
+      Array.isArray(state.configTorre.equipamiento)
+    ) {
+      return state.configTorre.equipamiento;
+    }
+    return [];
+  }
+
   function hcIlloTorreLayout(cfg) {
-    var numNiveles = cfg.numNiveles || 5;
+    var numNiveles = Math.max(1, Math.min(12, parseInt(cfg.numNiveles, 10) || 5));
     var W = 360;
     var CX = W / 2;
     var NIVEL_H = 58;
@@ -2378,7 +2391,7 @@
   }
 
   function hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) {
-    var numCestas = cfg.numCestas || 5;
+    var numCestas = Math.max(1, Math.min(10, parseInt(cfg.numCestas, 10) || 5));
     var cy = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
     var phase = n * 0.55 + (rot || 0);
     var items = [];
@@ -2550,8 +2563,8 @@
   window.hcIlloGenerarSVGTorre = function () {
     /* No llamar buildTorreDiagramSvg: torre-diagram.js ya delega aquí (bucle infinito). */
     var cfg = (typeof state !== 'undefined' ? state.configTorre : {}) || {};
-    var numNiveles = cfg.numNiveles || 5;
-    var numCestas = cfg.numCestas || 5;
+    var numNiveles = Math.max(1, Math.min(12, parseInt(cfg.numNiveles, 10) || 5));
+    var numCestas = Math.max(1, Math.min(10, parseInt(cfg.numCestas, 10) || 5));
     var u = uid('torre');
     var vista = cfg.torreDiagramaVista || 'esquema';
     var W = vista === 'esquema' ? 360 : 560;
@@ -2716,19 +2729,9 @@
     W = L.W;
     H = L.H;
     var rot = cfg._torreRotRad || 0;
-    var equip = cfg.equipamiento || [];
-    var tieneDifusor =
-      (typeof state !== 'undefined' &&
-        state.configTorre &&
-        state.configTorre.equipamiento &&
-        state.configTorre.equipamiento.indexOf('difusor') >= 0) ||
-      equip.indexOf('difusor') >= 0;
-    var tieneCalentador =
-      (typeof state !== 'undefined' &&
-        state.configTorre &&
-        state.configTorre.equipamiento &&
-        state.configTorre.equipamiento.indexOf('calentador') >= 0) ||
-      equip.indexOf('calentador') >= 0;
+    var equip = illoTorreEquipList(cfg);
+    var tieneDifusor = equip.indexOf('difusor') >= 0;
+    var tieneCalentador = equip.indexOf('calentador') >= 0;
     var volTankL =
       volMez != null && Number.isFinite(Number(volMez)) && volMez > 0
         ? volMez
@@ -2736,15 +2739,26 @@
           ? Number(volCap) * 0.78
           : 20;
     var tankPack = null;
-    if (typeof nftSvgTankTorreStyle === 'function') {
-      tankPack = nftSvgTankTorreStyle(L.depX, L.depY, L.DEP_W, L.DEP_H, u + 'Tk', volTankL, {
-        animate: ta,
-      });
+    try {
+      if (typeof nftSvgTankTorreStyle === 'function') {
+        tankPack = nftSvgTankTorreStyle(L.depX, L.depY, L.DEP_W, L.DEP_H, u + 'Tk', volTankL, {
+          animate: ta,
+        });
+      }
+    } catch (tankErr) {
+      try {
+        console.warn('hcIlloGenerarSVGTorre tank', tankErr);
+      } catch (_) {}
+      tankPack = null;
     }
     var extraDefs =
       '<linearGradient id="dwcPumpDome" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/></linearGradient>';
     if (tankPack && tankPack.defs) extraDefs += tankPack.defs;
-    body = body.replace('</defs>', extraDefs + '</defs>');
+    if (body.indexOf('</defs>') >= 0) {
+      body = body.replace('</defs>', extraDefs + '</defs>');
+    } else {
+      body = '<defs>' + extraDefs + '</defs>' + body;
+    }
     body += '<rect width="' + L.W + '" height="' + L.H + '" fill="url(#' + u + '-bg)"/>';
     body +=
       '<text x="' +
@@ -2820,7 +2834,13 @@
         f1(L.depY + L.DEP_H - 36) +
         '" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1"/>';
     }
-    body += hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, tieneDifusor, u);
+    try {
+      body += hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, tieneDifusor, u);
+    } catch (airErr) {
+      try {
+        console.warn('hcIlloGenerarSVGTorre air', airErr);
+      } catch (_) {}
+    }
     body += '<line x1="' + f1(L.CX) + '" y1="' + f1(L.depY) + '" x2="' + f1(L.CX) + '" y2="' + f1(L.MARG_T + L.torH) + '" stroke="#0ea5e9" stroke-width="2.2" opacity="0.35"/>';
     body += hcIlloTorreRotFlechas(L.depX, L.depY, L.DEP_W, L.DEP_H);
     return svgWrap(

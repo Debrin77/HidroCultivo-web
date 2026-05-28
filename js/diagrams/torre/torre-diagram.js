@@ -57,7 +57,13 @@
       }
     }
     if (typeof _buildTorreSvgLegacy === 'function') {
-      return tagTorreScada(_buildTorreSvgLegacy());
+      try {
+        return tagTorreScada(_buildTorreSvgLegacy());
+      } catch (e2) {
+        try {
+          console.error('_buildTorreSvgLegacy', e2);
+        } catch (_) {}
+      }
     }
     return '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema de torre.</p>';
   }
