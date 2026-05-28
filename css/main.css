@@ -1302,6 +1302,18 @@ svg g.hc-cesta-pe-none { pointer-events: none; }
   border-radius: 14px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
+.torre-diagram-toolbar.torre-diagram-toolbar--torre-vertical {
+  justify-content: flex-end;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+.torre-diagram-toolbar--torre-vertical .torre-diagram-legend,
+.torre-diagram-toolbar--torre-vertical #btnTorreVistaEsquema,
+.torre-diagram-toolbar--torre-vertical #btnTorreDiagCorte,
+.torre-diagram-toolbar--torre-vertical #btnTorreDiagFlujo,
+.torre-diagram-toolbar--torre-vertical #btnTorreVistaLista {
+  display: none !important;
+}
 .torre-diagram-legend {
   font-size: 12px;
   font-weight: 700;

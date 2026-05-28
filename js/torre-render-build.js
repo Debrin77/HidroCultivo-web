@@ -260,6 +260,7 @@ function aplicarVistaTorreUI() {
   const bL = document.getElementById('btnTorreVistaLista');
   const bC = document.getElementById('btnTorreDiagCorte');
   const bF = document.getElementById('btnTorreDiagFlujo');
+  const toolbar = document.getElementById('torreDiagramToolbar');
   const swipe = document.getElementById('torreSwipeHint');
   const nftHint = document.getElementById('torreNftDiagramHint');
   let swipeHidden = false;
@@ -276,23 +277,32 @@ function aplicarVistaTorreUI() {
   if (nftHint) {
     nftHint.style.display = lista || !esNftSwipe ? 'none' : '';
   }
+  if (toolbar) {
+    toolbar.classList.toggle('torre-diagram-toolbar--torre-vertical', esTorre);
+  }
+  if (esTorre && lista) {
+    if (lv) lv.style.display = 'none';
+    if (w) w.style.display = '';
+  }
   if (bE) {
-    bE.classList.toggle('active', !lista);
-    bE.setAttribute('aria-pressed', lista ? 'false' : 'true');
+    bE.style.display = esTorre ? 'none' : '';
+    if (!esTorre) {
+      bE.classList.toggle('active', !lista);
+      bE.setAttribute('aria-pressed', lista ? 'false' : 'true');
+    }
   }
   if (bL) {
-    bL.classList.toggle('active', lista);
-    bL.setAttribute('aria-pressed', lista ? 'true' : 'false');
+    bL.style.display = esTorre ? 'none' : '';
+    if (!esTorre) {
+      bL.classList.toggle('active', lista);
+      bL.setAttribute('aria-pressed', lista ? 'true' : 'false');
+    }
   }
   if (bC) {
-    bC.style.display = !lista && esTorre ? '' : 'none';
-    bC.classList.toggle('active', !lista && esTorre && subVista === 'corte');
-    bC.setAttribute('aria-pressed', !lista && esTorre && subVista === 'corte' ? 'true' : 'false');
+    bC.style.display = 'none';
   }
   if (bF) {
-    bF.style.display = !lista && esTorre ? '' : 'none';
-    bF.classList.toggle('active', !lista && esTorre && subVista === 'flujo');
-    bF.setAttribute('aria-pressed', !lista && esTorre && subVista === 'flujo' ? 'true' : 'false');
+    bF.style.display = 'none';
   }
 }
 
@@ -2136,6 +2146,7 @@ function actualizarChromePanelEsquemaPorTipo() {
   const intro = document.getElementById('torreEsquemaSub');
   if (intro) {
     if (esNft) {
+      intro.classList.remove('setup-hidden');
       const dN = nftDisposicionNormalizada(cfg.nftDisposicion);
       const dEt =
         dN === 'pared' ? 'pared' : dN === 'escalera' ? 'escalera' : 'mesa';
@@ -2146,19 +2157,22 @@ function actualizarChromePanelEsquemaPorTipo() {
             dEt +
             '. Agua en <strong>azul discontinuo</strong> (si animaciones activas). <strong>Toca hueco</strong> o <strong>Lista</strong>. Altura al 1.º canal: asistente o montaje arriba.';
     } else if (esDwc) {
+      intro.classList.remove('setup-hidden');
       intro.innerHTML =
         '<strong>DWC</strong>: tapa arriba, depósito abajo. <strong>Toca maceta</strong> o usa <strong>Lista</strong>.';
     } else if (esRdwc) {
       intro.innerHTML =
         '<strong>RDWC</strong>: <strong>recirculación continua</strong> (envío/retorno), aireación principal en los <strong>módulos/cubos</strong> y apoyo opcional en el depósito de control. Fase del cultivo <strong>encima</strong> de cada módulo. <strong>Toca módulo</strong> o <strong>Lista</strong>.';
+      intro.classList.remove('setup-hidden');
     } else {
-      intro.innerHTML =
-        '<strong>Torre</strong>: usa <strong>Corte</strong> o <strong>Flujo</strong> para lectura técnica, <strong>Esquema</strong> para la maqueta giratoria y <strong>Lista</strong> para repasar todas las cestas.';
+      intro.innerHTML = '';
+      intro.classList.add('setup-hidden');
     }
   }
   const leg = document.getElementById('torreDiagramLegend');
   if (leg) {
     if (esNft) {
+      leg.classList.remove('setup-hidden');
       leg.innerHTML =
         '<span class="k-dep">Depósito</span>' +
         '<span class="k-sep">·</span>' +
@@ -2166,6 +2180,7 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<span class="k-sep">·</span>' +
         '<span class="k-ces">Huecos</span>';
     } else if (esDwc) {
+      leg.classList.remove('setup-hidden');
       leg.innerHTML =
         '<span class="k-dep">Depósito</span>' +
         '<span class="k-sep">·</span>' +
@@ -2174,6 +2189,7 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<span class="k-ces">Macetas</span>' +
         '<span class="k-hint"> · tocar</span>';
     } else if (esRdwc) {
+      leg.classList.remove('setup-hidden');
       leg.innerHTML =
         '<span class="k-dep">Depósito control</span>' +
         '<span class="k-sep">·</span>' +
@@ -2182,13 +2198,8 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<span class="k-ces">Módulos</span>' +
         '<span class="k-hint"> · tocar</span>';
     } else {
-      leg.innerHTML =
-        '<span class="k-dep">Depósito</span>' +
-        '<span class="k-sep">·</span>' +
-        '<span class="k-niv">Niveles</span>' +
-        '<span class="k-sep">·</span>' +
-        '<span class="k-ces">Cestas</span>' +
-        '<span class="k-hint"> · tocar</span>';
+      leg.innerHTML = '';
+      leg.classList.add('setup-hidden');
     }
   }
   const animLbl = document.getElementById('torreAnimSuavesLabel');

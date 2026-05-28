@@ -3916,8 +3916,13 @@ function refrescarSistemaDatosFacilesBanner(cfg) {
     el.classList.add('setup-hidden');
     return;
   }
-  el.classList.remove('setup-hidden');
   const tipo = typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (!tipo || tipo === 'torre') {
+    el.classList.add('setup-hidden');
+    el.textContent = '';
+    return;
+  }
+  el.classList.remove('setup-hidden');
   if (tipo === 'nft') {
     el.textContent =
       'NFT: disposición, tubos/huecos y Ø de cesta (suele venir en la caja del net pot). Altura de bombeo solo si el agua sube; datos de bomba son opcionales (placa del equipo).';
@@ -3931,8 +3936,8 @@ function refrescarSistemaDatosFacilesBanner(cfg) {
     el.textContent =
       'SRF: mide el estanque (L×A×profundidad útil) y huecos en la balsa. Aireación y litros de mezcla pueden quedar orientativos hasta que los completes.';
   } else {
-    el.textContent =
-      'Torre vertical: objetivo de cosecha y estrategia EC/pH en el asistente de configuración y en el checklist de recarga; aquí solo instalación, plantas y montaje ya aplicado.';
+    el.classList.add('setup-hidden');
+    el.textContent = '';
   }
 }
 

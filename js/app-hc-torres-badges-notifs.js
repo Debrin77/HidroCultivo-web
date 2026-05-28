@@ -135,9 +135,14 @@ function refrescarMedirDatosFacilesBanner(cfg) {
     el.classList.add('setup-hidden');
     return;
   }
-  el.classList.remove('setup-hidden');
   const tipo =
     typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (!tipo || tipo === 'torre') {
+    el.classList.add('setup-hidden');
+    el.textContent = '';
+    return;
+  }
+  el.classList.remove('setup-hidden');
   if (tipo === 'nft') {
     el.textContent =
       'Anota lo que leas hoy en el medidor (EC, pH, °C del agua). Volumen: litros actuales en el depósito de circulación; el rango te orienta frente a la capacidad guardada.';
@@ -151,8 +156,8 @@ function refrescarMedirDatosFacilesBanner(cfg) {
     el.textContent =
       'SRF: lecturas en el estanque común; el volumen es la solución útil que tienes hoy (L×A×P o litros que anotaste en Cultivo e instalación).';
   } else {
-    el.textContent =
-      'Torre: valores del medidor y volumen con regla o a ojo en el depósito hoy. No hace falta precisión de laboratorio: importa la tendencia día a día.';
+    el.classList.add('setup-hidden');
+    el.textContent = '';
   }
 }
 
