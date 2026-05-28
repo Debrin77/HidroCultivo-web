@@ -128,8 +128,8 @@
     if (!positions.length) return '';
     let s = '';
     const sorted = positions.slice().sort((a, b) => a.x - b.x || a.col - b.col);
-    const railX0 = sorted[0].x;
-    const railX1 = sorted[sorted.length - 1].x;
+    let railX0 = sorted[0].x;
+    let railX1 = sorted[sorted.length - 1].x;
 
     s += dwcMcPlanAirTube(
       'M ' + f1(pumpOutX) + ' ' + f1(pumpOutY) + ' L ' + f1(pumpOutX) + ' ' + f1(airRailY),
@@ -163,6 +163,14 @@
       .sort((a, b) => a - b);
     const colCenters = colKeys.map((ck) => byCol[ck][0].x);
     const nCols = colKeys.length;
+    if (dist.rows > 1 && nCols > 0) {
+      const spineXs = [];
+      for (let ci = 0; ci < colKeys.length; ci++) {
+        spineXs.push(dwcMcPlanAirColumnSpineX(ci, nCols, colCenters, bucketR, pumpOutX));
+      }
+      railX0 = Math.min(railX0, ...spineXs);
+      railX1 = Math.max(railX1, ...spineXs);
+    }
     for (let ci = 0; ci < colKeys.length; ci++) {
       const ck = colKeys[ci];
       const list = byCol[ck].sort((a, b) => a.row - b.row);
@@ -186,7 +194,6 @@
   }
 
   function dwcMcPlanAirPumpBadge(cx, cy, lpm) {
-    const lbl = Math.round(lpm) + ' L/min';
     const w = 56;
     const h = 40;
     const px = cx - w / 2;
@@ -241,13 +248,6 @@
       '" y="' +
       f1(py - 13) +
       '" text-anchor="middle" font-size="9" font-weight="800" fill="#14532d" font-family="system-ui,sans-serif">AIRE</text>' +
-      '<text x="' +
-      f1(cx) +
-      '" y="' +
-      f1(py - 3) +
-      '" text-anchor="middle" font-size="7.5" fill="#15803d" font-family="system-ui,sans-serif">' +
-      lbl +
-      '</text>' +
       '</g>';
     return { svg: svg, outX: outX, outY: outY };
   }
