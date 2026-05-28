@@ -2411,46 +2411,79 @@ function updateTorreBuilder() {
     } catch (_) {}
   }
 
-  // Preview visual de torre vertical (Hibrida Pro, claramente diferenciada)
   const N = Math.max(1, Math.min(12, niveles));
   const C = Math.max(1, Math.min(10, cestas));
-  const W = 320;
-  const top = 56;
-  const stepY = 27;
-  const towerH = (N - 1) * stepY + 20;
-  const depY = top + towerH + 22;
-  const H = depY + 90;
+  const hasAir = !!(setupEquipamiento && setupEquipamiento.has('difusor'));
+  const hasHeat = !!(setupEquipamiento && setupEquipamiento.has('calentador'));
+  const W = 340;
+  const H = 430;
   const cx = W / 2;
-  const rx = Math.max(40, Math.min(84, 30 + C * 5.1));
+  const selNivel = Math.max(0, Math.min(N - 1, Math.floor((N - 1) / 2)));
+  const topCx = cx;
+  const topCy = 92;
+  const topR = Math.max(44, Math.min(72, 32 + C * 5));
+  const sectionTop = 194;
+  const sectionBottom = 362;
+  const towerX = cx;
+  const towerW = 18;
+  const depY = 364;
+  const depW = 158;
+  const depX = cx - depW / 2;
+  const depH = 42;
+  const waterW = Math.max(64, Math.min(depW - 12, 62 + volSlider * 1.1));
   const volLbl = Number.isFinite(volSlider) ? Math.round(volSlider) + ' L' : '—';
-  let rings = '';
-  let cups = '';
+  let ringPts = '';
+  let ringLabels = '';
+  for (let i = 0; i < C; i++) {
+    const a = (i / C) * Math.PI * 2 - Math.PI / 2;
+    const px = topCx + Math.cos(a) * topR;
+    const py = topCy + Math.sin(a) * (topR * 0.82);
+    ringPts +=
+      '<circle cx="' +
+      px.toFixed(1) +
+      '" cy="' +
+      py.toFixed(1) +
+      '" r="7" fill="#f8fafc" stroke="#0f2744" stroke-width="1.4"/>' +
+      '<circle cx="' +
+      px.toFixed(1) +
+      '" cy="' +
+      py.toFixed(1) +
+      '" r="2.1" fill="#94a3b8"/>';
+    ringLabels +=
+      '<text x="' +
+      (topCx + Math.cos(a) * (topR + 15)).toFixed(1) +
+      '" y="' +
+      (topCy + Math.sin(a) * (topR * 0.9 + 10)).toFixed(1) +
+      '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="9" font-weight="700" fill="#64748b">' +
+      (i + 1) +
+      '</text>';
+  }
+  let sectionRows = '';
   for (let n = 0; n < N; n++) {
-    const y = top + n * stepY + 10;
-    rings +=
+    const y = sectionTop + ((sectionBottom - sectionTop) * (n + 0.5)) / N;
+    const active = n === selNivel;
+    const rowW = Math.max(72, Math.min(106, 48 + C * 8.5));
+    sectionRows +=
       '<ellipse cx="' +
-      cx.toFixed(1) +
+      towerX.toFixed(1) +
       '" cy="' +
       y.toFixed(1) +
       '" rx="' +
-      rx.toFixed(1) +
-      '" ry="9.3" fill="none" stroke="#94a3b8" stroke-width="1.35" stroke-dasharray="5 4" opacity="0.68"/>';
-    for (let c = 0; c < C; c++) {
-      const ang = (c / C) * Math.PI * 2 - Math.PI / 2;
-      const px = cx + Math.cos(ang) * rx;
-      const py = y + Math.sin(ang) * 8.8;
-      cups +=
-        '<circle cx="' +
-        px.toFixed(1) +
-        '" cy="' +
-        py.toFixed(1) +
-        '" r="5.2" fill="#f8fafc" stroke="#0f2744" stroke-width="1.35"/>' +
-        '<circle cx="' +
-        px.toFixed(1) +
-        '" cy="' +
-        py.toFixed(1) +
-        '" r="1.5" fill="#94a3b8" opacity="0.92"/>';
-    }
+      (rowW * 0.5).toFixed(1) +
+      '" ry="8.8" fill="' +
+      (active ? '#65a30d' : '#84cc16') +
+      '" stroke="#3f6212" stroke-width="' +
+      (active ? '1.8' : '1.2') +
+      '" opacity="' +
+      (active ? '0.98' : '0.78') +
+      '"/>' +
+      '<text x="' +
+      (towerX - rowW * 0.57).toFixed(1) +
+      '" y="' +
+      (y + 3).toFixed(1) +
+      '" text-anchor="end" font-family="Inconsolata,monospace" font-size="9.5" font-weight="800" fill="#64748b">N' +
+      (n + 1) +
+      '</text>';
   }
   preview.classList.add('torre-preview--tower-hero');
   preview.innerHTML =
@@ -2458,92 +2491,141 @@ function updateTorreBuilder() {
     W +
     ' ' +
     H +
-    '" width="100%" role="img" aria-label="Vista previa torre: ' +
-    N +
-    ' filas y ' +
-    C +
-    ' cestas por fila">' +
-    '<defs><linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></linearGradient>' +
-    '<linearGradient id="tpDep" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient>' +
-    '<linearGradient id="tpHead" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#dbeafe"/><stop offset="100%" stop-color="#bfdbfe"/></linearGradient></defs>' +
-    '<rect x="0" y="0" width="' +
-    W +
+    '" width="100%" role="img" aria-label="Torre: nivel seleccionado y sección transversal">' +
+    '<defs>' +
+    '<linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#334155"/></linearGradient>' +
+    '<linearGradient id="tpDep" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>' +
+    '</defs>' +
+    '<rect x="1" y="1" width="' +
+    (W - 2) +
     '" height="' +
-    H +
-    '" rx="18" fill="rgba(255,255,255,0.58)" stroke="#cbd5e1" stroke-width="1.2"/>' +
+    (H - 2) +
+    '" rx="18" fill="rgba(255,255,255,0.72)" stroke="#cbd5e1" stroke-width="1.2"/>' +
     '<text x="' +
     cx.toFixed(1) +
-    '" y="24" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="12" font-weight="700" fill="#64748b">VISTA PREVIA TORRE</text>' +
-    '<text x="' +
-    cx.toFixed(1) +
-    '" y="42" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="18" font-weight="900" fill="#0f2744">Hibrida Pro</text>' +
-    '<rect x="' +
-    (cx - 38).toFixed(1) +
-    '" y="' +
-    (top - 20).toFixed(1) +
-    '" width="76" height="12" rx="6" fill="url(#tpHead)" stroke="#93c5fd" stroke-width="1"/>' +
-    '<rect x="' +
-    (cx - 6).toFixed(1) +
-    '" y="' +
-    top.toFixed(1) +
-    '" width="12" height="' +
-    towerH.toFixed(1) +
-    '" rx="6" fill="url(#tpPipe)" stroke="#0f2744" stroke-width="1.4"/>' +
-    '<circle cx="' +
-    cx.toFixed(1) +
-    '" cy="' +
-    (top + 8).toFixed(1) +
-    '" r="6.2" fill="#e2e8f0" stroke="#334155" stroke-width="1.2"/>' +
-    rings +
-    cups +
-    '<rect x="' +
-    (cx + 98).toFixed(1) +
-    '" y="' +
-    (depY + 8).toFixed(1) +
-    '" width="28" height="18" rx="4" fill="#37474f" stroke="#1e293b" stroke-width="1.2"/>' +
+    '" y="20" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="11" font-weight="700" fill="#64748b">NIVEL SELECCIONADO</text>' +
     '<ellipse cx="' +
-    (cx + 112).toFixed(1) +
+    topCx.toFixed(1) +
     '" cy="' +
-    (depY + 7).toFixed(1) +
-    '" rx="11" ry="6.2" fill="#ff9800" stroke="#e65100" stroke-width="1.2"/>' +
-    '<path d="M ' +
-    (cx + 98).toFixed(1) +
-    ' ' +
-    (depY + 16).toFixed(1) +
-    ' C ' +
-    (cx + 76).toFixed(1) +
-    ' ' +
-    (depY + 14).toFixed(1) +
-    ' ' +
-    (cx + 58).toFixed(1) +
-    ' ' +
-    (depY + 12).toFixed(1) +
-    ' ' +
-    (cx + 44).toFixed(1) +
-    ' ' +
-    (depY + 12).toFixed(1) +
-    '" fill="none" stroke="#e2e8f0" stroke-width="1.8"/>' +
+    topCy.toFixed(1) +
+    '" rx="' +
+    topR.toFixed(1) +
+    '" ry="' +
+    (topR * 0.82).toFixed(1) +
+    '" fill="none" stroke="#84cc16" stroke-dasharray="4 3" stroke-width="1.25" opacity="0.7"/>' +
+    '<circle cx="' +
+    topCx.toFixed(1) +
+    '" cy="' +
+    topCy.toFixed(1) +
+    '" r="16" fill="#334155"/>' +
+    '<circle cx="' +
+    topCx.toFixed(1) +
+    '" cy="' +
+    topCy.toFixed(1) +
+    '" r="4.2" fill="#60a5fa"/>' +
+    ringPts +
+    ringLabels +
+    '<text x="' +
+    cx.toFixed(1) +
+    '" y="154" text-anchor="middle" font-family="Inconsolata,monospace" font-size="11" font-weight="700" fill="#64748b">' +
+    C +
+    ' cestas en anillo · N' +
+    (selNivel + 1) +
+    '</text>' +
+    '<line x1="22" y1="170" x2="' +
+    (W - 22) +
+    '" y2="170" stroke="#d1d5db"/>' +
+    '<text x="22" y="186" text-anchor="start" font-family="Syne,system-ui,sans-serif" font-size="11" font-weight="700" fill="#64748b">SECCIÓN TRANSVERSAL</text>' +
     '<rect x="' +
-    (cx - Math.min(104, 50 + volSlider * 0.5)).toFixed(1) +
+    (towerX - towerW / 2).toFixed(1) +
+    '" y="' +
+    sectionTop.toFixed(1) +
+    '" width="' +
+    towerW.toFixed(1) +
+    '" height="' +
+    (sectionBottom - sectionTop).toFixed(1) +
+    '" rx="7" fill="url(#tpPipe)" stroke="#0f2744" stroke-width="1.3"/>' +
+    sectionRows +
+    '<rect x="' +
+    depX.toFixed(1) +
     '" y="' +
     depY.toFixed(1) +
     '" width="' +
-    (Math.min(208, 100 + volSlider * 1.0)).toFixed(1) +
-    '" height="52" rx="11" fill="#e2e8f0" stroke="#334155" stroke-width="1.45"/>' +
+    depW.toFixed(1) +
+    '" height="' +
+    depH +
+    '" rx="9" fill="#e2e8f0" stroke="#334155" stroke-width="1.35"/>' +
     '<rect x="' +
-    (cx - Math.min(98, 47 + volSlider * 0.47)).toFixed(1) +
+    (cx - waterW / 2).toFixed(1) +
     '" y="' +
-    (depY + 14).toFixed(1) +
+    (depY + 11).toFixed(1) +
     '" width="' +
-    (Math.min(196, 94 + volSlider * 0.94)).toFixed(1) +
-    '" height="30" rx="7" fill="url(#tpDep)" opacity="0.9"/>' +
+    waterW.toFixed(1) +
+    '" height="20" rx="6" fill="url(#tpDep)" opacity="0.9"/>' +
     '<text x="' +
     cx.toFixed(1) +
     '" y="' +
-    (depY + 73).toFixed(1) +
+    (depY + 58).toFixed(1) +
     '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="14" font-weight="900" fill="#0284c7">' +
     volLbl +
-    '</text></svg>';
+    '</text>' +
+    (hasAir
+      ? '<g><rect x="' +
+        (depX + depW + 16).toFixed(1) +
+        '" y="' +
+        (depY + 6).toFixed(1) +
+        '" width="24" height="15" rx="3.5" fill="#37474f" stroke="#1e293b" stroke-width="1.2"/>' +
+        '<ellipse cx="' +
+        (depX + depW + 28).toFixed(1) +
+        '" cy="' +
+        (depY + 6).toFixed(1) +
+        '" rx="8.8" ry="5.6" fill="#ff9800" stroke="#e65100" stroke-width="1.1"/>' +
+        '<path d="M ' +
+        (depX + depW + 16).toFixed(1) +
+        ' ' +
+        (depY + 13).toFixed(1) +
+        ' C ' +
+        (depX + depW - 4).toFixed(1) +
+        ' ' +
+        (depY + 12).toFixed(1) +
+        ' ' +
+        (depX + depW - 16).toFixed(1) +
+        ' ' +
+        (depY + 11).toFixed(1) +
+        ' ' +
+        (depX + depW - 26).toFixed(1) +
+        ' ' +
+        (depY + 11).toFixed(1) +
+        '" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>' +
+        '<ellipse cx="' +
+        (depX + depW - 28).toFixed(1) +
+        '" cy="' +
+        (depY + 11).toFixed(1) +
+        '" rx="7.2" ry="4.2" fill="#64748b" stroke="#475569" stroke-width="1"/>' +
+        '<text x="' +
+        (depX + depW + 28).toFixed(1) +
+        '" y="' +
+        (depY + 29).toFixed(1) +
+        '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8.5" font-weight="700" fill="#64748b">AIRE</text></g>'
+      : '') +
+    (hasHeat
+      ? '<g><rect x="' +
+        (depX + 14).toFixed(1) +
+        '" y="' +
+        (depY + 8).toFixed(1) +
+        '" width="7" height="26" rx="3.5" fill="#fb923c" stroke="#c2410c" stroke-width="1"/>' +
+        '<circle cx="' +
+        (depX + 17.5).toFixed(1) +
+        '" cy="' +
+        (depY + 6).toFixed(1) +
+        '" r="2.8" fill="#f59e0b"/>' +
+        '<text x="' +
+        (depX + 18).toFixed(1) +
+        '" y="' +
+        (depY + 38).toFixed(1) +
+        '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8.3" font-weight="700" fill="#64748b">TEMP</text></g>'
+      : '') +
+    '</svg>';
 }
 
 function toggleUbic(tipo) {
