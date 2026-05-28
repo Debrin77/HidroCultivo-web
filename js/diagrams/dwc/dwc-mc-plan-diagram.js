@@ -406,10 +406,10 @@
       byCol[P.col].push(P);
     }
 
-    const airBadgeY = 24;
+    const airRailY = gridTop - bucketR - 10;
+    const airBadgeY = airRailY - 30;
     const pumpOutX = cx;
     const pumpOutY = airBadgeY + 24;
-    const airRailY = gridTop - 14;
 
     let s = dwcMcPlanDefs();
     s += '<rect width="' + W + '" height="' + H + '" fill="url(#dwcMcPlanBg)"/>';
