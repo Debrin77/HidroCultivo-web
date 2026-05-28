@@ -1964,6 +1964,17 @@ html.hc-theme-dark #torreSVGWrap.torre-svg-canvas svg[class*="svg-diagram--scada
   min-height: min(42vh, 480px);
 }
 @media (max-width: 640px) {
+  #setupTorreBuilderWrap .setup-torre-builder .torre-preview.torre-preview--tower-hero {
+    width: min(100%, 290px);
+    min-width: 190px;
+    padding: 8px 8px 6px;
+  }
+  #setupTorreBuilderWrap .setup-torre-controls .slider-value {
+    font-size: 28px;
+  }
+  #tab-sistema #torreSVGWrap.torre-svg-canvas svg.hc-illo-torre {
+    min-height: min(58vh, 680px);
+  }
   #torreSVGWrap.torre-svg-canvas {
     padding: 6px 4px;
     max-height: min(82dvh, 1200px);
@@ -12077,6 +12088,20 @@ button.config-option:focus-visible,
     0 4px 22px rgba(15, 23, 42, 0.1),
     0 0 0 1px rgba(255, 255, 255, 0.65) inset;
 }
+#tab-sistema #torreSVGWrap.torre-svg-canvas {
+  background:
+    radial-gradient(240px 120px at 50% -20%, rgba(56, 189, 248, 0.14), transparent 72%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 16px;
+}
+#tab-sistema #torreSVGWrap.torre-svg-canvas svg.hc-illo-torre {
+  min-height: min(64vh, 760px);
+  filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.12));
+}
+#tab-sistema #torreSVGWrap.torre-svg-canvas svg.hc-illo-torre text {
+  letter-spacing: 0.01em;
+}
 #tab-sistema .torre-diagram-toolbar,
 #tab-sistema .torre-interaccion-bar {
   border: 1.5px solid rgba(15, 23, 42, 0.12);
@@ -14971,6 +14996,19 @@ button.toggle-switch:focus-visible {
 #setupTorreBuilderWrap .setup-torre-controls .torre-control-label {
   margin-bottom: 6px;
 }
+#setupTorreBuilderWrap .setup-torre-controls .torre-control-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e3a5f;
+  letter-spacing: 0.01em;
+}
+#setupTorreBuilderWrap .setup-torre-controls .slider-value {
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 900;
+  color: #16a34a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+}
 .torre-preview {
   display: flex;
   flex-direction: column;
@@ -14978,6 +15016,23 @@ button.toggle-switch:focus-visible {
   gap: 4px;
   flex-shrink: 0;
   width: 80px;
+}
+.torre-preview.torre-preview--tower-hero {
+  width: min(100%, 320px);
+  min-width: 220px;
+  margin-top: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 14px;
+  background:
+    radial-gradient(140px 70px at 50% -10%, rgba(56, 189, 248, 0.14), transparent 72%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.09);
+  padding: 10px 10px 8px;
+}
+.torre-preview .torre-preview-svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 .torre-preview-nivel {
   width: 70px;

@@ -2548,22 +2548,42 @@
     body +=
       '<text x="' +
       CX +
-      '" y="26" text-anchor="middle" font-family="Syne,sans-serif" font-size="16" font-weight="900" fill="' +
+      '" y="24" text-anchor="middle" font-family="Syne,sans-serif" font-size="12" font-weight="700" fill="' +
+      HC_ILLO.inkSoft +
+      '">Sistema de cultivo</text>';
+    body +=
+      '<text x="' +
+      CX +
+      '" y="41" text-anchor="middle" font-family="Syne,sans-serif" font-size="24" font-weight="900" fill="' +
       HC_ILLO.ink +
       '">Torre vertical</text>';
     body +=
+      '<ellipse cx="' +
+      f1(CX) +
+      '" cy="' +
+      f1(MARG_T + torH + 10) +
+      '" rx="78" ry="14" fill="rgba(15,23,42,0.08)"/>';
+    body +=
       '<rect x="' +
-      f1(CX - 6) +
+      f1(CX - 8) +
       '" y="' +
       MARG_T +
-      '" width="12" height="' +
+      '" width="16" height="' +
       torH +
-      '" rx="6" fill="' +
-      HC_ILLO.flow +
-      '" stroke="' +
+      '" rx="8" fill="url(#' +
+      u +
+      '-water)" stroke="' +
       HC_ILLO.ink +
-      '" stroke-width="2"/>';
-    var RX = 78;
+      '" stroke-width="2.2"/>';
+    body +=
+      '<rect x="' +
+      f1(CX - 2.4) +
+      '" y="' +
+      f1(MARG_T + 8) +
+      '" width="4.8" height="' +
+      f1(Math.max(20, torH - 16)) +
+      '" rx="2.4" fill="rgba(255,255,255,0.42)"/>';
+    var RX = 84;
     for (var n = 0; n < numNiveles; n++) {
       var cy = MARG_T + n * (NIVEL_H + GAP) + NIVEL_H / 2;
       body +=
@@ -2575,7 +2595,18 @@
         RX +
         '" ry="14" fill="none" stroke="' +
         HC_ILLO.lidHi +
-        '" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.5"/>';
+        '" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.56"/>';
+      body +=
+        '<circle cx="' +
+        f1(CX) +
+        '" cy="' +
+        f1(cy) +
+        '" r="11.8" fill="#cbd5e1" stroke="#334155" stroke-width="1.8"/>' +
+        '<circle cx="' +
+        f1(CX) +
+        '" cy="' +
+        f1(cy) +
+        '" r="3.1" fill="#94a3b8"/>';
       for (var c = 0; c < numCestas; c++) {
         var ang = (c / numCestas) * Math.PI * 2 - Math.PI / 2;
         var px = CX + Math.cos(ang) * RX;
@@ -2585,8 +2616,8 @@
           c: c,
           cx: px,
           cy: py,
-          rx: 13,
-          ry: 9,
+          rx: 13.4,
+          ry: 9.3,
           uid: u,
           cfg: cfg,
           extraClass: 'torre-maceta',
@@ -2595,6 +2626,34 @@
     }
     var depY = MARG_T + torH + 24;
     body += tankFront(CX - 90, depY, 180, DEP_H, volPct, u, ta, true, true);
+    body += airPump(CX + 98, depY + 10, 44, 30, u);
+    body +=
+      '<path d="M ' +
+      f1(CX + 98) +
+      ' ' +
+      f1(depY + 24) +
+      ' C ' +
+      f1(CX + 62) +
+      ' ' +
+      f1(depY + 20) +
+      ' ' +
+      f1(CX + 38) +
+      ' ' +
+      f1(depY + 14) +
+      ' ' +
+      f1(CX + 16) +
+      ' ' +
+      f1(depY + 14) +
+      '" fill="none" stroke="#e2e8f0" stroke-width="2.2" opacity="0.95"/>' +
+      '<path d="M ' +
+      f1(CX + 16) +
+      ' ' +
+      f1(depY + 14) +
+      ' L ' +
+      f1(CX + 16) +
+      ' ' +
+      f1(depY + 70) +
+      '" fill="none" stroke="#e2e8f0" stroke-width="2.2" opacity="0.95"/>';
     body +=
       '<text x="' +
       CX +

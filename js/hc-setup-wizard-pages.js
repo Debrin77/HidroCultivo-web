@@ -2392,6 +2392,7 @@ function updateTorreBuilder() {
     return;
   }
   preview.classList.remove('torre-preview--dwc');
+  preview.classList.remove('torre-preview--tower-hero');
 
   if (setupTipoInstalacion === 'torre') {
     if (esNuevaBuilder && (niveles < 1 || cestas < 1)) {
@@ -2410,45 +2411,90 @@ function updateTorreBuilder() {
     } catch (_) {}
   }
 
-  // Actualizar preview visual de la torre vertical
-  preview.innerHTML = '';
-
-  // Pipe central
-  const pipe = document.createElement('div');
-  pipe.className = 'torre-preview-pipe';
-  pipe.style.height = (niveles * 18 + 20) + 'px';
-  preview.appendChild(pipe);
-
-  // Niveles (superpuestos sobre el pipe con position absolute)
-  preview.style.position = 'relative';
-  preview.style.height = (niveles * 22 + 40) + 'px';
-  pipe.style.position = 'absolute';
-  pipe.style.left = '50%';
-  pipe.style.top = '0';
-  pipe.style.transform = 'translateX(-50%)';
-
-  for (let n = 0; n < niveles; n++) {
-    const nivel = document.createElement('div');
-    nivel.className = 'torre-preview-nivel';
-    nivel.style.position = 'absolute';
-    nivel.style.top = (n * 20) + 'px';
-    nivel.style.left = '50%';
-    nivel.style.transform = 'translateX(-50%)';
-    nivel.style.width = Math.min(70, 30 + cestas * 8) + 'px';
-    nivel.style.opacity = 0.6 + (n / niveles) * 0.4;
-    preview.appendChild(nivel);
+  // Preview visual de torre vertical (SVG compacto y legible)
+  const N = Math.max(1, Math.min(12, niveles));
+  const C = Math.max(1, Math.min(10, cestas));
+  const W = 260;
+  const top = 22;
+  const stepY = 26;
+  const towerH = (N - 1) * stepY + 18;
+  const depY = top + towerH + 16;
+  const H = depY + 56;
+  const cx = W / 2;
+  const rx = Math.max(34, Math.min(72, 28 + C * 4.4));
+  const volLbl = Number.isFinite(volSlider) ? Math.round(volSlider) + ' L' : '—';
+  let rings = '';
+  let cups = '';
+  for (let n = 0; n < N; n++) {
+    const y = top + n * stepY + 9;
+    rings +=
+      '<ellipse cx="' +
+      cx.toFixed(1) +
+      '" cy="' +
+      y.toFixed(1) +
+      '" rx="' +
+      rx.toFixed(1) +
+      '" ry="8.5" fill="none" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.62"/>';
+    for (let c = 0; c < C; c++) {
+      const ang = (c / C) * Math.PI * 2 - Math.PI / 2;
+      const px = cx + Math.cos(ang) * rx;
+      const py = y + Math.sin(ang) * 8.2;
+      cups +=
+        '<circle cx="' +
+        px.toFixed(1) +
+        '" cy="' +
+        py.toFixed(1) +
+        '" r="4.2" fill="#f8fafc" stroke="#0f2744" stroke-width="1.2"/>' +
+        '<circle cx="' +
+        px.toFixed(1) +
+        '" cy="' +
+        py.toFixed(1) +
+        '" r="1.2" fill="#94a3b8" opacity="0.9"/>';
+    }
   }
-
-  // Depósito
-  const dep = document.createElement('div');
-  dep.className = 'torre-preview-deposito';
-  dep.style.position = 'absolute';
-  dep.style.bottom = '0';
-  dep.style.left = '50%';
-  dep.style.transform = 'translateX(-50%)';
-  dep.style.width = Math.min(70, 30 + volSlider * 0.5) + 'px';
-  dep.title = volSlider + 'L';
-  preview.appendChild(dep);
+  preview.classList.add('torre-preview--tower-hero');
+  preview.innerHTML =
+    '<svg class="torre-preview-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
+    W +
+    ' ' +
+    H +
+    '" width="100%" role="img" aria-label="Vista previa torre: ' +
+    N +
+    ' filas y ' +
+    C +
+    ' cestas por fila">' +
+    '<defs><linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#86efac"/><stop offset="100%" stop-color="#16a34a"/></linearGradient>' +
+    '<linearGradient id="tpDep" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#bfdbfe"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient></defs>' +
+    '<rect x="' +
+    (cx - 5).toFixed(1) +
+    '" y="' +
+    top.toFixed(1) +
+    '" width="10" height="' +
+    towerH.toFixed(1) +
+    '" rx="5" fill="url(#tpPipe)" stroke="#0f2744" stroke-width="1.2"/>' +
+    rings +
+    cups +
+    '<rect x="' +
+    (cx - Math.min(86, 42 + volSlider * 0.42)).toFixed(1) +
+    '" y="' +
+    depY.toFixed(1) +
+    '" width="' +
+    (Math.min(172, 84 + volSlider * 0.84)).toFixed(1) +
+    '" height="42" rx="9" fill="#e2e8f0" stroke="#334155" stroke-width="1.3"/>' +
+    '<rect x="' +
+    (cx - Math.min(82, 40 + volSlider * 0.4)).toFixed(1) +
+    '" y="' +
+    (depY + 10).toFixed(1) +
+    '" width="' +
+    (Math.min(164, 80 + volSlider * 0.8)).toFixed(1) +
+    '" height="24" rx="6" fill="url(#tpDep)" opacity="0.88"/>' +
+    '<text x="' +
+    cx.toFixed(1) +
+    '" y="' +
+    (depY + 57).toFixed(1) +
+    '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="11" font-weight="900" fill="#0284c7">' +
+    volLbl +
+    '</text></svg>';
 }
 
 function toggleUbic(tipo) {
