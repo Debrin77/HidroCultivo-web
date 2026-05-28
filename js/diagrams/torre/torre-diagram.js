@@ -47,25 +47,28 @@
   }
 
   function buildTorreDiagramSvg() {
-    if (typeof hcIlloGenerarSVGTorre === 'function') {
-      try {
-        return tagTorreScada(hcIlloGenerarSVGTorre());
-      } catch (e) {
-        try {
-          console.error('hcIlloGenerarSVGTorre', e);
-        } catch (_) {}
-      }
-    }
+    /* Motor legacy: cestas interactivas, giro y depósito probados en producción. */
     if (typeof _buildTorreSvgLegacy === 'function') {
       try {
-        return tagTorreScada(_buildTorreSvgLegacy());
+        const leg = _buildTorreSvgLegacy();
+        if (leg && leg.indexOf('<svg') >= 0) return tagTorreScada(leg);
       } catch (e2) {
         try {
           console.error('_buildTorreSvgLegacy', e2);
         } catch (_) {}
       }
     }
-    return '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema de torre.</p>';
+    if (typeof hcIlloGenerarSVGTorre === 'function') {
+      try {
+        const illo = hcIlloGenerarSVGTorre();
+        if (illo && illo.indexOf('<svg') >= 0) return tagTorreScada(illo);
+      } catch (e) {
+        try {
+          console.error('hcIlloGenerarSVGTorre', e);
+        } catch (_) {}
+      }
+    }
+    return '<p class="torre-svg-fallback" role="status">No se pudo cargar el esquema de torre. Recarga la página (Ctrl+F5).</p>';
   }
 
   function generarSVGTorre() {

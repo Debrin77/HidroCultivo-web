@@ -1358,4 +1358,6 @@ function generarSVGDwc() {
   global.buildDwcDiagramSvg = buildDwcDiagramSvg;
   global.generarSVGDwc = generarSVGDwc;
   global.dwcSvgDepDimsDesdeCfg = dwcSvgDepDimsDesdeCfg;
+  global.dwcSvgAirPumpExternal = dwcSvgAirPumpExternal;
+  global.dwcSvgAirHosePumpToStone = dwcSvgAirHosePumpToStone;
 })(typeof window !== 'undefined' ? window : globalThis);

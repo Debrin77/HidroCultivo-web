@@ -542,8 +542,70 @@ function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
   return { defs: defs, html: html, volTextFill: aguaCol };
 }
 
+/** Bomba DWC unificada en preview del asistente (torre): sin tramo vertical entre bomba y depósito. */
+function torrePreviewAireadorSvg(depX, depY, depW, depH) {
+  if (typeof dwcSvgAirPumpExternal !== 'function') return '';
+  const pumpScale = 0.74;
+  const pumpX = depX + depW + 14;
+  const pumpY = depY + depH - 40 * pumpScale;
+  const piedraX = depX + Math.round(depW * 0.55);
+  const piedraY = depY + depH - 11;
+  const pump = dwcSvgAirPumpExternal(0, 0, 1);
+  const o0 = pump.outlets[0] || { x: 0, y: 12 + 0.55 * 34 };
+  const pumpOutX = pumpX + o0.x * pumpScale;
+  const pumpOutY = pumpY + o0.y * pumpScale;
+  let s =
+    '<g class="torre-preview-dwc-pump" transform="translate(' +
+    pumpX.toFixed(1) +
+    ' ' +
+    pumpY.toFixed(1) +
+    ') scale(' +
+    pumpScale.toFixed(3) +
+    ')">' +
+    pump.svg +
+    '</g>';
+  if (typeof dwcSvgAirHosePumpToStone === 'function') {
+    s += dwcSvgAirHosePumpToStone(
+      pumpOutX,
+      pumpOutY,
+      depX + depW - 4,
+      depY + depH * 0.55,
+      piedraX,
+      piedraY,
+      1.5,
+      0.92
+    );
+  } else {
+    s +=
+      '<path d="M ' +
+      pumpOutX.toFixed(1) +
+      ' ' +
+      pumpOutY.toFixed(1) +
+      ' L ' +
+      piedraX.toFixed(1) +
+      ' ' +
+      pumpOutY.toFixed(1) +
+      ' L ' +
+      piedraX.toFixed(1) +
+      ' ' +
+      piedraY.toFixed(1) +
+      '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
+  }
+  s +=
+    '<ellipse cx="' +
+    piedraX.toFixed(1) +
+    '" cy="' +
+    piedraY.toFixed(1) +
+    '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>';
+  return s;
+}
+
 /** Bomba de aire en suelo, separada del depósito; piedra difusora dentro del agua, alejada del borde del depósito. */
 function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, P) {
+  P = P || {};
+  if (!P.airLine) P.airLine = '#eceff1';
+  if (!P.airStoneFill) P.airStoneFill = '#9ca3af';
+  if (!P.airStoneStroke) P.airStoneStroke = '#57534e';
   const gapFromTank = 16;
   const sueloY = tankY + tankH;
   const pumpScale = Math.max(0.76, Math.min(1.05, 0.8 + Math.min(180, tankW) / 900));
@@ -2510,7 +2572,7 @@ function updateTorreBuilder() {
       (n + 1) +
       '</text>';
   }
-  const torrePreviewAirSvg = hasAir ? nftSvgAireadorEnSuelo(depX, depY, depW, depH, {}) : '';
+  const torrePreviewAirSvg = hasAir ? torrePreviewAireadorSvg(depX, depY, depW, depH) : '';
   preview.classList.add('torre-preview--tower-hero');
   preview.innerHTML =
     '<svg class="torre-preview-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +

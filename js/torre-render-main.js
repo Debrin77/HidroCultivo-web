@@ -177,6 +177,22 @@ function renderTorre() {
         console.error('generarSVGTorre', eTorreSvg);
       } catch (_) {}
     }
+    if (!wrap.innerHTML || !String(wrap.innerHTML).trim() || String(wrap.innerHTML).indexOf('<svg') < 0) {
+      try {
+        if (typeof _buildTorreSvgLegacy === 'function') {
+          const leg = _buildTorreSvgLegacy();
+          if (leg && leg.indexOf('<svg') >= 0) wrap.innerHTML = leg;
+        }
+      } catch (eLeg) {
+        try {
+          console.error('_buildTorreSvgLegacy fallback', eLeg);
+        } catch (_) {}
+      }
+    }
+    if (!wrap.innerHTML || String(wrap.innerHTML).indexOf('<svg') < 0) {
+      wrap.innerHTML =
+        '<p class="torre-svg-fallback" role="status">Esquema de torre vacío: revisa niveles y cestas en Cultivo e instalación.</p>';
+    }
     wrap.setAttribute(
       'aria-label',
       'Torre hidropónica: eje central, niveles y depósito. Flechas para girar; toca una cesta de frente o usa Lista.'
