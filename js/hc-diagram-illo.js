@@ -2434,6 +2434,44 @@
     return out;
   }
 
+  /** Eje central (agua + subida animada): encima de anillos de nivel para que no quede cortado. */
+  function hcIlloTorreEjeCentralSvg(L, u, ta) {
+    var out =
+      '<g class="hc-torre-eje" pointer-events="none" aria-hidden="true">' +
+      '<rect x="' +
+      f1(L.CX - 7) +
+      '" y="' +
+      f1(L.MARG_T - 8) +
+      '" width="14" height="' +
+      f1(L.torH + 16) +
+      '" rx="7" fill="url(#' +
+      u +
+      '-water)" stroke="' +
+      HC_ILLO.ink +
+      '" stroke-width="2"/>';
+    if (ta) {
+      out +=
+        '<line x1="' +
+        f1(L.CX) +
+        '" y1="' +
+        f1(L.MARG_T) +
+        '" x2="' +
+        f1(L.CX) +
+        '" y2="' +
+        f1(L.depY) +
+        '" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="6 7" opacity="0.45">' +
+        '<animate attributeName="stroke-dashoffset" from="0" to="26" dur="1s" repeatCount="indefinite"/></line>';
+    }
+    out +=
+      '<ellipse cx="' +
+      f1(L.CX) +
+      '" cy="' +
+      f1(L.MARG_T - 22) +
+      '" rx="24" ry="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>' +
+      '</g>';
+    return out;
+  }
+
   function hcIlloTorreNivelRotHint(cx, cy, rx) {
     return (
       '<g class="hc-torre-nivel-rot-hint" pointer-events="none" aria-hidden="true" opacity="0.5">' +
@@ -2940,43 +2978,6 @@
           ? Number(volCap) * 0.78
           : 20;
     body += '<rect width="' + L.W + '" height="' + L.H + '" fill="url(#' + u + '-bg)"/>';
-    body +=
-      '<text x="' +
-      f1(L.CX) +
-      '" y="32" text-anchor="middle" font-family="Syne,sans-serif" font-size="22" font-weight="900" fill="' +
-      HC_ILLO.ink +
-      '">Torre vertical</text>';
-    body +=
-      '<ellipse cx="' +
-      f1(L.CX) +
-      '" cy="' +
-      f1(L.MARG_T - 22) +
-      '" rx="24" ry="10" fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>';
-    body +=
-      '<rect x="' +
-      f1(L.CX - 7) +
-      '" y="' +
-      f1(L.MARG_T - 8) +
-      '" width="14" height="' +
-      f1(L.torH + 16) +
-      '" rx="7" fill="url(#' +
-      u +
-      '-water)" stroke="' +
-      HC_ILLO.ink +
-      '" stroke-width="2"/>';
-    if (ta) {
-      body +=
-        '<line x1="' +
-        f1(L.CX) +
-        '" y1="' +
-        f1(L.MARG_T) +
-        '" x2="' +
-        f1(L.CX) +
-        '" y2="' +
-        f1(L.depY) +
-        '" stroke="#0ea5e9" stroke-width="2" stroke-dasharray="6 7" opacity="0.45">' +
-        '<animate attributeName="stroke-dashoffset" from="0" to="26" dur="1s" repeatCount="indefinite"/></line>';
-    }
     var n;
     for (n = 0; n < numNiveles; n++) {
       var cyN = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
@@ -2989,10 +2990,11 @@
         f1(L.TORRE_RX + 4) +
         '" ry="' +
         f1(L.TORRE_RY + 3) +
-        '" fill="rgba(132,204,22,0.08)" stroke="#84cc16" stroke-width="1.4" opacity="0.65"/>';
+        '" fill="none" stroke="#84cc16" stroke-width="1.5" opacity="0.72"/>';
       body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
       body += hcIlloTorreNivelRotHint(L.CX, cyN, L.TORRE_RX);
     }
+    body += hcIlloTorreEjeCentralSvg(L, u, ta);
     body += '<ellipse cx="' + f1(L.CX) + '" cy="' + f1(L.depY + L.DEP_H + 8) + '" rx="' + f1(L.DEP_W * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
     var depBlock = { defs: '', html: '' };
     if (typeof torreSvgDepositoCompleto === 'function') {
@@ -3035,7 +3037,13 @@
       });
     }
     body += hcIlloTorreRotFlechas(L.depX, L.depY, L.DEP_W, L.DEP_H);
-    return svgWrap('torre-svg-diagram hc-illo-torre hc-illo-torre--esquema', W, L.H, u + '-title', 'Torre vertical', body);
+    var ariaTorre =
+      numNiveles +
+      (numNiveles === 1 ? ' nivel' : ' niveles') +
+      ', ' +
+      numCestas +
+      (numCestas === 1 ? ' cesta' : ' cestas');
+    return svgWrap('torre-svg-diagram hc-illo-torre hc-illo-torre--esquema', W, L.H, u + '-title', ariaTorre, body);
   };
 
   /** Hueco NFT interactivo (sustituye círculo plano en serpentín/mesa/escalera). */

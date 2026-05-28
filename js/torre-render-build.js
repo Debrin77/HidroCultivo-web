@@ -1044,34 +1044,8 @@ function _buildTorreSvgLegacy() {
     </clipPath>
   </defs>`;
 
-  // ── EJE CENTRAL ───────────────────────────────────────────────────────────
   const ejeTop = MARG_T - 36;
   const ejeBot = DEP_Y + 8;
-  s += `<rect x="${CX-EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot-ejeTop}"
-    rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.88"/>`;
-
-  // Agua cayendo (animada si ta)
-  s += `<line x1="${CX}" y1="${ejeTop+10}" x2="${CX}" y2="${ejeBot-4}"
-    stroke="#0ea5e9" stroke-width="2.25" stroke-dasharray="7 8" stroke-linecap="round" opacity="0.48">
-    ${ta ? `<animate attributeName="stroke-dashoffset" from="0" to="34" dur="1s" repeatCount="indefinite" calcMode="linear"/>` : ''}
-  </line>`;
-
-  // ── ROCIADOR ──────────────────────────────────────────────────────────────
-  s += `<ellipse cx="${CX}" cy="${ejeTop}" rx="24" ry="11"
-    fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>`;
-  // Gotas (solo con animación)
-  if (ta) {
-    const gotas = [-20,-10,0,10,20];
-    gotas.forEach((dx, i) => {
-      const delay = i * 0.18;
-      s += `<circle cx="${CX+dx}" cy="${ejeTop+16}" r="2.5" fill="#93c5fd" opacity="0.75">
-        <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+26}"
-          dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
-        <animate attributeName="opacity" from="0.8" to="0"
-          dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
-      </circle>`;
-    });
-  }
 
   // ── NIVELES Y CESTAS ──────────────────────────────────────────────────────
   for (let n = 0; n < numNiveles; n++) {
@@ -1094,6 +1068,29 @@ function _buildTorreSvgLegacy() {
 
     // Cestas por nivel en <g> propio: al girar solo se actualiza este fragmento (mucho más fluido).
     s += `<g id="hc-baskets-n-${n}">${generarSVGTorreCestasNivelHTML(n, rot)}</g>`;
+  }
+
+  // Eje central y subida de agua encima de los módulos (no cortado por cilindros de nivel)
+  s += `<g class="hc-torre-eje" pointer-events="none" aria-hidden="true">
+    <rect x="${CX-EJE_W/2}" y="${ejeTop}" width="${EJE_W}" height="${ejeBot-ejeTop}"
+      rx="${EJE_W/2}" fill="url(#ejeGrad)" opacity="0.88"/>
+    <line x1="${CX}" y1="${ejeTop+10}" x2="${CX}" y2="${ejeBot-4}"
+      stroke="#0ea5e9" stroke-width="2.25" stroke-dasharray="7 8" stroke-linecap="round" opacity="0.48">
+      ${ta ? `<animate attributeName="stroke-dashoffset" from="0" to="34" dur="1s" repeatCount="indefinite" calcMode="linear"/>` : ''}
+    </line>
+    <ellipse cx="${CX}" cy="${ejeTop}" rx="24" ry="11" fill="#f1f5f9" stroke="#64748b" stroke-width="1.1"/>
+  </g>`;
+  if (ta) {
+    const gotas = [-20,-10,0,10,20];
+    gotas.forEach((dx, i) => {
+      const delay = i * 0.18;
+      s += `<circle cx="${CX+dx}" cy="${ejeTop+16}" r="2.5" fill="#93c5fd" opacity="0.75">
+        <animate attributeName="cy" from="${ejeTop+14}" to="${ejeTop+26}"
+          dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" from="0.8" to="0"
+          dur="0.9s" begin="${delay}s" repeatCount="indefinite"/>
+      </circle>`;
+    });
   }
 
   // ── DEPÓSITO ──────────────────────────────────────────────────────────────
@@ -1135,8 +1132,6 @@ function _buildTorreSvgLegacy() {
     s += `<text x="${CX}" y="${DEP_Y + DEP_H + 30}" font-family="Syne,sans-serif"
       font-size="20" font-weight="900" fill="${aguaCol}" text-anchor="middle" letter-spacing="0.02em">${volTorreTexto}</text>`;
   }
-  s += `<text x="${CX}" y="16" text-anchor="middle" font-family="Syne,sans-serif" font-size="9" font-weight="800" fill="#475569" pointer-events="none">Torre vertical</text>`;
-
   // ── CALENTADOR ────────────────────────────────────────────────────────────
   if (tieneCalentador) {
     const hx = DEP_X + 20;
