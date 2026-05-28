@@ -84,6 +84,7 @@
 
   function dwcMcPlanAirTube(d, sw) {
     const w = sw || 2.6;
+    const dash = ' stroke-dasharray="6 4"';
     return (
       '<g class="dwc-mc-plan-air-tube">' +
       '<path d="' +
@@ -93,6 +94,7 @@
       '" stroke-width="' +
       (w + 1.6) +
       '" stroke-linecap="round" stroke-linejoin="round"' +
+      dash +
       '/>' +
       '<path d="' +
       d +
@@ -101,6 +103,7 @@
       '" stroke-width="' +
       w +
       '" stroke-linecap="round" stroke-linejoin="round"' +
+      dash +
       '/>' +
       '</g>'
     );
@@ -132,17 +135,16 @@
       'M ' + f1(pumpOutX) + ' ' + f1(pumpOutY) + ' L ' + f1(pumpOutX) + ' ' + f1(airRailY),
       2.8
     );
-    if (railX1 - railX0 > 2) {
-      s += dwcMcPlanAirTube(
-        'M ' + f1(railX0) + ' ' + f1(airRailY) + ' L ' + f1(railX1) + ' ' + f1(airRailY),
-        2.8
-      );
-    }
+    const mainRailD =
+      railX1 - railX0 > 2
+        ? 'M ' + f1(railX0) + ' ' + f1(airRailY) + ' L ' + f1(railX1) + ' ' + f1(airRailY)
+        : '';
 
     if (dist.sites <= 1) {
       const P = sorted[0];
       const entryY = P.y + bucketR * 0.48;
       s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.3);
+      if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
       return s;
     }
 
@@ -152,6 +154,7 @@
         const entryY = P.y + bucketR * 0.48;
         s += dwcMcPlanAirTube('M ' + f1(P.x) + ' ' + f1(airRailY) + ' L ' + f1(P.x) + ' ' + f1(entryY), 2.3);
       }
+      if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
       return s;
     }
 
@@ -178,6 +181,7 @@
         );
       }
     }
+    if (mainRailD) s += dwcMcPlanAirTube(mainRailD, 2.8);
     return s;
   }
 
@@ -230,17 +234,17 @@
       '<rect x="' +
       f1(cx - 31) +
       '" y="' +
-      f1(py - 19) +
+      f1(py - 27) +
       '" width="62" height="20" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>' +
       '<text x="' +
       f1(cx) +
       '" y="' +
-      f1(py - 5) +
+      f1(py - 13) +
       '" text-anchor="middle" font-size="9" font-weight="800" fill="#14532d" font-family="system-ui,sans-serif">AIRE</text>' +
       '<text x="' +
       f1(cx) +
       '" y="' +
-      f1(py + 5) +
+      f1(py - 3) +
       '" text-anchor="middle" font-size="7.5" fill="#15803d" font-family="system-ui,sans-serif">' +
       lbl +
       '</text>' +
