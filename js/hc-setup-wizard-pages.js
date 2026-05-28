@@ -2592,6 +2592,13 @@ function updateTorreBuilder() {
         '<animate attributeName="stroke-dashoffset" from="18" to="0" dur="1.1s" repeatCount="indefinite"/></path>'
       : '') +
     sectionRows +
+    '<ellipse cx="' +
+    cx.toFixed(1) +
+    '" cy="' +
+    (depY + depH + 10).toFixed(1) +
+    '" rx="' +
+    (depW * 0.44).toFixed(1) +
+    '" ry="5.8" fill="rgba(15,23,42,0.12)"/>' +
     '<rect x="' +
     depX.toFixed(1) +
     '" y="' +
@@ -2600,14 +2607,126 @@ function updateTorreBuilder() {
     depW.toFixed(1) +
     '" height="' +
     depH +
-    '" rx="9" fill="#e2e8f0" stroke="#334155" stroke-width="1.35"/>' +
+    '" rx="10" fill="#d8e1ec" stroke="#334155" stroke-width="1.4"/>' +
+    '<rect x="' +
+    (depX + 4).toFixed(1) +
+    '" y="' +
+    (depY + 4).toFixed(1) +
+    '" width="' +
+    (depW - 8).toFixed(1) +
+    '" height="' +
+    (depH - 8).toFixed(1) +
+    '" rx="8" fill="#c7d2e0" opacity="0.55"/>' +
     '<rect x="' +
     (cx - waterW / 2).toFixed(1) +
     '" y="' +
-    (depY + 11).toFixed(1) +
+    (depY + 12).toFixed(1) +
     '" width="' +
     waterW.toFixed(1) +
-    '" height="20" rx="6" fill="url(#tpDep)" opacity="0.9"/>' +
+    '" height="20" rx="6" fill="url(#tpDep)" opacity="0.94"/>' +
+    (animPreview
+      ? '<path d="M ' +
+        (cx - waterW / 2 + 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        ' C ' +
+        (cx - waterW * 0.2).toFixed(1) +
+        ' ' +
+        (depY + 13).toFixed(1) +
+        ' ' +
+        (cx + waterW * 0.1).toFixed(1) +
+        ' ' +
+        (depY + 19).toFixed(1) +
+        ' ' +
+        (cx + waterW / 2 - 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        '" fill="none" stroke="#dbeafe" stroke-width="1.2" opacity="0.9">' +
+        '<animate attributeName="d" dur="1.6s" repeatCount="indefinite" values="' +
+        'M ' +
+        (cx - waterW / 2 + 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        ' C ' +
+        (cx - waterW * 0.2).toFixed(1) +
+        ' ' +
+        (depY + 13).toFixed(1) +
+        ' ' +
+        (cx + waterW * 0.1).toFixed(1) +
+        ' ' +
+        (depY + 19).toFixed(1) +
+        ' ' +
+        (cx + waterW / 2 - 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        ';' +
+        'M ' +
+        (cx - waterW / 2 + 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        ' C ' +
+        (cx - waterW * 0.18).toFixed(1) +
+        ' ' +
+        (depY + 19).toFixed(1) +
+        ' ' +
+        (cx + waterW * 0.12).toFixed(1) +
+        ' ' +
+        (depY + 13).toFixed(1) +
+        ' ' +
+        (cx + waterW / 2 - 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        ';' +
+        'M ' +
+        (cx - waterW / 2 + 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        ' C ' +
+        (cx - waterW * 0.2).toFixed(1) +
+        ' ' +
+        (depY + 13).toFixed(1) +
+        ' ' +
+        (cx + waterW * 0.1).toFixed(1) +
+        ' ' +
+        (depY + 19).toFixed(1) +
+        ' ' +
+        (cx + waterW / 2 - 1).toFixed(1) +
+        ' ' +
+        (depY + 16).toFixed(1) +
+        '"/></path>'
+      : '') +
+    '<rect x="' +
+    (depX + depW + 2).toFixed(1) +
+    '" y="' +
+    (depY + 6).toFixed(1) +
+    '" width="8" height="' +
+    (depH - 12).toFixed(1) +
+    '" rx="3" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>' +
+    '<rect x="' +
+    (depX + depW + 3.6).toFixed(1) +
+    '" y="' +
+    (depY + 14 + (1 - Math.min(1, Math.max(0, waterW / depW))) * 12).toFixed(1) +
+    '" width="4.8" height="' +
+    (depH - 20 - (1 - Math.min(1, Math.max(0, waterW / depW))) * 12).toFixed(1) +
+    '" rx="2.4" fill="#60a5fa" opacity="0.9"/>' +
+    '<line x1="' +
+    (depX + depW + 12).toFixed(1) +
+    '" y1="' +
+    (depY + 10).toFixed(1) +
+    '" x2="' +
+    (depX + depW + 15).toFixed(1) +
+    '" y2="' +
+    (depY + 10).toFixed(1) +
+    '" stroke="#94a3b8"/>' +
+    '<line x1="' +
+    (depX + depW + 12).toFixed(1) +
+    '" y1="' +
+    (depY + depH - 10).toFixed(1) +
+    '" x2="' +
+    (depX + depW + 15).toFixed(1) +
+    '" y2="' +
+    (depY + depH - 10).toFixed(1) +
+    '" stroke="#94a3b8"/>' +
     '<text x="' +
     cx.toFixed(1) +
     '" y="' +
