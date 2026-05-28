@@ -2484,10 +2484,10 @@
     );
   }
 
-  function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor) {
+  function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor, ta) {
     if (!tieneDifusor) return { defs: '', html: '' };
     if (typeof torreSvgDepositoAirDwc === 'function') {
-      return torreSvgDepositoAirDwc(depX, depY, depW, depH);
+      return torreSvgDepositoAirDwc(depX, depY, depW, depH, ta !== false);
     }
     return { defs: '', html: '' };
   }
@@ -2606,7 +2606,7 @@
           '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
       }
       body += tankFront(depXv, depYv, depWv, DEP_H, volPct, u, ta, true, true);
-      var airCorte = hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true);
+      var airCorte = hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true, ta);
       if (airCorte.defs) body = body.replace('</defs>', airCorte.defs + '</defs>');
       body += airCorte.html;
       body +=
@@ -2701,7 +2701,7 @@
     H = L.H;
     var rot = cfg._torreRotRad || 0;
     var equip = illoTorreEquipList(cfg);
-    var tieneDifusor = equip.indexOf('difusor') >= 0;
+    var tieneDifusor = !equip.length || equip.indexOf('difusor') >= 0;
     var tieneCalentador = equip.indexOf('calentador') >= 0;
     var volTankL =
       volMez != null && Number.isFinite(Number(volMez)) && volMez > 0
@@ -2709,26 +2709,6 @@
         : volCap != null && Number.isFinite(Number(volCap))
           ? Number(volCap) * 0.78
           : 20;
-    var tankPack = null;
-    try {
-      if (typeof nftSvgTankTorreStyle === 'function') {
-        tankPack = nftSvgTankTorreStyle(L.depX, L.depY, L.DEP_W, L.DEP_H, u + 'Tk', volTankL, {
-          animate: ta,
-        });
-      }
-    } catch (tankErr) {
-      try {
-        console.warn('hcIlloGenerarSVGTorre tank', tankErr);
-      } catch (_) {}
-      tankPack = null;
-    }
-    var extraDefs = '';
-    if (tankPack && tankPack.defs) extraDefs += tankPack.defs;
-    if (body.indexOf('</defs>') >= 0) {
-      body = body.replace('</defs>', extraDefs + '</defs>');
-    } else {
-      body = '<defs>' + extraDefs + '</defs>' + body;
-    }
     body += '<rect width="' + L.W + '" height="' + L.H + '" fill="url(#' + u + '-bg)"/>';
     body +=
       '<text x="' +
@@ -2779,24 +2759,47 @@
         f1(L.TORRE_RX + 4) +
         '" ry="' +
         f1(L.TORRE_RY + 3) +
-        '" fill="none" stroke="' +
-        HC_ILLO.lidHi +
-        '" stroke-width="1.2" stroke-dasharray="5 4" opacity="0.45"/>';
-      body +=
-        '<circle cx="' +
-        f1(L.CX) +
-        '" cy="' +
-        f1(cyN) +
-        '" r="10" fill="#cbd5e1" stroke="#475569" stroke-width="1.4"/>';
+        '" fill="rgba(132,204,22,0.06)" stroke="#84cc16" stroke-width="1.4" stroke-dasharray="5 4" opacity="0.72"/>';
       body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, L) + '</g>';
       body += hcIlloTorreNivelRotHint(L.CX, cyN, L.TORRE_RX);
     }
     body += '<ellipse cx="' + f1(L.CX) + '" cy="' + f1(L.depY + L.DEP_H + 8) + '" rx="' + f1(L.DEP_W * 0.44) + '" ry="6" fill="rgba(15,23,42,0.1)"/>';
-    if (tankPack && tankPack.html) {
-      body += tankPack.html;
+    var depBlock = { defs: '', html: '' };
+    if (typeof torreSvgDepositoCompleto === 'function') {
+      depBlock = torreSvgDepositoCompleto(L.depX, L.depY, L.DEP_W, L.DEP_H, volTankL, {
+        suf: u + 'Tk',
+        animate: ta,
+        capL: volCap,
+        mezL: volMez,
+        difusor: tieneDifusor,
+      });
+    } else if (typeof nftSvgTankTorreStyle === 'function') {
+      depBlock = nftSvgTankTorreStyle(L.depX, L.depY, L.DEP_W, L.DEP_H, u + 'Tk', volTankL, {
+        animate: ta,
+        capL: volCap,
+        mezL: volMez,
+      });
+      if (tieneDifusor && typeof torreSvgDepositoAirDwc === 'function') {
+        var airFb = torreSvgDepositoAirDwc(L.depX, L.depY, L.DEP_W, L.DEP_H, ta);
+        depBlock.defs += airFb.defs || '';
+        depBlock.html += airFb.html || '';
+      }
     } else {
-      body += tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, volPct, u, ta, false, tieneCalentador);
+      depBlock.html = tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, Math.max(0.55, volPct), u, ta, false, tieneCalentador);
+      if (tieneDifusor && typeof torreSvgDepositoAirDwc === 'function') {
+        var airFb2 = torreSvgDepositoAirDwc(L.depX, L.depY, L.DEP_W, L.DEP_H, ta);
+        depBlock.defs += airFb2.defs || '';
+        depBlock.html += airFb2.html || '';
+      }
     }
+    if (depBlock.defs) {
+      if (body.indexOf('</defs>') >= 0) {
+        body = body.replace('</defs>', depBlock.defs + '</defs>');
+      } else {
+        body = '<defs>' + depBlock.defs + '</defs>' + body;
+      }
+    }
+    body += depBlock.html || '';
     if (tieneCalentador) {
       body +=
         '<rect x="' +
@@ -2804,16 +2807,6 @@
         '" y="' +
         f1(L.depY + L.DEP_H - 36) +
         '" width="8" height="26" rx="4" fill="#f97316" stroke="#ea580c" stroke-width="1"/>';
-    }
-    try {
-      if (tieneDifusor) {
-        var airEsquema = hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, true);
-        body += airEsquema.html;
-      }
-    } catch (airErr) {
-      try {
-        console.warn('hcIlloGenerarSVGTorre air', airErr);
-      } catch (_) {}
     }
     body += '<line x1="' + f1(L.CX) + '" y1="' + f1(L.depY) + '" x2="' + f1(L.CX) + '" y2="' + f1(L.MARG_T + L.torH) + '" stroke="#0ea5e9" stroke-width="2.2" opacity="0.35"/>';
     if (typeof hcDiagramVolLabelSvg === 'function') {

@@ -75,7 +75,7 @@
       try {
         const illo = hcIlloGenerarSVGTorre();
         if (torreDiagramSvgLooksValid(illo) && illo.indexOf('hc-illo-torre') >= 0) {
-          return tagTorreScada(illo);
+          return illo;
         }
       } catch (e) {
         try {

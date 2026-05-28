@@ -674,11 +674,128 @@ function generarSVGRdwc() {
 
 
 /** Núcleo torre (cestas + depósito). Envoltorio SCADA: js/diagrams/torre/torre-diagram.js */
+
+/** Nivel visual del agua: mezcla en uso respecto a capacidad (≤ máx.). */
+function nftSvgTankFillPct(volL, opts) {
+  const o = opts || {};
+  const cap = Number(o.capL);
+  const mez = Number(o.mezL);
+  const v = Math.max(5, Number(volL) || 20);
+  if (Number.isFinite(cap) && cap > 0 && Number.isFinite(mez) && mez > 0) {
+    return Math.min(0.94, Math.max(0.5, mez / cap));
+  }
+  return 0.87;
+}
+
+/** Depósito torre: cuerpo claro, agua con clip y superficie elíptica (Sistema + asistente). */
+function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
+  const o = opts || {};
+  const Tg =
+    typeof HC_DIAG !== 'undefined' && HC_DIAG.torre
+      ? HC_DIAG.torre
+      : { depBody0: '#f8fafc', depBody1: '#e2e8f0', depAgua0: '#7dd3fc', depAgua1: '#0284c7', depAguaOp0: '0.82', depAguaOp1: '0.92' };
+  const gidBody = 'nftTkBody' + suf;
+  const gidAqua = 'nftTkAq' + suf;
+  const gidClip = 'nftTkClip' + suf;
+  const cx = tx + tankW / 2;
+  const vol = Math.max(5, parseInt(String(volL), 10) || 20);
+  const volPct = nftSvgTankFillPct(vol, o);
+  const aguaH = Math.round((tankH - 20) * volPct);
+  const aguaY = tankY + tankH - 10 - aguaH;
+  const aguaCol = '#0284c7';
+  const ta = o.animate !== false && typeof torreSvgAnimacionesActivas === 'function' && torreSvgAnimacionesActivas();
+  let defs = '';
+  defs +=
+    '<linearGradient id="' +
+    gidBody +
+    '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' +
+    Tg.depBody0 +
+    '"/><stop offset="100%" stop-color="' +
+    Tg.depBody1 +
+    '"/></linearGradient>';
+  defs +=
+    '<linearGradient id="' +
+    gidAqua +
+    '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' +
+    Tg.depAgua0 +
+    '" stop-opacity="' +
+    (Tg.depAguaOp0 || '0.82') +
+    '"/><stop offset="100%" stop-color="' +
+    Tg.depAgua1 +
+    '" stop-opacity="' +
+    (Tg.depAguaOp1 || '0.92') +
+    '"/></linearGradient>';
+  defs +=
+    '<clipPath id="' +
+    gidClip +
+    '"><rect x="' +
+    (tx + 3) +
+    '" y="' +
+    (tankY + 3) +
+    '" width="' +
+    (tankW - 6) +
+    '" height="' +
+    (tankH - 6) +
+    '" rx="10"/></clipPath>';
+  let html = '';
+  html +=
+    '<rect x="' +
+    tx +
+    '" y="' +
+    tankY +
+    '" width="' +
+    tankW +
+    '" height="' +
+    tankH +
+    '" rx="12" fill="url(#' +
+    gidBody +
+    ')" stroke="#94a3b8" stroke-width="1.2"/>';
+  html +=
+    '<rect x="' +
+    (tx + 3) +
+    '" y="' +
+    aguaY +
+    '" width="' +
+    (tankW - 6) +
+    '" height="' +
+    (aguaH + 7) +
+    '" fill="url(#' +
+    gidAqua +
+    ')" clip-path="url(#' +
+    gidClip +
+    ')" opacity="0.92">';
+  if (ta) {
+    html +=
+      '<animate attributeName="y" from="' +
+      (aguaY + 2) +
+      '" to="' +
+      (aguaY - 2) +
+      '" dur="2s" repeatCount="indefinite" direction="alternate"/>';
+  }
+  html += '</rect>';
+  html +=
+    '<ellipse cx="' +
+    cx +
+    '" cy="' +
+    aguaY +
+    '" rx="' +
+    (tankW - 16) / 2 +
+    '" ry="5" fill="' +
+    aguaCol +
+    '" opacity="0.3">';
+  if (ta) {
+    html +=
+      '<animate attributeName="ry" from="4" to="6" dur="1.5s" repeatCount="indefinite" direction="alternate"/>';
+  }
+  html += '</ellipse>';
+  return { defs: defs, html: html, volTextFill: aguaCol };
+}
+
 /**
  * Bomba DWC unificada (misma que NFT/DWC/RDWC) + manguera a piedra.
  * La bomba va a la derecha de las flechas de giro del depósito (no las tapa).
  */
-function torreSvgDepositoAirDwc(depX, depY, depW, depH) {
+function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate) {
   if (typeof dwcSvgAirPumpDraw !== 'function' && typeof dwcSvgAirPumpExternal !== 'function') {
     return { defs: '', html: '' };
   }
@@ -726,10 +843,87 @@ function torreSvgDepositoAirDwc(depX, depY, depW, depH) {
     piedraX.toFixed(1) +
     '" cy="' +
     piedraY.toFixed(1) +
-    '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/></g>';
+    '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>';
+  if (animate !== false) {
+    html += torreSvgAirBubbles(piedraX, piedraY, depY + 12);
+  }
+  html += '</g>';
   return { defs: '', html: html };
 }
-if (typeof window !== 'undefined') window.torreSvgDepositoAirDwc = torreSvgDepositoAirDwc;
+
+/** Burbujas desde la piedra difusora (mismo efecto que legacy / tankFront). */
+function torreSvgAirBubbles(cx, cy, waterTopY) {
+  const ta =
+    typeof torreSvgAnimacionesActivas === 'function' ? torreSvgAnimacionesActivas() : false;
+  let s = '';
+  const y0 = cy - 4;
+  const y1 = Math.max(waterTopY + 6, cy - 28);
+  for (let i = 0; i < 8; i++) {
+    const dx = ((i % 5) - 2) * 4.5;
+    const r = 1.3 + (i % 3) * 0.7;
+    const dur = (1.1 + i * 0.12).toFixed(2);
+    const delay = (i * 0.15).toFixed(2);
+    if (ta) {
+      s +=
+        '<circle cx="' +
+        (cx + dx).toFixed(1) +
+        '" cy="' +
+        y0.toFixed(1) +
+        '" r="' +
+        r +
+        '" fill="#93c5fd" stroke="#0ea5e9" stroke-width="0.6" opacity="0">' +
+        '<animate attributeName="cy" from="' +
+        y0.toFixed(1) +
+        '" to="' +
+        y1.toFixed(1) +
+        '" dur="' +
+        dur +
+        's" begin="' +
+        delay +
+        's" repeatCount="indefinite"/>' +
+        '<animate attributeName="opacity" values="0;0.85;0.85;0" dur="' +
+        dur +
+        's" begin="' +
+        delay +
+        's" repeatCount="indefinite"/></circle>';
+    } else {
+      s +=
+        '<circle cx="' +
+        (cx + dx).toFixed(1) +
+        '" cy="' +
+        y0.toFixed(1) +
+        '" r="' +
+        r +
+        '" fill="#93c5fd" stroke="#0ea5e9" stroke-width="0.6" opacity="0.55"/>';
+    }
+  }
+  return s;
+}
+
+function torreSvgDepositoCompleto(depX, depY, depW, depH, volL, opts) {
+  const o = opts || {};
+  let defs = '';
+  let html = '';
+  const pack = nftSvgTankTorreStyle(depX, depY, depW, depH, o.suf || 'Sys', volL, {
+    animate: o.animate !== false,
+    capL: o.capL,
+    mezL: o.mezL,
+  });
+  defs += pack.defs || '';
+  html += pack.html || '';
+  if (o.difusor !== false) {
+    const air = torreSvgDepositoAirDwc(depX, depY, depW, depH, o.animate !== false);
+    defs += air.defs || '';
+    html += air.html || '';
+  }
+  return { defs: defs, html: html };
+}
+if (typeof window !== 'undefined') {
+  window.nftSvgTankFillPct = nftSvgTankFillPct;
+  window.nftSvgTankTorreStyle = nftSvgTankTorreStyle;
+  window.torreSvgDepositoAirDwc = torreSvgDepositoAirDwc;
+  window.torreSvgDepositoCompleto = torreSvgDepositoCompleto;
+}
 
 function _buildTorreSvgLegacy() {
   // Usar configuración REAL de la torre activa
@@ -948,7 +1142,7 @@ function _buildTorreSvgLegacy() {
 
   // ── DIFUSOR DE AIRE (bomba DWC + manguera a piedra) ───────────────────────
   if (tieneDifusor) {
-    const airLeg = torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H);
+    const airLeg = torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H, ta);
     s += airLeg.html;
     if (ta) {
       const ax = DEP_X + Math.round(DEP_W * 0.55);
