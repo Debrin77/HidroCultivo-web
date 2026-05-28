@@ -2409,8 +2409,9 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     }
   }
 
+  const difusorWithOwnPumpMM = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
   let pumpLines = '';
-  {
+  if (!difusorWithOwnPumpMM) {
     const pumpScale = Math.max(0.82, Math.min(1.3, 0.9 + nTubosMesa * 0.012 + Math.max(0, nTiers - 1) * 0.04));
     const pumpW = 54 * pumpScale;
     const pumpH = 40 * pumpScale;
@@ -3301,8 +3302,9 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   }
 
+  const difusorWithOwnPumpEsc = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
   let pumpLines = '';
-  {
+  if (!difusorWithOwnPumpEsc) {
     const pumpScale = Math.max(0.82, Math.min(1.32, 0.9 + nTubosEscTotal * 0.013 + (car === 2 ? 0.06 : 0)));
     const pumpW = 54 * pumpScale;
     const pumpH = 40 * pumpScale;
