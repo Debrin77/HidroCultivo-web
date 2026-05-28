@@ -2527,7 +2527,7 @@ function updateTorreBuilder() {
     ringLabels +
     '<text x="' +
     cx.toFixed(1) +
-    '" y="154" text-anchor="middle" font-family="Inconsolata,monospace" font-size="11" font-weight="700" fill="#64748b">' +
+    '" y="148" text-anchor="middle" font-family="Inconsolata,monospace" font-size="11" font-weight="700" fill="#64748b">' +
     C +
     ' cestas en anillo · N' +
     (selNivel + 1) +
@@ -2535,11 +2535,11 @@ function updateTorreBuilder() {
     '<line x1="' +
     (cx - topR - 20).toFixed(1) +
     '" y1="' +
-    (topCy + topR * 0.9).toFixed(1) +
+    (topCy + topR * 0.9 + 8).toFixed(1) +
     '" x2="' +
     (cx + topR + 20).toFixed(1) +
     '" y2="' +
-    (topCy + topR * 0.9).toFixed(1) +
+    (topCy + topR * 0.9 + 8).toFixed(1) +
     '" stroke="#d1d5db" stroke-dasharray="3 3"/>' +
     '<line x1="22" y1="170" x2="' +
     (W - 22) +
@@ -2622,41 +2622,41 @@ function updateTorreBuilder() {
     ' cm</text>' +
     (hasAir
       ? '<g><rect x="' +
-        (depX + depW + 16).toFixed(1) +
+        (depX + depW + 12).toFixed(1) +
         '" y="' +
-        (depY + 6).toFixed(1) +
+        (depY + 14).toFixed(1) +
         '" width="24" height="15" rx="3.5" fill="#37474f" stroke="#1e293b" stroke-width="1.2"/>' +
         '<ellipse cx="' +
-        (depX + depW + 28).toFixed(1) +
+        (depX + depW + 24).toFixed(1) +
         '" cy="' +
-        (depY + 6).toFixed(1) +
+        (depY + 14).toFixed(1) +
         '" rx="8.8" ry="5.6" fill="#ff9800" stroke="#e65100" stroke-width="1.1"/>' +
         '<path d="M ' +
-        (depX + depW + 16).toFixed(1) +
+        (depX + depW + 12).toFixed(1) +
         ' ' +
-        (depY + 13).toFixed(1) +
+        (depY + 22).toFixed(1) +
         ' C ' +
         (depX + depW - 4).toFixed(1) +
         ' ' +
-        (depY + 12).toFixed(1) +
+        (depY + 22).toFixed(1) +
         ' ' +
         (depX + depW - 16).toFixed(1) +
         ' ' +
-        (depY + 11).toFixed(1) +
+        (depY + 21).toFixed(1) +
         ' ' +
         (depX + depW - 26).toFixed(1) +
         ' ' +
-        (depY + 11).toFixed(1) +
+        (depY + 21).toFixed(1) +
         '" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>' +
         '<ellipse cx="' +
         (depX + depW - 28).toFixed(1) +
         '" cy="' +
-        (depY + 11).toFixed(1) +
+        (depY + 21).toFixed(1) +
         '" rx="7.2" ry="4.2" fill="#64748b" stroke="#475569" stroke-width="1"/>' +
         '<text x="' +
-        (depX + depW + 28).toFixed(1) +
+        (depX + depW + 24).toFixed(1) +
         '" y="' +
-        (depY + 29).toFixed(1) +
+        (depY + 40).toFixed(1) +
         '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8.5" font-weight="700" fill="#64748b">AIRE</text></g>'
       : '') +
     (hasHeat
