@@ -450,11 +450,11 @@
       const rimW = 17;
       const rimH = 4.4;
       const bodyTopW = 12.5;
-      const bodyBotW = 9;
-      const bodyH = 10.5;
+      const bodyBotW = 8.2;
+      const bodyH = 16.5;
       for (let bi = 0; bi < basketN; bi++) {
         const bx = waterX + waterW * ((bi + 0.5) / basketN);
-        const rimY = raftY - 1.2;
+        const rimY = raftY + 2.2;
         const bodyY = rimY + rimH * 0.6;
         const bodyBottom = bodyY + bodyH;
         s +=
