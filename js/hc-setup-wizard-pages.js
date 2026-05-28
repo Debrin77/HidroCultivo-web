@@ -2432,6 +2432,12 @@ function updateTorreBuilder() {
   const depH = 44;
   const waterW = Math.max(70, Math.min(depW - 12, 68 + volSlider * 1.1));
   const volLbl = Number.isFinite(volSlider) ? Math.round(volSlider) + ' L' : '—';
+  const animPreview =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? false
+      : true;
   let ringPts = '';
   let ringLabels = '';
   for (let i = 0; i < C; i++) {
@@ -2493,6 +2499,8 @@ function updateTorreBuilder() {
     H +
     '" width="100%" role="img" aria-label="Torre: nivel seleccionado y sección transversal">' +
     '<defs>' +
+    '<linearGradient id="tpTopBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef8f1"/><stop offset="100%" stop-color="#f7fbf8"/></linearGradient>' +
+    '<linearGradient id="tpBotBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f4f6f8"/><stop offset="100%" stop-color="#eef2f6"/></linearGradient>' +
     '<linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#334155"/></linearGradient>' +
     '<linearGradient id="tpDep" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>' +
     '</defs>' +
@@ -2501,6 +2509,14 @@ function updateTorreBuilder() {
     '" height="' +
     (H - 2) +
     '" rx="18" fill="rgba(255,255,255,0.72)" stroke="#cbd5e1" stroke-width="1.2"/>' +
+    '<rect x="6" y="6" width="' +
+    (W - 12) +
+    '" height="160" rx="14" fill="url(#tpTopBg)" opacity="0.9"/>' +
+    '<rect x="6" y="174" width="' +
+    (W - 12) +
+    '" height="' +
+    (H - 180) +
+    '" rx="0" fill="url(#tpBotBg)" opacity="0.95"/>' +
     '<text x="' +
     cx.toFixed(1) +
     '" y="20" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="11" font-weight="700" fill="#64748b">NIVEL SELECCIONADO</text>' +
@@ -2554,6 +2570,27 @@ function updateTorreBuilder() {
     '" height="' +
     (sectionBottom - sectionTop).toFixed(1) +
     '" rx="7" fill="url(#tpPipe)" stroke="#0f2744" stroke-width="1.3"/>' +
+    '<path d="M ' +
+    towerX.toFixed(1) +
+    ' ' +
+    (depY + 10).toFixed(1) +
+    ' L ' +
+    towerX.toFixed(1) +
+    ' ' +
+    (sectionTop + 8).toFixed(1) +
+    '" fill="none" stroke="#60a5fa" stroke-width="2.2" opacity="0.75"/>' +
+    (animPreview
+      ? '<path d="M ' +
+        towerX.toFixed(1) +
+        ' ' +
+        (depY + 10).toFixed(1) +
+        ' L ' +
+        towerX.toFixed(1) +
+        ' ' +
+        (sectionTop + 8).toFixed(1) +
+        '" fill="none" stroke="#dbeafe" stroke-width="1.3" stroke-dasharray="7 6" opacity="0.95">' +
+        '<animate attributeName="stroke-dashoffset" from="18" to="0" dur="1.1s" repeatCount="indefinite"/></path>'
+      : '') +
     sectionRows +
     '<rect x="' +
     depX.toFixed(1) +
