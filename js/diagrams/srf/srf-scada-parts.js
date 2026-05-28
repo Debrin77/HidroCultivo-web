@@ -128,29 +128,17 @@
 
   /** Brida superior del estanque (la balsa actúa como tapadera). */
   function frontalTankLidSeat(x, y, w) {
-    const T = tokens();
     return (
       '<g class="srf-frontal-lid-seat" aria-hidden="true">' +
       '<line x1="' +
       f1(x + 2) +
       '" y1="' +
-      f1(y) +
+      f1(y + 2.2) +
       '" x2="' +
       f1(x + w - 2) +
       '" y2="' +
-      f1(y) +
-      '" stroke="' +
-      (T.tank || '#475569') +
-      '" stroke-width="2.2" stroke-linecap="round"/>' +
-      '<line x1="' +
-      f1(x + 2) +
-      '" y1="' +
-      f1(y + 2.5) +
-      '" x2="' +
-      f1(x + w - 2) +
-      '" y2="' +
-      f1(y + 2.5) +
-      '" stroke="#94a3b8" stroke-width="0.9" stroke-linecap="round" opacity="0.85"/>' +
+      f1(y + 2.2) +
+      '" stroke="#94a3b8" stroke-width="0.9" stroke-linecap="round" opacity="0.65"/>' +
       '</g>'
     );
   }

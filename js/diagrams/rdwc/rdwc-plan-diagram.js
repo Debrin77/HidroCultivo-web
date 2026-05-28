@@ -197,10 +197,17 @@
     return o;
   }
 
-  function rdwcAirPumpAnchor(cx, tankCy, tankR, diagramW, preferSide) {
+  function rdwcAirPumpAnchor(cx, tankCy, tankR, diagramW, preferSide, opts) {
+    opts = opts || {};
+    const sites = Math.max(0, parseInt(String(opts.sites || 0), 10) || 0);
+    const rows = Math.max(1, parseInt(String(opts.rows || 1), 10) || 1);
     const onLid = !preferSide && diagramW >= 380;
     const px = onLid ? cx : cx + tankR + 20;
-    const py = onLid ? tankCy - tankR * 0.52 : tankCy - tankR * 0.15;
+    let py = onLid ? tankCy - tankR * 0.52 : tankCy - tankR * 0.15;
+    if (!onLid && rows === 2 && sites >= 10) {
+      // En 10+ cubos con 2 filas, se eleva la bomba lateral para no solaparse con el reservorio.
+      py = tankCy - tankR * 0.42;
+    }
     return {
       onLid: onLid,
       px: px,
@@ -305,8 +312,11 @@
   }
 
   /** Bomba de aire sobre la tapa del depósito (o al lado si no cabe). */
-  function rdwcPlanAirPumpOnTank(cx, tankCy, tankR, lpm, diagramW, preferSide) {
-    const a = rdwcAirPumpAnchor(cx, tankCy, tankR, diagramW, preferSide);
+  function rdwcPlanAirPumpOnTank(cx, tankCy, tankR, lpm, diagramW, preferSide, dist) {
+    const a = rdwcAirPumpAnchor(cx, tankCy, tankR, diagramW, preferSide, {
+      sites: dist && dist.sites,
+      rows: dist && dist.rows,
+    });
     const px = a.px;
     const py = a.py;
     const w = 56;
@@ -732,7 +742,10 @@
     const trunkX = cx;
     const gridLeft = cx - gridW / 2;
     const gridRight = cx + gridW / 2;
-    const airPumpAnchor = rdwcAirPumpAnchor(cx, tankCy, tankR, W, preferSideAirPump);
+    const airPumpAnchor = rdwcAirPumpAnchor(cx, tankCy, tankR, W, preferSideAirPump, {
+      sites: dist.sites,
+      rows: dist.rows,
+    });
 
     const byCol = {};
     for (let pi = 0; pi < positions.length; pi++) {
@@ -763,7 +776,7 @@
 
     s += '<g class="rdwc-plan-vessels">';
     s += rdwcPlanRoundTank(cx, tankCy, tankR, pct, volLbl);
-    s += rdwcPlanAirPumpOnTank(cx, tankCy, tankR, airLpm, W, preferSideAirPump);
+    s += rdwcPlanAirPumpOnTank(cx, tankCy, tankR, airLpm, W, preferSideAirPump, dist);
 
     for (let pi = 0; pi < positions.length; pi++) {
       const P = positions[pi];

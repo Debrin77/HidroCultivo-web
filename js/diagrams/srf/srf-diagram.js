@@ -420,12 +420,12 @@
         '<line x1="' +
         tankX.toFixed(1) +
         '" y1="' +
-        lidSeatY.toFixed(1) +
+        (lidSeatY + 2.2).toFixed(1) +
         '" x2="' +
         (tankX + tankW).toFixed(1) +
         '" y2="' +
-        lidSeatY.toFixed(1) +
-        '" stroke="#475569" stroke-width="2" stroke-linecap="round" aria-hidden="true"/>';
+        (lidSeatY + 2.2).toFixed(1) +
+        '" stroke="#94a3b8" stroke-width="0.9" stroke-linecap="round" opacity="0.65" aria-hidden="true"/>';
     }
     if (SP && typeof SP.frontalRaftLid === 'function') {
       s += SP.frontalRaftLid(waterX, raftY, waterW, raftH, T.raftFrontStroke || '#0284c7');
