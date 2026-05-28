@@ -281,8 +281,10 @@ function generarPasosNutriente() {
       ? 'pH− Campeador Down'
       : 'pH−';
   const pasos  = [];
-  const esDwcNut = cfg.tipoInstalacion === 'dwc';
-  const esRdwcNut = cfg.tipoInstalacion === 'rdwc';
+  const tipoNut =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  const esDwcNut = tipoNut === 'dwc';
+  const esRdwcNut = tipoNut === 'rdwc';
   const esDwcKratky =
     esDwcNut && typeof dwcGetModoCultivo === 'function' && dwcGetModoCultivo(cfg) === 'kratky';
   const faPl = typeof getFactorArranquePlantulaHidro === 'function' ? getFactorArranquePlantulaHidro() : 1;
@@ -477,10 +479,12 @@ function construirTextoChecklistPreliminar() {
       p1Partes.push(Math.max(0.5, Math.round((ref.mlPorLitro[i] || 0) * 5 * 10) / 10) + sufP + ' ' + (orden[i] || ('Parte ' + (i + 1))));
     }
   }
-  const esNft = cfg.tipoInstalacion === 'nft';
-  const esDwc = cfg.tipoInstalacion === 'dwc';
-  const esRdwc = cfg.tipoInstalacion === 'rdwc';
-  const esSrf = cfg.tipoInstalacion === 'srf';
+  const tipoPre =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  const esNft = tipoPre === 'nft';
+  const esDwc = tipoPre === 'dwc';
+  const esRdwc = tipoPre === 'rdwc';
+  const esSrf = tipoPre === 'srf';
   const esSrfKratky =
     esSrf && typeof srfNormalizeOxigenacionModo === 'function' && srfNormalizeOxigenacionModo(cfg.srfOxigenacionModo) === 'kratky';
   const esDwcK =
@@ -490,6 +494,9 @@ function construirTextoChecklistPreliminar() {
     p1Partes.join(' + ') + '. Remover bien.' +
     (esNft ? ' En NFT, con esa mezcla humedece copas o el arranque de cada canal antes del paro prolongado.' : '') +
     (esDwc ? ' En DWC, humedece coronas/net cups o el arranque de cada maceta antes del vaciado prolongado.' : '') +
+    (esRdwc
+      ? ' En RDWC, humedece cada net cup o corona en los cubos antes de vaciar el circuito; prepara la mezcla provisional en el <strong>depósito de control</strong> con la recirculación en marcha.'
+      : '') +
     (esSrf ? ' En SRF, humedece net cups o coronas antes de llenar el estanque y colocar la balsa.' : '');
   const stockExtra = orden.slice(0, partes).join(', ');
   const phStockTxt =
@@ -501,6 +508,7 @@ function construirTextoChecklistPreliminar() {
     ', ' + stockExtra + ', ' + phStockTxt + ', agua oxigenada 3%, esponja';
   if (esNft) p2 += ', cepillo suave o tubo flexible para canales, comprobación de pendiente';
   if (esDwc && !esDwcK) p2 += ', repuestos de difusor o piedra porosa, manguera de aire';
+  if (esRdwc) p2 += ', piedras de aire o difusores por cubo, manguera de retorno, comprobación de flujo en control';
   if (esSrf && !esSrfKratky) p2 += ', difusor o piedra porosa, manguera de aire';
   const ecO = getECOptimaTorre();
   const provMs = Math.min(1.2, Math.max(0.35, ((ecO.min + ecO.max) / 2000) * 0.06));
@@ -514,7 +522,8 @@ function construirTextoChecklistPreliminar() {
 function checklistInstalacionCompletaParaRecarga() {
   const cfg = state.configTorre;
   if (!cfg || typeof cfg !== 'object') return false;
-  const tipo = cfg.tipoInstalacion;
+  const tipo =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
   const vol =
     typeof litrosDepositoParaChecklist === 'function'
       ? litrosDepositoParaChecklist(cfg)
@@ -533,8 +542,8 @@ function checklistInstalacionCompletaParaRecarga() {
     getNivelesActivos().some(n => (state.torre[n] || []).some(c => c && c.variedad));
   if (hayUso) return true;
 
-  // DWC: depósito y nutriente ya guardados en Cultivo e instalación (sin medición previa ni plantas) — permitir checklist
-  if (cfg.tipoInstalacion === 'dwc' || cfg.tipoInstalacion === 'rdwc') {
+  // DWC/RDWC: depósito y nutriente ya guardados en Cultivo e instalación (sin medición previa ni plantas) — permitir checklist
+  if (tipo === 'dwc' || tipo === 'rdwc') {
     const cap =
       typeof getDwcCapacidadLitrosDesdeConfig === 'function'
         ? getDwcCapacidadLitrosDesdeConfig(cfg)
@@ -545,7 +554,7 @@ function checklistInstalacionCompletaParaRecarga() {
       (Number.isFinite(volManual) && volManual >= 1 && volManual <= 800);
     if (dwcVolOk) return true;
   }
-  if (cfg.tipoInstalacion === 'srf') {
+  if (tipo === 'srf') {
     const segS =
       typeof srfVolumenSeguroLitrosDesdeConfig === 'function' ? srfVolumenSeguroLitrosDesdeConfig(cfg) : null;
     if (segS != null && segS >= 1) return true;

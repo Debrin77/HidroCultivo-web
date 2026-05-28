@@ -173,13 +173,13 @@ function getVolumenDepositoMaxLitros(cfg) {
       if (cap != null && cap > 0) return Math.min(5000, Math.max(1, Math.round(cap * 10) / 10));
     }
   }
-  if (cfg.tipoInstalacion === 'dwc' && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
+  if (tipoNorm === 'dwc' && typeof getDwcVolumenSeguroMaxLitrosDesdeConfig === 'function') {
     const vSafe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
     if (vSafe != null && vSafe > 0) return Math.min(800, Math.max(1, Math.round(vSafe * 10) / 10));
   }
   const v = Number(cfg.volDeposito);
   if (Number.isFinite(v) && v > 0) return Math.min(800, Math.max(1, Math.round(v * 10) / 10));
-  if (cfg.tipoInstalacion === 'dwc' && typeof getDwcCapacidadLitrosDesdeConfig === 'function') {
+  if (tipoNorm === 'dwc' && typeof getDwcCapacidadLitrosDesdeConfig === 'function') {
     const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
     if (cap != null && cap > 0) return Math.min(800, Math.max(1, Math.round(cap * 10) / 10));
   }

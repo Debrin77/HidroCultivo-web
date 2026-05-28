@@ -2079,6 +2079,24 @@ function nftGetObjetivoCultivo(cfg) {
   return mk === 'mini' ? 'baby' : 'final';
 }
 
+/** Ajuste de rango EC por objetivo baby/final en NFT (misma lógica orientativa que torre/DWC). */
+function nftAplicarObjetivoEcRango(ecRange, cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  if (tipoInstalacionNormalizado(c) !== 'nft') return ecRange;
+  const baseMin = Number(ecRange && ecRange.min);
+  const baseMax = Number(ecRange && ecRange.max);
+  if (!Number.isFinite(baseMin) || !Number.isFinite(baseMax)) return ecRange;
+  const objRaw =
+    objetivo != null
+      ? objetivo
+      : (typeof nftGetObjetivoCultivo === 'function' ? nftGetObjetivoCultivo(c) : 'final');
+  const obj = torreNormalizeObjetivoCultivo(objRaw);
+  const adj = torreGetObjetivoAjustes(c, obj);
+  const minAdj = Math.max(350, Math.round(baseMin * adj.ecMult));
+  const maxAdj = Math.max(minAdj + 80, Math.round(baseMax * adj.ecMult));
+  return { min: minAdj, max: maxAdj };
+}
+
 function nftGetObjetivoSpec(objetivo) {
   const k = nftNormalizeObjetivoCultivo(objetivo);
   if (k === 'baby') {

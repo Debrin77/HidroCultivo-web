@@ -24,7 +24,9 @@ function getNutrienteTorre() {
 function aplicarAjusteEcObjetivoPorInstalacion(ecRange, cfg) {
   let r = ecRange;
   if (typeof torreAplicarObjetivoEcRango === 'function') r = torreAplicarObjetivoEcRango(r, cfg);
+  if (typeof nftAplicarObjetivoEcRango === 'function') r = nftAplicarObjetivoEcRango(r, cfg);
   if (typeof dwcAplicarObjetivoEcRango === 'function') r = dwcAplicarObjetivoEcRango(r, cfg);
+  if (typeof srfAplicarObjetivoEcRango === 'function') r = srfAplicarObjetivoEcRango(r, cfg);
   return r;
 }
 
@@ -1199,7 +1201,12 @@ function getSetupECObjetivo() {
     // Sin cultivos → usar EC del nutriente
     const nut = NUTRIENTES_DB.find(n => n.id === setupNutriente) || NUTRIENTES_DB[0];
     let out = { min: nut.ecObjetivo?.[0] || 900, max: nut.ecObjetivo?.[1] || 1400, fuente: 'nutriente' };
-    if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+    if (
+      setupTipoInstalacion === 'torre' ||
+      setupTipoInstalacion === 'dwc' ||
+      setupTipoInstalacion === 'nft' ||
+      setupTipoInstalacion === 'srf'
+    ) {
       const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
       out = { ...out, min: adj.min, max: adj.max };
     }
@@ -1215,7 +1222,12 @@ function getSetupECObjetivo() {
   });
   if (rangos.length === 0) {
     let out = { min: 900, max: 1400, fuente: 'default' };
-    if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+    if (
+      setupTipoInstalacion === 'torre' ||
+      setupTipoInstalacion === 'dwc' ||
+      setupTipoInstalacion === 'nft' ||
+      setupTipoInstalacion === 'srf'
+    ) {
       const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
       out = { ...out, min: adj.min, max: adj.max };
     }
@@ -1225,7 +1237,12 @@ function getSetupECObjetivo() {
   const ecMax = Math.min(...rangos.map(r => r.max));
   if (ecMax >= ecMin + 100) {
     let out = { min: ecMin, max: ecMax, fuente: 'cultivos' };
-    if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+    if (
+      setupTipoInstalacion === 'torre' ||
+      setupTipoInstalacion === 'dwc' ||
+      setupTipoInstalacion === 'nft' ||
+      setupTipoInstalacion === 'srf'
+    ) {
       const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
       out = { ...out, min: adj.min, max: adj.max };
     }
@@ -1235,7 +1252,12 @@ function getSetupECObjetivo() {
   const avgMin = Math.round(rangos.reduce((s,r) => s+r.min,0) / rangos.length);
   const avgMax = Math.round(rangos.reduce((s,r) => s+r.max,0) / rangos.length);
   let out = { min: avgMin, max: avgMax, fuente: 'promedio', advertencia: true };
-  if (setupTipoInstalacion === 'torre' || setupTipoInstalacion === 'dwc') {
+  if (
+    setupTipoInstalacion === 'torre' ||
+    setupTipoInstalacion === 'dwc' ||
+    setupTipoInstalacion === 'nft' ||
+    setupTipoInstalacion === 'srf'
+  ) {
     const adj = aplicarAjusteEcObjetivoPorInstalacion(out, state.configTorre || {});
     out = { ...out, min: adj.min, max: adj.max };
   }

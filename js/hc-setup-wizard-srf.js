@@ -215,6 +215,39 @@ function srfNormalizeObjetivoCultivo(raw) {
   return v === 'baby' || v === 'baby_leaf' || v === 'micro' ? 'baby' : 'final';
 }
 
+function srfGetObjetivoCultivo(cfg) {
+  const c = cfg || state.configTorre || {};
+  if (c.srfObjetivoCultivo) return srfNormalizeObjetivoCultivo(c.srfObjetivoCultivo);
+  if (c.torreObjetivoCultivo && typeof torreNormalizeObjetivoCultivo === 'function') {
+    return torreNormalizeObjetivoCultivo(c.torreObjetivoCultivo);
+  }
+  return 'final';
+}
+
+/** Ajuste de rango EC por objetivo baby/final en SRF (misma lógica orientativa que torre/DWC). */
+function srfAplicarObjetivoEcRango(ecRange, cfg, objetivo) {
+  const c = cfg || state.configTorre || {};
+  if (typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(c) !== 'srf' : c.tipoInstalacion !== 'srf') {
+    return ecRange;
+  }
+  const baseMin = Number(ecRange && ecRange.min);
+  const baseMax = Number(ecRange && ecRange.max);
+  if (!Number.isFinite(baseMin) || !Number.isFinite(baseMax)) return ecRange;
+  const objRaw =
+    objetivo != null
+      ? objetivo
+      : (typeof srfGetObjetivoCultivo === 'function' ? srfGetObjetivoCultivo(c) : 'final');
+  const obj =
+    typeof torreNormalizeObjetivoCultivo === 'function'
+      ? torreNormalizeObjetivoCultivo(objRaw)
+      : srfNormalizeObjetivoCultivo(objRaw);
+  const adj =
+    typeof torreGetObjetivoAjustes === 'function' ? torreGetObjetivoAjustes(c, obj) : { ecMult: obj === 'baby' ? 0.88 : 1 };
+  const minAdj = Math.max(350, Math.round(baseMin * adj.ecMult));
+  const maxAdj = Math.max(minAdj + 80, Math.round(baseMax * adj.ecMult));
+  return { min: minAdj, max: maxAdj };
+}
+
 /** Instalación nueva en asistente: sin heredar otra torre activa. */
 function hcFreshSrfSetupDefaults() {
   return { tipoInstalacion: 'srf', srfOxigenacionModo: 'aireador', srfObjetivoCultivo: 'final' };

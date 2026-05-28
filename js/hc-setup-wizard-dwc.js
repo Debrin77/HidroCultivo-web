@@ -705,7 +705,7 @@ function litrosDepositoParaChecklist(cfg) {
     const vCtl = Number(cfg.rdwcControlVolL);
     if (Number.isFinite(vCtl) && vCtl >= 1 && vCtl <= 800) return Math.round(vCtl * 10) / 10;
   }
-  if (cfg.tipoInstalacion === 'dwc') {
+  if (tipoNorm === 'dwc') {
     const cap = getDwcCapacidadLitrosDesdeConfig(cfg);
     if (cap != null && cap >= 1 && cap <= 800) return cap;
   }
