@@ -248,10 +248,18 @@ function setTorreAnimSuaves(on) {
 function aplicarVistaTorreUI() {
   const lista = state.configTorre?.torreVistaModo === 'lista';
   const esNftSwipe = state.configTorre?.tipoInstalacion === 'nft';
+  const esTorre =
+    state.configTorre?.tipoInstalacion !== 'nft' &&
+    state.configTorre?.tipoInstalacion !== 'dwc' &&
+    state.configTorre?.tipoInstalacion !== 'rdwc' &&
+    state.configTorre?.tipoInstalacion !== 'srf';
+  const subVista = state.configTorre?.torreDiagramaVista || 'esquema';
   const w = document.getElementById('torreSVGWrap');
   const lv = document.getElementById('torreListaVista');
   const bE = document.getElementById('btnTorreVistaEsquema');
   const bL = document.getElementById('btnTorreVistaLista');
+  const bC = document.getElementById('btnTorreDiagCorte');
+  const bF = document.getElementById('btnTorreDiagFlujo');
   const swipe = document.getElementById('torreSwipeHint');
   const nftHint = document.getElementById('torreNftDiagramHint');
   let swipeHidden = false;
@@ -276,11 +284,30 @@ function aplicarVistaTorreUI() {
     bL.classList.toggle('active', lista);
     bL.setAttribute('aria-pressed', lista ? 'true' : 'false');
   }
+  if (bC) {
+    bC.style.display = !lista && esTorre ? '' : 'none';
+    bC.classList.toggle('active', !lista && esTorre && subVista === 'corte');
+    bC.setAttribute('aria-pressed', !lista && esTorre && subVista === 'corte' ? 'true' : 'false');
+  }
+  if (bF) {
+    bF.style.display = !lista && esTorre ? '' : 'none';
+    bF.classList.toggle('active', !lista && esTorre && subVista === 'flujo');
+    bF.setAttribute('aria-pressed', !lista && esTorre && subVista === 'flujo' ? 'true' : 'false');
+  }
 }
 
 function setTorreVistaModo(modo) {
   if (!state.configTorre) state.configTorre = {};
   state.configTorre.torreVistaModo = modo === 'lista' ? 'lista' : 'esquema';
+  saveState();
+  renderTorre();
+}
+
+function setTorreDiagramaVista(vista) {
+  if (!state.configTorre) state.configTorre = {};
+  const v = vista === 'corte' || vista === 'flujo' ? vista : 'esquema';
+  state.configTorre.torreDiagramaVista = v;
+  state.configTorre.torreVistaModo = 'esquema';
   saveState();
   renderTorre();
 }
@@ -1887,7 +1914,7 @@ function actualizarChromePanelEsquemaPorTipo() {
         '<strong>RDWC</strong>: <strong>recirculación continua</strong> (envío/retorno), aireación principal en los <strong>módulos/cubos</strong> y apoyo opcional en el depósito de control. Fase del cultivo <strong>encima</strong> de cada módulo. <strong>Toca módulo</strong> o <strong>Lista</strong>.';
     } else {
       intro.innerHTML =
-        '<strong>Torre</strong> (maqueta): <strong>flechas o deslizar</strong> para girar; <strong>Lista</strong> para ver todas las cestas.';
+        '<strong>Torre</strong>: usa <strong>Corte</strong> o <strong>Flujo</strong> para lectura técnica, <strong>Esquema</strong> para la maqueta giratoria y <strong>Lista</strong> para repasar todas las cestas.';
     }
   }
   const leg = document.getElementById('torreDiagramLegend');

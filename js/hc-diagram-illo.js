@@ -2344,13 +2344,48 @@
     return svgWrap('rdwc-svg-diagram hc-illo-rdwc', W, tankY + 120, u + '-title', 'RDWC ' + sites + ' sitios', body);
   };
 
+  function torreAllBasketsPanel(u, cfg, x0, y0, nNiv, nCes, stepX, stepY, rx, ry) {
+    var body = '';
+    for (var n = 0; n < nNiv; n++) {
+      var y = y0 + n * stepY;
+      body +=
+        '<text x="' +
+        f1(x0 - 24) +
+        '" y="' +
+        f1(y + 4) +
+        '" text-anchor="end" font-family="Syne,sans-serif" font-size="11" font-weight="800" fill="' +
+        HC_ILLO.inkSoft +
+        '">N' +
+        (n + 1) +
+        '</text>';
+      for (var c = 0; c < nCes; c++) {
+        var x = x0 + c * stepX;
+        body += maceta({
+          n: n,
+          c: c,
+          cx: x,
+          cy: y,
+          rx: rx,
+          ry: ry,
+          uid: u,
+          cfg: cfg,
+          topView: true,
+          extraClass: 'torre-maceta torre-maceta--panel',
+          label: 'Nivel ' + (n + 1) + ', cesta ' + (c + 1),
+        });
+      }
+    }
+    return body;
+  }
+
   window.hcIlloGenerarSVGTorre = function () {
     /* No llamar buildTorreDiagramSvg: torre-diagram.js ya delega aquí (bucle infinito). */
     var cfg = (typeof state !== 'undefined' ? state.configTorre : {}) || {};
     var numNiveles = cfg.numNiveles || 5;
     var numCestas = cfg.numCestas || 5;
     var u = uid('torre');
-    var W = 380;
+    var vista = cfg.torreDiagramaVista || 'esquema';
+    var W = vista === 'esquema' ? 380 : 560;
     var CX = W / 2;
     var NIVEL_H = 58;
     var GAP = 12;
@@ -2364,6 +2399,152 @@
     var volPct = volCap > 0 && volMez > 0 ? Math.min(1, volMez / volCap) : 0.65;
     var body = defsBlock(u);
     body += '<rect width="' + W + '" height="' + H + '" fill="url(#' + u + '-bg)"/>';
+    if (vista === 'corte' || vista === 'flujo') {
+      var isFlujo = vista === 'flujo';
+      var shellX = 56;
+      var shellW = 168;
+      var headY = MARG_T - 8;
+      var depYv = MARG_T + torH + 24;
+      var depXv = 40;
+      var depWv = 220;
+      body +=
+        '<text x="' +
+        f1(W / 2) +
+        '" y="26" text-anchor="middle" font-family="Syne,sans-serif" font-size="16" font-weight="900" fill="' +
+        HC_ILLO.ink +
+        '">Torre vertical · vista ' +
+        esc(vista) +
+        '</text>';
+      body +=
+        '<rect x="' +
+        f1(shellX) +
+        '" y="' +
+        f1(MARG_T) +
+        '" width="' +
+        f1(shellW) +
+        '" height="' +
+        f1(torH) +
+        '" rx="20" fill="rgba(255,255,255,0.55)" stroke="#94a3b8" stroke-width="1.4"/>';
+      body +=
+        '<rect x="' +
+        f1(shellX + shellW / 2 - 8) +
+        '" y="' +
+        f1(MARG_T + 12) +
+        '" width="16" height="' +
+        f1(torH - 24) +
+        '" rx="7" fill="#0ea5e9" opacity="' +
+        (isFlujo ? '0.85' : '0.45') +
+        '" stroke="#0f2744" stroke-width="1.1"/>';
+      body +=
+        '<ellipse cx="' +
+        f1(shellX + shellW / 2) +
+        '" cy="' +
+        f1(headY + 8) +
+        '" rx="26" ry="10" fill="#22c55e" stroke="#14532d" stroke-width="1.4"/>';
+      for (var nl = 0; nl < numNiveles; nl++) {
+        var yL = MARG_T + nl * (NIVEL_H + GAP) + NIVEL_H * 0.5;
+        body +=
+          '<line x1="' +
+          f1(shellX + 12) +
+          '" y1="' +
+          f1(yL) +
+          '" x2="' +
+          f1(shellX + shellW - 12) +
+          '" y2="' +
+          f1(yL) +
+          '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
+      }
+      body += tankFront(depXv, depYv, depWv, DEP_H, volPct, u, ta, true, true);
+      var pumpX = depXv + depWv + 24;
+      var pumpY = depYv + 10;
+      body += airPump(pumpX, pumpY, 44, 30, u);
+      body +=
+        '<path d="M ' +
+        f1(depXv + depWv - 20) +
+        ' ' +
+        f1(depYv + 12) +
+        ' L ' +
+        f1(shellX + shellW / 2) +
+        ' ' +
+        f1(depYv + 12) +
+        ' L ' +
+        f1(shellX + shellW / 2) +
+        ' ' +
+        f1(headY + 8) +
+        '" fill="none" stroke="#0ea5e9" stroke-width="' +
+        (isFlujo ? '3.6' : '2.6') +
+        '" stroke-linecap="round" opacity="0.92"/>';
+      body +=
+        '<path d="M ' +
+        f1(shellX + shellW - 18) +
+        ' ' +
+        f1(MARG_T + 18) +
+        ' L ' +
+        f1(shellX + shellW + 12) +
+        ' ' +
+        f1(MARG_T + 18) +
+        ' L ' +
+        f1(shellX + shellW + 12) +
+        ' ' +
+        f1(depYv + 14) +
+        ' L ' +
+        f1(depXv + 24) +
+        ' ' +
+        f1(depYv + 14) +
+        '" fill="none" stroke="#22c55e" stroke-width="' +
+        (isFlujo ? '3.4' : '2.4') +
+        '" stroke-linecap="round" opacity="0.9"/>';
+      var panelX = 316;
+      var panelY = MARG_T + 18;
+      body +=
+        '<rect x="' +
+        f1(panelX - 28) +
+        '" y="' +
+        f1(panelY - 24) +
+        '" width="' +
+        f1(Math.max(188, numCestas * 36 + 44)) +
+        '" height="' +
+        f1(Math.max(140, numNiveles * 46 + 36)) +
+        '" rx="12" fill="rgba(255,255,255,0.72)" stroke="#cbd5e1" stroke-width="1.1"/>';
+      body +=
+        '<text x="' +
+        f1(panelX + 40) +
+        '" y="' +
+        f1(panelY - 8) +
+        '" text-anchor="middle" font-family="Syne,sans-serif" font-size="11" font-weight="800" fill="' +
+        HC_ILLO.inkSoft +
+        '">Cestas seleccionables</text>';
+      body += torreAllBasketsPanel(
+        u,
+        cfg,
+        panelX,
+        panelY + 14,
+        numNiveles,
+        numCestas,
+        34,
+        44,
+        11.5,
+        8.2
+      );
+      body +=
+        '<text x="' +
+        f1(depXv + depWv / 2) +
+        '" y="' +
+        f1(depYv + DEP_H + 26) +
+        '" text-anchor="middle" font-family="Syne,sans-serif" font-size="17" font-weight="900" fill="' +
+        HC_ILLO.water1 +
+        '">' +
+        (volMez != null ? Math.round(volMez * 10) / 10 + ' L' : '—') +
+        '</text>';
+      return svgWrap(
+        'torre-svg-diagram hc-illo-torre hc-illo-torre--' + esc(vista),
+        W,
+        depYv + DEP_H + 40,
+        u + '-title',
+        'Torre ' + numNiveles + ' niveles · ' + vista,
+        body
+      );
+    }
     body +=
       '<text x="' +
       CX +
