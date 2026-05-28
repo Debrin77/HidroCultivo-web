@@ -2492,8 +2492,94 @@
     return { defs: '', html: '' };
   }
 
+  /** Layout fijo de la vista «Sistema de cultivo» (440px, panel colorido). */
+  function hcIlloTorreLayoutSistema(cfg) {
+    var numNiveles = Math.max(1, Math.min(12, parseInt(cfg.numNiveles, 10) || 5));
+    var W = 440;
+    var NIVEL_H = 58;
+    var GAP = 12;
+    var MARG_T = 50;
+    var torH = numNiveles * NIVEL_H + (numNiveles - 1) * GAP;
+    var DEP_H = 88;
+    var DEP_W = 188;
+    var panelX = 18;
+    var leftZoneW = 272;
+    var leftX = panelX + 14;
+    var centerX = leftX + leftZoneW * 0.5;
+    var topY = MARG_T + 4;
+    var depY = topY + torH + 24;
+    return {
+      W: W,
+      H: MARG_T + torH + 24 + DEP_H + 40,
+      CX: centerX,
+      centerX: centerX,
+      topY: topY,
+      torH: torH,
+      NIVEL_H: NIVEL_H,
+      GAP: GAP,
+      MARG_T: topY - NIVEL_H / 2,
+      TORRE_RX: 86,
+      TORRE_RY: 14,
+      depX: centerX - 94,
+      depY: depY,
+      DEP_W: DEP_W,
+      DEP_H: DEP_H,
+      leftX: leftX,
+      leftZoneW: leftZoneW,
+      panelX: panelX,
+      numNiveles: numNiveles,
+    };
+  }
+
+  /** Macetas en anillo frontal (vista acordada); respeta rotación por nivel. */
+  function hcIlloTorreNivelCestasFrontal(n, rot, u, cfg, L) {
+    var numCestas = Math.max(1, Math.min(10, parseInt(cfg.numCestas, 10) || 5));
+    var cy = L.MARG_T + n * (L.NIVEL_H + L.GAP) + L.NIVEL_H / 2;
+    var phase = n * 0.55 + (rot || 0);
+    var items = [];
+    var c;
+    for (c = 0; c < numCestas; c++) {
+      var ang = (c / numCestas) * Math.PI * 2 - Math.PI / 2 + phase;
+      var z = (Math.sin(ang) + 1) / 2;
+      var scale = 0.84 + 0.22 * z;
+      var opacity = 0.42 + 0.58 * z;
+      items.push({
+        c: c,
+        px: L.CX + Math.cos(ang) * L.TORRE_RX,
+        py: cy + Math.sin(ang) * L.TORRE_RY,
+        z: z,
+        scale: scale,
+        opacity: opacity,
+      });
+    }
+    items.sort(function (a, b) {
+      return a.z - b.z;
+    });
+    var out = '';
+    items.forEach(function (it) {
+      var caraFrontal = it.z >= 0.38;
+      out += '<g opacity="' + it.opacity.toFixed(2) + '"' + (caraFrontal ? '' : ' pointer-events="none"') + '>';
+      out += maceta({
+        n: n,
+        c: it.c,
+        cx: it.px,
+        cy: it.py,
+        rx: 13.4 * it.scale,
+        ry: 9.3 * it.scale,
+        uid: u,
+        cfg: cfg,
+        topView: false,
+        extraClass: 'torre-maceta torre-maceta--sistema',
+      });
+      out += '</g>';
+    });
+    return out;
+  }
+
   window.hcIlloTorreLayout = hcIlloTorreLayout;
+  window.hcIlloTorreLayoutSistema = hcIlloTorreLayoutSistema;
   window.hcIlloTorreNivelCestasHTML = hcIlloTorreNivelCestasHTML;
+  window.hcIlloTorreNivelCestasFrontal = hcIlloTorreNivelCestasFrontal;
 
   /**
    * Vista colorida de torre para Cultivo e instalación (panel, macetas 3D, depósito con agua).
@@ -2509,33 +2595,22 @@
         : volCap != null && Number.isFinite(Number(volCap))
           ? Number(volCap) * 0.78
           : 20;
-    var W = 440;
-    var NIVEL_H = 58;
-    var GAP = 12;
-    var torH = numNiveles * NIVEL_H + (numNiveles - 1) * GAP;
-    var MARG_T = 50;
-    var DEP_H = 88;
-    var H = MARG_T + torH + 24 + DEP_H + 40;
-    var panelX = 18;
+    var Lp = hcIlloTorreLayoutSistema(cfg);
+    var W = Lp.W;
+    var H = Lp.H;
+    var centerX = Lp.centerX;
+    var topY = Lp.topY;
+    var torH = Lp.torH;
+    var depY = Lp.depY;
+    var depX = Lp.depX;
+    var depW = Lp.DEP_W;
+    var DEP_H = Lp.DEP_H;
+    var panelX = Lp.panelX;
     var panelY = 14;
     var panelW = W - 36;
     var panelH = H - 24;
-    var leftZoneW = 272;
-    var leftX = panelX + 14;
-    var centerX = leftX + leftZoneW * 0.5;
-    var topY = MARG_T + 4;
-    var RX = 86;
-    var depY = topY + torH + 24;
-    var depX = centerX - 94;
-    var depW = 188;
-    var Lp = {
-      CX: centerX,
-      MARG_T: topY - NIVEL_H / 2,
-      NIVEL_H: NIVEL_H,
-      GAP: GAP,
-      TORRE_RX: RX,
-      TORRE_RY: 14,
-    };
+    var leftX = Lp.leftX;
+    var leftZoneW = Lp.leftZoneW;
     var body = '';
     body += '<rect width="' + W + '" height="' + H + '" fill="url(#' + u + '-bg)"/>';
     body +=
@@ -2575,7 +2650,7 @@
       f1(leftZoneW - 56) +
       '" height="' +
       f1(torH + 22) +
-      '" rx="20" fill="rgba(148,163,184,0.09)" stroke="#bfcedd" stroke-width="1.1"/>';
+      '" rx="20" fill="rgba(186,230,253,0.38)" stroke="#7dd3fc" stroke-width="1.2"/>';
     body +=
       '<ellipse cx="' +
       f1(centerX) +
@@ -2603,19 +2678,11 @@
       f1(Math.max(20, torH - 20)) +
       '" rx="2.4" fill="rgba(255,255,255,0.42)"/>';
     var n;
+    var NIVEL_H = Lp.NIVEL_H;
+    var GAP = Lp.GAP;
     for (n = 0; n < numNiveles; n++) {
       var cy = topY + n * (NIVEL_H + GAP) + NIVEL_H / 2;
-      body +=
-        '<ellipse cx="' +
-        f1(centerX) +
-        '" cy="' +
-        f1(cy) +
-        '" rx="' +
-        f1(RX) +
-        '" ry="14" fill="none" stroke="' +
-        HC_ILLO.lidHi +
-        '" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.56"/>';
-      body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasHTML(n, rot, u, cfg, Lp) + '</g>';
+      body += '<g id="hc-baskets-n-' + n + '">' + hcIlloTorreNivelCestasFrontal(n, rot, u, cfg, Lp) + '</g>';
       body +=
         '<text x="' +
         f1(leftX + 18) +

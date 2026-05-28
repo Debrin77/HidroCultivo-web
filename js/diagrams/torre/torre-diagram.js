@@ -6,10 +6,7 @@
 
   function tagTorreScada(svg) {
     if (!svg || typeof svg !== 'string' || svg.indexOf('<svg') < 0) return svg;
-    if (svg.indexOf('hc-illo-torre') >= 0) {
-      if (svg.indexOf('torre-svg-diagram--scada') < 0) {
-        return svg.replace(/class="([^"]*)"/, 'class="torre-svg-diagram--scada $1"');
-      }
+  if (svg.indexOf('hc-illo-torre') >= 0) {
       return svg;
     }
     let s = svg;

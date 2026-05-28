@@ -386,6 +386,24 @@ function torrePintarCestasSolo(wrap) {
   const numNiveles = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || NUM_NIVELES;
   const rot = cfg._torreRotRad || 0;
   const isIllo = !!wrap.querySelector('.hc-illo-torre');
+  const isSistemaColor = !!wrap.querySelector('.hc-illo-torre--sistema');
+  if (
+    isIllo &&
+    isSistemaColor &&
+    typeof hcIlloTorreNivelCestasFrontal === 'function' &&
+    typeof hcIlloTorreLayoutSistema === 'function'
+  ) {
+    const L = hcIlloTorreLayoutSistema(cfg);
+    const titleEl = wrap.querySelector('svg title');
+    const illoU =
+      (wrap.dataset && wrap.dataset.illoUid) ||
+      (titleEl && titleEl.id ? titleEl.id.replace(/-title$/, '') : 'torre');
+    for (let ni = 0; ni < numNiveles; ni++) {
+      const g = wrap.querySelector('#hc-baskets-n-' + ni);
+      if (g) g.innerHTML = hcIlloTorreNivelCestasFrontal(ni, rot, illoU, cfg, L);
+    }
+    return;
+  }
   if (isIllo && typeof hcIlloTorreNivelCestasHTML === 'function' && typeof hcIlloTorreLayout === 'function') {
     const L = hcIlloTorreLayout(cfg);
     const titleEl = wrap.querySelector('svg title');
