@@ -260,6 +260,7 @@
     }
 
     const wTop = waterBottom - (waterBottom - waterY) * volPct;
+    const drawFrontalBaskets = true;
     const raftY = Math.max(tankY + 2, wTop - raftH);
     if (SP && typeof SP.frontalTankInner === 'function') {
       s += SP.frontalTankInner(tankX, tankY, tankW, tankH, rimIn);
@@ -308,7 +309,7 @@
       '" stroke="' +
       (T.waterSurface || '#38bdf8') +
       '" stroke-width="1.8" opacity="0.9"/>';
-    if (!esKratky && wTop > raftY + raftH + 4) {
+    if (!drawFrontalBaskets && !esKratky && wTop > raftY + raftH + 4) {
       const rootY = raftY + raftH + 2;
       const rootH = Math.min(18, wTop - rootY - 2);
       if (rootH > 3) {
@@ -442,6 +443,101 @@
         '" rx="4" class="srf-frontal-raft srf-frontal-raft-lid" fill="url(#srfRaft)" stroke="' +
         (T.raftFrontStroke || '#0284c7') +
         '" stroke-width="1.4" filter="url(#srfSoftShadow)"/>';
+    }
+
+    if (drawFrontalBaskets) {
+      const basketN = Math.min(6, Math.max(1, C));
+      const rimW = 17;
+      const rimH = 4.4;
+      const bodyTopW = 12.5;
+      const bodyBotW = 9;
+      const bodyH = 10.5;
+      for (let bi = 0; bi < basketN; bi++) {
+        const bx = waterX + waterW * ((bi + 0.5) / basketN);
+        const rimY = raftY + 2.2;
+        const bodyY = rimY + rimH * 0.6;
+        const bodyBottom = bodyY + bodyH;
+        s +=
+          '<g class="srf-frontal-basket" aria-hidden="true" opacity="0.95">' +
+          '<ellipse cx="' +
+          bx.toFixed(1) +
+          '" cy="' +
+          rimY.toFixed(1) +
+          '" rx="' +
+          (rimW * 0.5).toFixed(1) +
+          '" ry="' +
+          rimH.toFixed(1) +
+          '" fill="#d7b980" stroke="#b0894a" stroke-width="0.9"/>' +
+          '<path d="M ' +
+          (bx - bodyTopW * 0.5).toFixed(1) +
+          ' ' +
+          bodyY.toFixed(1) +
+          ' L ' +
+          (bx + bodyTopW * 0.5).toFixed(1) +
+          ' ' +
+          bodyY.toFixed(1) +
+          ' L ' +
+          (bx + bodyBotW * 0.5).toFixed(1) +
+          ' ' +
+          bodyBottom.toFixed(1) +
+          ' L ' +
+          (bx - bodyBotW * 0.5).toFixed(1) +
+          ' ' +
+          bodyBottom.toFixed(1) +
+          ' Z" fill="#d9bd88" stroke="#a67c3c" stroke-width="0.8"/>' +
+          '<line x1="' +
+          (bx - 2.2).toFixed(1) +
+          '" y1="' +
+          (bodyY + 1.8).toFixed(1) +
+          '" x2="' +
+          (bx - 2.4).toFixed(1) +
+          '" y2="' +
+          (bodyBottom - 1).toFixed(1) +
+          '" stroke="#b0894a" stroke-width="0.55" opacity="0.75"/>' +
+          '<line x1="' +
+          bx.toFixed(1) +
+          '" y1="' +
+          (bodyY + 1.5).toFixed(1) +
+          '" x2="' +
+          bx.toFixed(1) +
+          '" y2="' +
+          (bodyBottom - 1).toFixed(1) +
+          '" stroke="#b0894a" stroke-width="0.55" opacity="0.75"/>' +
+          '<line x1="' +
+          (bx + 2.2).toFixed(1) +
+          '" y1="' +
+          (bodyY + 1.8).toFixed(1) +
+          '" x2="' +
+          (bx + 2.4).toFixed(1) +
+          '" y2="' +
+          (bodyBottom - 1).toFixed(1) +
+          '" stroke="#b0894a" stroke-width="0.55" opacity="0.75"/>';
+        if (!esKratky) {
+          const rootLen = Math.max(4, Math.min(16, wTop - bodyBottom - 2));
+          if (rootLen > 4) {
+            s +=
+              '<path d="M ' +
+              bx.toFixed(1) +
+              ' ' +
+              bodyBottom.toFixed(1) +
+              ' q -2.6 ' +
+              (rootLen * 0.5).toFixed(1) +
+              ' 0 ' +
+              rootLen.toFixed(1) +
+              '" fill="none" stroke="#d1cab3" stroke-width="1.05" stroke-linecap="round" opacity="0.9"/>' +
+              '<path d="M ' +
+              bx.toFixed(1) +
+              ' ' +
+              bodyBottom.toFixed(1) +
+              ' q 2.6 ' +
+              (rootLen * 0.5).toFixed(1) +
+              ' 0 ' +
+              rootLen.toFixed(1) +
+              '" fill="none" stroke="#d1cab3" stroke-width="1.05" stroke-linecap="round" opacity="0.9"/>';
+          }
+        }
+        s += '</g>';
+      }
     }
 
     if (tieneDifusor) {
