@@ -2420,8 +2420,10 @@ function updateTorreBuilder() {
   const cx = W / 2;
   const selNivel = Math.max(0, Math.min(N - 1, Math.floor((N - 1) / 2)));
   const topCx = cx;
-  const topCy = 94;
-  const topR = Math.max(46, Math.min(76, 34 + C * 5.4));
+  const topCy = 78;
+  const topPanelMaxR = 52;
+  const topR = Math.max(34, Math.min(topPanelMaxR, 26 + C * 4.6));
+  const topRingRy = topR * 0.76;
   const sectionTop = 198;
   const sectionBottom = 370;
   const towerX = cx;
@@ -2430,7 +2432,9 @@ function updateTorreBuilder() {
   const depW = 166;
   const depX = cx - depW / 2;
   const depH = 44;
-  const waterW = Math.max(70, Math.min(depW - 12, 68 + volSlider * 1.1));
+  const volPctTank = nftSvgTankFillPct(Math.max(5, volSlider || 20), {});
+  const sightY = depY + 8 + (1 - volPctTank) * (depH - 24);
+  const sightH = Math.max(8, depH - 18 - (1 - volPctTank) * (depH - 24));
   const volLbl = Number.isFinite(volSlider) ? Math.round(volSlider) + ' L' : '—';
   const animPreview =
     typeof window !== 'undefined' &&
@@ -2438,32 +2442,50 @@ function updateTorreBuilder() {
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
       ? false
       : true;
+  const tankPreview = nftSvgTankTorreStyle(depX, depY, depW, depH, 'TorPrv', volSlider, {
+    animate: animPreview,
+  });
   let ringPts = '';
-  let ringLabels = '';
   for (let i = 0; i < C; i++) {
     const a = (i / C) * Math.PI * 2 - Math.PI / 2;
     const px = topCx + Math.cos(a) * topR;
-    const py = topCy + Math.sin(a) * (topR * 0.82);
+    const py = topCy + Math.sin(a) * topRingRy;
     ringPts +=
+      '<line x1="' +
+      topCx.toFixed(1) +
+      '" y1="' +
+      topCy.toFixed(1) +
+      '" x2="' +
+      px.toFixed(1) +
+      '" y2="' +
+      py.toFixed(1) +
+      '" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="3 3" opacity="0.85"/>' +
       '<circle cx="' +
       px.toFixed(1) +
       '" cy="' +
       py.toFixed(1) +
-      '" r="7" fill="#f8fafc" stroke="#0f2744" stroke-width="1.4"/>' +
+      '" r="10.5" fill="#f8fafc" stroke="#0f2744" stroke-width="1.5"/>' +
       '<circle cx="' +
       px.toFixed(1) +
       '" cy="' +
       py.toFixed(1) +
-      '" r="2.1" fill="#94a3b8"/>';
-    ringLabels +=
+      '" r="7.2" fill="none" stroke="#94a3b8" stroke-width="1" stroke-dasharray="2.5 2"/>' +
+      '<circle cx="' +
+      px.toFixed(1) +
+      '" cy="' +
+      py.toFixed(1) +
+      '" r="3.2" fill="#cbd5e1" stroke="#64748b" stroke-width="0.8"/>' +
       '<text x="' +
-      (topCx + Math.cos(a) * (topR + 15)).toFixed(1) +
+      px.toFixed(1) +
       '" y="' +
-      (topCy + Math.sin(a) * (topR * 0.9 + 10)).toFixed(1) +
-      '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="9" font-weight="700" fill="#64748b">' +
+      (py + 3.8).toFixed(1) +
+      '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8.5" font-weight="800" fill="#334155">' +
       (i + 1) +
       '</text>';
   }
+  const captionW = Math.min(W - 44, 196);
+  const captionX = cx - captionW / 2;
+  const captionY = 138;
   let sectionRows = '';
   for (let n = 0; n < N; n++) {
     const y = sectionTop + ((sectionBottom - sectionTop) * (n + 0.5)) / N;
@@ -2491,6 +2513,90 @@ function updateTorreBuilder() {
       (n + 1) +
       '</text>';
   }
+  let torrePreviewAirSvg = '';
+  if (hasAir) {
+    const pumpScale = 0.7;
+    const pumpX = depX + depW + 8;
+    const pumpY = depY + depH - 40 * pumpScale;
+    const piedraX = depX + Math.round(depW * 0.58);
+    const piedraY = depY + depH - 11;
+    const pumpOutX = pumpX;
+    const pumpOutY = pumpY + 12 * pumpScale + (40 * pumpScale - 6 * pumpScale) * 0.55;
+    const hoseKneeX = piedraX + 10;
+    if (typeof dwcSvgAirPumpExternal === 'function') {
+      const pump = dwcSvgAirPumpExternal(0, 0, 1);
+      torrePreviewAirSvg +=
+        '<g class="torre-preview-air-pump" transform="translate(' +
+        pumpX.toFixed(1) +
+        ' ' +
+        pumpY.toFixed(1) +
+        ') scale(' +
+        pumpScale.toFixed(3) +
+        ')">' +
+        pump.svg +
+        '</g>';
+    } else {
+      const pumpW = 54 * pumpScale;
+      const pumpH = 40 * pumpScale;
+      const pcx = pumpX + pumpW / 2;
+      torrePreviewAirSvg +=
+        '<g class="torre-preview-air-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
+        '<rect x="' +
+        (pumpX + 4 * pumpScale).toFixed(1) +
+        '" y="' +
+        (pumpY + 15 * pumpScale).toFixed(1) +
+        '" width="' +
+        (pumpW - 8 * pumpScale).toFixed(1) +
+        '" height="' +
+        (pumpH - 11 * pumpScale).toFixed(1) +
+        '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>' +
+        '<ellipse cx="' +
+        pcx.toFixed(1) +
+        '" cy="' +
+        (pumpY + 12 * pumpScale).toFixed(1) +
+        '" rx="' +
+        ((pumpW - 10 * pumpScale) / 2).toFixed(1) +
+        '" ry="13" fill="url(#dwcPumpDome)" stroke="#e65100" stroke-width="2"/>' +
+        '</g>';
+    }
+    if (typeof dwcSvgAirHosePumpToStone === 'function') {
+      torrePreviewAirSvg += dwcSvgAirHosePumpToStone(
+        pumpOutX,
+        pumpOutY,
+        depX + depW - 4,
+        depY + depH * 0.55,
+        piedraX,
+        piedraY,
+        1.6,
+        0.9
+      );
+    } else {
+      torrePreviewAirSvg +=
+        '<path d="M ' +
+        pumpOutX.toFixed(1) +
+        ' ' +
+        pumpOutY.toFixed(1) +
+        ' L ' +
+        hoseKneeX.toFixed(1) +
+        ' ' +
+        pumpOutY.toFixed(1) +
+        ' L ' +
+        hoseKneeX.toFixed(1) +
+        ' ' +
+        piedraY.toFixed(1) +
+        ' L ' +
+        piedraX.toFixed(1) +
+        ' ' +
+        piedraY.toFixed(1) +
+        '" fill="none" stroke="#eceff1" stroke-width="1.8" stroke-linecap="round"/>';
+    }
+    torrePreviewAirSvg +=
+      '<ellipse cx="' +
+      piedraX.toFixed(1) +
+      '" cy="' +
+      piedraY.toFixed(1) +
+      '" rx="9" ry="5" fill="#9ca3af" stroke="#57534e" stroke-width="0.9"/>';
+  }
   preview.classList.add('torre-preview--tower-hero');
   preview.innerHTML =
     '<svg class="torre-preview-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
@@ -2502,7 +2608,8 @@ function updateTorreBuilder() {
     '<linearGradient id="tpTopBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef8f1"/><stop offset="100%" stop-color="#f7fbf8"/></linearGradient>' +
     '<linearGradient id="tpBotBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f4f6f8"/><stop offset="100%" stop-color="#eef2f6"/></linearGradient>' +
     '<linearGradient id="tpPipe" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#94a3b8"/><stop offset="100%" stop-color="#334155"/></linearGradient>' +
-    '<linearGradient id="tpDep" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#93c5fd"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>' +
+    '<linearGradient id="dwcPumpDome" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb74d"/><stop offset="100%" stop-color="#ff9800"/></linearGradient>' +
+    tankPreview.defs +
     '</defs>' +
     '<rect x="1" y="1" width="' +
     (W - 2) +
@@ -2527,36 +2634,43 @@ function updateTorreBuilder() {
     '" rx="' +
     topR.toFixed(1) +
     '" ry="' +
-    (topR * 0.82).toFixed(1) +
-    '" fill="none" stroke="#84cc16" stroke-dasharray="4 3" stroke-width="1.25" opacity="0.7"/>' +
+    topRingRy.toFixed(1) +
+    '" fill="rgba(132,204,22,0.08)" stroke="#84cc16" stroke-dasharray="5 4" stroke-width="1.3" opacity="0.85"/>' +
     '<circle cx="' +
     topCx.toFixed(1) +
     '" cy="' +
     topCy.toFixed(1) +
-    '" r="16" fill="#334155"/>' +
+    '" r="18" fill="#1e293b" stroke="#0f172a" stroke-width="1.4"/>' +
     '<circle cx="' +
     topCx.toFixed(1) +
     '" cy="' +
     topCy.toFixed(1) +
-    '" r="4.2" fill="#60a5fa"/>' +
+    '" r="11" fill="#334155" stroke="#475569" stroke-width="1"/>' +
+    '<circle cx="' +
+    topCx.toFixed(1) +
+    '" cy="' +
+    topCy.toFixed(1) +
+    '" r="4.5" fill="#38bdf8" stroke="#0ea5e9" stroke-width="0.8"/>' +
     ringPts +
-    ringLabels +
+    '<rect x="' +
+    captionX.toFixed(1) +
+    '" y="' +
+    captionY +
+    '" width="' +
+    captionW.toFixed(1) +
+    '" height="20" rx="10" fill="rgba(255,255,255,0.92)" stroke="#e2e8f0" stroke-width="1"/>' +
     '<text x="' +
     cx.toFixed(1) +
-    '" y="148" text-anchor="middle" font-family="Inconsolata,monospace" font-size="11" font-weight="700" fill="#64748b">' +
+    '" y="' +
+    (captionY + 14).toFixed(1) +
+    '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="10.5" font-weight="700" fill="#475569">' +
     C +
     ' cestas en anillo · N' +
     (selNivel + 1) +
     '</text>' +
-    '<line x1="' +
-    (cx - topR - 20).toFixed(1) +
-    '" y1="' +
-    (topCy + topR * 0.9 + 8).toFixed(1) +
-    '" x2="' +
-    (cx + topR + 20).toFixed(1) +
-    '" y2="' +
-    (topCy + topR * 0.9 + 8).toFixed(1) +
-    '" stroke="#d1d5db" stroke-dasharray="3 3"/>' +
+    '<line x1="22" y1="162" x2="' +
+    (W - 22) +
+    '" y2="162" stroke="#d1d5db" stroke-dasharray="3 3"/>' +
     '<line x1="22" y1="170" x2="' +
     (W - 22) +
     '" y2="170" stroke="#d1d5db"/>' +
@@ -2595,119 +2709,24 @@ function updateTorreBuilder() {
     '<ellipse cx="' +
     cx.toFixed(1) +
     '" cy="' +
-    (depY + depH + 10).toFixed(1) +
+    (depY + depH + 9).toFixed(1) +
     '" rx="' +
     (depW * 0.44).toFixed(1) +
-    '" ry="5.8" fill="rgba(15,23,42,0.12)"/>' +
-    '<rect x="' +
-    depX.toFixed(1) +
-    '" y="' +
-    depY.toFixed(1) +
-    '" width="' +
-    depW.toFixed(1) +
-    '" height="' +
-    depH +
-    '" rx="10" fill="#d8e1ec" stroke="#334155" stroke-width="1.4"/>' +
-    '<rect x="' +
-    (depX + 4).toFixed(1) +
-    '" y="' +
-    (depY + 4).toFixed(1) +
-    '" width="' +
-    (depW - 8).toFixed(1) +
-    '" height="' +
-    (depH - 8).toFixed(1) +
-    '" rx="8" fill="#c7d2e0" opacity="0.55"/>' +
-    '<rect x="' +
-    (cx - waterW / 2).toFixed(1) +
-    '" y="' +
-    (depY + 12).toFixed(1) +
-    '" width="' +
-    waterW.toFixed(1) +
-    '" height="20" rx="6" fill="url(#tpDep)" opacity="0.94"/>' +
-    (animPreview
-      ? '<path d="M ' +
-        (cx - waterW / 2 + 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        ' C ' +
-        (cx - waterW * 0.2).toFixed(1) +
-        ' ' +
-        (depY + 13).toFixed(1) +
-        ' ' +
-        (cx + waterW * 0.1).toFixed(1) +
-        ' ' +
-        (depY + 19).toFixed(1) +
-        ' ' +
-        (cx + waterW / 2 - 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        '" fill="none" stroke="#dbeafe" stroke-width="1.2" opacity="0.9">' +
-        '<animate attributeName="d" dur="1.6s" repeatCount="indefinite" values="' +
-        'M ' +
-        (cx - waterW / 2 + 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        ' C ' +
-        (cx - waterW * 0.2).toFixed(1) +
-        ' ' +
-        (depY + 13).toFixed(1) +
-        ' ' +
-        (cx + waterW * 0.1).toFixed(1) +
-        ' ' +
-        (depY + 19).toFixed(1) +
-        ' ' +
-        (cx + waterW / 2 - 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        ';' +
-        'M ' +
-        (cx - waterW / 2 + 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        ' C ' +
-        (cx - waterW * 0.18).toFixed(1) +
-        ' ' +
-        (depY + 19).toFixed(1) +
-        ' ' +
-        (cx + waterW * 0.12).toFixed(1) +
-        ' ' +
-        (depY + 13).toFixed(1) +
-        ' ' +
-        (cx + waterW / 2 - 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        ';' +
-        'M ' +
-        (cx - waterW / 2 + 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        ' C ' +
-        (cx - waterW * 0.2).toFixed(1) +
-        ' ' +
-        (depY + 13).toFixed(1) +
-        ' ' +
-        (cx + waterW * 0.1).toFixed(1) +
-        ' ' +
-        (depY + 19).toFixed(1) +
-        ' ' +
-        (cx + waterW / 2 - 1).toFixed(1) +
-        ' ' +
-        (depY + 16).toFixed(1) +
-        '"/></path>'
-      : '') +
+    '" ry="6" fill="rgba(15,23,42,0.14)"/>' +
+    tankPreview.html +
     '<rect x="' +
     (depX + depW + 2).toFixed(1) +
     '" y="' +
-    (depY + 6).toFixed(1) +
+    (depY + 7).toFixed(1) +
     '" width="8" height="' +
-    (depH - 12).toFixed(1) +
+    (depH - 14).toFixed(1) +
     '" rx="3" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>' +
     '<rect x="' +
     (depX + depW + 3.6).toFixed(1) +
     '" y="' +
-    (depY + 14 + (1 - Math.min(1, Math.max(0, waterW / depW))) * 12).toFixed(1) +
+    sightY.toFixed(1) +
     '" width="4.8" height="' +
-    (depH - 20 - (1 - Math.min(1, Math.max(0, waterW / depW))) * 12).toFixed(1) +
+    sightH.toFixed(1) +
     '" rx="2.4" fill="#60a5fa" opacity="0.9"/>' +
     '<line x1="' +
     (depX + depW + 12).toFixed(1) +
@@ -2730,8 +2749,10 @@ function updateTorreBuilder() {
     '<text x="' +
     cx.toFixed(1) +
     '" y="' +
-    (depY + 60).toFixed(1) +
-    '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="14" font-weight="900" fill="#0284c7">' +
+    (depY + depH - 11).toFixed(1) +
+    '" text-anchor="middle" font-family="Syne,system-ui,sans-serif" font-size="13" font-weight="900" fill="' +
+    (tankPreview.volTextFill || '#0284c7') +
+    '">' +
     volLbl +
     '</text>' +
     '<line x1="' +
@@ -2776,45 +2797,7 @@ function updateTorreBuilder() {
     '" text-anchor="start" font-family="Inconsolata,monospace" font-size="11" font-weight="700" fill="#475569">~' +
     (N * 20) +
     ' cm</text>' +
-    (hasAir
-      ? '<g><rect x="' +
-        (depX + depW + 12).toFixed(1) +
-        '" y="' +
-        (depY + 14).toFixed(1) +
-        '" width="24" height="15" rx="3.5" fill="#37474f" stroke="#1e293b" stroke-width="1.2"/>' +
-        '<ellipse cx="' +
-        (depX + depW + 24).toFixed(1) +
-        '" cy="' +
-        (depY + 14).toFixed(1) +
-        '" rx="8.8" ry="5.6" fill="#ff9800" stroke="#e65100" stroke-width="1.1"/>' +
-        '<path d="M ' +
-        (depX + depW + 12).toFixed(1) +
-        ' ' +
-        (depY + 22).toFixed(1) +
-        ' C ' +
-        (depX + depW - 4).toFixed(1) +
-        ' ' +
-        (depY + 22).toFixed(1) +
-        ' ' +
-        (depX + depW - 16).toFixed(1) +
-        ' ' +
-        (depY + 21).toFixed(1) +
-        ' ' +
-        (depX + depW - 26).toFixed(1) +
-        ' ' +
-        (depY + 21).toFixed(1) +
-        '" fill="none" stroke="#e2e8f0" stroke-width="1.5"/>' +
-        '<ellipse cx="' +
-        (depX + depW - 28).toFixed(1) +
-        '" cy="' +
-        (depY + 21).toFixed(1) +
-        '" rx="7.2" ry="4.2" fill="#64748b" stroke="#475569" stroke-width="1"/>' +
-        '<text x="' +
-        (depX + depW + 24).toFixed(1) +
-        '" y="' +
-        (depY + 40).toFixed(1) +
-        '" text-anchor="middle" font-family="Inconsolata,monospace" font-size="8.5" font-weight="700" fill="#64748b">AIRE</text></g>'
-      : '') +
+    torrePreviewAirSvg +
     (hasHeat
       ? '<g><rect x="' +
         (depX + 14).toFixed(1) +
