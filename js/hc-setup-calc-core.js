@@ -1149,12 +1149,15 @@ function getSetupVolumenMaxLitros() {
 
 function getSetupVolumenMezclaLitros() {
   const maxL = getSetupVolumenMaxLitros();
-  const raw =
-    typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'rdwc'
-      ? document.getElementById('setupRdwcControlTrabajoL')?.value
-      : document.getElementById('setupVolMezclaL')?.value;
+  const esRdwc = typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'rdwc';
+  const raw = esRdwc
+    ? document.getElementById('setupRdwcControlTrabajoL')?.value
+    : document.getElementById('setupVolMezclaL')?.value;
   const m = parseFloat(String(raw || '').replace(',', '.'));
-  if (!Number.isFinite(m) || m <= 0) return maxL;
+  if (!Number.isFinite(m) || m <= 0) {
+    if (esRdwc) return null;
+    return maxL;
+  }
   if (m >= maxL - 0.02) return maxL;
   return Math.min(maxL, Math.max(0.5, Math.round(m * 10) / 10));
 }
@@ -1306,8 +1309,9 @@ function renderDosisSetup() {
     (
       setupTipoInstalacion === 'rdwc'
         ? '📦 Reservorio control: <strong>' + volMax + ' L</strong>' +
-          (volRes < volMax - 0.05 ? ' · mezcla en reservorio <strong>' + volRes + ' L</strong>' : '') +
-          ' · solución total para dosis <strong>' + vol + ' L</strong>'
+          (volRes != null && volRes < volMax - 0.05 ? ' · mezcla en reservorio <strong>' + volRes + ' L</strong>' : '') +
+          ' · solución total para dosis <strong>' +
+          (vol != null && Number.isFinite(vol) ? vol + ' L</strong>' : '— (indica litros útiles en depósito control)</strong>')
         : '📦 Depósito máx.: <strong>' + volMax + ' L</strong>' +
           (vol < volMax - 0.05 ? ' · mezcla <strong>' + vol + ' L</strong>' : '')
     ) + ' · ' +
