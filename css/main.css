@@ -15631,8 +15631,25 @@ button.toggle-switch:focus-visible {
 #setupNftBuilderWrap.setup-nft-asistente-simple #setupNftMontajeDiyBlock .setup-nft-counts-wrap {
   margin-top: 2px;
 }
-#setupNftBuilderWrap.setup-nft-asistente-simple #nftMesaTierSlidersHost:not(.setup-hidden) {
-  margin-top: 2px;
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-tier-config-host {
+  margin: 8px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-tier-franja {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+#setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-tier-franja-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-resultados-dl {
   margin: 6px 0 0;

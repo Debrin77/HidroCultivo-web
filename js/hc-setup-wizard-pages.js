@@ -23,7 +23,13 @@ function buildNftSetupEmptyDiagramSvg() {
 /** Elige SVG NFT según config (mesa multinivel, escalera, serpentín mesa/pared). */
 function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, equipOpts) {
   const nCh0 = parseInt(String(canales), 10);
-  const nHx0 = parseInt(String(huecos), 10);
+  const huecosArrIn = Array.isArray(huecos) ? huecos : null;
+  const nHx0 = huecosArrIn
+    ? Math.max.apply(
+        null,
+        huecosArrIn.map(h => parseInt(String(h), 10) || 0).filter(h => h >= 2).concat([0])
+      )
+    : parseInt(String(huecos), 10);
   if (!Number.isFinite(nCh0) || nCh0 < 1 || !Number.isFinite(nHx0) || nHx0 < 2) {
     return buildNftSetupEmptyDiagramSvg();
   }
@@ -47,7 +53,13 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     if (tiers.length < 2) tiers = null;
   }
   if (disp === 'mesa' && tiers) {
-    return buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuffix, equipOpts);
+    let huecosMm = huecos;
+    const ht =
+      EO.mesaHuecosTiers && EO.mesaHuecosTiers.length >= 2
+        ? EO.mesaHuecosTiers
+        : parseNftMesaHuecosPorNivelStrLoose(cfg.nftMesaHuecosPorNivelStr);
+    if (ht.length >= 2) huecosMm = ht;
+    return buildNftMesaMultinivelDiagramSvg(tiers, huecosMm, pendPct, volL, svgIdSuffix, equipOpts);
   }
   if (disp === 'escalera') {
     const caras =
@@ -1411,9 +1423,15 @@ function buildNftDraftConfigFromSetupUi() {
     if (mont.mesaMultinivel) {
       const tiers = parseNftMesaTubosPorNivelStrLoose(mont.mesaTubosStr);
       if (tiers.length >= 2) {
+        let huecosTiers = parseNftMesaHuecosPorNivelStrLoose(mont.mesaHuecosStr);
+        while (huecosTiers.length < tiers.length) huecosTiers.push(0);
+        huecosTiers = huecosTiers.slice(0, tiers.length);
         draft.nftMesaMultinivel = true;
         draft.nftMesaTubosPorNivelStr = tiers.join(',');
+        draft.nftMesaHuecosPorNivelStr = huecosTiers.join(',');
         draft.nftNumCanales = tiers.reduce((a, b) => a + b, 0);
+        const hxPos = huecosTiers.filter(h => h > 0);
+        if (hxPos.length) draft.nftHuecosPorCanal = Math.min(30, Math.max(2, Math.max.apply(null, hxPos)));
         if (mont.mesaSepCm > 0) draft.nftMesaSeparacionNivelesCm = mont.mesaSepCm;
       }
     }
@@ -1477,9 +1495,12 @@ function updateNftSetupPreview() {
   }
   if (elV) elV.innerHTML = vol + '<span class="setup-inline-unit-l">L</span>';
   for (let i = 0; i < 8; i++) {
-    const sl = document.getElementById('sliderNftMesaTier_' + i);
-    const vEl = document.getElementById('valNftMesaTier_' + i);
-    if (sl && vEl) vEl.textContent = String(parseInt(String(sl.value), 10) || 0);
+    const slT = document.getElementById('sliderNftMesaTierTubos_' + i);
+    const slH = document.getElementById('sliderNftMesaTierHuecos_' + i);
+    const vT = document.getElementById('valNftMesaTierTubos_' + i);
+    const vH = document.getElementById('valNftMesaTierHuecos_' + i);
+    if (slT && vT) vT.textContent = String(parseInt(String(slT.value), 10) || 0);
+    if (slH && vH) vH.textContent = String(parseInt(String(slH.value), 10) || 0);
   }
 
   try {
@@ -1501,11 +1522,17 @@ function updateNftSetupPreview() {
   const canalesDraw =
     dispPrev === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraNiveles >= 1
       ? hyd.escaleraNiveles
-      : canales;
+      : draft.nftMesaMultinivel && hyd.mesaTiers
+        ? hyd.nCh
+        : canales;
+  const huecosDraw =
+    draft.nftMesaMultinivel && hyd.mesaHuecosTiers && hyd.mesaHuecosTiers.length >= 2
+      ? hyd.mesaHuecosTiers
+      : huecos;
   let nftPrevSvg = buildNftSetupEmptyDiagramSvg();
   try {
     if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
-    nftPrevSvg = buildNftActiveDiagramSvg(canalesDraw, huecos, pendDraw, vol, '', {
+    nftPrevSvg = buildNftActiveDiagramSvg(canalesDraw, huecosDraw, pendDraw, vol, '', {
       calentador: setupEquipamiento.has('calentador'),
       difusor: setupEquipamiento.has('difusor'),
       bombaInfo: bNft,
@@ -1513,6 +1540,7 @@ function updateNftSetupPreview() {
       nftAlturaBombeoCm: altShow > 0 ? altShow : null,
       cfgSnapshot: draft,
       mesaTiers: hyd.mesaTiers,
+      mesaHuecosTiers: hyd.mesaHuecosTiers,
       escaleraNiveles: hyd.escaleraNiveles,
       escaleraCaras: hyd.escaleraCaras,
     });

@@ -2460,9 +2460,15 @@ function abrirSetup() {
   if (mmChk) mmChk.checked = c.nftMesaMultinivel === true;
   if (mmChk && mmChk.checked) {
     const tiersW = parseNftMesaTubosPorNivelStrLoose(c.nftMesaTubosPorNivelStr || '');
-    rebuildNftMesaMultinivelTierSliders('nft', tiersW.length >= 2 ? tiersW : [0, 0]);
+    const tiersUse = tiersW.length >= 2 ? tiersW : [0, 0];
+    let huecosW = parseNftMesaHuecosPorNivelStrLoose(c.nftMesaHuecosPorNivelStr || '');
+    if (huecosW.length < tiersUse.length) {
+      const hxFb = Math.max(0, parseInt(String(c.nftHuecosPorCanal ?? c.numCestas ?? ''), 10) || 0);
+      while (huecosW.length < tiersUse.length) huecosW.push(hxFb);
+    }
+    rebuildNftMesaMultinivelTierSliders('nft', tiersUse, huecosW);
   } else {
-    const host = document.getElementById('nftMesaTierSlidersHost');
+    const host = document.getElementById('nftMesaTierConfigHost');
     if (host) host.innerHTML = '';
   }
   const mmSep = document.getElementById('nftMesaSepNivelesCm');
@@ -3137,6 +3143,48 @@ function parseNftMesaTubosPorNivelStrLoose(str) {
   return out.slice(0, 8);
 }
 
+/** @returns {number[]} huecos/cestas por franja (0–30 permitido; conserva posiciones) */
+function parseNftMesaHuecosPorNivelStrLoose(str) {
+  const s = String(str == null ? '' : str).trim();
+  if (!s) return [];
+  const parts = s.split(/[,;\s]+/).filter(Boolean);
+  const out = [];
+  for (const p of parts) {
+    const n = parseInt(p, 10);
+    if (Number.isFinite(n) && n >= 0 && n <= 30) out.push(n);
+  }
+  return out.slice(0, 8);
+}
+
+/** Serializa huecos/cestas por franja desde el asistente (nft) o cuadrícula Cultivo (sys). */
+function getNftMesaHuecosPorNivelStrFromGrid(prefix) {
+  const isSys = prefix === 'sys';
+  const nEl = document.getElementById(isSys ? 'sysNftMesaNumNiveles' : 'nftMesaNumNiveles');
+  let n = parseInt(String(nEl && nEl.value != null ? nEl.value : ''), 10);
+  if (!Number.isFinite(n) || n < 2) n = 2;
+  n = Math.min(8, n);
+  const parts = [];
+  if (!isSys) {
+    const host = document.getElementById('nftMesaTierConfigHost');
+    if (host && host.children.length) {
+      for (let i = 0; i < n; i++) {
+        const sl = document.getElementById('sliderNftMesaTierHuecos_' + i);
+        const v = parseInt(String(sl && sl.value != null ? sl.value : ''), 10);
+        parts.push(Math.min(30, Math.max(0, Number.isFinite(v) ? v : 0)));
+      }
+      return parts.join(',');
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    const id = (isSys ? 'sysNftMesaHuecosNivel_' : 'nftMesaHuecosNivel_') + i;
+    const el = document.getElementById(id);
+    if (!el) break;
+    const v = parseInt(String(el.value || ''), 10);
+    parts.push(Math.min(30, Math.max(0, Number.isFinite(v) ? v : 0)));
+  }
+  return parts.join(',');
+}
+
 /** Serializa tubos por nivel desde sliders del asistente (nft) o cuadrícula Cultivo (sys). */
 function getNftMesaTubosPorNivelStrFromGrid(prefix) {
   const isSys = prefix === 'sys';
@@ -3146,10 +3194,10 @@ function getNftMesaTubosPorNivelStrFromGrid(prefix) {
   n = Math.min(8, n);
   const parts = [];
   if (!isSys) {
-    const host = document.getElementById('nftMesaTierSlidersHost');
+    const host = document.getElementById('nftMesaTierConfigHost');
     if (host && host.children.length) {
       for (let i = 0; i < n; i++) {
-        const sl = document.getElementById('sliderNftMesaTier_' + i);
+        const sl = document.getElementById('sliderNftMesaTierTubos_' + i);
         const v = parseInt(String(sl && sl.value != null ? sl.value : ''), 10);
         parts.push(Math.min(12, Math.max(0, Number.isFinite(v) ? v : 0)));
       }
@@ -3164,12 +3212,12 @@ function getNftMesaTubosPorNivelStrFromGrid(prefix) {
   return parts.join(',');
 }
 
-function rebuildNftMesaMultinivelTierSliders(prefix, tiersInit) {
+function rebuildNftMesaMultinivelTierSliders(prefix, tiersInit, huecosInit) {
   if (prefix !== 'nft') {
     rebuildNftMesaMultinivelGrid(prefix, tiersInit);
     return;
   }
-  const host = document.getElementById('nftMesaTierSlidersHost');
+  const host = document.getElementById('nftMesaTierConfigHost');
   const numInp = document.getElementById('nftMesaNumNiveles');
   if (!host || !numInp) return;
   let tiers = [];
@@ -3182,36 +3230,58 @@ function rebuildNftMesaMultinivelTierSliders(prefix, tiersInit) {
       .map(p => Math.min(12, Math.max(0, parseInt(String(p), 10) || 0)));
     tiers = parsed.length >= 2 ? parsed : [0, 0];
   }
+  let huecos = [];
+  if (Array.isArray(huecosInit)) {
+    huecos = huecosInit.map(h => Math.min(30, Math.max(0, parseInt(String(h), 10) || 0)));
+  } else {
+    huecos = parseNftMesaHuecosPorNivelStrLoose(String(huecosInit || ''));
+  }
   if (tiers.length < 2) tiers = [0, 0];
   tiers = tiers.slice(0, 8);
   numInp.value = String(Math.min(8, Math.max(2, tiers.length)));
   const n = parseInt(String(numInp.value), 10) || 2;
   while (tiers.length < n) tiers.push(0);
+  while (huecos.length < n) huecos.push(0);
   tiers = tiers.slice(0, n);
+  huecos = huecos.slice(0, n);
   let html = '';
   for (let i = 0; i < n; i++) {
-    const slId = 'sliderNftMesaTier_' + i;
-    const valId = 'valNftMesaTier_' + i;
-    const val = tiers[i] != null ? tiers[i] : 0;
-    let lab = 'Tubos — franja ' + (i + 1);
-    if (i === 0) lab += ' (arriba)';
-    else if (i === n - 1 && n > 1) lab += ' (abajo)';
+    const tVal = tiers[i] != null ? tiers[i] : 0;
+    const hVal = huecos[i] != null ? huecos[i] : 0;
+    let franja = 'Franja ' + (i + 1);
+    if (i === 0) franja += ' (arriba)';
+    else if (i === n - 1 && n > 1) franja += ' (abajo)';
     html +=
-      '<div class="torre-control-row setup-nft-counts-slider-row" data-nft-mesa-tier-idx="' +
+      '<div class="setup-nft-tier-franja" data-nft-mesa-tier-idx="' +
       i +
       '">' +
-      '<div class="torre-control-label"><span>' +
-      escHtmlUi(lab) +
-      '</span> <span class="torre-control-val" id="' +
-      valId +
+      '<div class="setup-nft-tier-franja-title">' +
+      escHtmlUi(franja) +
+      '</div>' +
+      '<div class="torre-control-row setup-nft-tier-slider-row">' +
+      '<div class="torre-control-label"><span>Tubos</span> <span class="torre-control-val" id="valNftMesaTierTubos_' +
+      i +
       '">' +
-      val +
+      tVal +
       '</span></div>' +
-      '<input type="range" class="torre-slider" id="' +
-      slId +
+      '<input type="range" class="torre-slider" id="sliderNftMesaTierTubos_' +
+      i +
       '" min="0" max="12" value="' +
-      val +
+      tVal +
       '" oninput="updateNftSetupPreview()">' +
+      '</div>' +
+      '<div class="torre-control-row setup-nft-tier-slider-row">' +
+      '<div class="torre-control-label"><span>Huecos / cestas por tubo</span> <span class="torre-control-val" id="valNftMesaTierHuecos_' +
+      i +
+      '">' +
+      hVal +
+      '</span></div>' +
+      '<input type="range" class="torre-slider" id="sliderNftMesaTierHuecos_' +
+      i +
+      '" min="0" max="30" value="' +
+      hVal +
+      '" oninput="updateNftSetupPreview()">' +
+      '</div>' +
       '</div>';
   }
   host.innerHTML = html;
@@ -3266,13 +3336,17 @@ function rebuildNftMesaMultinivelGrid(prefix, tiersInit) {
 
 function onNftWizardMesaNumNivelesChange() {
   const want = Math.min(8, Math.max(2, parseInt(String(document.getElementById('nftMesaNumNiveles')?.value || ''), 10) || 2));
-  const prev = [];
+  const prevT = [];
+  const prevH = [];
   for (let i = 0; i < 8; i++) {
-    const el = document.getElementById('sliderNftMesaTier_' + i);
-    if (el) prev.push(Math.min(12, Math.max(0, parseInt(String(el.value), 10) || 0)));
+    const elT = document.getElementById('sliderNftMesaTierTubos_' + i);
+    const elH = document.getElementById('sliderNftMesaTierHuecos_' + i);
+    if (elT) prevT.push(Math.min(12, Math.max(0, parseInt(String(elT.value), 10) || 0)));
+    if (elH) prevH.push(Math.min(30, Math.max(0, parseInt(String(elH.value), 10) || 0)));
   }
-  while (prev.length < want) prev.push(0);
-  rebuildNftMesaMultinivelTierSliders('nft', prev.slice(0, want));
+  while (prevT.length < want) prevT.push(0);
+  while (prevH.length < want) prevH.push(0);
+  rebuildNftMesaMultinivelTierSliders('nft', prevT.slice(0, want), prevH.slice(0, want));
   document.getElementById('nftMesaNumNiveles').value = String(want);
   if (typeof updateNftSetupPreview === 'function') updateNftSetupPreview();
 }
@@ -3387,7 +3461,12 @@ function getNftHidraulicaDesdeConfig(cfg) {
     const tiers = parseNftMesaTubosPorNivelStrLoose(cfg.nftMesaTubosPorNivelStr);
     if (tiers.length >= 2) {
       const sumT = tiers.reduce((a, b) => a + b, 0);
-      return { nCh: Math.min(24, Math.max(0, sumT)), nHx: hx, mesaTiers: tiers };
+      let huecosTiers = parseNftMesaHuecosPorNivelStrLoose(cfg.nftMesaHuecosPorNivelStr);
+      while (huecosTiers.length < tiers.length) huecosTiers.push(0);
+      huecosTiers = huecosTiers.slice(0, tiers.length);
+      const hxTier = huecosTiers.filter(h => h > 0);
+      const nHxEff = hxTier.length ? Math.min(30, Math.max(2, Math.max.apply(null, hxTier))) : hx;
+      return { nCh: Math.min(24, Math.max(0, sumT)), nHx: nHxEff, mesaTiers: tiers, mesaHuecosTiers: huecosTiers };
     }
   }
   if (disp === 'escalera') {
@@ -3411,9 +3490,12 @@ function hcResetNftSetupSlidersZero() {
   set('sliderNftHuecos', 0);
   set('sliderNftPendiente', 0);
   for (let i = 0; i < 8; i++) {
-    set('sliderNftMesaTier_' + i, 0);
-    const vEl = document.getElementById('valNftMesaTier_' + i);
-    if (vEl) vEl.textContent = '0';
+    set('sliderNftMesaTierTubos_' + i, 0);
+    set('sliderNftMesaTierHuecos_' + i, 0);
+    const vT = document.getElementById('valNftMesaTierTubos_' + i);
+    const vH = document.getElementById('valNftMesaTierHuecos_' + i);
+    if (vT) vT.textContent = '0';
+    if (vH) vH.textContent = '0';
   }
   const vC = document.getElementById('valNftCanales');
   const vH = document.getElementById('valNftHuecos');
@@ -3455,6 +3537,7 @@ function readNftMontajeFromSetupUi() {
     Number.isFinite(raw) && raw > 0 ? Math.min(500, Math.round(raw)) : 0;
   const mesaMultinivel = document.getElementById('nftMesaMultinivelChk')?.checked === true;
   const mesaTubosStr = mesaMultinivel ? getNftMesaTubosPorNivelStrFromGrid('nft') : '';
+  const mesaHuecosStr = mesaMultinivel ? getNftMesaHuecosPorNivelStrFromGrid('nft') : '';
   const sepRaw = parseFloat(String(document.getElementById('nftMesaSepNivelesCm')?.value || '').replace(',', '.'));
   const mesaSepCm =
     Number.isFinite(sepRaw) && sepRaw > 0 ? Math.min(150, Math.round(sepRaw)) : 0;
@@ -3467,6 +3550,7 @@ function readNftMontajeFromSetupUi() {
     alturaBombeoCm: altCm,
     mesaMultinivel,
     mesaTubosStr,
+    mesaHuecosStr,
     mesaSepCm,
     mesaRecorrido,
     escaleraCaras,
@@ -3568,14 +3652,16 @@ function refrescarNftMesaMultinivelCantidadesUi() {
   const mont =
     typeof readNftMontajeFromSetupUi === 'function' ? readNftMontajeFromSetupUi() : { disposicion: 'mesa', mesaMultinivel: false };
   const showMm = mont.disposicion === 'mesa' && mont.mesaMultinivel === true;
-  const host = document.getElementById('nftMesaTierSlidersHost');
   const canRow = document.getElementById('nftCanalesSliderRow');
+  const huecosRow = document.getElementById('nftHuecosSliderRow');
   const help = document.getElementById('setupNftCountsHelp');
-  if (host) host.classList.toggle('setup-hidden', !showMm);
+  const countsTitle = document.getElementById('setupNftCountsTitle');
   if (canRow) canRow.classList.toggle('setup-hidden', showMm);
+  if (huecosRow) huecosRow.classList.toggle('setup-hidden', showMm);
+  if (countsTitle) countsTitle.textContent = showMm ? 'Pendiente del circuito' : 'Cantidades en el diagrama';
   if (help) {
     help.innerHTML = showMm
-      ? 'Indica <strong>tubos por franja</strong> (de arriba a abajo), <strong>huecos por tubo</strong> y <strong>pendiente</strong>. El esquema se actualiza debajo.'
+      ? 'Con mesa multinivel, <strong>tubos y huecos por franja</strong> se configuran arriba. Aquí solo ajustas la <strong>pendiente aproximada</strong> antes del esquema.'
       : NFT_COUNTS_HELP_DEFAULT;
   }
 }
@@ -3584,10 +3670,10 @@ function onNftMesaMultinivelToggle() {
   const mf = document.getElementById('nftMesaMultinivelFields');
   const chk = document.getElementById('nftMesaMultinivelChk');
   if (mf && chk) mf.classList.toggle('setup-hidden', !chk.checked);
-  if (chk && chk.checked && !document.getElementById('nftMesaTierSlidersHost')?.children.length) {
-    rebuildNftMesaMultinivelTierSliders('nft', [0, 0]);
+  if (chk && chk.checked && !document.getElementById('nftMesaTierConfigHost')?.children.length) {
+    rebuildNftMesaMultinivelTierSliders('nft', [0, 0], [0, 0]);
   } else if (chk && !chk.checked) {
-    const host = document.getElementById('nftMesaTierSlidersHost');
+    const host = document.getElementById('nftMesaTierConfigHost');
     if (host) host.innerHTML = '';
   }
   if (typeof refrescarNftMesaMultinivelCantidadesUi === 'function') refrescarNftMesaMultinivelCantidadesUi();
@@ -4579,6 +4665,7 @@ function aplicarSistemaNftMontajeDesdeFormulario() {
   else delete cfg.nftBombaUsuarioPotenciaW;
   delete cfg.nftMesaMultinivel;
   delete cfg.nftMesaTubosPorNivelStr;
+  delete cfg.nftMesaHuecosPorNivelStr;
   delete cfg.nftMesaSeparacionNivelesCm;
   delete cfg.nftMesaRecorridoAgua;
   delete cfg.nftParedRecorridoAgua;

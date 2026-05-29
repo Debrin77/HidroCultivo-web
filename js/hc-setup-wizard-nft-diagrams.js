@@ -1376,7 +1376,19 @@ function refrescarNftLayoutResumenChecklist() {
   else if (disp === 'escalera') monte = 'Escalera / inclinado';
   lines.push('<strong>Montaje</strong>: ' + monte);
   if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
-    lines.push('Multinivel: <strong>' + hyd.mesaTiers.join('+') + '</strong> tubos por franja · ' + hyd.mesaTiers.length + ' niveles');
+    const hxMm =
+      hyd.mesaHuecosTiers && hyd.mesaHuecosTiers.length >= 2
+        ? hyd.mesaHuecosTiers.join('+')
+        : String(hyd.nHx);
+    lines.push(
+      'Multinivel: <strong>' +
+        hyd.mesaTiers.join('+') +
+        '</strong> tubos · <strong>' +
+        hxMm +
+        '</strong> huecos/franja · ' +
+        hyd.mesaTiers.length +
+        ' niveles'
+    );
   }
   if (disp === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraCaras != null) {
     lines.push('Peldaños/cara: <strong>' + hyd.escaleraNiveles + '</strong> · Caras: <strong>' + hyd.escaleraCaras + '</strong>');
@@ -1940,7 +1952,27 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const gidAqua = 'nftMMAq' + suf;
   const tid = 'nftMMTitle' + suf;
 
-  const huecosN = Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
+  const huecosArr = Array.isArray(huecos)
+    ? huecos.map(h => Math.min(30, Math.max(0, parseInt(String(h), 10) || 0)))
+    : null;
+  const huecosN = huecosArr
+    ? Math.min(
+        30,
+        Math.max(
+          2,
+          Math.max.apply(
+            null,
+            huecosArr.map(h => (h >= 2 ? h : 0)).filter(h => h > 0).concat([2])
+          )
+        )
+      )
+    : Math.min(Math.max(parseInt(String(huecos), 10) || 2, 2), 30);
+  function huecosEnFranja(tIdx) {
+    if (huecosArr && huecosArr[tIdx] != null && huecosArr[tIdx] >= 2) {
+      return Math.min(30, huecosArr[tIdx]);
+    }
+    return huecosN;
+  }
   const pend = Math.min(Math.max(parseInt(String(pendPct), 10) || 2, 1), 4);
   const tankMetaMM =
     typeof nftSvgTankMetaFromEquip === 'function'
@@ -1980,9 +2012,12 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   const colWPreMM = (rowInnerPreMM - Math.max(0, maxNtPreMM - 1) * gapT) / maxNtPreMM;
   const topPad = Math.max(70 + (compactMesa ? 8 : 0), hdrMesa.topPadMin);
   const botTank = 162;
+  const maxHuecosFranja = huecosArr
+    ? Math.max(2, Math.max.apply(null, tiersNums.map((_, ti) => huecosEnFranja(ti))))
+    : huecosN;
   let tierRowH = Math.max(
     88,
-    Math.min(138, Math.floor(520 / Math.max(nTiers, 1)) + huecosN * 5 + (maxTubosPorNivelMesa <= 2 ? 18 : 0))
+    Math.min(138, Math.floor(520 / Math.max(nTiers, 1)) + maxHuecosFranja * 5 + (maxTubosPorNivelMesa <= 2 ? 18 : 0))
   );
   if (nTiers >= 3) tierRowH = Math.max(tierRowH, 92);
   if (maxTubosPorNivelMesa <= 2) tierRowH = Math.max(tierRowH, 96);
@@ -1995,7 +2030,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     const slotPadMM = compactMesa ? 6 : 8;
     const gapVNeedMM = 2 * hrPreMM + slotPadMM;
     const bandPadMM = compactMesa ? 46 : 56;
-    const stackMinMM = (huecosN - 1) * gapVNeedMM + 2 * hrPreMM + bandPadMM;
+    const stackMinMM = (maxHuecosFranja - 1) * gapVNeedMM + 2 * hrPreMM + bandPadMM;
     tierRowH = Math.max(tierRowH, stackMinMM, compactMesa ? 118 : 136);
   }
   const tierGapMM = nTiers > 1 ? (compactMesa ? 14 : 20) : 0;
@@ -2106,6 +2141,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
    */
   const padAlongX = 10;
   function mesaMultinivelHoleLayout(G) {
+    const tierHx = huecosEnFranja(G.t);
     const xC = (G.xL + G.xR) / 2;
     const colW = Math.max(10, G.xR - G.xL);
     const hr = interactive
@@ -2115,22 +2151,22 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     const vBand = compactMesa ? 22 : 28;
     const maxHalf = Math.max(0, tierRowH / 2 - vBand);
     let gapV = Math.max(gapVMin, hr * 1.12);
-    let halfSpan = huecosN <= 1 ? 0 : ((huecosN - 1) * gapV) / 2;
-    if (huecosN > 1 && halfSpan + hr > maxHalf) {
-      const gapVF = (2 * (maxHalf - hr)) / (huecosN - 1);
+    let halfSpan = tierHx <= 1 ? 0 : ((tierHx - 1) * gapV) / 2;
+    if (tierHx > 1 && halfSpan + hr > maxHalf) {
+      const gapVF = (2 * (maxHalf - hr)) / (tierHx - 1);
       gapV = gapVF < gapVMin ? gapVMin : gapVF;
-      halfSpan = ((huecosN - 1) * gapV) / 2;
+      halfSpan = ((tierHx - 1) * gapV) / 2;
     }
     const down = G.t % 2 === 0;
     function gyForJ(j) {
-      const ji = down ? j : huecosN - 1 - j;
+      const ji = down ? j : tierHx - 1 - j;
       return G.rowY - halfSpan + ji * gapV;
     }
     let yMin = G.rowY;
     let yMax = G.rowY;
-    if (huecosN > 1) {
+    if (tierHx > 1) {
       yMin = gyForJ(0);
-      yMax = gyForJ(huecosN - 1);
+      yMax = gyForJ(tierHx - 1);
       if (yMin > yMax) {
         const tmp = yMin;
         yMin = yMax;
@@ -2325,7 +2361,8 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       const L = mesaMultinivelHoleLayout(G);
       const hrGi = L.hr;
       const slotAlongG = L.slotAlongG;
-      for (let j = 0; j < huecosN; j++) {
+      const tierHxDraw = huecosEnFranja(G.t);
+      for (let j = 0; j < tierHxDraw; j++) {
         const gx = L.xC;
         const gy = L.gyForJ(j);
         const numShow = j + 1;

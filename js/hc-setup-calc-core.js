@@ -1776,6 +1776,7 @@ function guardarSetupYContinuar() {
     else delete state.configTorre.nftLongCanalM;
     delete state.configTorre.nftMesaMultinivel;
     delete state.configTorre.nftMesaTubosPorNivelStr;
+    delete state.configTorre.nftMesaHuecosPorNivelStr;
     delete state.configTorre.nftMesaSeparacionNivelesCm;
     delete state.configTorre.nftMesaRecorridoAgua;
     delete state.configTorre.nftParedRecorridoAgua;
@@ -1789,10 +1790,16 @@ function guardarSetupYContinuar() {
       state.configTorre.nftMesaRecorridoAgua =
         montSv.mesaRecorrido || (typeof nftMesaRecorridoNormalizada === 'function' ? nftMesaRecorridoNormalizada() : 'serie');
       if (montSv.mesaMultinivel) {
-        const tiersSv = parseNftMesaTubosPorNivelStr(montSv.mesaTubosStr);
+        const tiersSv = parseNftMesaTubosPorNivelStrLoose(montSv.mesaTubosStr);
         if (tiersSv.length >= 2) {
+          let huecosSv = parseNftMesaHuecosPorNivelStrLoose(montSv.mesaHuecosStr);
+          while (huecosSv.length < tiersSv.length) huecosSv.push(0);
+          huecosSv = huecosSv.slice(0, tiersSv.length);
           state.configTorre.nftMesaMultinivel = true;
           state.configTorre.nftMesaTubosPorNivelStr = tiersSv.join(',');
+          state.configTorre.nftMesaHuecosPorNivelStr = huecosSv.join(',');
+          const hxPos = huecosSv.filter(h => h > 0);
+          if (hxPos.length) state.configTorre.nftHuecosPorCanal = Math.min(30, Math.max(2, Math.max.apply(null, hxPos)));
           if (montSv.mesaSepCm > 0) state.configTorre.nftMesaSeparacionNivelesCm = montSv.mesaSepCm;
         }
       }
@@ -1863,6 +1870,7 @@ function guardarSetupYContinuar() {
     delete state.configTorre.nftAlturaBombeoCm;
     delete state.configTorre.nftMesaMultinivel;
     delete state.configTorre.nftMesaTubosPorNivelStr;
+    delete state.configTorre.nftMesaHuecosPorNivelStr;
     delete state.configTorre.nftMesaSeparacionNivelesCm;
     delete state.configTorre.nftMesaRecorridoAgua;
     delete state.configTorre.nftParedRecorridoAgua;
