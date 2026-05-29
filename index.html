@@ -1319,8 +1319,8 @@
           <summary class="torre-vol-detalles-summary">Pasos, flujo en escalera y asistente</summary>
           <div class="torre-vol-wrap torre-vol-wrap--inner">
             <ol class="torre-nft-ol">
-              <li><strong>Mesa, escalera o pared</strong> (+ multinivel o dos caras si aplica).</li>
-              <li><strong>Tubos, huecos y pendiente</strong> (mismo n.º de huecos por tubo en el dibujo).</li>
+              <li><strong>Mesa, escalera o pared</strong> (+ <strong>multinivel</strong> en mesa: mismos tubos en cada nivel, o dos caras en escalera).</li>
+              <li><strong>Tubos, huecos y pendiente</strong> — en multinivel: tubos iguales por nivel; huecos pueden variar por franja (asistente).</li>
               <li><strong>Cesta (net pot)</strong> aquí o en asistente → <strong>Aplicar montaje NFT</strong>. Canal, lámina y bomba: botón de abajo.</li>
             </ol>
             <p class="torre-nft-p-soft">En <strong>escalera / A</strong> el esquema asume alimentación al <strong>1.º tubo</strong> por cara, zigzag en cada peldaño y retorno al depósito desde el último (montaje en pendiente típico).</p>
@@ -1410,14 +1410,16 @@
           <label class="torre-nft-check-row">
             <input type="checkbox" id="sysNftMesaMultinivelChk" class="torre-nft-check"
               onchange="onSistemaNftMesaMultinivelToggle()">
-            <span>Mesa <strong>multinivel</strong> (tubos por franja, ej. 1+2+4)</span>
+            <span>Mesa <strong>multinivel</strong> (mismos tubos en cada nivel)</span>
           </label>
           <div id="sysNftMesaMultinivelFields" class="torre-nft-mesa-nested setup-hidden">
             <label class="form-label torre-nft-label-xs" for="sysNftMesaNumNiveles">Niveles (superpuestos)</label>
             <input type="number" id="sysNftMesaNumNiveles" class="torre-nft-input-mt" min="2" max="8" step="1" value="2" inputmode="numeric" autocomplete="off"
               onchange="onSistemaNftMesaNumNivelesChange()">
-            <div id="sysNftMesaTubosPorNivelGrid" class="torre-nft-tubos-grid"></div>
-            <p class="torre-nft-p-note"><strong>Cestas/tubo:</strong> campo <strong>Huecos / canal</strong> arriba (mismo valor en todos).</p>
+            <label class="form-label torre-nft-label-xs torre-nft-label-sep" for="sysNftMesaTubosTodos">Tubos por nivel (todos iguales)</label>
+            <input type="number" id="sysNftMesaTubosTodos" class="torre-nft-input-mt" min="0" max="12" step="1" value="0" inputmode="numeric" autocomplete="off"
+              onchange="try{ if(typeof renderTorre==='function') renderTorre(); }catch(_){}">
+            <p class="torre-nft-p-note setup-hidden" id="sysNftMesaMultinivelHuecosNote"><strong>Mismos tubos</strong> en cada nivel. Los <strong>huecos por franja</strong> se afinan en el asistente; aquí <strong>Huecos / canal</strong> es solo referencia común.</p>
             <label class="form-label torre-nft-label-xs torre-nft-label-sep" for="sysNftMesaSepCm">Separación niveles (cm)</label>
             <input type="number" id="sysNftMesaSepCm" class="torre-nft-input-mt" min="0" max="150" step="1" placeholder="ej. 28">
           </div>
@@ -3178,10 +3180,10 @@
                 Disposición física
               </div>
               <p class="setup-nft-layout-help setup-nft-layout-help--brief">
-                <strong>Mesa</strong>: tubos en paralelo o varios niveles. <strong>Escalera</strong>: peldaños inclinados (1–2 caras). <strong>Pared</strong>: tubos en zigzag en el muro. Indica la altura de bombeo si el agua sube al primer tubo.
+                <strong>Mesa</strong>: serie/paralelo en un nivel, o <strong>multinivel</strong> (mismos tubos en cada franja). <strong>Escalera</strong>: peldaños (1–2 caras). <strong>Pared</strong>: zigzag. Altura de bombeo si el agua sube al primer tubo.
               </p>
               <p class="setup-nft-layout-help setup-nft-layout-help--full">
-                <strong>Mesa</strong>: tubos horizontales en paralelo o en varios niveles (más cosecha por m²).
+                <strong>Mesa</strong>: tubos horizontales en serie/paralelo, o <strong>multinivel</strong> (mismo n.º de tubos en cada nivel; huecos por franja).
                 <strong>Escalera</strong> / inclinado: peldaños; una o dos caras (tipo A). El diagrama sigue el NFT escalonado usual: alimentación al primer peldaño, enlace entre niveles en el extremo opuesto del canal (como manguitos/codos) y caída del último peldaño al depósito.
                 <strong>Pared</strong>: tubos horizontales apilados en zigzag en el muro.
                 La <strong>altura de bombeo</strong> hasta el 1.º tubo suma carga a la bomba; en <strong>pared y escalera</strong> conviene indicarla siempre.
@@ -3222,7 +3224,7 @@
                 <label class="setup-nft-check-label">
                   <input type="checkbox" id="nftMesaMultinivelChk" class="setup-nft-check-input"
                     onchange="onNftMesaMultinivelToggle()">
-                  <span>Mesa con <strong>varios niveles</strong> (distintos tubos por franja, ej. 1+2+4)</span>
+                  <span>Mesa con <strong>varios niveles</strong> (mismo número de tubos en cada nivel)</span>
                 </label>
                 <div id="nftMesaMultinivelFields" class="setup-hidden setup-nft-subfields">
                   <label class="form-label setup-nft-field-label" for="nftMesaNumNiveles">Número de niveles (mesas superpuestas)</label>
@@ -4692,13 +4694,13 @@
   <script src="js/torre-render-main.js?v=2026-05-28-nft-difusor-rdwc-ec"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-rdwc-ecph-nft-dif"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-mm-tubos-uniform"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-28-hydro-audit"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15-wizard-aislado"></script>
 
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-28-hydro-audit"></script>
   <script src="js/diagrams/nft/nft-hydraulic-model.js?v=2026-05-28-mm-flow-air"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-mm-flow-air"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-nft-difusor-fijo"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-mm-tubos-uniform"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-mm-tubos-uniform"></script>
   <script src="js/diagrams/nft/nft-pared-illustration.js?v=2026-05-28-nft-pump-unify"></script>
   <script src="js/diagrams/nft/nft-cartoon-enhance.js?v=2026-05-19-nft-cartoon3"></script>
   <script src="js/diagrams/nft/nft-medir-view.js?v=2026-05-28-nft-difusor-fijo"></script>
@@ -4713,9 +4715,9 @@
   <script src="js/hc-setup-mediciones-logic.js?v=2026-05-28-hydro-audit"></script>
   <script src="js/hc-medicion-wizard.js?v=6"></script>
   <script src="js/hc-tools-pro.js?v=10"></script>
-  <script src="js/hc-setup-checklist.js?v=2026-05-28-hydro-audit"></script>
+  <script src="js/hc-setup-checklist.js?v=2026-05-28-mm-tubos-uniform"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
-  <script src="js/hc-setup-consejos.js?v=2026-05-15-cesta-matrix"></script>
+  <script src="js/hc-setup-consejos.js?v=2026-05-28-mm-tubos-uniform"></script>
   <script src="js/calendario-logic.js?v=9"></script>
   <script src="js/meteo-forecast-meteo.js?v=13"></script>
   <script src="js/meteo-forecast-dashboard.js?v=21"></script>
@@ -4723,7 +4725,7 @@
   <script src="js/riego-calculo-calcular.js?v=2026-05-20-sombra-cultivo"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=6"></script>
-  <script src="js/app-hc-setup-onboarding.js?v=2026-05-15-dwc-tronco-setup"></script>
+  <script src="js/app-hc-setup-onboarding.js?v=2026-05-28-mm-tubos-uniform"></script>
   <script src="js/hc-sistema-icons.js?v=2026-05-15-sistema-ico"></script>
   <script src="js/app-hc-torres-badges-notifs.js?v=2026-05-28-rdwc-ecph-nft-dif"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=2026-05-26-paralelo-colectores"></script>

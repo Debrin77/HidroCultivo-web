@@ -174,6 +174,8 @@ function nftTuberiaReferenciaDocHtml(opts) {
     'Un difusor de aire en el depósito ayuda al oxígeno disuelto; la parte superior de las raíces debe seguir en contacto con el <strong>aire</strong> dentro del canal. ' +
     'Indica en el <strong>asistente</strong> las medidas <strong>reales de tu montaje</strong>: los botones recogen los Ø de canal y de tubería de riego más usados; elige los que correspondan a lo que tienes. ' +
     'El Ø que eliges para la bomba debe ser el del <strong>tramo más restrictivo</strong> de la línea de alimentación (no el del retorno ni el del tubo de cultivo).</p>' +
+    '<p class="nft-ref-h3 ' + (cl ? 'nft-ref-h3--cl' : '') + '">4. Mesa multinivel (varios niveles superpuestos)</p>' +
+    '<p class="nft-ref-p">En esta app el montaje multinivel asume el <strong>mismo número de tubos en cada nivel</strong> (columnas alineadas entre franjas). El agua recorre los niveles en <strong>serie</strong> (serpentín). Los <strong>huecos por franja</strong> pueden ser distintos (arriba → abajo); configúralos en el asistente. Indica <strong>separación entre niveles</strong> o altura de bombeo para afinar la carga de la bomba.</p>' +
     '</div>'
   );
 }
@@ -708,8 +710,8 @@ function nftTextoResumenInstalacion(cfg) {
   const t = getTorreActiva();
   const nombre = ((t?.nombre || '').trim() || 'Instalación');
   const hyd = getNftHidraulicaDesdeConfig(cfg);
-  const ch = hyd.nCh;
-  const hx = hyd.nHx;
+  const qtyTxt =
+    typeof nftResumenCantidadesBreve === 'function' ? nftResumenCantidadesBreve(cfg) : hyd.nCh + ' tubos × ' + hyd.nHx + ' huecos';
   const vol = getVolumenDepositoMaxLitros(cfg);
   const pend = cfg.nftPendientePct ?? 2;
   const tubo = cfg.nftTuboInteriorMm || 25;
@@ -725,7 +727,7 @@ function nftTextoResumenInstalacion(cfg) {
       : { label: objNft === 'baby' ? 'Alta densidad / baby leaf (cosecha joven)' : 'Planta adulta (tamaño completo)' };
   let extraDisp = '';
   if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
-    extraDisp = ' multinivel ' + hyd.mesaTiers.join('+');
+    extraDisp = ' multinivel';
   }
   if (disp === 'escalera' && hyd.escaleraNiveles != null && hyd.escaleraCaras != null) {
     extraDisp += ' · ' + hyd.escaleraNiveles + '×' + hyd.escaleraCaras + ' cara(s)';
@@ -737,7 +739,7 @@ function nftTextoResumenInstalacion(cfg) {
         ? vol + ' L (mezcla ' + vMez + ' L)'
         : vol + ' L'
       : 'L por indicar';
-  let s = nombre + ' — ' + ch + ' tubos × ' + hx + ' huecos — ' + volTxt + ' · ' + dispTxt + extraDisp + ' · pend. ~' + pend + '%';
+  let s = nombre + ' — ' + qtyTxt + ' — ' + volTxt + ' · ' + dispTxt + extraDisp + ' · pend. ~' + pend + '%';
   s += ' · objetivo ' + objSpec.label;
   if (altEff > 0) s += ' · ↑~' + altEff + ' cm';
   if (b) {
@@ -781,11 +783,12 @@ function renderTorreSistemaResumenTabla(cfg) {
     let montajeDet =
       disp === 'escalera' ? 'Escalera / A-frame' : disp === 'pared' ? 'Pared (zigzag)' : 'Mesa';
     if (disp === 'mesa' && cfg.nftMesaMultinivel && hyd.mesaTiers && hyd.mesaTiers.length >= 2) {
+      const tubLbl =
+        typeof nftMesaTubosUniformLabel === 'function'
+          ? nftMesaTubosUniformLabel(hyd.mesaTiers)
+          : hyd.mesaTiers.join(' · ');
       montajeDet =
-        'Mesa multinivel · ' +
-        hyd.mesaTiers.length +
-        ' niveles · tubos por nivel ' +
-        hyd.mesaTiers.join(' · ');
+        'Mesa multinivel · ' + hyd.mesaTiers.length + ' niveles · ' + tubLbl + ' tubos/nivel';
     } else if (disp === 'mesa') {
       const rec =
         typeof nftMesaRecorridoNormalizada === 'function'
@@ -1380,10 +1383,14 @@ function refrescarNftLayoutResumenChecklist() {
       hyd.mesaHuecosTiers && hyd.mesaHuecosTiers.length >= 2
         ? hyd.mesaHuecosTiers.join('+')
         : String(hyd.nHx);
+    const tubLbl2 =
+      typeof nftMesaTubosUniformLabel === 'function'
+        ? nftMesaTubosUniformLabel(hyd.mesaTiers)
+        : hyd.mesaTiers.join('+');
     lines.push(
       'Multinivel: <strong>' +
-        hyd.mesaTiers.join('+') +
-        '</strong> tubos · <strong>' +
+        tubLbl2 +
+        '</strong> tubos/nivel · <strong>' +
         hxMm +
         '</strong> huecos/franja · ' +
         hyd.mesaTiers.length +
@@ -2622,10 +2629,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
   }
 
   const nTot = geoms.length;
-  const tiersFmt = tiersNums.join(' · ');
+  const tiersFmt =
+    typeof nftMesaTubosUniformLabel === 'function'
+      ? nftMesaTubosUniformLabel(tiersNums)
+      : tiersNums.join(' · ');
   const mesaNivelesTxt =
     nTiers > 1
-      ? nTiers + ' niveles · tubos por nivel ' + tiersFmt + ' · ' + nTot + ' tubos en total'
+      ? nTiers + ' niveles · ' + tiersFmt + ' tubos/nivel · ' + nTot + ' tubos en total'
       : '1 nivel · ' + (tiersNums[0] != null ? tiersNums[0] : 0) + ' tubos';
   const mesaTitleLong = 'NFT mesa · ' + vol + ' L · vista cenital';
 

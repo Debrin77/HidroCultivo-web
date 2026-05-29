@@ -1642,6 +1642,7 @@ function getCLPasos() {
     }]
     : [];
 
+  const nftMm = esNft && cfg.nftMesaMultinivel === true;
   const pasoNftTuberiaRef = esNft
     ? [{
       id: 'Nref',
@@ -1649,8 +1650,13 @@ function getCLPasos() {
       paso: 'N·ref',
       desc:
         'Configura el <strong>canal donde van las cestas</strong> (tubo redondo o ancho útil de perfil rectangular), la <strong>lámina de agua</strong> (~3 mm habitual) y opcionalmente la <strong>longitud</strong> de cada canal. ' +
-        'Con eso la app estima volumen de película y caudal orientativo, y contrasta con tu bomba en el paso N0.',
-      nota: 'El Ø de <strong>línea de riego</strong> (16–32 mm según tramo; retorno 40–50 mm aparte) se configuró en Cultivo e instalación; aquí solo el canal de cultivo (redondo o rectangular), lámina y longitud.',
+        'Con eso la app estima volumen de película y caudal orientativo, y contrasta con tu bomba en el paso N0.' +
+        (nftMm
+          ? ' En <strong>mesa multinivel</strong> los tubos son iguales en cada nivel; revisa el resumen de montaje debajo.'
+          : ''),
+      nota:
+        'El Ø de <strong>línea de riego</strong> (16–32 mm según tramo; retorno 40–50 mm aparte) se configuró en Cultivo e instalación; aquí solo el canal de cultivo (redondo o rectangular), lámina y longitud.' +
+        (nftMm ? ' Multinivel: serie entre franjas; huecos pueden variar por nivel (asistente).' : ''),
       extraHtml: nftTuberiaReferenciaDocHtml({ forChecklist: true }),
       campos: [
         {
@@ -1753,8 +1759,17 @@ function getCLPasos() {
         '<div id="clNftBombaUsuarioMsg" class="cl-nft-bomba-usuario-msg" role="status"></div>' },
     ...(!primerLlenado ? [{
       id:'N1', seccion:null, paso:'N1',
-      desc:'Inspeccionar los ' + nftCh + ' canales: sin barro orgánico, raíces compactando el fondo ni tapones en codos',
-      nota:'NFT: la película de agua debe poder recorrer todo el canal; ~' + nftHx + ' huecos/canal en tu configuración'
+      desc:
+        (nftMm
+          ? 'Inspeccionar todos los canales del multinivel (' +
+            nftCh +
+            ' tubos en total): película continua, codos entre franjas y columnas alineadas'
+          : 'Inspeccionar los ' + nftCh + ' canales: sin barro orgánico, raíces compactando el fondo ni tapones en codos'),
+      nota: nftMm
+        ? 'Multinivel (' +
+          (typeof nftResumenCantidadesBreve === 'function' ? nftResumenCantidadesBreve(cfg) : nftCh + ' tubos') +
+          '): revisa cada franja y el salto de agua entre niveles.'
+        : 'NFT: la película de agua debe poder recorrer todo el canal; ~' + nftHx + ' huecos/canal en tu configuración',
     }] : []),
     { id:'N2', seccion:null, paso:'N2',
       desc:'Revisar retornos y bajantes al depósito: flujo continuo, sin burbujas atrapadas en subidas largas',

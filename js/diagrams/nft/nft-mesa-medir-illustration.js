@@ -452,8 +452,14 @@
     const tid = 'nftMesaMi' + suf;
     const L = computeMesaMedirLayout(cfg, EO);
     const scene = buildScene(L, suf, EO);
+    const tubFoot =
+      L.tiers && typeof global.nftMesaTubosUniformLabel === 'function'
+        ? global.nftMesaTubosUniformLabel(L.tiers)
+        : L.tiers
+          ? L.tiers.join('+')
+          : '';
     const foot = L.multinivel
-      ? 'Mesa multinivel · ' + L.tiers.join('+') + ' tubos/nivel · ' + L.vol + ' L'
+      ? 'Mesa multinivel · ' + tubFoot + ' tubos/nivel · ' + L.vol + ' L'
       : 'Mesa · ' + L.nCh + ' tubos × ' + L.huecosN + ' huecos · ' + L.vol + ' L';
 
     return (

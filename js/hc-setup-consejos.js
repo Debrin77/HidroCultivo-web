@@ -1784,11 +1784,30 @@ function buildConsejosNftHidraulica() {
         },
       })
     : '';
+  const mmCard =
+    cfg.tipoInstalacion === 'nft' && cfg.nftMesaMultinivel
+      ? htmlConsejoCard(cat, {
+          icono: '📚',
+          titulo: 'Mesa multinivel — reglas en la app',
+          texto:
+            '<p class="consejo-p consejo-p--tight"><strong>Resumen:</strong> ' +
+            (typeof nftResumenCantidadesBreve === 'function' ? escHtmlUi(nftResumenCantidadesBreve(cfg)) : 'mesa multinivel') +
+            '.</p>' +
+            '<p class="consejo-p consejo-p--tight"><strong>Mismos tubos</strong> en cada nivel (columnas alineadas). ' +
+            'Agua en <strong>serie</strong> entre franjas (sin paralelo). ' +
+            '<strong>Huecos por franja</strong> en el asistente. ' +
+            '<strong>Difusor</strong> en depósito. Revisa saltos entre niveles en el checklist.</p>',
+          alerta: {
+            tipo: 'info',
+            txt: 'ℹ️ En Cultivo e instalación el campo «Huecos / canal» es referencia común; el detalle por franja queda en la config guardada desde el asistente.',
+          },
+        })
+      : '';
   const docWrap =
     '<div class="consejo-card"><div class="consejo-texto consejo-texto--flush">' +
     nftTuberiaReferenciaDocHtml({ forChecklist: true }) +
     '</div></div>';
-  return dyn + cultivo + formula + docWrap;
+  return dyn + mmCard + cultivo + formula + docWrap;
 }
 
 function buildConsejosCestasPorSistemaTabla() {

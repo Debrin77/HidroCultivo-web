@@ -1509,12 +1509,12 @@ function updateNftSetupPreview() {
       (Number.isFinite(pend) ? pend : 0) + '<span class="setup-inline-unit-percent">%</span>';
   }
   if (elV) elV.innerHTML = vol + '<span class="setup-inline-unit-l">L</span>';
+  const slTodos = document.getElementById('sliderNftMesaTubosTodos');
+  const vTodos = document.getElementById('valNftMesaTubosTodos');
+  if (slTodos && vTodos) vTodos.textContent = String(parseInt(String(slTodos.value), 10) || 0);
   for (let i = 0; i < 8; i++) {
-    const slT = document.getElementById('sliderNftMesaTierTubos_' + i);
     const slH = document.getElementById('sliderNftMesaTierHuecos_' + i);
-    const vT = document.getElementById('valNftMesaTierTubos_' + i);
     const vH = document.getElementById('valNftMesaTierHuecos_' + i);
-    if (slT && vT) vT.textContent = String(parseInt(String(slT.value), 10) || 0);
     if (slH && vH) vH.textContent = String(parseInt(String(slH.value), 10) || 0);
   }
 

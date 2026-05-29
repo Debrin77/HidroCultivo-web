@@ -92,16 +92,24 @@ function getSetupPlantasFilasCols() {
       return { filas: 0, cols: 0, labelFila: 'Tubo', labelCol: 'Hueco' };
     }
     let niveles = Math.max(1, Math.min(24, nftNvSlider));
+    let colsHuecos = Math.max(1, Math.min(30, huecos));
     if (mont.disposicion === 'mesa' && mont.mesaMultinivel && typeof parseNftMesaTubosPorNivelStr === 'function') {
       const tiers = parseNftMesaTubosPorNivelStr(mont.mesaTubosStr || '');
-      if (tiers.length >= 2) niveles = Math.min(24, tiers.reduce((a, b) => a + b, 0));
+      if (tiers.length >= 2) {
+        niveles = Math.min(24, tiers.reduce((a, b) => a + b, 0));
+        const hxT = typeof parseNftMesaHuecosPorNivelStrLoose === 'function'
+          ? parseNftMesaHuecosPorNivelStrLoose(mont.mesaHuecosStr || '')
+          : [];
+        const hxPos = hxT.filter(h => h > 0);
+        if (hxPos.length) colsHuecos = Math.max(1, Math.min(30, Math.max.apply(null, hxPos)));
+      }
     } else if (mont.disposicion === 'escalera') {
       const caras = mont.escaleraCaras === 2 ? 2 : 1;
       niveles = Math.min(24, Math.max(1, nftNvSlider * caras));
     }
     return {
       filas: niveles,
-      cols: Math.max(1, Math.min(30, huecos)),
+      cols: colsHuecos,
       labelFila: 'Tubo',
       labelCol: 'Hueco',
     };
@@ -568,9 +576,13 @@ function actualizarResumenSetup() {
 
   el.innerHTML =
     (isNft
-      ? '🪴 NFT: <strong>' + (hydNFT ? hydNFT.nCh : niveles) + ' tubos × ' + cestas + ' huecos/canal · ' + pendTxt + volTxtResume + '</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong> · disposición <strong>' +
+      ? '🪴 NFT: <strong>' +
+        (hydNFT && typeof nftResumenCantidadesBreve === 'function'
+          ? nftResumenCantidadesBreve({ tipoInstalacion: 'nft', nftMesaMultinivel: montR.mesaMultinivel, nftMesaTubosPorNivelStr: montR.mesaTubosStr, nftMesaHuecosPorNivelStr: montR.mesaHuecosStr, nftNumCanales: hydNFT.nCh, nftHuecosPorCanal: cestas, nftDisposicion: montR.disposicion })
+          : (hydNFT ? hydNFT.nCh : niveles) + ' tubos × ' + cestas + ' huecos') +
+        ' · ' + pendTxt + volTxtResume + '</strong> · tubo principal Ø <strong>' + setupNftTuboMm + ' mm</strong> · disposición <strong>' +
         (montR.disposicion === 'escalera' ? 'escalera' : montR.disposicion === 'pared' ? 'pared' : 'mesa') +
-        (montR.disposicion === 'mesa' && montR.mesaMultinivel ? ' · multinivel' : '') +
+        (montR.disposicion === 'mesa' && montR.mesaMultinivel ? ' · multinivel (tubos iguales/nivel)' : '') +
         (montR.disposicion === 'escalera' && montR.escaleraCaras === 2 ? ' · A (2 caras)' : '') +
         '</strong>' +
         (potNft.rimMm != null || potNft.heightMm != null
