@@ -25,7 +25,7 @@
     const bomb = typeof getNftBombaDesdeConfig === 'function' ? getNftBombaDesdeConfig(cfg) : null;
     return {
       calentador: eq.includes('calentador'),
-      difusor: eq.includes('difusor'),
+      difusor: true,
       interactive: true,
       cartoonMedir: true,
       bombaInfo: bomb,

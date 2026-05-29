@@ -1603,7 +1603,13 @@ function nftRefreshSetupCalculadoUi(draft, bNft, hyd) {
   const elBom = document.getElementById('setupNftRecoBomba');
   const elAir = document.getElementById('setupNftRecoAire');
   const valLegacy = document.getElementById('setupNftRecoValor');
-  if (!elDep && !valLegacy) return;
+  const tuboOk =
+    typeof nftTuboRiegoElegidoEnSetup === 'function' && nftTuboRiegoElegidoEnSetup();
+  if (block) {
+    block.classList.toggle('setup-hidden', !tuboOk);
+    block.setAttribute('aria-hidden', tuboOk ? 'false' : 'true');
+  }
+  if (!tuboOk || (!elDep && !valLegacy)) return;
   draft =
     draft ||
     (typeof buildNftDraftConfigFromSetupUi === 'function' ? buildNftDraftConfigFromSetupUi() : {});
@@ -1863,7 +1869,7 @@ function nftSvgExternalPump(px, py, scale, numOutlets) {
   const footRx = w * 0.4;
   return {
     svg:
-      '<g class="nft-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))" pointer-events="none">' +
+      '<g class="nft-ext-pump nft-recirc-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))" pointer-events="none">' +
       '<ellipse cx="' +
       cx.toFixed(1) +
       '" cy="' +
@@ -1928,6 +1934,29 @@ function nftSvgExternalPump(px, py, scale, numOutlets) {
     w: w,
     h: h,
   };
+}
+
+/**
+ * Bomba de recirculación (agua) al lado del depósito — misma convención que DWC/SRF y vista Medir.
+ * Si hay difusor, la bomba de aire va a la derecha (nftSvgAireadorEnSuelo) y esta bomba a la izquierda.
+ */
+function nftSvgRecircPumpBesideTank(tx, tankY, tankW, tankH, waterTop, waterH, Wsvg, opts) {
+  opts = opts || {};
+  const nTubos = Math.max(1, parseInt(String(opts.nTubosHint), 10) || 4);
+  const nTiers = Math.max(1, parseInt(String(opts.nTiers), 10) || 1);
+  const reserveRightForAir = opts.reserveRightForAir === true;
+  const pumpScale = Math.max(0.82, Math.min(1.32, 0.9 + nTubos * 0.012 + Math.max(0, nTiers - 1) * 0.04));
+  const pumpW = 54 * pumpScale;
+  const pumpH = 40 * pumpScale;
+  const pumpY = waterTop + waterH * 0.5 - pumpH * 0.5;
+  const rightX = tx + tankW + 12;
+  const leftX = Math.max(8, tx - pumpW - 12);
+  let pumpX = rightX;
+  if (reserveRightForAir) pumpX = leftX;
+  else if (rightX + pumpW > Wsvg - 8) pumpX = leftX;
+  const pump = nftSvgExternalPump(pumpX, pumpY, pumpScale, 1);
+  const neededCanvasW = Math.max(Wsvg, pumpX + pumpW + 10, reserveRightForAir ? tx + tankW + 80 : 0);
+  return { svg: pump.svg, pumpX: pumpX, pumpY: pumpY, pumpW: pumpW, pumpH: pumpH, neededCanvasW: neededCanvasW };
 }
 
 /**
@@ -2532,19 +2561,14 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     }
   }
 
-  const difusorWithOwnPumpMM = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
-  let pumpLines = '';
-  if (!difusorWithOwnPumpMM) {
-    const pumpScale = Math.max(0.82, Math.min(1.3, 0.9 + nTubosMesa * 0.012 + Math.max(0, nTiers - 1) * 0.04));
-    const pumpW = 54 * pumpScale;
-    const pumpH = 40 * pumpScale;
-    const rightX = tx + tankW + 12;
-    const leftX = tx - pumpW - 12;
-    const pumpX = rightX + pumpW <= Wsvg - 8 ? rightX : Math.max(8, leftX);
-    const pumpY = tankY + tankH * 0.5 - pumpH * 0.5;
-    const pump = nftSvgExternalPump(pumpX, pumpY, pumpScale, 1);
-    pumpLines += pump.svg;
-  }
+  const difusorWithAirPumpMM = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
+  const recircPumpMM = nftSvgRecircPumpBesideTank(tx, tankY, tankW, tankH, waterTop, waterH, Wsvg, {
+    nTubosHint: nTubosMesa,
+    nTiers: nTiers,
+    reserveRightForAir: difusorWithAirPumpMM,
+  });
+  let pumpLines = recircPumpMM.svg;
+  if (recircPumpMM.neededCanvasW > Wsvg) Wsvg = recircPumpMM.neededCanvasW;
 
   let tierBandsMm = '';
   if (nTiers > 1) {
@@ -2671,7 +2695,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
     plants +
     tankLayer +
     flowTankPortsMM +
-    (!interactive ? pumpLines : '') +
+    pumpLines +
     '</svg>'
   );
 }
@@ -3425,19 +3449,14 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     }
   }
 
-  const difusorWithOwnPumpEsc = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
-  let pumpLines = '';
-  if (!difusorWithOwnPumpEsc) {
-    const pumpScale = Math.max(0.82, Math.min(1.32, 0.9 + nTubosEscTotal * 0.013 + (car === 2 ? 0.06 : 0)));
-    const pumpW = 54 * pumpScale;
-    const pumpH = 40 * pumpScale;
-    const rightX = tx + tankW + 12;
-    const leftX = tx - pumpW - 12;
-    const pumpX = rightX + pumpW <= Wsvg - 8 ? rightX : Math.max(8, leftX);
-    const pumpY = tankY + tankH * 0.5 - pumpH * 0.5;
-    const pump = nftSvgExternalPump(pumpX, pumpY, pumpScale, 1);
-    pumpLines += pump.svg;
-  }
+  const difusorWithAirPumpEsc = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
+  const recircPumpEsc = nftSvgRecircPumpBesideTank(tx, tankY, tankW, tankH, waterTop, waterH, Wsvg, {
+    nTubosHint: nTubosEscTotal,
+    nTiers: nv,
+    reserveRightForAir: difusorWithAirPumpEsc,
+  });
+  let pumpLines = recircPumpEsc.svg;
+  if (recircPumpEsc.neededCanvasW > Wsvg) Wsvg = recircPumpEsc.neededCanvasW;
 
   if (interactive) {
     back = '<g pointer-events="none">' + back + '</g>';
@@ -3520,7 +3539,7 @@ function buildNftEscaleraDiagramSvg(nivelesCara, caras, huecos, pendPct, volL, s
     channelLabels +
     tankLayer +
     flowTankPortsEsc +
-    (!interactive ? pumpLines : '') +
+    pumpLines +
     '</svg>'
   );
 }

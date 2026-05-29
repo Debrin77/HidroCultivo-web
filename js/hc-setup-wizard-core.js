@@ -498,8 +498,19 @@ function rdwcEnsureConfigDefaults(cfg) {
   if (c.rdwcLayout !== 'line' && c.rdwcLayout !== 'double_row' && c.rdwcLayout !== 'u_shape') c.rdwcLayout = 'line';
   if (c.rdwcAirStonePerBucket !== false) c.rdwcAirStonePerBucket = true;
   c.ecPhEstrategia = 'auto';
-  c.ecPhIntensidad = 'estandar';
+  c.ecPhIntensidad = 'conservador';
   return c;
+}
+
+/** NFT: difusor de aire en el depósito de circulación (siempre). */
+function nftEnsureDifusorEnDeposito(cfg) {
+  if (!cfg) return cfg;
+  const tipo =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipo !== 'nft') return cfg;
+  if (!Array.isArray(cfg.equipamiento)) cfg.equipamiento = [];
+  if (cfg.equipamiento.indexOf('difusor') < 0) cfg.equipamiento.push('difusor');
+  return cfg;
 }
 
 function initSetupRdwcPresetSelect() {
@@ -2346,7 +2357,25 @@ function infoSistemaEntrada(e) {
 }
 let setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
 /** NFT: Ø interior línea de alimentación/distribución desde bomba (no el canal de cultivo 75–110 mm), mm — 16–40 */
-let setupNftTuboMm = 25;
+let setupNftTuboMm = null;
+
+/** true si el usuario eligió un Ø de tubería de riego en el asistente (chip marcado). */
+function nftTuboRiegoElegidoEnSetup() {
+  return [16, 20, 25, 32, 40].some(d => document.getElementById('nftTubo' + d)?.classList.contains('selected'));
+}
+
+function hcResetNftTuboRiegoSeleccion() {
+  setupNftTuboMm = null;
+  [16, 20, 25, 32, 40].forEach(d => {
+    const el = document.getElementById('nftTubo' + d);
+    if (el) el.classList.remove('selected');
+  });
+  const block = document.getElementById('setupNftRecoBlock');
+  if (block) {
+    block.classList.add('setup-hidden');
+    block.setAttribute('aria-hidden', 'true');
+  }
+}
 let setupNftCanalDiamMm = 90;
 
 function readNftCanalGeomFromSetupUi() {
@@ -2481,8 +2510,12 @@ function abrirSetup() {
   seleccionarNftEscaleraCaras(nftEscaleraCarasNormalizada(c.nftEscaleraCaras));
   onNftMesaMultinivelToggle();
   refrescarNftMontajeSubpanels();
-  setupNftTuboMm = Math.max(16, Math.min(40, parseInt(String(c.nftTuboInteriorMm), 10) || 25));
-  seleccionarTuboNft(setupNftTuboMm);
+  const tuboCfg = parseInt(String(c.nftTuboInteriorMm), 10);
+  if (Number.isFinite(tuboCfg) && tuboCfg >= 16 && tuboCfg <= 40) {
+    seleccionarTuboNft(tuboCfg);
+  } else {
+    hcResetNftTuboRiegoSeleccion();
+  }
   setupNftCanalDiamMm = Math.max(50, Math.min(160, parseInt(String(c.nftCanalDiamMm), 10) || 90));
   const anchEl = document.getElementById('nftCanalAnchoMm');
   if (anchEl) anchEl.value = String(c.nftCanalAnchoMm != null ? c.nftCanalAnchoMm : 100);
@@ -3081,6 +3114,7 @@ function nftColectoresParaleloDesdeConfig(cfg) {
   cfg = cfg || {};
   const disp = nftDisposicionNormalizada(cfg.nftDisposicion);
   if (disp === 'mesa') {
+    if (cfg.nftMesaMultinivel) return false;
     return nftMesaRecorridoNormalizada(cfg.nftMesaRecorridoAgua) === 'paralelo';
   }
   if (disp === 'pared') {
@@ -3543,8 +3577,11 @@ function readNftMontajeFromSetupUi() {
     Number.isFinite(sepRaw) && sepRaw > 0 ? Math.min(150, Math.round(sepRaw)) : 0;
   let escaleraCaras = 1;
   if (document.getElementById('nftEscCara2')?.classList.contains('selected')) escaleraCaras = 2;
-  const mesaRecorrido =
-    document.getElementById('nftMesaRecorridoParalelo')?.checked === true ? 'paralelo' : 'serie';
+  const mesaRecorrido = mesaMultinivel
+    ? 'serie'
+    : document.getElementById('nftMesaRecorridoParalelo')?.checked === true
+      ? 'paralelo'
+      : 'serie';
   return {
     disposicion: dispo,
     alturaBombeoCm: altCm,
@@ -3643,6 +3680,44 @@ function refrescarNftMontajeSubpanels() {
   const chk = document.getElementById('nftMesaMultinivelChk');
   if (mf && chk) mf.classList.toggle('setup-hidden', !(d === 'mesa' && chk.checked));
   if (typeof refrescarNftMesaMultinivelCantidadesUi === 'function') refrescarNftMesaMultinivelCantidadesUi();
+  if (typeof refrescarNftMesaRecorridoMultinivelUi === 'function') refrescarNftMesaRecorridoMultinivelUi();
+}
+
+/** Mesa multinivel: solo serie; oculta y desactiva recorrido en paralelo. */
+function refrescarNftMesaRecorridoMultinivelUi() {
+  const disp = readNftMontajeFromSetupUi().disposicion;
+  const mm = document.getElementById('nftMesaMultinivelChk')?.checked === true;
+  const bloqueaParalelo = disp === 'mesa' && mm;
+  const elS = document.getElementById('nftMesaRecorridoSerie');
+  const elP = document.getElementById('nftMesaRecorridoParalelo');
+  const lS = document.getElementById('nftMesaRecorridoSerieLbl');
+  const lP = document.getElementById('nftMesaRecorridoParaleloLbl');
+  const hint = document.getElementById('nftMesaRecorridoHint');
+  if (bloqueaParalelo) {
+    if (elS) {
+      elS.checked = true;
+      elS.disabled = false;
+    }
+    if (elP) {
+      elP.checked = false;
+      elP.disabled = true;
+    }
+    if (lS) lS.classList.add('selected');
+    if (lP) lP.classList.remove('selected');
+    if (lP) lP.classList.add('setup-hidden');
+    if (hint) {
+      hint.innerHTML =
+        'Con <strong>varios niveles</strong> el agua recorre las franjas en <strong>serie</strong> (serpentín). La opción <strong>paralelo</strong> no aplica en este montaje.';
+    }
+  } else {
+    if (elP) elP.disabled = false;
+    if (lP) lP.classList.remove('setup-hidden');
+    if (hint) {
+      hint.innerHTML =
+        'Paralelo: cada tubo recibe mezcla desde el colector izquierdo y devuelve por el derecho (como bancada comercial). Serie: el agua pasa por todos los tubos en orden.';
+    }
+    if (typeof onNftMesaRecorridoChange === 'function') onNftMesaRecorridoChange('nft');
+  }
 }
 
 const NFT_COUNTS_HELP_DEFAULT =
@@ -3677,6 +3752,7 @@ function onNftMesaMultinivelToggle() {
     if (host) host.innerHTML = '';
   }
   if (typeof refrescarNftMesaMultinivelCantidadesUi === 'function') refrescarNftMesaMultinivelCantidadesUi();
+  if (typeof refrescarNftMesaRecorridoMultinivelUi === 'function') refrescarNftMesaRecorridoMultinivelUi();
   updateNftSetupPreview();
 }
 
@@ -3712,6 +3788,7 @@ function seleccionarNftDisposicion(which) {
     el.setAttribute('aria-pressed', on ? 'true' : 'false');
   });
   refrescarNftMontajeSubpanels();
+  if (typeof refrescarNftMesaRecorridoMultinivelUi === 'function') refrescarNftMesaRecorridoMultinivelUi();
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
 }
 
@@ -4334,9 +4411,10 @@ function sincronizarSistemaNftMontajeUI() {
       ? tipoInstalacionNormalizado(cfg)
       : cfg && cfg.tipoInstalacion;
   const ocultarEcPhObjetivoTorreEnSistema = tipoInst === 'torre';
+  const ocultarEcPhRdwc = tipoInst === 'rdwc';
   const nftYaListo = cfg && nftInstalacionYaConfigurada(cfg);
   if (ecphCard) {
-    const mostrarEcPh = cfg && !ocultarEcPhObjetivoTorreEnSistema && !nftYaListo;
+    const mostrarEcPh = cfg && !ocultarEcPhObjetivoTorreEnSistema && !ocultarEcPhRdwc && !nftYaListo;
     ecphCard.style.display = mostrarEcPh ? 'block' : 'none';
     ecphCard.classList.toggle('setup-hidden', !mostrarEcPh);
     ecphCard.hidden = !mostrarEcPh;
@@ -4348,7 +4426,12 @@ function sincronizarSistemaNftMontajeUI() {
   }
   if (cfg && ocultarEcPhRdwc) {
     cfg.ecPhEstrategia = 'auto';
-    cfg.ecPhIntensidad = 'estandar';
+    cfg.ecPhIntensidad = 'conservador';
+  }
+  if (cfg && tipoInst === 'nft') {
+    try {
+      nftEnsureDifusorEnDeposito(cfg);
+    } catch (_) {}
   }
   const torreMontajeCard = document.getElementById('sistemaTorreMontajeCard');
   if (torreObj) {
@@ -4577,6 +4660,16 @@ function persistTorreObjetivoDesdeChecklist() {
 function aplicarSistemaEcPhStrategyDesdeFormulario() {
   if (!state.configTorre) return;
   const cfg = state.configTorre;
+  const tipoInst =
+    typeof tipoInstalacionNormalizado === 'function'
+      ? tipoInstalacionNormalizado(cfg)
+      : cfg.tipoInstalacion;
+  if (tipoInst === 'rdwc') {
+    cfg.ecPhEstrategia = 'auto';
+    cfg.ecPhIntensidad = 'conservador';
+    saveState();
+    return;
+  }
   const selE = document.getElementById('sysEcPhEstrategia');
   const selI = document.getElementById('sysEcPhIntensidad');
   const ecM = document.getElementById('sysEcManualObjetivoUs');

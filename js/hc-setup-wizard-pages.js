@@ -37,6 +37,7 @@ function buildNftActiveDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffix, e
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 72" role="img" aria-label="Error de carga del diagrama"><text x="12" y="40" font-family="system-ui,sans-serif" font-size="13" fill="#b91c1c">Recarga forzada (Ctrl+F5) o borra caché del sitio.</text></svg>';
   }
   const EO = equipOpts || {};
+  EO.difusor = true;
   const cfg = EO.cfgSnapshot || {};
   const disp = nftDisposicionNormalizada(EO.nftDisposicion != null ? EO.nftDisposicion : cfg.nftDisposicion);
   const recorridoParalelo =
@@ -961,7 +962,15 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, P);
   }
 
-  const pumpLines = '';
+  let pumpLines = '';
+  if (typeof nftSvgRecircPumpBesideTank === 'function') {
+    const recircSerp = nftSvgRecircPumpBesideTank(tx, tankY, tankW, tankH, waterTop, waterH, Wsvg, {
+      nTubosHint: nCh,
+      reserveRightForAir: showDifusor && typeof nftSvgAireadorEnSuelo === 'function',
+    });
+    pumpLines = recircSerp.svg;
+    if (recircSerp.neededCanvasW > Wsvg) Wsvg = recircSerp.neededCanvasW;
+  }
   let scadaCallouts = '';
 
   if (interactive) {
@@ -1011,7 +1020,7 @@ function buildNftSerpentineDiagramSvg(canales, huecos, pendPct, volL, svgIdSuffi
     tankLayer +
     flowTankPorts +
     scadaCallouts +
-    (!interactive ? pumpLines : '') +
+    pumpLines +
     '</svg>'
   );
 }
@@ -1409,7 +1418,6 @@ function buildNftDraftConfigFromSetupUi() {
     nftNumCanales: Number.isFinite(canalesSlider) ? Math.max(0, Math.min(24, canalesSlider)) : 0,
     nftHuecosPorCanal: Number.isFinite(huecos) ? Math.max(0, Math.min(30, huecos)) : 0,
     nftPendientePct: Number.isFinite(pend) && pend >= 1 ? Math.min(4, pend) : 0,
-    nftTuboInteriorMm: setupNftTuboMm,
     nftDisposicion: mont.disposicion,
     nftCanalForma: geom.forma,
     nftCanalDiamMm: geom.diamMm,
@@ -1417,9 +1425,16 @@ function buildNftDraftConfigFromSetupUi() {
     nftLaminaAguaMm: geom.laminaMm,
   };
   if (geom.longCanalM != null) draft.nftLongCanalM = geom.longCanalM;
+  if (
+    typeof nftTuboRiegoElegidoEnSetup === 'function' &&
+    nftTuboRiegoElegidoEnSetup() &&
+    setupNftTuboMm != null
+  ) {
+    draft.nftTuboInteriorMm = setupNftTuboMm;
+  }
   if (mont.alturaBombeoCm > 0) draft.nftAlturaBombeoCm = mont.alturaBombeoCm;
   if (mont.disposicion === 'mesa') {
-    draft.nftMesaRecorridoAgua = mont.mesaRecorrido || 'serie';
+    draft.nftMesaRecorridoAgua = mont.mesaMultinivel ? 'serie' : mont.mesaRecorrido || 'serie';
     if (mont.mesaMultinivel) {
       const tiers = parseNftMesaTubosPorNivelStrLoose(mont.mesaTubosStr);
       if (tiers.length >= 2) {
@@ -1534,7 +1549,7 @@ function updateNftSetupPreview() {
     if (typeof wrapBuildNftActiveDiagramSvg === 'function') wrapBuildNftActiveDiagramSvg();
     nftPrevSvg = buildNftActiveDiagramSvg(canalesDraw, huecosDraw, pendDraw, vol, '', {
       calentador: setupEquipamiento.has('calentador'),
-      difusor: setupEquipamiento.has('difusor'),
+      difusor: true,
       bombaInfo: bNft,
       nftDisposicion: draft.nftDisposicion,
       nftAlturaBombeoCm: altShow > 0 ? altShow : null,
@@ -2641,6 +2656,9 @@ function toggleUbic(tipo) {
 }
 
 function toggleEquip(id) {
+  if (id === 'difusor' && typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'nft') {
+    return;
+  }
   const card = document.getElementById('eq' + id.charAt(0).toUpperCase() + id.slice(1));
   if (setupEquipamiento.has(id)) {
     setupEquipamiento.delete(id);
@@ -2677,6 +2695,12 @@ function syncSetupEquipamientoDesdeConfig(cfg) {
   }
   if (setupEquipamiento.size === 0) {
     setupEquipamiento = new Set(['difusor', 'calentador', 'bomba']);
+  }
+  if (
+    (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'nft') ||
+    (typeof tipoInstalacionNormalizado === 'function' && tipoInstalacionNormalizado(c) === 'nft')
+  ) {
+    setupEquipamiento.add('difusor');
   }
   refreshSetupEquipamientoCardsDesdeSet();
   const ccInp = document.getElementById('setupCalentadorConsignaC');

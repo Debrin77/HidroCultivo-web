@@ -1766,7 +1766,15 @@ function guardarSetupYContinuar() {
     state.configTorre.nftNumCanales = niveles;
     state.configTorre.nftHuecosPorCanal = cestas;
     state.configTorre.nftPendientePct = Math.max(1, Math.min(4, nftPend != null ? nftPend : 2));
-    state.configTorre.nftTuboInteriorMm = setupNftTuboMm;
+    if (
+      typeof nftTuboRiegoElegidoEnSetup === 'function' &&
+      nftTuboRiegoElegidoEnSetup() &&
+      setupNftTuboMm != null
+    ) {
+      state.configTorre.nftTuboInteriorMm = setupNftTuboMm;
+    } else {
+      delete state.configTorre.nftTuboInteriorMm;
+    }
     const geomSv = readNftCanalGeomFromSetupUi();
     state.configTorre.nftCanalForma = geomSv.forma;
     state.configTorre.nftCanalDiamMm = geomSv.diamMm;
@@ -1787,8 +1795,9 @@ function guardarSetupYContinuar() {
     if (montSv.alturaBombeoCm > 0) state.configTorre.nftAlturaBombeoCm = montSv.alturaBombeoCm;
     else delete state.configTorre.nftAlturaBombeoCm;
     if (montSv.disposicion === 'mesa') {
-      state.configTorre.nftMesaRecorridoAgua =
-        montSv.mesaRecorrido || (typeof nftMesaRecorridoNormalizada === 'function' ? nftMesaRecorridoNormalizada() : 'serie');
+      state.configTorre.nftMesaRecorridoAgua = montSv.mesaMultinivel
+        ? 'serie'
+        : montSv.mesaRecorrido || (typeof nftMesaRecorridoNormalizada === 'function' ? nftMesaRecorridoNormalizada() : 'serie');
       if (montSv.mesaMultinivel) {
         const tiersSv = parseNftMesaTubosPorNivelStrLoose(montSv.mesaTubosStr);
         if (tiersSv.length >= 2) {
@@ -1853,6 +1862,7 @@ function guardarSetupYContinuar() {
       delete state.configTorre.nftNetPotHeightMm;
     }
     delete state.configTorre.nftMontajeOrigen;
+    if (typeof nftEnsureDifusorEnDeposito === 'function') nftEnsureDifusorEnDeposito(state.configTorre);
   } else {
     delete state.configTorre.nftNumCanales;
     delete state.configTorre.nftHuecosPorCanal;

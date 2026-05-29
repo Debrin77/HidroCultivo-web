@@ -48,7 +48,7 @@ function renderTorre() {
     const esPared = nftDisposicionNormalizada(cfg.nftDisposicion) === 'pared';
     const svgOpts = {
       calentador: eqArr?.includes('calentador') ?? true,
-      difusor: eqArr?.includes('difusor') ?? true,
+      difusor: true,
       interactive: true,
       bombaInfo: bombMain,
       userCaudalLh: cfg.nftBombaUsuarioCaudalLh || null,
@@ -301,7 +301,7 @@ function renderTorreMedirDiagram() {
           : hyd.nCh;
       let nftSvg = buildNftActiveDiagramSvg(canalesMir, hx, pend, vol, 'MedirMirror', {
         calentador: eqArr.includes('calentador'),
-        difusor: eqArr.includes('difusor'),
+        difusor: true,
         interactive: true,
         cfgSnapshot: cfg,
         nftDisposicion: cfg.nftDisposicion,

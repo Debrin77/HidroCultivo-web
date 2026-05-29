@@ -137,6 +137,8 @@ function refrescarMedirDatosFacilesBanner(cfg) {
   }
   const tipo =
     typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipo === 'rdwc' && typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
+  if (tipo === 'nft' && typeof nftEnsureDifusorEnDeposito === 'function') nftEnsureDifusorEnDeposito(cfg);
   if (!tipo || tipo === 'torre') {
     el.classList.add('setup-hidden');
     el.textContent = '';
@@ -525,6 +527,10 @@ function cargarEstadoTorre(idx) {
   state.mediciones  = hcClonePlainData(t.mediciones, []);
   state.registro    = hcClonePlainData(t.registro, []);
   state.configTorre = hcClonePlainData(hcNormalizarConfigSegunTipo(t.config).config, null);
+  if (state.configTorre) {
+    if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(state.configTorre);
+    if (typeof nftEnsureDifusorEnDeposito === 'function') nftEnsureDifusorEnDeposito(state.configTorre);
+  }
   const umSlot = t.ultimaMedicion;
   if (umSlot && typeof umSlot === 'object') {
     state.ultimaMedicion = { ...umSlot };
