@@ -803,8 +803,8 @@ function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
 
 /**
  * Bomba DWC unificada (misma que NFT/DWC/RDWC) + manguera a piedra.
- * A la derecha del depósito si cabe en el viewBox; si no, esquina del tanque (sin tapar flechas de giro).
- * @param {object} [opts] — `canvasW`: ancho del SVG para recortar posición.
+ * Fuera del depósito: entre la flecha de giro derecha y el borde del SVG (misma convención que hcIlloTorreRotFlechas).
+ * @param {object} [opts] — `canvasW`: ancho del SVG para escalar si hace falta.
  */
 function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate, opts) {
   if (typeof dwcSvgAirPumpDraw !== 'function' && typeof dwcSvgAirPumpExternal !== 'function') {
@@ -814,27 +814,21 @@ function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate, opts) {
   const pumpNomW = 54;
   const rotBtnR = 17;
   const rotBtnPad = 6;
-  const rotRCx = depX + depW + rotBtnPad + rotBtnR;
+  const rotRightOuter = depX + depW + rotBtnPad + rotBtnR * 2;
+  const gapAfterRot = 8;
   let pumpScale = 0.88;
-  let pumpX = depX + depW + 52;
+  let pumpX = rotRightOuter + gapAfterRot;
   const canvasW = Number(opts.canvasW);
   if (Number.isFinite(canvasW) && canvasW > 0) {
     const margin = 8;
     const maxRight = canvasW - margin;
     let pumpW = pumpNomW * pumpScale;
-    const besideRotX = rotRCx + rotBtnR + 6;
-    if (pumpX + pumpW > maxRight) {
-      pumpX = besideRotX;
+    while (pumpX + pumpW > maxRight && pumpScale > 0.66) {
+      pumpScale = Math.round((pumpScale - 0.04) * 100) / 100;
       pumpW = pumpNomW * pumpScale;
     }
     if (pumpX + pumpW > maxRight) {
-      pumpX = Math.max(depX + Math.round(depW * 0.38), depX + depW - pumpW - 8);
-    }
-    if (pumpX + pumpW > maxRight) {
-      pumpScale = Math.max(0.68, (maxRight - pumpX - 2) / pumpNomW);
-    }
-    if (pumpX < rotRCx + rotBtnR - 2 && pumpX + pumpNomW * pumpScale > rotRCx - rotBtnR) {
-      pumpX = Math.max(depX + Math.round(depW * 0.38), depX + depW - pumpNomW * pumpScale - 8);
+      pumpScale = Math.max(0.66, (maxRight - pumpX - 2) / pumpNomW);
     }
   }
   const pumpH = 40 * pumpScale;
@@ -971,7 +965,7 @@ function _buildTorreSvgLegacy() {
   const rot = (cfg._torreRotRad || 0);
 
   // ── Dimensiones ───────────────────────────────────────────────────────────
-  const SVG_W     = 360;
+  const SVG_W     = 408;
   const CX        = SVG_W / 2;
   const NIVEL_H   = 62;
   const NIVEL_GAP = 14;

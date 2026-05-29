@@ -2359,7 +2359,7 @@
 
   function hcIlloTorreLayout(cfg) {
     var numNiveles = Math.max(1, Math.min(12, parseInt(cfg.numNiveles, 10) || 5));
-    var W = 388;
+    var W = 408;
     var CX = W / 2;
     var NIVEL_H = 58;
     var GAP = 12;
@@ -2522,10 +2522,14 @@
     );
   }
 
-  function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor, ta) {
+  function hcIlloTorreDwcAirSvg(depX, depY, depW, depH, tieneDifusor, ta, canvasW) {
     if (!tieneDifusor) return { defs: '', html: '' };
     if (typeof torreSvgDepositoAirDwc === 'function') {
-      return torreSvgDepositoAirDwc(depX, depY, depW, depH, ta !== false);
+      var airOpts = {};
+      if (Number.isFinite(Number(canvasW)) && Number(canvasW) > 0) {
+        airOpts.canvasW = Number(canvasW);
+      }
+      return torreSvgDepositoAirDwc(depX, depY, depW, depH, ta !== false, airOpts);
     }
     return { defs: '', html: '' };
   }
@@ -2745,7 +2749,7 @@
     } else {
       depBlock.html = tankFront(depX, depY, depW, DEP_H, Math.max(0.55, volPct), u, ta, false, false);
       if (tieneDifusor) {
-        var airFb = hcIlloTorreDwcAirSvg(depX, depY, depW, DEP_H, true, ta);
+        var airFb = hcIlloTorreDwcAirSvg(depX, depY, depW, DEP_H, true, ta, W);
         depBlock.defs += airFb.defs || '';
         depBlock.html += airFb.html || '';
       }
@@ -2874,7 +2878,7 @@
           '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" opacity="0.7"/>';
       }
       body += tankFront(depXv, depYv, depWv, DEP_H, volPct, u, ta, true, true);
-      var airCorte = hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true, ta);
+      var airCorte = hcIlloTorreDwcAirSvg(depXv, depYv, depWv, DEP_H, true, ta, W);
       if (airCorte.defs) body = body.replace('</defs>', airCorte.defs + '</defs>');
       body += airCorte.html;
       body +=
@@ -3010,7 +3014,7 @@
     } else {
       depBlock.html = tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, Math.max(0.55, volPct), u, ta, false, tieneCalentador);
       if (tieneDifusor) {
-        var airFb = hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, true, ta);
+        var airFb = hcIlloTorreDwcAirSvg(L.depX, L.depY, L.DEP_W, L.DEP_H, true, ta, L.W);
         depBlock.defs += airFb.defs || '';
         depBlock.html += airFb.html || '';
       }
