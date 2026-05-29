@@ -15631,6 +15631,9 @@ button.toggle-switch:focus-visible {
 #setupNftBuilderWrap.setup-nft-asistente-simple #setupNftMontajeDiyBlock .setup-nft-counts-wrap {
   margin-top: 2px;
 }
+#setupNftBuilderWrap.setup-nft-asistente-simple #nftMesaTierSlidersHost:not(.setup-hidden) {
+  margin-top: 2px;
+}
 #setupNftBuilderWrap.setup-nft-asistente-simple .setup-nft-resultados-dl {
   margin: 6px 0 0;
   display: grid;

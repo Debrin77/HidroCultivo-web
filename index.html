@@ -3113,6 +3113,11 @@
       <div id="setupSrfDetalleWrap" class="setup-hidden">
         <div class="setup-dwc-title">SRF · balsa flotante</div>
         <p class="setup-dwc-help">Mide el <strong>estanque</strong>, la <strong>rejilla en la balsa</strong> (filas × plantas por fila) y la <strong>cesta</strong> (Ø y profundidad). Los litros de solución y la bomba de aire se calculan en tiempo real.</p>
+        <p class="setup-dwc-section-kicker">Balsa · huecos</p>
+        <div class="setup-dwc-grid-2 setup-mb-8">
+          <div><label class="form-label setup-dwc-label" for="setupSrfFilas">Filas en balsa</label><input type="number" id="setupSrfFilas" class="setup-dwc-input" min="1" max="8" step="1" placeholder="2" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+          <div><label class="form-label setup-dwc-label" for="setupSrfPlantasPorFila">Plantas por fila</label><input type="number" id="setupSrfPlantasPorFila" class="setup-dwc-input" min="1" max="16" step="1" placeholder="4" oninput="try{onSetupSrfInput()}catch(e){}"></div>
+        </div>
         <div id="setupSrfPreviewSection" class="setup-dwc-preview-section setup-dwc-preview-section--diagram">
           <p class="setup-dwc-preview-kicker">Vista previa</p>
           <div class="torre-preview torre-preview--srf" id="setupSrfPreview" role="img" aria-live="polite"></div>
@@ -3122,11 +3127,6 @@
           <div><label class="form-label setup-dwc-label" for="setupSrfCanalLargoCm">Largo estanque (cm)</label><input type="number" id="setupSrfCanalLargoCm" class="setup-dwc-input" min="20" max="600" step="1" placeholder="120" oninput="try{onSetupSrfInput()}catch(e){}"></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfCanalAnchoCm">Ancho estanque (cm)</label><input type="number" id="setupSrfCanalAnchoCm" class="setup-dwc-input" min="20" max="400" step="1" placeholder="60" oninput="try{onSetupSrfInput()}catch(e){}"></div>
           <div><label class="form-label setup-dwc-label" for="setupSrfProfundidadCm">Profundidad útil agua (cm)</label><input type="number" id="setupSrfProfundidadCm" class="setup-dwc-input" min="10" max="50" step="0.5" placeholder="25" oninput="try{onSetupSrfInput()}catch(e){}"></div>
-        </div>
-        <p class="setup-dwc-section-kicker">Balsa · huecos</p>
-        <div class="setup-dwc-grid-2">
-          <div><label class="form-label setup-dwc-label" for="setupSrfFilas">Filas en balsa</label><input type="number" id="setupSrfFilas" class="setup-dwc-input" min="1" max="8" step="1" placeholder="2" oninput="try{onSetupSrfInput()}catch(e){}"></div>
-          <div><label class="form-label setup-dwc-label" for="setupSrfPlantasPorFila">Plantas por fila</label><input type="number" id="setupSrfPlantasPorFila" class="setup-dwc-input" min="1" max="16" step="1" placeholder="4" oninput="try{onSetupSrfInput()}catch(e){}"></div>
         </div>
         <p class="setup-dwc-section-kicker">Balsa EPS</p>
         <div class="setup-dwc-grid-2">
@@ -3230,15 +3230,12 @@
                   <input type="number" id="nftMesaNumNiveles" min="2" max="8" step="1" value="2" inputmode="numeric" autocomplete="off"
                     class="setup-nft-field-input"
                     onchange="onNftWizardMesaNumNivelesChange()">
-                  <div id="nftMesaTubosPorNivelGrid" class="setup-nft-grid-host"></div>
-                  <p id="nftMesaCestasHint" class="setup-nft-subhint">
-                    <strong>Cestas por tubo</strong> (igual en todos los canales): usa el deslizador <strong>Huecos por tubo</strong> en «Cantidades en el diagrama». Valor actual: <strong id="nftMesaHuecosMirror">—</strong>.
-                  </p>
                   <label class="form-label setup-nft-field-label setup-nft-field-label-gap" for="nftMesaSepNivelesCm">Separación entre niveles (cm) — solo si no indicas altura total arriba</label>
                   <input type="number" id="nftMesaSepNivelesCm" min="0" max="150" step="1" placeholder="ej. 28"
                     inputmode="numeric" autocomplete="off"
                     class="setup-nft-field-input setup-nft-field-input-regular"
                     oninput="updateNftSetupPreview()" onblur="updateNftSetupPreview()">
+                  <p class="setup-nft-subhint setup-nft-subhint-compact">Con varios niveles, indica <strong>tubos por franja</strong>, <strong>huecos por tubo</strong> y <strong>pendiente</strong> en la sección siguiente (antes del esquema).</p>
                 </div>
               </div>
               <div id="nftEscaleraExtraWrap" class="setup-hidden setup-nft-subpanel">
@@ -3258,6 +3255,35 @@
                 </p>
               </div>
             </div>
+            <div id="setupNftCountsWrap" class="setup-nft-counts-wrap">
+              <div class="setup-nft-counts-title">Cantidades en el diagrama</div>
+              <p id="setupNftCountsHelp" class="setup-nft-layout-help">Misma sección de tubo y huecos alineados en todo el esquema. La <strong>línea azul</strong> es el agua: subida desde la bomba al <strong>primer tubo</strong> (en A, reparto en T en el vértice), recorrido en <strong>zigzag</strong> entre extremos de cada peldaño y <strong>retorno al depósito</strong> desde el último tubo de cada cara.</p>
+              <div id="nftMesaTierSlidersHost" class="setup-hidden"></div>
+              <div class="torre-control-row" id="nftCanalesSliderRow">
+                <div class="torre-control-label">
+                  <span id="nftCanalesLabelMain">Tubos en serpentín</span>
+                  <span class="torre-control-val" id="valNftCanales">0</span>
+                </div>
+                <input type="range" class="torre-slider" id="sliderNftCanales"
+                  min="0" max="24" value="0" oninput="updateNftSetupPreview()">
+              </div>
+              <div class="torre-control-row setup-nft-counts-slider-row">
+                <div class="torre-control-label">
+                  Huecos por tubo <span class="setup-inline-subtle">(igual en todos)</span>
+                  <span class="torre-control-val" id="valNftHuecos">0</span>
+                </div>
+                <input type="range" class="torre-slider" id="sliderNftHuecos"
+                  min="0" max="30" value="0" oninput="updateNftSetupPreview()">
+              </div>
+              <div class="torre-control-row setup-nft-counts-slider-row">
+                <div class="torre-control-label">
+                  Pendiente aprox.
+                  <span class="torre-control-val" id="valNftPendiente">0<span class="setup-inline-unit-percent">%</span></span>
+                </div>
+                <input type="range" class="torre-slider" id="sliderNftPendiente"
+                  min="0" max="4" value="0" step="1" oninput="updateNftSetupPreview()">
+              </div>
+            </div>
             <div class="setup-nft-preview-col">
               <div class="torre-preview nft-schematic-host" id="nftPreview" aria-live="polite"></div>
               <div id="setupNftRecoBlock" class="setup-nft-resultados setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
@@ -3269,34 +3295,6 @@
                 </dl>
                 <p class="setup-dwc-litros-solucion-hint setup-hidden" id="setupNftRecoHint" aria-hidden="true"></p>
               </div>
-            </div>
-            <div class="setup-nft-counts-wrap">
-              <div class="setup-nft-counts-title">Cantidades en el diagrama</div>
-              <p class="setup-nft-layout-help">Misma sección de tubo y huecos alineados en todo el esquema. La <strong>línea azul</strong> es el agua: subida desde la bomba al <strong>primer tubo</strong> (en A, reparto en T en el vértice), recorrido en <strong>zigzag</strong> entre extremos de cada peldaño y <strong>retorno al depósito</strong> desde el último tubo de cada cara.</p>
-            </div>
-            <div class="torre-control-row">
-              <div class="torre-control-label">
-                <span id="nftCanalesLabelMain">Tubos en serpentín</span>
-                <span class="torre-control-val" id="valNftCanales">0</span>
-              </div>
-              <input type="range" class="torre-slider" id="sliderNftCanales"
-                min="0" max="24" value="0" oninput="updateNftSetupPreview()">
-            </div>
-            <div class="torre-control-row">
-              <div class="torre-control-label">
-                Huecos por tubo <span class="setup-inline-subtle">(igual en todos)</span>
-                <span class="torre-control-val" id="valNftHuecos">0</span>
-              </div>
-              <input type="range" class="torre-slider" id="sliderNftHuecos"
-                min="0" max="30" value="0" oninput="updateNftSetupPreview()">
-            </div>
-            <div class="torre-control-row">
-              <div class="torre-control-label">
-                Pendiente aprox.
-                <span class="torre-control-val" id="valNftPendiente">0<span class="setup-inline-unit-percent">%</span></span>
-              </div>
-              <input type="range" class="torre-slider" id="sliderNftPendiente"
-                min="0" max="4" value="0" step="1" oninput="updateNftSetupPreview()">
             </div>
           </div>
           <div class="torre-controls setup-nft-controls-rest" id="setupNftControlsRest">
@@ -4696,13 +4694,13 @@
   <script src="js/torre-render-main.js?v=2026-05-28-torre-solo-sistema"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-rdwc-bombas"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-nft-mesa-mm"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-28-hydro-audit"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15-wizard-aislado"></script>
 
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-28-hydro-audit"></script>
   <script src="js/diagrams/nft/nft-hydraulic-model.js?v=2026-05-26-esc2-mirror"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-rdwc-bombas"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-torre-tank-water"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-nft-mesa-mm"></script>
   <script src="js/diagrams/nft/nft-pared-illustration.js?v=2026-05-28-nft-pump-unify"></script>
   <script src="js/diagrams/nft/nft-cartoon-enhance.js?v=2026-05-19-nft-cartoon3"></script>
   <script src="js/diagrams/nft/nft-medir-view.js?v=2026-05-26-escalera-2c-dual-ladder"></script>

@@ -1409,7 +1409,7 @@ function buildNftDraftConfigFromSetupUi() {
   if (mont.disposicion === 'mesa') {
     draft.nftMesaRecorridoAgua = mont.mesaRecorrido || 'serie';
     if (mont.mesaMultinivel) {
-      const tiers = parseNftMesaTubosPorNivelStr(mont.mesaTubosStr);
+      const tiers = parseNftMesaTubosPorNivelStrLoose(mont.mesaTubosStr);
       if (tiers.length >= 2) {
         draft.nftMesaMultinivel = true;
         draft.nftMesaTubosPorNivelStr = tiers.join(',');
@@ -1451,7 +1451,7 @@ function refrescarNftCanalesSliderEtiqueta() {
     return;
   }
   if (mont.mesaMultinivel) {
-    el.textContent = 'Tubos (si multinivel válido, el total lo fija la lista)';
+    el.textContent = 'Tubos en el circuito (mesa)';
     return;
   }
   el.textContent = 'Tubos en el circuito (mesa)';
@@ -1476,8 +1476,11 @@ function updateNftSetupPreview() {
       (Number.isFinite(pend) ? pend : 0) + '<span class="setup-inline-unit-percent">%</span>';
   }
   if (elV) elV.innerHTML = vol + '<span class="setup-inline-unit-l">L</span>';
-  const mmHueMirror = document.getElementById('nftMesaHuecosMirror');
-  if (mmHueMirror) mmHueMirror.textContent = String(huecos);
+  for (let i = 0; i < 8; i++) {
+    const sl = document.getElementById('sliderNftMesaTier_' + i);
+    const vEl = document.getElementById('valNftMesaTier_' + i);
+    if (sl && vEl) vEl.textContent = String(parseInt(String(sl.value), 10) || 0);
+  }
 
   try {
     renderNftCultivoRecoStatus('setup');
