@@ -1149,7 +1149,10 @@ function getSetupVolumenMaxLitros() {
 
 function getSetupVolumenMezclaLitros() {
   const maxL = getSetupVolumenMaxLitros();
-  const raw = document.getElementById('setupVolMezclaL')?.value;
+  const raw =
+    typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'rdwc'
+      ? document.getElementById('setupRdwcControlTrabajoL')?.value
+      : document.getElementById('setupVolMezclaL')?.value;
   const m = parseFloat(String(raw || '').replace(',', '.'));
   if (!Number.isFinite(m) || m <= 0) return maxL;
   if (m >= maxL - 0.02) return maxL;
@@ -1953,13 +1956,15 @@ function guardarSetupYContinuar() {
     }
     return Number(state.configTorre.volDeposito);
   })();
-  const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
-  if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < volEfectivo - 0.02) {
-    state.configTorre.volMezclaLitros = Math.min(volEfectivo, Math.max(0.5, Math.round(mezParsed * 10) / 10));
-  } else if (isSrf && Number.isFinite(volEfectivo) && volEfectivo > 0) {
-    state.configTorre.volMezclaLitros = Math.round(volEfectivo * 10) / 10;
-  } else {
-    delete state.configTorre.volMezclaLitros;
+  if (!isRdwc) {
+    const mezParsed = parseFloat(String(document.getElementById('setupVolMezclaL')?.value || '').replace(',', '.'));
+    if (Number.isFinite(mezParsed) && mezParsed > 0 && mezParsed < volEfectivo - 0.02) {
+      state.configTorre.volMezclaLitros = Math.min(volEfectivo, Math.max(0.5, Math.round(mezParsed * 10) / 10));
+    } else if (isSrf && Number.isFinite(volEfectivo) && volEfectivo > 0) {
+      state.configTorre.volMezclaLitros = Math.round(volEfectivo * 10) / 10;
+    } else if (!isSrf) {
+      delete state.configTorre.volMezclaLitros;
+    }
   }
   invalidateMeteoNomiCache();
   const su = normalizaSustratoKey(setupData.sustrato);

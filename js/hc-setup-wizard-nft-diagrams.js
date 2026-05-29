@@ -937,6 +937,87 @@ function renderTorreSistemaResumenTabla(cfg) {
     if (cSrf.srfNetPotMm != null) {
       rows.push(['Net pot', escHtmlUi('Ø ' + cSrf.srfNetPotMm + ' mm')]);
     }
+  } else if (cfg.tipoInstalacion === 'rdwc') {
+    const cR =
+      typeof rdwcEnsureConfigDefaults === 'function' ? rdwcEnsureConfigDefaults(Object.assign({}, cfg)) : cfg;
+    const sites = Math.max(2, Math.round(Number(cR.rdwcSites) || 4));
+    const rowsN = Math.max(1, Math.round(Number(cR.rdwcRows) || 1));
+    const volCtl = Math.max(10, Math.round(Number(cR.rdwcControlVolL || cR.volDeposito) || 40));
+    const vMez =
+      typeof getRdwcVolumenControlTrabajoLitros === 'function'
+        ? getRdwcVolumenControlTrabajoLitros(cR)
+        : cR.volMezclaLitros;
+    const total =
+      typeof getRdwcVolumenSolucionTotalLitros === 'function'
+        ? getRdwcVolumenSolucionTotalLitros(cR)
+        : null;
+    const tubes =
+      typeof getRdwcTuberiasEffectiveMm === 'function' ? getRdwcTuberiasEffectiveMm(cR) : null;
+    const lenM =
+      typeof rdwcEstimateRecirculationPipeLengthM === 'function'
+        ? rdwcEstimateRecirculationPipeLengthM(cR)
+        : null;
+    const pipeL =
+      typeof getRdwcTuberiasVolumeLitros === 'function' ? getRdwcTuberiasVolumeLitros(cR) : null;
+    const presetLbl =
+      cR.rdwcPresetId && typeof rdwcPresetById === 'function'
+        ? (rdwcPresetById(cR.rdwcPresetId) || {}).label || cR.rdwcPresetId
+        : '';
+    if (nombre) rows.push(['Nombre', escHtmlUi(nombre)]);
+    rows.push(['Cultivo e instalación', 'RDWC']);
+    if (presetLbl) rows.push(['Plantilla asistente', escHtmlUi(presetLbl)]);
+    rows.push(['Sitios / cubos', String(sites)]);
+    rows.push(['Filas', String(rowsN)]);
+    rows.push(['Cubo nominal', escHtmlUi(String(Math.round(Number(cR.rdwcBucketVolL) || 20)) + ' L')]);
+    rows.push([
+      'Depósito de control',
+      escHtmlUi(
+        volCtl +
+          ' L máx' +
+          (vMez != null && Number(vMez) < volCtl - 0.05 ? ' · útiles ~' + vMez + ' L' : '')
+      ),
+    ]);
+    if (total != null && Number.isFinite(total) && total > 0) {
+      rows.push(['Agua útil en circuito', escHtmlUi('≈ ' + total + ' L (control + cubos + tuberías)')]);
+    }
+    rows.push([
+      'Separación entre cubos',
+      escHtmlUi(String(Math.round(Number(cR.rdwcCenterSpacingCm) || 45)) + ' cm (centro a centro)'),
+    ]);
+    if (tubes) {
+      rows.push([
+        'Tuberías',
+        escHtmlUi(
+          'Impulsión Ø' +
+            tubes.supplyMm +
+            ' mm · retorno Ø' +
+            tubes.returnMm +
+            ' mm' +
+            (lenM != null ? ' · ~' + lenM + ' m/tramo' : '') +
+            (pipeL != null && pipeL > 0 ? ' · ~' + pipeL + ' L en tuberías' : '')
+        ),
+      ]);
+    }
+    const rim = cR.rdwcNetPotMm;
+    const hp = cR.rdwcNetPotHeightMm;
+    if (rim != null || hp != null) {
+      rows.push([
+        'Cesta (net pot)',
+        escHtmlUi(
+          (rim != null ? 'Ø ' + rim + ' mm' : '—') + (hp != null ? ' · alto ' + hp + ' mm' : '')
+        ),
+      ]);
+    }
+    rows.push([
+      'Recirculación / aire',
+      escHtmlUi(
+        '~' +
+          Math.round(Number(cR.rdwcRecirculationLh) || 1200) +
+          ' L/h · ~' +
+          Math.round(Number(cR.rdwcAirLpm) || 20) +
+          ' L/min'
+      ),
+    ]);
   } else {
     const N = cfg.numNiveles || window.NUM_NIVELES_ACTIVO || (typeof NUM_NIVELES !== 'undefined' ? NUM_NIVELES : 4);
     const C = cfg.numCestas || window.NUM_CESTAS_ACTIVO || (typeof NUM_CESTAS !== 'undefined' ? NUM_CESTAS : 5);
@@ -1093,6 +1174,7 @@ function renderTorreSistemaResumenTabla(cfg) {
 function torreSistemaResumenColapsoStorageKey() {
   const t = (state.configTorre || {}).tipoInstalacion;
   if (t === 'dwc') return 'uiTorreSistemaResumenDwcColapsado';
+  if (t === 'rdwc') return 'uiTorreSistemaResumenRdwcColapsado';
   if (t === 'srf') return 'uiTorreSistemaResumenSrfColapsado';
   return 'uiTorreSistemaResumenNftColapsado';
 }
