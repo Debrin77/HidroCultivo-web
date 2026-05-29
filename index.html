@@ -2982,17 +2982,15 @@
             <div><label class="form-label setup-dwc-label" for="setupRdwcReturnTubeMm" title="Tubería de retorno (azul en el esquema)">Ø tubo retorno (mm)</label><input type="number" id="setupRdwcReturnTubeMm" class="setup-dwc-input" min="20" max="100" step="1" placeholder="32" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
           </div>
           <p id="setupRdwcLitrosUtilesHint" class="setup-dwc-help" role="status" aria-live="polite"></p>
-          <details class="torre-vol-detalles setup-mt-8">
-            <summary class="torre-vol-detalles-summary">Bomba, aire y ajuste fino (opcional)</summary>
+          <details class="torre-vol-detalles setup-mt-8" id="setupRdwcBombasDetails">
+            <summary class="torre-vol-detalles-summary">Bombas de impulsión y aire (opcional)</summary>
             <div class="torre-vol-wrap torre-vol-wrap--inner">
-          <div id="setupRdwcMontajeDiyExtra" class="setup-dwc-grid-2">
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoL">Litros útiles por cubo (bajo cesta)</label><input type="number" id="setupRdwcBucketTrabajoL" class="setup-dwc-input" min="0.5" max="200" step="0.1" placeholder="auto ~70 %"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoDiamCm">Ø útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoDiamCm" class="setup-dwc-input" min="5" max="80" step="0.1" placeholder="opcional"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcBucketTrabajoProfCm">Prof. útil bajo cesta (cm)</label><input type="number" id="setupRdwcBucketTrabajoProfCm" class="setup-dwc-input" min="1" max="80" step="0.1" placeholder="opcional"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcRecirculationLh">Bomba recirculación (L/h)</label><input type="number" id="setupRdwcRecirculationLh" class="setup-dwc-input" min="200" max="12000" step="10" placeholder="1200"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcAirLpm">Aireación total (L/min)</label><input type="number" id="setupRdwcAirLpm" class="setup-dwc-input" min="1" max="300" step="1" placeholder="20"></div>
-            <div><label class="form-label setup-dwc-label" for="setupRdwcLineLenM">Longitud tuberías (m, opc.)</label><input type="number" id="setupRdwcLineLenM" class="setup-dwc-input" min="1" max="60" step="0.5" placeholder="auto" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
+          <div id="setupRdwcBombasWrap" class="setup-dwc-grid-2">
+            <div><label class="form-label setup-dwc-label" for="setupRdwcRecircPumpW">Bomba de impulsión — potencia (W)</label><input type="number" id="setupRdwcRecircPumpW" class="setup-dwc-input" min="1" max="500" step="1" placeholder="ej. 15" inputmode="numeric" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcAirPumpW">Bomba de aire — potencia (W)</label><input type="number" id="setupRdwcAirPumpW" class="setup-dwc-input" min="1" max="500" step="1" placeholder="ej. 8" inputmode="numeric" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
+            <div><label class="form-label setup-dwc-label" for="setupRdwcAirLpm">Bomba de aire — caudal (L/min)</label><input type="number" id="setupRdwcAirLpm" class="setup-dwc-input" min="1" max="300" step="0.5" placeholder="ej. 20" oninput="try{onSetupRdwcInput()}catch(e){}"></div>
           </div>
+          <p id="setupRdwcBombasHint" class="setup-dwc-help setup-mt-8" role="status" aria-live="polite"></p>
             </div>
           </details>
           <p id="setupRdwcCompatStatus" class="setup-dwc-help" role="status" aria-live="polite"></p>
@@ -4698,12 +4696,12 @@
   <script src="js/torre-render-main.js?v=2026-05-28-torre-solo-sistema"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-rdwc-litros-vacio"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-rdwc-bombas"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-28-hydro-audit"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15-wizard-aislado"></script>
 
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-28-hydro-audit"></script>
   <script src="js/diagrams/nft/nft-hydraulic-model.js?v=2026-05-26-esc2-mirror"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-rdwc-resumen"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-rdwc-bombas"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-torre-tank-water"></script>
   <script src="js/diagrams/nft/nft-pared-illustration.js?v=2026-05-28-nft-pump-unify"></script>
   <script src="js/diagrams/nft/nft-cartoon-enhance.js?v=2026-05-19-nft-cartoon3"></script>

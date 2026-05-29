@@ -55,6 +55,7 @@ function _hcExposeMontajeDiyBlocks() {
     'setupNftMontajeDiyBlock',
     'sysNftMontajeDiyBlock',
     'setupRdwcMontajeDiyExtra',
+    'setupRdwcBombasWrap',
     'sysRdwcMontajeDiyExtra',
     'setupTorreBombaUsuarioBlock',
     'sysTorreBombaUsuarioBlock',
@@ -532,17 +533,14 @@ function syncSetupRdwcFormFromConfig(cfg) {
     setupRdwcBucketVolL: cfg.rdwcBucketVolL,
     setupRdwcControlVolL: cfg.rdwcControlVolL,
     setupRdwcControlTrabajoL: cfg.volMezclaLitros,
-    setupRdwcRecirculationLh: cfg.rdwcRecirculationLh,
+    setupRdwcRecircPumpW: cfg.rdwcRecircPumpW,
+    setupRdwcAirPumpW: cfg.rdwcAirPumpW,
     setupRdwcAirLpm: cfg.rdwcAirLpm,
     setupRdwcNetPotMm: cfg.rdwcNetPotMm,
     setupRdwcNetPotHeightMm: cfg.rdwcNetPotHeightMm,
     setupRdwcCenterSpacingCm: cfg.rdwcCenterSpacingCm,
     setupRdwcSupplyTubeMm: cfg.rdwcSupplyTubeMm,
     setupRdwcReturnTubeMm: cfg.rdwcReturnTubeMm,
-    setupRdwcLineLenM: cfg.rdwcLineLenM,
-    setupRdwcBucketTrabajoL: cfg.rdwcBucketTrabajoL,
-    setupRdwcBucketTrabajoDiamCm: cfg.rdwcBucketTrabajoDiamCm,
-    setupRdwcBucketTrabajoProfCm: cfg.rdwcBucketTrabajoProfCm,
   };
   Object.keys(map).forEach((id) => {
     const el = document.getElementById(id);
@@ -697,8 +695,18 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
     const bucketProf = rdwcParseCm(document.getElementById(prefix + 'BucketTrabajoProfCm')?.value);
     if (bucketProf != null) c.rdwcBucketTrabajoProfCm = bucketProf;
     else delete c.rdwcBucketTrabajoProfCm;
-    c.rdwcRecirculationLh = Math.max(200, Math.min(12000, gNum(prefix + 'RecirculationLh', c.rdwcRecirculationLh || 1200)));
-    c.rdwcAirLpm = Math.max(1, Math.min(300, gNum(prefix + 'AirLpm', c.rdwcAirLpm || 20)));
+    const recPumpW = rdwcParsePotenciaW(document.getElementById(prefix + 'RecircPumpW')?.value);
+    if (recPumpW != null) c.rdwcRecircPumpW = recPumpW;
+    else delete c.rdwcRecircPumpW;
+    const airPumpW = rdwcParsePotenciaW(document.getElementById(prefix + 'AirPumpW')?.value);
+    if (airPumpW != null) c.rdwcAirPumpW = airPumpW;
+    else delete c.rdwcAirPumpW;
+    const airEl = document.getElementById(prefix + 'AirLpm');
+    if (airEl && String(airEl.value || '').trim()) {
+      c.rdwcAirLpm = Math.max(1, Math.min(300, gNum(prefix + 'AirLpm', c.rdwcAirLpm || 20)));
+    } else if (scope === 'setup') {
+      delete c.rdwcAirLpm;
+    }
     const netPotH = rdwcParseNetPotHeightMm(document.getElementById(prefix + 'NetPotHeightMm')?.value);
     if (netPotH != null) c.rdwcNetPotHeightMm = netPotH;
     else delete c.rdwcNetPotHeightMm;
@@ -737,6 +745,7 @@ function buildRdwcConfigFromForm(scope, seedCfg) {
   c.numNiveles = c.rdwcRows;
   c.numCestas = Math.max(1, Math.ceil(c.rdwcSites / c.rdwcRows));
   c.volDeposito = Math.round(c.rdwcControlVolL);
+  if (typeof rdwcSyncRecircLhDesdeCalculo === 'function') rdwcSyncRecircLhDesdeCalculo(c);
   if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(c);
   return c;
 }
@@ -784,20 +793,22 @@ function hcResetRdwcSetupFormZero() {
     'setupRdwcSites',
     'setupRdwcRows',
     'setupRdwcBucketVolL',
-    'setupRdwcBucketTrabajoL',
-    'setupRdwcBucketTrabajoDiamCm',
-    'setupRdwcBucketTrabajoProfCm',
     'setupRdwcControlVolL',
     'setupRdwcControlTrabajoL',
-    'setupRdwcRecirculationLh',
+    'setupRdwcRecircPumpW',
+    'setupRdwcAirPumpW',
     'setupRdwcAirLpm',
     'setupRdwcNetPotMm',
     'setupRdwcNetPotHeightMm',
     'setupRdwcCenterSpacingCm',
+    'setupRdwcSupplyTubeMm',
+    'setupRdwcReturnTubeMm',
   ].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  const bombasHint = document.getElementById('setupRdwcBombasHint');
+  if (bombasHint) bombasHint.textContent = '';
   const compatEl = document.getElementById('setupRdwcCompatStatus');
   const calcEl = document.getElementById('setupRdwcCalcStatus');
   if (compatEl) compatEl.innerHTML = '';
@@ -813,6 +824,9 @@ function hcResetRdwcSetupFormZero() {
   } catch (_) {}
   try {
     syncRdwcLitrosUtilesSugeridos('setup');
+  } catch (_) {}
+  try {
+    syncRdwcBombasUi(setupRdwcDraft);
   } catch (_) {}
   try {
     if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(setupRdwcDraft);
@@ -1029,6 +1043,72 @@ function getRdwcVolumenControlTrabajoLitros(cfg, opts) {
 /** true si el usuario indicó litros útiles en el depósito de control (asistente / config). */
 function rdwcTieneDepositoControlManual(cfg) {
   return rdwcParseLitrosTrabajo((cfg || {}).volMezclaLitros) != null;
+}
+
+function rdwcParsePotenciaW(raw) {
+  const v = parseInt(String(raw == null ? '' : raw).trim(), 10);
+  if (!Number.isFinite(v) || v < 1 || v > 500) return null;
+  return v;
+}
+
+/** Potencia orientativa (W) bomba de impulsión según caudal/altura estimados. */
+function rdwcEstimateRecircPumpW(cfg) {
+  const calc = typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(cfg) : null;
+  if (!calc || !Number.isFinite(calc.pumpRec)) return null;
+  const headM = Math.max(0, Number((cfg || {}).rdwcHeadM) || 1.2);
+  const Q = calc.pumpRec / 1000;
+  const potenciaW = Math.ceil((Q * headM) / (0.367 * 0.35));
+  return Math.max(5, potenciaW * 2);
+}
+
+/** Potencia orientativa (W) bomba de aire según L/min. */
+function rdwcEstimateAirPumpW(airLpm) {
+  const lpm = Math.max(1, Number(airLpm) || 20);
+  return Math.max(3, Math.ceil(lpm * 1.75));
+}
+
+function rdwcSyncRecircLhDesdeCalculo(cfg) {
+  const c = cfg || {};
+  const calc = typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(c) : null;
+  if (calc && Number.isFinite(calc.pumpRec) && calc.pumpRec >= 200) {
+    c.rdwcRecirculationLh = Math.round(calc.pumpRec);
+  } else if (!Number.isFinite(Number(c.rdwcRecirculationLh)) || Number(c.rdwcRecirculationLh) < 200) {
+    c.rdwcRecirculationLh = 1200;
+  }
+  return c;
+}
+
+function syncRdwcBombasUi(cfg) {
+  const hint = document.getElementById('setupRdwcBombasHint');
+  if (!hint) return;
+  const c = cfg || setupRdwcDraft || {};
+  const calc = typeof rdwcCalcularHidraulica === 'function' ? rdwcCalcularHidraulica(c) : null;
+  const recWEl = document.getElementById('setupRdwcRecircPumpW');
+  const airWEl = document.getElementById('setupRdwcAirPumpW');
+  const airLpmEl = document.getElementById('setupRdwcAirLpm');
+  const recWOrient = typeof rdwcEstimateRecircPumpW === 'function' ? rdwcEstimateRecircPumpW(c) : null;
+  const airLpmOrient = calc && Number.isFinite(calc.airObj) ? calc.airObj : Number(c.rdwcAirLpm) || 20;
+  const airWOrient = rdwcEstimateAirPumpW(airLpmOrient);
+  if (recWEl && !String(recWEl.value || '').trim() && recWOrient != null) {
+    recWEl.placeholder = 'orient. ~' + recWOrient + ' W';
+  }
+  if (airWEl && !String(airWEl.value || '').trim() && airWOrient != null) {
+    airWEl.placeholder = 'orient. ~' + airWOrient + ' W';
+  }
+  if (airLpmEl && !String(airLpmEl.value || '').trim() && calc && Number.isFinite(calc.airObj)) {
+    airLpmEl.placeholder = 'orient. ~' + calc.airObj + ' L/min';
+  }
+  if (calc) {
+    hint.textContent =
+      'Referencia de diseño (no sustituye la placa): impulsión ~' +
+      calc.pumpRec +
+      ' L/h · aire ~' +
+      calc.airObj +
+      ' L/min. Anota la potencia (W) y el L/min de aire de tus bombas reales.';
+  } else {
+    hint.textContent =
+      'Indica potencia (W) de la bomba de impulsión y de la de aire, y el caudal de aire (L/min) según la placa.';
+  }
 }
 
 /** Longitud estimada de cada tramo principal (impulsión o retorno), en metros. */
@@ -1705,6 +1785,9 @@ function onSetupRdwcInput() {
     syncRdwcLitrosUtilesSugeridos('setup');
   } catch (_) {}
   try {
+    syncRdwcBombasUi(c);
+  } catch (_) {}
+  try {
     if (typeof renderRdwcSetupCalculadoUi === 'function') renderRdwcSetupCalculadoUi(c);
   } catch (_) {}
   try {
@@ -1924,19 +2007,16 @@ function bindRdwcCompatLive(scope) {
     'setupRdwcSites',
     'setupRdwcRows',
     'setupRdwcBucketVolL',
-    'setupRdwcBucketTrabajoL',
-    'setupRdwcBucketTrabajoDiamCm',
-    'setupRdwcBucketTrabajoProfCm',
     'setupRdwcControlVolL',
     'setupRdwcControlTrabajoL',
-    'setupRdwcRecirculationLh',
+    'setupRdwcRecircPumpW',
+    'setupRdwcAirPumpW',
     'setupRdwcAirLpm',
     'setupRdwcNetPotMm',
     'setupRdwcNetPotHeightMm',
     'setupRdwcCenterSpacingCm',
     'setupRdwcSupplyTubeMm',
     'setupRdwcReturnTubeMm',
-    'setupRdwcLineLenM',
   ];
   const render = () => {
     const c =
@@ -1953,13 +2033,18 @@ function bindRdwcCompatLive(scope) {
     c2.rdwcSites = g('setupRdwcSites', c.rdwcSites || 4);
     c2.rdwcRows = g('setupRdwcRows', c.rdwcRows || 1);
     c2.rdwcBucketVolL = g('setupRdwcBucketVolL', c.rdwcBucketVolL || 20);
-    c2.rdwcBucketTrabajoL = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcBucketTrabajoL')?.value);
-    c2.rdwcBucketTrabajoDiamCm = rdwcParseCm(document.getElementById('setupRdwcBucketTrabajoDiamCm')?.value);
-    c2.rdwcBucketTrabajoProfCm = rdwcParseCm(document.getElementById('setupRdwcBucketTrabajoProfCm')?.value);
     c2.rdwcControlVolL = g('setupRdwcControlVolL', c.rdwcControlVolL || 40);
     c2.volMezclaLitros = rdwcParseLitrosTrabajo(document.getElementById('setupRdwcControlTrabajoL')?.value);
-    c2.rdwcRecirculationLh = g('setupRdwcRecirculationLh', c.rdwcRecirculationLh || 1200);
-    c2.rdwcAirLpm = g('setupRdwcAirLpm', c.rdwcAirLpm || 20);
+    const recPumpW = rdwcParsePotenciaW(document.getElementById('setupRdwcRecircPumpW')?.value);
+    if (recPumpW != null) c2.rdwcRecircPumpW = recPumpW;
+    else delete c2.rdwcRecircPumpW;
+    const airPumpW = rdwcParsePotenciaW(document.getElementById('setupRdwcAirPumpW')?.value);
+    if (airPumpW != null) c2.rdwcAirPumpW = airPumpW;
+    else delete c2.rdwcAirPumpW;
+    const airRaw = String(document.getElementById('setupRdwcAirLpm')?.value || '').trim();
+    if (airRaw) c2.rdwcAirLpm = g('setupRdwcAirLpm', c.rdwcAirLpm || 20);
+    else delete c2.rdwcAirLpm;
+    if (typeof rdwcSyncRecircLhDesdeCalculo === 'function') rdwcSyncRecircLhDesdeCalculo(c2);
     c2.rdwcNetPotMm = g('setupRdwcNetPotMm', c.rdwcNetPotMm || 125);
     const hSetup = rdwcParseNetPotHeightMm(document.getElementById('setupRdwcNetPotHeightMm')?.value);
     if (hSetup != null) c2.rdwcNetPotHeightMm = hSetup;
@@ -1967,9 +2052,6 @@ function bindRdwcCompatLive(scope) {
     c2.rdwcCenterSpacingCm = g('setupRdwcCenterSpacingCm', c.rdwcCenterSpacingCm || 45);
     c2.rdwcSupplyTubeMm = g('setupRdwcSupplyTubeMm', c.rdwcSupplyTubeMm || 25);
     c2.rdwcReturnTubeMm = g('setupRdwcReturnTubeMm', c.rdwcReturnTubeMm || 32);
-    const lineRaw = String(document.getElementById('setupRdwcLineLenM')?.value || '').trim();
-    if (lineRaw) c2.rdwcLineLenM = g('setupRdwcLineLenM', c.rdwcLineLenM || 12);
-    else delete c2.rdwcLineLenM;
     delete c2.rdwcCultivoPrevisto;
     setupRdwcDraft = hcSetupClonePlain(c2, {});
     try {
@@ -1977,6 +2059,9 @@ function bindRdwcCompatLive(scope) {
     } catch (_) {}
     try {
       if (typeof refreshRdwcSetupPreview === 'function') refreshRdwcSetupPreview();
+    } catch (_) {}
+    try {
+      syncRdwcBombasUi(c2);
     } catch (_) {}
   };
   ids.forEach(id => {
@@ -2041,8 +2126,12 @@ function aplicarRdwcRecomendacionBaseSetup() {
   setVal('setupRdwcNetPotMm', cestaBase);
   setVal('setupRdwcCenterSpacingCm', sepBase);
   setVal('setupRdwcControlVolL', controlBase);
-  setVal('setupRdwcControlTrabajoL', controlTrabajoBase);
-  setVal('setupRdwcRecirculationLh', recirc);
+  setupRdwcDraft = applySetupRdwcDesdeFormulario();
+  if (typeof rdwcSyncRecircLhDesdeCalculo === 'function') rdwcSyncRecircLhDesdeCalculo(setupRdwcDraft);
+  const recW = typeof rdwcEstimateRecircPumpW === 'function' ? rdwcEstimateRecircPumpW(setupRdwcDraft) : null;
+  const airW = rdwcEstimateAirPumpW(air);
+  if (recW != null) setVal('setupRdwcRecircPumpW', recW);
+  if (airW != null) setVal('setupRdwcAirPumpW', airW);
   setVal('setupRdwcAirLpm', air);
   setupRdwcDraft = applySetupRdwcDesdeFormulario();
   try { renderSetupPage(); } catch (_) {}
@@ -3657,7 +3746,8 @@ function textoResumenSistemaRdwcPanel(cfg) {
   const b = Math.max(5, Math.round(Number(cfg.rdwcBucketVolL || 20)));
   const v = Math.max(10, Math.round(Number(cfg.rdwcControlVolL || 40)));
   const vu = rdwcParseLitrosTrabajo(cfg.volMezclaLitros);
-  const q = Math.max(200, Math.round(Number(cfg.rdwcRecirculationLh || 1200)));
+  const recW = cfg.rdwcRecircPumpW != null ? Math.round(Number(cfg.rdwcRecircPumpW)) : null;
+  const airW = cfg.rdwcAirPumpW != null ? Math.round(Number(cfg.rdwcAirPumpW)) : null;
   const air = Math.max(1, Math.round(Number(cfg.rdwcAirLpm || 20)));
   const depTxt = vu != null ? ('depósito ' + vu + '/' + v + ' L') : ('depósito ' + v + ' L');
   const total =
@@ -3667,6 +3757,13 @@ function textoResumenSistemaRdwcPanel(cfg) {
   const sep = Math.round(Number(cfg.rdwcCenterSpacingCm || 45));
   const tubes = typeof getRdwcTuberiasEffectiveMm === 'function' ? getRdwcTuberiasEffectiveMm(cfg) : null;
   const tubTxt = tubes ? ' · tubos ' + tubes.supplyMm + '/' + tubes.returnMm + ' mm' : '';
+  const bombTxt =
+    ' · impulsión ' +
+    (recW != null && recW > 0 ? recW + ' W' : '—') +
+    ' · aire ' +
+    air +
+    ' L/min' +
+    (airW != null && airW > 0 ? ' / ' + airW + ' W' : '');
   return (
     s +
     ' sitios · ' +
@@ -3679,11 +3776,7 @@ function textoResumenSistemaRdwcPanel(cfg) {
     depTxt +
     totalTxt +
     tubTxt +
-    ' · recirc ' +
-    q +
-    ' L/h · aire ' +
-    air +
-    ' L/min'
+    bombTxt
   );
 }
 
@@ -3929,19 +4022,16 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
     setupRdwcSites: c.rdwcSites,
     setupRdwcRows: c.rdwcRows,
     setupRdwcBucketVolL: c.rdwcBucketVolL,
-    setupRdwcBucketTrabajoL: c.rdwcBucketTrabajoL,
-    setupRdwcBucketTrabajoDiamCm: c.rdwcBucketTrabajoDiamCm,
-    setupRdwcBucketTrabajoProfCm: c.rdwcBucketTrabajoProfCm,
     setupRdwcControlVolL: c.rdwcControlVolL,
     setupRdwcControlTrabajoL: c.volMezclaLitros,
-    setupRdwcRecirculationLh: c.rdwcRecirculationLh,
+    setupRdwcRecircPumpW: c.rdwcRecircPumpW,
+    setupRdwcAirPumpW: c.rdwcAirPumpW,
     setupRdwcAirLpm: c.rdwcAirLpm,
     setupRdwcNetPotMm: c.rdwcNetPotMm,
     setupRdwcNetPotHeightMm: c.rdwcNetPotHeightMm,
     setupRdwcCenterSpacingCm: c.rdwcCenterSpacingCm,
     setupRdwcSupplyTubeMm: c.rdwcSupplyTubeMm,
     setupRdwcReturnTubeMm: c.rdwcReturnTubeMm,
-    setupRdwcLineLenM: c.rdwcLineLenM,
   };
   Object.keys(map).forEach(id => {
     const el = document.getElementById(id);
@@ -3967,6 +4057,9 @@ function syncSetupRdwcFieldsDesdeConfig(cfg) {
   } catch (_) {}
   try {
     syncRdwcLitrosUtilesSugeridos('setup');
+  } catch (_) {}
+  try {
+    syncRdwcBombasUi(cFresh);
   } catch (_) {}
 }
 

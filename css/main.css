@@ -15720,6 +15720,11 @@ button.toggle-switch:focus-visible {
 #setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcMontajeDiyExtra {
   display: none;
 }
+#setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcBombasWrap,
+#setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcBombasHint,
+#setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcBombasDetails {
+  display: block;
+}
 #setupRdwcDetalleWrap.setup-rdwc-asistente-simple div:has(> #setupRdwcCultivoPrevisto),
 #setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcCompatStatus,
 #setupRdwcDetalleWrap.setup-rdwc-asistente-simple #setupRdwcCalcStatus {

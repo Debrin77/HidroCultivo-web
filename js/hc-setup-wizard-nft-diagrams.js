@@ -1008,14 +1008,18 @@ function renderTorreSistemaResumenTabla(cfg) {
         ),
       ]);
     }
+    const recW = cR.rdwcRecircPumpW != null ? Math.round(Number(cR.rdwcRecircPumpW)) : null;
+    const airW = cR.rdwcAirPumpW != null ? Math.round(Number(cR.rdwcAirPumpW)) : null;
+    const airLpm = Math.round(Number(cR.rdwcAirLpm) || 20);
     rows.push([
-      'Recirculación / aire',
+      'Bombas',
       escHtmlUi(
-        '~' +
-          Math.round(Number(cR.rdwcRecirculationLh) || 1200) +
-          ' L/h · ~' +
-          Math.round(Number(cR.rdwcAirLpm) || 20) +
-          ' L/min'
+        'Impulsión ' +
+          (recW != null && recW > 0 ? recW + ' W' : '—') +
+          ' · aire ' +
+          airLpm +
+          ' L/min' +
+          (airW != null && airW > 0 ? ' · ' + airW + ' W' : '')
       ),
     ]);
   } else {
