@@ -1110,10 +1110,6 @@ function actualizarBadgesNutriente() {
   const dashRazon = document.getElementById('dashNutrienteRazon');
   const dashAviso   = document.getElementById('dashNutrienteAviso');
   if (dashNombre) dashNombre.textContent = nut ? nut.nombre : 'Nutriente sin elegir';
-  const dashSummaryNombre = document.getElementById('dashNutrienteSummaryNombre');
-  if (dashSummaryNombre) {
-    dashSummaryNombre.textContent = nut ? nut.nombre : 'Sin elegir';
-  }
   if (dashDetalle) dashDetalle.textContent = nut ? nut.detalle : 'Elige marca en Cultivo e instalación o Medir';
   if (dashEstado || dashRecomendado || dashRazon || dashFuente) {
     const usoRaw =

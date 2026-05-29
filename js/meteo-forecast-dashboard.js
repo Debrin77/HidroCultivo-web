@@ -71,66 +71,6 @@ function updateDashboard() {
     if (typeof refreshEcTransicionAvisoAll === 'function') refreshEcTransicionAvisoAll();
   } catch (_) {}
 
-  try {
-    refreshDashHero();
-  } catch (_) {}
-}
-
-/** Inicio — panel hero: estado resumido y cuenta atrás de recarga. */
-function refreshDashHero() {
-  const hero = document.getElementById('dashHero');
-  const estadoEl = document.getElementById('dashHeroEstado');
-  const recargaVal = document.getElementById('dashHeroRecargaValor');
-  const recargaSub = document.getElementById('dashHeroRecargaSub');
-  const recargaBtn = document.querySelector('.dash-hero-recarga');
-  if (!hero) return;
-
-  if (estadoEl) {
-    if (!state || !state.ultimaMedicion) {
-      hero.classList.add('dash-hero--sin-medicion');
-      estadoEl.textContent = 'Empieza registrando tu primera medición';
-    } else {
-      hero.classList.remove('dash-hero--sin-medicion');
-      const m = state.ultimaMedicion;
-      const keys = [
-        { k: 'ec', v: parseFloat(m.ec) },
-        { k: 'ph', v: parseFloat(m.ph) },
-        { k: 'temp', v: parseFloat(m.temp) },
-        { k: 'vol', v: parseFloat(m.vol) },
-      ];
-      let bad = 0;
-      let warn = 0;
-      keys.forEach((x) => {
-        const t = getTileClass(x.k, x.v);
-        if (t === 'bad') bad++;
-        else if (t === 'warn') warn++;
-      });
-      if (bad > 0) estadoEl.textContent = bad === 1 ? '1 parámetro fuera de rango' : bad + ' parámetros fuera de rango';
-      else if (warn > 0) estadoEl.textContent = 'Parámetros en rango con avisos';
-      else estadoEl.textContent = 'Solución en rango — sigue midiendo';
-    }
-  }
-
-  if (recargaVal) {
-    let evalRec = { diasRestantes: null, level: 'ok' };
-    try {
-      if (typeof evaluarFatigaRecargaOculta === 'function') evalRec = evaluarFatigaRecargaOculta();
-    } catch (_) {}
-    const dr = evalRec.diasRestantes;
-    if (!state || !state.ultimaRecarga) {
-      recargaVal.textContent = '—';
-      if (recargaSub) recargaSub.textContent = 'Sin recarga registrada';
-      if (recargaBtn) recargaBtn.classList.remove('dash-hero-recarga--urgent');
-    } else if (evalRec.level === 'change' || dr === 0) {
-      recargaVal.textContent = dr === 0 ? 'Hoy' : 'Ya';
-      if (recargaSub) recargaSub.textContent = 'Recarga completa recomendada';
-      if (recargaBtn) recargaBtn.classList.add('dash-hero-recarga--urgent');
-    } else {
-      recargaVal.textContent = Number.isFinite(dr) ? dr + ' d' : '—';
-      if (recargaSub) recargaSub.textContent = 'Hasta próxima recarga orientativa';
-      if (recargaBtn) recargaBtn.classList.remove('dash-hero-recarga--urgent');
-    }
-  }
 }
 
 function getRecentMedicionesForWeekly(limit) {

@@ -33,7 +33,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Syne:wght@400;600;700;800&family=Inconsolata:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/main.css?v=2026-05-28-play-inicio">
+  <link rel="stylesheet" href="css/main.css?v=2026-05-28-torre-hibrida-pro-v3">
 </head>
 <body>
   <script src="js/hc-theme.js?v=2"></script>
@@ -254,39 +254,59 @@
 
       <!-- Aviso oficial AEMET/MeteoAlarm (flash en Inicio; zona inferida del municipio por geocodificación) -->
       <div id="meteoFlashAviso" class="meteo-flash-aviso setup-hidden" role="alert" aria-live="polite" aria-atomic="true"></div>
+      <!-- Ambiente meteorológico (exterior); municipio en Medir / asistente -->
+      <div id="dashBloqueAmbienteExterior" class="dash-bloque-ambiente-exterior">
+      <div id="dashUbicacionExteriorPendiente" class="dash-ubic-exterior-pendiente setup-hidden" role="alert" aria-live="polite"></div>
+      <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
+        <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
+        <div class="meteo-alert-icon" id="meteoAlertIcon" aria-hidden="true"><svg class="hc-ico hc-ico--meteo" focusable="false"><use href="#hc-i-cloud-sun"/></svg></div>
+        <div class="meteo-alert-body">
+          <div class="meteo-alert-title" id="meteoAlertTitle">Cargando datos meteorológicos...</div>
+          <div class="meteo-alert-text" id="meteoAlertText">Obteniendo condiciones actuales</div>
+        </div>
+      </div>
 
-      <!-- Panel operativo: acciones + recarga (prioridad visual para Play / móvil) -->
-      <section class="dash-hero" id="dashHero" aria-label="Panel operativo">
-        <p class="dash-hero-status" id="dashHeroEstado" aria-live="polite">Sin mediciones aún</p>
-        <div class="dash-hero-actions">
-          <button type="button" class="dash-hero-btn dash-hero-btn--primary"
-            onclick="typeof abrirWizardMedicion==='function'?abrirWizardMedicion():goTab('mediciones')"
-            aria-label="Registrar medición con el asistente">
-            <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-chart"/></svg>
-            <span class="dash-hero-btn-label">Medir ahora</span>
-          </button>
-          <button type="button" class="dash-hero-btn"
-            onclick="intentarAbrirChecklistDesdeInicio(false)"
-            aria-label="Abrir checklist de recarga del depósito">
-            <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-clipboard"/></svg>
-            <span class="dash-hero-btn-label">Checklist</span>
-          </button>
-          <button type="button" class="dash-hero-btn"
-            onclick="goTab('sistema')"
-            aria-label="Ir a Cultivo e instalación">
-            <svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-plant"/></svg>
-            <span class="dash-hero-btn-label">Cultivo</span>
+      </div>
+
+      <!-- 4. Nutriente seleccionado -->
+      <p class="dash-block-label" id="dashNutrienteLabel">Nutriente seleccionado</p>
+      <div id="dashSistemaInfo" class="dash-sistema-info" role="button" tabindex="0"
+        aria-describedby="dashNutrienteLabel"
+        aria-label="Ir a mediciones: nutriente y sistema"
+        onclick="goTab('mediciones')"
+        onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">
+        <div class="dash-sistema-top">
+          <div class="dash-sistema-main">
+            <span class="dash-sistema-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
+            <div>
+              <div id="dashNutrienteNombre" class="dash-nutriente-nombre">—</div>
+              <div id="dashNutrienteDetalle" class="dash-nutriente-detalle">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="dash-sistema-actions">
+          <button type="button" onclick="event.stopPropagation();cambiarNutriente()"
+            aria-label="Cambiar nutriente"
+            class="dash-btn-cambiar-nutriente">
+            Cambiar
           </button>
         </div>
-        <button type="button" class="dash-hero-recarga" onclick="goTab('mediciones')"
-          aria-labelledby="dashHeroRecargaLabel dashHeroRecargaValor">
-          <span class="dash-hero-recarga-label" id="dashHeroRecargaLabel">Próxima recarga</span>
-          <span class="dash-hero-recarga-val" id="dashHeroRecargaValor">—</span>
-          <span class="dash-hero-recarga-sub" id="dashHeroRecargaSub">Registra mediciones y recargas en Mediciones</span>
-        </button>
-      </section>
+        <div class="dash-sistema-meta">
+          <div>
+            <div id="dashNutrienteTagEstado" class="dash-nutriente-tag dash-nutriente-tag--estado" role="status" aria-live="polite">
+              <div id="dashNutrienteEstado" class="dash-nutriente-estado">Actual: —</div>
+              <div id="dashNutrienteRecomendado" class="dash-nutriente-recomendado">Recomendado ahora: —</div>
+            </div>
+            <div class="dash-nutriente-tag dash-nutriente-tag--razon" role="status" aria-live="polite">
+              <div id="dashNutrienteFuente" class="dash-nutriente-fuente">Fuente: —</div>
+              <div id="dashNutrienteRazon" class="dash-nutriente-razon">Motivo: —</div>
+            </div>
+            <div id="dashNutrienteAviso" class="dash-nutriente-aviso setup-hidden" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
 
-      <!-- Última medición (KPIs) + resumen de cultivo -->
+      <!-- 5. Última medición (resumen) + sistema de cultivo -->
       <section class="dash-medicion-y-cultivo" aria-label="Última medición y cultivo">
         <div class="dash-subtitle dash-subtitle--ultima-medicion">
           <span id="dashUltimaMedicion" aria-live="polite" aria-atomic="true">Sin mediciones aún</span>
@@ -359,84 +379,8 @@
         </button>
       </section>
 
-      <!-- Ambiente meteorológico (exterior); municipio en Medir / asistente -->
-      <div id="dashBloqueAmbienteExterior" class="dash-bloque-ambiente-exterior">
-      <div id="dashUbicacionExteriorPendiente" class="dash-ubic-exterior-pendiente setup-hidden" role="alert" aria-live="polite"></div>
-      <p class="dash-block-label" id="dashAmbienteLabel">Condiciones de ambiente</p>
-        <div class="meteo-alert ok" id="meteoAlert" role="region" aria-labelledby="dashAmbienteLabel">
-        <div class="meteo-alert-icon" id="meteoAlertIcon" aria-hidden="true"><svg class="hc-ico hc-ico--meteo" focusable="false"><use href="#hc-i-cloud-sun"/></svg></div>
-        <div class="meteo-alert-body">
-          <div class="meteo-alert-title" id="meteoAlertTitle">Cargando datos meteorológicos...</div>
-          <div class="meteo-alert-text" id="meteoAlertText">Obteniendo condiciones actuales</div>
-        </div>
-      </div>
-
-      </div>
-
-      <!-- Nutriente (plegable: menos ruido en Inicio) -->
-      <details class="dash-nutriente-fold" id="dashNutrienteFold">
-        <summary class="dash-nutriente-fold-summary" id="dashNutrienteLabel">
-          <span class="dash-nutriente-fold-title">Nutriente</span>
-          <span class="dash-nutriente-fold-name" id="dashNutrienteSummaryNombre">—</span>
-        </summary>
-      <div id="dashSistemaInfo" class="dash-sistema-info" role="button" tabindex="0"
-        aria-label="Ir a mediciones: nutriente y sistema"
-        onclick="goTab('mediciones')"
-        onkeydown="a11yKeyActivate(event, function(){ goTab('mediciones'); })">
-        <div class="dash-sistema-top">
-          <div class="dash-sistema-main">
-            <span class="dash-sistema-icon" aria-hidden="true"><svg class="hc-ico" focusable="false"><use href="#hc-i-flask"/></svg></span>
-            <div>
-              <div id="dashNutrienteNombre" class="dash-nutriente-nombre">—</div>
-              <div id="dashNutrienteDetalle" class="dash-nutriente-detalle">—</div>
-            </div>
-          </div>
-        </div>
-        <div class="dash-sistema-actions">
-          <button type="button" onclick="event.stopPropagation();cambiarNutriente()"
-            aria-label="Cambiar nutriente"
-            class="dash-btn-cambiar-nutriente">
-            Cambiar
-          </button>
-        </div>
-        <div class="dash-sistema-meta">
-          <div>
-            <div id="dashNutrienteTagEstado" class="dash-nutriente-tag dash-nutriente-tag--estado" role="status" aria-live="polite">
-              <div id="dashNutrienteEstado" class="dash-nutriente-estado">Actual: —</div>
-              <div id="dashNutrienteRecomendado" class="dash-nutriente-recomendado">Recomendado ahora: —</div>
-            </div>
-            <div class="dash-nutriente-tag dash-nutriente-tag--razon" role="status" aria-live="polite">
-              <div id="dashNutrienteFuente" class="dash-nutriente-fuente">Fuente: —</div>
-              <div id="dashNutrienteRazon" class="dash-nutriente-razon">Motivo: —</div>
-            </div>
-            <div id="dashNutrienteAviso" class="dash-nutriente-aviso setup-hidden" role="status" aria-live="polite"></div>
-          </div>
-        </div>
-      </div>
-      </details>
-
-      <!-- Acciones rápidas: núcleo visible; avanzado en «Más» -->
+      <!-- 6. Acciones rápidas: núcleo siempre visible; resto en «Más» hasta tener config + medición -->
       <div class="quick-actions-wrap" id="quickActionsWrap">
-        <div class="quick-actions quick-actions--core" role="group" aria-label="Acciones habituales">
-          <button type="button" class="quick-btn quick-btn-primary" data-quick-icon="medir"
-            onclick="typeof abrirWizardMedicion==='function'?abrirWizardMedicion():goTab('mediciones')"
-            aria-label="Asistente de medición">
-            <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-ion-pulse"/></svg></span>
-            <span>Medir</span>
-          </button>
-          <button type="button" class="quick-btn quick-btn-info" data-quick-icon="checklist"
-            onclick="intentarAbrirChecklistDesdeInicio(false)"
-            aria-label="Checklist de recarga del depósito">
-            <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-clipboard"/></svg></span>
-            <span>Recarga</span>
-          </button>
-          <button type="button" class="quick-btn quick-btn-info" data-quick-icon="riego"
-            onclick="goTab('riego')"
-            aria-label="Ir a planificación de riego">
-            <span class="quick-btn-icon" aria-hidden="true"><svg class="hc-ico hc-ico--ion-quick" focusable="false"><use href="#hc-i-droplet"/></svg></span>
-            <span>Riego</span>
-          </button>
-        </div>
         <details class="quick-actions-more" id="quickActionsMore">
           <summary class="quick-actions-more-summary" id="quickActionsMoreSummary">Más opciones (seguridad, alertas…)</summary>
           <div class="quick-actions quick-actions--extra quick-actions--stacked">
@@ -481,13 +425,13 @@
       <section class="dash-notif-prefs config-section-collapsible" id="dashNotifPrefsCard" aria-labelledby="dashNotifPrefsTitle">
         <button type="button" class="config-section-collapse-head medir-disclosure-main-head dash-notif-prefs-head"
           id="btnNotifPrefsInicio" onclick="toggleAvisosTelefonoInicio()"
-          aria-expanded="false" aria-controls="panelNotifPrefsInicio" aria-label="Mostrar u ocultar avisos en el teléfono">
+          aria-expanded="true" aria-controls="panelNotifPrefsInicio" aria-label="Mostrar u ocultar avisos en el teléfono">
           <span class="config-section-collapse-title-wrap">
             <span class="config-section-collapse-title dash-notif-prefs-title" id="dashNotifPrefsTitle"><svg class="hc-ico hc-ico--title-inline" aria-hidden="true" focusable="false"><use href="#hc-i-bell"/></svg> Avisos en el teléfono</span>
           </span>
           <span class="config-section-collapse-chevron" aria-hidden="true">▼</span>
         </button>
-        <div class="config-section-collapse-body recarga-proxima-collapse-body" id="panelNotifPrefsInicio" hidden>
+        <div class="config-section-collapse-body recarga-proxima-collapse-body" id="panelNotifPrefsInicio">
           <p class="dash-notif-prefs-lead">Las alertas meteorológicas (MeteoAlarm / AEMET en tu zona) siguen con el permiso del navegador. Las casillas de avisos <strong>extra</strong> de cultivo son <strong>por instalación activa</strong> (cada sistema hidropónico puede llevarlas distinto).</p>
           <fieldset class="dash-notif-prefs-fieldset" id="dashNotifPrefsFieldset">
             <label class="dash-notif-toggle-row">
@@ -2817,7 +2761,7 @@
         onclick="setWelcomeTheme('dark')" aria-pressed="false">Dark</button>
     </div>
     <h2 id="welcomeGuideTitle" class="welcome-title">Controla tu cultivo hidropónico sin perderte</h2>
-    <p class="welcome-lead">HIDROCultivo centraliza tu operativa diaria: <strong>cinco sistemas hidropónicos</strong> (torre, NFT, DWC, RDWC y SRF) con <strong>cálculos recomendados</strong> de volumen, cestas, bombeo y aireación; más <strong>asistente de mediciones</strong>, <strong>herramientas PRO</strong>, <strong>nutrientes por cultivo y fase</strong> y <strong>meteorología local</strong>. Las lecturas de EC y pH las registras tú (o tus sondas habituales); la app no sustituye un medidor conectado por WiFi.</p>
+    <p class="welcome-lead">HIDROCultivo centraliza tu operativa diaria: <strong>cinco sistemas hidropónicos</strong> (torre, NFT, DWC, RDWC y SRF) con <strong>cálculos recomendados</strong> de volumen, cestas, bombeo y aireación; más <strong>asistente de mediciones</strong>, <strong>herramientas PRO</strong>, <strong>nutrientes por cultivo y fase</strong> y <strong>meteorología local</strong>.</p>
     <div class="welcome-kpis" aria-label="Resumen de utilidad">
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-grid"/></svg><strong>1</strong> panel operativo</span>
       <span class="welcome-kpi"><svg class="hc-ico" aria-hidden="true" focusable="false"><use href="#hc-i-layers"/></svg><strong>5</strong> sistemas con cálculos guiados</span>
@@ -4807,14 +4751,14 @@
   <script src="js/hc-setup-consejos.js?v=2026-05-15-cesta-matrix"></script>
   <script src="js/calendario-logic.js?v=9"></script>
   <script src="js/meteo-forecast-meteo.js?v=13"></script>
-  <script src="js/meteo-forecast-dashboard.js?v=2026-05-28-play-inicio"></script>
+  <script src="js/meteo-forecast-dashboard.js?v=21"></script>
   <script src="js/riego-calculo-helpers.js?v=2026-05-20-sombra-cultivo"></script>
   <script src="js/riego-calculo-calcular.js?v=2026-05-20-sombra-cultivo"></script>
   <script src="js/meteo-alarm-app.js?v=1"></script>
   <script src="js/app-hc-medicion-toast.js?v=6"></script>
   <script src="js/app-hc-setup-onboarding.js?v=2026-05-15-dwc-tronco-setup"></script>
   <script src="js/hc-sistema-icons.js?v=2026-05-15-sistema-ico"></script>
-  <script src="js/app-hc-torres-badges-notifs.js?v=2026-05-28-play-inicio"></script>
+  <script src="js/app-hc-torres-badges-notifs.js?v=2026-05-28-torre-banner-off"></script>
   <script src="js/app-hc-pwa-fotodb.js?v=2026-05-26-paralelo-colectores"></script>
 </body>
 </html>
