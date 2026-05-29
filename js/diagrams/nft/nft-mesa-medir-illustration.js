@@ -385,13 +385,30 @@
         '" width="10" height="28" rx="5" fill="#f97316" stroke="#c2410c" stroke-width="1.1" pointer-events="none"/>';
     }
 
-    const pumpScale = Math.max(0.82, Math.min(1.2, 0.9 + (L.multinivel ? L.nTiers * 0.06 : 0)));
-    const px = L.tx + L.tankW + 12;
-    const py = L.waterTop + L.waterH * 0.5 - 20 * pumpScale;
-    s += drawUnifiedPump(px, py, pumpScale);
-
     if (L.showDifusor && typeof global.nftSvgAireadorEnSuelo === 'function') {
       s += global.nftSvgAireadorEnSuelo(L.tx, L.tankY, L.tankW, L.tankH, P);
+    }
+    if (typeof global.nftSvgRecircPumpBesideTank === 'function') {
+      const rec = global.nftSvgRecircPumpBesideTank(
+        L.tx,
+        L.tankY,
+        L.tankW,
+        L.tankH,
+        L.waterTop,
+        L.waterH,
+        L.Wsvg,
+        {
+          nTubosHint: L.multinivel && L.tiers ? L.tiers.reduce((a, b) => a + b, 0) : L.nCh,
+          nTiers: L.nTiers,
+          reserveRightForAir: L.showDifusor,
+        }
+      );
+      s += rec.svg;
+    } else if (!L.showDifusor) {
+      const pumpScale = Math.max(0.82, Math.min(1.2, 0.9 + (L.multinivel ? L.nTiers * 0.06 : 0)));
+      const px = L.tx + L.tankW + 12;
+      const py = L.waterTop + L.waterH * 0.5 - 20 * pumpScale;
+      s += drawUnifiedPump(px, py, pumpScale);
     }
 
     const flowSupply = typeof NFT_FLOW_SUPPLY !== 'undefined' ? NFT_FLOW_SUPPLY : '#2563eb';

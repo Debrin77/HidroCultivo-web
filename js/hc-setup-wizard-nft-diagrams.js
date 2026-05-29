@@ -2276,6 +2276,7 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       geomByG: geomByG,
       layoutFn: mesaMultinivelHoleLayout,
       er: compactMesa ? 12 : 16,
+      vertJog: flowMarginMM + 8,
     };
   } else if (hydSeq.length) {
     hydMmSpec.mesaRow = {
@@ -2548,20 +2549,13 @@ function buildNftMesaMultinivelDiagramSvg(tiers, huecos, pendPct, volL, svgIdSuf
       '<rect x="' + (hx - 5) + '" y="' + (tankY + tankH - 36) + '" width="10" height="30" rx="5" fill="#f97316" stroke="#ea580c" stroke-width="1.2"/>';
     tankLayer += '<circle cx="' + hx + '" cy="' + (tankY + tankH - 42) + '" r="3.5" fill="#fbbf24"/>';
   }
-  if (showDifusor) {
-    const ax = tx + tankW - 18;
-    const ay = tankY + tankH - 16;
-    tankLayer +=
-      '<line x1="' + ax + '" y1="' + (tankY - 2) + '" x2="' + ax + '" y2="' + (ay - 12) + '" stroke="#e2e8f0" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.95"/>';
-    tankLayer +=
-      '<ellipse cx="' + ax + '" cy="' + ay + '" rx="13" ry="7" fill="#94a3b8" stroke="#64748b" stroke-width="1.2"/>';
-    for (let bi = 0; bi < 5; bi++) {
-      const bx = ax + (bi % 3 - 1) * 4;
-      tankLayer += '<circle cx="' + bx + '" cy="' + (ay - 7 - bi * 3) + '" r="1.7" fill="#bfdbfe" opacity="0.9"/>';
-    }
+  const difusorWithAirPumpMM = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
+  if (difusorWithAirPumpMM) {
+    tankLayer += nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, HC_DIAG.nft);
+    const minWAir = tx + tankW + 16 + 58;
+    if (minWAir > Wsvg) Wsvg = minWAir;
   }
 
-  const difusorWithAirPumpMM = showDifusor && typeof nftSvgAireadorEnSuelo === 'function';
   const recircPumpMM = nftSvgRecircPumpBesideTank(tx, tankY, tankW, tankH, waterTop, waterH, Wsvg, {
     nTubosHint: nTubosMesa,
     nTiers: nTiers,

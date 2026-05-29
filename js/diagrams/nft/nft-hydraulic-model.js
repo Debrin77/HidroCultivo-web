@@ -777,11 +777,22 @@
         Lto(xIn, yB);
       } else {
         const Gp = geomByG[hydSeq[i - 1]];
+        const Lp = layoutFn(Gp);
         const tierJump = Gp.t !== Gc.t;
         if (tierJump) {
-          if (Math.abs(lx - xC) > 0.8) Lto(xC, ly);
-          if (Math.abs(ly - yIn) > 0.8) Lto(xC, yIn);
-          if (Math.abs(lx - xIn) > 0.8) Lto(xIn, yIn);
+          const prevXOut = lx;
+          const prevYOut = ly;
+          const exitOnLeft = prevXOut < Lp.xC - 0.5;
+          const jog = p.vertJog != null ? p.vertJog : er + 8;
+          const xVert = serpentineVertColumnX(prevXOut, xIn, exitOnLeft, jog);
+          if (Math.abs(lx - prevXOut) > 0.8 || Math.abs(ly - prevYOut) > 0.8) {
+            Lto(prevXOut, prevYOut);
+          }
+          Lto(xVert, prevYOut);
+          Lto(xVert, yIn);
+          if (Math.abs(xVert - xIn) > 0.8) {
+            Lto(xIn, yIn);
+          }
         } else {
           orthoKnee(xIn, yIn);
         }
@@ -937,6 +948,7 @@
         xFeedRiser: p.xFeedRiser,
         yOutletStart: ports.yOutlet,
         er: mc.er != null ? mc.er : 16,
+        vertJog: mc.vertJog,
       });
       const tailD = segmentsToSvg(col.segments, { orthoKneeBetweenLines: false });
       supplyBodyD = tailD;
