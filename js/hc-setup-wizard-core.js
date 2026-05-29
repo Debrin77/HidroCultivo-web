@@ -1648,22 +1648,41 @@ function syncRdwcLitrosUtilesSugeridos(scope) {
       hintEl.textContent =
         'Indica altura del net pot (mm) y Ø del aro para calcular el total de agua útil del circuito.';
     } else if (totalCalc != null) {
-      let t =
-        'Total calculado del circuito: ~' +
-        totalCalc +
-        ' L (' +
-        (controlCalc != null ? controlCalc : '—') +
-        ' L reservorio + ' +
-        sites +
-        '×' +
-        (bucketCalc != null ? bucketCalc : '—') +
-        ' L/cubo).';
-      if (manualCtl != null && totalConManual != null && Math.abs(totalConManual - totalCalc) > 0.15) {
-        t += ' Si indicas ' + manualCtl + ' L en el depósito de control, el total con tu medida sería ~' + totalConManual + ' L.';
+      const pipeCalc =
+        typeof getRdwcTuberiasVolumeLitros === 'function' ? getRdwcTuberiasVolumeLitros(c) : 0;
+      const usaManual =
+        manualCtl != null && totalConManual != null && Math.abs(totalConManual - totalCalc) > 0.15;
+      if (usaManual) {
+        hintEl.textContent =
+          'Total del circuito con tu medida en reservorio (' +
+          manualCtl +
+          ' L): ~' +
+          totalConManual +
+          ' L. Referencia solo calculada (sin litros manuales en depósito): ~' +
+          totalCalc +
+          ' L (~' +
+          (controlCalc != null ? controlCalc : '—') +
+          ' L reservorio + ' +
+          sites +
+          '×' +
+          (bucketCalc != null ? bucketCalc : '—') +
+          ' L/cubo' +
+          (pipeCalc > 0 ? ' + ~' + pipeCalc + ' L tuberías' : '') +
+          ').';
       } else {
-        t += ' El campo «litros útiles en depósito control» es opcional: vacío = valor calculado.';
+        hintEl.textContent =
+          'Total del circuito: ~' +
+          totalCalc +
+          ' L (~' +
+          (controlCalc != null ? controlCalc : '—') +
+          ' L reservorio + ' +
+          sites +
+          '×' +
+          (bucketCalc != null ? bucketCalc : '—') +
+          ' L/cubo' +
+          (pipeCalc > 0 ? ' + ~' + pipeCalc + ' L tuberías' : '') +
+          '). El campo «litros útiles en depósito control» es opcional: vacío = reservorio calculado.';
       }
-      hintEl.textContent = t;
     } else {
       hintEl.textContent = '';
     }
@@ -1716,8 +1735,18 @@ function renderRdwcSetupCalculadoUi(cfg) {
     if (calc) {
       block.classList.add('setup-dwc-litros-solucion-block--ok');
       const cubosSum = Math.round(calc.sites * calc.bucketVol * 10) / 10;
-      val.textContent = calc.totalVol + ' L útiles en todo el circuito';
-      if (elCtl) elCtl.textContent = String(calc.controlVol);
+      const usaManualDeposito =
+        manualCtl != null &&
+        totalManual != null &&
+        Math.abs(manualCtl - calc.controlVol) > 0.15;
+      const totalMostrar = usaManualDeposito ? totalManual : calc.totalVol;
+      const totalRedondeado = Math.round(totalMostrar * 10) / 10;
+      val.textContent = totalRedondeado + ' L útiles en todo el circuito';
+      if (elCtl) {
+        elCtl.textContent = usaManualDeposito
+          ? String(manualCtl) + ' (tu medida)'
+          : String(calc.controlVol);
+      }
       if (elCubo) elCubo.textContent = String(calc.bucketVol);
       if (elSites) elSites.textContent = String(calc.sites);
       if (elCubosSum) elCubosSum.textContent = String(cubosSum);
@@ -1734,7 +1763,7 @@ function renderRdwcSetupCalculadoUi(cfg) {
           calc.tubeRetMm +
           ' mm)';
       }
-      if (elSuma) elSuma.textContent = String(calc.totalVol);
+      if (elSuma) elSuma.textContent = String(totalRedondeado);
       if (elCuboDet) {
         if (bucketInfo && bucketInfo.fuente === 'cesta') {
           elCuboDet.textContent = '(' + bucketInfo.detalle + ')';
@@ -1764,13 +1793,11 @@ function renderRdwcSetupCalculadoUi(cfg) {
           ' L/h. La suma incluye depósito, cubos y tuberías.';
       }
       if (elManualNote) {
-        if (manualCtl != null && totalManual != null && Math.abs(totalManual - calc.totalVol) > 0.15) {
+        if (usaManualDeposito) {
           elManualNote.textContent =
-            'Has indicado ' +
-            manualCtl +
-            ' L en el depósito de control (manual). Total con tu medida: ~' +
-            totalManual +
-            ' L. El desglose calculado no cambia.';
+            'Reservorio calculado por cesta/medidas: ~' +
+            calc.controlVol +
+            ' L (referencia). Cubos y tuberías del desglose siguen el cálculo automático.';
           elManualNote.classList.remove('setup-hidden');
         } else {
           elManualNote.textContent = '';
