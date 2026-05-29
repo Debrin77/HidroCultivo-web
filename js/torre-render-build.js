@@ -803,15 +803,41 @@ function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
 
 /**
  * Bomba DWC unificada (misma que NFT/DWC/RDWC) + manguera a piedra.
- * La bomba va a la derecha de las flechas de giro del depósito (no las tapa).
+ * A la derecha del depósito si cabe en el viewBox; si no, esquina del tanque (sin tapar flechas de giro).
+ * @param {object} [opts] — `canvasW`: ancho del SVG para recortar posición.
  */
-function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate) {
+function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate, opts) {
   if (typeof dwcSvgAirPumpDraw !== 'function' && typeof dwcSvgAirPumpExternal !== 'function') {
     return { defs: '', html: '' };
   }
-  const pumpScale = 0.88;
+  opts = opts && typeof opts === 'object' ? opts : {};
+  const pumpNomW = 54;
+  const rotBtnR = 17;
+  const rotBtnPad = 6;
+  const rotRCx = depX + depW + rotBtnPad + rotBtnR;
+  let pumpScale = 0.88;
+  let pumpX = depX + depW + 52;
+  const canvasW = Number(opts.canvasW);
+  if (Number.isFinite(canvasW) && canvasW > 0) {
+    const margin = 8;
+    const maxRight = canvasW - margin;
+    let pumpW = pumpNomW * pumpScale;
+    const besideRotX = rotRCx + rotBtnR + 6;
+    if (pumpX + pumpW > maxRight) {
+      pumpX = besideRotX;
+      pumpW = pumpNomW * pumpScale;
+    }
+    if (pumpX + pumpW > maxRight) {
+      pumpX = Math.max(depX + Math.round(depW * 0.38), depX + depW - pumpW - 8);
+    }
+    if (pumpX + pumpW > maxRight) {
+      pumpScale = Math.max(0.68, (maxRight - pumpX - 2) / pumpNomW);
+    }
+    if (pumpX < rotRCx + rotBtnR - 2 && pumpX + pumpNomW * pumpScale > rotRCx - rotBtnR) {
+      pumpX = Math.max(depX + Math.round(depW * 0.38), depX + depW - pumpNomW * pumpScale - 8);
+    }
+  }
   const pumpH = 40 * pumpScale;
-  const pumpX = depX + depW + 52;
   const pumpY = depY + depH - pumpH - 2;
   const piedraX = depX + Math.round(depW * 0.55);
   const piedraY = depY + depH - 11;
@@ -922,7 +948,9 @@ function torreSvgDepositoCompleto(depX, depY, depW, depH, volL, opts) {
   defs += pack.defs || '';
   html += pack.html || '';
   if (o.difusor !== false) {
-    const air = torreSvgDepositoAirDwc(depX, depY, depW, depH, o.animate !== false);
+    const air = torreSvgDepositoAirDwc(depX, depY, depW, depH, o.animate !== false, {
+      canvasW: o.canvasW,
+    });
     defs += air.defs || '';
     html += air.html || '';
   }
@@ -1141,7 +1169,7 @@ function _buildTorreSvgLegacy() {
 
   // ── DIFUSOR DE AIRE (bomba DWC + manguera a piedra) ───────────────────────
   if (tieneDifusor) {
-    const airLeg = torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H, ta);
+    const airLeg = torreSvgDepositoAirDwc(DEP_X, DEP_Y, DEP_W, DEP_H, ta, { canvasW: SVG_W });
     s += airLeg.html;
     if (ta) {
       const ax = DEP_X + Math.round(DEP_W * 0.55);

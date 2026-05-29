@@ -2359,7 +2359,7 @@
 
   function hcIlloTorreLayout(cfg) {
     var numNiveles = Math.max(1, Math.min(12, parseInt(cfg.numNiveles, 10) || 5));
-    var W = 360;
+    var W = 388;
     var CX = W / 2;
     var NIVEL_H = 58;
     var GAP = 12;
@@ -2740,6 +2740,7 @@
         capL: volCap,
         mezL: volMez,
         difusor: tieneDifusor,
+        canvasW: W,
       });
     } else {
       depBlock.html = tankFront(depX, depY, depW, DEP_H, Math.max(0.55, volPct), u, ta, false, false);
@@ -3004,6 +3005,7 @@
         capL: volCap,
         mezL: volMez,
         difusor: tieneDifusor,
+        canvasW: L.W,
       });
     } else {
       depBlock.html = tankFront(L.depX, L.depY, L.DEP_W, L.DEP_H, Math.max(0.55, volPct), u, ta, false, tieneCalentador);
