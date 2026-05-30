@@ -307,9 +307,15 @@ function hcResetSrfSetupFormZero() {
   try {
     clearSetupVolMezclaSrfAutofill();
   } catch (_) {}
+  const litVal = document.getElementById('setupSrfLitrosSolucionValor');
+  const litHint = document.getElementById('setupSrfLitrosSolucionHint');
+  const litBlock = document.getElementById('setupSrfLitrosSolucionBlock');
   const bombaVal = document.getElementById('setupSrfBombaRecoValor');
   const bombaHint = document.getElementById('setupSrfBombaRecoHint');
   const bombaBlock = document.getElementById('setupSrfBombaRecoBlock');
+  if (litBlock) litBlock.classList.add('setup-dwc-litros-solucion-block--pending');
+  if (litVal) litVal.textContent = 'Indica medidas del estanque y de la cesta';
+  if (litHint) litHint.textContent = '';
   if (bombaBlock) bombaBlock.classList.remove('setup-hidden');
   if (bombaVal) bombaVal.textContent = '—';
   if (bombaHint) bombaHint.textContent = 'Se calcula al completar el estanque.';
@@ -962,9 +968,48 @@ function srfRefreshSetupCalculadoUi() {
       typeof hcFreshSrfSetupDefaults === 'function' ? hcFreshSrfSetupDefaults() : { tipoInstalacion: 'srf' };
     draft = buildSrfConfigFromForm('setup', seed, { applyDefaults: false });
   } catch (_) {}
+  const litBlock = document.getElementById('setupSrfLitrosSolucionBlock');
+  const litVal = document.getElementById('setupSrfLitrosSolucionValor');
+  const litHint = document.getElementById('setupSrfLitrosSolucionHint');
   const bombaBlock = document.getElementById('setupSrfBombaRecoBlock');
   const bombaVal = document.getElementById('setupSrfBombaRecoValor');
   const bombaHint = document.getElementById('setupSrfBombaRecoHint');
+  const cap = draft ? srfCapacidadLitrosDesdeConfig(draft) : null;
+  const util = draft ? srfVolumenSeguroLitrosDesdeConfig(draft) : null;
+  const desg = draft ? srfDesgloseVolumenLlenado(draft) : null;
+  if (litBlock && litVal) {
+    litBlock.classList.remove('setup-dwc-litros-solucion-block--pending', 'setup-dwc-litros-solucion-block--ok');
+    if (util != null && util > 0) {
+      litBlock.classList.add('setup-dwc-litros-solucion-block--ok');
+      litVal.textContent = util + ' L';
+      if (litHint && desg) {
+        litHint.textContent =
+          'Total geométrico ' +
+          desg.cap +
+          ' L · P ' +
+          desg.P +
+          ' cm − balsa ~' +
+          desg.balsaCm +
+          ' cm − cesta en agua ~' +
+          desg.hang +
+          ' cm − cámara aire ~' +
+          desg.gap +
+          ' cm → ~' +
+          desg.hCol +
+          ' cm útiles' +
+          (desg.hPotMm != null ? ' (cesta ' + desg.hPotMm + ' mm' + (desg.rimMm != null ? ', Ø ' + desg.rimMm + ' mm' : '') + ')' : '') +
+          '.';
+      }
+    } else if (cap != null) {
+      litBlock.classList.add('setup-dwc-litros-solucion-block--pending');
+      litVal.textContent = cap + ' L (completa cesta para llenado seguro)';
+      if (litHint) litHint.textContent = 'Indica diámetro y profundidad de la cesta.';
+    } else {
+      litBlock.classList.add('setup-dwc-litros-solucion-block--pending');
+      litVal.textContent = 'Completa medidas del estanque y de la cesta.';
+      if (litHint) litHint.textContent = '';
+    }
+  }
   const modo = draft ? srfNormalizeOxigenacionModo(draft.srfOxigenacionModo) : 'aireador';
   if (bombaBlock) {
     if (modo === 'kratky') {
@@ -1003,9 +1048,6 @@ function onSetupSrfInput() {
   } catch (_) {}
   try {
     renderSrfCultivoRecoStatus('setup');
-  } catch (_) {}
-  try {
-    syncSetupVolMezclaSugeridoSrf({ forceMezcla: true });
   } catch (_) {}
 }
 

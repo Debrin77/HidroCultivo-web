@@ -3113,7 +3113,7 @@
 
       <div id="setupSrfDetalleWrap" class="setup-hidden">
         <div class="setup-dwc-title">SRF · balsa flotante</div>
-        <p class="setup-dwc-help">Mide el <strong>estanque</strong>, la <strong>rejilla en la balsa</strong> (filas × plantas por fila) y la <strong>cesta</strong> (Ø y profundidad). La bomba de aire recomendada se actualiza al completar medidas; los litros útiles del estanque los indicas abajo si quieres afinar la mezcla.</p>
+        <p class="setup-dwc-help">Mide el <strong>estanque</strong>, la <strong>rejilla en la balsa</strong> (filas × plantas por fila) y la <strong>cesta</strong> (Ø y profundidad). Los litros de solución y la bomba de aire se calculan en tiempo real.</p>
         <p class="setup-dwc-section-kicker">Balsa · huecos</p>
         <div class="setup-dwc-grid-2 setup-mb-8">
           <div><label class="form-label setup-dwc-label" for="setupSrfFilas">Filas en balsa</label><input type="number" id="setupSrfFilas" class="setup-dwc-input" min="1" max="8" step="1" placeholder="2" oninput="try{onSetupSrfInput()}catch(e){}"></div>
@@ -3148,12 +3148,16 @@
           <button type="button" class="btn btn-secondary btn-sm" id="setupSrfAplicarCultivoBtn" onclick="aplicarSrfRecoCultivo('setup')" disabled>Aplicar estanque (cultivo)</button>
           <button type="button" class="btn btn-secondary btn-sm" id="setupSrfAplicarCestaBtn" onclick="aplicarSrfRecoCesta('setup')" disabled>Aplicar cesta (cultivo)</button>
         </div>
+        <div id="setupSrfLitrosSolucionBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
+          <p class="setup-dwc-litros-solucion-label">Litros de solución en el estanque</p>
+          <p class="setup-dwc-litros-solucion-valor" id="setupSrfLitrosSolucionValor">—</p>
+          <p class="setup-dwc-litros-solucion-hint" id="setupSrfLitrosSolucionHint"></p>
+        </div>
         <div id="setupSrfBombaRecoBlock" class="setup-dwc-litros-solucion-block setup-mt-8" role="status" aria-live="polite">
           <p class="setup-dwc-litros-solucion-label">Bomba de aire recomendada</p>
           <p class="setup-dwc-litros-solucion-valor" id="setupSrfBombaRecoValor">—</p>
           <p class="setup-dwc-litros-solucion-hint" id="setupSrfBombaRecoHint"></p>
         </div>
-        <div id="setupVolMezclaSlotSrf" class="setup-mt-8"></div>
         <div id="setupSrfCalcStatus" class="setup-dwc-help" role="status" aria-live="polite"></div>
       </div>
 
@@ -4689,13 +4693,13 @@
   <script src="js/torre-render-main.js?v=2026-05-28-nft-difusor-rdwc-ec"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-setup-cesta-srf"></script>
-  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-28-hydro-audit"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15-wizard-aislado"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-srf-litros-ui"></script>
+  <script src="js/hc-setup-wizard-dwc.js?v=2026-05-28-srf-litros-ui"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15-wizard-aislado"></script>
 
-  <script src="js/hc-setup-wizard-srf.js?v=2026-05-28-setup-srf-litros"></script>
+  <script src="js/hc-setup-wizard-srf.js?v=2026-05-28-srf-litros-ui"></script>
   <script src="js/diagrams/nft/nft-hydraulic-model.js?v=2026-05-28-mm-flow-air"></script>
   <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-air-pump-torre"></script>
-  <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-torre-preview-air"></script>
+  <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-srf-litros-ui"></script>
   <script src="js/diagrams/nft/nft-pared-illustration.js?v=2026-05-28-air-pump-torre"></script>
   <script src="js/diagrams/nft/nft-cartoon-enhance.js?v=2026-05-19-nft-cartoon3"></script>
   <script src="js/diagrams/nft/nft-medir-view.js?v=2026-05-28-nft-difusor-fijo"></script>

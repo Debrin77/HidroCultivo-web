@@ -2463,9 +2463,6 @@ function abrirSetup() {
     try {
       syncSrfFormDesdeConfig(c, 'setup');
     } catch (_) {}
-    try {
-      if (typeof syncSetupVolMezclaSugeridoSrf === 'function') syncSetupVolMezclaSugeridoSrf();
-    } catch (_) {}
   }
   const snc = document.getElementById('sliderNftCanales');
   const snh = document.getElementById('sliderNftHuecos');
@@ -2943,7 +2940,7 @@ function refrescarSetupTipoInstalacionUI() {
     if (rdwcW) rdwcW.classList.add('setup-rdwc-asistente-simple');
   }
   const volDepWrap = document.getElementById('setupVolDepositoWrap');
-  if (volDepWrap) volDepWrap.style.display = isRdwc ? 'none' : '';
+  if (volDepWrap) volDepWrap.style.display = isRdwc || isSrf ? 'none' : '';
   const capMaxWrap = document.getElementById('setupVolCapacidadMaxWrap');
   if (capMaxWrap) capMaxWrap.style.display = (setupTipoInstalacion === 'dwc' || isRdwc || isSrf) ? 'none' : '';
   const dwcCapHint = document.getElementById('setupDwcCapacidadEstimada');
@@ -2958,10 +2955,6 @@ function refrescarSetupTipoInstalacionUI() {
       mezLab.textContent = 'Litros de solución en el depósito (relleno operativo)';
       mezAyuda.textContent =
         'La app puede sugerir litros al llenado seguro: capacidad geométrica menos la reserva bajo la base del sustrato (altura estimada según tipo de sustrato y altura de cesta) y una cámara de aire orientativa ~0,5–1 cm, coherente con Cultivo e instalación. Si el campo está vacío o sigue la última sugerencia, se recalcula al cambiar medidas o cesta; edítalo a mano si tu llenado real es otro.';
-    } else if (isSrf) {
-      mezLab.textContent = 'Litros de solución en el estanque (mezcla útil)';
-      mezAyuda.textContent =
-        'Vacío = capacidad del estanque (L×A×profundidad útil o volumen manual). Se recalcula al cambiar medidas; edítalo si llenas a menos del tope geométrico.';
     } else {
       mezLab.textContent = 'Litros de mezcla (opcional)';
       mezAyuda.textContent =
@@ -2980,9 +2973,6 @@ function refrescarSetupTipoInstalacionUI() {
         syncSrfFormDesdeConfig(state.configTorre || {}, 'setup');
       }
       if (typeof updateTorreBuilder === 'function') updateTorreBuilder();
-      if (!setupEsNuevaTorre && typeof syncSetupVolMezclaSugeridoSrf === 'function') {
-        syncSetupVolMezclaSugeridoSrf();
-      }
       if (typeof renderSrfCultivoRecoStatus === 'function') renderSrfCultivoRecoStatus('setup');
     } catch (_) {}
   }

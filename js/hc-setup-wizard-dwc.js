@@ -1301,13 +1301,11 @@ function onSetupDwcCestaMedidasInput() {
 function repositionSetupVolMezclaBlock() {
   const block = document.getElementById('setupVolMezclaBlock');
   const slotDwc = document.getElementById('setupVolMezclaSlotDwc');
-  const slotSrf = document.getElementById('setupVolMezclaSlotSrf');
   const slotDefault = document.getElementById('setupVolMezclaSlotDefault');
   if (!block || !slotDefault) return;
   const t =
     typeof setupTipoInstalacion !== 'undefined' ? setupTipoInstalacion : '';
   if (t === 'dwc' && slotDwc) slotDwc.appendChild(block);
-  else if (t === 'srf' && slotSrf) slotSrf.appendChild(block);
   else slotDefault.appendChild(block);
 }
 
