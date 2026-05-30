@@ -2859,7 +2859,11 @@ function refrescarSetupTipoInstalacionUI() {
     inlSrf.setAttribute('aria-pressed', 'true');
   }
   const cestaBlk = document.getElementById('setupBloqueTamanoCestas');
-  if (cestaBlk) cestaBlk.style.display = (setupTipoInstalacion === 'dwc' || setupTipoInstalacion === 'rdwc') ? 'none' : '';
+  // Torre: tarjetas cm. DWC/RDWC: Ø mm en su bloque. NFT/SRF: diámetro en el bloque del sistema (no repetir abajo).
+  if (cestaBlk) {
+    cestaBlk.style.display =
+      setupTipoInstalacion === 'torre' ? '' : 'none';
+  }
   try {
     aplicarSetupWizardExclusividadTorreVertical();
   } catch (_) {}
