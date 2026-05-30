@@ -550,54 +550,36 @@
       const tankWallX = tankX + tankW - rimIn;
       let pumpOutX = pumpX;
       let pumpOutY = pumpY + pumpH * 0.55;
-      s += '<g class="srf-ext-pump-outside" aria-hidden="true">';
-      if (typeof dwcSvgAirPumpExternal === 'function') {
-        const pumpMc = dwcSvgAirPumpExternal(pumpX, pumpY, 1);
-        s += pumpMc.svg;
-        if (pumpMc.outlets && pumpMc.outlets[0]) {
-          pumpOutX = pumpMc.outlets[0].x;
-          pumpOutY = pumpMc.outlets[0].y;
+      s += '<g class="srf-ext-pump-outside hc-air-pump-torre" aria-hidden="true">';
+      const pumpScaleSrf = Math.max(0.76, Math.min(1.05, pumpH / 40));
+      if (typeof global.dwcSvgAirPumpDraw === 'function') {
+        const drawn = global.dwcSvgAirPumpDraw(pumpX, pumpY, pumpScaleSrf);
+        s += drawn.svg;
+        if (drawn.outlets && drawn.outlets[0]) {
+          pumpOutX = drawn.outlets[0].x;
+          pumpOutY = drawn.outlets[0].y;
         }
-      } else {
+      } else if (typeof global.hcSvgAirPumpTorreBlock === 'function') {
+        s += global.hcSvgAirPumpTorreBlock(pumpX, pumpY, pumpScaleSrf);
+        pumpOutX = pumpX;
+        pumpOutY = pumpY + pumpH * 0.55;
+      } else if (typeof global.dwcSvgAirPumpExternal === 'function') {
+        const pumpMc = global.dwcSvgAirPumpExternal(pumpX, pumpY, 1);
+        const inner = pumpMc.svg.replace(/fill="url\(#dwcPumpDome\)"/g, 'fill="#ff9800"');
         s +=
-          '<g class="srf-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
-          '<ellipse cx="' +
-          pumpCx.toFixed(1) +
-          '" cy="' +
-          (pumpY + pumpH + 6).toFixed(1) +
-          '" rx="20" ry="4.5" fill="rgba(15,23,42,0.14)"/>' +
-          '<rect x="' +
-          (pumpX + 4).toFixed(1) +
-          '" y="' +
-          (pumpY + 15).toFixed(1) +
-          '" width="' +
-          (pumpW - 8).toFixed(1) +
-          '" height="' +
-          (pumpH - 11).toFixed(1) +
-          '" rx="5" fill="#37474f" stroke="#1e293b" stroke-width="1.8"/>' +
-          '<ellipse cx="' +
-          pumpCx.toFixed(1) +
-          '" cy="' +
-          (pumpY + 12).toFixed(1) +
-          '" rx="' +
-          ((pumpW - 10) / 2).toFixed(1) +
-          '" ry="13" fill="#ff9800" stroke="#e65100" stroke-width="2"/>' +
-          '<ellipse cx="' +
-          (pumpCx - 8).toFixed(1) +
-          '" cy="' +
-          (pumpY + 8).toFixed(1) +
-          '" rx="7" ry="3" fill="rgba(255,255,255,0.45)"/>' +
-          '<circle cx="' +
-          pumpCx.toFixed(1) +
-          '" cy="' +
-          (pumpY + pumpH * 0.52).toFixed(1) +
-          '" r="9" fill="#eceff1" stroke="#78909c" stroke-width="1.2"/>' +
-          '<circle cx="' +
-          pumpCx.toFixed(1) +
-          '" cy="' +
-          (pumpY + pumpH * 0.52).toFixed(1) +
-          '" r="4.5" fill="none" stroke="#90a4ae" stroke-width="0.9"/>' +
+          '<g class="srf-ext-pump" transform="translate(' +
+          pumpX.toFixed(1) +
+          ' ' +
+          pumpY.toFixed(1) +
+          ') scale(' +
+          pumpScaleSrf.toFixed(3) +
+          ')">' +
+          inner +
           '</g>';
+        if (pumpMc.outlets && pumpMc.outlets[0]) {
+          pumpOutX = pumpX + pumpMc.outlets[0].x * pumpScaleSrf;
+          pumpOutY = pumpY + pumpMc.outlets[0].y * pumpScaleSrf;
+        }
       }
       if (stoneYs.length) {
         const mid = stoneYs[Math.floor(stoneYs.length / 2)];
