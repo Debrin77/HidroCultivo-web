@@ -441,10 +441,15 @@ function nftSvgTankPorts(tx, tankW, tankY, tankH, nTubos) {
   };
 }
 
-/** Bomba DWC + manguera a piedra (preview asistente; motor en torre-render-build.js). */
-function torrePreviewAireadorSvg(depX, depY, depW, depH) {
+/** Bomba DWC + manguera a piedra (preview asistente; sin flechas de giro → besideRight + canvasW). */
+function torrePreviewAireadorSvg(depX, depY, depW, depH, opts) {
   if (typeof torreSvgDepositoAirDwc !== 'function') return { defs: '', html: '' };
-  return torreSvgDepositoAirDwc(depX, depY, depW, depH);
+  opts = opts && typeof opts === 'object' ? opts : {};
+  const airOpts = { placement: 'besideRight', gap: 12 };
+  if (Number.isFinite(Number(opts.canvasW)) && Number(opts.canvasW) > 0) {
+    airOpts.canvasW = Number(opts.canvasW);
+  }
+  return torreSvgDepositoAirDwc(depX, depY, depW, depH, opts.animate !== false, airOpts);
 }
 
 /** Bomba de aire a la derecha del depósito — mismo dibujo que sistema torre. */
@@ -2329,7 +2334,9 @@ function updateTorreBuilder() {
       (n + 1) +
       '</text>';
   }
-  const torrePreviewAir = hasAir ? torrePreviewAireadorSvg(depX, depY, depW, depH) : { defs: '', html: '' };
+  const torrePreviewAir = hasAir
+    ? torrePreviewAireadorSvg(depX, depY, depW, depH, { canvasW: W, animate: animPreview })
+    : { defs: '', html: '' };
   const volOutsideY = depY + depH + 22;
   const volOutsideSvg =
     typeof hcDiagramVolLabelSvg === 'function'
