@@ -1,0 +1,12 @@
+HIDROCULTIVO v1.0.0 — CODIGO FUENTE (totalidad depositada)
+Autor: Jose Caruana Reina
+NIF: 19002112H
+Titulo: HidroCultivo
+
+Contenido: index.html, manifest.json, service-worker.js, package.json,
+capacitor.config.json, carpetas js/ (logica e interfaz), css/, icons/.
+
+Excluido: node_modules, www generado, proyectos android/ios nativos,
+dependencias de terceros instalables via npm.
+
+Expediente ACCEDA: completar al subir.

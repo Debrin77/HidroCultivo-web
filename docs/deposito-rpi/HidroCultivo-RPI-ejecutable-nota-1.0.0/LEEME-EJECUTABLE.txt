@@ -1,0 +1,16 @@
+HIDROCULTIVO v1.0.0 — NOTA SOBRE EJECUTABLE
+
+Autor: Jose Caruana Reina (NIF 19002112H)
+
+No se aporta binario ejecutable autocontenido (.exe / .apk) en este deposito porque:
+
+1. La obra se ejecuta como aplicacion web (PWA): index.html, service-worker.js
+   y modulos JavaScript en el deposito de codigo fuente.
+
+2. La variante Android (es.hidrocultivo.app) se genera con Capacitor a partir
+   del mismo codigo; el APK/AAB depende del entorno de compilacion del titular.
+
+La identificacion del programa queda cubierta por el codigo fuente depositado,
+la memoria del programa (PDF) con descripcion funcional y capturas de interfaz.
+
+Castellon de la Plana, 28/05/2026.

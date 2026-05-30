@@ -1,0 +1,60 @@
+HidroCultivo v1.0.0 — modulos representativos del deposito
+Generado: 2026-05-30
+
+index.html
+  Interfaz principal y estructura de la aplicacion
+
+manifest.json
+  Manifiesto PWA
+
+capacitor.config.json
+  Configuracion Capacitor (appId, webDir)
+
+js/hc-bootstrap-config.js
+  Inicializacion y configuracion global
+
+js/hc-setup-wizard-core.js
+  Asistente de configuracion (nucleo)
+
+js/hc-setup-wizard-pages.js
+  Asistente: paginas y vistas previa
+
+js/hc-setup-calc-core.js
+  Calculos hidraulicos y volumenes
+
+js/hc-setup-checklist.js
+  Checklist de recarga
+
+js/hc-setup-consejos.js
+  Consejos tecnicos
+
+js/torre-render-build.js
+  Diagramas torre y deposito
+
+js/hc-diagram-illo.js
+  Ilustraciones y diagramas por sistema
+
+js/diagrams/dwc/dwc-diagram.js
+  Diagrama DWC
+
+js/hc-setup-wizard-nft-diagrams.js
+  Diagramas y logica NFT
+
+js/diagrams/nft/nft-scada-bridge.js
+  Puente diagramas NFT SCADA
+
+js/diagrams/srf/srf-diagram.js
+  Diagrama SRF
+
+js/diagrams/rdwc/rdwc-diagram.js
+  Diagrama RDWC
+
+js/meteo-forecast-dashboard.js
+  Panel meteorologico
+
+js/backup-capacitor.js
+  Exportacion/importacion (stub web; bundle en nativo)
+
+css/main.css
+  Estilos principales
+

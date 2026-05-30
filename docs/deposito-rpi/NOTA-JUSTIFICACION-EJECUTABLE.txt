@@ -1,0 +1,16 @@
+HidroCultivo v1.0.0 — Justificación de no aportar ejecutable en ZIP separado
+
+Autor: Jose Caruana Reina (NIF 19002112H)
+
+El programa se distribuye como:
+1) Aplicación web progresiva (PWA), ejecutada en navegador mediante index.html,
+   service-worker.js y recursos js/css (incluidos en el depósito de código fuente).
+2) Cliente Android empaquetado con Capacitor (es.hidrocultivo.app), generado a partir
+   del mismo código; el binario APK/AAB depende del entorno de compilación del titular
+   y no constituye un único fichero ejecutable autocontenido en el sentido de un .exe.
+
+Por ello no se adjunta un ejecutable independiente en este trámite. La funcionalidad
+queda identificada mediante el código fuente depositado, la memoria del programa
+(con capturas de la interfaz en funcionamiento) y la descripción en la solicitud.
+
+Castellón de la Plana, 2026.

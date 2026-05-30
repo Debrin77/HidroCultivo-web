@@ -10,7 +10,16 @@
     "cap:prep": "node scripts/sync-www.cjs && node scripts/bundle-capacitor.cjs",
     "cap:sync": "node scripts/sync-www.cjs && node scripts/bundle-capacitor.cjs && npx cap sync",
     "cap:open:android": "npx cap open android",
-    "cap:open:ios": "npx cap open ios"
+    "cap:open:ios": "npx cap open ios",
+    "rpi:memoria": "node scripts/generate-registro-pdf.js && node scripts/generate-registro-pdf-imprimible.js",
+    "rpi:deposito": "node scripts/prepare-rpi-deposit.mjs",
+    "rpi:serve": "npx --yes serve . -l 5173",
+    "rpi:capturas-check": "node scripts/rpi-check-capturas.mjs",
+    "rpi:capturas-abrir": "node scripts/rpi-open-capturas-folder.mjs",
+    "rpi:zip": "node scripts/rpi-zip-deposit.mjs",
+    "rpi:portada": "node scripts/generate-rpi-portada.js",
+    "rpi:fuente": "node scripts/rpi-fuente-zip.mjs",
+    "rpi:ejecutable": "node scripts/rpi-ejecutable-zip.mjs"
   },
   "keywords": [],
   "author": "",

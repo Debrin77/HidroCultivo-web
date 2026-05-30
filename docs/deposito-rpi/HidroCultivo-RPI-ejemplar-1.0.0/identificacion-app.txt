@@ -1,0 +1,6 @@
+appName: HidroCultivo
+applicationId: es.hidrocultivo.app
+versionName: 1.0
+versionSemver: 1.0.0
+capacitorWebDir: www
+platforms: PWA (navegador) y Android (Capacitor 6)

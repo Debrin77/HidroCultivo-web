@@ -1,0 +1,14 @@
+Paso 3 RPI — guarda aqui exactamente estos 8 PNG:
+
+01-inicio.png
+02-asistente-torre.png   (o 02-asistente-nft.png)
+03-sistema-diagrama.png
+04-checklist-recarga.png
+05-mediciones-historial.png
+06-consejos.png
+07-exportar-estado.png
+08-ayuda-fragmento.png
+
+Guia paso a paso: docs/RPI-PASO-03-CAPTURAS.md
+Comprobar: npm run rpi:capturas-check
+Servir app: npm run rpi:serve  ->  http://localhost:5173
