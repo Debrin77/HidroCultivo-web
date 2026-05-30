@@ -802,9 +802,8 @@ function nftSvgTankTorreStyle(tx, tankY, tankW, tankH, suf, volL, opts) {
 }
 
 /**
- * Bomba DWC unificada (misma que NFT/DWC/RDWC) + manguera a piedra.
- * Fuera del depósito: entre la flecha de giro derecha y el borde del SVG (misma convención que hcIlloTorreRotFlechas).
- * @param {object} [opts] — `canvasW`: ancho del SVG para escalar si hace falta.
+ * Bomba de aire estilo torre (cúpula naranja + manguera curva + piedra + burbujas).
+ * @param {object} [opts] — `canvasW`, `placement` (`torreRot` | `besideRight`), `gap`, `scale`
  */
 function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate, opts) {
   if (typeof dwcSvgAirPumpDraw !== 'function' && typeof dwcSvgAirPumpExternal !== 'function') {
@@ -812,12 +811,19 @@ function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate, opts) {
   }
   opts = opts && typeof opts === 'object' ? opts : {};
   const pumpNomW = 54;
+  const placement = opts.placement === 'besideRight' ? 'besideRight' : 'torreRot';
   const rotBtnR = 17;
   const rotBtnPad = 6;
   const rotRightOuter = depX + depW + rotBtnPad + rotBtnR * 2;
   const gapAfterRot = 8;
-  let pumpScale = 0.88;
-  let pumpX = rotRightOuter + gapAfterRot;
+  const gapBeside = opts.gap != null ? Number(opts.gap) : 16;
+  let pumpScale =
+    opts.scale != null && Number.isFinite(Number(opts.scale))
+      ? Math.max(0.66, Math.min(1.45, Number(opts.scale)))
+      : placement === 'besideRight'
+        ? Math.max(0.76, Math.min(1.05, 0.8 + Math.min(180, depW) / 900))
+        : 0.88;
+  let pumpX = placement === 'besideRight' ? depX + depW + gapBeside : rotRightOuter + gapAfterRot;
   const canvasW = Number(opts.canvasW);
   if (Number.isFinite(canvasW) && canvasW > 0) {
     const margin = 8;
@@ -864,7 +870,8 @@ function torreSvgDepositoAirDwc(depX, depY, depW, depH, animate, opts) {
       inner +
       '</g>';
   }
-  let html = '<g class="torre-dwc-air">' + pumpBlock;
+  const gClass = placement === 'besideRight' ? 'hc-air-torre-style' : 'torre-dwc-air';
+  let html = '<g class="' + gClass + '">' + pumpBlock;
   if (typeof dwcSvgAirHosePumpToStone === 'function') {
     html += dwcSvgAirHosePumpToStone(pumpOutX, pumpOutY, wallX, entryY, piedraX, piedraY, 1.8, 0.95);
   }
@@ -950,10 +957,18 @@ function torreSvgDepositoCompleto(depX, depY, depW, depH, volL, opts) {
   }
   return { defs: defs, html: html };
 }
+/** HTML de aireador torre a la derecha del depósito (NFT, Medir, etc.). */
+function hcSvgAireadorHtmlAtTank(tx, tankY, tankW, tankH, opts) {
+  if (typeof torreSvgDepositoAirDwc !== 'function') return '';
+  const air = torreSvgDepositoAirDwc(tx, tankY, tankW, tankH, opts && opts.animate !== false, Object.assign({ placement: 'besideRight', gap: 16 }, opts || {}));
+  return air.html || '';
+}
+
 if (typeof window !== 'undefined') {
   window.nftSvgTankFillPct = nftSvgTankFillPct;
   window.nftSvgTankTorreStyle = nftSvgTankTorreStyle;
   window.torreSvgDepositoAirDwc = torreSvgDepositoAirDwc;
+  window.hcSvgAireadorHtmlAtTank = hcSvgAireadorHtmlAtTank;
   window.torreSvgDepositoCompleto = torreSvgDepositoCompleto;
 }
 

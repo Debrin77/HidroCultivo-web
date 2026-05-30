@@ -447,144 +447,21 @@ function torrePreviewAireadorSvg(depX, depY, depW, depH) {
   return torreSvgDepositoAirDwc(depX, depY, depW, depH);
 }
 
-/** Bomba de aire en suelo, separada del depósito; piedra difusora dentro del agua, alejada del borde del depósito. */
+/** Bomba de aire a la derecha del depósito — mismo dibujo que sistema torre. */
 function nftSvgAireadorEnSuelo(tx, tankY, tankW, tankH, P) {
   P = P || {};
-  if (!P.airLine) P.airLine = '#eceff1';
-  if (!P.airStoneFill) P.airStoneFill = '#9ca3af';
-  if (!P.airStoneStroke) P.airStoneStroke = '#57534e';
-  const gapFromTank = 16;
-  const sueloY = tankY + tankH;
-  const pumpScale = Math.max(0.76, Math.min(1.05, 0.8 + Math.min(180, tankW) / 900));
-  const pumpW = 54 * pumpScale;
-  const pumpH = 40 * pumpScale;
-  const pumpX = tx + tankW + gapFromTank;
-  const pumpY = sueloY - pumpH;
-  const piedraX = tx + Math.round(tankW * 0.58);
-  const piedraY = tankY + tankH - 12;
-  let s = '';
-  if (typeof dwcSvgAirPumpExternal === 'function') {
-    const pump = dwcSvgAirPumpExternal(0, 0, 1);
-    s +=
-      '<g class="nft-ext-pump" transform="translate(' +
-      pumpX.toFixed(1) +
-      ' ' +
-      pumpY.toFixed(1) +
-      ') scale(' +
-      pumpScale.toFixed(3) +
-      ')">' +
-      pump.svg +
-      '</g>';
-  } else {
-    const cx = pumpX + pumpW / 2;
-    s +=
-      '<g class="nft-ext-pump" filter="drop-shadow(0 2px 5px rgba(15,23,42,0.12))">' +
-      '<ellipse cx="' +
-      cx.toFixed(1) +
-      '" cy="' +
-      (pumpY + pumpH + 6 * pumpScale).toFixed(1) +
-      '" rx="' +
-      (pumpW * 0.4).toFixed(1) +
-      '" ry="' +
-      (4.5 * pumpScale).toFixed(1) +
-      '" fill="rgba(15,23,42,0.14)"/>' +
-      '<rect x="' +
-      (pumpX + 4 * pumpScale).toFixed(1) +
-      '" y="' +
-      (pumpY + 15 * pumpScale).toFixed(1) +
-      '" width="' +
-      (pumpW - 8 * pumpScale).toFixed(1) +
-      '" height="' +
-      (pumpH - 11 * pumpScale).toFixed(1) +
-      '" rx="' +
-      (5 * pumpScale).toFixed(1) +
-      '" fill="#37474f" stroke="#1e293b" stroke-width="' +
-      (1.8 * pumpScale).toFixed(2) +
-      '"/>' +
-      '<ellipse cx="' +
-      cx.toFixed(1) +
-      '" cy="' +
-      (pumpY + 12 * pumpScale).toFixed(1) +
-      '" rx="' +
-      ((pumpW - 10 * pumpScale) / 2).toFixed(1) +
-      '" ry="' +
-      (13 * pumpScale).toFixed(1) +
-      '" fill="#ff9800" stroke="#e65100" stroke-width="' +
-      (2 * pumpScale).toFixed(2) +
-      '"/>' +
-      '<ellipse cx="' +
-      (cx - 8 * pumpScale).toFixed(1) +
-      '" cy="' +
-      (pumpY + 8 * pumpScale).toFixed(1) +
-      '" rx="' +
-      (7 * pumpScale).toFixed(1) +
-      '" ry="' +
-      (3 * pumpScale).toFixed(1) +
-      '" fill="rgba(255,255,255,0.45)"/>' +
-      '<circle cx="' +
-      cx.toFixed(1) +
-      '" cy="' +
-      (pumpY + pumpH * 0.52).toFixed(1) +
-      '" r="' +
-      (9 * pumpScale).toFixed(1) +
-      '" fill="#eceff1" stroke="#78909c" stroke-width="' +
-      (1.2 * pumpScale).toFixed(2) +
-      '"/>' +
-      '<circle cx="' +
-      cx.toFixed(1) +
-      '" cy="' +
-      (pumpY + pumpH * 0.52).toFixed(1) +
-      '" r="' +
-      (4.5 * pumpScale).toFixed(1) +
-      '" fill="none" stroke="#90a4ae" stroke-width="' +
-      (0.9 * pumpScale).toFixed(2) +
-      '"/>' +
-      '</g>';
+  if (typeof hcSvgAireadorHtmlAtTank === 'function') {
+    return hcSvgAireadorHtmlAtTank(tx, tankY, tankW, tankH, { canvasW: P.canvasW });
   }
-  const pumpOutX = pumpX;
-  const pumpOutY = pumpY + 12 * pumpScale + (40 * pumpScale - 6 * pumpScale) * 0.55;
-  const hoseY = sueloY - 4;
-  const hoseKneeX = piedraX + 8;
-  s +=
-    '<path d="M ' +
-    pumpOutX.toFixed(1) +
-    ' ' +
-    pumpOutY.toFixed(1) +
-    ' L ' +
-    hoseKneeX +
-    ' ' +
-    pumpOutY.toFixed(1) +
-    ' L ' +
-    hoseKneeX +
-    ' ' +
-    hoseY +
-    ' L ' +
-    piedraX +
-    ' ' +
-    hoseY +
-    ' L ' +
-    piedraX +
-    ' ' +
-    piedraY +
-    '" fill="none" stroke="' +
-    P.airLine +
-    '" stroke-width="2.2" stroke-linejoin="round" opacity="0.95"/>';
-  s +=
-    '<ellipse cx="' +
-    piedraX +
-    '" cy="' +
-    piedraY +
-    '" rx="13" ry="7" fill="' +
-    P.airStoneFill +
-    '" stroke="' +
-    P.airStoneStroke +
-    '" stroke-width="1.2"/>';
-  const ySurf = tankY + 8;
-  for (let bi = 0; bi < 6; bi++) {
-    const bx = piedraX + (bi % 3 - 1) * 4;
-    s += nftSvgBurbujaAnimada(bx, ySurf, piedraY, bi, P.bubble);
+  if (typeof torreSvgDepositoAirDwc === 'function') {
+    const air = torreSvgDepositoAirDwc(tx, tankY, tankW, tankH, true, {
+      placement: 'besideRight',
+      gap: 16,
+      canvasW: P.canvasW,
+    });
+    return air.html || '';
   }
-  return s;
+  return '';
 }
 
 /**

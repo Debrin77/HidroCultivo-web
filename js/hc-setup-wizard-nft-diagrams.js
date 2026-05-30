@@ -1944,14 +1944,17 @@ function nftSvgExternalPump(px, py, scale, numOutlets) {
 }
 
 /**
- * Bomba de recirculación (agua) al lado del depósito — misma convención que DWC/SRF y vista Medir.
- * Si hay difusor, la bomba de aire va a la derecha (nftSvgAireadorEnSuelo) y esta bomba a la izquierda.
+ * Bomba de recirculación (agua) al lado del depósito.
+ * Con difusor activo no se dibuja: el aireador torre va solo a la derecha (nftSvgAireadorEnSuelo).
  */
 function nftSvgRecircPumpBesideTank(tx, tankY, tankW, tankH, waterTop, waterH, Wsvg, opts) {
   opts = opts || {};
+  const reserveRightForAir = opts.reserveRightForAir === true;
+  if (reserveRightForAir) {
+    return { svg: '', pumpX: 0, pumpY: 0, pumpW: 0, pumpH: 0, neededCanvasW: Wsvg };
+  }
   const nTubos = Math.max(1, parseInt(String(opts.nTubosHint), 10) || 4);
   const nTiers = Math.max(1, parseInt(String(opts.nTiers), 10) || 1);
-  const reserveRightForAir = opts.reserveRightForAir === true;
   const pumpScale = Math.max(0.82, Math.min(1.32, 0.9 + nTubos * 0.012 + Math.max(0, nTiers - 1) * 0.04));
   const pumpW = 54 * pumpScale;
   const pumpH = 40 * pumpScale;
@@ -1959,8 +1962,7 @@ function nftSvgRecircPumpBesideTank(tx, tankY, tankW, tankH, waterTop, waterH, W
   const rightX = tx + tankW + 12;
   const leftX = Math.max(8, tx - pumpW - 12);
   let pumpX = rightX;
-  if (reserveRightForAir) pumpX = leftX;
-  else if (rightX + pumpW > Wsvg - 8) pumpX = leftX;
+  if (rightX + pumpW > Wsvg - 8) pumpX = leftX;
   const pump = nftSvgExternalPump(pumpX, pumpY, pumpScale, 1);
   const neededCanvasW = Math.max(Wsvg, pumpX + pumpW + 10, reserveRightForAir ? tx + tankW + 80 : 0);
   return { svg: pump.svg, pumpX: pumpX, pumpY: pumpY, pumpW: pumpW, pumpH: pumpH, neededCanvasW: neededCanvasW };

@@ -19,17 +19,25 @@
 
   function drawUnifiedPump(px, py, scale) {
     const sc = Number.isFinite(Number(scale)) ? Math.max(0.75, Math.min(1.3, Number(scale))) : 1;
+    if (typeof global.dwcSvgAirPumpDraw === 'function') {
+      return (
+        '<g class="nft-illo-pump hc-air-pump-torre" pointer-events="none">' +
+        global.dwcSvgAirPumpDraw(px, py, sc).svg +
+        '</g>'
+      );
+    }
     if (typeof global.dwcSvgAirPumpExternal === 'function') {
       const pump = global.dwcSvgAirPumpExternal(0, 0, 1);
+      const inner = pump.svg.replace(/fill="url\(#dwcPumpDome\)"/g, 'fill="#ff9800"');
       return (
-        '<g class="nft-illo-pump" transform="translate(' +
+        '<g class="nft-illo-pump hc-air-pump-torre" transform="translate(' +
         fq(px) +
         ' ' +
         fq(py) +
         ') scale(' +
         fq(sc) +
         ')" pointer-events="none">' +
-        pump.svg +
+        inner +
         '</g>'
       );
     }
@@ -470,11 +478,12 @@
     if (L.showDifusor && typeof global.nftSvgAireadorEnSuelo === 'function') {
       const P = typeof HC_DIAG !== 'undefined' && HC_DIAG.nft ? HC_DIAG.nft : {};
       s += global.nftSvgAireadorEnSuelo(L.tx, L.tankY, L.tankW, L.tankH, P);
+    } else {
+      const pumpScale = Math.max(0.84, Math.min(1.24, 0.9 + L.nCh * 0.015));
+      const px = L.tx + 12;
+      const py = L.waterTop + L.waterH * 0.5 - 20 * pumpScale;
+      s += drawUnifiedPump(px, py, pumpScale);
     }
-    const pumpScale = Math.max(0.84, Math.min(1.24, 0.9 + L.nCh * 0.015));
-    const px = L.tx + 12;
-    const py = L.waterTop + L.waterH * 0.5 - 20 * pumpScale;
-    s += drawUnifiedPump(px, py, pumpScale);
 
     return { html: s, gidCh: gidCh };
   }

@@ -690,7 +690,11 @@
     if (tieneDifusor) {
       var pumpX = xFR + 22;
       var pumpY = oy + skY * 0.5;
-      s += airPumpModern(pumpX, pumpY, 56, 42, u);
+      if (typeof hcSvgAirPumpTorreBlock === 'function') {
+        s += hcSvgAirPumpTorreBlock(pumpX, pumpY, 1.02);
+      } else {
+        s += airPumpModern(pumpX, pumpY, 56, 42, u);
+      }
       s +=
         '<path d="M ' +
         f1(pumpX + 4) +
@@ -881,7 +885,11 @@
     var x0 = (W - gridW) / 2;
     var y0 = 78;
     var s = '';
-    s += airPumpModern(W - 88, 52, 62, 46, u);
+    if (typeof hcSvgAirPumpTorreBlock === 'function') {
+      s += hcSvgAirPumpTorreBlock(W - 88, 52, 1.12);
+    } else {
+      s += airPumpModern(W - 88, 52, 62, 46, u);
+    }
     s +=
       '<rect x="' +
       f1(W - 94) +
@@ -2243,7 +2251,13 @@
         });
       }
     }
-    if (tieneDifusor) body += airPump(planX + planW + 8, planTop, 48, 32, u);
+    if (tieneDifusor) {
+      if (typeof hcSvgAirPumpTorreBlock === 'function') {
+        body += hcSvgAirPumpTorreBlock(planX + planW + 8, planTop, 0.95);
+      } else {
+        body += airPump(planX + planW + 8, planTop, 48, 32, u);
+      }
+    }
     var secY = planTop + planH + 44;
     body += tankFront(planX, secY, planW, 86, 0.62, u, ta, tieneDifusor, false);
     body +=
@@ -2327,7 +2341,11 @@
     var tankX = (W - tankW) / 2;
     var tankY = pumpY + 36;
     body += tankFront(tankX, tankY, tankW, 72, 0.58, u, ta, true, false);
-    body += airPump(tankX + tankW + 12, tankY + 8, 44, 30, u);
+    if (typeof hcSvgAirPumpTorreBlock === 'function') {
+      body += hcSvgAirPumpTorreBlock(tankX + tankW + 12, tankY + 8, 0.88);
+    } else {
+      body += airPump(tankX + tankW + 12, tankY + 8, 44, 30, u);
+    }
     body +=
       flowArrow(pumpX, pumpY + 16, pumpX, tankY) +
       flowArrow(left + blockW - 20, retY + 4, tankX + tankW - 20, tankY + 12);

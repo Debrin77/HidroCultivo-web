@@ -19,17 +19,25 @@
 
   function drawUnifiedPump(px, py, scale) {
     const sc = Number.isFinite(Number(scale)) ? Math.max(0.75, Math.min(1.3, Number(scale))) : 1;
+    if (typeof global.dwcSvgAirPumpDraw === 'function') {
+      return (
+        '<g class="nft-illo-pump hc-air-pump-torre" pointer-events="none">' +
+        global.dwcSvgAirPumpDraw(px, py, sc).svg +
+        '</g>'
+      );
+    }
     if (typeof global.dwcSvgAirPumpExternal === 'function') {
       const pump = global.dwcSvgAirPumpExternal(0, 0, 1);
+      const inner = pump.svg.replace(/fill="url\(#dwcPumpDome\)"/g, 'fill="#ff9800"');
       return (
-        '<g class="nft-illo-pump" transform="translate(' +
+        '<g class="nft-illo-pump hc-air-pump-torre" transform="translate(' +
         fq(px) +
         ' ' +
         fq(py) +
         ') scale(' +
         fq(sc) +
         ')" pointer-events="none">' +
-        pump.svg +
+        inner +
         '</g>'
       );
     }

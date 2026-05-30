@@ -1439,4 +1439,29 @@ function generarSVGDwc() {
   }
 
   global.dwcSvgAirPumpDraw = dwcSvgAirPumpDraw;
+
+  /** Solo el icono de bomba de aire torre (cúpula naranja), sin manguera — p. ej. ilustraciones compactas. */
+  function hcSvgAirPumpTorreBlock(px, py, scale) {
+    if (typeof dwcSvgAirPumpDraw === 'function') {
+      return dwcSvgAirPumpDraw(px, py, scale).svg;
+    }
+    if (typeof dwcSvgAirPumpExternal === 'function') {
+      const pump = dwcSvgAirPumpExternal(0, 0, 1);
+      const sc = Number.isFinite(Number(scale)) ? Math.max(0.72, Math.min(1.15, Number(scale))) : 1;
+      const inner = pump.svg.replace(/fill="url\(#dwcPumpDome\)"/g, 'fill="#ff9800"');
+      return (
+        '<g class="hc-air-pump-torre" transform="translate(' +
+        (Number(px) || 0).toFixed(1) +
+        ' ' +
+        (Number(py) || 0).toFixed(1) +
+        ') scale(' +
+        sc.toFixed(3) +
+        ')">' +
+        inner +
+        '</g>'
+      );
+    }
+    return '';
+  }
+  global.hcSvgAirPumpTorreBlock = hcSvgAirPumpTorreBlock;
 })(typeof window !== 'undefined' ? window : globalThis);
