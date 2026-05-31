@@ -16,7 +16,7 @@ function hcChecklistContinuidadVisualAsistente() {
 }
 
 /**
- * Quita volMezclaLitros si solo repite el máximo orientativo (DWC/SRF cámara+cesta; NFT = capacidad depósito).
+ * Quita volMezclaLitros si solo repite el máximo orientativo (DWC/SRF cámara+cesta; NFT si confundía mezcla con capacidad física).
  * El campo «litros de mezcla (opcional)» puede quedar vacío: getVolumenMezclaLitros usa el máximo orientativo.
  */
 function hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg) {
@@ -29,6 +29,18 @@ function hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg) {
     if (tipo !== 'dwc' && tipo !== 'srf' && tipo !== 'nft') return false;
     const vm = Number(cfg.volMezclaLitros);
     if (!Number.isFinite(vm) || vm <= 0) return false;
+    if (tipo === 'nft') {
+      const dosis =
+        typeof nftVolumenDosificacionLitrosDesdeConfig === 'function'
+          ? nftVolumenDosificacionLitrosDesdeConfig(cfg)
+          : null;
+      const maxF =
+        typeof getVolumenDepositoMaxLitros === 'function' ? getVolumenDepositoMaxLitros(cfg) : null;
+      if (dosis == null || maxF == null || !Number.isFinite(maxF) || maxF <= dosis + 0.35) return false;
+      if (Math.abs(vm - maxF) > 0.35) return false;
+      delete cfg.volMezclaLitros;
+      return true;
+    }
     if (typeof getVolumenDepositoMaxLitros !== 'function') return false;
     const maxO = getVolumenDepositoMaxLitros(cfg);
     if (maxO == null || !Number.isFinite(maxO) || maxO <= 0) return false;
@@ -685,6 +697,17 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
       nftLaminaAguaMm: 3,
     });
     redimensionarMatrizTorreNftPreservando(state.configTorre);
+    try {
+      const bOv = typeof getNftBombaDesdeConfig === 'function' ? getNftBombaDesdeConfig(state.configTorre) : null;
+      const recOv =
+        bOv && Number.isFinite(bOv.volDepositoRecomendadoL) ? Math.round(bOv.volDepositoRecomendadoL) : vol;
+      const fisOv =
+        typeof nftSnapCapacidadFisicaDepositoL === 'function'
+          ? nftSnapCapacidadFisicaDepositoL(vol, recOv)
+          : Math.max(recOv, vol);
+      state.configTorre.volDeposito = fisOv;
+      state.configTorre.volMezclaLitros = recOv;
+    } catch (_) {}
   } else if (tipo === 'dwc') {
     state.configTorre = Object.assign({}, baseComun, {
       tipoInstalacion: 'dwc',
@@ -1043,21 +1066,46 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       hint.textContent =
         'Llenado seguro con cámara de aire y cesta (asistente o Cultivo e instalación). Si no hay medidas de cesta, usa L×A×P o el litraje medido.';
     } else if (tipoSel === 'nft') {
-      lab.textContent = 'Capacidad máx. depósito de impulsión (L)';
+      lab.textContent = 'Capacidad física del depósito (L)';
       let hintNft =
-        'Etiqueta del recipiente. Si ya configuraste tubos y Ø de riego, usa el recomendado con margen del asistente; si no, estima y afinas después.';
+        'Etiqueta del recipiente que compres (≥ volumen para dosificar). Las dosis usan el recomendado con margen del asistente.';
+      const dosisNft =
+        typeof nftVolumenDosificacionLitrosDesdeConfig === 'function'
+          ? nftVolumenDosificacionLitrosDesdeConfig(cfg)
+          : null;
       if (typeof nftVolumenDepositoOrientativoDesdeConfig === 'function') {
         const o = nftVolumenDepositoOrientativoDesdeConfig(cfg);
         if (o && o.recL >= 1) {
+          const minFis =
+            typeof nftSnapCapacidadFisicaDepositoL === 'function'
+              ? nftSnapCapacidadFisicaDepositoL(o.recL, o.recL)
+              : o.recL;
           hintNft =
-            'Recomendado con margen: ~' +
+            'Dosificar sobre <strong>~' +
             o.recL +
+            ' L</strong> (recomendado con margen). Indica aquí el tope físico del depósito (≥ ~' +
+            minFis +
             ' L' +
-            (o.minL != null ? ' (mín. orientativo ' + o.minL + ' L)' : '') +
-            '. Puedes subir el valor si tu depósito real es mayor.';
-          if (depIn && (!depIn.value || depIn.value === '20')) {
-            depIn.value = String(o.recL);
+            (o.minL != null ? '; mín. orientativo ' + o.minL + ' L' : '') +
+            ') para no rebosar al comprarlo.';
+          if (depIn) {
+            const curD = parseFloat(String(depIn.value || '').replace(',', '.'));
+            const snap =
+              typeof nftSnapCapacidadFisicaDepositoL === 'function'
+                ? nftSnapCapacidadFisicaDepositoL(
+                    Number.isFinite(curD) && curD > 0 ? curD : minFis,
+                    o.recL
+                  )
+                : minFis;
+            if (!Number.isFinite(curD) || curD <= 0 || curD === 20 || curD < minFis - 0.01) {
+              depIn.value = String(snap);
+            }
           }
+        } else if (dosisNft != null) {
+          hintNft =
+            'Dosificar sobre ~' +
+            dosisNft +
+            ' L. Indica el tope físico del depósito (≥ ese valor).';
         }
       }
       hint.textContent = hintNft;
@@ -1310,7 +1358,10 @@ function getCLPasos() {
     Number.isFinite(nftBomb.volDepositoRecomendadoL) &&
     (!Number.isFinite(vMaxRawPrimer) || vMaxRawPrimer <= 0 || vMaxRawPrimer === 20)
   ) {
-    vMaxRawPrimer = nftBomb.volDepositoRecomendadoL;
+    vMaxRawPrimer =
+      typeof nftSnapCapacidadFisicaDepositoL === 'function'
+        ? nftSnapCapacidadFisicaDepositoL(nftBomb.volDepositoRecomendadoL, nftBomb.volDepositoRecomendadoL)
+        : nftBomb.volDepositoRecomendadoL;
   }
   const volMaxPrimerIni = Number.isFinite(vMaxRawPrimer) && vMaxRawPrimer > 0 ? Math.round(vMaxRawPrimer) : 20;
   const pc1SeccionTitulo = esRdwc
@@ -1321,7 +1372,7 @@ function getCLPasos() {
   const pc1DescPaso = esRdwc
     ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
     : esNft
-      ? 'Capacidad máxima del <strong>depósito de impulsión</strong> (etiqueta del recipiente). Los <strong>ml del paso 4</strong> usan ese tope; en el paso <strong>N0</strong> verás si cumple el margen orientativo según tubos, huecos y Ø de riego (como en el asistente).'
+      ? 'Capacidad <strong>física</strong> del depósito (etiqueta del recipiente que compres, ≥ al volumen recomendado). Los <strong>ml del paso 4</strong> se calculan sobre el <strong>volumen recomendado con margen</strong> (paso N0 / asistente), no sobre este tope si es mayor.'
       : esSrf
       ? 'Llenado seguro del <strong>estanque común</strong> (cámara de aire + cesta del asistente, o L×A×P si faltan medidas), litros de mezcla si no llenas hasta el tope, agua y nutriente. Todos los huecos comparten la misma solución; los <strong>ml del paso 4</strong> usan ese volumen.'
     : esDwc
@@ -1334,13 +1385,21 @@ function getCLPasos() {
     : esSrf
       ? 'Litros útiles estanque (L)'
       : esNft
-        ? 'Capacidad máx. depósito (L)'
+        ? 'Capacidad física del depósito (L)'
         : dwcOxMult
           ? 'Litros útiles por cubo (L)'
           : 'Capacidad máx. depósito (L)';
   let pc1PhVolMax = esRdwc ? '40' : esSrf ? '500' : '20';
+  const nftDosisL =
+    esNft && typeof nftVolumenDosificacionLitrosDesdeConfig === 'function'
+      ? nftVolumenDosificacionLitrosDesdeConfig(cfg)
+      : null;
   if (esNft && nftBomb && Number.isFinite(nftBomb.volDepositoRecomendadoL)) {
-    pc1PhVolMax = 'Recomendado ~' + Math.round(nftBomb.volDepositoRecomendadoL) + ' L';
+    const minFisPc =
+      typeof nftSnapCapacidadFisicaDepositoL === 'function'
+        ? nftSnapCapacidadFisicaDepositoL(nftBomb.volDepositoRecomendadoL, nftBomb.volDepositoRecomendadoL)
+        : Math.round(nftBomb.volDepositoRecomendadoL);
+    pc1PhVolMax = 'Mín. ~' + minFisPc + ' L (dosificar ~' + Math.round(nftBomb.volDepositoRecomendadoL) + ' L)';
   }
   const pc1LabelVolMez = esRdwc
     ? 'Litros de mezcla en reservorio (opcional)'
@@ -1381,7 +1440,9 @@ function getCLPasos() {
               : esSrf
                 ? ' En SRF todos los huecos comparten el <strong>mismo estanque</strong>: mide EC/pH en la solución común con aireador en marcha (o superficie estable en Kratky). El volumen orientativo es el <strong>llenado seguro</strong> (cámara de aire hasta la base de la cesta), no el geométrico completo.'
                 : esNft
-                  ? ' En NFT los <strong>ml del paso 4</strong> usan la <strong>capacidad máx.</strong> del depósito (PC·1). En <strong>N0</strong> verás cifras fijas y si tu depósito cumple el margen orientativo según tubos, huecos y Ø de riego (como en el asistente).'
+                  ? ' En NFT los <strong>ml del paso 4</strong> usan el <strong>volumen recomendado con margen</strong> (~' +
+                    (nftDosisL != null ? nftDosisL : '—') +
+                    ' L). En PC·1 indicas la <strong>capacidad física</strong> del depósito (≥ ese valor). En <strong>N0</strong> verás el desglose y si el recipiente encaja.'
                   : ''),
       extraHtml:
         (clGuiaMcHtml || '') +
@@ -1813,9 +1874,9 @@ function getCLPasos() {
       nota:
         'Orientación de equipo (no es veredicto): ' +
         nftBomb.modeloRec +
-        ' Ajusta la <strong>capacidad máx. del depósito</strong> en PC·1 (recomendado ~' +
+        ' Dosifica sobre <strong>~' +
         (nftBomb.volDepositoRecomendadoL != null ? nftBomb.volDepositoRecomendadoL : '—') +
-        ' L con margen). Cifras de depósito visibles en el bloque inferior. Si la película se corta, sube caudal o revisa pendiente.',
+        ' L</strong> (recomendado con margen). En PC·1 indica la <strong>capacidad física</strong> del depósito (≥ ese valor). Cifras en el bloque inferior. Si la película se corta, sube caudal o revisa pendiente.',
       campos: [
         { id:'clNftBombaUsuarioLh', label:'Tu bomba — caudal nominal (L/h)', type:'number', step:'10', placeholder:'ej. 600',
           value: cfg.nftBombaUsuarioCaudalLh != null ? String(cfg.nftBombaUsuarioCaudalLh) : '',
@@ -2044,8 +2105,8 @@ function getCLPasos() {
           ' L de agua (destilada/ósmosis recomendado)' +
           (nCubosMc > 1 ? ' — ' + nCubosMc + ' cubos por separado' : '') +
           (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.'))
-        : ('Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen de tu ' +
-          (esNft ? 'depósito NFT' : esDwc ? 'depósito DWC' : 'torre') +
+        : ('Llenar con ' + vol + ' litros de agua (destilada/ósmosis recomendado) — volumen para dosificar en tu ' +
+          (esNft ? 'NFT (recomendado con margen)' : esDwc ? 'depósito DWC' : 'torre') +
           (primerLlenado ? '' : ' · Ajusta aquí el EC objetivo (µS/cm) y CalMag si aplica; sal del campo EC para recalcular los ml del orden del fabricante.')),
     nota: primerLlenado
       ? (esRdwc
@@ -2496,9 +2557,30 @@ function onPrimerLlenadoVolDesdeChecklist() {
     delete cfg.volMezclaLitros;
     if (elZ) elZ.value = '';
   } else {
-    state.configTorre.volDeposito = vMax;
+    const tipoP =
+      typeof tipoInstalacionNormalizado === 'function'
+        ? tipoInstalacionNormalizado(state.configTorre)
+        : state.configTorre.tipoInstalacion;
+    if (tipoP === 'nft') {
+      const recP =
+        typeof nftVolumenDosificacionLitrosDesdeConfig === 'function'
+          ? nftVolumenDosificacionLitrosDesdeConfig(state.configTorre)
+          : null;
+      const fisP =
+        typeof nftSnapCapacidadFisicaDepositoL === 'function' && recP != null
+          ? nftSnapCapacidadFisicaDepositoL(vMax, recP)
+          : vMax;
+      state.configTorre.volDeposito = fisP;
+      if (recP != null && recP > 0) state.configTorre.volMezclaLitros = recP;
+    } else {
+      state.configTorre.volDeposito = vMax;
+    }
   }
-  if (!esMc) {
+  const esNftP =
+    typeof tipoInstalacionNormalizado === 'function'
+      ? tipoInstalacionNormalizado(state.configTorre) === 'nft'
+      : state.configTorre.tipoInstalacion === 'nft';
+  if (!esMc && !esNftP) {
     const rawMez = elZ ? String(elZ.value || '').trim() : '';
     const m = parseFloat(rawMez.replace(',', '.'));
     if (rawMez !== '' && Number.isFinite(m) && m > 0 && m < vMax - 0.02) {
@@ -2511,6 +2593,12 @@ function onPrimerLlenadoVolDesdeChecklist() {
   }
   guardarEstadoTorreActual();
   saveState();
+  try {
+    if (hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(state.configTorre)) {
+      guardarEstadoTorreActual();
+      saveState();
+    }
+  } catch (_) {}
   aplicarConfigTorre();
   try { actualizarBadgesNutriente(); } catch (e) {}
   renderChecklist();

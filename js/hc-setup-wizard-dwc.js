@@ -720,18 +720,12 @@ function litrosDepositoParaChecklist(cfg) {
     }
   }
   if (tipoNorm === 'nft') {
+    if (typeof nftVolumenDosificacionLitrosDesdeConfig === 'function') {
+      const d = nftVolumenDosificacionLitrosDesdeConfig(cfg);
+      if (d != null && d >= 1 && d <= 600) return d;
+    }
     const v = Number(cfg.volDeposito);
     if (Number.isFinite(v) && v >= 1 && v <= 600) return Math.round(v * 10) / 10;
-    if (typeof nftVolumenDepositoOrientativoDesdeConfig === 'function') {
-      const o = nftVolumenDepositoOrientativoDesdeConfig(cfg);
-      if (o && Number.isFinite(o.recL) && o.recL >= 1) return o.recL;
-    }
-    if (typeof getNftBombaDesdeConfig === 'function') {
-      const b = getNftBombaDesdeConfig(cfg);
-      if (b && Number.isFinite(b.volDepositoRecomendadoL) && b.volDepositoRecomendadoL >= 1) {
-        return Math.min(600, Math.round(b.volDepositoRecomendadoL * 10) / 10);
-      }
-    }
   }
   return null;
 }

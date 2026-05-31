@@ -1148,6 +1148,16 @@ function getSetupVolumenMaxLitros() {
 }
 
 function getSetupVolumenMezclaLitros() {
+  if (typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'nft') {
+    if (
+      typeof buildNftDraftConfigFromSetupUi === 'function' &&
+      typeof nftVolumenDosificacionLitrosDesdeConfig === 'function'
+    ) {
+      const d = nftVolumenDosificacionLitrosDesdeConfig(buildNftDraftConfigFromSetupUi());
+      if (d != null && Number.isFinite(d) && d > 0) return d;
+    }
+    return null;
+  }
   const maxL = getSetupVolumenMaxLitros();
   const esRdwc = typeof setupTipoInstalacion !== 'undefined' && setupTipoInstalacion === 'rdwc';
   const raw = esRdwc
@@ -1312,8 +1322,14 @@ function renderDosisSetup() {
           (volRes != null && volRes < volMax - 0.05 ? ' · mezcla en reservorio <strong>' + volRes + ' L</strong>' : '') +
           ' · solución total para dosis <strong>' +
           (vol != null && Number.isFinite(vol) ? vol + ' L</strong>' : '— (indica litros útiles en depósito control)</strong>')
-        : '📦 Depósito máx.: <strong>' + volMax + ' L</strong>' +
-          (vol < volMax - 0.05 ? ' · mezcla <strong>' + vol + ' L</strong>' : '')
+        : setupTipoInstalacion === 'nft'
+          ? '🧪 Dosificar sobre <strong>' +
+            (vol != null && Number.isFinite(vol) ? vol : '—') +
+            ' L</strong> (recomendado con margen) · depósito físico ≥ <strong>' +
+            volMax +
+            ' L</strong>'
+          : '📦 Depósito máx.: <strong>' + volMax + ' L</strong>' +
+            (vol != null && vol < volMax - 0.05 ? ' · mezcla <strong>' + vol + ' L</strong>' : '')
     ) + ' · ' +
     '⚡ EC objetivo: <strong>' + ecObj.min + '–' + ecObj.max + ' µS/cm</strong>' +
     (ecObj.fuente === 'cultivos' ? ' <span class="nut-dosis-ctx-tag--ok">(según cultivos)</span>' :
@@ -1827,6 +1843,17 @@ function guardarSetupYContinuar() {
       state.configTorre.nftEscaleraNivelesCara = Math.max(1, Math.min(12, nftNvSlider));
     }
     state.configTorre.nftBombaEstimada = getNftBombaDesdeConfig(state.configTorre);
+    const bNftSave = state.configTorre.nftBombaEstimada;
+    const recNftL =
+      bNftSave && Number.isFinite(bNftSave.volDepositoRecomendadoL)
+        ? Math.round(bNftSave.volDepositoRecomendadoL)
+        : vol;
+    const fisNftL =
+      typeof nftSnapCapacidadFisicaDepositoL === 'function'
+        ? nftSnapCapacidadFisicaDepositoL(vol, recNftL)
+        : Math.max(recNftL, vol);
+    state.configTorre.volDeposito = Math.min(100, fisNftL);
+    state.configTorre.volMezclaLitros = recNftL;
     const lhInp = document.getElementById('nftBombaUsuarioLh');
     const wInp = document.getElementById('nftBombaUsuarioW');
     const uLh = lhInp ? parseFloat(String(lhInp.value).replace(',', '.')) : NaN;
@@ -1984,6 +2011,12 @@ function guardarSetupYContinuar() {
       state.configTorre.volMezclaLitros = Math.min(volEfectivo, Math.max(0.5, Math.round(mezParsed * 10) / 10));
     } else if (isSrf && Number.isFinite(volEfectivo) && volEfectivo > 0) {
       state.configTorre.volMezclaLitros = Math.round(volEfectivo * 10) / 10;
+    } else if (isNft) {
+      const dNft =
+        typeof nftVolumenDosificacionLitrosDesdeConfig === 'function'
+          ? nftVolumenDosificacionLitrosDesdeConfig(state.configTorre)
+          : null;
+      if (dNft != null && dNft > 0) state.configTorre.volMezclaLitros = dNft;
     } else if (!isSrf) {
       delete state.configTorre.volMezclaLitros;
     }

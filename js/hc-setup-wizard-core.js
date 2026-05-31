@@ -2976,7 +2976,12 @@ function refrescarSetupTipoInstalacionUI() {
       'Tope físico del recipiente (porcentaje de llenado y bomba). Las dosis usan los litros de mezcla si los indicas abajo.';
   } else if (capAyuda && setupTipoInstalacion === 'nft') {
     capAyuda.textContent =
-      'Tope del recipiente (etiqueta). Tras elegir Ø de tubo de riego verás el volumen recomendado con margen.';
+      'Capacidad del recipiente que compres (etiqueta), ≥ al volumen para dosificar del recuadro superior. Las dosis usan el recomendado con margen, no este tope si es mayor.';
+  }
+  const capLab = document.getElementById('setupVolCapacidadLabel');
+  if (capLab) {
+    capLab.textContent =
+      setupTipoInstalacion === 'nft' ? 'Capacidad física del depósito' : 'Capacidad máx. depósito';
   }
   try {
     if (typeof repositionSetupVolMezclaBlock === 'function') repositionSetupVolMezclaBlock();
@@ -3029,6 +3034,13 @@ function onSetupVolSliderInput() {
   const sliderVol = document.getElementById('sliderVol');
   if (setupTipoInstalacion === 'nft' && sliderVol && !sliderVol.dataset.hcNftVolSyncing) {
     sliderVol.setAttribute('data-hc-nft-vol-manual', '1');
+    const minFis = parseInt(String(sliderVol.min || '5'), 10);
+    const cur = parseInt(String(sliderVol.value), 10);
+    if (Number.isFinite(minFis) && Number.isFinite(cur) && cur < minFis) {
+      sliderVol.dataset.hcNftVolSyncing = '1';
+      sliderVol.value = String(minFis);
+      delete sliderVol.dataset.hcNftVolSyncing;
+    }
   }
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
   else updateTorreBuilder();

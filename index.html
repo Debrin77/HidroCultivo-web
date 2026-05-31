@@ -3288,7 +3288,7 @@
               <div id="setupNftRecoBlock" class="setup-nft-resultados setup-dwc-litros-solucion-block setup-mt-8 setup-hidden" role="status" aria-live="polite" aria-hidden="true">
                 <p class="setup-dwc-litros-solucion-label">Resultados</p>
                 <dl class="setup-nft-resultados-dl">
-                  <dt>Depósito impulsión</dt><dd id="setupNftRecoDeposito">—</dd>
+                  <dt>Litros para dosificar</dt><dd id="setupNftRecoDeposito">—</dd>
                   <dt>Bomba 24 h</dt><dd id="setupNftRecoBomba">—</dd>
                   <dt>Aireador</dt><dd id="setupNftRecoAire">—</dd>
                 </dl>
@@ -3429,14 +3429,14 @@
         <div id="setupVolCapacidadMaxWrap">
           <div class="torre-control-row">
             <div class="torre-control-label">
-              Capacidad máx. depósito
+              <span id="setupVolCapacidadLabel">Capacidad máx. depósito</span>
               <span class="torre-control-val" id="valVol">20<span class="setup-inline-unit-l">L</span></span>
             </div>
             <input type="range" class="torre-slider" id="sliderVol"
               min="5" max="100" value="20" step="5" oninput="onSetupVolSliderInput()">
           </div>
           <p id="setupVolCapacidadAyuda" class="setup-vol-cap-ayuda">
-            Tope del recipiente (etiqueta). En NFT, arriba verás el volumen recomendado con margen; ajusta el deslizador si tu depósito es otro.
+            En NFT: arriba, volumen para dosificar; aquí, capacidad física del depósito (≥ recomendado) para no rebosar.
           </p>
         </div>
         <div id="setupVolMezclaSlotDefault">
@@ -4693,28 +4693,28 @@
   <script src="js/torre-render-main.js?v=2026-05-28-nft-difusor-rdwc-ec"></script>
   <script src="js/cultivos-germinacion.js?v=3"></script>
   <script src="js/nutrientes-catalog.js?v=1"></script>
-  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-nft-vol-deposito"></script>
+  <script src="js/hc-setup-wizard-core.js?v=2026-05-28-nft-dosis-vs-fisico"></script>
   <script src="js/hc-setup-wizard-dwc.js?v=2026-05-28-srf-litros-ui"></script>  <script src="js/hc-cultivo-cesta-matrix.js?v=2026-05-15-wizard-aislado"></script>
 
   <script src="js/hc-setup-wizard-srf.js?v=2026-05-28-srf-litros-ui"></script>
   <script src="js/diagrams/nft/nft-hydraulic-model.js?v=2026-05-28-mm-flow-air"></script>
-  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-nft-vol-deposito"></script>
+  <script src="js/hc-setup-wizard-nft-diagrams.js?v=2026-05-28-nft-dosis-vs-fisico"></script>
   <script src="js/hc-setup-wizard-pages.js?v=2026-05-28-nft-vol-deposito"></script>
   <script src="js/diagrams/nft/nft-pared-illustration.js?v=2026-05-28-air-pump-torre"></script>
   <script src="js/diagrams/nft/nft-cartoon-enhance.js?v=2026-05-19-nft-cartoon3"></script>
   <script src="js/diagrams/nft/nft-medir-view.js?v=2026-05-28-nft-difusor-fijo"></script>
   <script src="js/diagrams/nft/nft-scada-bridge.js?v=2026-05-19-nft-cartoon2"></script>
-  <script src="js/hc-setup-calc-core.js?v=2026-05-28-rdwc-ecph-nft-dif"></script>
+  <script src="js/hc-setup-calc-core.js?v=2026-05-28-nft-dosis-vs-fisico"></script>
   <script src="js/hc-setup-rotacion.js?v=2"></script>
   <script src="js/hc-setup-compat-modal.js?v=1"></script>
   <script src="js/hc-setup-diario-fotos.js?v=1"></script>
   <script src="js/hc-setup-historial-delete.js?v=8"></script>
   <script src="js/hc-setup-registro.js?v=5"></script>
   <script src="js/hc-setup-agua-sustrato.js?v=11"></script>
-  <script src="js/hc-setup-mediciones-logic.js?v=2026-05-28-hydro-audit"></script>
+  <script src="js/hc-setup-mediciones-logic.js?v=2026-05-28-nft-dosis-fallback"></script>
   <script src="js/hc-medicion-wizard.js?v=6"></script>
   <script src="js/hc-tools-pro.js?v=10"></script>
-  <script src="js/hc-setup-checklist.js?v=2026-05-28-nft-srf-checklist-vol"></script>
+  <script src="js/hc-setup-checklist.js?v=2026-05-28-nft-dosis-vs-fisico"></script>
   <script src="js/hc-setup-historial-tabs.js?v=13"></script>
   <script src="js/hc-setup-consejos.js?v=2026-05-28-mm-tubos-uniform"></script>
   <script src="js/calendario-logic.js?v=9"></script>

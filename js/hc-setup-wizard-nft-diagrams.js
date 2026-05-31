@@ -269,14 +269,16 @@ function nftDepositoVeredictoBloqueHtml(b, volUsuarioL) {
       '<strong>Depósito:</strong> <span class="nft-verdict-ok">Cumple</span> con margen orientativo.';
   }
   const detInner =
-    '<p class="nft-detalle-p-sm">Volumen indicado: <strong>' +
+    '<p class="nft-detalle-p-sm"><strong>Dosificar nutrientes sobre ~' +
+    recL +
+    ' L</strong> (recomendado con margen). Depósito físico indicado: <strong>' +
     (vAct != null ? vAct + ' L' : '—') +
     '</strong> · Mín. útil orientativo: <strong>' +
     minL +
-    ' L</strong> · Recomendado con margen: <strong>~' +
-    recL +
     ' L</strong>.</p>' +
-    '<p class="nft-detalle-foot-muted">Criterio: agua en tuberías + película + holgura para muestreos y pérdidas, en línea con recomendaciones de depósito en sistemas de recirculación continua.</p>';
+    '<p class="nft-detalle-foot-muted">El recipiente que compres debe ser <strong>≥ ~' +
+    recL +
+    ' L</strong> (etiqueta) para no rebosar; las dosis de la app usan el volumen recomendado, no el tope del depósito si es mayor.</p>';
   return (
     '<div class="nft-verdict-main">' +
     main +
@@ -285,6 +287,38 @@ function nftDepositoVeredictoBloqueHtml(b, volUsuarioL) {
     detInner +
     '</div>'
   );
+}
+
+/** Litros para dosificar nutrientes en NFT (recomendado con margen según circuito). */
+function nftVolumenDosificacionLitrosDesdeConfig(cfg) {
+  if (!cfg) return null;
+  const tipo =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipo !== 'nft') return null;
+  if (typeof getNftBombaDesdeConfig === 'function') {
+    const b = getNftBombaDesdeConfig(cfg);
+    if (b && Number.isFinite(b.volDepositoRecomendadoL) && b.volDepositoRecomendadoL > 0) {
+      return Math.min(600, Math.max(1, Math.round(b.volDepositoRecomendadoL * 10) / 10));
+    }
+  }
+  const vm = Number(cfg.volMezclaLitros);
+  const vMax = Number(cfg.volDeposito);
+  if (Number.isFinite(vm) && vm > 0) {
+    if (Number.isFinite(vMax) && vMax > vm + 0.35) return Math.round(vm * 10) / 10;
+    if (!Number.isFinite(vMax) || vMax <= 0 || Math.abs(vm - vMax) <= 0.35) {
+      return Math.min(600, Math.max(1, Math.round(vm * 10) / 10));
+    }
+  }
+  return null;
+}
+
+/** Redondea capacidad física del depósito (slider) al paso de 5 L y ≥ recomendado. */
+function nftSnapCapacidadFisicaDepositoL(valorL, recomendadoL) {
+  const rec = Math.max(5, Math.min(100, Math.round(Number(recomendadoL) || 10)));
+  const minSnap = Math.ceil(rec / 5) * 5;
+  const v = Number(valorL);
+  if (!Number.isFinite(v) || v <= 0) return minSnap;
+  return Math.min(100, Math.max(minSnap, Math.ceil(v / 5) * 5));
 }
 
 /** Mínimo y recomendado con margen (L) para depósito NFT según circuito actual. */
@@ -300,50 +334,65 @@ function nftVolumenDepositoOrientativoDesdeConfig(cfg) {
   };
 }
 
-/** Sugiere capacidad máx. del depósito (slider) según cálculo NFT; el usuario puede cambiarla. */
+/** Ajusta el slider de capacidad <em>física</em> del depósito (≥ volumen recomendado para dosificar). */
 function syncNftSetupVolDepositoSlider(bNft) {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') return;
   const tuboOk =
     typeof nftTuboRiegoElegidoEnSetup === 'function' && nftTuboRiegoElegidoEnSetup();
   const slider = document.getElementById('sliderVol');
   const ayuda = document.getElementById('setupVolCapacidadAyuda');
+  const capLab = document.getElementById('setupVolCapacidadLabel');
   if (!tuboOk || !bNft || !Number.isFinite(bNft.volDepositoRecomendadoL) || !slider) {
     if (ayuda && setupTipoInstalacion === 'nft') {
       ayuda.textContent =
-        'Tope del recipiente (etiqueta). Tras elegir Ø de tubo de riego verás el volumen recomendado con margen.';
+        'Capacidad del recipiente que vas a comprar (etiqueta). Tras elegir Ø de tubo verás el volumen para dosificar y el mínimo físico.';
+    }
+    if (capLab && setupTipoInstalacion === 'nft') {
+      capLab.textContent = 'Capacidad física del depósito';
     }
     return;
   }
   const rec = Math.min(100, Math.max(5, Math.round(bNft.volDepositoRecomendadoL)));
+  const minFis = typeof nftSnapCapacidadFisicaDepositoL === 'function' ? nftSnapCapacidadFisicaDepositoL(rec, rec) : rec;
   const minL = bNft.volMinDepositoSugeridoL;
+  slider.min = String(minFis);
   const cur = parseInt(String(slider.value), 10);
   const prevAuto = slider.getAttribute('data-hc-nft-vol-auto');
   const manual = slider.getAttribute('data-hc-nft-vol-manual') === '1';
+  const belowMin = Number.isFinite(cur) && cur < minFis - 0.01;
   const shouldApply =
     !manual &&
-    (!Number.isFinite(cur) ||
+    (belowMin ||
+      !Number.isFinite(cur) ||
       cur <= 0 ||
       (prevAuto != null &&
         prevAuto !== '' &&
         Number.isFinite(parseInt(prevAuto, 10)) &&
         Math.abs(cur - parseInt(prevAuto, 10)) < 2));
-  if (shouldApply) {
+  const snapCur =
+    typeof nftSnapCapacidadFisicaDepositoL === 'function'
+      ? nftSnapCapacidadFisicaDepositoL(shouldApply && !manual ? minFis : cur, rec)
+      : Math.max(minFis, cur || minFis);
+  if (shouldApply || belowMin) {
     slider.dataset.hcNftVolSyncing = '1';
-    slider.value = String(rec);
-    slider.setAttribute('data-hc-nft-vol-auto', String(rec));
+    slider.value = String(snapCur);
+    slider.setAttribute('data-hc-nft-vol-auto', String(snapCur));
     delete slider.dataset.hcNftVolSyncing;
   }
+  if (capLab) capLab.textContent = 'Capacidad física del depósito';
   if (ayuda) {
     ayuda.textContent =
-      'Tope del recipiente (etiqueta). Recomendado con margen: ~' +
+      'Recipiente que compres (etiqueta): indica un tope <strong>≥ ~' +
       rec +
-      ' L' +
+      ' L</strong>' +
       (minL != null ? ' (mín. orientativo ' + minL + ' L)' : '') +
-      '. Ajusta el deslizador si tu depósito real es otro.';
+      ' para no rebosar. Las <strong>dosis de nutrientes</strong> usan ~' +
+      rec +
+      ' L (recomendado con margen en el recuadro superior), no este tope si es mayor.';
   }
   const elV = document.getElementById('valVol');
   if (elV) {
-    const show = parseInt(String(slider.value), 10) || rec;
+    const show = parseInt(String(slider.value), 10) || snapCur;
     elV.innerHTML = show + '<span class="setup-inline-unit-l">L</span>';
   }
 }
@@ -1711,7 +1760,7 @@ function nftRefreshSetupCalculadoUi(draft, bNft, hyd) {
   const depTxt =
     '~' +
     bNft.volDepositoRecomendadoL +
-    ' L' +
+    ' L (dosificar)' +
     (lam != null ? ' · lámina ' + lam + ' mm' : '') +
     (bNft.volPeliculaL != null ? ' · película ~' + bNft.volPeliculaL + ' L' : '');
   const bomTxt =

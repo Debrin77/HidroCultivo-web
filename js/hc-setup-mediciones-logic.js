@@ -146,7 +146,8 @@ function instalacionPlantillaSinCapacidadDepositoUsuario(cfg) {
 
 /**
  * Volumen de referencia (L) para escalados y límites en Medir / checklist:
- * - Torre y NFT: `volDeposito` (tope del depósito).
+ * - Torre: `volDeposito` (tope del depósito).
+ * - NFT: `volDeposito` = capacidad física del recipiente; la dosificación usa el recomendado con margen.
  * - RDWC: depósito de control (`rdwcControlVolL`, o `volDeposito` si ya está unificado en config).
  * - SRF: **llenado seguro** del estanque (cámara de aire + cesta) si hay medidas; si no, L×A×P.
  * - DWC: si se puede calcular, **llenado seguro** bajo la base del sustrato (`getDwcVolumenSeguroMaxLitrosDesdeConfig`);
@@ -177,6 +178,14 @@ function getVolumenDepositoMaxLitros(cfg) {
     const vSafe = getDwcVolumenSeguroMaxLitrosDesdeConfig(cfg);
     if (vSafe != null && vSafe > 0) return Math.min(800, Math.max(1, Math.round(vSafe * 10) / 10));
   }
+  if (tipoNorm === 'nft') {
+    const vFis = Number(cfg.volDeposito);
+    if (Number.isFinite(vFis) && vFis > 0) return Math.min(600, Math.max(1, Math.round(vFis * 10) / 10));
+    if (typeof nftVolumenDosificacionLitrosDesdeConfig === 'function') {
+      const d = nftVolumenDosificacionLitrosDesdeConfig(cfg);
+      if (d != null && d > 0) return d;
+    }
+  }
   const v = Number(cfg.volDeposito);
   if (Number.isFinite(v) && v > 0) return Math.min(800, Math.max(1, Math.round(v * 10) / 10));
   if (tipoNorm === 'dwc' && typeof getDwcCapacidadLitrosDesdeConfig === 'function') {
@@ -195,6 +204,15 @@ function getVolumenDepositoMaxLitros(cfg) {
  */
 function getVolumenMezclaLitros(cfg) {
   cfg = cfg || state.configTorre || {};
+  const tipoNorm =
+    typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion;
+  if (tipoNorm === 'nft') {
+    if (typeof nftVolumenDosificacionLitrosDesdeConfig === 'function') {
+      const dNft = nftVolumenDosificacionLitrosDesdeConfig(cfg);
+      if (dNft != null && Number.isFinite(dNft) && dNft > 0) return dNft;
+    }
+    return null;
+  }
   const maxL = getVolumenDepositoMaxLitros(cfg);
   if (maxL == null || !Number.isFinite(maxL) || maxL <= 0) return null;
   const mez = Number(cfg.volMezclaLitros);
