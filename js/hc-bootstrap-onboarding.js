@@ -13,6 +13,41 @@ const HC_TAB_BAR_COACH_KEY = 'hc_tab_bar_coach_dismiss_v2';
 const HC_WELCOME_THEME_PREVIEW_KEY = 'hc_welcome_theme_preview';
 
 let _tabCoachRetryTimer = null;
+/** Posición de scroll del documento antes de fijar body (bienvenida abierta). */
+let _hcWelcomeScrollLockY = 0;
+
+/** Fuerza scroll al inicio (PWA / recarga no debe abrir a mitad de página). */
+function hcScrollAppToTop() {
+  try {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  } catch (_) {}
+  try {
+    window.scrollTo(0, 0);
+  } catch (_) {}
+  try {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  } catch (_) {}
+  try {
+    const ov = document.getElementById('welcomeOverlay');
+    if (ov) ov.scrollTop = 0;
+    const card = ov && ov.querySelector('.welcome-card');
+    if (card) card.scrollTop = 0;
+  } catch (_) {}
+}
+
+function hcScrollWelcomeToTopDeferred() {
+  hcScrollAppToTop();
+  try {
+    requestAnimationFrame(() => {
+      hcScrollAppToTop();
+      requestAnimationFrame(hcScrollAppToTop);
+    });
+  } catch (_) {
+    setTimeout(hcScrollAppToTop, 0);
+    setTimeout(hcScrollAppToTop, 80);
+  }
+}
 
 function _clearTabCoachRetryTimer() {
   if (_tabCoachRetryTimer) {
@@ -230,21 +265,35 @@ function setWelcomeTheme(theme) {
 
 function applyWelcomeScrollLock(open) {
   try {
-    const v = open ? 'auto' : '';
-    const x = open ? 'hidden' : '';
-    try {
-      document.documentElement.classList.toggle('hc-welcome-open', !!open);
-    } catch (_) {}
-    document.documentElement.style.overflowY = v;
-    document.documentElement.style.overflowX = x;
-    document.documentElement.style.overscrollBehaviorY = open ? 'auto' : '';
-    document.documentElement.style.overscrollBehaviorX = open ? 'none' : '';
-    document.documentElement.style.touchAction = open ? 'pan-y' : '';
-    document.body.style.overflowY = v;
-    document.body.style.overflowX = x;
-    document.body.style.overscrollBehaviorY = open ? 'auto' : '';
-    document.body.style.overscrollBehaviorX = open ? 'none' : '';
-    document.body.style.touchAction = open ? 'pan-y' : '';
+    document.documentElement.classList.toggle('hc-welcome-open', !!open);
+    if (open) {
+      hcScrollWelcomeToTopDeferred();
+      _hcWelcomeScrollLockY = window.scrollY || document.documentElement.scrollTop || 0;
+      document.body.style.position = 'fixed';
+      document.body.style.top = _hcWelcomeScrollLockY ? '-' + _hcWelcomeScrollLockY + 'px' : '0';
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overscrollBehavior = 'none';
+      document.body.style.overscrollBehavior = 'none';
+    } else {
+      const restoreY = _hcWelcomeScrollLockY || 0;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      document.documentElement.style.overscrollBehavior = '';
+      document.body.style.overscrollBehavior = '';
+      _hcWelcomeScrollLockY = 0;
+      try {
+        window.scrollTo(0, restoreY);
+      } catch (_) {}
+    }
   } catch (_) {}
 }
 
@@ -263,6 +312,7 @@ function resetBienvenidaParaPruebas() {
     // Apertura forzada para pruebas en móvil: evita bloqueos por reglas de "ya hay datos".
     ov.classList.remove('setup-hidden');
     ov.setAttribute('aria-hidden', 'false');
+    hcScrollWelcomeToTopDeferred();
     try {
       const tSaved = localStorage.getItem(HC_WELCOME_THEME_PREVIEW_KEY);
       setWelcomeTheme(tSaved === 'dark' ? 'dark' : 'light');
@@ -401,6 +451,7 @@ function mostrarBienvenidaOContinuarArranque(opts) {
   }
   const ov = document.getElementById('welcomeOverlay');
   if (ov) {
+    hcScrollAppToTop();
     ov.classList.remove('setup-hidden');
     ov.setAttribute('aria-hidden', 'false');
     try { document.body.classList.add('hc-welcome-open'); } catch (_) {}
@@ -727,6 +778,20 @@ function hcAccionChecklistPostSetupDesdeSistema() {
   }
   hcEjecutarChecklistPostSetupTrasCultivosListos();
 }
+
+try {
+  window.addEventListener(
+    'pageshow',
+    function (ev) {
+      try {
+        if (ev.persisted || document.body.classList.contains('hc-welcome-open')) {
+          hcScrollWelcomeToTopDeferred();
+        }
+      } catch (_) {}
+    },
+    { passive: true }
+  );
+} catch (_) {}
 
 function iniciarFlujoSistemaAntesChecklistPostSetup() {
   try {

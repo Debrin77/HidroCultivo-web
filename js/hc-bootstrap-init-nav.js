@@ -94,6 +94,9 @@ function resetApp() {
 }
 
 function initApp() {
+  try {
+    if (typeof hcScrollAppToTop === 'function') hcScrollAppToTop();
+  } catch (_) {}
   updateClock();
   setInterval(updateClock, 30000);
   // Modo de cultivos (lechuga / mixto / …): solo estado; no hay selector en Cultivo e instalación (evita confusión con «Editar ficha»).
@@ -136,7 +139,12 @@ function initApp() {
   setTimeout(actualizarBadgesNutriente, 100);
 
   // Primera vez: bienvenida (una sola) y luego asistente o checklist si aplica
-  setTimeout(() => mostrarBienvenidaOContinuarArranque(), 520);
+  setTimeout(() => {
+    try {
+      if (typeof hcScrollAppToTop === 'function') hcScrollAppToTop();
+    } catch (_) {}
+    mostrarBienvenidaOContinuarArranque();
+  }, 520);
   setTimeout(() => {
     try {
       if (state && state.hcPostSetupChecklistPendiente && typeof actualizarPostSetupChecklistRail === 'function') {
