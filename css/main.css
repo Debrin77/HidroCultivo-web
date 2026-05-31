@@ -6550,6 +6550,23 @@ html.hc-theme-dark #cardVol .param-label .hc-ico { color: #22d3ee; }
   background: #eff6ff;
   border: 1.5px solid #93c5fd;
 }
+.cl-srf-estanque-rec {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #eff6ff;
+  border: 1.5px solid #93c5fd;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.cl-srf-estanque-rec-main {
+  margin: 0 0 6px;
+}
+.cl-srf-estanque-rec-foot {
+  margin: 0;
+  font-size: 10px;
+  color: #475569;
+}
 .cl-nft-bomba-usuario-msg {
   margin-top: 10px;
   font-size: 11px;

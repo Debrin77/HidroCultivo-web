@@ -16,18 +16,17 @@ function hcChecklistContinuidadVisualAsistente() {
 }
 
 /**
- * DWC: quita volMezclaLitros si solo repite el máximo orientativo (cámara de aire / cesta).
- * El campo «litros de mezcla (opcional)» en PC·1 puede quedar vacío sin cambiar las dosis:
- * getVolumenMezclaLitros ya usa ese máximo cuando no hay valor explícito por debajo.
+ * Quita volMezclaLitros si solo repite el máximo orientativo (DWC/SRF cámara+cesta; NFT = capacidad depósito).
+ * El campo «litros de mezcla (opcional)» puede quedar vacío: getVolumenMezclaLitros usa el máximo orientativo.
  */
-function dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg) {
+function hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg) {
   try {
     if (!cfg) return false;
     const tipo =
       typeof tipoInstalacionNormalizado === 'function'
         ? tipoInstalacionNormalizado(cfg)
         : cfg.tipoInstalacion;
-    if (tipo !== 'dwc') return false;
+    if (tipo !== 'dwc' && tipo !== 'srf' && tipo !== 'nft') return false;
     const vm = Number(cfg.volMezclaLitros);
     if (!Number.isFinite(vm) || vm <= 0) return false;
     if (typeof getVolumenDepositoMaxLitros !== 'function') return false;
@@ -39,6 +38,11 @@ function dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg) {
   } catch (_) {
     return false;
   }
+}
+
+/** Alias histórico (DWC); misma lógica que hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo. */
+function dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg) {
+  return hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg);
 }
 
 let clChecked = new Set();
@@ -563,6 +567,16 @@ function checklistInstalacionCompletaParaRecarga() {
     const volManualS = Number(cfg.volDeposito);
     if (Number.isFinite(volManualS) && volManualS >= 1 && volManualS <= 5000) return true;
   }
+  if (tipo === 'nft') {
+    const v = Number(cfg.volDeposito);
+    if (Number.isFinite(v) && v >= 1 && v <= 600) return true;
+    const hyd = typeof getNftHidraulicaDesdeConfig === 'function' ? getNftHidraulicaDesdeConfig(cfg) : null;
+    if (hyd && hyd.nCh >= 1 && hyd.nHx >= 2 && Number(cfg.nftTuboInteriorMm) > 0) return true;
+    if (typeof nftVolumenDepositoOrientativoDesdeConfig === 'function') {
+      const o = nftVolumenDepositoOrientativoDesdeConfig(cfg);
+      if (o && o.recL >= 1) return true;
+    }
+  }
 
   return false;
 }
@@ -767,6 +781,7 @@ function aplicarConfigDesdeOverlayChecklistRecarga(tipo, vol, agua, nutId, volMe
   } else {
     delete state.configTorre.volMezclaLitros;
   }
+  try { hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(state.configTorre); } catch (_) {}
 
   if (crearNuevaEntrada) {
     const nomNueva = hcCrearNombreInstalacionPorTipo(tipo, state.torres.length + 1);
@@ -796,12 +811,14 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
   cerrarOverlayChecklistDatosInstalacion();
   const cfg = state.configTorre || {};
   try {
+    const tipoPre =
+      cfg && typeof tipoInstalacionNormalizado === 'function'
+        ? tipoInstalacionNormalizado(cfg)
+        : cfg && cfg.tipoInstalacion;
     if (
       cfg &&
-      (typeof tipoInstalacionNormalizado === 'function'
-        ? tipoInstalacionNormalizado(cfg) === 'dwc'
-        : cfg.tipoInstalacion === 'dwc') &&
-      dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg)
+      (tipoPre === 'dwc' || tipoPre === 'srf' || tipoPre === 'nft') &&
+      hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(cfg)
     ) {
       if (typeof saveState === 'function') saveState();
     }
@@ -856,6 +873,10 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     }
     cldVolMezclaHint =
       'En SRF, <strong>vacío</strong>: las dosis usan el llenado seguro del estanque común (cámara de aire hasta la base de la cesta). Solo indica litros si rellenas <strong>menos</strong> que ese orientativo.';
+  }
+  if (tipoIni === 'nft') {
+    cldVolMezclaHint =
+      'En NFT no hace falta: las dosis usan la <strong>capacidad máxima del depósito</strong> (arriba). El margen orientativo se muestra al configurar tubos y Ø de riego.';
   }
   const aguaIni = cfg.agua || state.configAgua || 'destilada';
   const nutObjIni = typeof getNutrienteTorre === 'function' ? getNutrienteTorre() : null;
@@ -938,12 +959,14 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       '<input id="cldVolDeposito" type="number" inputmode="numeric" min="1" max="600" step="1"' +
         (volIni === '' ? ' placeholder="Ej. 20 — etiqueta o Cultivo e instalación"' : ' value="' + volIni + '"') +
         ' class="checklist-dark-field-input checklist-dark-field-input--mb8">' +
-      '<label class="checklist-dark-field-label">Litros de mezcla (opcional)</label>' +
+      '<div id="cldVolMezclaWrap">' +
+      '<label class="checklist-dark-field-label" id="cldVolMezclaLabel">Litros de mezcla (opcional)</label>' +
       '<input id="cldVolMezcla" type="number" inputmode="decimal" min="0.5" max="600" step="0.1" placeholder="' +
         String(cldVolMezclaPlaceholder).replace(/"/g, '&quot;') +
         '" value="' + mezIni.replace(/"/g, '') + '"' +
-        ' class="checklist-dark-field-input checklist-dark-field-input--mb12">' +
-      '<p class="checklist-dark-text checklist-dark-text--mix-hint">' + cldVolMezclaHint + '</p>' +
+        ' class="checklist-dark-field-input checklist-dark-field-input--mb8">' +
+      '<p id="cldVolMezclaHint" class="checklist-dark-text checklist-dark-text--mix-hint">' + cldVolMezclaHint + '</p>' +
+      '</div>' +
 
       '<label class="checklist-dark-field-label">Agua para la mezcla</label>' +
       '<select id="cldAgua" class="checklist-dark-field-input checklist-dark-select checklist-dark-select--mb12">' +
@@ -974,7 +997,8 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     const agua = document.getElementById('cldAgua').value || 'destilada';
     const dwcModo = document.getElementById('cldDwcModo')?.value || 'aireado';
     const nutId = document.getElementById('cldNutriente').value;
-    const mezStr = String(document.getElementById('cldVolMezcla')?.value || '').trim();
+    const mezStr =
+      tipo === 'nft' ? '' : String(document.getElementById('cldVolMezcla')?.value || '').trim();
     const volMez = parseFloat(String(mezStr).replace(',', '.'));
     const volMaxOk = tipo === 'srf' ? 5000 : 600;
     if (!Number.isFinite(vol) || vol < 1 || vol > volMaxOk) {
@@ -1007,6 +1031,8 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
     const tipoSel = (overlay.querySelector('input[name="cldTipoInst"]:checked') || {}).value || 'torre';
     const lab = document.getElementById('cldVolDepositoLabel');
     const hint = document.getElementById('cldVolDepositoHint');
+    const mezWrap = document.getElementById('cldVolMezclaWrap');
+    const depIn = document.getElementById('cldVolDeposito');
     if (!lab || !hint) return;
     if (tipoSel === 'rdwc') {
       lab.textContent = 'Litros del depósito de control (L)';
@@ -1016,10 +1042,32 @@ function mostrarOverlayChecklistDatosInstalacion(esPrimeraVezChecklist) {
       lab.textContent = 'Litros útiles del estanque SRF (L)';
       hint.textContent =
         'Llenado seguro con cámara de aire y cesta (asistente o Cultivo e instalación). Si no hay medidas de cesta, usa L×A×P o el litraje medido.';
+    } else if (tipoSel === 'nft') {
+      lab.textContent = 'Capacidad máx. depósito de impulsión (L)';
+      let hintNft =
+        'Etiqueta del recipiente. Si ya configuraste tubos y Ø de riego, usa el recomendado con margen del asistente; si no, estima y afinas después.';
+      if (typeof nftVolumenDepositoOrientativoDesdeConfig === 'function') {
+        const o = nftVolumenDepositoOrientativoDesdeConfig(cfg);
+        if (o && o.recL >= 1) {
+          hintNft =
+            'Recomendado con margen: ~' +
+            o.recL +
+            ' L' +
+            (o.minL != null ? ' (mín. orientativo ' + o.minL + ' L)' : '') +
+            '. Puedes subir el valor si tu depósito real es mayor.';
+          if (depIn && (!depIn.value || depIn.value === '20')) {
+            depIn.value = String(o.recL);
+          }
+        }
+      }
+      hint.textContent = hintNft;
     } else {
       lab.textContent = 'Capacidad máxima del depósito de mezcla (L)';
       hint.textContent =
         'Recipiente de solución: copia el dato de la etiqueta o de Cultivo e instalación si ya lo guardaste.';
+    }
+    if (mezWrap) {
+      mezWrap.style.display = tipoSel === 'nft' ? 'none' : '';
     }
   }
   syncCldVolDepositoCopy();
@@ -1149,6 +1197,8 @@ function getCLPasos() {
   const tipoInstCl =
     typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : (cfg.tipoInstalacion || 'torre');
   const esNft = tipoInstCl === 'nft';
+  const nftBomb =
+    esNft && typeof getNftBombaDesdeConfig === 'function' ? getNftBombaDesdeConfig(cfg) : null;
   const esDwc = tipoInstCl === 'dwc';
   const esRdwc = tipoInstCl === 'rdwc';
   const esSrf = tipoInstCl === 'srf';
@@ -1254,6 +1304,14 @@ function getCLPasos() {
     if (typeof rdwcEnsureConfigDefaults === 'function') rdwcEnsureConfigDefaults(cfg);
     vMaxRawPrimer = Number(cfg.rdwcControlVolL);
   }
+  if (
+    esNft &&
+    nftBomb &&
+    Number.isFinite(nftBomb.volDepositoRecomendadoL) &&
+    (!Number.isFinite(vMaxRawPrimer) || vMaxRawPrimer <= 0 || vMaxRawPrimer === 20)
+  ) {
+    vMaxRawPrimer = nftBomb.volDepositoRecomendadoL;
+  }
   const volMaxPrimerIni = Number.isFinite(vMaxRawPrimer) && vMaxRawPrimer > 0 ? Math.round(vMaxRawPrimer) : 20;
   const pc1SeccionTitulo = esRdwc
     ? '⚙️ Depósito de control, agua y nutriente'
@@ -1262,7 +1320,9 @@ function getCLPasos() {
       : '⚙️ Depósito, agua y nutriente';
   const pc1DescPaso = esRdwc
     ? 'Litros del <strong>depósito de control</strong> (reservoir), litros de mezcla si no llenas hasta el tope, tipo de agua y marca de nutriente. Para calcular ml, la app suma ese reservorio y los <strong>cubos útiles</strong> configurados en Cultivo e instalación. En el llenado real primero se ceba por el reservorio y luego se completa el circuito hasta ese volumen útil total.'
-    : esSrf
+    : esNft
+      ? 'Capacidad máxima del <strong>depósito de impulsión</strong> (etiqueta del recipiente). Los <strong>ml del paso 4</strong> usan ese tope; en el paso <strong>N0</strong> verás si cumple el margen orientativo según tubos, huecos y Ø de riego (como en el asistente).'
+      : esSrf
       ? 'Llenado seguro del <strong>estanque común</strong> (cámara de aire + cesta del asistente, o L×A×P si faltan medidas), litros de mezcla si no llenas hasta el tope, agua y nutriente. Todos los huecos comparten la misma solución; los <strong>ml del paso 4</strong> usan ese volumen.'
     : esDwc
       ? (dwcOxMult
@@ -1273,10 +1333,15 @@ function getCLPasos() {
     ? 'Litros depósito de control (L)'
     : esSrf
       ? 'Litros útiles estanque (L)'
-      : dwcOxMult
-        ? 'Litros útiles por cubo (L)'
-        : 'Capacidad máx. depósito (L)';
-  const pc1PhVolMax = esRdwc ? '40' : esSrf ? '500' : '20';
+      : esNft
+        ? 'Capacidad máx. depósito (L)'
+        : dwcOxMult
+          ? 'Litros útiles por cubo (L)'
+          : 'Capacidad máx. depósito (L)';
+  let pc1PhVolMax = esRdwc ? '40' : esSrf ? '500' : '20';
+  if (esNft && nftBomb && Number.isFinite(nftBomb.volDepositoRecomendadoL)) {
+    pc1PhVolMax = 'Recomendado ~' + Math.round(nftBomb.volDepositoRecomendadoL) + ' L';
+  }
   const pc1LabelVolMez = esRdwc
     ? 'Litros de mezcla en reservorio (opcional)'
     : dwcOxMult
@@ -1315,7 +1380,9 @@ function getCLPasos() {
               ? ' En RDWC indica litros del <strong>depósito de control</strong> (reservoir): ahí añades los productos y tomas EC/pH en <strong>Medir</strong>; para dosificar nutrientes la app suma también los <strong>cubos útiles</strong> del circuito y deja un margen conservador si no los has afinado. Eso no significa echar todo el volumen total de golpe en el reservorio: primero se ceba y luego se completa el circuito.'
               : esSrf
                 ? ' En SRF todos los huecos comparten el <strong>mismo estanque</strong>: mide EC/pH en la solución común con aireador en marcha (o superficie estable en Kratky). El volumen orientativo es el <strong>llenado seguro</strong> (cámara de aire hasta la base de la cesta), no el geométrico completo.'
-                : ''),
+                : esNft
+                  ? ' En NFT los <strong>ml del paso 4</strong> usan la <strong>capacidad máx.</strong> del depósito (PC·1). En <strong>N0</strong> verás cifras fijas y si tu depósito cumple el margen orientativo según tubos, huecos y Ø de riego (como en el asistente).'
+                  : ''),
       extraHtml:
         (clGuiaMcHtml || '') +
         '<button type="button" class="btn cl-tabla-cultivos-btn" onclick="abrirOverlayTablaCultivosChecklist()">📊 Ver tabla EC / pH por cultivo</button>' +
@@ -1324,7 +1391,7 @@ function getCLPasos() {
         { id: 'clPrimerVolMax', label: pc1LabelVolMax, type: 'number', step: '0.1', placeholder: pc1PhVolMax,
           value: String(volMaxPrimerIni),
           _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()' },
-        ...(dwcOxMult ? [] : [{
+        ...(dwcOxMult || esNft ? [] : [{
           id: 'clPrimerVolMezcla', label: pc1LabelVolMez, type: 'number', step: '0.1', placeholder: pc1PhVolMez,
           value: mezPrimerVal,
           _clOnblur: 'onPrimerLlenadoVolDesdeChecklist()',
@@ -1379,8 +1446,6 @@ function getCLPasos() {
           : ('Sensores o medidores en tu torre vertical (' + hwLista.join(', ') + '): comprueba calibración y que la lectura sea representativa (agua homogénea, tiempo de espera con difusor cumplido).'),
     nota:'Sin telemática en esta app: si contrastas sonda y pen, usa el criterio único que vas a registrar. El <strong>registro</strong> de esta recarga lo cierras en el paso <strong>6.4</strong> y lo verás en <strong>Mediciones</strong>.',
   }] : [];
-
-  const nftBomb = esNft ? getNftBombaDesdeConfig(cfg) : null;
 
   let mapRegionToken = 0;
 
@@ -1546,6 +1611,10 @@ function getCLPasos() {
           desc: srfKratky
             ? 'Comprueba la <strong>cámara de aire</strong> bajo la balsa (~' + (cfg.srfKratkyGapCm || 8) + ' cm) y que el nivel de solución no cubra esa zona.'
             : 'Enciende la <strong>bomba de aire</strong> y los difusores en el estanque común antes de cerrar la recarga.',
+          postCamposHtml:
+            typeof srfEstanqueChecklistResumenHtml === 'function'
+              ? srfEstanqueChecklistResumenHtml(cfg)
+              : '',
           nota: srfKratky
             ? 'Sin aireador: no llenes por encima de la base del sustrato; prioriza agua fresca (17–21 °C).'
             : (function () {
@@ -1744,7 +1813,9 @@ function getCLPasos() {
       nota:
         'Orientación de equipo (no es veredicto): ' +
         nftBomb.modeloRec +
-        ' Ajusta la capacidad del depósito en <strong>Cultivo e instalación</strong>. Si la película se corta, sube caudal o revisa pendiente y tapones. Cifras y desglose: bloque «Depósito» y «Ver detalle técnico» debajo.',
+        ' Ajusta la <strong>capacidad máx. del depósito</strong> en PC·1 (recomendado ~' +
+        (nftBomb.volDepositoRecomendadoL != null ? nftBomb.volDepositoRecomendadoL : '—') +
+        ' L con margen). Cifras de depósito visibles en el bloque inferior. Si la película se corta, sube caudal o revisa pendiente.',
       campos: [
         { id:'clNftBombaUsuarioLh', label:'Tu bomba — caudal nominal (L/h)', type:'number', step:'10', placeholder:'ej. 600',
           value: cfg.nftBombaUsuarioCaudalLh != null ? String(cfg.nftBombaUsuarioCaudalLh) : '',
@@ -2777,8 +2848,8 @@ function renderChecklist() {
       clRutaChecklist === 'primer_llenado' &&
       state &&
       state.configTorre &&
-      tipoN === 'dwc' &&
-      dwcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(state.configTorre)
+      (tipoN === 'dwc' || tipoN === 'srf' || tipoN === 'nft') &&
+      hcEliminarVolMezclaLitrosSiRedundanteConMaxOrientativo(state.configTorre)
     ) {
       if (typeof guardarEstadoTorreActual === 'function') guardarEstadoTorreActual();
       if (typeof saveState === 'function') saveState();
@@ -2860,6 +2931,7 @@ function renderChecklist() {
     try { refrescarUIMensajeBombaUsuarioNft('checklist'); } catch (e) {}
     try { actualizarMensajeNftCanalChecklist(); } catch (e) {}
     try { refrescarNftLayoutResumenChecklist(); } catch (e) {}
+    try { refrescarNftDepositoRecomendadoChecklistUI(); } catch (e) {}
   }
   if ((state.configTorre || {}).tipoInstalacion === 'dwc') {
     try { refrescarDwcDifusorChecklist(); } catch (eDwcDif) {}

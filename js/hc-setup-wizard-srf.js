@@ -1110,6 +1110,49 @@ function syncSetupVolMezclaSugeridoSrf(opts) {
   srfUpdateVolCapLabels(draft, 'setup');
 }
 
+/** Bloque fijo para checklist SRF: llenado seguro vs capacidad geométrica. */
+function srfEstanqueChecklistResumenHtml(cfg) {
+  cfg = srfEnsureConfigDefaults(cfg || state.configTorre || {});
+  const cap = srfCapacidadLitrosDesdeConfig(cfg);
+  const util = srfVolumenSeguroLitrosDesdeConfig(cfg);
+  const vUser = Number(cfg.volDeposito);
+  const vAct =
+    Number.isFinite(vUser) && vUser > 0 ? Math.round(vUser * 10) / 10 : null;
+  if (cap == null && util == null && vAct == null) {
+    return '<p class="cl-srf-estanque-rec">Completa medidas del estanque y de la cesta en Cultivo e instalación o en el asistente.</p>';
+  }
+  let main = '<strong>Estanque:</strong> ';
+  if (util != null && util > 0) {
+    main +=
+      'llenado seguro orientativo <strong>' +
+      util +
+      ' L</strong> (cámara de aire + cesta)';
+    if (cap != null && cap > util + 0.5) {
+      main += ' · capacidad geométrica ~<strong>' + cap + ' L</strong>';
+    }
+  } else if (cap != null) {
+    main += 'capacidad geométrica ~<strong>' + cap + ' L</strong> (completa cesta para llenado seguro)';
+  } else {
+    main += 'indica medidas del estanque y de la cesta';
+  }
+  if (vAct != null) {
+    main += ' · configurado: <strong>' + vAct + ' L</strong>';
+    if (util != null && vAct < util - 0.5) {
+      main += ' <span class="nft-verdict-warn">(por debajo del llenado seguro)</span>';
+    } else if (util != null && vAct >= util - 0.5) {
+      main += ' <span class="nft-verdict-ok">(coherente con llenado seguro)</span>';
+    }
+  }
+  return (
+    '<div class="cl-srf-estanque-rec" role="status">' +
+    '<p class="cl-srf-estanque-rec-main">' +
+    main +
+    '.</p>' +
+    '<p class="cl-srf-estanque-rec-foot">Las dosis del checklist usan el llenado seguro (o los litros que indiques en PC·1 si rellenas menos).</p>' +
+    '</div>'
+  );
+}
+
 function renderSrfCalculoStatus(cfg, elId) {
   const el = document.getElementById(elId);
   if (!el) return;

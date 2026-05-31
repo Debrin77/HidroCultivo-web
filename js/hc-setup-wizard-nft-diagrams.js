@@ -287,6 +287,19 @@ function nftDepositoVeredictoBloqueHtml(b, volUsuarioL) {
   );
 }
 
+/** Mínimo y recomendado con margen (L) para depósito NFT según circuito actual. */
+function nftVolumenDepositoOrientativoDesdeConfig(cfg) {
+  if (!cfg || (typeof tipoInstalacionNormalizado === 'function' ? tipoInstalacionNormalizado(cfg) : cfg.tipoInstalacion) !== 'nft') {
+    return null;
+  }
+  const b = getNftBombaDesdeConfig(cfg);
+  if (!b || !Number.isFinite(b.volDepositoRecomendadoL) || b.volDepositoRecomendadoL <= 0) return null;
+  return {
+    minL: b.volMinDepositoSugeridoL,
+    recL: Math.round(b.volDepositoRecomendadoL),
+  };
+}
+
 /** Sugiere capacidad máx. del depósito (slider) según cálculo NFT; el usuario puede cambiarla. */
 function syncNftSetupVolDepositoSlider(bNft) {
   if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') return;
