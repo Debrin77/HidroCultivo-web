@@ -2370,6 +2370,11 @@ function hcResetNftTuboRiegoSeleccion() {
     const el = document.getElementById('nftTubo' + d);
     if (el) el.classList.remove('selected');
   });
+  const slider = document.getElementById('sliderVol');
+  if (slider) {
+    slider.removeAttribute('data-hc-nft-vol-auto');
+    slider.removeAttribute('data-hc-nft-vol-manual');
+  }
   const block = document.getElementById('setupNftRecoBlock');
   if (block) {
     block.classList.add('setup-hidden');
@@ -2948,9 +2953,13 @@ function refrescarSetupTipoInstalacionUI() {
     dwcCapHint.classList.add('setup-hidden');
     dwcCapHint.textContent = '';
   }
+  const mezBlock = document.getElementById('setupVolMezclaBlock');
+  if (mezBlock) {
+    mezBlock.style.display = setupTipoInstalacion === 'nft' ? 'none' : '';
+  }
   const mezLab = document.getElementById('setupVolMezclaLabel');
   const mezAyuda = document.getElementById('setupVolMezclaAyuda');
-  if (mezLab && mezAyuda) {
+  if (mezLab && mezAyuda && setupTipoInstalacion !== 'nft') {
     if (setupTipoInstalacion === 'dwc') {
       mezLab.textContent = 'Litros de solución en el depósito (relleno operativo)';
       mezAyuda.textContent =
@@ -2960,6 +2969,14 @@ function refrescarSetupTipoInstalacionUI() {
       mezAyuda.textContent =
         'Vacío = llenar hasta el máximo. Si rellenas a menos (p. ej. 19 L en depósito de 20 L), las dosis se calculan sobre esos litros.';
     }
+  }
+  const capAyuda = document.getElementById('setupVolCapacidadAyuda');
+  if (capAyuda && setupTipoInstalacion === 'torre') {
+    capAyuda.textContent =
+      'Tope físico del recipiente (porcentaje de llenado y bomba). Las dosis usan los litros de mezcla si los indicas abajo.';
+  } else if (capAyuda && setupTipoInstalacion === 'nft') {
+    capAyuda.textContent =
+      'Tope del recipiente (etiqueta). Tras elegir Ø de tubo de riego verás el volumen recomendado con margen.';
   }
   try {
     if (typeof repositionSetupVolMezclaBlock === 'function') repositionSetupVolMezclaBlock();
@@ -3009,6 +3026,10 @@ function syncSetupPreviewDiagramPorTipoInstalacion() {
 }
 
 function onSetupVolSliderInput() {
+  const sliderVol = document.getElementById('sliderVol');
+  if (setupTipoInstalacion === 'nft' && sliderVol && !sliderVol.dataset.hcNftVolSyncing) {
+    sliderVol.setAttribute('data-hc-nft-vol-manual', '1');
+  }
   if (setupTipoInstalacion === 'nft') updateNftSetupPreview();
   else updateTorreBuilder();
   const mezEl = document.getElementById('setupVolMezclaL');

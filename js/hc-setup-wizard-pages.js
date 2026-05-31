@@ -1411,6 +1411,9 @@ function updateNftSetupPreview() {
     if (typeof nftRefreshSetupCalculadoUi === 'function') nftRefreshSetupCalculadoUi(draft, bNft, hyd);
   } catch (_) {}
   pintarResultadoBombaNftUI(bNft, vol);
+  try {
+    if (typeof syncNftSetupVolDepositoSlider === 'function') syncNftSetupVolDepositoSlider(bNft);
+  } catch (_) {}
   const pendDraw = Number.isFinite(pend) && pend >= 1 ? pend : 2;
   const altShow = draft.nftAlturaBombeoCm != null && Number(draft.nftAlturaBombeoCm) > 0
     ? Math.round(Number(draft.nftAlturaBombeoCm))

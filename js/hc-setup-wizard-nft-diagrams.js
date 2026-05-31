@@ -281,8 +281,58 @@ function nftDepositoVeredictoBloqueHtml(b, volUsuarioL) {
     '<div class="nft-verdict-main">' +
     main +
     '</div>' +
-    nftWrapDetalleTecnicoSummary(detInner, 'Cifras de depósito (litros)')
+    '<div class="nft-deposito-cifras-fixed">' +
+    detInner +
+    '</div>'
   );
+}
+
+/** Sugiere capacidad máx. del depósito (slider) según cálculo NFT; el usuario puede cambiarla. */
+function syncNftSetupVolDepositoSlider(bNft) {
+  if (typeof setupTipoInstalacion === 'undefined' || setupTipoInstalacion !== 'nft') return;
+  const tuboOk =
+    typeof nftTuboRiegoElegidoEnSetup === 'function' && nftTuboRiegoElegidoEnSetup();
+  const slider = document.getElementById('sliderVol');
+  const ayuda = document.getElementById('setupVolCapacidadAyuda');
+  if (!tuboOk || !bNft || !Number.isFinite(bNft.volDepositoRecomendadoL) || !slider) {
+    if (ayuda && setupTipoInstalacion === 'nft') {
+      ayuda.textContent =
+        'Tope del recipiente (etiqueta). Tras elegir Ø de tubo de riego verás el volumen recomendado con margen.';
+    }
+    return;
+  }
+  const rec = Math.min(100, Math.max(5, Math.round(bNft.volDepositoRecomendadoL)));
+  const minL = bNft.volMinDepositoSugeridoL;
+  const cur = parseInt(String(slider.value), 10);
+  const prevAuto = slider.getAttribute('data-hc-nft-vol-auto');
+  const manual = slider.getAttribute('data-hc-nft-vol-manual') === '1';
+  const shouldApply =
+    !manual &&
+    (!Number.isFinite(cur) ||
+      cur <= 0 ||
+      (prevAuto != null &&
+        prevAuto !== '' &&
+        Number.isFinite(parseInt(prevAuto, 10)) &&
+        Math.abs(cur - parseInt(prevAuto, 10)) < 2));
+  if (shouldApply) {
+    slider.dataset.hcNftVolSyncing = '1';
+    slider.value = String(rec);
+    slider.setAttribute('data-hc-nft-vol-auto', String(rec));
+    delete slider.dataset.hcNftVolSyncing;
+  }
+  if (ayuda) {
+    ayuda.textContent =
+      'Tope del recipiente (etiqueta). Recomendado con margen: ~' +
+      rec +
+      ' L' +
+      (minL != null ? ' (mín. orientativo ' + minL + ' L)' : '') +
+      '. Ajusta el deslizador si tu depósito real es otro.';
+  }
+  const elV = document.getElementById('valVol');
+  if (elV) {
+    const show = parseInt(String(slider.value), 10) || rec;
+    elV.innerHTML = show + '<span class="setup-inline-unit-l">L</span>';
+  }
 }
 
 function nftRecoPerfilPorGrupo(grupo) {
